@@ -206,6 +206,7 @@ catalogue! {
     E5401 Error "scene change failed",
     W5402 Warning "saved data ignored",
     W5403 Warning "saving failed",
+    E5501 Error "audio argument out of range",
     E5901 Error "scene switching not supported",
     E5902 Error "transparency not supported",
     // 5.6 GPU and target (`6xxx`)
@@ -242,6 +243,8 @@ catalogue! {
     E7026 Error "asset limit exceeded",
     E7030 Error "asset fetch or integrity failure",
     E7031 Error "image decode failure",
+    E7101 Error "unsupported audio file",
+    E7102 Error "malformed audio file",
     E7901 Error "remote assets not supported",
     E7902 Error "node hierarchy instancing not supported",
     // 5.8 Runtime (`8xxx`)
@@ -273,6 +276,8 @@ catalogue! {
     E8102 Error "physics module failed to load",
     E8103 Error "non-finite pose produced by the solver",
     E8104 Error "non-finite value given to a body",
+    W8201 Warning "audio value clamped",
+    W8202 Warning "sound could not be decoded",
     // 5.9 Project and internal (`9xxx`)
     E9001 Error "invalid project configuration",
     E9002 Error "too many modules",

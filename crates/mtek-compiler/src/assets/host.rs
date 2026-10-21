@@ -12,6 +12,7 @@ use std::collections::BTreeMap;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
+use super::audio::{AudioInfo, format_of_extension, sniff_audio};
 use super::glb::{GlbFile, read_glb};
 use super::image::{ImageInfo, sniff_image};
 use super::{AssetLimits, Issue};
@@ -28,6 +29,8 @@ pub enum AssetKind {
     Texture,
     /// `asset.linear_texture(..)`.
     LinearTexture,
+    /// `asset.sound(..)` (`spec/audio.md`, decision 0160).
+    Sound,
 }
 
 /// The colour space an image is sampled in (`texture` is sRGB, `linear_texture` is linear).
@@ -56,6 +59,8 @@ pub enum AssetHandle {
     Glb { path: String },
     /// A standalone image at this project path, in a colour space.
     Image { path: String, space: ImageSpace },
+    /// A validated sound file at this project path (decision 0160).
+    Sound { path: String },
 }
 
 /// What the checker needs from the asset machinery.
@@ -91,15 +96,36 @@ pub struct ImageFile {
     pub info: ImageInfo,
 }
 
+/// A sound file (`asset.sound`, decision 0160).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SoundFile {
+    pub path: String,
+    pub bytes: Vec<u8>,
+    pub sha256: String,
+    pub info: AudioInfo,
+}
+
 /// Everything the loader found: the files of a project's asset declarations.
 #[derive(Clone, Debug, Default)]
 pub struct AssetStore {
     pub limits: AssetLimits,
     glbs: BTreeMap<String, DeclaredFile<GlbFile>>,
     images: BTreeMap<String, DeclaredFile<ImageFile>>,
+    sounds: BTreeMap<String, DeclaredFile<SoundFile>>,
 }
 
 impl AssetStore {
+    /// The sound file at `path`.
+    #[must_use]
+    pub fn sound(&self, path: &str) -> Option<&DeclaredFile<SoundFile>> {
+        self.sounds.get(path)
+    }
+
+    /// Every declared sound file that loaded, by project path.
+    pub fn sounds(&self) -> impl Iterator<Item = (&String, &DeclaredFile<SoundFile>)> {
+        self.sounds.iter()
+    }
+
     /// The validated GLB at `path`.
     #[must_use]
     pub fn glb(&self, path: &str) -> Option<&DeclaredFile<GlbFile>> {
@@ -115,7 +141,7 @@ impl AssetStore {
     /// Whether any asset was declared and loaded.
     #[must_use]
     pub fn is_empty(&self) -> bool {
-        self.glbs.is_empty() && self.images.is_empty()
+        self.glbs.is_empty() && self.images.is_empty() && self.sounds.is_empty()
     }
 }
 
@@ -130,6 +156,7 @@ pub struct AssetLoader<'f> {
     limits: AssetLimits,
     glbs: BTreeMap<String, Slot<GlbFile>>,
     images: BTreeMap<String, Slot<ImageFile>>,
+    sounds: BTreeMap<String, Slot<SoundFile>>,
 }
 
 impl<'f> AssetLoader<'f> {
@@ -140,6 +167,7 @@ impl<'f> AssetLoader<'f> {
             limits,
             glbs: BTreeMap::new(),
             images: BTreeMap::new(),
+            sounds: BTreeMap::new(),
         }
     }
 
@@ -158,6 +186,11 @@ impl<'f> AssetLoader<'f> {
         for (path, slot) in self.images {
             if let Slot::Loaded(file) = slot {
                 store.images.insert(path, file);
+            }
+        }
+        for (path, slot) in self.sounds {
+            if let Slot::Loaded(file) = slot {
+                store.sounds.insert(path, file);
             }
         }
         store
@@ -289,6 +322,79 @@ impl<'f> AssetLoader<'f> {
         }
     }
 
+    fn load_sound(&self, path: &ProjectPath, span: Span) -> Slot<SoundFile> {
+        let bytes = match self.fs.read(path) {
+            Ok(bytes) => bytes,
+            Err(error) => {
+                return Slot::Failed(vec![Issue::new(
+                    Code::E7020,
+                    format!("The asset file '{path}' could not be read: {error}."),
+                )]);
+            }
+        };
+        match sniff_audio(path.as_str(), &bytes) {
+            Ok(info) => {
+                let sha256 = Sha256::digest(&bytes)
+                    .iter()
+                    .map(|byte| format!("{byte:02x}"))
+                    .collect();
+                Slot::Loaded(DeclaredFile {
+                    file: SoundFile {
+                        path: path.as_str().to_owned(),
+                        bytes,
+                        sha256,
+                        info,
+                    },
+                    span,
+                })
+            }
+            Err(issue) => Slot::Failed(vec![issue]),
+        }
+    }
+
+    /// `asset.sound(..)`: resolve, locate, size-check, read and sniff once per path.
+    fn declare_sound(
+        &mut self,
+        literal: &str,
+        path: ProjectPath,
+        span: Span,
+        sink: &mut Diagnostics,
+    ) -> Option<AssetHandle> {
+        let key = path.as_str().to_owned();
+        if format_of_extension(&key).is_none() {
+            sink.push(
+                Issue::new(
+                    Code::E7101,
+                    format!("'{path}' is not a `.wav`, `.ogg` or `.mp3` file; `asset.sound` reads those three formats."),
+                )
+                .help("convert the sound to WAV (16-bit PCM), Ogg Vorbis or MP3")
+                .at(span),
+            );
+            return None;
+        }
+        if !self.sounds.contains_key(&key) {
+            let length = match self.locate(literal, &path, span) {
+                Ok(length) => length,
+                Err(diagnostic) => {
+                    sink.push(*diagnostic);
+                    return None;
+                }
+            };
+            let slot = match self.too_large(&path, length) {
+                Some(issue) => Slot::Failed(vec![issue]),
+                None => self.load_sound(&path, span),
+            };
+            self.sounds.insert(key.clone(), slot);
+        }
+        if let Some(Slot::Failed(issues)) = self.sounds.get(&key) {
+            for issue in issues {
+                sink.push(issue.at_in(span, Some(path.as_str())));
+            }
+            return None;
+        }
+        Some(AssetHandle::Sound { path: key })
+    }
+
     fn load_image(&self, path: &ProjectPath, span: Span) -> Slot<ImageFile> {
         let bytes = match self.fs.read(path) {
             Ok(bytes) => bytes,
@@ -354,6 +460,9 @@ impl AssetHost for AssetLoader<'_> {
                 return None;
             }
         };
+        if kind == AssetKind::Sound {
+            return self.declare_sound(literal, path, span, sink);
+        }
         let key = path.as_str().to_owned();
         let is_glb = kind == AssetKind::Glb;
         if is_glb {

@@ -251,7 +251,20 @@ export interface MtekImageAsset {
   readonly source?: string;
 }
 
-export type MtekAsset = MtekMeshDataAsset | MtekImageAsset;
+/** A sound file declared with `asset.sound(..)`, copied byte for byte (`spec/audio.md` section 4, decision 0160). */
+export interface MtekAudioAsset {
+  readonly url: string;
+  readonly sha256: string;
+  readonly bytes: number;
+  readonly kind: "audio";
+  readonly format: "wav" | "ogg" | "mp3";
+  readonly mime: "audio/wav" | "audio/ogg" | "audio/mpeg";
+  /** The project path generated code names the sound by. */
+  readonly source: string;
+  readonly span: SpanId;
+}
+
+export type MtekAsset = MtekMeshDataAsset | MtekImageAsset | MtekAudioAsset;
 
 // ---- scene structure (spec/runtime-abi.md section 5.2) ----
 

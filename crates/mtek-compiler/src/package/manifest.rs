@@ -496,6 +496,17 @@ pub enum AssetKind {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         source: Option<String>,
     },
+    /// A sound file declared with `asset.sound(..)`, copied byte for byte (decision 0160).
+    #[serde(rename = "audio")]
+    Audio {
+        /// `wav`, `ogg` or `mp3`.
+        format: String,
+        mime: String,
+        /// The project path of the declaring `asset.sound(..)`: generated code names the sound
+        /// by it.
+        source: String,
+        span: u32,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

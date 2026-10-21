@@ -1009,6 +1009,7 @@ impl<'p> ShaderLowering<'p> {
                 Expr::construct(array, lowered, span)
             }
             Value::String(_) => return Err("a string constant in GPU code".to_owned()),
+            Value::Sound(_) => return Err("a sound constant in GPU code".to_owned()),
             Value::Texture(_) | Value::Sampler(_) | Value::Image(_) => {
                 return Err("a texture or sampler constant in GPU code".to_owned());
             }

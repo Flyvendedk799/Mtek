@@ -127,7 +127,7 @@ export interface MtekTestOptions {
 export interface MtekAssetStateEvent {
   /** The file's url in the manifest's assets table. */
   readonly url: string;
-  readonly kind: "mesh-data" | "image";
+  readonly kind: "mesh-data" | "image" | "audio";
   readonly state: "pending" | "ready" | "failed";
 }
 

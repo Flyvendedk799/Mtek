@@ -43,7 +43,7 @@ The generated file contains more than the sketch above (field `constructionOnly`
 
 ## 2. Types and namespaces
 
-Types: `bool i32 u32 f32 string vec2 vec3 vec4 mat4 quat color mesh material texture sampler entity_ref` and the generic `array<T, N>`; structured built-ins `SurfaceInput` (`spec/materials.md` §3.1) and `PointerEvent { position: vec2; button: i32 }`.
+Types: `bool i32 u32 f32 string vec2 vec3 vec4 mat4 quat color mesh material texture sampler entity_ref sound` and the generic `array<T, N>`; structured built-ins `SurfaceInput` (`spec/materials.md` §3.1) and `PointerEvent { position: vec2; button: i32 }`.
 
 | Namespace | Members |
 |---|---|
@@ -53,7 +53,7 @@ Types: `bool i32 u32 f32 string vec2 vec3 vec4 mat4 quat color mesh material tex
 | `texture` | `white()`, `black()` (1×1 built-ins) |
 | `sampler` | `linear_repeat()`, `linear_clamp()`, `nearest_repeat()`, `nearest_clamp()` |
 | `frame` | `time: f32`, `delta: f32`, `index: u32` (`spec/scenes.md` §7.5) |
-| `asset` | `glb(path: string) -> glb_asset`, `texture(path: string) -> texture`, `linear_texture(path: string) -> texture` (`spec/assets.md` §2; `glb_asset` accessors in §2.1 there; implemented by task M4-05 ahead of the M4 gate, decision 0058) |
+| `asset` | `glb(path: string) -> glb_asset`, `texture(path: string) -> texture`, `linear_texture(path: string) -> texture`, `sound(path: string) -> sound` (`spec/assets.md` §2, `spec/audio.md` §2; `glb_asset` accessors in §2.1 there; implemented by task M4-05 ahead of the M4 gate, decision 0058) |
 | `lighting` | `pbr(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32) -> color` — GPU only (implemented by M4-03, decision 0057) |
 | `Key` | enum constants (§5.2) |
 
@@ -186,6 +186,13 @@ Notation: `T` ranges over `f32, vec2, vec3, vec4` (component-wise), `I` over `i3
 | `is_key_down` | `(Key) → bool` | cpu | — | |
 | `spawn` | `(prefab descriptor) → entity_ref` | cpu (handlers only) | — | the argument is a prefab literal `Prefab { param: value; }`; params may be run-time values (decision 0064) |
 | `destroy` | `(entity_ref) → ()` | cpu (handlers only) | — | `E5030` for a named entity |
+| `play` | `(sound) → ()`, `(sound, f32) → ()`, `(sound, f32, f32) → ()` | cpu (handlers only) | — | volume `0..4` (default 1), pitch `0.0625..16` (default 1); `spec/audio.md` §3 (decision 0160) |
+| `play_at` | `(sound, vec3) → ()`, `(sound, vec3, f32) → ()` | cpu (handlers only) | — | positional: distance attenuation and panning from the active camera; `spec/audio.md` §3 |
+| `play_music` | `(sound) → ()`, `(sound, f32) → ()` | cpu (handlers only) | — | loops; replaces the music that plays |
+| `stop_music` | `() → ()` | cpu (handlers only) | — | |
+| `set_volume` | `(f32) → ()` | cpu (handlers only) | — | global volume `0..4` |
+| `set_muted` | `(bool) → ()` | cpu (handlers only) | — | the volume is kept |
+| `is_muted` | `() → bool` | cpu | — | |
 | `alive` | `(entity_ref) → bool` | cpu | — | false for a pending spawn, a pending removal and a dead reference |
 | `go_to` | `(scene name) → ()` | cpu (handlers only) | — | the argument is the name of a scene of the program, `go_to(Level)` (`E5201` otherwise); switches scene at the start of a later frame, carrying `shared state` over (`spec/scenes.md` §15.2, decision 0141) |
 | `reset` | `() → ()` | cpu (handlers only) | — | restarts the scene that runs from its initial values, at the start of a later frame (`spec/scenes.md` §15.5, decision 0140) |

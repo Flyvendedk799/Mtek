@@ -24,12 +24,12 @@ Columns: **CFG** `examples/material-configurator`, **PHY** `examples/physics-pla
 |---|---|
 | Each demonstration exercises a feature no other demonstration does | holds (CFG 23, PHY 23, MOD 21) |
 | Each demonstration exercises its pressure of decision 0002, and no other demonstration does | holds |
-| Every v0.1 feature is exercised by a demonstration or a named positive program | holds (304 features: 172 by a demonstration, 16 by other examples only, 116 by a fixture only) |
+| Every v0.1 feature is exercised by a demonstration or a named positive program | holds (313 features: 172 by a demonstration, 16 by other examples only, 125 by a fixture only) |
 | Every feature belongs to a negative-test area whose codes are all tested | holds (21 areas) |
 | Every nearest unsupported neighbour is rejected by a fixture or a registry reservation | holds (37 entries) |
 | Diagnostic codes without a fail fixture, a named negative test or a registry mark | none |
 
-157 positive fixture programs were read; 0 directories under the fixture roots do not check and are not positive (section 9).
+158 positive fixture programs were read; 0 directories under the fixture roots do not check and are not positive (section 9).
 
 ## 3. The demonstrations
 
@@ -80,7 +80,7 @@ Every fact that only this demonstration exercises (21):
 
 `binding/dep:entityState`, `binding/dep:frame`, `expr/state-read:entity`, `fn/cpu-reachable`, `function:sin`, `local/var`, `module/cross-file-call`, `module/cross-file-prefab`, `module/cross-file-spawn`, `namespace:frame`, `op/binary:%`, `op/binary:==`, `place/root:local`, `place/root:state:entity`, `remainder`, `schema:Sphere`, `state/owner:entity`, `state/owner:prefab`, `stmt/assign:=`, `stmt/var`, `value:frame.time`
 
-## 4. Features of the registry (168)
+## 4. Features of the registry (177)
 
 `supported.features` of `mtek context`, by kind.
 
@@ -88,89 +88,90 @@ Every fact that only this demonstration exercises (21):
 
 | Feature | Neg | CFG | PHY | MOD | EX | Positive fixture |
 |---|:-:|:-:|:-:|:-:|:-:|---|
-| `arithmetic` |  | x | x | x | x | `tests/semantics/pass/functions/pure_function` (+108) |
+| `arithmetic` |  | x | x | x | x | `tests/semantics/pass/functions/pure_function` (+109) |
 | `arrays` |  |  |  |  |  | `tests/semantics/pass/functions/w3081_unreachable_code` (+15) |
 | `bind` |  | x | x | x | x | `tests/semantics/pass/lights` (+26) |
 | `body-constants` |  |  |  |  |  | `tests/semantics/pass/order_independent_names` (+3) |
 | `comparison` |  |  | x | x | x | `tests/semantics/pass/functions/every_path_returns` (+25) |
-| `constants` |  | x | x | x |  | `tests/semantics/pass/types/ctor_vec3_components` (+68) |
+| `constants` |  | x | x | x |  | `tests/semantics/pass/types/ctor_vec3_components` (+69) |
 | `cpu-functions` |  |  |  |  |  | `tests/semantics/pass/functions/w4003_cpu_fn_could_be_fn` (+8) |
-| `descriptors` |  | x | x | x | x | `tests/semantics/pass/functions/imported_functions` (+107) |
-| `entities` |  | x | x | x | x | `tests/semantics/pass/modules_diamond_load_order` (+104) |
-| `entity-fields` |  | x | x | x | x | `tests/semantics/pass/modules_diamond_load_order` (+103) |
+| `descriptors` |  | x | x | x | x | `tests/semantics/pass/functions/imported_functions` (+108) |
+| `entities` |  | x | x | x | x | `tests/semantics/pass/modules_diamond_load_order` (+105) |
+| `entity-fields` |  | x | x | x | x | `tests/semantics/pass/modules_diamond_load_order` (+104) |
 | `equality` |  |  | x | x | x | `tests/browser/fixtures/m2/mixed_layout` (+14) |
-| `exports` |  | x | x | x | x | `tests/semantics/pass/modules_diamond_load_order` (+84) |
+| `exports` |  | x | x | x | x | `tests/semantics/pass/modules_diamond_load_order` (+85) |
 | `functions` |  | x |  | x | x | `tests/semantics/pass/functions/pure_function` (+28) |
-| `handlers` |  |  | x | x | x | `tests/semantics/pass/handler_key_down` (+34) |
-| `imports` |  | x | x | x | x | `tests/semantics/pass/modules_diamond_load_order` (+84) |
+| `handlers` |  |  | x | x | x | `tests/semantics/pass/handler_key_down` (+35) |
+| `imports` |  | x | x | x | x | `tests/semantics/pass/modules_diamond_load_order` (+85) |
 | `indexing` |  |  |  |  |  | `tests/semantics/pass/types/array_literals_and_indexing` (+15) |
 | `lifecycle-functions` |  |  | x |  | x | `tests/semantics/pass/lifecycle_update` (+32) |
-| `logical` |  |  |  |  | x | `tests/browser/fixtures/m2/mixed_layout` (+11) |
-| `materials` |  | x | x | x | x | `tests/semantics/pass/materials/w5101_constant_alpha` (+103) |
+| `logical` |  |  |  |  | x | `tests/browser/fixtures/m2/mixed_layout` (+12) |
+| `materials` |  | x | x | x | x | `tests/semantics/pass/materials/w5101_constant_alpha` (+104) |
 | `negation` |  |  |  |  | x | `tests/semantics/pass/functions_statements_and_calls` (+5) |
 | `prefab-instances` |  |  | x | x | x | `tests/browser/fixtures/m5/prefab_instances` (+17) |
 | `prefabs` |  |  | x | x | x | `tests/semantics/pass/spawn_physics_prefab` (+23) |
 | `remainder` |  |  |  | x | x | `tests/semantics/pass/materials/surface_inputs` (+7) |
 | `scene-fields` |  | x | x | x | x | `tests/semantics/pass/types/ctor_color_linear` (+47) |
-| `scene-objects` |  | x | x | x | x | `tests/semantics/pass/state_scene` (+156) |
-| `scenes` |  | x | x | x | x | `tests/semantics/pass/state_scene` (+156) |
+| `scene-objects` |  | x | x | x | x | `tests/semantics/pass/state_scene` (+157) |
+| `scenes` |  | x | x | x | x | `tests/semantics/pass/state_scene` (+157) |
 | `self` |  |  | x | x | x | `tests/semantics/pass/lights` (+30) |
-| `state` |  | x | x | x | x | `tests/semantics/pass/state_scene` (+50) |
+| `state` |  | x | x | x | x | `tests/semantics/pass/state_scene` (+51) |
 | `strings` |  | x |  |  |  | `tests/semantics/pass/types/string_constant` (+6) |
 | `structs` |  |  |  |  |  | `tests/semantics/pass/functions/imported_functions` (+15) |
 
-### Types (20)
+### Types (21)
 
 | Feature | Neg | CFG | PHY | MOD | EX | Positive fixture |
 |---|:-:|:-:|:-:|:-:|:-:|---|
 | `type:PointerEvent` | 0 |  |  |  |  | `tests/semantics/pass/handler_pointer_events` (+3) |
-| `type:SurfaceInput` | 0 | x | x | x | x | `tests/semantics/pass/materials/w5101_constant_alpha` (+103) |
+| `type:SurfaceInput` | 0 | x | x | x | x | `tests/semantics/pass/materials/w5101_constant_alpha` (+104) |
 | `type:array` | 0 |  |  |  |  | `tests/semantics/pass/functions/w3081_unreachable_code` (+15) |
-| `type:bool` | 0 |  | x | x | x | `tests/semantics/pass/functions/every_path_returns` (+46) |
-| `type:color` | 7 | x | x | x | x | `tests/semantics/pass/types/ctor_color_linear` (+108) |
+| `type:bool` | 0 |  | x | x | x | `tests/semantics/pass/functions/every_path_returns` (+47) |
+| `type:color` | 7 | x | x | x | x | `tests/semantics/pass/types/ctor_color_linear` (+109) |
 | `type:entity_ref` | 1 |  | x | x |  | `tests/semantics/pass/spawn_physics_prefab` (+16) |
-| `type:f32` | 3 | x | x | x | x | `tests/semantics/pass/state_scene` (+128) |
+| `type:f32` | 3 | x | x | x | x | `tests/semantics/pass/state_scene` (+129) |
 | `type:glb_asset` | 2 | x |  |  |  | `tests/assets/pass/assets_imported` (+2) |
 | `type:i32` | 0 |  | x | x | x | `tests/semantics/pass/redundant_conversion` (+50) |
 | `type:mat4` | 1 |  |  |  |  | `tests/semantics/pass/types/ctor_mat4_identity` (+14) |
-| `type:material` | 9 | x | x | x | x | `tests/browser/fixtures/m2/pulse` (+101) |
-| `type:mesh` | 6 | x | x | x | x | `tests/browser/fixtures/m2/pulse` (+101) |
+| `type:material` | 9 | x | x | x | x | `tests/browser/fixtures/m2/pulse` (+102) |
+| `type:mesh` | 6 | x | x | x | x | `tests/browser/fixtures/m2/pulse` (+102) |
 | `type:quat` | 2 |  |  |  | x | `tests/semantics/pass/types/ctor_quat_euler` (+19) |
-| `type:sampler` | 1 | x | x |  | x | `tests/browser/fixtures/m4/texture_sampling` (+83) |
+| `type:sampler` | 1 | x | x |  | x | `tests/browser/fixtures/m4/texture_sampling` (+84) |
+| `type:sound` | 0 |  |  |  |  | `tests/assets/pass/audio_sounds` |
 | `type:string` | 0 | x |  |  |  | `tests/semantics/pass/types/string_constant` (+6) |
-| `type:texture` | 0 | x | x |  | x | `tests/browser/fixtures/m4/texture_sampling` (+83) |
+| `type:texture` | 0 | x | x |  | x | `tests/browser/fixtures/m4/texture_sampling` (+84) |
 | `type:u32` | 1 |  |  |  |  | `tests/semantics/pass/types/conv_to_f32` (+24) |
-| `type:vec2` | 0 | x | x |  | x | `tests/semantics/pass/types/ctor_vec2_components` (+105) |
-| `type:vec3` | 4 | x | x | x | x | `tests/semantics/pass/types/ctor_vec3_components` (+136) |
-| `type:vec4` | 0 | x | x |  | x | `tests/semantics/pass/types/ctor_vec4_components` (+99) |
+| `type:vec2` | 0 | x | x |  | x | `tests/semantics/pass/types/ctor_vec2_components` (+106) |
+| `type:vec3` | 4 | x | x | x | x | `tests/semantics/pass/types/ctor_vec3_components` (+137) |
+| `type:vec4` | 0 | x | x |  | x | `tests/semantics/pass/types/ctor_vec4_components` (+100) |
 
 ### Schemas (descriptors) (17)
 
 | Feature | Neg | CFG | PHY | MOD | EX | Positive fixture |
 |---|:-:|:-:|:-:|:-:|:-:|---|
-| `schema:Box` | 1 |  | x | x | x | `tests/browser/fixtures/m2/pulse` (+77) |
+| `schema:Box` | 1 |  | x | x | x | `tests/browser/fixtures/m2/pulse` (+78) |
 | `schema:BoxCollider` | 0 |  | x |  |  | `tests/semantics/pass/spawn_physics_prefab` (+15) |
-| `schema:Camera` | 1 | x | x | x | x | `tests/semantics/pass/state_scene` (+156) |
+| `schema:Camera` | 1 | x | x | x | x | `tests/semantics/pass/state_scene` (+157) |
 | `schema:DirectionalLight` | 0 | x | x |  | x | `tests/semantics/pass/lights` (+12) |
 | `schema:Dynamic` | 0 |  | x |  |  | `tests/semantics/pass/spawn_physics_prefab` (+15) |
-| `schema:Entity` | 0 | x | x | x | x | `tests/semantics/pass/modules_diamond_load_order` (+104) |
+| `schema:Entity` | 0 | x | x | x | x | `tests/semantics/pass/modules_diamond_load_order` (+105) |
 | `schema:Kinematic` | 0 |  |  |  |  | `tests/semantics/pass/physics_body_collider_matrix` (+3) |
 | `schema:Orthographic` | 0 |  |  |  |  | `tests/browser/fixtures/m4/texture_sampling` (+7) |
 | `schema:Pbr` | 0 | x | x |  | x | `tests/browser/fixtures/m4/exposure` (+11) |
-| `schema:Perspective` | 0 | x | x | x | x | `tests/semantics/pass/state_scene` (+149) |
+| `schema:Perspective` | 0 | x | x | x | x | `tests/semantics/pass/state_scene` (+150) |
 | `schema:Plane` | 0 |  |  |  |  | `tests/semantics/pass/materials/resource_limit` (+14) |
 | `schema:PointLight` | 0 | x |  |  | x | `tests/semantics/pass/lights` (+6) |
 | `schema:Scene` | 0 | x | x | x | x | `tests/semantics/pass/types/ctor_color_linear` (+47) |
 | `schema:Sphere` | 0 |  |  | x |  | `tests/semantics/pass/materials/across_modules` (+45) |
 | `schema:SphereCollider` | 0 |  |  |  |  | `tests/semantics/pass/physics_body_collider_matrix` (+10) |
 | `schema:Static` | 0 |  | x |  |  | `tests/semantics/pass/physics_body_collider_matrix` (+13) |
-| `schema:Unlit` | 0 |  | x |  |  | `tests/semantics/pass/configured_entry_scene` (+76) |
+| `schema:Unlit` | 0 |  | x |  |  | `tests/semantics/pass/configured_entry_scene` (+77) |
 
 ### Scene objects (1)
 
 | Feature | Neg | CFG | PHY | MOD | EX | Positive fixture |
 |---|:-:|:-:|:-:|:-:|:-:|---|
-| `scene-object:camera` | 0 | x | x | x | x | `tests/semantics/pass/state_scene` (+156) |
+| `scene-object:camera` | 0 | x | x | x | x | `tests/semantics/pass/state_scene` (+157) |
 
 ### Events (7)
 
@@ -178,7 +179,7 @@ Every fact that only this demonstration exercises (21):
 |---|:-:|:-:|:-:|:-:|:-:|---|
 | `event:collision_enter` | 0 |  | x |  |  | `tests/semantics/pass/entity_ref_in_collision_handler` (+9) |
 | `event:collision_exit` | 0 |  | x |  |  | `tests/semantics/pass/physics_collision_events` (+3) |
-| `event:key_down` | 0 |  | x | x | x | `tests/semantics/pass/handler_key_down` (+31) |
+| `event:key_down` | 0 |  | x | x | x | `tests/semantics/pass/handler_key_down` (+32) |
 | `event:key_up` | 0 |  |  |  |  | `tests/semantics/pass/state_entity_and_handlers` (+1) |
 | `event:pointer_down` | 0 |  |  |  |  | `tests/semantics/pass/handler_pointer_events` (+3) |
 | `event:pointer_move` | 0 |  |  |  |  | `tests/semantics/pass/handler_pointer_events` |
@@ -188,22 +189,22 @@ Every fact that only this demonstration exercises (21):
 
 | Feature | Neg | CFG | PHY | MOD | EX | Positive fixture |
 |---|:-:|:-:|:-:|:-:|:-:|---|
-| `enum:Key` | 6 |  | x | x | x | `tests/semantics/pass/handler_key_down` (+31) |
+| `enum:Key` | 6 |  | x | x | x | `tests/semantics/pass/handler_key_down` (+32) |
 
 ### Namespaces (8)
 
 | Feature | Neg | CFG | PHY | MOD | EX | Positive fixture |
 |---|:-:|:-:|:-:|:-:|:-:|---|
-| `namespace:asset` | 0 | x |  |  |  | `tests/browser/fixtures/m4/assets_corrupt` (+3) |
-| `namespace:color` | 7 | x | x | x | x | `tests/semantics/pass/types/ctor_color_linear` (+108) |
+| `namespace:asset` | 0 | x |  |  |  | `tests/browser/fixtures/m4/assets_corrupt` (+4) |
+| `namespace:color` | 7 | x | x | x | x | `tests/semantics/pass/types/ctor_color_linear` (+109) |
 | `namespace:frame` | 0 |  |  | x | x | `tests/semantics/pass/frame_and_camera_reads` (+12) |
-| `namespace:lighting` | 0 | x | x |  | x | `tests/semantics/pass/configured_entry_scene` (+78) |
+| `namespace:lighting` | 0 | x | x |  | x | `tests/semantics/pass/configured_entry_scene` (+79) |
 | `namespace:mat4` | 1 |  |  |  |  | `tests/semantics/pass/types/ctor_mat4_identity` (+14) |
 | `namespace:quat` | 2 | x | x |  | x | `tests/semantics/pass/types/ctor_quat_euler` (+40) |
-| `namespace:sampler` | 1 | x | x |  | x | `tests/browser/fixtures/m4/texture_sampling` (+83) |
-| `namespace:texture` | 0 | x | x |  | x | `tests/browser/fixtures/m4/texture_sampling` (+83) |
+| `namespace:sampler` | 1 | x | x |  | x | `tests/browser/fixtures/m4/texture_sampling` (+84) |
+| `namespace:texture` | 0 | x | x |  | x | `tests/browser/fixtures/m4/texture_sampling` (+84) |
 
-### Functions (64)
+### Functions (72)
 
 | Feature | Neg | CFG | PHY | MOD | EX | Positive fixture |
 |---|:-:|:-:|:-:|:-:|:-:|---|
@@ -213,12 +214,13 @@ Every fact that only this demonstration exercises (21):
 | `function:asin` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+1) |
 | `function:asset.glb` | 1 | x |  |  |  | `tests/assets/pass/assets_imported` (+2) |
 | `function:asset.linear_texture` | 0 |  |  |  |  | `tests/assets/pass/assets_supported` (+1) |
+| `function:asset.sound` † | 1 |  |  |  |  | `tests/assets/pass/audio_sounds` |
 | `function:asset.texture` | 0 |  |  |  |  | `tests/browser/fixtures/m4/assets_corrupt` (+3) |
 | `function:atan` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+1) |
 | `function:atan2` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+2) |
 | `function:ceil` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+1) |
 | `function:clamp` | 1 |  |  |  |  | `tests/semantics/pass/types/intrinsics_integer_overloads` (+4) |
-| `function:color.linear` | 1 | x | x | x | x | `tests/semantics/pass/types/ctor_color_linear` (+107) |
+| `function:color.linear` | 1 | x | x | x | x | `tests/semantics/pass/types/ctor_color_linear` (+108) |
 | `function:color.srgb` | 0 |  |  |  |  | `tests/semantics/pass/types/ctor_color_srgb` (+4) |
 | `function:cos` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+1) |
 | `function:cross` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_geometry` (+1) |
@@ -232,8 +234,9 @@ Every fact that only this demonstration exercises (21):
 | `function:fract` | 0 | x |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+2) |
 | `function:inverse_sqrt` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+2) |
 | `function:is_key_down` | 0 |  |  |  |  | `tests/browser/fixtures/m5/physics_combos` |
+| `function:is_muted` | 0 |  |  |  |  | `tests/assets/pass/audio_sounds` |
 | `function:length` | 2 |  |  |  |  | `tests/semantics/pass/types/intrinsics_geometry` (+5) |
-| `function:lighting.pbr` | 0 | x | x |  | x | `tests/semantics/pass/configured_entry_scene` (+78) |
+| `function:lighting.pbr` | 0 | x | x |  | x | `tests/semantics/pass/configured_entry_scene` (+79) |
 | `function:log` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+1) |
 | `function:log2` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+2) |
 | `function:mat4.columns` | 0 |  |  |  |  | `tests/semantics/pass/types/ctor_mat4_columns` (+2) |
@@ -245,6 +248,9 @@ Every fact that only this demonstration exercises (21):
 | `function:min` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_integer_overloads` (+3) |
 | `function:mix` | 0 | x |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+3) |
 | `function:normalize` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_geometry` (+2) |
+| `function:play` | 1 |  |  |  |  | `tests/assets/pass/audio_sounds` |
+| `function:play_at` | 0 |  |  |  |  | `tests/assets/pass/audio_sounds` |
+| `function:play_music` | 0 |  |  |  |  | `tests/assets/pass/audio_sounds` |
 | `function:pow` | 0 |  |  |  |  | `tests/semantics/pass/functions/imported_functions` (+4) |
 | `function:print` | 0 |  |  |  |  | `tests/semantics/pass/state_entity_and_handlers` |
 | `function:quat.axis_angle` | 1 |  |  |  | x | `tests/semantics/pass/types/ctor_quat_axis_angle` (+20) |
@@ -254,21 +260,24 @@ Every fact that only this demonstration exercises (21):
 | `function:random` | 2 |  | x |  |  | `tests/codegen/assignable_places` (+1) |
 | `function:reflect` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_geometry` (+2) |
 | `function:round` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+2) |
-| `function:sample` | 4 | x | x |  | x | `tests/browser/fixtures/m4/texture_sampling` (+83) |
+| `function:sample` | 4 | x | x |  | x | `tests/browser/fixtures/m4/texture_sampling` (+84) |
 | `function:sampler.linear_clamp` | 1 |  |  |  |  | `tests/browser/fixtures/m4/texture_sampling` (+2) |
-| `function:sampler.linear_repeat` | 0 | x | x |  | x | `tests/browser/fixtures/m4/texture_sampling` (+82) |
+| `function:sampler.linear_repeat` | 0 | x | x |  | x | `tests/browser/fixtures/m4/texture_sampling` (+83) |
 | `function:sampler.nearest_clamp` | 0 |  |  |  |  | `tests/browser/fixtures/m4/texture_sampling` (+7) |
 | `function:sampler.nearest_repeat` | 0 |  |  |  |  | `tests/browser/fixtures/m4/texture_sampling` (+2) |
 | `function:saturate` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+2) |
+| `function:set_muted` | 0 |  |  |  |  | `tests/assets/pass/audio_sounds` |
+| `function:set_volume` | 1 |  |  |  |  | `tests/assets/pass/audio_sounds` |
 | `function:sign` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+1) |
 | `function:sin` | 0 |  |  | x | x | `tests/semantics/pass/types/intrinsics_component_wise` (+17) |
 | `function:smoothstep` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+2) |
 | `function:spawn` | 4 |  | x | x |  | `tests/semantics/pass/spawn_physics_prefab` (+8) |
 | `function:sqrt` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+1) |
 | `function:step` | 0 | x |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+2) |
+| `function:stop_music` | 0 |  |  |  |  | `tests/assets/pass/audio_sounds` |
 | `function:tan` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+1) |
 | `function:texture.black` | 0 |  |  |  |  | `tests/browser/fixtures/m4/texture_sampling` (+3) |
-| `function:texture.white` | 3 | x | x |  | x | `tests/browser/fixtures/m4/texture_sampling` (+83) |
+| `function:texture.white` | 3 | x | x |  | x | `tests/browser/fixtures/m4/texture_sampling` (+84) |
 | `function:transpose` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_geometry` (+2) |
 | `function:trunc` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+1) |
 
@@ -320,9 +329,9 @@ Reference: spec/language.md section 7.
 
 | Feature | Form | CFG | PHY | MOD | EX | Positive fixture |
 |---|---|:-:|:-:|:-:|:-:|---|
-| `stmt/let` | `let` local | x | x |  | x | `tests/semantics/pass/prelude_function_names_may_be_reused` (+96) |
+| `stmt/let` | `let` local | x | x |  | x | `tests/semantics/pass/prelude_function_names_may_be_reused` (+97) |
 | `stmt/var` | `var` local |  |  | x |  | `tests/semantics/pass/functions/w2010_var_never_reassigned` (+15) |
-| `stmt/assign:=` | assignment `=` |  |  | x | x | `tests/semantics/pass/frame_and_camera_reads` (+45) |
+| `stmt/assign:=` | assignment `=` |  |  | x | x | `tests/semantics/pass/frame_and_camera_reads` (+46) |
 | `stmt/assign:+=` | compound assignment `+=` |  | x | x | x | `tests/browser/fixtures/preview/runaway_init` (+36) |
 | `stmt/assign:-=` | compound assignment `-=` |  | x |  |  | `tests/codegen/wgsl-materials/assignable_places` (+5) |
 | `stmt/assign:*=` | compound assignment `*=` |  |  |  | x | `tests/codegen/wgsl-materials/structs_arrays_bools` (+5) |
@@ -332,12 +341,12 @@ Reference: spec/language.md section 7.
 | `stmt/else` | `else` |  |  |  |  | `tests/semantics/pass/functions/every_path_returns` (+3) |
 | `stmt/forRange` | `for i in a..b` |  |  |  |  | `tests/browser/fixtures/preview/runaway_init` (+10) |
 | `stmt/forEach` | `for x in array` |  |  |  |  | `tests/semantics/pass/functions/w3081_unreachable_code` (+4) |
-| `stmt/return:value` | `return expr;` | x | x | x | x | `tests/semantics/pass/functions/w4003_cpu_fn_could_be_fn` (+114) |
+| `stmt/return:value` | `return expr;` | x | x | x | x | `tests/semantics/pass/functions/w4003_cpu_fn_could_be_fn` (+115) |
 | `stmt/return:unit` | `return;` |  |  |  |  | `tests/semantics/pass/functions/every_path_returns` (+2) |
 | `stmt/break` | `break` |  |  |  |  | `tests/codegen/wgsl-materials/loops` (+2) |
 | `stmt/continue` | `continue` |  |  |  |  | `tests/codegen/wgsl-materials/loops` (+2) |
 | `stmt/block` | nested block |  |  |  |  | `tests/semantics/pass/functions/every_path_returns` (+2) |
-| `stmt/expr` | call as statement |  | x | x |  | `tests/semantics/pass/spawn_physics_prefab` (+22) |
+| `stmt/expr` | call as statement |  | x | x |  | `tests/semantics/pass/spawn_physics_prefab` (+23) |
 
 ### Locals (4)
 
@@ -345,8 +354,8 @@ Reference: spec/language.md section 7.1.
 
 | Feature | Form | CFG | PHY | MOD | EX | Positive fixture |
 |---|---|:-:|:-:|:-:|:-:|---|
-| `local/param` | function, stage or handler parameter | x | x | x | x | `tests/semantics/pass/lifecycle_update` (+117) |
-| `local/let` | `let` local | x | x |  | x | `tests/semantics/pass/prelude_function_names_may_be_reused` (+96) |
+| `local/param` | function, stage or handler parameter | x | x | x | x | `tests/semantics/pass/lifecycle_update` (+118) |
+| `local/let` | `let` local | x | x |  | x | `tests/semantics/pass/prelude_function_names_may_be_reused` (+97) |
 | `local/var` | `var` local |  |  | x |  | `tests/semantics/pass/functions/w2010_var_never_reassigned` (+15) |
 | `local/loop` | `for` loop variable |  |  |  |  | `tests/semantics/pass/functions/w3081_unreachable_code` (+11) |
 
@@ -357,10 +366,10 @@ Reference: spec/language.md section 6.1.
 | Feature | Form | CFG | PHY | MOD | EX | Positive fixture |
 |---|---|:-:|:-:|:-:|:-:|---|
 | `op/unary:-` | unary `-` |  |  |  | x | `tests/semantics/pass/functions_statements_and_calls` (+5) |
-| `op/unary:!` | unary `!` |  |  |  | x | `tests/codegen/wgsl-materials/structs_arrays_bools` (+6) |
+| `op/unary:!` | unary `!` |  |  |  | x | `tests/codegen/wgsl-materials/structs_arrays_bools` (+7) |
 | `op/binary:+` | binary `+` |  | x | x | x | `tests/browser/fixtures/m2/pulse` (+42) |
 | `op/binary:-` | binary `-` |  | x |  |  | `tests/semantics/pass/materials/surface_inputs` (+13) |
-| `op/binary:*` | binary `*` | x | x | x | x | `tests/semantics/pass/functions/pure_function` (+106) |
+| `op/binary:*` | binary `*` | x | x | x | x | `tests/semantics/pass/functions/pure_function` (+107) |
 | `op/binary:/` | binary `/` |  |  |  |  | `tests/semantics/pass/functions_statements_and_calls` (+6) |
 | `op/binary:%` | binary `%` |  |  | x | x | `tests/semantics/pass/materials/surface_inputs` (+7) |
 | `op/binary:<` | binary `<` |  | x | x | x | `tests/semantics/pass/functions/every_path_returns` (+7) |
@@ -381,17 +390,17 @@ Reference: spec/language.md section 6.
 | `expr/call` | call of a user function | x |  | x | x | `tests/semantics/pass/functions/imported_functions` (+25) |
 | `expr/vector-construct` | vector constructor with run-time components |  | x | x | x | `tests/semantics/pass/material_literal_value` (+46) |
 | `expr/convert` | numeric conversion `f32(x)`, `i32(x)`, `u32(x)` |  | x | x |  | `tests/codegen/wgsl-materials/textures` (+22) |
-| `expr/swizzle` | swizzle of several components | x | x | x | x | `tests/semantics/pass/materials/w5101_constant_alpha` (+98) |
+| `expr/swizzle` | swizzle of several components | x | x | x | x | `tests/semantics/pass/materials/w5101_constant_alpha` (+99) |
 | `expr/component` | single component `.x` | x | x | x | x | `tests/semantics/pass/frame_and_camera_reads` (+31) |
-| `expr/struct-field` | field of a struct value | x | x |  | x | `tests/semantics/pass/materials/w5101_constant_alpha` (+99) |
+| `expr/struct-field` | field of a struct value | x | x |  | x | `tests/semantics/pass/materials/w5101_constant_alpha` (+100) |
 | `expr/struct-literal` | struct literal |  |  |  |  | `tests/codegen/wgsl-materials/same_named_structs` (+5) |
-| `expr/state-read:scene` | read of scene `state` | x | x | x | x | `tests/semantics/pass/material_literal_value` (+30) |
+| `expr/state-read:scene` | read of scene `state` | x | x | x | x | `tests/semantics/pass/material_literal_value` (+31) |
 | `expr/state-read:entity` | read of entity `state` |  |  | x | x | `tests/codegen/state_and_handlers` (+14) |
 | `expr/entity-field-read` | read of an entity field (`Cube.position`, `self.rotation`) |  | x |  |  | `tests/codegen/bindings` (+11) |
 | `expr/camera-field-read` | read of a camera field |  |  |  |  | `tests/semantics/pass/frame_and_camera_reads` |
 | `expr/instance-param-read` | read of a material instance param (`Cube.material.phase`) |  |  |  |  | `tests/browser/fixtures/m6/builtin_params` (+5) |
 | `expr/light-field-read` | read of a light field (`Sun.light.intensity`) |  |  |  |  | `tests/semantics/pass/lights` (+4) |
-| `expr/material-param-read` | read of a material param in a stage function | x | x | x | x | `tests/semantics/pass/materials/w5101_constant_alpha` (+103) |
+| `expr/material-param-read` | read of a material param in a stage function | x | x | x | x | `tests/semantics/pass/materials/w5101_constant_alpha` (+104) |
 | `expr/prefab-param-read` | read of a prefab param in a prefab body |  | x | x | x | `tests/semantics/pass/spawn_physics_prefab` (+23) |
 | `expr/material-literal` | material descriptor that is not constant |  |  |  |  | `tests/semantics/pass/material_literal_value` |
 | `expr/prefab-literal` | prefab literal (the argument of `spawn`) |  | x | x |  | `tests/semantics/pass/spawn_physics_prefab` (+8) |
@@ -406,7 +415,7 @@ Reference: spec/language.md section 7.2.
 | Feature | Form | CFG | PHY | MOD | EX | Positive fixture |
 |---|---|:-:|:-:|:-:|:-:|---|
 | `place/root:local` | assignment to a `var` local |  |  | x |  | `tests/browser/fixtures/preview/runaway_init` (+14) |
-| `place/root:state:scene` | assignment to scene `state` |  | x | x | x | `tests/semantics/pass/frame_and_camera_reads` (+29) |
+| `place/root:state:scene` | assignment to scene `state` |  | x | x | x | `tests/semantics/pass/frame_and_camera_reads` (+30) |
 | `place/root:state:entity` | assignment to entity `state` |  |  | x | x | `tests/semantics/pass/prefab_crate` (+20) |
 | `place/root:entityField` | assignment to an entity field |  |  |  | x | `tests/codegen/state_and_handlers` (+8) |
 | `place/root:cameraField` | assignment to a camera field |  |  |  |  | `tests/codegen/state_and_handlers` (+1) |
@@ -424,12 +433,12 @@ Reference: spec/scenes.md sections 6 and 7.
 |---|---|:-:|:-:|:-:|:-:|---|
 | `behavior/update` | `update` lifecycle function |  |  |  | x | `tests/semantics/pass/lifecycle_update` (+26) |
 | `behavior/fixedUpdate` | `fixed_update` lifecycle function |  | x |  |  | `tests/codegen/state_and_handlers` (+11) |
-| `behavior/event` | `on event` handler |  | x | x | x | `tests/semantics/pass/handler_key_down` (+34) |
-| `behavior/event-filter` | handler with a filter (`on key_down(Key.Space)`) |  | x | x | x | `tests/semantics/pass/handler_key_down` (+31) |
-| `behavior/owner:scene` | behaviour in a scene body |  | x | x | x | `tests/semantics/pass/lifecycle_update` (+36) |
+| `behavior/event` | `on event` handler |  | x | x | x | `tests/semantics/pass/handler_key_down` (+35) |
+| `behavior/event-filter` | handler with a filter (`on key_down(Key.Space)`) |  | x | x | x | `tests/semantics/pass/handler_key_down` (+32) |
+| `behavior/owner:scene` | behaviour in a scene body |  | x | x | x | `tests/semantics/pass/lifecycle_update` (+37) |
 | `behavior/owner:entity` | behaviour in an entity body |  | x | x | x | `tests/semantics/pass/lights` (+30) |
 | `behavior/owner:prefab` | behaviour in a prefab body |  | x | x |  | `tests/semantics/pass/prefab_crate` (+18) |
-| `state/owner:scene` | scene `state` | x | x | x | x | `tests/semantics/pass/state_scene` (+41) |
+| `state/owner:scene` | scene `state` | x | x | x | x | `tests/semantics/pass/state_scene` (+42) |
 | `state/owner:entity` | entity `state` |  |  | x | x | `tests/semantics/pass/prefab_crate` (+16) |
 | `state/owner:prefab` | prefab `state` |  |  | x | x | `tests/semantics/pass/prefab_crate` (+18) |
 
@@ -467,7 +476,7 @@ Reference: spec/scenes.md sections 3 to 5 and spec/physics.md.
 | `entity-field/rotation` | written `rotation` | x | x |  | x | `tests/codegen/wgsl-materials/pulse` (+19) |
 | `entity-field/scale` | written `scale` |  | x | x | x | `tests/browser/fixtures/m4/instancing_grid` (+14) |
 | `entity-field/visible` | written `visible` |  |  |  |  | `tests/semantics/pass/types/op_logical` (+7) |
-| `entity-field/mesh` | written `mesh` | x | x | x | x | `tests/browser/fixtures/m2/pulse` (+101) |
+| `entity-field/mesh` | written `mesh` | x | x | x | x | `tests/browser/fixtures/m2/pulse` (+102) |
 | `entity-field/material` | written `material` | x | x | x | x | `tests/browser/fixtures/m2/pulse` (+79) |
 | `entity-field/light` | written `light` | x | x |  | x | `tests/semantics/pass/lights` (+12) |
 | `entity-field/body` | written `body` |  | x |  |  | `tests/semantics/pass/physics_body_collider_matrix` (+14) |
@@ -481,9 +490,9 @@ Reference: spec/materials.md section 4.
 
 | Feature | Form | CFG | PHY | MOD | EX | Positive fixture |
 |---|---|:-:|:-:|:-:|:-:|---|
-| `form/builtin-material` | instance of a built-in material (`Unlit`, `Pbr`) | x | x |  | x | `tests/semantics/pass/configured_entry_scene` (+77) |
+| `form/builtin-material` | instance of a built-in material (`Unlit`, `Pbr`) | x | x |  | x | `tests/semantics/pass/configured_entry_scene` (+78) |
 | `form/user-material-instance` | instance of a user material | x |  | x | x | `tests/browser/fixtures/m2/pulse` (+33) |
-| `param-update/initial` | material param written once | x | x | x | x | `tests/browser/fixtures/m2/pulse` (+93) |
+| `param-update/initial` | material param written once | x | x | x | x | `tests/browser/fixtures/m2/pulse` (+94) |
 | `param-update/imperative` | material param written by a handler |  |  |  |  | `tests/codegen/state_and_handlers` (+10) |
 | `param-update/bound` | material param bound every frame | x |  | x | x | `tests/semantics/pass/host_outputs_every_type` (+12) |
 | `param-update/resource` | texture or sampler param | x | x |  | x | `tests/browser/fixtures/m4/texture_sampling` (+18) |
@@ -504,7 +513,7 @@ Reference: spec/language.md section 9 and decision 0092.
 
 | Feature | Form | CFG | PHY | MOD | EX | Positive fixture |
 |---|---|:-:|:-:|:-:|:-:|---|
-| `module/multi-file` | program of several modules | x | x | x | x | `tests/semantics/pass/modules_diamond_load_order` (+84) |
+| `module/multi-file` | program of several modules | x | x | x | x | `tests/semantics/pass/modules_diamond_load_order` (+85) |
 | `module/cross-file-call` | call of a function declared in another module |  |  | x |  | `tests/semantics/pass/functions/imported_functions` (+4) |
 | `module/cross-file-prefab` | static prefab instance of a prefab declared in another module |  |  | x | x | `tests/semantics/pass/physics_imported_prefab` (+5) |
 | `module/cross-file-spawn` | `spawn` of a prefab declared in another module |  |  | x |  |  |
@@ -532,7 +541,7 @@ Reference: spec/runtime-abi.md sections 3 and 6.3, spec/tooling.md section 3.
 | `project/asset:mesh-data` | packaged mesh data (static GLB subset) | x |  |  |  | `tests/assets/pass/assets_imported` (+2) |
 | `project/asset:image` | packaged image (texture) |  |  |  |  | `tests/browser/fixtures/m4/assets_corrupt` (+3) |
 | `project/lights` | scene lights | x | x |  | x | `tests/semantics/pass/lights` (+12) |
-| `project/user-material-shaders` | generated WGSL of a user material | x | x | x | x | `tests/browser/fixtures/m2/pulse` (+102) |
+| `project/user-material-shaders` | generated WGSL of a user material | x | x | x | x | `tests/browser/fixtures/m2/pulse` (+103) |
 
 ## 6. Nearest unsupported neighbours
 
@@ -630,13 +639,13 @@ A feature has no diagnostic of its own that a tool could derive, so the features
 | Arrays and indexing | 3 | E3030 | `tests/semantics/fail/functions/e3030_constant_index_in_assignment` |
 |  |  | E3031 | `tests/semantics/fail/types/e3031_array_length_not_an_integer_constant` |
 |  |  | E3032 | `tests/semantics/fail/types/e3032_struct_nesting_too_deep` |
-| Types, conversions and vectors | 25 | E3001 | `tests/semantics/fail/e3001_body_as_value` |
+| Types, conversions and vectors | 26 | E3001 | `tests/semantics/fail/e3001_body_as_value` |
 |  |  | E3003 | `tests/semantics/fail/e3003_constant_is_not_a_type` |
 |  |  | E3013 | `tests/semantics/fail/e3013_color_swizzle` |
 |  |  | E3014 | `tests/semantics/fail/e3014_entity_ref_has_no_ordering` |
 |  |  | E3041 | `tests/semantics/fail/e3041_float_literal_as_integer` |
 |  |  | W3050 | `tests/semantics/pass/redundant_conversion` |
-| Math intrinsics and constructors | 76 | E3001 | `tests/semantics/fail/e3001_body_as_value` |
+| Math intrinsics and constructors | 84 | E3001 | `tests/semantics/fail/e3001_body_as_value` |
 |  |  | E3002 | `tests/semantics/fail/e3002_body_command_arity` |
 |  |  | E4012 | `tests/semantics/fail/materials/e4012_builtin_texture_called_in_stage` |
 |  |  | E4013 | `tests/semantics/fail/e4013_gpu_only_builtin_in_cpu_code` |
@@ -655,7 +664,7 @@ A feature has no diagnostic of its own that a tool could derive, so the features
 | Textures and samplers | 11 | E4041 | `tests/semantics/fail/materials/e4041_sampler_outside_sample` |
 |  |  | E6002 | `tests/semantics/fail/materials/e6002_too_many_resources` |
 |  |  | E5004 | `tests/semantics/fail/e5004_bind_in_a_prefab_literal` |
-| Static GLB assets and images | 17 | E7001 | `tests/assets/fail/e7001_bin_chunk_first` |
+| Static GLB assets and images | 18 | E7001 | `tests/assets/fail/e7001_bin_chunk_first` |
 |  |  | E7002 | `tests/assets/fail/e7002_file_too_large` |
 |  |  | E7003 | `tests/assets/fail/e7003_data_uri_buffer` |
 |  |  | E7004 | `tests/assets/fail/e7004_required_extension` |
@@ -732,12 +741,12 @@ A feature has no diagnostic of its own that a tool could derive, so the features
 
 ## 8. Diagnostic codes
 
-The catalogue of `spec/diagnostics.md` section 5 has 201 codes. A code has a fixture when the expected diagnostics of some fixture contain it (for a warning, a passing program that lists it). `tests/semantics/code-coverage-exceptions.json` lists, with a reason, the codes that no fixture can produce; the compiler's own test (`every_catalogue_code_has_a_fixture_or_a_listed_reason`) and this tool read the same file.
+The catalogue of `spec/diagnostics.md` section 5 has 206 codes. A code has a fixture when the expected diagnostics of some fixture contain it (for a warning, a passing program that lists it). `tests/semantics/code-coverage-exceptions.json` lists, with a reason, the codes that no fixture can produce; the compiler's own test (`every_catalogue_code_has_a_fixture_or_a_listed_reason`) and this tool read the same file.
 
 | Negative test | Codes |
 |---|--:|
-| A fixture | 153 |
-| A named test, because a fixture cannot express the code (generated sizes, files the source manager rejects, runtime codes) | 42 |
+| A fixture | 156 |
+| A named test, because a fixture cannot express the code (generated sizes, files the source manager rejects, runtime codes) | 44 |
 | A named test, because only a compiler defect produces the code | 2 |
 | Reserved or not implemented, marked in the catalogue | 4 |
 | **None** | 0 |
@@ -796,6 +805,8 @@ None.
 | E8102 | physics module failed to load | `packages/runtime-web/src/physics/load.test.ts` | A runtime code of the physics subsystem (decision 0066). |
 | E8103 | non-finite pose produced by the solver | `packages/runtime-web/src/physics/system.test.ts` | A runtime code of the physics subsystem (decision 0066). |
 | E8104 | non-finite value given to a body | `packages/runtime-web/src/physics/system.test.ts` | A runtime code of the physics subsystem (decision 0066). |
+| W8201 | audio value clamped | `packages/runtime-web/src/audio/audio.test.ts` | A runtime code of the audio subsystem (decision 0160). |
+| W8202 | sound could not be decoded | `packages/runtime-web/src/audio/audio.test.ts` | A runtime code of the audio subsystem (decision 0160). |
 | E9002 | too many modules \| | `crates/mtek-compiler/src/project/modules/tests.rs` | More than 1 024 modules, generated in the test. |
 | W9003 | further diagnostics suppressed \| | `crates/mtek-compiler/src/diagnostics/sink.rs` | More than 200 diagnostics in one file: too large to review as a fixture, generated in the test. |
 | E9004 | project file not found | `crates/mtek-compiler/src/project/load/tests.rs` | A fixture is a project directory with mtek.toml; this code is about the missing project file. |
@@ -806,6 +817,6 @@ None.
 
 ## 9. Programs read
 
-Positive fixture programs: 157. The roots are listed in `tools/coverage-matrix/src/projects.ts`. Directories under them that do not check (a variant that must fail on purpose) are not positive fixtures and name no feature:
+Positive fixture programs: 158. The roots are listed in `tools/coverage-matrix/src/projects.ts`. Directories under them that do not check (a variant that must fail on purpose) are not positive fixtures and name no feature:
 
 None.

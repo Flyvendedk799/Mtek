@@ -589,6 +589,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         for (const diagnostic of loaded.diagnostics) report(diagnostic);
         return { ok: false, diagnostics: loaded.diagnostics };
       }
+      services.audio?.adopt?.(manifest, (url) => (loaded.assets.has(url) ? loaded.assets.bytes(url) : undefined));
 
       // A candidate with bodies needs the physics module: the one already loaded when it is the same file,
       // otherwise it is imported now, so a candidate whose physics cannot load is discarded like any other.
@@ -724,6 +725,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
     const { device, registry, surface, overlay } = this.deps;
     // `spec/runtime-abi.md` section 9.3: the physics world, with every body, collider and the event queue.
     this.deps.physics?.dispose();
+    this.deps.services.audio?.dispose?.();
     this.scheduler.stop();
     this.clearRecoveryTimer();
     this.resizeObserver?.disconnect();

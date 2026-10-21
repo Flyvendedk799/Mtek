@@ -1947,6 +1947,9 @@ impl<'a> Checker<'a> {
                     if name == "destroy" {
                         self.check_destroy_target(args);
                     }
+                    if super::audio::AUDIO_FUNCTIONS.contains(&name) {
+                        self.check_audio_args(name, args);
+                    }
                     return ty;
                 }
                 Some(Res::Def(id)) if self.names_function(id) => {

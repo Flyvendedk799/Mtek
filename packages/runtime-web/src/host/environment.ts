@@ -74,6 +74,11 @@ export interface HostEnvironment {
   /** `setTimeout`; the device recovery delays (`spec/runtime-abi.md` section 9.4) run on it so tests can fake time. */
   setTimeout(callback: () => void, delayMs: number): unknown;
   clearTimeout(handle: unknown): void;
+  /**
+   * Web Audio (decision 0160): absent means the browser's (`AudioContext` and `OfflineAudioContext`), `null` means
+   * none (every audio call is then a no-op). Tests inject a fake.
+   */
+  readonly audio?: import("../audio/audio.js").AudioBackend | null;
 }
 
 /** `crypto.subtle.digest("SHA-256")` as lowercase hex, or `undefined` where `crypto.subtle` does not exist. */

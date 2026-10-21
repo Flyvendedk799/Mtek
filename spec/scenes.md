@@ -230,7 +230,9 @@ The mounted application owns the scene; the scene owns entity instances; entitie
 
 ## 14. Not in v0.1
 
-Several scenes at once (one runs at a time, §15); run-time re-parenting; spawned prefabs with children; prefab instances nested within prefabs; reading/writing fields through `entity_ref`; user-defined components, queries and systems (v0.2); render interpolation; camera switching; text and UI; audio.
+Several scenes at once (one runs at a time, §15); run-time re-parenting; spawned prefabs with children; prefab instances nested within prefabs; reading/writing fields through `entity_ref`; user-defined components, queries and systems (v0.2); render interpolation; camera switching; text and UI.
+
+Audio is no longer in this list: `spec/audio.md` (decision 0160).
 
 ## 15. Game flow: scenes, reset, pause and timers
 

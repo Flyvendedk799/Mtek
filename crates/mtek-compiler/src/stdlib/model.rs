@@ -98,6 +98,8 @@ pub enum TypeRef {
     EntityRef,
     /// The opaque compile-time handle of `asset.glb(..)` (`spec/assets.md` section 2).
     GlbAsset,
+    /// A sound file declared with `asset.sound(..)` (`spec/audio.md`).
+    Sound,
     /// The result of a function without `->`.
     Unit,
     /// A built-in record type, by name (`SurfaceInput`, `PointerEvent`).
@@ -133,6 +135,7 @@ impl TypeRef {
             TypeRef::Sampler => "sampler",
             TypeRef::EntityRef => "entity_ref",
             TypeRef::GlbAsset => "glb_asset",
+            TypeRef::Sound => "sound",
             TypeRef::Unit => "()",
             TypeRef::Record(name) | TypeRef::Enum(name) => name,
             TypeRef::Descriptor(category) => category.as_str(),

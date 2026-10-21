@@ -1,0 +1,11 @@
+// E5501: a constant volume outside 0..4 or a constant pitch outside 0.0625..16 (spec/audio.md section 3).
+const BLIP = asset.sound("../sounds/blip.wav");
+
+scene Demo {
+    camera Main {}
+    on key_down(Key.Space) {
+        play(BLIP, 5.0);
+        play(BLIP, 1.0, 0.0);
+        set_volume(-1.0);
+    }
+}

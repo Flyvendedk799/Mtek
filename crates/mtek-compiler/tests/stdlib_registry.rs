@@ -541,6 +541,7 @@ fn types_cover_section_2() {
         "texture",
         "sampler",
         "entity_ref",
+        "sound",
         "array",
         "SurfaceInput",
         "PointerEvent",
@@ -576,7 +577,7 @@ fn types_cover_section_2() {
 }
 
 /// `(namespace, member, signature shape or value type)`.
-const NAMESPACE_ROWS: [(&str, &str, &str); 23] = [
+const NAMESPACE_ROWS: [(&str, &str, &str); 24] = [
     ("quat", "identity", "() -> quat"),
     ("quat", "axis_angle", "(vec3, f32) -> quat"),
     ("quat", "euler", "(f32, f32, f32) -> quat"),
@@ -599,6 +600,7 @@ const NAMESPACE_ROWS: [(&str, &str, &str); 23] = [
     ("asset", "glb", "(string) -> glb_asset"),
     ("asset", "texture", "(string) -> texture"),
     ("asset", "linear_texture", "(string) -> texture"),
+    ("asset", "sound", "(string) -> sound"),
     (
         "lighting",
         "pbr",
@@ -654,7 +656,7 @@ fn every_namespace_member_of_section_2_is_present() {
             count("asset"),
             count("lighting")
         ],
-        [3, 5, 2, 2, 4, 3, 3, 1]
+        [3, 5, 2, 2, 4, 3, 4, 1]
     );
 }
 
@@ -855,6 +857,33 @@ fn intrinsic_rows() -> Vec<IntrinsicRow> {
         false,
     ));
     rows.push(("destroy", &["(entity_ref) -> ()"], Domain::Cpu, false));
+    // Audio (spec/audio.md section 3, decision 0160).
+    rows.push((
+        "play",
+        &[
+            "(sound) -> ()",
+            "(sound, f32) -> ()",
+            "(sound, f32, f32) -> ()",
+        ],
+        Domain::Cpu,
+        false,
+    ));
+    rows.push((
+        "play_at",
+        &["(sound, vec3) -> ()", "(sound, vec3, f32) -> ()"],
+        Domain::Cpu,
+        false,
+    ));
+    rows.push((
+        "play_music",
+        &["(sound) -> ()", "(sound, f32) -> ()"],
+        Domain::Cpu,
+        false,
+    ));
+    rows.push(("stop_music", &["() -> ()"], Domain::Cpu, false));
+    rows.push(("set_volume", &["(f32) -> ()"], Domain::Cpu, false));
+    rows.push(("set_muted", &["(bool) -> ()"], Domain::Cpu, false));
+    rows.push(("is_muted", &["() -> bool"], Domain::Cpu, false));
     rows.push(("alive", &["(entity_ref) -> bool"], Domain::Cpu, false));
     // Game flow (decisions 0140, 0141 and 0143).
     rows.push(("go_to", &["(scene name) -> ()"], Domain::Cpu, false));
@@ -907,9 +936,16 @@ fn every_intrinsic_row_of_section_6_is_present() {
         "save",
         "load",
         "clear_saved",
+        "play",
+        "play_at",
+        "play_music",
+        "stop_music",
+        "set_volume",
+        "set_muted",
     ] {
         assert!(registry.intrinsic(name).unwrap().handlers_only, "{name}");
     }
+    assert!(!registry.intrinsic("is_muted").unwrap().handlers_only);
     assert!(!registry.intrinsic("alive").unwrap().handlers_only);
     assert!(!registry.intrinsic("paused").unwrap().handlers_only);
 }

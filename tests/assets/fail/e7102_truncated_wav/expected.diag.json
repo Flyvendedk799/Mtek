@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E7102",
+    "file": "src/main.mtek",
+    "startByte": 104,
+    "endByte": 123,
+    "message": "The `data` chunk of 'sounds/cut.wav' declares 551 bytes, but the file ends after 76.",
+    "notes": [
+      "help: re-export the sound from an audio editor"
+    ]
+  }
+]

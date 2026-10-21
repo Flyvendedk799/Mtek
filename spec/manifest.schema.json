@@ -399,7 +399,7 @@
     "assetUrl": { "type": "string", "pattern": "^assets/[0-9a-f]{16}\\.[a-z0-9]+$" },
     "asset": {
       "type": "object",
-      "oneOf": [{ "$ref": "#/$defs/meshDataAsset" }, { "$ref": "#/$defs/imageAsset" }],
+      "oneOf": [{ "$ref": "#/$defs/meshDataAsset" }, { "$ref": "#/$defs/imageAsset" }, { "$ref": "#/$defs/audioAsset" }],
       "discriminator": { "propertyName": "kind" }
     },
     "meshDataAsset": {
@@ -429,6 +429,22 @@
         "preprocessing": { "$ref": "#/$defs/preprocessing" },
         "span": { "$ref": "#/$defs/spanId" },
         "source": { "type": "string", "minLength": 1, "description": "The author's file (decision 0082): the project path of a standalone image, or \"<glb path>#images[N]\" for an image embedded in a GLB. Optional; shown by the runtime when the image fails." }
+      }
+    },
+    "audioAsset": {
+      "type": "object",
+      "description": "A sound file declared with asset.sound(..), copied byte for byte (spec/audio.md section 4, decision 0160).",
+      "additionalProperties": false,
+      "required": ["url", "sha256", "bytes", "kind", "format", "mime", "source", "span"],
+      "properties": {
+        "url": { "$ref": "#/$defs/assetUrl" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "bytes": { "$ref": "#/$defs/index" },
+        "kind": { "const": "audio" },
+        "format": { "type": "string", "enum": ["wav", "ogg", "mp3"] },
+        "mime": { "type": "string", "enum": ["audio/wav", "audio/ogg", "audio/mpeg"] },
+        "source": { "type": "string", "minLength": 1, "description": "The project path of the declaring asset.sound(..); generated code names the sound by it." },
+        "span": { "$ref": "#/$defs/spanId" }
       }
     },
     "preprocessing": {

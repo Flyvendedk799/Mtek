@@ -160,6 +160,7 @@ impl Checker<'_> {
         let kind = match member {
             "glb" => AssetKind::Glb,
             "texture" => AssetKind::Texture,
+            "sound" => AssetKind::Sound,
             _ => AssetKind::LinearTexture,
         };
         if !self.asset_state.attempted.insert(expr.id) {
@@ -188,6 +189,9 @@ impl Checker<'_> {
                     space: *space,
                     mipmapped: false,
                 }))
+            }
+            Some(AssetHandle::Sound { path }) => {
+                Folded::Value(ConstValue::AssetSound(path.clone()))
             }
             None => Folded::Unknown,
         }

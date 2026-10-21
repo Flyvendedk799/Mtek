@@ -45,6 +45,7 @@ import { InputState } from "../input/input.js";
 import { loadPhysicsBackend, type PhysicsLoadResult } from "../physics/load.js";
 import { PhysicsSystem } from "../physics/system.js";
 import { Xoshiro128 } from "../random/xoshiro.js";
+import { AudioSystem, browserAudioBackend, type ListenerPose } from "../audio/audio.js";
 import { ExecutionBudgetExceeded } from "../scene/budget.js";
 import { defaultSaveStorage, MemorySaveStorage } from "../scene/saves.js";
 import { GameLink } from "../scene/game.js";
@@ -219,6 +220,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
   let images: DecodedImages | undefined;
   // The physics world, freed on every failure after it exists.
   let physics: PhysicsSystem | undefined;
+  let audio: AudioSystem | undefined;
   // A holder object, because the callbacks below assign it and TypeScript does not track that.
   const early: { lost?: GPUDeviceLostInfo } = {};
   const allocationFailures: MtekDiagnostic[] = [];
@@ -385,6 +387,18 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
     const pageStorage = options.storage === undefined && options.test === undefined ? defaultSaveStorage() : null;
     const saveStorage = options.storage ?? pageStorage ?? new MemorySaveStorage();
     const saveStorageUnavailable = options.storage === undefined && options.test === undefined && pageStorage === null;
+    // Audio (decision 0160): decoded now, played after the first user gesture unlocks it.
+    const listening: { world?: { readonly camera: ListenerPose } } = {};
+    audio = new AudioSystem({
+      manifest,
+      bytes: (url) => (assets.has(url) ? assets.bytes(url) : undefined),
+      backend: environment.audio === undefined ? browserAudioBackend() : (environment.audio ?? undefined),
+      report: (diagnostic) => {
+        if (app !== undefined) app.report(diagnostic);
+        else earlyReports.push(diagnostic);
+      },
+      listener: () => listening.world?.camera,
+    });
     const services: CpuServices = {
       game,
       random: () => generator.nextF32(),
@@ -392,6 +406,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
       print: (message) => {
         environment.log?.(message);
       },
+      audio,
     };
 
     // The scene: init(ctx), meshes and every startup pipeline. Run-time diagnostics of init (E8090,
@@ -425,6 +440,17 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
     // The textures are filled: the bitmaps are no longer needed (the bytes stay for the rebuild after a device loss).
     closeImages(images);
     if (!started.ok) throw mountError(started.diagnostics);
+    listening.world = started.scene.world;
+    // The first key press, click or touch unlocks audio (browser autoplay policy, spec/audio.md section 5). The
+    // listeners capture, so they run inside the gesture even when the canvas handles the event.
+    if (audio.hasSounds) {
+      const unlocking = audio;
+      const unlock = (): void => {
+        unlocking.unlock();
+      };
+      for (const type of ["pointerdown", "touchend", "mousedown"]) registry.addEventListener(canvas, type, unlock, { capture: true });
+      if (environment.document !== undefined) registry.addEventListener(environment.document, "keydown", unlock, { capture: true });
+    }
 
     // The bodies of the scene, now that `init`, the bindings and the transforms have given every entity its pose
     // (`spec/scenes.md` section 11, step 5). Collision events reach the application's handlers once it exists.
@@ -538,6 +564,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
   } catch (error) {
     // Release everything acquired so far, then make the failure visible.
     if (images !== undefined) closeImages(images);
+    audio?.dispose();
     physics?.dispose();
     surface?.dispose();
     registry?.destroyAll();

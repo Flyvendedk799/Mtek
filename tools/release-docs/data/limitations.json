@@ -299,7 +299,7 @@
     {
       "id": "scenes-scope",
       "area": "Scenes and entities",
-      "restriction": "One scene runs at a time (`go_to(Scene)` switches between the scenes of a program); no camera switching, no run-time re-parenting, no spawned prefabs with children or nested prefab instances inside prefabs, no user-defined components, queries or systems, no render interpolation, no text or UI, no audio.",
+      "restriction": "One scene runs at a time (`go_to(Scene)` switches between the scenes of a program); no camera switching, no run-time re-parenting, no spawned prefabs with children or nested prefab instances inside prefabs, no user-defined components, queries or systems, no render interpolation, no text or UI.",
       "reason": "Not in v0.1 (spec/scenes.md section 14). Scene switching landed with decision 0141; `component`, `query` and `system` are reserved words (E0013).",
       "codes": [
         "E0013"
@@ -310,6 +310,24 @@
       "source": {
         "file": "spec/scenes.md",
         "quote": "## 14. Not in v0.1"
+      }
+    },
+    {
+      "id": "audio-scope",
+      "area": "Scenes and entities",
+      "restriction": "Audio plays whole decoded WAV, Ogg or MP3 files: no streaming, no effects or buses beyond the master volume, no handle to stop a playing one-shot, one music track at a time, and nothing plays before the first user gesture (browser autoplay policy).",
+      "reason": "Spec/audio.md section 8 (decision 0160): the smallest audio model that covers hit, score and music sounds.",
+      "codes": [
+        "E7101",
+        "E7102",
+        "E5501"
+      ],
+      "decisions": [
+        "0160"
+      ],
+      "source": {
+        "file": "spec/audio.md",
+        "quote": "## 8. Not in this extension"
       }
     },
     {

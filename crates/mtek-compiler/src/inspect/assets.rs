@@ -41,7 +41,7 @@ pub struct AssetRow {
     pub url: String,
     pub sha256: String,
     pub bytes: u64,
-    /// `mesh-data` or `image`.
+    /// `mesh-data`, `image` or `audio`.
     pub kind: &'static str,
     /// Images: `srgb` or `linear`.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -199,6 +199,17 @@ fn row(
                 .unwrap_or_default(),
             declared_at: located(*span)?,
             preprocessing: preprocessing.clone(),
+            primitives: Vec::new(),
+        },
+        AssetKind::Audio { source, span, .. } => AssetRow {
+            url: asset.url.clone(),
+            sha256: asset.sha256.clone(),
+            bytes: asset.bytes,
+            kind: "audio",
+            color_space: None,
+            sources: vec![source.clone()],
+            declared_at: located(*span)?,
+            preprocessing: Vec::new(),
             primitives: Vec::new(),
         },
     })

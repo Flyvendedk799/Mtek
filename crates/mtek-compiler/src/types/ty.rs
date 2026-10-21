@@ -41,6 +41,8 @@ impl TyId {
     pub const SAMPLER: TyId = TyId(16);
     pub const ENTITY_REF: TyId = TyId(17);
     pub const GLB_ASSET: TyId = TyId(18);
+    /// `asset.sound(..)` (`spec/audio.md`, decision 0160).
+    pub const SOUND: TyId = TyId(19);
 
     /// The id as an index into the interner.
     #[must_use]
@@ -103,6 +105,8 @@ pub enum Ty {
     EntityRef,
     /// The compile-time handle of `asset.glb(..)` (`spec/assets.md` section 2).
     GlbAsset,
+    /// A sound file declared with `asset.sound(..)` (`spec/audio.md`): CPU only.
+    Sound,
     /// A built-in record type of the registry (`SurfaceInput`, `PointerEvent`).
     Record(&'static str),
     /// A registry enum (`Key`).
@@ -127,7 +131,7 @@ pub enum Ty {
 }
 
 /// The types with fixed ids, in id order.
-const PRIMITIVES: [Ty; 19] = [
+const PRIMITIVES: [Ty; 20] = [
     Ty::Error,
     Ty::Unit,
     Ty::Bool,
@@ -147,12 +151,13 @@ const PRIMITIVES: [Ty; 19] = [
     Ty::Sampler,
     Ty::EntityRef,
     Ty::GlbAsset,
+    Ty::Sound,
 ];
 
 /// The registry types without parameters, by which the registry's type names
 /// are mapped to [`Ty`] (through [`TypeRef::spelling`], so the registry stays
 /// the only place that spells them).
-const NAMED_TYPE_REFS: [TypeRef; 17] = [
+const NAMED_TYPE_REFS: [TypeRef; 18] = [
     TypeRef::Bool,
     TypeRef::I32,
     TypeRef::U32,
@@ -170,6 +175,7 @@ const NAMED_TYPE_REFS: [TypeRef; 17] = [
     TypeRef::Sampler,
     TypeRef::EntityRef,
     TypeRef::GlbAsset,
+    TypeRef::Sound,
 ];
 
 /// The identity of a user struct type: its declaration, by the file that
@@ -527,6 +533,7 @@ impl TyInterner {
             TypeRef::Sampler => Ty::Sampler,
             TypeRef::EntityRef => Ty::EntityRef,
             TypeRef::GlbAsset => Ty::GlbAsset,
+            TypeRef::Sound => Ty::Sound,
             TypeRef::Unit => Ty::Unit,
             TypeRef::Record(name) => Ty::Record(name),
             TypeRef::Enum(name) => Ty::Enum(name),
@@ -559,6 +566,7 @@ impl TyInterner {
             Ty::Sampler => TypeRef::Sampler,
             Ty::EntityRef => TypeRef::EntityRef,
             Ty::GlbAsset => TypeRef::GlbAsset,
+            Ty::Sound => TypeRef::Sound,
             Ty::Unit => TypeRef::Unit,
             Ty::Record(name) => TypeRef::Record(name),
             Ty::Enum(name) => TypeRef::Enum(name),

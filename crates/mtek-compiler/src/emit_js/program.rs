@@ -717,6 +717,7 @@ pub fn value_expr(value: &Value) -> Result<Expr, String> {
         // consumes one: resource params are bound from the manifest.
         Value::Texture(name) | Value::Sampler(name) => Expr::string(name),
         Value::Image(image) => Expr::string(&image.to_string()),
+        Value::Sound(file) => Expr::string(file),
     })
 }
 

@@ -1,0 +1,9 @@
+[project]
+name = "arcade-audio"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Arcade"
+
+[build]
+target = "web"
+title = "Arcade Audio"

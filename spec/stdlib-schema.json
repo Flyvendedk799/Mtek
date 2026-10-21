@@ -1397,6 +1397,18 @@
       "doc": "Whether the key was down at the end of input handling in the current frame."
     },
     {
+      "name": "is_muted",
+      "signatures": [
+        "() -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Whether audio is muted with `set_muted`."
+    },
+    {
       "name": "length",
       "signatures": [
         "(x: T) -> f32"
@@ -1518,6 +1530,46 @@
       "cpuSemantics": "",
       "since": "M1",
       "doc": "Whether paused."
+    },
+    {
+      "name": "play",
+      "signatures": [
+        "(sound: sound) -> ()",
+        "(sound: sound, volume: f32) -> ()",
+        "(sound: sound, volume: f32, pitch: f32) -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "Web Audio; silent until the first user input unlocks audio (spec/audio.md section 5).",
+      "since": "M1",
+      "doc": "Plays a sound once, at a volume (default 1.0, range 0..4) and a pitch (playback rate, default 1.0, range 0.0625..16)."
+    },
+    {
+      "name": "play_at",
+      "signatures": [
+        "(sound: sound, position: vec3) -> ()",
+        "(sound: sound, position: vec3, volume: f32) -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "A Web Audio PannerNode (HRTF off, inverse distance, reference distance 1 m); the listener follows the active camera each frame.",
+      "since": "M1",
+      "doc": "Plays a sound once from a world position: it is quieter further from the active camera and panned left or right."
+    },
+    {
+      "name": "play_music",
+      "signatures": [
+        "(sound: sound) -> ()",
+        "(sound: sound, volume: f32) -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Starts a sound as looping music, replacing the music that plays (one music track at a time)."
     },
     {
       "name": "pow",
@@ -1664,16 +1716,28 @@
       "doc": "Limits `x` to 0..1."
     },
     {
-      "name": "save",
+      "name": "set_muted",
       "signatures": [
-        "() -> ()"
+        "(muted: bool) -> ()"
       ],
       "domain": "cpu",
       "constEligible": false,
       "handlersOnly": true,
       "cpuSemantics": "",
       "since": "M1",
-      "doc": "Writes the saved and setting state to storage."
+      "doc": "Mutes or unmutes all audio; the volume is kept."
+    },
+    {
+      "name": "set_volume",
+      "signatures": [
+        "(volume: f32) -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Sets the global volume of every sound and the music (default 1.0, range 0..4)."
     },
     {
       "name": "sign",
@@ -1748,6 +1812,18 @@
       "doc": "0 where `x < edge`, otherwise 1, component-wise. WGSL argument order: `step(edge, x)`."
     },
     {
+      "name": "stop_music",
+      "signatures": [
+        "() -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Stops the music started with `play_music`; does nothing when none plays."
+    },
+    {
       "name": "tan",
       "signatures": [
         "(x: T) -> T"
@@ -1815,6 +1891,19 @@
           "cpuSemantics": "",
           "since": "M1",
           "doc": "A linear data texture (masks, normal data)."
+        },
+        {
+          "name": "sound",
+          "kind": "function",
+          "signatures": [
+            "(path: string) -> sound"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "A sound file (`.wav`, `.ogg` or `.mp3`) for `play`, `play_at` and `play_music`."
         },
         {
           "name": "texture",
@@ -2397,6 +2486,15 @@
       "gpu": false,
       "since": "M1",
       "doc": "A sampler preset. Usable only as a material parameter.",
+      "fields": [],
+      "methods": []
+    },
+    {
+      "name": "sound",
+      "kind": "handle",
+      "gpu": false,
+      "since": "M1",
+      "doc": "A sound file declared with `asset.sound(..)`; CPU only. Played with `play`, `play_at` and `play_music` (decision 0160).",
       "fields": [],
       "methods": []
     },

@@ -1036,6 +1036,18 @@ impl FnLowering<'_, '_> {
                 arguments.push(Expr::Num(Number::U32(span_id)));
                 Expr::ident("ctx").member("destroy").call(arguments)
             }
+            // Audio (decision 0160): `ctx.audio.<method>(spanId, ..args)`; the span names the call
+            // in `W8201`, and the runtime supplies the defaults of omitted arguments.
+            ir::ExprKind::Builtin { function, args } if audio_method(function).is_some() => {
+                let method = audio_method(function).unwrap_or_default();
+                let span_id = (self.span_id)(expr.span)?;
+                let mut arguments = vec![Expr::Num(Number::U32(span_id))];
+                arguments.extend(self.exprs(args)?);
+                Expr::ident("ctx")
+                    .member("audio")
+                    .member(method)
+                    .call(arguments)
+            }
             ir::ExprKind::Builtin { function, args } if function == "alive" => {
                 let arguments = self.exprs(args)?;
                 Expr::ident("ctx").member("alive").call(arguments)
@@ -1320,6 +1332,20 @@ fn swizzle(ty: &str, components: &[u32], value: Expr) -> Result<Expr, String> {
             Ok(rt(helper, arguments))
         }
     }
+}
+
+/// The `ctx.audio` method of an audio intrinsic (decision 0160).
+fn audio_method(function: &str) -> Option<&'static str> {
+    Some(match function {
+        "play" => "play",
+        "play_at" => "playAt",
+        "play_music" => "playMusic",
+        "stop_music" => "stopMusic",
+        "set_volume" => "setVolume",
+        "set_muted" => "setMuted",
+        "is_muted" => "isMuted",
+        _ => return None,
+    })
 }
 
 #[cfg(test)]

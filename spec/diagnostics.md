@@ -273,6 +273,8 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-w5402"></a>W5402 | saved data ignored | run time: a stored value is unreadable, of another type than the state now has, or of another shape; the state keeps its value, reported once per state (decision 0145) |
 | <a id="mtek-w5403"></a>W5403 | saving failed | run time: the browser's storage refused the write (full or disabled), or the page has no usable `localStorage` and the values last only until it closes (decision 0145) |
 | <a id="mtek-e5901"></a>E5901 | scene switching not supported | **Reserved:** retired by decision 0141: `go_to(Scene)` switches the active scene, so no program produces it; the code is kept so that the number is not reused |
+| <a id="mtek-e5501"></a>E5501 | audio argument out of range | a constant volume of `play`, `play_at`, `play_music` or `set_volume` outside `0.0..=4.0`, or a constant pitch outside `0.0625..=16.0` (`spec/audio.md` §3) |
+| <a id="mtek-e5901"></a>E5901 | scene switching not supported | **Reserved:** switching the active scene at run time; v0.1 mounts one scene and has no construct that could switch it, so no program produces it |
 | <a id="mtek-e5902"></a>E5902 | transparency not supported | **Reserved:** v0.1 has only opaque materials and no construct that asks for transparency, so no program produces it |
 
 ### 5.6 GPU and target (`6xxx`)
@@ -314,6 +316,8 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e7026"></a>E7026 | asset limit exceeded | more vertices than `max_vertices_per_primitive`, or packaged assets over `max_total_bytes` |
 | <a id="mtek-e7030"></a>E7030 | asset fetch or integrity failure | runtime: fetch failed, length or SHA-256 mismatch (M4-06, decision 0060) |
 | <a id="mtek-e7031"></a>E7031 | image decode failure | runtime: the browser could not decode the image (M4-06, decision 0060) |
+| <a id="mtek-e7101"></a>E7101 | unsupported audio file | `asset.sound(path)` names a file that is not WAV (PCM or IEEE float), Ogg (Vorbis or Opus) or MP3, by extension or by content (`spec/audio.md` §2, decision 0160) |
+| <a id="mtek-e7102"></a>E7102 | malformed audio file | the header of a WAV, Ogg or MP3 file is truncated or inconsistent (no `fmt `/`data` chunk, zero channels or sample rate, no Ogg page, no MPEG frame) (`spec/audio.md` §2) |
 | <a id="mtek-e7901"></a>E7901 | remote assets not supported | an `http:`, `https:` or other URL as an asset path |
 | <a id="mtek-e7902"></a>E7902 | node hierarchy instancing not supported | `model: asset` instancing a whole node hierarchy |
 | (E7032–E7099) | further asset codes | reserved; added with the feature that needs them |
@@ -349,6 +353,8 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e8102"></a>E8102 | physics module failed to load | mount fails with the kind `physics-failed`; a reload whose physics module cannot load is refused (decision 0066) |
 | <a id="mtek-e8103"></a>E8103 | non-finite pose produced by the solver | the body is frozen (taken out of the simulation, the entity keeps its last finite pose) and the code is reported once per body (decision 0066) |
 | <a id="mtek-e8104"></a>E8104 | non-finite value given to a body | a body command with an argument that is not finite (a rotation of zero length counts), or a body whose initial pose is not finite; the command is dropped, the body is not created (decision 0066) |
+| <a id="mtek-w8201"></a>W8201 | audio value clamped | runtime: a volume or pitch outside its range, or not finite, was given to an audio call; the nearest valid value is used (`spec/audio.md` §3) |
+| <a id="mtek-w8202"></a>W8202 | sound could not be decoded | runtime: the browser could not decode a sound file; playing it does nothing and the program keeps running (`spec/audio.md` §5) |
 | (E8105–E8199) | further physics runtime codes | reserved; added with the feature that needs them |
 
 ### 5.9 Project and internal (`9xxx`)

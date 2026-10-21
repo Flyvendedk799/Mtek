@@ -359,6 +359,7 @@ impl<'a> Checker<'a> {
                 | Ty::Sampler
                 | Ty::EntityRef
                 | Ty::GlbAsset
+                | Ty::Sound
                 | Ty::Enum(_)
                 | Ty::UserEnum(_)
                 | Ty::Schema(_)

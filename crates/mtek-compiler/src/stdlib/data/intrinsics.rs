@@ -36,6 +36,8 @@ fn binary_float_int(name: &'static str, doc: &'static str, cpu: &'static str) ->
 /// Every global intrinsic of the v0.1 registry.
 pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
     let vec3 = exact(TypeRef::Vec3);
+    let sound = exact(TypeRef::Sound);
+    let unit = exact(TypeRef::Unit);
     vec![
         math(
             "abs",
@@ -244,6 +246,81 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             vec![sig(&[p("target", exact(TypeRef::EntityRef))], exact(TypeRef::Unit))],
         )
         .handlers_only(),
+        // Audio (spec/audio.md, decision 0160): CPU intrinsics that reach `ctx.audio`.
+        function(
+            "play",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Plays a sound once, at a volume (default 1.0, range 0..4) and a pitch (playback rate, default 1.0, range 0.0625..16).",
+            vec![
+                sig(&[p("sound", sound)], unit),
+                sig(&[p("sound", sound), p("volume", F32)], unit),
+                sig(&[p("sound", sound), p("volume", F32), p("pitch", F32)], unit),
+            ],
+        )
+        .handlers_only()
+        .cpu_semantics("Web Audio; silent until the first user input unlocks audio (spec/audio.md section 5)."),
+        function(
+            "play_at",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Plays a sound once from a world position: it is quieter further from the active camera and panned left or right.",
+            vec![
+                sig(&[p("sound", sound), p("position", vec3)], unit),
+                sig(&[p("sound", sound), p("position", vec3), p("volume", F32)], unit),
+            ],
+        )
+        .handlers_only()
+        .cpu_semantics("A Web Audio PannerNode (HRTF off, inverse distance, reference distance 1 m); the listener follows the active camera each frame."),
+        function(
+            "play_music",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Starts a sound as looping music, replacing the music that plays (one music track at a time).",
+            vec![
+                sig(&[p("sound", sound)], unit),
+                sig(&[p("sound", sound), p("volume", F32)], unit),
+            ],
+        )
+        .handlers_only(),
+        function(
+            "stop_music",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Stops the music started with `play_music`; does nothing when none plays.",
+            vec![sig(&[], unit)],
+        )
+        .handlers_only(),
+        function(
+            "set_volume",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Sets the global volume of every sound and the music (default 1.0, range 0..4).",
+            vec![sig(&[p("volume", F32)], unit)],
+        )
+        .handlers_only(),
+        function(
+            "set_muted",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Mutes or unmutes all audio; the volume is kept.",
+            vec![sig(&[p("muted", exact(TypeRef::Bool))], unit)],
+        )
+        .handlers_only(),
+        function(
+            "is_muted",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Whether audio is muted with `set_muted`.",
+            vec![sig(&[], exact(TypeRef::Bool))],
+        ),
         function(
             "go_to",
             Domain::Cpu,

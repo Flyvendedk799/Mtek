@@ -18,6 +18,7 @@ import {
   type MtekDiagnostic,
   type MtekRuntimePhase,
 } from "../diagnostics/types.js";
+import { SILENT_AUDIO, type AudioService } from "../audio/audio.js";
 import { resolveSpan, spanOfSymbol } from "../host/failures.js";
 import { fromRotationTranslationScaleInto, multiplyInto, type Mat4 } from "../math/mat4.js";
 import type { LoopBudget } from "./budget.js";
@@ -76,6 +77,7 @@ export const CONTEXT_MEMBERS = [
   "save",
   "load",
   "clearSaved",
+  "audio",
 ] as const;
 
 /**
@@ -153,6 +155,8 @@ export interface CpuServices {
   print(message: string, spanId: number): void;
   /** `go_to`, `reset`, `pause`, `resume`, `paused` (decisions 0140, 0141, 0143), `save`, `load`, `clear_saved` (0145); default: {@link INERT_GAME}. */
   readonly game?: GameHooks;
+  /** `ctx.audio` (decision 0160); silent when absent. */
+  readonly audio?: AudioService;
 }
 
 /**
@@ -491,6 +495,7 @@ export class World {
       every: (seconds: unknown, fn: unknown, owner: unknown, spanId: unknown): void => {
         this.timers.every(seconds, fn, timerOwner(owner), spanId);
       },
+      audio: services.audio ?? SILENT_AUDIO,
     };
     Object.defineProperty(members, "frame", { enumerable: true, get: () => this.frameValues });
     this.ctx = guarded(members, "ctx");

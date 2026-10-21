@@ -53,6 +53,7 @@
 //! - [`scene`]: the scene and schema checks and their result.
 
 mod assets;
+mod audio;
 mod bind;
 mod body;
 mod check;

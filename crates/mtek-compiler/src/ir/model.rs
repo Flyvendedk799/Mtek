@@ -1409,6 +1409,9 @@ pub enum Value {
     /// A texture from an image file or an image embedded in a GLB (decision 0058):
     /// `{ "image": { "source": { "file": "textures/wood.png" }, "space": "srgb", "mipmapped": false } }`.
     Image(crate::assets::AssetImage),
+    /// A sound file (`asset.sound`, decision 0160), by project path: `{ "sound": "sfx/hit.wav" }`.
+    /// The runtime finds the packaged file by this path in the manifest's `audio` entries.
+    Sound(String),
 }
 
 /// A field of a [`Value::Struct`].
@@ -1447,6 +1450,7 @@ impl From<&crate::types::ConstValue> for Value {
             C::Texture(texture) => Value::Texture(texture.name().to_owned()),
             C::Sampler(sampler) => Value::Sampler(sampler.name().to_owned()),
             C::AssetTexture(image) => Value::Image(image.clone()),
+            C::AssetSound(file) => Value::Sound(file.clone()),
             // The handle of a GLB and an asset mesh are consumed by the lowering of entities
             // (`MeshDesc::Asset`); as plain values they are only descriptive text.
             C::GlbAsset(file) => Value::String(file.clone()),
@@ -1543,6 +1547,7 @@ impl fmt::Display for Value {
             }
             Value::Texture(name) | Value::Sampler(name) => write!(f, "{name}()"),
             Value::Image(image) => write!(f, "{image}"),
+            Value::Sound(file) => write!(f, "asset.sound({file:?})"),
             Value::String(text) => {
                 f.write_str("\"")?;
                 for c in text.chars() {

@@ -289,6 +289,7 @@ impl<'a> Checker<'a> {
                 | Ty::Material
                 | Ty::EntityRef
                 | Ty::GlbAsset
+                | Ty::Sound
                 | Ty::Record(_)
                 | Ty::Enum(_)
                 | Ty::UserEnum(_)

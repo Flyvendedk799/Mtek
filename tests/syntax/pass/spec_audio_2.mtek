@@ -1,0 +1,3 @@
+// spec/audio.md section 2: sounds are declared as constants.
+const HIT = asset.sound("sounds/hit.wav");
+const MUSIC = asset.sound("sounds/theme.ogg");

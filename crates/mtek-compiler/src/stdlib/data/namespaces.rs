@@ -271,6 +271,14 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                     &[p("path", string)],
                     TypeRef::Texture,
                 )),
+                // Decision 0160 (spec/audio.md): sounds are assets like images.
+                NamespaceMember::Function(compile_time(
+                    "sound",
+                    Milestone::M1,
+                    "A sound file (`.wav`, `.ogg` or `.mp3`) for `play`, `play_at` and `play_music`.",
+                    &[p("path", string)],
+                    TypeRef::Sound,
+                )),
             ],
         ),
         // `lighting.pbr` and the `Pbr` material landed with task M4-03, before the M4 gate
@@ -487,6 +495,11 @@ pub(super) fn types() -> Vec<TypeDef> {
             "entity_ref",
             Milestone::M1,
             "A generation-checked reference to an entity. Supports comparison, `alive`, `destroy` and body commands only.",
+        ),
+        handle(
+            "sound",
+            Milestone::M1,
+            "A sound file declared with `asset.sound(..)`; CPU only. Played with `play`, `play_at` and `play_music` (decision 0160).",
         ),
         TypeDef {
             methods: glb_methods(),

@@ -325,6 +325,7 @@ Generated from [spec/stdlib-schema.json](../spec/stdlib-schema.json) (registry v
 | `mesh` | handle | no |  |  | An immutable mesh: a primitive descriptor or an asset mesh. |
 | `quat` | rotation | yes |  |  | Unit quaternion `(x, y, z, w)`; distinct from `vec4`. |
 | `sampler` | handle | no |  |  | A sampler preset. Usable only as a material parameter. |
+| `sound` | handle | no |  |  | A sound file declared with `asset.sound(..)`; CPU only. Played with `play`, `play_at` and `play_music` (decision 0160). |
 | `string` | text | no |  |  | Immutable text. CPU only. |
 | `texture` | handle | no |  |  | An immutable texture. Usable only as a material parameter. |
 | `u32` | scalar | yes |  |  | 32-bit unsigned integer. |
@@ -609,6 +610,7 @@ Compile-time asset declarations. The argument must be a string literal naming a 
 |---|---|---|---|---|---|
 | `asset.glb` | function | `(path: string) -> glb_asset` | cpu | yes | A static GLB model. May be stored only in a `const` and used through its accessors. |
 | `asset.linear_texture` | function | `(path: string) -> texture` | cpu | yes | A linear data texture (masks, normal data). |
+| `asset.sound` | function | `(path: string) -> sound` | cpu | yes | A sound file (`.wav`, `.ogg` or `.mp3`) for `play`, `play_at` and `play_music`. |
 | `asset.texture` | function | `(path: string) -> texture` | cpu | yes | An sRGB colour texture. |
 
 #### `color`
@@ -706,6 +708,7 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `fract` | `(x: T) -> T` | both | yes | no | Fractional part of `x`. |
 | `inverse_sqrt` | `(x: T) -> T` | both | yes | no | Reciprocal of the square root. |
 | `is_key_down` | `(key: Key) -> bool` | cpu | no | no | Whether the key was down at the end of input handling in the current frame. |
+| `is_muted` | `() -> bool` | cpu | no | no | Whether audio is muted with `set_muted`. |
 | `length` | `(x: T) -> f32` | both | yes | no | Length of a vector, or the absolute value of a scalar. |
 | `log` | `(x: T) -> T` | both | yes | no | Natural logarithm. |
 | `log2` | `(x: T) -> T` | both | yes | no | Base-2 logarithm. |
@@ -713,6 +716,9 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `min` | `(a: T, b: T) -> T`<br>`(a: I, b: I) -> I` | both | yes | no | Smaller of two values, component-wise. |
 | `mix` | `(a: T, b: T, t: f32) -> T`<br>`(a: T, b: T, t: T) -> T` | both | yes | no | Linear interpolation `a * (1 - t) + b * t`, with a scalar or a component-wise `t`. |
 | `normalize` | `(v: V) -> V` | both | yes | no | The vector scaled to length 1. |
+| `play` | `(sound: sound) -> ()`<br>`(sound: sound, volume: f32) -> ()`<br>`(sound: sound, volume: f32, pitch: f32) -> ()` | cpu | no | yes | Plays a sound once, at a volume (default 1.0, range 0..4) and a pitch (playback rate, default 1.0, range 0.0625..16). |
+| `play_at` | `(sound: sound, position: vec3) -> ()`<br>`(sound: sound, position: vec3, volume: f32) -> ()` | cpu | no | yes | Plays a sound once from a world position: it is quieter further from the active camera and panned left or right. |
+| `play_music` | `(sound: sound) -> ()`<br>`(sound: sound, volume: f32) -> ()` | cpu | no | yes | Starts a sound as looping music, replacing the music that plays (one music track at a time). |
 | `pow` | `(base: T, exponent: T) -> T` | both | yes | no | `base` raised to `exponent`, component-wise. |
 | `print` | `(message: string) -> ()` | cpu | no | no | Writes a message to the development console. |
 | `radians` | `(x: T) -> T` | both | yes | no | Degrees to radians. |
@@ -721,12 +727,15 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `round` | `(x: T) -> T` | both | yes | no | Nearest integer value, halves to even. |
 | `sample` | `(t: texture, s: sampler, uv: vec2) -> vec4` | gpu | no | no | Filtered texel of `t` at `uv`. `texture` and `sampler` parameters may be used only as direct arguments to `sample`. |
 | `saturate` | `(x: T) -> T` | both | yes | no | Limits `x` to 0..1. |
+| `set_muted` | `(muted: bool) -> ()` | cpu | no | yes | Mutes or unmutes all audio; the volume is kept. |
+| `set_volume` | `(volume: f32) -> ()` | cpu | no | yes | Sets the global volume of every sound and the music (default 1.0, range 0..4). |
 | `sign` | `(x: T) -> T` | both | yes | no | -1, 0 or 1 according to the sign of `x`. |
 | `sin` | `(x: T) -> T` | both | yes | no | Sine of an angle in radians. |
 | `smoothstep` | `(edge0: T, edge1: T, x: T) -> T` | both | yes | no | Smooth Hermite interpolation between `edge0` and `edge1`. |
 | `spawn` | `(prefab: prefab descriptor) -> entity_ref` | cpu | no | yes | Queues creation of a prefab instance as a root entity; the reference is valid immediately and `alive` turns true after the next lifecycle flush. |
 | `sqrt` | `(x: T) -> T` | both | yes | no | Square root. |
 | `step` | `(edge: T, x: T) -> T` | both | yes | no | 0 where `x < edge`, otherwise 1, component-wise. WGSL argument order: `step(edge, x)`. |
+| `stop_music` | `() -> ()` | cpu | no | yes | Stops the music started with `play_music`; does nothing when none plays. |
 | `tan` | `(x: T) -> T` | both | yes | no | Tangent of an angle in radians. |
 | `transpose` | `(m: mat4) -> mat4` | both | yes | no | Transpose of a 4x4 matrix. |
 | `trunc` | `(x: T) -> T` | both | yes | no | Integer part of `x`, rounding toward zero. |
@@ -746,7 +755,7 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `angular_velocity` | `vec3` | Dynamic, Kinematic | Angular velocity as of the last completed tick. Read-only. |
 | `linear_velocity` | `vec3` | Dynamic, Kinematic | Linear velocity as of the last completed tick. Read-only. |
 
-## Part C. Features of this build (168)
+## Part C. Features of this build (177)
 
 The list below is `supported.features` of `mtek context`, printed by the compiler this document was generated with. It is derived by the compiler from its construct table and from the registry, never typed in. A feature is supported when a test that would fail without it passes in a recorded environment (`spec/testing.md`); `docs/coverage-matrix.md` shows which program or fixture exercises each one.
 
@@ -770,9 +779,9 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 `event:collision_enter` `event:collision_exit` `event:key_down` `event:key_up` `event:pointer_down` `event:pointer_move` `event:pointer_up`
 
-### Functions (64)
+### Functions (72)
 
-`function:abs` `function:acos` `function:alive` `function:asin` `function:asset.glb` `function:asset.linear_texture` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:clamp` `function:color.linear` `function:color.srgb` `function:cos` `function:cross` `function:degrees` `function:destroy` `function:distance` `function:dot` `function:exp` `function:exp2` `function:floor` `function:fract` `function:inverse_sqrt` `function:is_key_down` `function:length` `function:lighting.pbr` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:normalize` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:reflect` `function:round` `function:sample` `function:sampler.linear_clamp` `function:sampler.linear_repeat` `function:sampler.nearest_clamp` `function:sampler.nearest_repeat` `function:saturate` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc`
+`function:abs` `function:acos` `function:alive` `function:asin` `function:asset.glb` `function:asset.linear_texture` `function:asset.sound` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:clamp` `function:color.linear` `function:color.srgb` `function:cos` `function:cross` `function:degrees` `function:destroy` `function:distance` `function:dot` `function:exp` `function:exp2` `function:floor` `function:fract` `function:inverse_sqrt` `function:is_key_down` `function:is_muted` `function:length` `function:lighting.pbr` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:normalize` `function:play` `function:play_at` `function:play_music` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:reflect` `function:round` `function:sample` `function:sampler.linear_clamp` `function:sampler.linear_repeat` `function:sampler.nearest_clamp` `function:sampler.nearest_repeat` `function:saturate` `function:set_muted` `function:set_volume` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:stop_music` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc`
 
 ### Type methods (10)
 
@@ -790,9 +799,9 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 `schema:Box` `schema:BoxCollider` `schema:Camera` `schema:DirectionalLight` `schema:Dynamic` `schema:Entity` `schema:Kinematic` `schema:Orthographic` `schema:Pbr` `schema:Perspective` `schema:Plane` `schema:PointLight` `schema:Scene` `schema:Sphere` `schema:SphereCollider` `schema:Static` `schema:Unlit`
 
-### Types (20)
+### Types (21)
 
-`type:PointerEvent` `type:SurfaceInput` `type:array` `type:bool` `type:color` `type:entity_ref` `type:f32` `type:glb_asset` `type:i32` `type:mat4` `type:material` `type:mesh` `type:quat` `type:sampler` `type:string` `type:texture` `type:u32` `type:vec2` `type:vec3` `type:vec4`
+`type:PointerEvent` `type:SurfaceInput` `type:array` `type:bool` `type:color` `type:entity_ref` `type:f32` `type:glb_asset` `type:i32` `type:mat4` `type:material` `type:mesh` `type:quat` `type:sampler` `type:sound` `type:string` `type:texture` `type:u32` `type:vec2` `type:vec3` `type:vec4`
 
 ### Namespace values (3)
 
@@ -800,7 +809,7 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 What the build does **not** support is on [limitations.md](limitations.md); `supported.notSupported` of `mtek context` has the same list.
 
-## Part D. Diagnostics (201 codes)
+## Part D. Diagnostics (206 codes)
 
 Every diagnostic has a stable code: `E` for an error, `W` for a warning, then four digits; the first digit is the area. The full catalogue, the JSON form (`mtek check --format json`), the human rendering and the suggested edits are in [spec/diagnostics.md](../spec/diagnostics.md).
 
@@ -811,10 +820,10 @@ Every diagnostic has a stable code: `E` for an error, `W` for a warning, then fo
 | `2xxx` | names, scopes, modules | 14 |
 | `3xxx` | types, values, constant evaluation | 25 |
 | `4xxx` | functions, effects, execution domains, material stages | 15 |
-| `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 43 |
+| `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 44 |
 | `6xxx` | GPU layout, target profile, generated-shader validation | 4 |
-| `7xxx` | assets | 30 |
-| `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 28 |
+| `7xxx` | assets | 32 |
+| `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 30 |
 | `9xxx` | project, configuration, tooling, internal | 13 |
 
 Within each range the `x9xx` codes mean "specified as not supported in v0.1"; all of them are listed, with their reasons, on [limitations.md](limitations.md).

@@ -14,7 +14,7 @@ export interface ManifestAsset {
   readonly url: string;
   readonly sha256: string;
   readonly bytes: number;
-  readonly kind: "mesh-data" | "image";
+  readonly kind: "mesh-data" | "image" | "audio";
   readonly colorSpace?: "srgb" | "linear";
   readonly span: number;
 }

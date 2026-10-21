@@ -246,7 +246,7 @@ One entry per emitted WGSL statement/expression that originates in Mtek source; 
 
 ### 5.5 Assets (decision 0058)
 
-`assets` lists the packaged files of the entry scene (none if no entity uses an asset). Every `url` is relative to the program like `shaders[].url`; file names are opaque; the runtime verifies `bytes` and `sha256` (`spec/assets.md` §5) and never parses a name. Entries are sorted: `mesh-data` by the project path of their GLB, then `image` by `url`. `span` is the declaring `asset.*` call (the first declaration that named the file).
+`assets` lists the packaged files of the entry scene (none if no entity uses an asset). Every `url` is relative to the program like `shaders[].url`; file names are opaque; the runtime verifies `bytes` and `sha256` (`spec/assets.md` §5) and never parses a name. Entries are sorted: `mesh-data` by the project path of their GLB, then `image` by `url`, then `audio` by the project path of the sound (`spec/audio.md` §4). `span` is the declaring `asset.*` call (the first declaration that named the file).
 
 ```json
 { "url": "assets/07f04966d738a71c.bin", "sha256": "…", "bytes": 500, "kind": "mesh-data", "span": 4,
@@ -263,6 +263,7 @@ One entry per emitted WGSL statement/expression that originates in Mtek source; 
 - **Mesh data.** A `.bin` holds the referenced primitives of one GLB, in the order of the `primitives` array. Every offset is a **byte offset from the start of the file** and a multiple of 4; numbers are little-endian. A primitive stores, in this order: `position` (`f32 × 3` per vertex), `normal` (`f32 × 3`) if `attributes` has `"normal"`, `uv` (`f32 × 2`) if it has `"uv"`, all tightly packed, then `indexCount` indices of `indexFormat` (`uint16` when `vertexCount` ≤ 65 535, otherwise `uint32`), then zero padding to a multiple of 4. `boundingSphere` is in the mesh's local space (the entity transform applies as for built-in shapes). Triangles are counter-clockwise from the front, uv origin top-left, +Y up (glTF's conventions, which are Mtek's; nothing is converted).
 - **Meshes.** `meshes[]` has entries `{ "id": "mesh:N", "kind": "asset", "asset": <url of a mesh-data entry>, "primitive": <index into that entry's primitives> }`; an entity's `mesh` is the id. The compiler has checked that the mesh has every attribute its material reads (`shaders[].vertexAttributes`, `E7010`).
 - **Images.** The file is a PNG or JPEG exactly as the author wrote it; `colorSpace` says how to upload it (`"srgb"`: `rgba8unorm-srgb`, `"linear"`: `rgba8unorm`, `spec/assets.md` §5). An instance's `texture` param is `{ "name": "base_color_texture", "class": "resource", "value": { "kind": "asset", "asset": <url of an image entry> } }`; its `sampler` param is a built-in preset. `preprocessing` lists what the compiler decided instead of the author (`mipmaps not generated`: the file's sampler asked for mip-maps, v0.1 samples the base level).
+- **Audio** (decision 0160). The file is a WAV, Ogg or MP3 exactly as the author wrote it: `{ "url": "assets/<h16>.wav", "sha256": "…", "bytes": 2252, "kind": "audio", "format": "wav", "mime": "audio/wav", "source": "sounds/hit.wav", "span": 3 }`. `format` is `wav`, `ogg` or `mp3`; `source` is the project path, the string by which generated code names the sound (`ctx.audio.play(spanId, "sounds/hit.wav", ..)`).
 - **Loading.** The runtime fetches each `url` from `baseUrl`, verifies `bytes` and `sha256`, decodes images, uploads meshes and textures and keeps the verified bytes for device recovery and hot reload; every state, diagnostic and limit check is decision 0060.
 - **Names.** The `<h16>` of a `.bin` is the first 16 hex digits of the SHA-256 of the GLB's project path, a zero byte and the file's bytes; of an image, of the colour space name, a zero byte and the image bytes. The same image bytes used in both colour spaces are two files.
 
@@ -511,7 +512,7 @@ interface MtekTestOptions {
   disableCulling?: boolean;       // draw every visible entity, as if culling did not exist (decision 0055)
   disableInstancing?: boolean;    // one draw call per entity, as if instancing did not exist; parameter blocks are still shared (decision 0059)
   textures?: { "texture.white"?: MtekTestTexture; "texture.black"?: MtekTestTexture };  // M4-04: a generated texture in place of a built-in (decision 0054)
-  onAssetState?: (event: { url: string; kind: "mesh-data" | "image"; state: "pending" | "ready" | "failed" }) => void;
+  onAssetState?: (event: { url: string; kind: "mesh-data" | "image" | "audio"; state: "pending" | "ready" | "failed" }) => void;
                                   // M4-06: every state change of every asset file; all pending first (decision 0060)
 }
 interface MtekTestTexture { width: number; height: number; data: Uint8Array; colorSpace?: "srgb" | "linear"; }  // RGBA8, top row first, width x height x 4 bytes
@@ -523,7 +524,7 @@ interface MtekDebug {
   setParam(entityName: string, param: string, value: unknown): void;  // M2 gate: change a param without `bind` (decision 0046)
   loseDevice(): void;      // destroys the GPU device; handled as a device loss (§9.4, decision 0056)
   failAllocation(): void;  // reports E8063 as an out-of-memory scope would (§9.5)
-  assets(): ReadonlyArray<{ url: string; kind: "mesh-data" | "image"; state: "pending" | "ready" | "failed"; bytes: number }>;  // M4-06: the asset files of the running program (decision 0060)
+  assets(): ReadonlyArray<{ url: string; kind: "mesh-data" | "image" | "audio"; state: "pending" | "ready" | "failed"; bytes: number }>;  // M4-06: the asset files of the running program (decision 0060)
   scene(): { state: Record<string, unknown>; entities: Array<{ name: string; position: unknown; rotation: unknown }>;
              spawned: Array<{ prefab: string; slot: number; gen: number; alive: boolean; position: unknown; rotation: unknown; scale: unknown; visible: boolean; state: Record<string, unknown>; mat?: { p: Record<string, unknown> } }> };   // M5-02: the spawned entities that exist, in spawn order (decision 0064)
 }

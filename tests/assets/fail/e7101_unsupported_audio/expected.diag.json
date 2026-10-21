@@ -1,0 +1,22 @@
+[
+  {
+    "code": "MTEK-E7101",
+    "file": "src/main.mtek",
+    "startByte": 121,
+    "endByte": 143,
+    "message": "'sounds/voice.flac' is not a `.wav`, `.ogg` or `.mp3` file; `asset.sound` reads those three formats.",
+    "notes": [
+      "help: convert the sound to WAV (16-bit PCM), Ogg Vorbis or MP3"
+    ]
+  },
+  {
+    "code": "MTEK-E7101",
+    "file": "src/main.mtek",
+    "startByte": 172,
+    "endByte": 199,
+    "message": "'sounds/named_wrong.mp3' has the extension of an MP3 file, but its bytes are WAV data.",
+    "notes": [
+      "help: rename the file so that its extension matches its content"
+    ]
+  }
+]

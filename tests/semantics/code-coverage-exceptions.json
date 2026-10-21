@@ -256,6 +256,16 @@
       "code": "E8104",
       "reason": "A runtime code of the physics subsystem (decision 0066).",
       "test": "packages/runtime-web/src/physics/system.test.ts"
+    },
+    {
+      "code": "W8201",
+      "reason": "A runtime code of the audio subsystem (decision 0160).",
+      "test": "packages/runtime-web/src/audio/audio.test.ts"
+    },
+    {
+      "code": "W8202",
+      "reason": "A runtime code of the audio subsystem (decision 0160).",
+      "test": "packages/runtime-web/src/audio/audio.test.ts"
     }
   ]
 }

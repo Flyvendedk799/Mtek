@@ -102,6 +102,8 @@ export const RUNTIME_DIAGNOSTIC_CATALOGUE = {
   E8102: "physics module failed to load",
   E8103: "non-finite pose produced by the solver",
   E8104: "non-finite value given to a body",
+  W8201: "audio value clamped",
+  W8202: "sound could not be decoded",
 } as const;
 
 /**

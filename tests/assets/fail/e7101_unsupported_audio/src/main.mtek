@@ -1,0 +1,10 @@
+// E7101: `asset.sound` reads WAV, Ogg and MP3 only, and the content must match the extension.
+const VOICE = asset.sound("../sounds/voice.flac");
+const WRONG = asset.sound("../sounds/named_wrong.mp3");
+
+scene Demo {
+    camera Main {}
+    entity Part {
+        mesh: Box {};
+    }
+}
