@@ -1,0 +1,10 @@
+// random_int takes i32 bounds; random_range takes f32 bounds.
+scene Demo {
+    state lane: i32 = 0;
+    state height: f32 = 0.0;
+    camera Main {}
+    on key_down(Key.Space) {
+        lane = random_int(0.0, 3);
+        height = random_range(lane, 2.0);
+    }
+}

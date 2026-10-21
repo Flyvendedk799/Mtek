@@ -179,6 +179,9 @@ Notation: `T` ranges over `f32, vec2, vec3, vec4` (component-wise), `I` over `i3
 | `transpose` | `mat4 → mat4` | both | ✓ | |
 | `sample` | `(texture, sampler, vec2) → vec4` | gpu | — | `spec/materials.md` §5 |
 | `random` | `() → f32` | cpu | — | `[0, 1)`, seeded PRNG (xoshiro128**, seed from mount options) — deterministic under a fixed seed |
+| `random_range` | `(f32, f32) → f32` | cpu | — | `lo + (hi − lo) · random()` rounded to f32: in `[lo, hi)`; one draw of `random()` (decision 0149) |
+| `random_int` | `(i32, i32) → i32` | cpu | — | `lo + floor(random() · (hi − lo))`: in `[lo, hi)`, `lo` when `hi ≤ lo`; one draw, also then (decision 0149) |
+| `chance` | `(f32) → bool` | cpu | — | `random() < p`: true with probability `p` (never for `p ≤ 0`, always for `p ≥ 1`); one draw (decision 0149) |
 | `print` | `(string) → ()` | cpu | — | dev console; no-op in release builds |
 | `is_key_down` | `(Key) → bool` | cpu | — | |
 | `spawn` | `(prefab descriptor) → entity_ref` | cpu (handlers only) | — | the argument is a prefab literal `Prefab { param: value; }`; params may be run-time values (decision 0064) |

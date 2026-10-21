@@ -157,3 +157,4 @@ recorded here before code depends on it (blueprint §15).
 | 0146 | Settings: `setting state` is persistent like `saved state` and also written at the end of every frame in which it changed |
 | 0147 | The cold-start context keeps 600 bytes (not 1 000) for the project after the game intrinsics; the next growth makes a structural choice |
 | 0148 | A cold-start context leaves `function:*` out of `supported.features` (`reference.builtins` names every function; restored if the budget drops `builtins`); the project room is 1 000 bytes again |
+| 0149 | Random helpers: `random_range(lo, hi) -> f32`, `random_int(lo, hi) -> i32` (both `[lo, hi)`, `lo` if `hi <= lo`) and `chance(p) -> bool`, CPU only, one draw of `random()` each |

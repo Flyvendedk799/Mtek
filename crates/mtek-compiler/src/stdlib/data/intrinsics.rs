@@ -178,6 +178,34 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             vec![sig(&[], F32)],
         )
         .cpu_semantics("Seeded PRNG (xoshiro128**, seed from the mount options); deterministic under a fixed seed."),
+        // Random helpers (decision 0149): one draw of `random()` each.
+        function(
+            "random_range",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "A random f32 in `[lo, hi)`.",
+            vec![sig(&[p("lo", F32), p("hi", F32)], F32)],
+        )
+        .cpu_semantics("`lo + (hi - lo) * random()`, rounded to f32; one draw."),
+        function(
+            "random_int",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "A random i32 in `[lo, hi)`; `lo` if `hi <= lo`.",
+            vec![sig(&[p("lo", exact(TypeRef::I32)), p("hi", exact(TypeRef::I32))], exact(TypeRef::I32))],
+        )
+        .cpu_semantics("`lo + floor(random() * (hi - lo))` in f64; one draw, also when `hi <= lo`."),
+        function(
+            "chance",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "True with probability `p`.",
+            vec![sig(&[p("p", F32)], exact(TypeRef::Bool))],
+        )
+        .cpu_semantics("`random() < p`; one draw."),
         function(
             "print",
             Domain::Cpu,

@@ -61,6 +61,9 @@ export const CONTEXT_MEMBERS = [
   "budget",
   "warn",
   "random",
+  "randomRange",
+  "randomInt",
+  "chance",
   "isKeyDown",
   "print",
   "goTo",
@@ -450,6 +453,10 @@ export class World {
         this.warn(code, spanId);
       },
       random: (): number => services.random(),
+      // Decision 0149: one draw of `random()` each.
+      randomRange: (lo: unknown, hi: unknown): number => randomRange(services.random(), num(lo, "randomRange"), num(hi, "randomRange")),
+      randomInt: (lo: unknown, hi: unknown): number => randomInt(services.random(), num(lo, "randomInt"), num(hi, "randomInt")),
+      chance: (p: unknown): boolean => services.random() < num(p, "chance"),
       isKeyDown: (code: unknown): boolean => {
         if (typeof code !== "string") throw new RuntimeInternalError(`ctx.isKeyDown got ${describeValue(code)}; expected a DOM key code.`);
         return services.isKeyDown(code);
@@ -1020,3 +1027,21 @@ export class World {
     );
   }
 }
+
+/** A numeric argument of a random helper; anything else is a bug of generated code. */
+function num(value: unknown, member: string): number {
+  if (typeof value !== "number") throw new RuntimeInternalError(`ctx.${member} got ${describeValue(value)}; expected a number.`);
+  return value;
+}
+
+/** `random_range(lo, hi)` from the draw `r` in `[0, 1)`: `lo + (hi - lo) * r`, rounded to f32 (decision 0149). */
+export function randomRange(r: number, lo: number, hi: number): number {
+  return Math.fround(lo + (hi - lo) * r);
+}
+
+/** `random_int(lo, hi)` from the draw `r` in `[0, 1)`: an i32 in `[lo, hi)`, `lo` when `hi <= lo` (decision 0149). */
+export function randomInt(r: number, lo: number, hi: number): number {
+  if (hi <= lo) return lo;
+  return (lo + Math.floor(r * (hi - lo))) | 0;
+}
+

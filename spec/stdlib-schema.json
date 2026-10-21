@@ -1204,6 +1204,18 @@
       "doc": "Smallest integer value not below `x`."
     },
     {
+      "name": "chance",
+      "signatures": [
+        "(p: f32) -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "`random() < p`; one draw.",
+      "since": "M1",
+      "doc": "True with probability `p`."
+    },
+    {
       "name": "clamp",
       "signatures": [
         "(x: T, lo: T, hi: T) -> T",
@@ -1554,6 +1566,30 @@
       "cpuSemantics": "Seeded PRNG (xoshiro128**, seed from the mount options); deterministic under a fixed seed.",
       "since": "M1",
       "doc": "A pseudo-random number in `[0, 1)`."
+    },
+    {
+      "name": "random_int",
+      "signatures": [
+        "(lo: i32, hi: i32) -> i32"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "`lo + floor(random() * (hi - lo))` in f64; one draw, also when `hi <= lo`.",
+      "since": "M1",
+      "doc": "A random i32 in `[lo, hi)`; `lo` if `hi <= lo`."
+    },
+    {
+      "name": "random_range",
+      "signatures": [
+        "(lo: f32, hi: f32) -> f32"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "`lo + (hi - lo) * random()`, rounded to f32; one draw.",
+      "since": "M1",
+      "doc": "A random f32 in `[lo, hi)`."
     },
     {
       "name": "reflect",

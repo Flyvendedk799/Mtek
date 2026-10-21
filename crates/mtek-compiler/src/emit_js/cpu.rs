@@ -988,6 +988,18 @@ impl FnLowering<'_, '_> {
                 let _ = args;
                 Expr::ident("ctx").member("random").call(Vec::new())
             }
+            // `random_range`, `random_int`, `chance` (decision 0149): one draw each, in the runtime.
+            ir::ExprKind::Builtin { function, args }
+                if matches!(function.as_str(), "random_range" | "random_int" | "chance") =>
+            {
+                let member = match function.as_str() {
+                    "random_range" => "randomRange",
+                    "random_int" => "randomInt",
+                    _ => "chance",
+                };
+                let arguments = self.exprs(args)?;
+                Expr::ident("ctx").member(member).call(arguments)
+            }
             ir::ExprKind::Builtin { function, args } if function == "is_key_down" => {
                 let arguments = self.exprs(args)?;
                 Expr::ident("ctx").member("isKeyDown").call(arguments)

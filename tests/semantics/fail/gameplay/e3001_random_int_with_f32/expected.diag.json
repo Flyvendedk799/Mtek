@@ -1,0 +1,23 @@
+[
+  {
+    "code": "MTEK-E3041",
+    "file": "src/main.mtek",
+    "startByte": 204,
+    "endByte": 207,
+    "message": "The float literal 0.0 is not representable as i32: a float literal always has type f32.",
+    "expected": "i32",
+    "actual": "f32",
+    "notes": [
+      "help: write an integer literal, or convert explicitly: `i32(0.0)`"
+    ]
+  },
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 243,
+    "endByte": 247,
+    "message": "Argument 1 of `random_range(lo: f32, hi: f32)` expects f32, but received i32.",
+    "expected": "f32",
+    "actual": "i32"
+  }
+]

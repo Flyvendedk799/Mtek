@@ -842,6 +842,10 @@ fn intrinsic_rows() -> Vec<IntrinsicRow> {
         false,
     ));
     rows.push(("random", &["() -> f32"], Domain::Cpu, false));
+    // Random helpers (decision 0149).
+    rows.push(("random_range", &["(f32, f32) -> f32"], Domain::Cpu, false));
+    rows.push(("random_int", &["(i32, i32) -> i32"], Domain::Cpu, false));
+    rows.push(("chance", &["(f32) -> bool"], Domain::Cpu, false));
     rows.push(("print", &["(string) -> ()"], Domain::Cpu, false));
     rows.push(("is_key_down", &["(Key) -> bool"], Domain::Cpu, false));
     rows.push((

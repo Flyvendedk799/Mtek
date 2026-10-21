@@ -61,6 +61,7 @@
       "function:atan",
       "function:atan2",
       "function:ceil",
+      "function:chance",
       "function:clamp",
       "function:clear_saved",
       "function:color.linear",
@@ -101,6 +102,8 @@
       "function:quat.identity",
       "function:radians",
       "function:random",
+      "function:random_int",
+      "function:random_range",
       "function:reflect",
       "function:reset",
       "function:resume",
@@ -303,14 +306,6 @@
       "doc": "",
       "file": "src/main.mtek",
       "line": 7
-    },
-    {
-      "name": "Demo.Cube",
-      "kind": "entity",
-      "type": "entity",
-      "doc": "",
-      "file": "src/main.mtek",
-      "line": 23
     }
   ],
   "schemaGuide": "A field line reads `name: type = default [flags]`; R required, W writable, B bindable, C construction-only.",
@@ -340,6 +335,12 @@
       "names": [
         "Entity",
         "Box"
+      ]
+    },
+    "symbols": {
+      "count": 1,
+      "names": [
+        "Demo.Cube"
       ]
     }
   }

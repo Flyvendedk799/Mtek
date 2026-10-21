@@ -92,10 +92,10 @@ impl Draft {
                         draft.context.reference.clear(section);
                         dropped.reference.push(section.to_owned());
                         // Without the signatures, the features name the functions again.
-                        if section == "builtins" {
-                            if let Some(features) = draft.full_features.take() {
-                                draft.context.supported.features = features;
-                            }
+                        if section == "builtins"
+                            && let Some(features) = draft.full_features.take()
+                        {
+                            draft.context.supported.features = features;
                         }
                     }
                 }
