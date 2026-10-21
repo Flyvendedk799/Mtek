@@ -10,6 +10,7 @@ mod context_cmd;
 mod dev;
 mod dist;
 mod fmt;
+mod game_package;
 mod grammar;
 mod guard;
 mod limits;

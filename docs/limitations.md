@@ -102,6 +102,13 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 | Audio plays whole decoded WAV, Ogg or MP3 files: no streaming, no effects or buses beyond the master volume, no handle to stop a playing one-shot, one music track at a time, and nothing plays before the first user gesture (browser autoplay policy). | Spec/audio.md section 8 (decision 0130): the smallest audio model that covers hit, score and music sounds. | `E7101`, `E7102`, `E5501` | decisions [0130](../spec/decisions/0130-audio.md); [spec/audio.md](../spec/audio.md): "## 8. Not in this extension" |
 | An `entity_ref` (the result of `spawn`, the argument of a collision handler) can be passed to `destroy`, `alive` and body commands, but its fields and state cannot be read or written. | Decision 0064: not in v0.1. | `E5074` | decisions [0064](../spec/decisions/0064-spawn-destroy-entity-ref.md); [spec/diagnostics.md](../spec/diagnostics.md): "field access through entity_ref" |
 
+### Tooling
+
+| Restriction | Why | Diagnostics | Records and source |
+|---|---|---|---|
+| `mtek build --release` packages one self-contained folder (minified runtime, loading screen, favicon, title) and, with `--itch`, an uncompressed zip for itch.io: `app.js` is not minified, the zip is stored rather than deflated, the favicon is found only at `assets/favicon.svg\|png\|ico`, and there is no upload, no other store format and no PWA manifest. | Spec/tooling.md section 2.1 (decision 0136): the smallest packaging that turns a release build into an uploadable HTML5 game without new dependencies. | `E7103`, `E7104` | decisions [0136](../spec/decisions/0136-game-packages-release.md); [spec/tooling.md](../spec/tooling.md): "### 2.1 Game packages" |
+| `mtek fmt` has no range formatting, no standard-input mode and no configuration, and comments inside a multi-line block comment are not re-indented. | Decision 0070 item 11: "no options" is the design; the layout is one canonical form. | none | decisions [0070](../spec/decisions/0070-canonical-formatter.md); [spec/decisions/0070-canonical-formatter.md](../spec/decisions/0070-canonical-formatter.md): "Range formatting, a stdin mode and configuration are not provided" |
+
 ### Physics
 
 | Restriction | Why | Diagnostics | Records and source |
@@ -145,12 +152,6 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 |---|---|---|---|
 | The target profile `webgpu-core-2026` is exactly the WebGPU default limits and requires no optional feature; a device below it cannot run a program. | Keeps the required capabilities of every v0.1 program empty (`features: []`, `limits: {}`); the consistency check compares this with the manifest the compiler writes. | `E8002` | [spec/runtime-abi.md](../spec/runtime-abi.md): "the v0.1 profile `webgpu-core-2026` is exactly the default limits" |
 | WebGPU is the only renderer: there is no WebGL2 fallback, and a browser without WebGPU (or without an adapter) shows the unsupported-browser screen instead of the game. Only Chromium has a full automated run; Firefox has one Windows run and Safari none. | Decision 0132: a second backend would need a second shader language and layout for every feature; spec/browser-support.md section 2 marks which browsers are expectations. | `E8004`, `E8005` | decisions [0132](../spec/decisions/0132-browser-support-webgpu-only.md); [spec/browser-support.md](../spec/browser-support.md): "## 1. The stance: WebGPU only, no WebGL2" |
-
-### Tooling
-
-| Restriction | Why | Diagnostics | Records and source |
-|---|---|---|---|
-| `mtek fmt` has no range formatting, no standard-input mode and no configuration, and comments inside a multi-line block comment are not re-indented. | Decision 0070 item 11: "no options" is the design; the layout is one canonical form. | none | decisions [0070](../spec/decisions/0070-canonical-formatter.md); [spec/decisions/0070-canonical-formatter.md](../spec/decisions/0070-canonical-formatter.md): "Range formatting, a stdin mode and configuration are not provided" |
 
 ## 7. The list `mtek context` gives to agents
 

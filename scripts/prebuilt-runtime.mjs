@@ -25,6 +25,7 @@ const prebuilt = join(root, "crates/mtek-cli/prebuilt");
 const FILES = [
   { name: "runtime.js", from: "packages/runtime-web/dist" },
   { name: "runtime.dev.js", from: "packages/runtime-web/dist" },
+  { name: "runtime.min.js", from: "packages/runtime-web/dist" },
   { name: "runtime.d.ts", from: "packages/runtime-web/dist" },
   { name: "physics.js", from: "packages/physics-rapier/dist" },
 ];

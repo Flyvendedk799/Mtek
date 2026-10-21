@@ -870,7 +870,7 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 What the build does **not** support is on [limitations.md](limitations.md); `supported.notSupported` of `mtek context` has the same list.
 
-## Part D. Diagnostics (216 codes)
+## Part D. Diagnostics (218 codes)
 
 Every diagnostic has a stable code: `E` for an error, `W` for a warning, then four digits; the first digit is the area. The full catalogue, the JSON form (`mtek check --format json`), the human rendering and the suggested edits are in [spec/diagnostics.md](../spec/diagnostics.md).
 
@@ -883,7 +883,7 @@ Every diagnostic has a stable code: `E` for an error, `W` for a warning, then fo
 | `4xxx` | functions, effects, execution domains, material stages | 15 |
 | `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 45 |
 | `6xxx` | GPU layout, target profile, generated-shader validation | 4 |
-| `7xxx` | assets | 32 |
+| `7xxx` | assets | 34 |
 | `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 31 |
 | `9xxx` | project, configuration, tooling, internal | 13 |
 

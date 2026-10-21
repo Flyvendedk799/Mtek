@@ -133,6 +133,35 @@ Negative checks (no new codes):
 
 The namespace is `easing`, not `ease`: built-in namespaces cannot be shadowed (`E2001`), and an existing fixture imports a user function `ease`.
 
+## 7. Phase 8.4: Game packages, `mtek build --release [--itch]` (decision 0136, `spec/tooling.md` §2.1)
+
+Automated (cheap, already green here):
+- `cargo test -p mtek-cli --bin mtek game_package`: CRC-32 check value, zip records and reproducibility, the itch limits (`E7104`), favicon content checks (`E7103`), packaging.
+- `cargo test -p mtek-compiler --lib package::html`: the game page (loading screen, favicon link, escaped title, no dev client).
+- `npx vitest run src/release-bundle.test.ts` in `packages/runtime-web`: the flavour file names, including `runtime.min.js`.
+- `npm run check:prebuilt`: the prebuilt copy includes `runtime.min.js`.
+- Done here by hand: `mtek build --release --itch --out /tmp/gp-out <copy of examples/hud-score>` printed `built 'hud-score' (release): 10 files in /tmp/gp-out and /tmp/gp-out-itch.zip`. Python `zipfile.testzip()` reported no bad entry. The names are at the root (`index.html`, `favicon.svg`, `runtime.<h16>.js` at 513 848 bytes against 843 265 unminified, `shaders/...`).
+
+Manual, in a WebGPU browser (not run here):
+1. `cargo run -p mtek-cli -- build --release --itch examples/hud-score`. Then serve the folder, for example with `npx http-server examples/hud-score/dist`, and open it.
+2. Expected:
+   - a dark loading screen with "HUD Score", a spinner and "Loading…";
+   - it fades out when the scene appears;
+   - the tab shows the blue "M" favicon and the title "HUD Score";
+   - the game plays exactly as in `mtek dev`;
+   - no console errors.
+3. In a browser without WebGPU (or with WebGPU disabled), the loading screen must go away and the unsupported-browser screen (decision 0132) must show. It must not spin forever.
+4. itch.io: create a draft HTML5 project, upload `dist-itch.zip` and choose "This file will be played in the browser". The game loads in the itch iframe. Only Abe can do this (account needed).
+5. Favicon: put a real PNG at `examples/hud-score/assets/favicon.png` and rebuild. The tab shows it, and `favicon.png` is in the folder and the zip. Rename a text file to `favicon.png`: the build fails with `E7103` and no folder is written.
+6. Usage errors (exit 2): `mtek build --release --mode dev`, `mtek build --itch` (needs `--release`).
+
+Fail looks like:
+- a white page during load;
+- a loading screen that never goes away;
+- a 404 for `favicon.svg`;
+- a zip whose files sit inside a sub-folder (itch shows "index.html not found");
+- runtime errors only with the minified bundle (compare with `mtek build` without `--release`).
+
 ## Pre-existing failures seen while running targeted tests (not caused by this branch)
 
 - `cargo test -p mtek-compiler --lib syntax::lexer_tests::longest_match_wins_for_operators` expects `=>` to lex as `Eq Gt`. The base branch's `match` work made it `FatArrow`.

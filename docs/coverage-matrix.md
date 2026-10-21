@@ -764,12 +764,12 @@ A feature has no diagnostic of its own that a tool could derive, so the features
 
 ## 8. Diagnostic codes
 
-The catalogue of `spec/diagnostics.md` section 5 has 216 codes. A code has a fixture when the expected diagnostics of some fixture contain it (for a warning, a passing program that lists it). `tests/semantics/code-coverage-exceptions.json` lists, with a reason, the codes that no fixture can produce; the compiler's own test (`every_catalogue_code_has_a_fixture_or_a_listed_reason`) and this tool read the same file.
+The catalogue of `spec/diagnostics.md` section 5 has 218 codes. A code has a fixture when the expected diagnostics of some fixture contain it (for a warning, a passing program that lists it). `tests/semantics/code-coverage-exceptions.json` lists, with a reason, the codes that no fixture can produce; the compiler's own test (`every_catalogue_code_has_a_fixture_or_a_listed_reason`) and this tool read the same file.
 
 | Negative test | Codes |
 |---|--:|
 | A fixture | 165 |
-| A named test, because a fixture cannot express the code (generated sizes, files the source manager rejects, runtime codes) | 45 |
+| A named test, because a fixture cannot express the code (generated sizes, files the source manager rejects, runtime codes) | 47 |
 | A named test, because only a compiler defect produces the code | 2 |
 | Reserved or not implemented, marked in the catalogue | 4 |
 | **None** | 0 |
@@ -800,6 +800,8 @@ None.
 | E6100 | generated WGSL failed validation | `crates/mtek-compiler/src/emit_wgsl/validate.rs` | Only a compiler defect produces it. Only a compiler defect produces it (Naga rejecting generated WGSL). |
 | E7030 | asset fetch or integrity failure | `packages/runtime-web/src/assets/loader.test.ts` | A runtime code: asset loading (spec/assets.md section 5, decision 0060). |
 | E7031 | image decode failure | `packages/runtime-web/src/assets/loader.test.ts` | A runtime code: asset loading (decision 0060). |
+| E7103 | invalid favicon | `crates/mtek-cli/src/game_package.rs` | Produced by mtek build --release from the project's assets/favicon file, not by the compiler (decision 0136). |
+| E7104 | game package exceeds itch.io limits | `crates/mtek-cli/src/game_package.rs` | Produced by mtek build --release --itch when the package breaks the itch.io limits, not by the compiler (decision 0136). |
 | E8001 | unsupported platform endianness \| | `packages/runtime-web/src/gpu/device.test.ts` | A runtime code, produced by @mtek/runtime-web, whose unit tests are its fixtures (spec/testing.md section 2). |
 | E8002 | device below target profile | `packages/runtime-web/src/gpu/device.test.ts` | A runtime code (device below the target profile). |
 | E8003 | incompatible program | `packages/runtime-web/src/abi/abi.test.ts` | A runtime code (incompatible program). |

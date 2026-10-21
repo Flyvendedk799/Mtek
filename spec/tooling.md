@@ -10,7 +10,7 @@
 | Command | Milestone | Purpose |
 |---|---|---|
 | `mtek check [--format human\|json] [PATH]` | M1 | parse + type-check; **no GPU needed**; exit 1 on errors |
-| `mtek build [--target web] [--mode release\|dev\|test\|preview] [--loop-budget N] [--out DIR] [--format human\|json] [PATH]` | M1 (`preview`: M6) | produce `dist/` (`spec/runtime-abi.md` §2). `--target` accepts only `web` in v0.1 (the default; any other value is a usage error) |
+| `mtek build [--target web] [--mode release\|dev\|test\|preview] [--loop-budget N] [--release [--itch]] [--out DIR] [--format human\|json] [PATH]` | M1 (`preview`: M6; `--release`: decision 0136) | produce `dist/` (`spec/runtime-abi.md` §2). `--target` accepts only `web` in v0.1 (the default; any other value is a usage error). `--release` packages a game (§2.1) |
 | `mtek dev [--port N] [--open] [PATH]` | M1 (reload: M3) | build, serve, watch, rebuild; candidate-based hot reload from M3 |
 | `mtek inspect --ir\|--bindings\|--shaders\|--assets [--format human\|json] [PATH]` | M1 (`--ir`), M2 (`--shaders`, `--bindings`), M4 (`--assets`) | inspection (`spec/gpu-layout.md` §10; the views are decision 0044; `--assets` is the packaged assets of `spec/assets.md` §4, decision 0058) |
 | `mtek new NAME` | M3 | scaffold a project from the built-in template (`mtek.toml`, `src/main.mtek` with the Demo scene, `.gitignore`) |
@@ -39,6 +39,17 @@ The path of a new user through these commands (install from source, `mtek new`, 
 | `dev` (used by `mtek dev`) | overlay, hot-reload client, `print`, dev-only warnings, `timestamp-query` requested if available |
 | `test` | like `dev` without the overlay and reload client; `index.html` does not auto-mount and exposes `window.__mtekMount(options)` (signature in `spec/runtime-abi.md` §6.5) for Playwright; probe shaders emitted when requested by fixtures |
 | `preview` (M6) | like `release` plus CPU loop budgets (`--loop-budget N`, default 10 million iterations per frame, valid with this mode only), a manifest that restricts the runtime's network access to `baseUrl`, external `bootstrap.js` and a restrictive Content-Security-Policy (`spec/ai-and-benchmarks.md` §5, decision 0075); the build runs against a 10 s clock (`E9032`) |
+
+### 2.1 Game packages (`mtek build --release`, decision 0136)
+
+`--release` is a `release` build packaged for players. It conflicts with `--mode` and `--loop-budget` (a usage error). Compared with a plain `release` build:
+
+1. **Minified runtime.** `runtime.<h16>.js` is the minified release flavour `runtime.min.js` (esbuild `minify`, no source map; about 60 % of the unminified bundle), embedded in the CLI beside the other two flavours and in the prebuilt copy. `app.js` keeps its source map, so diagnostics still point into the Mtek sources.
+2. **Game page.** `index.html` is the compiler's game page (`package::html::game_html`): a viewport `<meta>`, the `<title>` of `[build] title` (default: the project name), a favicon link and a loading screen showing the title and "Loading…". The screen fades out when `mountMtek` settles. On a failure it goes too, so the runtime's overlay (including the unsupported-browser screen, decision 0132) shows.
+3. **Favicon.** `assets/favicon.svg`, `assets/favicon.png` or `assets/favicon.ico` of the project, the first that exists, copied as is. Its content must match the extension (an `<svg` root, the PNG signature, the ICO header) and be at most 1 MiB, else `E7103`. Without one, a built-in SVG favicon is written.
+4. **`--itch`** (requires `--release`). After the folder is written, the same files are written as `<out>-itch.zip` beside it: stored entries, `index.html` at the root, every timestamp 1980-01-01, so the zip is reproducible. More than 1000 files, more than 500 MB uncompressed or a path longer than 240 characters is `E7104` (itch.io's HTML5 limits); the folder is still written.
+
+The output stays one self-contained folder of relative paths, so it can be uploaded as is. The `buildId` of the manifest is the one of the plain `release` build; the game page and favicon are not part of it.
 
 ## 3. `mtek.toml`
 

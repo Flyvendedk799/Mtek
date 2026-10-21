@@ -22,7 +22,12 @@ use std::path::{Path, PathBuf};
 use std::{env, fs};
 
 /// The runtime files and their names in `OUT_DIR`.
-const FILES: [&str; 3] = ["runtime.js", "runtime.dev.js", "runtime.d.ts"];
+const FILES: [&str; 4] = [
+    "runtime.js",
+    "runtime.dev.js",
+    "runtime.min.js",
+    "runtime.d.ts",
+];
 
 /// The physics bundle; it keeps its name in `OUT_DIR`.
 const PHYSICS_FILE: &str = "physics.js";

@@ -157,6 +157,40 @@ pub fn index_html(title: &str, mode: BuildMode) -> String {
     )
 }
 
+/// The default favicon of a game package (decision 0136): a rounded square with an "M", as SVG.
+pub const DEFAULT_FAVICON_SVG: &str = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect width=\"64\" height=\"64\" rx=\"14\" fill=\"#2f6fdf\"/><path d=\"M14 48V16h8l10 14 10-14h8v32h-8V29l-10 13-10-13v19z\" fill=\"#fff\"/></svg>\n";
+
+/// The `index.html` of a `mtek build --release` game package (decision 0136, `spec/tooling.md`
+/// section 2.1): the `release` page plus a viewport meta, the favicon link (`favicon` is a file
+/// name next to `index.html`) and a loading screen with the title that fades out when the mount
+/// settles. On a failure the loading screen goes too, so the runtime's overlay (including the
+/// unsupported-browser screen of decision 0132) is what remains.
+#[must_use]
+pub fn game_html(title: &str, favicon: &str) -> String {
+    let title = escape_html(title);
+    let favicon = escape_html(favicon);
+    format!(
+        "<!doctype html><meta charset=\"utf-8\">\n\
+         <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n\
+         <title>{title}</title>\n\
+         <link rel=\"icon\" href=\"./{favicon}\">\n\
+         <style>html,body{{margin:0;height:100%;background:#0b0f17}}canvas{{display:block;width:100%;height:100%}}\
+         #mtek-loading{{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;\
+         background:#0b0f17;color:#e8edf5;font:600 22px/1.3 system-ui,sans-serif;z-index:2147483000;transition:opacity .3s}}\
+         #mtek-loading.done{{opacity:0;pointer-events:none}}#mtek-loading small{{font-weight:400;font-size:14px;opacity:.7}}\
+         #mtek-loading i{{width:36px;height:36px;border:4px solid #3a4558;border-top-color:#e8edf5;border-radius:50%;animation:mtek-spin 1s linear infinite}}\
+         @keyframes mtek-spin{{to{{transform:rotate(360deg)}}}}</style>\n\
+         <canvas id=\"mtek\"></canvas>\n\
+         <div id=\"mtek-loading\" role=\"status\" aria-live=\"polite\"><i></i><span>{title}</span><small>Loading…</small></div>\n\
+         <script type=\"module\">\n\
+         \x20 import program, {{ mountMtek }} from \"./app.js\";\n\
+         \x20 const loading = document.getElementById(\"mtek-loading\");\n\
+         \x20 const hide = () => {{ loading.classList.add(\"done\"); setTimeout(() => loading.remove(), 400); }};\n\
+         \x20 mountMtek(document.getElementById(\"mtek\"), program).then(hide, hide); // failures are shown by the overlay\n\
+         </script>\n"
+    )
+}
+
 /// The page `mtek dev` serves for `/` while its output directory has no `index.html`, i.e.
 /// before the first successful build (decision 0033): no program to mount, only the reload
 /// client of the dev `index.html`, so the diagnostics of the failed build appear in the
@@ -192,6 +226,19 @@ mod tests {
              </script>\n"
         );
         assert!(!page.contains("__mtekMount") && !page.contains("EventSource"));
+    }
+
+    #[test]
+    fn the_game_page_has_the_loading_screen_favicon_and_escaped_title() {
+        let page = game_html("<Dodge> & run", "favicon.svg");
+        assert!(page.contains("<title>&lt;Dodge&gt; &amp; run</title>"));
+        assert!(page.contains("<span>&lt;Dodge&gt; &amp; run</span>"));
+        assert!(page.contains("<link rel=\"icon\" href=\"./favicon.svg\">"));
+        assert!(page.contains("id=\"mtek-loading\""));
+        assert!(page.contains(".then(hide, hide)"));
+        assert!(page.contains("import program, { mountMtek } from \"./app.js\";"));
+        assert!(!page.contains("EventSource") && !page.contains("__mtekMount"));
+        assert!(DEFAULT_FAVICON_SVG.starts_with("<svg"));
     }
 
     #[test]

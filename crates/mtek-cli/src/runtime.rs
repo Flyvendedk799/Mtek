@@ -13,6 +13,9 @@ pub struct Runtime {
     /// `runtime.dev.js`, the development flavour (overlay, GPU timing), written as
     /// `runtime.<h16>.js` by `dev` and `test` builds (decision 0055).
     pub dev_bundle: &'static [u8],
+    /// `runtime.min.js`, the release flavour minified, used by `mtek build --release` game
+    /// packages (decision 0136).
+    pub min_bundle: &'static [u8],
     /// `runtime.d.ts`.
     pub declarations: &'static [u8],
     /// `packages/physics-rapier/dist/physics.js`, written as `physics/<h16>.js` by builds of
@@ -35,6 +38,7 @@ pub fn embedded() -> Option<Runtime> {
     Some(Runtime {
         bundle: include_bytes!(concat!(env!("OUT_DIR"), "/runtime.js")),
         dev_bundle: include_bytes!(concat!(env!("OUT_DIR"), "/runtime.dev.js")),
+        min_bundle: include_bytes!(concat!(env!("OUT_DIR"), "/runtime.min.js")),
         declarations: include_bytes!(concat!(env!("OUT_DIR"), "/runtime.d.ts")),
         physics_bundle: PHYSICS_BUNDLE,
     })
@@ -63,6 +67,10 @@ mod tests {
         assert_eq!(
             runtime.dev_bundle,
             std::fs::read(format!("{dist}/runtime.dev.js")).unwrap()
+        );
+        assert_eq!(
+            runtime.min_bundle,
+            std::fs::read(format!("{dist}/runtime.min.js")).unwrap()
         );
         assert_eq!(
             runtime.declarations,

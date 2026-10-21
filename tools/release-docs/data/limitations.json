@@ -352,6 +352,23 @@
       }
     },
     {
+      "id": "game-package-scope",
+      "area": "Tooling",
+      "restriction": "`mtek build --release` packages one self-contained folder (minified runtime, loading screen, favicon, title) and, with `--itch`, an uncompressed zip for itch.io: `app.js` is not minified, the zip is stored rather than deflated, the favicon is found only at `assets/favicon.svg|png|ico`, and there is no upload, no other store format and no PWA manifest.",
+      "reason": "Spec/tooling.md section 2.1 (decision 0136): the smallest packaging that turns a release build into an uploadable HTML5 game without new dependencies.",
+      "codes": [
+        "E7103",
+        "E7104"
+      ],
+      "decisions": [
+        "0136"
+      ],
+      "source": {
+        "file": "spec/tooling.md",
+        "quote": "### 2.1 Game packages"
+      }
+    },
+    {
       "id": "audio-scope",
       "area": "Scenes and entities",
       "restriction": "Audio plays whole decoded WAV, Ogg or MP3 files: no streaming, no effects or buses beyond the master volume, no handle to stop a playing one-shot, one music track at a time, and nothing plays before the first user gesture (browser autoplay policy).",

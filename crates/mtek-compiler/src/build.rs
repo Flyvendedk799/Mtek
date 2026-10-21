@@ -151,6 +151,9 @@ pub struct BuildResult {
     /// `build.out_dir` of `mtek.toml`, relative to the project root; `None` if the project
     /// could not be loaded.
     pub out_dir: Option<ProjectPath>,
+    /// `[build] title` of `mtek.toml` (default: the project name), for the game page of
+    /// `mtek build --release` (decision 0136); `None` if the project could not be loaded.
+    pub title: Option<String>,
 }
 
 impl BuildResult {
@@ -249,12 +252,13 @@ pub fn build(root: &ProjectRoot, fs: &dyn Fs, options: &CompileOptions) -> Build
         options: &analyze_options,
     };
     let report = edits::finish(sink, &recheck, Some(&sources));
-    let (project_name, out_dir) = match front.project {
+    let (project_name, out_dir, title) = match front.project {
         Some(project) => (
             Some(project.config.project.name),
             Some(project.config.build.out_dir),
+            Some(project.config.build.title),
         ),
-        None => (None, None),
+        None => (None, None, None),
     };
     match packaged {
         Some(result) if report.summary.errors == 0 => BuildResult {
@@ -264,6 +268,7 @@ pub fn build(root: &ProjectRoot, fs: &dyn Fs, options: &CompileOptions) -> Build
             files: result.files,
             build_id: Some(result.build_id),
             out_dir,
+            title,
         },
         _ => BuildResult {
             project_name,
@@ -272,6 +277,7 @@ pub fn build(root: &ProjectRoot, fs: &dyn Fs, options: &CompileOptions) -> Build
             files: BTreeMap::new(),
             build_id: None,
             out_dir,
+            title,
         },
     }
 }

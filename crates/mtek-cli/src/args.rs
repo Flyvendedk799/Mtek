@@ -15,6 +15,13 @@ use mtek_compiler::context::DEFAULT_MAX_BYTES;
 
 use crate::test_cmd::TestArgs;
 
+/// `mtek build --release` (decision 0136): a game package, and with `--itch` its zip.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Game {
+    /// `--itch`: also write `<out>-itch.zip`.
+    pub itch: bool,
+}
+
 /// The output format of `--format`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ValueEnum)]
 pub enum Format {
@@ -125,6 +132,12 @@ enum CliCommand {
         /// `--mode preview` only: iterations of CPU loops allowed per frame [default: 10000000]
         #[arg(long, value_name = "N", value_parser = clap::value_parser!(u32).range(1..))]
         loop_budget: Option<u32>,
+        /// Package a game: release mode, minified runtime, loading screen, favicon, title
+        #[arg(long, conflicts_with_all = ["mode", "loop_budget"])]
+        release: bool,
+        /// With --release: also write the folder as `<out>-itch.zip` for itch.io
+        #[arg(long, requires = "release")]
+        itch: bool,
         /// Output format
         #[arg(long, value_enum, default_value_t)]
         format: Format,
@@ -206,6 +219,8 @@ pub enum Request {
         mode: BuildMode,
         /// `--loop-budget`: only with `BuildMode::Preview`.
         loop_budget: Option<u32>,
+        /// `--release` (game package, decision 0136): `Some(itch)` with `--itch`.
+        game: Option<Game>,
         out: Option<PathBuf>,
         format: Format,
         path: Option<PathBuf>,
@@ -315,9 +330,12 @@ where
             mode,
             out,
             loop_budget,
+            release,
+            itch,
             format,
             path,
         } => {
+            let game = release.then_some(Game { itch });
             let mode = match mode {
                 Mode::Release => BuildMode::Release,
                 Mode::Dev => BuildMode::Dev,
@@ -340,6 +358,7 @@ where
             Ok(Request::Build {
                 mode,
                 loop_budget,
+                game,
                 out,
                 format,
                 path,
@@ -426,6 +445,7 @@ mod tests {
             Ok(Request::Build {
                 mode: BuildMode::Release,
                 loop_budget: None,
+                game: None,
                 out: None,
                 format: Format::Human,
                 path: None
@@ -439,6 +459,7 @@ mod tests {
             Ok(Request::Build {
                 mode: BuildMode::Test,
                 loop_budget: None,
+                game: None,
                 out: Some(PathBuf::from("out/x")),
                 format: Format::Json,
                 path: Some(PathBuf::from("proj"))
@@ -454,6 +475,7 @@ mod tests {
             Ok(Request::Build {
                 mode: BuildMode::Preview,
                 loop_budget: None,
+                game: None,
                 out: None,
                 format: Format::Human,
                 path: None
@@ -471,6 +493,7 @@ mod tests {
             Ok(Request::Build {
                 mode: BuildMode::Preview,
                 loop_budget: Some(5000),
+                game: None,
                 out: None,
                 format: Format::Human,
                 path: Some(PathBuf::from("proj"))

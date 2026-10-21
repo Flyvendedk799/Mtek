@@ -321,6 +321,8 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e7031"></a>E7031 | image decode failure | runtime: the browser could not decode the image (M4-06, decision 0060) |
 | <a id="mtek-e7101"></a>E7101 | unsupported audio file | `asset.sound(path)` names a file that is not WAV (PCM or IEEE float), Ogg (Vorbis or Opus) or MP3, by extension or by content (`spec/audio.md` §2, decision 0130) |
 | <a id="mtek-e7102"></a>E7102 | malformed audio file | the header of a WAV, Ogg or MP3 file is truncated or inconsistent (no `fmt `/`data` chunk, zero channels or sample rate, no Ogg page, no MPEG frame) (`spec/audio.md` §2) |
+| <a id="mtek-e7103"></a>E7103 | invalid favicon | `mtek build --release` found `assets/favicon.svg`, `.png` or `.ico` whose content is not that format (PNG signature, ICO header, an `<svg` root) or that is larger than 1 MiB (`spec/tooling.md` §2.1, decision 0136) |
+| <a id="mtek-e7104"></a>E7104 | game package exceeds itch.io limits | `mtek build --release --itch` would write a zip with more than 1000 files, more than 500 MB uncompressed, or a path longer than 240 characters, the HTML5 upload limits of itch.io (`spec/tooling.md` §2.1, decision 0136) |
 | <a id="mtek-e7901"></a>E7901 | remote assets not supported | an `http:`, `https:` or other URL as an asset path |
 | <a id="mtek-e7902"></a>E7902 | node hierarchy instancing not supported | `model: asset` instancing a whole node hierarchy |
 | (E7032–E7099) | further asset codes | reserved; added with the feature that needs them |

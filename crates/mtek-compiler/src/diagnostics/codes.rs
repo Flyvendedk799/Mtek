@@ -248,6 +248,8 @@ catalogue! {
     E7031 Error "image decode failure",
     E7101 Error "unsupported audio file",
     E7102 Error "malformed audio file",
+    E7103 Error "invalid favicon",
+    E7104 Error "game package exceeds itch.io limits",
     E7901 Error "remote assets not supported",
     E7902 Error "node hierarchy instancing not supported",
     // 5.8 Runtime (`8xxx`)

@@ -271,6 +271,16 @@
       "code": "W8203",
       "reason": "A runtime code of the HUD (decision 0134).",
       "test": "packages/runtime-web/src/hud/hud.test.ts"
+    },
+    {
+      "code": "E7103",
+      "reason": "Produced by mtek build --release from the project's assets/favicon file, not by the compiler (decision 0136).",
+      "test": "crates/mtek-cli/src/game_package.rs"
+    },
+    {
+      "code": "E7104",
+      "reason": "Produced by mtek build --release --itch when the package breaks the itch.io limits, not by the compiler (decision 0136).",
+      "test": "crates/mtek-cli/src/game_package.rs"
     }
   ]
 }
