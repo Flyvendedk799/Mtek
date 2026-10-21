@@ -21,7 +21,9 @@ The binding re-evaluates every frame (`spec/scenes.md` §7), so the entity follo
 scene Tween {
     // 0 at the start of the tween, 1 at its end.
     state t: f32 = 0.0;
-    camera Cam { position: vec3(0.0, 0.0, 6.0); }
+    camera Cam {
+        position: vec3(0.0, 0.0, 6.0);
+    }
     entity Ball {
         position: bind(mix(vec3(-2.0, 0.0, 0.0), vec3(2.0, 0.0, 0.0), easing.in_out_cubic(t)));
         mesh: Sphere { radius: 0.5 };

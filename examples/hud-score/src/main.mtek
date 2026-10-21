@@ -3,6 +3,7 @@
 //
 //   Space    score a point: the cube pops and the score text updates
 //   R, or the "Reset" button at the bottom   start again
+//   After 30 s: a GAME OVER panel with the score and a "Play again" button
 //
 // The HUD is immediate mode: `update` draws the text, the bars and the button again every frame, and
 // `hud.button` returns true in the frame after a click.
@@ -59,9 +60,15 @@ scene Score {
         hud.text("${left:.1} s", vec2(-0.95, 0.7), 18.0, #a0b0c0, 0.0);
 
         if left <= 0.0 {
-            hud.text("Time! ${points} points", vec2(0.0, 0.2), 48.0);
-        }
-        if hud.button("Reset", vec2(0.0, -0.85)) {
+            // GAME OVER panel: a dark rectangle behind centred text and a "Play again" button.
+            hud.rect(vec2(0.0, 0.1), vec2(420.0, 220.0), #000000c0, 0.5);
+            hud.text("GAME OVER", vec2(0.0, 0.3), 56.0, #ff5050, 0.5);
+            hud.text("${points} points", vec2(0.0, 0.12), 28.0, #ffffff, 0.5);
+            if hud.button("Play again", vec2(0.0, -0.05), 24.0) {
+                points = 0;
+                elapsed = 0.0;
+            }
+        } else if hud.button("Reset", vec2(0.0, -0.85)) {
             points = 0;
             elapsed = 0.0;
         }

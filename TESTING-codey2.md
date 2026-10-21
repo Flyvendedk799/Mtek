@@ -97,7 +97,11 @@ Manual, in a WebGPU browser:
    - a rotating blue cube.
 3. **Space**: the score goes up by one and the cube pulses. "Best" follows.
 4. Click **Reset**: the score and the timer restart (exactly one reset per click). Clicking the button must not count as a canvas click. After clicking, Space must still score; it should not "press" the button again.
-5. Wait 30 s: the bar is empty and "Time! N points" appears in the centre; Space no longer scores. **R** restarts.
+5. Wait 30 s. The bar is empty, and a translucent dark panel appears with:
+   - "GAME OVER" in red;
+   - "N points";
+   - a **Play again** button.
+   The bottom "Reset" button is gone, and Space no longer scores. Clicking **Play again** (once) or pressing **R** starts a new round, and the panel disappears.
 6. Resize the window: the HUD stays in the same corners of the canvas. Text size stays in CSS pixels.
 7. DevTools → Elements: one `div[data-mtek-hud]` after the canvas. It has `div[data-mtek-hud-text]`, `div[data-mtek-hud-rect]` and `button[data-mtek-hud-button]` children, and they are **not** re-created every frame (no flashing in the Elements panel except changed text).
 8. `mtek test examples/hud-score` (hardware project, needs a GPU): the fixture `space-scores-r-resets` passes. It checks state only, not the HUD.
