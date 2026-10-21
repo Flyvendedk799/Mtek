@@ -41,7 +41,7 @@ import { UniformArena, type ArenaDevice } from "../gpu/uniform-arena.js";
 import { resolveSpan, spanOfSymbol } from "../host/failures.js";
 import { multiply, normalMatrixInto, orthographic, perspective, viewMatrix, identity, type Mat4 } from "../math/mat4.js";
 import type { BlockWriter, LayoutWriters } from "../scene/program.js";
-import type { ResolvedEntity, SceneStructure } from "../scene/structure.js";
+import type { ResolvedEntity, ResolvedMaterial, SceneStructure } from "../scene/structure.js";
 import type { World } from "../scene/world.js";
 import { emptyPackedLights, packLights, type LightSource, type PackedLight } from "./lights.js";
 import { extractFrustumPlanes, sphereIntersectsFrustum, worldBoundingSphere, type WorldSphere } from "./frustum.js";
@@ -64,6 +64,9 @@ export interface MaterialPipeline {
   /** The instanced variant (decision 0059); only materials that can be part of an instanced draw have one. */
   readonly instanced?: GPURenderPipeline;
 }
+
+/** Sorts translucent draws after every opaque one (decision 0138): `compareDraws` orders keys by code unit. */
+export const TRANSLUCENT_KEY_PREFIX = "\uffff";
 
 /** The order of the draw list (`spec/runtime-abi.md` section 8.4). */
 export interface DrawSortKey {
@@ -92,6 +95,28 @@ export interface DrawItem extends DrawSortKey {
   readonly attributes: readonly MtekVertexAttribute[];
   readonly gpuMesh: GpuMesh;
   readonly objectSlot: number;
+  /** Drawn in the translucent pass: blended, after the opaque draws, back to front (decision 0138). */
+  readonly translucent?: boolean;
+}
+
+/**
+ * The draws of a frame with the translucent ones (which sort after every opaque one) reordered back to front by the
+ * clip-space w of their bounding-sphere centre under `viewProj` (column-major); ties keep draw-list order. Returns
+ * `draws` itself when nothing is translucent (decision 0138).
+ */
+export function orderTranslucent(draws: readonly DrawItem[], viewProj: ArrayLike<number>, centres: ArrayLike<number>): readonly DrawItem[] {
+  const first = draws.findIndex((draw) => draw.translucent === true);
+  if (first < 0) return draws;
+  const depth = (draw: DrawItem): number => {
+    const e = draw.entity * 3;
+    return (viewProj[3] ?? 0) * (centres[e] ?? 0) + (viewProj[7] ?? 0) * (centres[e + 1] ?? 0) + (viewProj[11] ?? 0) * (centres[e + 2] ?? 0) + (viewProj[15] ?? 0);
+  };
+  const translucent = draws
+    .slice(first)
+    .map((draw, index) => ({ draw, index, w: depth(draw) }))
+    .sort((a, b) => b.w - a.w || a.index - b.index)
+    .map((entry) => entry.draw);
+  return [...draws.slice(0, first), ...translucent];
 }
 
 export interface RendererOptions {
@@ -107,6 +132,8 @@ export interface RendererOptions {
   readonly meshes: MeshStore;
   /** By material id. */
   readonly pipelines: ReadonlyMap<string, MaterialPipeline>;
+  /** Makes the alpha-blended pipeline of a material (decision 0138); without it translucent draws stay opaque. */
+  readonly blend?: (material: ResolvedMaterial) => Promise<{ readonly key: string; readonly pipeline: GPURenderPipeline } | undefined>;
   readonly report: (diagnostic: MtekDiagnostic) => void;
   /** Group compatible draws into instanced draws (decision 0059). Default true; `test.disableInstancing` turns it off. */
   readonly instancing?: boolean;
@@ -156,6 +183,25 @@ export class Renderer {
   private drawsVersion = -1;
   private drawsBlockVersion = -1;
   private drawsPopulation = -1;
+  /** The blended pipelines made so far, by material id, and the requests in flight (decision 0138). */
+  private readonly blended = new Map<string, { readonly key: string; readonly pipeline: GPURenderPipeline } | undefined>();
+  private blendedVersion = 0;
+  private drawsBlendedVersion = -1;
+
+  /** The blended pipeline of `material`, or `undefined` while it is being made (it is asked for once). */
+  private blendedPipeline(material: ResolvedMaterial): { readonly key: string; readonly pipeline: GPURenderPipeline } | undefined {
+    if (this.blended.has(material.id)) return this.blended.get(material.id);
+    this.blended.set(material.id, undefined);
+    const make = this.options.blend;
+    if (make !== undefined) {
+      void make(material).then((made) => {
+        if (made === undefined) return;
+        this.blended.set(material.id, made);
+        this.blendedVersion += 1;
+      });
+    }
+    return undefined;
+  }
   private drawCallsLastFrame = 0;
   private instancedLastFrame = 0;
   private culledLastFrame = 0;
@@ -443,7 +489,8 @@ export class Renderer {
     if (
       this.drawsVersion === world.visibilityVersion &&
       this.drawsBlockVersion === materials.blockVersion &&
-      this.drawsPopulation === world.dynamic.version
+      this.drawsPopulation === world.dynamic.version &&
+      this.drawsBlendedVersion === this.blendedVersion
     ) {
       return this.draws;
     }
@@ -455,17 +502,20 @@ export class Renderer {
       const pipeline = pipelines.get(entity.instance.material.id);
       if (pipeline === undefined) throw new Error(`internal error: no pipeline for material '${entity.instance.material.id}'`);
       const gpuMesh = meshes.get(entity.mesh.id);
+      const blended = materials.isTranslucent(entity.instance.index) ? this.blendedPipeline(entity.instance.material) : undefined;
       items.push({
-        pipelineKey: pipeline.key,
+        pipelineKey: blended === undefined ? pipeline.key : TRANSLUCENT_KEY_PREFIX + blended.key,
         instance: materials.blockOf(entity.instance.index),
         mesh: gpuMesh.order,
         entity: entity.index,
         order,
-        pipeline: pipeline.pipeline,
-        instancedPipeline: pipeline.instanced,
+        pipeline: blended?.pipeline ?? pipeline.pipeline,
+        // A translucent draw is never instanced: the pass is ordered back to front per draw.
+        instancedPipeline: blended === undefined ? pipeline.instanced : undefined,
         attributes: entity.instance.material.shader.vertexAttributes,
         gpuMesh,
         objectSlot,
+        ...(blended === undefined ? {} : { translucent: true }),
       });
     };
     for (const entity of structure.entities) list(entity, world.entities[entity.index]?.visible, entity.index);
@@ -475,6 +525,7 @@ export class Renderer {
     this.drawsVersion = world.visibilityVersion;
     this.drawsBlockVersion = materials.blockVersion;
     this.drawsPopulation = world.dynamic.version;
+    this.drawsBlendedVersion = this.blendedVersion;
     return this.draws;
   }
 
@@ -496,7 +547,9 @@ export class Renderer {
     materials.flush(device.queue);
 
     const listed = this.drawList();
-    const draws = this.cull(listed, viewProj);
+    const culled = this.cull(listed, viewProj);
+    const draws = orderTranslucent(culled, viewProj, this.sphereCentres);
+    if (draws !== culled) this.drawnUnchanged = false;
     const instanced = this.groupDraws(draws);
     this.writeIndividualObjectBlocks(draws);
     this.objectArena.flush(device.queue);

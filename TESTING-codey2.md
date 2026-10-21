@@ -223,3 +223,13 @@ Nothing below has code here. There is nothing to test until it is built.
 - Merge note: a `sound` is not carryable as `shared state` (`types/game.rs`, `E5203`), like other resources.
 
 These were not re-run on the bare base commit; my evidence is only that the code they test was not changed here.
+
+## Phase 6.1 alpha (decision 0138): partially implemented
+
+- **Done (runtime):**
+  - the translucent pass, ordered after opaque draws and back to front;
+  - a lazily created blended pipeline (straight-alpha "over", no depth write);
+  - alpha tracking in `MaterialStore`.
+- **Cheap test:** `cd packages/runtime-web && npx vitest run src/render`. This covers `translucency.test.ts` and checks that the pipeline counts are unchanged; the whole suite of 189 tests was green on 2026-10-21.
+- **Not yet reachable from a program.** `E5100` (compiler) and `E8100` (runtime) still reject non-opaque material colours, and generated WGSL still writes alpha 1.0. The remaining work is listed in `spec/decisions/0138-translucent-pass.md`.
+- **No GPU or browser test is possible yet:** no program can currently produce a translucent draw.

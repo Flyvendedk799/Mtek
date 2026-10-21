@@ -9377,6 +9377,371 @@ var UniformArena = class {
   }
 };
 
+// src/host/surface.ts
+var OFFSCREEN_FORMAT = "rgba8unorm-srgb", DEPTH_FORMAT = "depth24plus";
+function srgbViewFormat(format) {
+  if (format === "bgra8unorm") return "bgra8unorm-srgb";
+  if (format === "rgba8unorm") return "rgba8unorm-srgb";
+}
+function backingSize(clientWidth, clientHeight, devicePixelRatio2, maxDimension) {
+  let scale = (client) => Math.min(Math.max(Math.round(client * devicePixelRatio2), 0), maxDimension);
+  return { width: scale(clientWidth), height: scale(clientHeight) };
+}
+function paddedBytesPerRow(width) {
+  return Math.ceil(width * 4 / 256) * 256;
+}
+var Surface = class {
+  constructor(options) {
+    this.options = options;
+    let view = srgbViewFormat(options.format);
+    if (view === void 0) throw new Error(`Surface: no sRGB view format for ${options.format}`);
+    this.viewFormat = view, this.device = options.device;
+  }
+  options;
+  get timer() {
+    return this.timerDropped ? void 0 : this.options.timer;
+  }
+  viewFormat;
+  widthPx = 0;
+  heightPx = 0;
+  depth = null;
+  /** The GPU timer belongs to the device it was created on; a recovered device has none (decision 0055, 0056). */
+  timerDropped = !1;
+  depthWidth = 0;
+  depthHeight = 0;
+  offscreen = null;
+  offscreenWidth = 0;
+  offscreenHeight = 0;
+  /** Replaced by `recover`. */
+  device;
+  rendered = 0;
+  skipped = 0;
+  configured = !1;
+  /** Unconfigured because the canvas has no pixels; configured again when it has (decision 0132). */
+  parked = !1;
+  /** Frames that were drawn / skipped because the canvas has no pixels. */
+  get framesRendered() {
+    return this.rendered;
+  }
+  get framesSkipped() {
+    return this.skipped;
+  }
+  /** The current backing (or render target) size in pixels. */
+  get size() {
+    return { width: this.widthPx, height: this.heightPx };
+  }
+  /** The format of the colour attachment: the offscreen target's, or the canvas's sRGB view format. */
+  get colorFormat() {
+    return this.drawsOffscreen ? OFFSCREEN_FORMAT : this.viewFormat;
+  }
+  get drawsOffscreen() {
+    return this.options.renderTarget !== void 0 || this.options.canvasRenderTarget === !0;
+  }
+  /** True when a frame can be drawn: the target has at least one pixel. */
+  get renderable() {
+    return this.widthPx > 0 && this.heightPx > 0;
+  }
+  /**
+   * `context.configure` with the preferred format, its sRGB view format and opaque alpha, so the hardware
+   * encodes linear to sRGB (`spec/runtime-abi.md` section 8.2). Throws what the browser throws.
+   */
+  configure() {
+    let { context, format } = this.options, { device } = this;
+    context.configure({ device, format, viewFormats: [this.viewFormat], alphaMode: "opaque" }), this.configured = !0;
+  }
+  /**
+   * Computes the size, applies it to the canvas and creates the depth texture (and the offscreen target
+   * with `test.renderTarget`). Throws the registry's error when an allocation fails.
+   */
+  allocate() {
+    let { renderTarget } = this.options;
+    if (renderTarget !== void 0) {
+      this.widthPx = renderTarget.width, this.heightPx = renderTarget.height, this.ensureOffscreen(), this.ensureDepth();
+      return;
+    }
+    this.applyCanvasSize();
+  }
+  /**
+   * Recomputes the backing size after a `ResizeObserver` callback. Returns true when the size changed. In
+   * render-target mode the size is fixed and nothing changes.
+   */
+  resize() {
+    return this.options.renderTarget !== void 0 ? !1 : this.applyCanvasSize();
+  }
+  applyCanvasSize() {
+    let { canvas, devicePixelRatio: devicePixelRatio2 } = this.options, max2 = this.device.limits.maxTextureDimension2D, { width, height } = backingSize(canvas.clientWidth, canvas.clientHeight, devicePixelRatio2(), max2), changed = width !== this.widthPx || height !== this.heightPx;
+    this.widthPx = width, this.heightPx = height;
+    let empty = width === 0 || height === 0;
+    return empty && this.configured && (this.options.context.unconfigure(), this.configured = !1, this.parked = !0), canvas.width !== width && (canvas.width = width), canvas.height !== height && (canvas.height = height), !empty && this.parked && (this.parked = !1, this.configure()), this.options.canvasRenderTarget === !0 && this.ensureOffscreen(), this.ensureDepth(), changed;
+  }
+  /**
+   * Creates the offscreen target for the current size unless one of that size exists; the old texture is
+   * released after the new one is in place (section 9.2). A zero-sized target keeps the old texture: nothing
+   * is drawn while `renderable` is false.
+   */
+  ensureOffscreen() {
+    if (!this.renderable || this.offscreen !== null && this.offscreenWidth === this.widthPx && this.offscreenHeight === this.heightPx) return;
+    let next = this.options.registry.createTexture({
+      label: "mtek render target",
+      size: [this.widthPx, this.heightPx],
+      format: OFFSCREEN_FORMAT,
+      usage: 17
+    }), previous = this.offscreen;
+    this.offscreen = next, this.offscreenWidth = this.widthPx, this.offscreenHeight = this.heightPx, previous !== null && this.options.registry.release(previous);
+  }
+  /**
+   * Device recovery: forgets every texture of the lost device, configures the canvas for `device` and
+   * allocates the depth texture (and the offscreen target) again at the canvas's current size. Throws what
+   * the browser or the registry throws; the caller treats that as a failed recovery attempt.
+   */
+  recover(device) {
+    this.device = device, this.timerDropped = !0, this.depth = null, this.depthWidth = 0, this.depthHeight = 0, this.offscreen = null, this.offscreenWidth = 0, this.offscreenHeight = 0, this.widthPx = 0, this.heightPx = 0, this.configured = !1, this.parked = !1, this.configure(), this.allocate();
+  }
+  /** Creates the depth texture for the current size; the old one is released only after the new one exists. */
+  ensureDepth() {
+    if (!this.renderable || this.depth !== null && this.depthWidth === this.widthPx && this.depthHeight === this.heightPx) return;
+    let next = this.options.registry.createTexture({
+      label: "mtek depth",
+      size: [this.widthPx, this.heightPx],
+      format: DEPTH_FORMAT,
+      usage: 16
+    }), previous = this.depth;
+    this.depth = next, this.depthWidth = this.widthPx, this.depthHeight = this.heightPx, previous !== null && this.options.registry.release(previous);
+  }
+  /**
+   * Draws one frame: one render pass that clears to the RGB of `clearColor` (linear, encoded by the sRGB
+   * view; alpha 1, the canvas is opaque) and depth 1.0, then runs `encode` to record the draws, and
+   * submits. Returns false and draws nothing when the canvas has no pixels (a zero-sized canvas is not an
+   * error).
+   */
+  render(clearColor, encode) {
+    if (!this.renderable || this.depth === null)
+      return this.skipped += 1, !1;
+    let { context } = this.options, { device } = this, target = this.offscreen ?? context.getCurrentTexture(), encoder = device.createCommandEncoder({ label: "mtek frame" }), timestampWrites = this.timer?.passTimestampWrites(), pass = encoder.beginRenderPass({
+      ...timestampWrites === void 0 ? {} : { timestampWrites },
+      colorAttachments: [
+        {
+          view: target.createView({ format: this.offscreen !== null ? OFFSCREEN_FORMAT : this.viewFormat }),
+          clearValue: { r: clearColor[0], g: clearColor[1], b: clearColor[2], a: 1 },
+          loadOp: "clear",
+          storeOp: "store"
+        }
+      ],
+      depthStencilAttachment: {
+        view: this.depth.createView(),
+        depthClearValue: 1,
+        depthLoadOp: "clear",
+        depthStoreOp: "store"
+      }
+    });
+    return encode?.(pass), pass.end(), timestampWrites !== void 0 && this.timer?.resolve(encoder), device.queue.submit([encoder.finish()]), timestampWrites !== void 0 && this.timer?.submitted(), this.rendered += 1, !0;
+  }
+  /**
+   * Copies the offscreen target to a mappable buffer (`bytesPerRow` padded to 256), maps it and returns
+   * tightly packed rows (`spec/runtime-abi.md` section 10.2). The staging buffer is released either way.
+   */
+  async readPixels() {
+    let { registry } = this.options, { device } = this, offscreen = this.offscreen;
+    if (offscreen === null || !this.renderable)
+      throw new Error(
+        this.drawsOffscreen ? "readPixels: the canvas has no pixels" : "readPixels requires mountMtek options test.renderTarget or test.canvasRenderTarget"
+      );
+    let width = this.offscreenWidth, height = this.offscreenHeight, bytesPerRow = paddedBytesPerRow(width), staging = registry.createBuffer({
+      label: "mtek readback",
+      size: bytesPerRow * height,
+      usage: 9
+    });
+    try {
+      let encoder = device.createCommandEncoder({ label: "mtek readback" });
+      encoder.copyTextureToBuffer({ texture: offscreen }, { buffer: staging, bytesPerRow }, [width, height]), device.queue.submit([encoder.finish()]), await staging.mapAsync(1);
+      let mapped = new Uint8Array(staging.getMappedRange()), data = new Uint8Array(width * height * 4);
+      for (let row = 0; row < height; row += 1)
+        data.set(mapped.subarray(row * bytesPerRow, row * bytesPerRow + width * 4), row * width * 4);
+      return staging.unmap(), { width, height, format: OFFSCREEN_FORMAT, data };
+    } finally {
+      try {
+        registry.release(staging);
+      } catch {
+      }
+    }
+  }
+  /** Unconfigures the canvas. The textures are released by the registry's `destroyAll`. */
+  dispose() {
+    this.parked = !1, this.configured && (this.configured = !1, this.options.context.unconfigure()), this.depth = null, this.offscreen = null;
+  }
+};
+
+// src/render/pipelines.ts
+var STAGE_VERTEX = 1, STAGE_FRAGMENT = 2, CULL_MODE = "back", FRONT_FACE = "ccw", TOPOLOGY = "triangle-list", DEPTH_COMPARE = "less", INSTANCE_MATRICES = "instance_matrices", INSTANCE_MODEL_LOCATION = 3, INSTANCE_NORMAL_LOCATION = 7, INSTANCE_STRIDE = 128, INSTANCE_FLOATS = INSTANCE_STRIDE / 4;
+function pipelineKey(parts) {
+  return JSON.stringify([parts.shaderHash, parts.vertexAttributes, parts.colorFormat, parts.depthFormat, parts.cullMode, parts.topology]);
+}
+var VERTEX_FORMATS = {
+  position: { location: 0, format: "float32x3", stride: 12 },
+  normal: { location: 1, format: "float32x3", stride: 12 },
+  uv: { location: 2, format: "float32x2", stride: 8 }
+};
+function vertexBufferLayouts(attributes) {
+  return attributes.map((attribute) => {
+    let { location, format, stride } = VERTEX_FORMATS[attribute];
+    return { arrayStride: stride, stepMode: "vertex", attributes: [{ shaderLocation: location, offset: 0, format }] };
+  });
+}
+function instanceBufferLayout() {
+  let attributes = [];
+  for (let column = 0; column < 4; column++) attributes.push({ shaderLocation: INSTANCE_MODEL_LOCATION + column, offset: column * 16, format: "float32x4" });
+  for (let column = 0; column < 4; column++) attributes.push({ shaderLocation: INSTANCE_NORMAL_LOCATION + column, offset: 64 + column * 16, format: "float32x4" });
+  return { arrayStride: INSTANCE_STRIDE, stepMode: "instance", attributes };
+}
+function uniformEntry(size, visibility, hasDynamicOffset) {
+  return { binding: 0, visibility, buffer: { type: "uniform", hasDynamicOffset, minBindingSize: size } };
+}
+function materialLayoutKey(size, resources) {
+  let kinds = resources.map((resource) => `${String(resource.binding)}${resource.kind === "texture" ? "t" : "s"}`);
+  return [`${String(size)} bytes`, ...kinds].join(" ");
+}
+var BindingPlan = class {
+  constructor(registry, frameLayout, objectLayout) {
+    this.registry = registry;
+    this.frame = registry.createBindGroupLayout({ label: "mtek group 0 (MtekFrame)", entries: [uniformEntry(frameLayout.size, STAGE_VERTEX | STAGE_FRAGMENT, !1)] }), this.object = registry.createBindGroupLayout({ label: "mtek group 2 (MtekObject)", entries: [uniformEntry(objectLayout.size, STAGE_VERTEX, !0)] });
+  }
+  registry;
+  frame;
+  object;
+  materialLayouts = /* @__PURE__ */ new Map();
+  pipelineLayouts = /* @__PURE__ */ new Map();
+  emptyGroup;
+  /**
+   * Group 1 of a material: its parameter block at binding 0 (fragment stage; absent without value
+   * params), then one binding per texture or sampler (`spec/gpu-layout.md` section 6). The layout
+   * depends only on the block size and the kinds of the resources, so materials with the same shape
+   * share it.
+   */
+  material(layout, resources = []) {
+    let size = layout?.size ?? 0, key = materialLayoutKey(size, resources), found = this.materialLayouts.get(key);
+    if (found === void 0) {
+      let entries = size === 0 ? [] : [uniformEntry(size, STAGE_FRAGMENT, !1)];
+      for (let resource of resources)
+        entries.push(
+          resource.kind === "texture" ? { binding: resource.binding, visibility: STAGE_FRAGMENT, texture: { sampleType: "float", viewDimension: "2d", multisampled: !1 } } : { binding: resource.binding, visibility: STAGE_FRAGMENT, sampler: { type: "filtering" } }
+        );
+      found = this.registry.createBindGroupLayout({
+        label: size === 0 && resources.length === 0 ? "mtek group 1 (no params)" : `mtek group 1 (${key})`,
+        entries
+      }), this.materialLayouts.set(key, found);
+    }
+    return found;
+  }
+  /** The bind group of the empty group-1 layout, shared by every material without value params or resources. */
+  emptyMaterialGroup() {
+    return this.emptyGroup ??= this.registry.createBindGroup({ label: "mtek group 1 (no params)", layout: this.material(null), entries: [] }), this.emptyGroup;
+  }
+  pipelineLayout(layout, resources = []) {
+    let key = materialLayoutKey(layout?.size ?? 0, resources), found = this.pipelineLayouts.get(key);
+    return found === void 0 && (found = this.registry.createPipelineLayout({
+      label: `mtek pipeline layout (${key})`,
+      bindGroupLayouts: [this.frame, this.material(layout, resources), this.object]
+    }), this.pipelineLayouts.set(key, found)), found;
+  }
+}, ALPHA_PARAMS = /* @__PURE__ */ new Set(["color", "base_color"]);
+function canBlend(material) {
+  return material.params.some((param) => ALPHA_PARAMS.has(param.name) && param.type === "color");
+}
+var ALPHA_BLEND = {
+  color: { srcFactor: "src-alpha", dstFactor: "one-minus-src-alpha", operation: "add" },
+  alpha: { srcFactor: "one", dstFactor: "one-minus-src-alpha", operation: "add" }
+};
+function materialPipelineKey(material, colorFormat, instanced = !1) {
+  return pipelineKey({
+    shaderHash: material.shader.hash,
+    vertexAttributes: instanced ? [...material.shader.vertexAttributes, INSTANCE_MATRICES] : material.shader.vertexAttributes,
+    colorFormat,
+    depthFormat: DEPTH_FORMAT,
+    cullMode: CULL_MODE,
+    topology: TOPOLOGY
+  });
+}
+function pipelineDescriptor(plan, request) {
+  let { material, module, colorFormat } = request, buffers = vertexBufferLayouts(material.shader.vertexAttributes), entryPoint = material.shader.vertexEntry;
+  if (request.instanced === !0) {
+    let instancedEntry = material.shader.instancedVertexEntry;
+    if (instancedEntry === void 0) throw new Error(`internal error: the shader of '${material.id}' has no instanced vertex entry`);
+    entryPoint = instancedEntry, buffers.push(instanceBufferLayout());
+  }
+  return {
+    label: request.instanced === !0 ? `mtek pipeline ${material.id} (instanced)` : `mtek pipeline ${material.id}`,
+    layout: plan.pipelineLayout(material.layout, material.resources),
+    vertex: { module, entryPoint, buffers },
+    fragment: {
+      module,
+      entryPoint: material.shader.fragmentEntry,
+      targets: [request.blended === !0 ? { format: colorFormat, blend: ALPHA_BLEND } : { format: colorFormat }]
+    },
+    primitive: { topology: TOPOLOGY, cullMode: CULL_MODE, frontFace: FRONT_FACE },
+    // Translucent draws test depth against the opaque scene but do not write it (decision 0138).
+    depthStencil: { format: DEPTH_FORMAT, depthCompare: DEPTH_COMPARE, depthWriteEnabled: request.blended !== !0 }
+  };
+}
+function errorText4(error) {
+  return error instanceof Error ? error.message === "" ? error.name : error.message : String(error);
+}
+var PipelineCache = class {
+  constructor(device, registry, plan, manifest) {
+    this.device = device;
+    this.registry = registry;
+    this.plan = plan;
+    this.manifest = manifest;
+  }
+  device;
+  registry;
+  plan;
+  manifest;
+  pipelines = /* @__PURE__ */ new Map();
+  get size() {
+    return this.pipelines.size;
+  }
+  get(key) {
+    return this.pipelines.get(key);
+  }
+  /**
+   * Seeds the cache with pipelines from a previous program so unchanged shader hashes reuse them
+   * (`spec/runtime-abi.md` section 11.3 — a colour edit creates no pipeline).
+   */
+  adopt(key, pipeline) {
+    this.pipelines.has(key) || this.pipelines.set(key, pipeline);
+  }
+  /** Copies every entry of `other` into this cache (for hot reload reuse). */
+  adoptAll(other) {
+    for (let [key, pipeline] of other.pipelines) this.adopt(key, pipeline);
+  }
+  /** Returns the cached pipeline of the request's key, or creates it inside a validation error scope. */
+  async obtain(request) {
+    let key = materialPipelineKey(request.material, request.colorFormat, request.instanced === !0) + (request.blended === !0 ? "|blend" : ""), cached = this.pipelines.get(key);
+    if (cached !== void 0) return { ok: !0, key, pipeline: cached };
+    let descriptor = pipelineDescriptor(this.plan, request);
+    this.device.pushErrorScope("validation");
+    let creation = this.registry.createRenderPipelineAsync(descriptor).then(
+      (pipeline) => ({ pipeline, error: void 0 }),
+      (error) => ({ pipeline: void 0, error: errorText4(error) })
+    ), scope = this.device.popErrorScope().then(
+      (error) => error === null ? void 0 : error.message,
+      // popErrorScope rejects when the device is lost; the loss is reported through device.lost.
+      () => {
+      }
+    ), [created, scopeError] = await Promise.all([creation, scope]), message = created.error ?? scopeError;
+    return created.pipeline === void 0 || message !== void 0 ? (created.pipeline !== void 0 && this.registry.release(created.pipeline), { ok: !1, diagnostic: this.failure(request, message ?? "the pipeline was not created") }) : (this.pipelines.set(key, created.pipeline), { ok: !0, key, pipeline: created.pipeline });
+  }
+  failure(request, message) {
+    let spanId = spanOfSymbol(this.manifest, request.material.id);
+    return makeRuntimeDiagnostic("E8051", {
+      phase: request.phase ?? "runtime:mount",
+      message: `The render pipeline for material '${request.material.id}' could not be created: ${message}`,
+      source: spanId === void 0 ? null : resolveSpan(this.manifest, spanId),
+      notes: [`pipeline key: ${materialPipelineKey(request.material, request.colorFormat, request.instanced === !0)}`]
+    });
+  }
+};
+
 // src/render/resources.ts
 var TEXTURE_FORMATS = { srgb: "rgba8unorm-srgb", linear: "rgba8unorm" }, SAMPLER_PRESETS = {
   "sampler.linear_repeat": { magFilter: "linear", minFilter: "linear", mipmapFilter: "linear", addressModeU: "repeat", addressModeV: "repeat" },
@@ -9556,6 +9921,18 @@ var MaterialStore = class {
   get blockVersion() {
     return this.blockChanges;
   }
+  /** Instances whose `color` or `base_color` alpha is below 1 (decision 0138). */
+  translucent = /* @__PURE__ */ new Set();
+  /** Whether the instance is drawn in the translucent pass: its `color` or `base_color` alpha is below 1. */
+  isTranslucent(instance) {
+    return this.translucent.has(instance);
+  }
+  /** Tracks the alpha of a colour param; a change of translucency rebuilds the draw list (via `blockVersion`). */
+  trackAlpha(instance, name, value) {
+    if (!ALPHA_PARAMS.has(name) || typeof value != "object" || value === null) return;
+    let alpha = value.a, translucent = typeof alpha == "number" && alpha < 1;
+    translucent !== this.translucent.has(instance) && (translucent ? this.translucent.add(instance) : this.translucent.delete(instance), this.blockChanges += 1);
+  }
   /** The number of live material instances. */
   get instanceCount() {
     return this.instances.size;
@@ -9592,7 +9969,7 @@ var MaterialStore = class {
   /** Removes a spawned entity's instance: leaves its block, releasing the slot and the bind groups with the last user. */
   removeInstance(index) {
     if (!this.instances.has(index)) throw new Error(`internal error: no material instance ${String(index)}`);
-    this.leave(index), this.instances.delete(index), this.blocks[index] = void 0, this.resources.delete(index), this.blockChanges += 1;
+    this.leave(index), this.instances.delete(index), this.translucent.delete(index), this.blocks[index] = void 0, this.resources.delete(index), this.blockChanges += 1;
   }
   /** Takes `index` out of its block; frees the block when it was the last user, renames it when it was the lowest. */
   leave(index) {
@@ -9655,6 +10032,7 @@ var MaterialStore = class {
    * its block gets a block of its own first when the write would change the bytes.
    */
   writeParam(instance, name, value) {
+    this.trackAlpha(instance, name, value);
     let block = this.blockOfInstance(instance), storage = block.storage;
     if (storage === null) throw new Error(`internal error: material instance ${String(instance)} has no value params`);
     let writer = storage.writers.fields.get(name);
@@ -10017,359 +10395,6 @@ function instancingCandidates(structure, blockOf, pipelineKeyOf) {
   return { materials, capacity };
 }
 
-// src/host/surface.ts
-var OFFSCREEN_FORMAT = "rgba8unorm-srgb", DEPTH_FORMAT = "depth24plus";
-function srgbViewFormat(format) {
-  if (format === "bgra8unorm") return "bgra8unorm-srgb";
-  if (format === "rgba8unorm") return "rgba8unorm-srgb";
-}
-function backingSize(clientWidth, clientHeight, devicePixelRatio2, maxDimension) {
-  let scale = (client) => Math.min(Math.max(Math.round(client * devicePixelRatio2), 0), maxDimension);
-  return { width: scale(clientWidth), height: scale(clientHeight) };
-}
-function paddedBytesPerRow(width) {
-  return Math.ceil(width * 4 / 256) * 256;
-}
-var Surface = class {
-  constructor(options) {
-    this.options = options;
-    let view = srgbViewFormat(options.format);
-    if (view === void 0) throw new Error(`Surface: no sRGB view format for ${options.format}`);
-    this.viewFormat = view, this.device = options.device;
-  }
-  options;
-  get timer() {
-    return this.timerDropped ? void 0 : this.options.timer;
-  }
-  viewFormat;
-  widthPx = 0;
-  heightPx = 0;
-  depth = null;
-  /** The GPU timer belongs to the device it was created on; a recovered device has none (decision 0055, 0056). */
-  timerDropped = !1;
-  depthWidth = 0;
-  depthHeight = 0;
-  offscreen = null;
-  offscreenWidth = 0;
-  offscreenHeight = 0;
-  /** Replaced by `recover`. */
-  device;
-  rendered = 0;
-  skipped = 0;
-  configured = !1;
-  /** Unconfigured because the canvas has no pixels; configured again when it has (decision 0132). */
-  parked = !1;
-  /** Frames that were drawn / skipped because the canvas has no pixels. */
-  get framesRendered() {
-    return this.rendered;
-  }
-  get framesSkipped() {
-    return this.skipped;
-  }
-  /** The current backing (or render target) size in pixels. */
-  get size() {
-    return { width: this.widthPx, height: this.heightPx };
-  }
-  /** The format of the colour attachment: the offscreen target's, or the canvas's sRGB view format. */
-  get colorFormat() {
-    return this.drawsOffscreen ? OFFSCREEN_FORMAT : this.viewFormat;
-  }
-  get drawsOffscreen() {
-    return this.options.renderTarget !== void 0 || this.options.canvasRenderTarget === !0;
-  }
-  /** True when a frame can be drawn: the target has at least one pixel. */
-  get renderable() {
-    return this.widthPx > 0 && this.heightPx > 0;
-  }
-  /**
-   * `context.configure` with the preferred format, its sRGB view format and opaque alpha, so the hardware
-   * encodes linear to sRGB (`spec/runtime-abi.md` section 8.2). Throws what the browser throws.
-   */
-  configure() {
-    let { context, format } = this.options, { device } = this;
-    context.configure({ device, format, viewFormats: [this.viewFormat], alphaMode: "opaque" }), this.configured = !0;
-  }
-  /**
-   * Computes the size, applies it to the canvas and creates the depth texture (and the offscreen target
-   * with `test.renderTarget`). Throws the registry's error when an allocation fails.
-   */
-  allocate() {
-    let { renderTarget } = this.options;
-    if (renderTarget !== void 0) {
-      this.widthPx = renderTarget.width, this.heightPx = renderTarget.height, this.ensureOffscreen(), this.ensureDepth();
-      return;
-    }
-    this.applyCanvasSize();
-  }
-  /**
-   * Recomputes the backing size after a `ResizeObserver` callback. Returns true when the size changed. In
-   * render-target mode the size is fixed and nothing changes.
-   */
-  resize() {
-    return this.options.renderTarget !== void 0 ? !1 : this.applyCanvasSize();
-  }
-  applyCanvasSize() {
-    let { canvas, devicePixelRatio: devicePixelRatio2 } = this.options, max2 = this.device.limits.maxTextureDimension2D, { width, height } = backingSize(canvas.clientWidth, canvas.clientHeight, devicePixelRatio2(), max2), changed = width !== this.widthPx || height !== this.heightPx;
-    this.widthPx = width, this.heightPx = height;
-    let empty = width === 0 || height === 0;
-    return empty && this.configured && (this.options.context.unconfigure(), this.configured = !1, this.parked = !0), canvas.width !== width && (canvas.width = width), canvas.height !== height && (canvas.height = height), !empty && this.parked && (this.parked = !1, this.configure()), this.options.canvasRenderTarget === !0 && this.ensureOffscreen(), this.ensureDepth(), changed;
-  }
-  /**
-   * Creates the offscreen target for the current size unless one of that size exists; the old texture is
-   * released after the new one is in place (section 9.2). A zero-sized target keeps the old texture: nothing
-   * is drawn while `renderable` is false.
-   */
-  ensureOffscreen() {
-    if (!this.renderable || this.offscreen !== null && this.offscreenWidth === this.widthPx && this.offscreenHeight === this.heightPx) return;
-    let next = this.options.registry.createTexture({
-      label: "mtek render target",
-      size: [this.widthPx, this.heightPx],
-      format: OFFSCREEN_FORMAT,
-      usage: 17
-    }), previous = this.offscreen;
-    this.offscreen = next, this.offscreenWidth = this.widthPx, this.offscreenHeight = this.heightPx, previous !== null && this.options.registry.release(previous);
-  }
-  /**
-   * Device recovery: forgets every texture of the lost device, configures the canvas for `device` and
-   * allocates the depth texture (and the offscreen target) again at the canvas's current size. Throws what
-   * the browser or the registry throws; the caller treats that as a failed recovery attempt.
-   */
-  recover(device) {
-    this.device = device, this.timerDropped = !0, this.depth = null, this.depthWidth = 0, this.depthHeight = 0, this.offscreen = null, this.offscreenWidth = 0, this.offscreenHeight = 0, this.widthPx = 0, this.heightPx = 0, this.configured = !1, this.parked = !1, this.configure(), this.allocate();
-  }
-  /** Creates the depth texture for the current size; the old one is released only after the new one exists. */
-  ensureDepth() {
-    if (!this.renderable || this.depth !== null && this.depthWidth === this.widthPx && this.depthHeight === this.heightPx) return;
-    let next = this.options.registry.createTexture({
-      label: "mtek depth",
-      size: [this.widthPx, this.heightPx],
-      format: DEPTH_FORMAT,
-      usage: 16
-    }), previous = this.depth;
-    this.depth = next, this.depthWidth = this.widthPx, this.depthHeight = this.heightPx, previous !== null && this.options.registry.release(previous);
-  }
-  /**
-   * Draws one frame: one render pass that clears to the RGB of `clearColor` (linear, encoded by the sRGB
-   * view; alpha 1, the canvas is opaque) and depth 1.0, then runs `encode` to record the draws, and
-   * submits. Returns false and draws nothing when the canvas has no pixels (a zero-sized canvas is not an
-   * error).
-   */
-  render(clearColor, encode) {
-    if (!this.renderable || this.depth === null)
-      return this.skipped += 1, !1;
-    let { context } = this.options, { device } = this, target = this.offscreen ?? context.getCurrentTexture(), encoder = device.createCommandEncoder({ label: "mtek frame" }), timestampWrites = this.timer?.passTimestampWrites(), pass = encoder.beginRenderPass({
-      ...timestampWrites === void 0 ? {} : { timestampWrites },
-      colorAttachments: [
-        {
-          view: target.createView({ format: this.offscreen !== null ? OFFSCREEN_FORMAT : this.viewFormat }),
-          clearValue: { r: clearColor[0], g: clearColor[1], b: clearColor[2], a: 1 },
-          loadOp: "clear",
-          storeOp: "store"
-        }
-      ],
-      depthStencilAttachment: {
-        view: this.depth.createView(),
-        depthClearValue: 1,
-        depthLoadOp: "clear",
-        depthStoreOp: "store"
-      }
-    });
-    return encode?.(pass), pass.end(), timestampWrites !== void 0 && this.timer?.resolve(encoder), device.queue.submit([encoder.finish()]), timestampWrites !== void 0 && this.timer?.submitted(), this.rendered += 1, !0;
-  }
-  /**
-   * Copies the offscreen target to a mappable buffer (`bytesPerRow` padded to 256), maps it and returns
-   * tightly packed rows (`spec/runtime-abi.md` section 10.2). The staging buffer is released either way.
-   */
-  async readPixels() {
-    let { registry } = this.options, { device } = this, offscreen = this.offscreen;
-    if (offscreen === null || !this.renderable)
-      throw new Error(
-        this.drawsOffscreen ? "readPixels: the canvas has no pixels" : "readPixels requires mountMtek options test.renderTarget or test.canvasRenderTarget"
-      );
-    let width = this.offscreenWidth, height = this.offscreenHeight, bytesPerRow = paddedBytesPerRow(width), staging = registry.createBuffer({
-      label: "mtek readback",
-      size: bytesPerRow * height,
-      usage: 9
-    });
-    try {
-      let encoder = device.createCommandEncoder({ label: "mtek readback" });
-      encoder.copyTextureToBuffer({ texture: offscreen }, { buffer: staging, bytesPerRow }, [width, height]), device.queue.submit([encoder.finish()]), await staging.mapAsync(1);
-      let mapped = new Uint8Array(staging.getMappedRange()), data = new Uint8Array(width * height * 4);
-      for (let row = 0; row < height; row += 1)
-        data.set(mapped.subarray(row * bytesPerRow, row * bytesPerRow + width * 4), row * width * 4);
-      return staging.unmap(), { width, height, format: OFFSCREEN_FORMAT, data };
-    } finally {
-      try {
-        registry.release(staging);
-      } catch {
-      }
-    }
-  }
-  /** Unconfigures the canvas. The textures are released by the registry's `destroyAll`. */
-  dispose() {
-    this.parked = !1, this.configured && (this.configured = !1, this.options.context.unconfigure()), this.depth = null, this.offscreen = null;
-  }
-};
-
-// src/render/pipelines.ts
-var STAGE_VERTEX = 1, STAGE_FRAGMENT = 2, CULL_MODE = "back", FRONT_FACE = "ccw", TOPOLOGY = "triangle-list", DEPTH_COMPARE = "less", INSTANCE_MATRICES = "instance_matrices", INSTANCE_MODEL_LOCATION = 3, INSTANCE_NORMAL_LOCATION = 7, INSTANCE_STRIDE = 128, INSTANCE_FLOATS = INSTANCE_STRIDE / 4;
-function pipelineKey(parts) {
-  return JSON.stringify([parts.shaderHash, parts.vertexAttributes, parts.colorFormat, parts.depthFormat, parts.cullMode, parts.topology]);
-}
-var VERTEX_FORMATS = {
-  position: { location: 0, format: "float32x3", stride: 12 },
-  normal: { location: 1, format: "float32x3", stride: 12 },
-  uv: { location: 2, format: "float32x2", stride: 8 }
-};
-function vertexBufferLayouts(attributes) {
-  return attributes.map((attribute) => {
-    let { location, format, stride } = VERTEX_FORMATS[attribute];
-    return { arrayStride: stride, stepMode: "vertex", attributes: [{ shaderLocation: location, offset: 0, format }] };
-  });
-}
-function instanceBufferLayout() {
-  let attributes = [];
-  for (let column = 0; column < 4; column++) attributes.push({ shaderLocation: INSTANCE_MODEL_LOCATION + column, offset: column * 16, format: "float32x4" });
-  for (let column = 0; column < 4; column++) attributes.push({ shaderLocation: INSTANCE_NORMAL_LOCATION + column, offset: 64 + column * 16, format: "float32x4" });
-  return { arrayStride: INSTANCE_STRIDE, stepMode: "instance", attributes };
-}
-function uniformEntry(size, visibility, hasDynamicOffset) {
-  return { binding: 0, visibility, buffer: { type: "uniform", hasDynamicOffset, minBindingSize: size } };
-}
-function materialLayoutKey(size, resources) {
-  let kinds = resources.map((resource) => `${String(resource.binding)}${resource.kind === "texture" ? "t" : "s"}`);
-  return [`${String(size)} bytes`, ...kinds].join(" ");
-}
-var BindingPlan = class {
-  constructor(registry, frameLayout, objectLayout) {
-    this.registry = registry;
-    this.frame = registry.createBindGroupLayout({ label: "mtek group 0 (MtekFrame)", entries: [uniformEntry(frameLayout.size, STAGE_VERTEX | STAGE_FRAGMENT, !1)] }), this.object = registry.createBindGroupLayout({ label: "mtek group 2 (MtekObject)", entries: [uniformEntry(objectLayout.size, STAGE_VERTEX, !0)] });
-  }
-  registry;
-  frame;
-  object;
-  materialLayouts = /* @__PURE__ */ new Map();
-  pipelineLayouts = /* @__PURE__ */ new Map();
-  emptyGroup;
-  /**
-   * Group 1 of a material: its parameter block at binding 0 (fragment stage; absent without value
-   * params), then one binding per texture or sampler (`spec/gpu-layout.md` section 6). The layout
-   * depends only on the block size and the kinds of the resources, so materials with the same shape
-   * share it.
-   */
-  material(layout, resources = []) {
-    let size = layout?.size ?? 0, key = materialLayoutKey(size, resources), found = this.materialLayouts.get(key);
-    if (found === void 0) {
-      let entries = size === 0 ? [] : [uniformEntry(size, STAGE_FRAGMENT, !1)];
-      for (let resource of resources)
-        entries.push(
-          resource.kind === "texture" ? { binding: resource.binding, visibility: STAGE_FRAGMENT, texture: { sampleType: "float", viewDimension: "2d", multisampled: !1 } } : { binding: resource.binding, visibility: STAGE_FRAGMENT, sampler: { type: "filtering" } }
-        );
-      found = this.registry.createBindGroupLayout({
-        label: size === 0 && resources.length === 0 ? "mtek group 1 (no params)" : `mtek group 1 (${key})`,
-        entries
-      }), this.materialLayouts.set(key, found);
-    }
-    return found;
-  }
-  /** The bind group of the empty group-1 layout, shared by every material without value params or resources. */
-  emptyMaterialGroup() {
-    return this.emptyGroup ??= this.registry.createBindGroup({ label: "mtek group 1 (no params)", layout: this.material(null), entries: [] }), this.emptyGroup;
-  }
-  pipelineLayout(layout, resources = []) {
-    let key = materialLayoutKey(layout?.size ?? 0, resources), found = this.pipelineLayouts.get(key);
-    return found === void 0 && (found = this.registry.createPipelineLayout({
-      label: `mtek pipeline layout (${key})`,
-      bindGroupLayouts: [this.frame, this.material(layout, resources), this.object]
-    }), this.pipelineLayouts.set(key, found)), found;
-  }
-};
-function materialPipelineKey(material, colorFormat, instanced = !1) {
-  return pipelineKey({
-    shaderHash: material.shader.hash,
-    vertexAttributes: instanced ? [...material.shader.vertexAttributes, INSTANCE_MATRICES] : material.shader.vertexAttributes,
-    colorFormat,
-    depthFormat: DEPTH_FORMAT,
-    cullMode: CULL_MODE,
-    topology: TOPOLOGY
-  });
-}
-function pipelineDescriptor(plan, request) {
-  let { material, module, colorFormat } = request, buffers = vertexBufferLayouts(material.shader.vertexAttributes), entryPoint = material.shader.vertexEntry;
-  if (request.instanced === !0) {
-    let instancedEntry = material.shader.instancedVertexEntry;
-    if (instancedEntry === void 0) throw new Error(`internal error: the shader of '${material.id}' has no instanced vertex entry`);
-    entryPoint = instancedEntry, buffers.push(instanceBufferLayout());
-  }
-  return {
-    label: request.instanced === !0 ? `mtek pipeline ${material.id} (instanced)` : `mtek pipeline ${material.id}`,
-    layout: plan.pipelineLayout(material.layout, material.resources),
-    vertex: { module, entryPoint, buffers },
-    fragment: { module, entryPoint: material.shader.fragmentEntry, targets: [{ format: colorFormat }] },
-    primitive: { topology: TOPOLOGY, cullMode: CULL_MODE, frontFace: FRONT_FACE },
-    depthStencil: { format: DEPTH_FORMAT, depthCompare: DEPTH_COMPARE, depthWriteEnabled: !0 }
-  };
-}
-function errorText4(error) {
-  return error instanceof Error ? error.message === "" ? error.name : error.message : String(error);
-}
-var PipelineCache = class {
-  constructor(device, registry, plan, manifest) {
-    this.device = device;
-    this.registry = registry;
-    this.plan = plan;
-    this.manifest = manifest;
-  }
-  device;
-  registry;
-  plan;
-  manifest;
-  pipelines = /* @__PURE__ */ new Map();
-  get size() {
-    return this.pipelines.size;
-  }
-  get(key) {
-    return this.pipelines.get(key);
-  }
-  /**
-   * Seeds the cache with pipelines from a previous program so unchanged shader hashes reuse them
-   * (`spec/runtime-abi.md` section 11.3 — a colour edit creates no pipeline).
-   */
-  adopt(key, pipeline) {
-    this.pipelines.has(key) || this.pipelines.set(key, pipeline);
-  }
-  /** Copies every entry of `other` into this cache (for hot reload reuse). */
-  adoptAll(other) {
-    for (let [key, pipeline] of other.pipelines) this.adopt(key, pipeline);
-  }
-  /** Returns the cached pipeline of the request's key, or creates it inside a validation error scope. */
-  async obtain(request) {
-    let key = materialPipelineKey(request.material, request.colorFormat, request.instanced === !0), cached = this.pipelines.get(key);
-    if (cached !== void 0) return { ok: !0, key, pipeline: cached };
-    let descriptor = pipelineDescriptor(this.plan, request);
-    this.device.pushErrorScope("validation");
-    let creation = this.registry.createRenderPipelineAsync(descriptor).then(
-      (pipeline) => ({ pipeline, error: void 0 }),
-      (error) => ({ pipeline: void 0, error: errorText4(error) })
-    ), scope = this.device.popErrorScope().then(
-      (error) => error === null ? void 0 : error.message,
-      // popErrorScope rejects when the device is lost; the loss is reported through device.lost.
-      () => {
-      }
-    ), [created, scopeError] = await Promise.all([creation, scope]), message = created.error ?? scopeError;
-    return created.pipeline === void 0 || message !== void 0 ? (created.pipeline !== void 0 && this.registry.release(created.pipeline), { ok: !1, diagnostic: this.failure(request, message ?? "the pipeline was not created") }) : (this.pipelines.set(key, created.pipeline), { ok: !0, key, pipeline: created.pipeline });
-  }
-  failure(request, message) {
-    let spanId = spanOfSymbol(this.manifest, request.material.id);
-    return makeRuntimeDiagnostic("E8051", {
-      phase: request.phase ?? "runtime:mount",
-      message: `The render pipeline for material '${request.material.id}' could not be created: ${message}`,
-      source: spanId === void 0 ? null : resolveSpan(this.manifest, spanId),
-      notes: [`pipeline key: ${materialPipelineKey(request.material, request.colorFormat, request.instanced === !0)}`]
-    });
-  }
-};
-
 // src/render/lights.ts
 var LIGHT_KIND = { directional: 0, point: 1 };
 function emptyPackedLights(capacity) {
@@ -10420,8 +10445,18 @@ function worldBoundingSphere(world, meshRadius, out = { x: 0, y: 0, z: 0, radius
 }
 
 // src/render/renderer.ts
+var TRANSLUCENT_KEY_PREFIX = "\uFFFF";
 function compareDraws(a, b) {
   return a.pipelineKey !== b.pipelineKey ? a.pipelineKey < b.pipelineKey ? -1 : 1 : a.instance - b.instance || a.mesh - b.mesh || a.order - b.order;
+}
+function orderTranslucent(draws, viewProj, centres) {
+  let first = draws.findIndex((draw) => draw.translucent === !0);
+  if (first < 0) return draws;
+  let depth = (draw) => {
+    let e = draw.entity * 3;
+    return (viewProj[3] ?? 0) * (centres[e] ?? 0) + (viewProj[7] ?? 0) * (centres[e + 1] ?? 0) + (viewProj[11] ?? 0) * (centres[e + 2] ?? 0) + (viewProj[15] ?? 0);
+  }, translucent = draws.slice(first).map((draw, index) => ({ draw, index, w: depth(draw) })).sort((a, b) => b.w - a.w || a.index - b.index).map((entry) => entry.draw);
+  return [...draws.slice(0, first), ...translucent];
 }
 var BUFFER_USAGE_COPY_DST2 = 8, BUFFER_USAGE_VERTEX2 = 32, VIEW_KEY_LENGTH = 13;
 function fieldWriter(writers, name, layoutId) {
@@ -10460,6 +10495,19 @@ var Renderer = class {
   drawsVersion = -1;
   drawsBlockVersion = -1;
   drawsPopulation = -1;
+  /** The blended pipelines made so far, by material id, and the requests in flight (decision 0138). */
+  blended = /* @__PURE__ */ new Map();
+  blendedVersion = 0;
+  drawsBlendedVersion = -1;
+  /** The blended pipeline of `material`, or `undefined` while it is being made (it is asked for once). */
+  blendedPipeline(material) {
+    if (this.blended.has(material.id)) return this.blended.get(material.id);
+    this.blended.set(material.id, void 0);
+    let make = this.options.blend;
+    make !== void 0 && make(material).then((made) => {
+      made !== void 0 && (this.blended.set(material.id, made), this.blendedVersion += 1);
+    });
+  }
   drawCallsLastFrame = 0;
   instancedLastFrame = 0;
   culledLastFrame = 0;
@@ -10653,30 +10701,32 @@ var Renderer = class {
   /** The current draw list (rebuilt when visibility or the set of failed materials changed). */
   drawList() {
     let { world, structure, pipelines, meshes, materials } = this.options;
-    if (this.drawsVersion === world.visibilityVersion && this.drawsBlockVersion === materials.blockVersion && this.drawsPopulation === world.dynamic.version)
+    if (this.drawsVersion === world.visibilityVersion && this.drawsBlockVersion === materials.blockVersion && this.drawsPopulation === world.dynamic.version && this.drawsBlendedVersion === this.blendedVersion)
       return this.draws;
     let items = [], list = (entity, visible, order) => {
       let objectSlot = this.objectSlots[entity.index];
       if (visible !== !0 || entity.mesh === null || entity.instance === null || objectSlot === void 0 || this.failedMaterials.has(entity.instance.material.id)) return;
       let pipeline = pipelines.get(entity.instance.material.id);
       if (pipeline === void 0) throw new Error(`internal error: no pipeline for material '${entity.instance.material.id}'`);
-      let gpuMesh = meshes.get(entity.mesh.id);
+      let gpuMesh = meshes.get(entity.mesh.id), blended = materials.isTranslucent(entity.instance.index) ? this.blendedPipeline(entity.instance.material) : void 0;
       items.push({
-        pipelineKey: pipeline.key,
+        pipelineKey: blended === void 0 ? pipeline.key : TRANSLUCENT_KEY_PREFIX + blended.key,
         instance: materials.blockOf(entity.instance.index),
         mesh: gpuMesh.order,
         entity: entity.index,
         order,
-        pipeline: pipeline.pipeline,
-        instancedPipeline: pipeline.instanced,
+        pipeline: blended?.pipeline ?? pipeline.pipeline,
+        // A translucent draw is never instanced: the pass is ordered back to front per draw.
+        instancedPipeline: blended === void 0 ? pipeline.instanced : void 0,
         attributes: entity.instance.material.shader.vertexAttributes,
         gpuMesh,
-        objectSlot
+        objectSlot,
+        ...blended === void 0 ? {} : { translucent: !0 }
       });
     };
     for (let entity of structure.entities) list(entity, world.entities[entity.index]?.visible, entity.index);
     for (let spawned of world.dynamic.live) list(spawned.resolved, spawned.record.visible, structure.entities.length + spawned.order);
-    return this.draws = items.sort(compareDraws), this.drawsVersion = world.visibilityVersion, this.drawsBlockVersion = materials.blockVersion, this.drawsPopulation = world.dynamic.version, this.draws;
+    return this.draws = items.sort(compareDraws), this.drawsVersion = world.visibilityVersion, this.drawsBlockVersion = materials.blockVersion, this.drawsPopulation = world.dynamic.version, this.drawsBlendedVersion = this.blendedVersion, this.draws;
   }
   /** Renders one frame (phase 7). Returns false when the target has no pixels (nothing is drawn or uploaded). */
   frame() {
@@ -10685,7 +10735,9 @@ var Renderer = class {
       return this.drawCallsLastFrame = 0, this.instancedLastFrame = 0, this.culledLastFrame = 0, surface.render(clearColor);
     let viewProj = this.writeFrameBlock();
     this.applyWorldChanges(), this.frameArena.flush(device.queue), materials.flush(device.queue);
-    let listed = this.drawList(), draws = this.cull(listed, viewProj), instanced = this.groupDraws(draws);
+    let listed = this.drawList(), culled = this.cull(listed, viewProj), draws = orderTranslucent(culled, viewProj, this.sphereCentres);
+    draws !== culled && (this.drawnUnchanged = !1);
+    let instanced = this.groupDraws(draws);
     this.writeIndividualObjectBlocks(draws), this.objectArena.flush(device.queue);
     let rendered = surface.render(clearColor, (pass) => {
       this.encode(pass, draws);
@@ -10924,15 +10976,25 @@ async function startScene(options) {
           if (recover !== void 0) return missingModule(material, phase);
           throw new Error(`internal error: no shader module for '${material.id}'`);
         }
-        let request = { material, module, colorFormat: surface.colorFormat, ...phase === void 0 ? {} : { phase } }, [plain, variant] = await Promise.all([pipelines.obtain(request), instanced.has(material.id) ? pipelines.obtain({ ...request, instanced: !0 }) : void 0]);
-        return !plain.ok || variant === void 0 ? plain : variant.ok ? { ...plain, instancedPipeline: variant.pipeline } : variant;
+        let request = { material, module, colorFormat: surface.colorFormat, ...phase === void 0 ? {} : { phase } }, [plain, variant] = await Promise.all([
+          pipelines.obtain(request),
+          instanced.has(material.id) ? pipelines.obtain({ ...request, instanced: !0 }) : void 0
+        ]);
+        return plain.ok ? variant !== void 0 && !variant.ok ? variant : {
+          ...plain,
+          ...variant === void 0 ? {} : { instancedPipeline: variant.pipeline }
+        } : plain;
       })
     ), diagnostics = [];
     options.assertActive?.();
     let failed = [], byMaterial = /* @__PURE__ */ new Map();
     if (results.forEach((result, index) => {
       let material = structure.materials[index];
-      material !== void 0 && (result.ok ? byMaterial.set(material.id, { key: result.key, pipeline: result.pipeline, ...result.instancedPipeline === void 0 ? {} : { instanced: result.instancedPipeline } }) : recover === void 0 ? diagnostics.push(result.diagnostic) : failed.push({ id: material.id, diagnostic: result.diagnostic }));
+      material !== void 0 && (result.ok ? byMaterial.set(material.id, {
+        key: result.key,
+        pipeline: result.pipeline,
+        ...result.instancedPipeline === void 0 ? {} : { instanced: result.instancedPipeline }
+      }) : recover === void 0 ? diagnostics.push(result.diagnostic) : failed.push({ id: material.id, diagnostic: result.diagnostic }));
     }), diagnostics.length > 0)
       return { ok: !1, diagnostics };
     world.phase = "runtime:update", renderer = new Renderer({
@@ -10947,6 +11009,14 @@ async function startScene(options) {
       materials,
       meshes,
       pipelines: byMaterial,
+      // The translucent variant (decision 0138) is made the first time a draw of the material needs it.
+      blend: async (material) => {
+        let module = modules.get(material.shader.hash);
+        if (module === void 0 || !canBlend(material)) return;
+        let made = await pipelines.obtain({ material, module, colorFormat: surface.colorFormat, blended: !0 });
+        if (made.ok) return { key: made.key, pipeline: made.pipeline };
+        report(made.diagnostic);
+      },
       report,
       ...options.instancing === void 0 ? {} : { instancing: options.instancing }
     });

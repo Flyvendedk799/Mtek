@@ -174,7 +174,23 @@ export interface PipelineRequest {
   readonly phase?: MtekRuntimePhase;
   /** The instanced variant (needs the shader's `instancedVertexEntry`). Default: the plain pipeline. */
   readonly instanced?: boolean;
+  /** The alpha-blended variant for translucent draws (decision 0138): no depth writes, never instanced. */
+  readonly blended?: boolean;
 }
+
+/** The parameter names whose colour alpha makes a draw translucent (decision 0138). */
+export const ALPHA_PARAMS: ReadonlySet<string> = new Set(["color", "base_color"]);
+
+/** Whether `material` has a colour param that can make its draws translucent (decision 0138). */
+export function canBlend(material: { readonly params: readonly { readonly name: string; readonly type: string }[] }): boolean {
+  return material.params.some((param) => ALPHA_PARAMS.has(param.name) && param.type === "color");
+}
+
+/** Straight-alpha "over" blending of the translucent pass (decision 0138). */
+export const ALPHA_BLEND: GPUBlendState = {
+  color: { srcFactor: "src-alpha", dstFactor: "one-minus-src-alpha", operation: "add" },
+  alpha: { srcFactor: "one", dstFactor: "one-minus-src-alpha", operation: "add" },
+};
 
 export type PipelineResult =
   | { readonly ok: true; readonly key: string; readonly pipeline: GPURenderPipeline }
@@ -207,9 +223,14 @@ export function pipelineDescriptor(plan: BindingPlan, request: PipelineRequest):
     label: request.instanced === true ? `mtek pipeline ${material.id} (instanced)` : `mtek pipeline ${material.id}`,
     layout: plan.pipelineLayout(material.layout, material.resources),
     vertex: { module, entryPoint, buffers },
-    fragment: { module, entryPoint: material.shader.fragmentEntry, targets: [{ format: colorFormat }] },
+    fragment: {
+      module,
+      entryPoint: material.shader.fragmentEntry,
+      targets: [request.blended === true ? { format: colorFormat, blend: ALPHA_BLEND } : { format: colorFormat }],
+    },
     primitive: { topology: TOPOLOGY, cullMode: CULL_MODE, frontFace: FRONT_FACE },
-    depthStencil: { format: DEPTH_FORMAT, depthCompare: DEPTH_COMPARE, depthWriteEnabled: true },
+    // Translucent draws test depth against the opaque scene but do not write it (decision 0138).
+    depthStencil: { format: DEPTH_FORMAT, depthCompare: DEPTH_COMPARE, depthWriteEnabled: request.blended !== true },
   };
 }
 
@@ -251,7 +272,7 @@ export class PipelineCache {
 
   /** Returns the cached pipeline of the request's key, or creates it inside a validation error scope. */
   async obtain(request: PipelineRequest): Promise<PipelineResult> {
-    const key = materialPipelineKey(request.material, request.colorFormat, request.instanced === true);
+    const key = materialPipelineKey(request.material, request.colorFormat, request.instanced === true) + (request.blended === true ? "|blend" : "");
     const cached = this.pipelines.get(key);
     if (cached !== undefined) return { ok: true, key, pipeline: cached };
 
