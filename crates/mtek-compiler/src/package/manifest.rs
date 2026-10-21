@@ -79,6 +79,10 @@ pub struct Manifest {
     pub required_capabilities: RequiredCapabilities,
     pub subsystems: Subsystems,
     pub runtime_config: RuntimeConfig,
+    /// Game-level data (decision 0141): the scenes of a multi-scene program. Absent, byte for
+    /// byte, for a single-scene program.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub game: Option<Game>,
     /// Present exactly in the manifest of a `--mode preview` build: the runtime then enforces the
     /// loop budget the program was instrumented with and refuses network access outside
     /// `baseUrl` (decision 0075). Absent in every other mode, byte for byte.
@@ -97,6 +101,24 @@ pub struct Manifest {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub prefabs: Vec<Prefab>,
     pub scene: Scene,
+}
+
+/// `game` of the manifest (decision 0141). Every scene manifest of one build has the same one.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Game {
+    /// Every scene of the program, sorted by name; empty (absent) for a single scene.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub scenes: Vec<GameScene>,
+}
+
+/// One scene `go_to` can load: its program module and manifest, relative to the program.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GameScene {
+    pub name: String,
+    pub module: String,
+    pub manifest: String,
 }
 
 impl Manifest {
@@ -541,6 +563,9 @@ pub struct StateEntry {
     #[serde(rename = "type")]
     pub ty: String,
     pub symbol: String,
+    /// `shared state` of a scene (decision 0141): carried over `go_to`. Written only when true.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub shared: bool,
 }
 
 /// A camera: structure only; its values are set by `init(ctx)`.

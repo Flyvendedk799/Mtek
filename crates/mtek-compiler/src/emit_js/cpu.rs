@@ -280,7 +280,10 @@ fn owned_vars(body: &ir::Block) -> BTreeSet<u32> {
                         visit(block, out);
                     }
                 }
-                ir::Stmt::ForRange { body, .. } | ir::Stmt::ForEach { body, .. } => {
+                ir::Stmt::ForRange { body, .. }
+                | ir::Stmt::ForEach { body, .. }
+                | ir::Stmt::While { body, .. }
+                | ir::Stmt::Timer { body, .. } => {
                     visit(body, out);
                 }
                 ir::Stmt::Block { body } => visit(body, out),
@@ -352,6 +355,107 @@ impl FnLowering<'_, '_> {
             );
         }
         Ok(lowered)
+    }
+
+    /// `while cond { body }` (decision 0144), in a block of its own with the iteration counter:
+    ///
+    /// ```js
+    /// { let t_0 = 0; while (cond) { if (++t_0 > 1000000) { rt.whileLimit(id); } body } }
+    /// ```
+    ///
+    /// Every build counts: an execution that starts more than
+    /// [`crate::syntax::ast::WHILE_ITERATION_CAP`] iterations throws, and the runtime reports
+    /// `E8080` at the loop. A preview build checks its loop budget too ([`Self::loop_body`]).
+    fn while_loop(
+        &mut self,
+        cond: &ir::Expr,
+        body: &ir::Block,
+        span: Span,
+    ) -> Result<Stmt, String> {
+        let counter = self.temp();
+        let id = (self.span_id)(span)?;
+        let cond = self.expr(cond)?;
+        let mut lowered = self.loop_body(body, span)?;
+        let over = Expr::binary(
+            ">",
+            Expr::unary("++", Expr::ident(&counter)),
+            Expr::Num(Number::U32(crate::syntax::ast::WHILE_ITERATION_CAP)),
+        );
+        lowered.insert(
+            0,
+            Stmt::If {
+                branches: vec![(
+                    over,
+                    vec![Stmt::Expr {
+                        expr: rt("whileLimit", vec![Expr::Num(Number::U32(id))]),
+                        span: Some(span),
+                    }],
+                )],
+                otherwise: None,
+                span: Some(span),
+            },
+        );
+        Ok(Stmt::Block {
+            body: vec![
+                Stmt::Let {
+                    name: counter,
+                    value: int(0),
+                    span: Some(span),
+                },
+                Stmt::While {
+                    cond,
+                    body: lowered,
+                    span: Some(span),
+                },
+            ],
+        })
+    }
+
+    /// `after(seconds) { body }` / `every(seconds) { body }` (decision 0142): the body becomes a
+    /// local function (a closure over the handler's `let` locals, parameters and `self`) handed
+    /// to the runtime's timer list:
+    ///
+    /// ```js
+    /// { function t_0() { body } ctx.after(seconds, t_0, self, id); }
+    /// ```
+    ///
+    /// The owner is `self` inside an entity's or a prefab's own bodies (its timers end with
+    /// it), `null` in a scene's.
+    fn timer(
+        &mut self,
+        every: bool,
+        seconds: &ir::Expr,
+        body: &ir::Block,
+        span: Span,
+    ) -> Result<Stmt, String> {
+        let name = self.temp();
+        let id = (self.span_id)(span)?;
+        let seconds = self.expr(seconds)?;
+        let lowered = self.block(body)?;
+        let owner = match self.owner {
+            Some(ir::Owner::Entity { .. }) => Expr::ident("self"),
+            _ => Expr::Null,
+        };
+        let method = if every { "every" } else { "after" };
+        Ok(Stmt::Block {
+            body: vec![
+                Stmt::Function {
+                    name: name.clone(),
+                    params: Vec::new(),
+                    body: lowered,
+                    span: Some(span),
+                },
+                Stmt::Expr {
+                    expr: Expr::ident("ctx").member(method).call(vec![
+                        seconds,
+                        Expr::Ident(name),
+                        owner,
+                        Expr::Num(Number::U32(id)),
+                    ]),
+                    span: Some(span),
+                },
+            ],
+        })
     }
 
     /// `body`, preceded by `const budget = ctx.budget;` when it contains a budget check. The
@@ -446,6 +550,13 @@ impl FnLowering<'_, '_> {
                 body: self.loop_body(body, *span)?,
                 span: Some(*span),
             },
+            ir::Stmt::While { cond, body, span } => self.while_loop(cond, body, *span)?,
+            ir::Stmt::Timer {
+                every,
+                seconds,
+                body,
+                span,
+            } => self.timer(*every, seconds, body, *span)?,
             // The function's variables end here: returned owned storage needs no copy.
             ir::Stmt::Return { value, span } => Stmt::Return {
                 value: value.as_ref().map(|v| self.value(v)).transpose()?,
@@ -917,6 +1028,32 @@ impl FnLowering<'_, '_> {
                 let arguments = self.exprs(args)?;
                 Expr::ident("ctx").member("alive").call(arguments)
             }
+            // `go_to(Scene)`: `ctx.goTo("Scene", spanId)` (decision 0141); the span names the call
+            // for `E5401` when the scene cannot be loaded.
+            ir::ExprKind::Builtin { function, args } if function == "go_to" => {
+                let [scene] = args.as_slice() else {
+                    return Err("a go_to without one argument".to_owned());
+                };
+                let ir::ExprKind::Const {
+                    value: ir::Value::String(name),
+                } = &scene.kind
+                else {
+                    return Err("a go_to whose argument is not a scene name".to_owned());
+                };
+                let span_id = (self.span_id)(expr.span)?;
+                Expr::ident("ctx")
+                    .member("goTo")
+                    .call(vec![Expr::string(name), Expr::Num(Number::U32(span_id))])
+            }
+            // `reset()`, `pause()`, `resume()` and `paused()` (decisions 0140 and 0143).
+            ir::ExprKind::Builtin { function, args }
+                if matches!(function.as_str(), "reset" | "pause" | "resume" | "paused") =>
+            {
+                let _ = args;
+                Expr::ident("ctx")
+                    .member(function.as_str())
+                    .call(Vec::new())
+            }
             ir::ExprKind::Builtin { function, args } => {
                 let types: Vec<&str> = args.iter().map(|a| a.ty.as_str()).collect();
                 let arguments = self.exprs(args)?;
@@ -1304,6 +1441,21 @@ mod tests {
                     } => {
                         out.push(*span);
                         expr(array, out);
+                        block(body, out);
+                    }
+                    ir::Stmt::While { cond, body, span } => {
+                        out.push(*span);
+                        expr(cond, out);
+                        block(body, out);
+                    }
+                    ir::Stmt::Timer {
+                        seconds,
+                        body,
+                        span,
+                        ..
+                    } => {
+                        out.push(*span);
+                        expr(seconds, out);
                         block(body, out);
                     }
                     ir::Stmt::Return { value, span } => {

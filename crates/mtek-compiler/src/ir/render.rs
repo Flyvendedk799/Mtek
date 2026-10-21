@@ -421,6 +421,22 @@ impl Tree<'_> {
                 );
                 self.block(depth + 1, body, locals);
             }
+            Stmt::While { cond, body, span } => {
+                let location = self.location(*span);
+                self.line(depth, format!("while {} {location}", expr_text(cond)));
+                self.block(depth + 1, body, locals);
+            }
+            Stmt::Timer {
+                every,
+                seconds,
+                body,
+                span,
+            } => {
+                let location = self.location(*span);
+                let word = if *every { "every" } else { "after" };
+                self.line(depth, format!("{word}({}) {location}", expr_text(seconds)));
+                self.block(depth + 1, body, locals);
+            }
             Stmt::ForEach {
                 local,
                 array,

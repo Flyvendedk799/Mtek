@@ -1,0 +1,16 @@
+// `while` is CPU only: a stage function cannot loop on a condition.
+// covers: [S: while-loop]
+material Stripes {
+    fragment(input: SurfaceInput) -> color {
+        var x = input.uv.x;
+        while x > 0.1 {
+            x -= 0.1;
+        }
+        return color.linear(vec3(x), 1.0);
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Cube { mesh: Box {}; material: Stripes {}; }
+}

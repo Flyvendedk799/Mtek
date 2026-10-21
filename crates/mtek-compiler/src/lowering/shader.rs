@@ -410,6 +410,12 @@ impl<'p> ShaderLowering<'p> {
                 body: loop_body,
                 span,
             } => self.for_each(body, *local, array, loop_body, *span)?,
+            ir::Stmt::While { .. } => {
+                return Err("a `while` loop in GPU code (E4010)".to_owned());
+            }
+            ir::Stmt::Timer { .. } => {
+                return Err("a timer statement in GPU code (E5080)".to_owned());
+            }
             ir::Stmt::Return { value, span } => Statement::Return {
                 value: match value {
                     Some(value) => Some(self.expr(body, value)?),

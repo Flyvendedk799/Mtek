@@ -58,6 +58,11 @@ pub struct ProgramParts<'a> {
     /// The layout records whose writers the module carries, in `writers` table order
     /// (`builtin:frame`, `builtin:object`, then the material blocks by id).
     pub layouts: &'a [LayoutRecord],
+    /// The manifest `manifestUrl` names, relative to the module (`program.manifest.json`, or
+    /// `program.<Scene>.manifest.json` for a scene other than the entry, decision 0141).
+    pub manifest_file: &'a str,
+    /// The source map the module points to ([`SOURCE_MAP_FILE`], or `app.<Scene>.js.map`).
+    pub source_map_file: &'a str,
     /// What the build mode changes: `print` is compiled out of every CPU body in a release
     /// or preview build, and a preview build checks the loop budget in every loop.
     pub flags: CpuFlags,
@@ -120,7 +125,7 @@ pub fn emit_program(
         },
         Item::ExportConst {
             name: "manifestUrl".to_owned(),
-            value: new_url("./program.manifest.json"),
+            value: new_url(&format!("./{}", parts.manifest_file)),
         },
     ];
 
@@ -232,7 +237,7 @@ pub fn emit_program(
             .map(|name| ((*name).to_owned(), Expr::ident(name)))
             .collect(),
     )));
-    items.push(Item::SourceMappingUrl(SOURCE_MAP_FILE.to_owned()));
+    items.push(Item::SourceMappingUrl(parts.source_map_file.to_owned()));
     Ok(print(&Module { items }))
 }
 

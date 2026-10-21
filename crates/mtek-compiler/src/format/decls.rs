@@ -249,7 +249,11 @@ impl Printer<'_> {
         let value = self.expr(&decl.value);
         let semicolon = self.semicolon(decl.span.end);
         Doc::concat(vec![
-            Doc::text("state "),
+            Doc::text(if decl.shared.is_some() {
+                "shared state "
+            } else {
+                "state "
+            }),
             name,
             Doc::text(": "),
             ty,

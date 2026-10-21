@@ -4,7 +4,7 @@
   "reserved": [
     {
       "code": "E5901",
-      "reason": "No construct of v0.1 switches the active scene (spec/scenes.md section 1: one scene per application), so no program can produce it; the context export lists the feature as not supported."
+      "reason": "Retired by decision 0141: go_to(Scene) switches the active scene, so no program can produce it; the catalogue keeps the code so that the number is not reused."
     },
     {
       "code": "E5902",
@@ -81,6 +81,11 @@
       "code": "E9032",
       "reason": "The compile time limit of mtek build --mode preview (decision 0075), a constant of the command line tool.",
       "test": "crates/mtek-cli/src/limits.rs"
+    },
+    {
+      "code": "E5401",
+      "reason": "A runtime code (a go_to or reset() whose scene cannot be loaded, decision 0141), produced by @mtek/runtime-web, whose unit tests are its fixtures.",
+      "test": "packages/runtime-web/src/host/game.test.ts"
     },
     {
       "code": "E8080",

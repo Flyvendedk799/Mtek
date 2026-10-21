@@ -290,6 +290,21 @@ fn stmt(s: &Stmt, out: &mut Expected) {
             expr(array, out);
             block(body, out);
         }
+        Stmt::While { cond, body, span } => {
+            out.statements.push(*span);
+            expr(cond, out);
+            block(body, out);
+        }
+        Stmt::Timer {
+            seconds,
+            body,
+            span,
+            ..
+        } => {
+            out.statements.push(*span);
+            expr(seconds, out);
+            block(body, out);
+        }
         Stmt::Return { value, span } => {
             out.statements.push(*span);
             if let Some(v) = value {

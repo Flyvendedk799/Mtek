@@ -196,6 +196,8 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e3204"></a>E3204 | invalid match pattern | a pattern that is not `Enum.Variant` of the scrutinee's enum, or `_` |
 | <a id="mtek-e3205"></a>E3205 | unknown enum variant | `Enum.Name` where the enum declares no `Name`; the nearest variant (help) and every variant (note) |
 | <a id="mtek-e3206"></a>E3206 | match arms of different types | the arm values of a `match` expression; a related span at the first arm |
+| <a id="mtek-e3210"></a>E3210 | timer block uses an enclosing variable | an `after`/`every` block reads or writes a `var` local of the body around it; the block runs later, when the `var` no longer exists (decision 0142). `let` locals, parameters and loop variables are captured with their value; state, `self` and constants are fine |
+| <a id="mtek-e3211"></a>E3211 | invalid timer time | a constant delay of `after` that is negative or not finite, or a constant period of `every` that is not greater than 0 (decision 0142) |
 
 ### 5.4 Functions, effects, stages (`4xxx`)
 | Code | Title | Trigger |
@@ -260,7 +262,12 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5121"></a>E5121 | body without collider | a `body` without a `collider`; the body would have no shape |
 | <a id="mtek-e5122"></a>E5122 | scaled dynamic or kinematic body | `scale` of a `Dynamic` or `Kinematic` body that is not the constant `vec3(1.0)` |
 | <a id="mtek-e5123"></a>E5123 | command not valid for this body kind | `Name.body.<command>(..)` or `Name.body.<velocity>` that the entity's body kind does not support, or on an entity without a body |
-| <a id="mtek-e5901"></a>E5901 | scene switching not supported | **Reserved:** switching the active scene at run time; v0.1 mounts one scene and has no construct that could switch it, so no program produces it |
+| <a id="mtek-e5201"></a>E5201 | go_to target is not a scene | the argument of `go_to` is not the name of a scene of the program; a note lists the scenes (decision 0141) |
+| <a id="mtek-e5202"></a>E5202 | shared state outside a scene | `shared state` in an entity or a prefab; only a scene's state carries over to another scene (decision 0141) |
+| <a id="mtek-e5203"></a>E5203 | shared state of a type that cannot carry over | a `shared state` whose type holds an `entity_ref`, a resource or a descriptor, which belong to one scene (decision 0141) |
+| <a id="mtek-e5204"></a>E5204 | shared state with different types | two scenes declare a `shared state` of the same name with different types; a related span at the other one (decision 0141) |
+| <a id="mtek-e5401"></a>E5401 | scene change failed | run time: the scene of `go_to` or `reset()` could not be loaded or started (its module or manifest is missing or invalid); the current scene keeps running, the notes carry the underlying diagnostics (decision 0141) |
+| <a id="mtek-e5901"></a>E5901 | scene switching not supported | **Reserved:** retired by decision 0141: `go_to(Scene)` switches the active scene, so no program produces it; the code is kept so that the number is not reused |
 | <a id="mtek-e5902"></a>E5902 | transparency not supported | **Reserved:** v0.1 has only opaque materials and no construct that asks for transparency, so no program produces it |
 
 ### 5.6 GPU and target (`6xxx`)

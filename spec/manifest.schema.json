@@ -51,6 +51,7 @@
       "else": { "properties": { "physics": {}, "physicsModule": false }, "additionalProperties": false }
     },
     "runtimeConfig": { "$ref": "#/$defs/runtimeConfig" },
+    "game": { "$ref": "#/$defs/game" },
     "preview": {
       "type": "object",
       "description": "Present exactly in the manifest of a `--mode preview` build (decision 0075): the runtime enforces the loop budget the program was instrumented with and refuses any request outside baseUrl.",
@@ -502,7 +503,7 @@
             "gravity": { "$ref": "#/$defs/vec3" }
           }
         },
-        "state": { "type": "array", "items": { "$ref": "#/$defs/stateEntry" } },
+        "state": { "type": "array", "items": { "$ref": "#/$defs/sceneStateEntry" } },
         "cameras": { "type": "array", "items": { "$ref": "#/$defs/camera" } },
         "entities": { "type": "array", "items": { "$ref": "#/$defs/entity" } },
         "materialInstances": { "type": "array", "items": { "$ref": "#/$defs/materialInstance" } },
@@ -520,6 +521,41 @@
         "name": { "$ref": "#/$defs/name" },
         "type": { "$ref": "#/$defs/mtekTypeName" },
         "symbol": { "$ref": "#/$defs/symbolId" }
+      }
+    },
+    "sceneStateEntry": {
+      "type": "object",
+      "description": "A state of the scene: a stateEntry that can be shared.",
+      "additionalProperties": false,
+      "required": ["name", "type", "symbol"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "type": { "$ref": "#/$defs/mtekTypeName" },
+        "symbol": { "$ref": "#/$defs/symbolId" },
+        "shared": { "type": "boolean", "const": true, "description": "`shared state` (decision 0141): its value carries over when go_to switches to a scene with a shared state of the same name and type. Absent for ordinary state." }
+      }
+    },
+    "game": {
+      "type": "object",
+      "description": "Game-level data (decision 0141): present when the program has several scenes. Every scene manifest of one build carries the same object.",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "scenes": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Every scene of the program, sorted by name: the program module and the manifest that go_to loads for it, relative to the program's baseUrl.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "module", "manifest"],
+            "properties": {
+              "name": { "$ref": "#/$defs/name" },
+              "module": { "type": "string", "pattern": "^app(\\.[A-Za-z_][A-Za-z0-9_]*)?\\.js$" },
+              "manifest": { "type": "string", "pattern": "^program(\\.[A-Za-z_][A-Za-z0-9_]*)?\\.manifest\\.json$" }
+            }
+          }
+        }
       }
     },
     "camera": {

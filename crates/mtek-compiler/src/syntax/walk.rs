@@ -369,6 +369,14 @@ impl Walker<'_> {
             Stmt::Const(decl) => self.const_decl(decl),
             Stmt::If(stmt) => self.if_stmt(stmt),
             Stmt::For(stmt) => self.for_stmt(stmt),
+            Stmt::While(stmt) => self.node(stmt.id, stmt.span, "while", |w| {
+                w.expr(&stmt.cond);
+                w.block(&stmt.body);
+            }),
+            Stmt::Timer(stmt) => self.node(stmt.id, stmt.span, stmt.kind.word(), |w| {
+                w.expr(&stmt.seconds);
+                w.block(&stmt.body);
+            }),
             Stmt::Return(stmt) => self.node(stmt.id, stmt.span, "return", |w| {
                 if let Some(value) = &stmt.value {
                     w.expr(value);

@@ -325,6 +325,12 @@ pub enum Stmt {
         body: Vec<Stmt>,
         span: Option<Span>,
     },
+    /// `while (cond) { body }`.
+    While {
+        cond: Expr,
+        body: Vec<Stmt>,
+        span: Option<Span>,
+    },
     /// `return;` or `return value;`.
     Return {
         value: Option<Expr>,
@@ -745,6 +751,12 @@ impl Out {
                 self.map(*span);
                 let head = format!("for (const {var} of ");
                 self.line(&[Part::Text(&head), Part::Expr(iterable), Part::Text(") {")]);
+                self.body(body);
+                self.p.line("}");
+            }
+            Stmt::While { cond, body, span } => {
+                self.map(*span);
+                self.line(&[Part::Text("while ("), Part::Expr(cond), Part::Text(") {")]);
                 self.body(body);
                 self.p.line("}");
             }

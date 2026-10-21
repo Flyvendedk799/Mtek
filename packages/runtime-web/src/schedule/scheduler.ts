@@ -74,6 +74,7 @@ export class Scheduler {
   private frames = 0;
   private discarded = 0;
   private lastDelta = 0;
+  private gameHeld = false;
 
   /**
    * @param onFrameError Called when a frame throws inside the animation-frame loop (the owner reports
@@ -94,6 +95,26 @@ export class Scheduler {
   /** Active application time in seconds since mount, excluding paused time (f64). */
   get activeTime(): number {
     return this.time;
+  }
+
+  /**
+   * The game pause of `pause()`/`resume()` (decision 0143), distinct from {@link pause}: frames keep running and
+   * phases 1 (input), 4 (flush), 5 (bindings), 6 (transforms) and 7 (render) keep running, so UI and input
+   * handlers still work, but no fixed-step tick runs (no physics, no `fixed_update`), the accumulator does not
+   * grow, and phase 3 (timers and `update`) is skipped. `activeTime` and `ctx.frame` keep advancing.
+   */
+  get gamePaused(): boolean {
+    return this.gameHeld;
+  }
+
+  /** `pause()`: hold the game from the next phase on (a pause issued in phase 1 already skips this frame's ticks). */
+  pauseGame(): void {
+    this.gameHeld = true;
+  }
+
+  /** `resume()`: the game runs again from the next phase on; the held interval is never simulated. */
+  resumeGame(): void {
+    this.gameHeld = false;
   }
 
   /** Number of frames completed since mount. */
@@ -181,18 +202,22 @@ export class Scheduler {
     this.lastDelta = delta;
     this.time += delta;
     this.phases.phase1_input();
-    this.accumulator += delta;
-    let steps = 0;
-    while (this.accumulator >= fixedStep && steps < maxCatchUpSteps) {
-      this.phases.phase2_tick(fixedStep);
-      this.accumulator -= fixedStep;
-      steps += 1;
+    // The game pause (decision 0143) skips the simulation: ticks and phase 3. A pause issued by a tick stops the
+    // remaining ticks of the frame.
+    if (!this.gameHeld) {
+      this.accumulator += delta;
+      let steps = 0;
+      while (this.accumulator >= fixedStep && steps < maxCatchUpSteps && !this.gameHeld) {
+        this.phases.phase2_tick(fixedStep);
+        this.accumulator -= fixedStep;
+        steps += 1;
+      }
+      if (this.accumulator >= fixedStep && !this.gameHeld) {
+        this.discarded += Math.floor(this.accumulator / fixedStep);
+        this.accumulator %= fixedStep;
+      }
     }
-    if (this.accumulator >= fixedStep) {
-      this.discarded += Math.floor(this.accumulator / fixedStep);
-      this.accumulator %= fixedStep;
-    }
-    this.phases.phase3_update(delta);
+    if (!this.gameHeld) this.phases.phase3_update(delta);
     this.phases.phase4_flush();
     this.phases.phase5_bindings();
     this.phases.phase6_transforms();

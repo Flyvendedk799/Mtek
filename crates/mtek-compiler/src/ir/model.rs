@@ -424,6 +424,23 @@ pub enum Stmt {
         #[serde(serialize_with = "self::span")]
         span: Span,
     },
+    /// `while cond { … }` (decision 0144): CPU only, at most
+    /// [`crate::syntax::ast::WHILE_ITERATION_CAP`] iterations per execution.
+    While {
+        cond: Expr,
+        body: Block,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
+    /// `after(seconds) { … }` (`every: false`) or `every(seconds) { … }` (decision 0142): the
+    /// body runs later on the game clock, owned by the entity of the handler (if any).
+    Timer {
+        every: bool,
+        seconds: Expr,
+        body: Block,
+        #[serde(serialize_with = "self::span")]
+        span: Span,
+    },
     Return {
         value: Option<Expr>,
         #[serde(serialize_with = "self::span")]
@@ -931,6 +948,10 @@ pub struct State {
     #[serde(rename = "type")]
     pub ty: String,
     pub owner: Owner,
+    /// `shared state` (decision 0141): the value carries over `go_to` into a scene with a
+    /// shared state of the same name and type.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub shared: bool,
     /// The initialiser; it has no locals.
     pub init: Expr,
     /// The whole `state name: T = value;`.

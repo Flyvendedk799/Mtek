@@ -62,6 +62,7 @@ pub mod effects;
 mod effects_tests;
 mod enums;
 pub mod facts;
+mod game;
 mod intrinsics;
 mod material;
 mod ops;

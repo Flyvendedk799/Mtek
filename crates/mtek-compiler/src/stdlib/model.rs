@@ -108,6 +108,8 @@ pub enum TypeRef {
     Descriptor(SchemaCategory),
     /// The argument of `spawn`: a prefab descriptor `Prefab { params.. }`.
     PrefabDescriptor,
+    /// The argument of `go_to`: the name of a scene of the entry module (decision 0141).
+    SceneName,
 }
 
 impl TypeRef {
@@ -135,6 +137,7 @@ impl TypeRef {
             TypeRef::Record(name) | TypeRef::Enum(name) => name,
             TypeRef::Descriptor(category) => category.as_str(),
             TypeRef::PrefabDescriptor => "prefab descriptor",
+            TypeRef::SceneName => "scene name",
         }
     }
 }

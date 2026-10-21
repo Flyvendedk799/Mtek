@@ -136,6 +136,8 @@ catalogue! {
     E3204 Error "invalid match pattern",
     E3205 Error "unknown enum variant",
     E3206 Error "match arms of different types",
+    E3210 Error "timer block uses an enclosing variable",
+    E3211 Error "invalid timer time",
     // 5.4 Functions, effects, stages (`4xxx`)
     E4001 Error "recursion not supported",
     E4002 Error "impure call from pure function",
@@ -194,6 +196,11 @@ catalogue! {
     E5121 Error "body without collider",
     E5122 Error "scaled dynamic or kinematic body",
     E5123 Error "command not valid for this body kind",
+    E5201 Error "go_to target is not a scene",
+    E5202 Error "shared state outside a scene",
+    E5203 Error "shared state of a type that cannot carry over",
+    E5204 Error "shared state with different types",
+    E5401 Error "scene change failed",
     E5901 Error "scene switching not supported",
     E5902 Error "transparency not supported",
     // 5.6 GPU and target (`6xxx`)
@@ -311,7 +318,7 @@ impl Code {
     /// in v0.1"), except the internal error `E9999`.
     #[must_use]
     pub fn is_unsupported_feature(self) -> bool {
-        self != Code::E9999 && self.short().get(2..3) == Some("9")
+        !matches!(self, Code::E9999 | Code::E5901) && self.short().get(2..3) == Some("9")
     }
 
     /// The anchor of this code inside `spec/diagnostics.md`, for the `docs`
@@ -330,6 +337,8 @@ impl Code {
     pub fn default_phase(self) -> Phase {
         match self {
             Code::E6100 => Phase::Validate,
+            // Reported by the runtime when a `go_to` cannot load its scene (decision 0141).
+            Code::E5401 => Phase::Runtime(RuntimePhase::Update),
             _ => match self.range() {
                 0 | 1 => Phase::Parse,
                 6 => Phase::Emit,
@@ -410,6 +419,8 @@ mod tests {
         assert!(Code::E5902.is_unsupported_feature());
         assert!(Code::E4901.is_unsupported_feature());
         assert!(!Code::E9999.is_unsupported_feature());
+        // Retired by decision 0141: scene switching is `go_to`.
+        assert!(!Code::E5901.is_unsupported_feature());
         assert!(!Code::E9010.is_unsupported_feature());
         assert!(!Code::E3102.is_unsupported_feature());
     }

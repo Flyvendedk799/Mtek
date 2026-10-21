@@ -32,10 +32,13 @@ dist/
   shaders/<h16>.mtek-map.json      # WGSL span map (§5.4)
   assets/<h16>.<ext>               # packaged assets (spec/assets.md)
   physics/<h16>.js                 # only if the program uses physics (spec/physics.md; decisions 0063, 0066); named by subsystems.physicsModule
+  app.<Scene>.js                   # only for a program with several scenes: one program module per scene but the entry (decision 0141)
+  app.<Scene>.js.map               #   its source map
+  program.<Scene>.manifest.json    #   its manifest
 ```
 
 - `<h16>` is the first 16 lowercase hex digits of the SHA-256 of the file's bytes; the manifest records the full 64-digit hash.
-- `index.html`, `app.js`, `app.d.ts`, `runtime.d.ts` and `program.manifest.json` have fixed names so hosts can reference them.
+- `index.html`, `app.js`, `app.d.ts`, `runtime.d.ts` and `program.manifest.json` have fixed names so hosts can reference them. They are the entry scene's. In a program with several scenes every other scene `S` has its own program module and manifest, `app.S.js` and `program.S.manifest.json`, which `go_to(S)` loads (§11.4); the content-addressed files are shared, and every manifest lists the scenes in `game` (§5).
 - **Reproducibility.** Two builds of the same inputs with the same compiler produce byte-identical `dist/` trees (no timestamps, absolute paths, random ids, or hash-map iteration order in outputs). A test enforces this (`spec/testing.md` §7).
 - **Replace on success** (not atomic): the build writes into the sibling directory `<out_dir>.tmp-<buildId>/`; only if everything succeeded it renames the existing `<out_dir>` to `<out_dir>.old-<buildId>`, renames the temporary directory to `<out_dir>`, then deletes the `.old` directory (Windows cannot rename onto an existing directory, hence the three steps). A failed build deletes its temporary directory and leaves the previous output untouched.
 
@@ -136,6 +139,9 @@ The runtime passes `ctx` to every generated function. Its shape is part of ABI 1
 | `ctx.body(refOrEntity, spanId)` | the **body handle** of an entity record (`ctx.e[i]`, `self`) or of an `entity_ref`, for the body commands and velocity reads of `spec/physics.md` §3 (decision 0065): `h.applyImpulse(v)`, `h.applyForce(v)`, `h.setKinematicTarget(position, rotation)`, `h.teleport(position, rotation, keepVelocity)`, `h.setLinearVelocity(v)` (commands: queued for the next tick, in the category order of physics §4) and the read-only `h.linearVelocity`, `h.angularVelocity` (`vec3`, as of the last completed tick, zero before the first). The compiler has checked the body kind of a record; for an `entity_ref` the handle reports `E8101` and drops a command the body kind of its target does not support (and `W8031` for a pending or dead target). `spanId` is the manifest span of the command or property in the Mtek source (decision 0066), for `W8031`, `E8101` and `E8104`; a command with a value that is not finite is dropped with `E8104`. Generated code calls it as `ctx.body(self, 7).applyImpulse(..)`, `ctx.body(ctx.e[3], 8).teleport(..)`, `ctx.body(a_other, 9).applyForce(..)` |
 | `ctx.random()`, `ctx.print(message, spanId)`, `ctx.isKeyDown(code)` | CPU intrinsics |
 | `ctx.warn(code, spanId)` | report a mapped runtime warning (e.g. index clamping `W8030`, once per span) |
+| `ctx.goTo(sceneName, spanId)`, `ctx.reset()` | `go_to(Scene)` and `reset()` (decisions 0140, 0141): request a scene change, prepared in the background and applied at the start of a later frame (§11.4); the first request wins until it is applied or fails (`E5401`, at `spanId`). `sceneName` is the scene's name (a string constant of the generated code). |
+| `ctx.pause()`, `ctx.resume()`, `ctx.paused()` | the game pause (decision 0143, §7): no fixed ticks and no phase 3 while paused; input, flush, bindings, transforms and rendering go on. |
+| `ctx.after(seconds, fn, owner, spanId)`, `ctx.every(seconds, fn, owner, spanId)` | timers (decision 0142): `fn` is a closure of the generated code, `owner` the entity record whose handler started it (`self`) or `null` for the scene; the world runs due timers at the start of phase 3 on the game clock and drops the timers of a destroyed owner. |
 | `ctx.budget` | `{ n }`, the iterations of CPU loops left in this frame: refilled with `manifest.preview.loopBudget` at the start of every frame and before `init`, decremented by the checks of `--mode preview` builds (`rt.budgetExceeded(spanId)` throws when it goes below zero; the runtime then reports `E8080`). Zero when the manifest has no `preview` object. Decision 0075. |
 
 Ownership rules (`spec/scenes.md` §8) are enforced **statically**; the setters only re-validate values. Generated code passes **span ids** (indices into the manifest `spans` table) so the runtime can map any run-time diagnostic to the Mtek source.
@@ -175,6 +181,8 @@ JSON, UTF-8, keys in a fixed order, schema version 1. A JSON Schema for it is ch
 Every `spans` entry carries the half-open byte range into the file as stored on disk and the 1-based line and column of both ends (columns count Unicode scalar values), computed by the compiler's source manager exactly as for compiler diagnostics; the runtime copies them verbatim into the `source` of a diagnostic and never ships or reads source text (decision `spec/decisions/0019-manifest-spans-carry-line-columns.md`).
 
 `requiredCapabilities.limits` lists only limits **above** the WebGPU defaults that the program needs (the v0.1 profile `webgpu-core-2026` is exactly the default limits, so it is `{}`); `features` lists optional WebGPU features (none in v0.1; `timestamp-query` is requested opportunistically by dev builds and never required).
+
+The optional top-level **`game`** object (decision 0141), `{ "scenes": [ { "name", "module", "manifest" } … ] }`, is present exactly when the program has more than one scene (it sits between `runtimeConfig` and `preview`): every scene sorted by name, with its program module (`app.js` for the entry, `app.<Scene>.js` otherwise) and manifest (`program.manifest.json`, `program.<Scene>.manifest.json`), relative to `baseUrl`. Every manifest of the build carries the same object. A scene state that is `shared state` has `"shared": true` in `scene.state` (absent otherwise).
 
 The optional top-level `preview` object, `{ "loopBudget": <integer 1 … 4294967295> }`, is present exactly in the manifest of a `--mode preview` build (it sits between `runtimeConfig` and `entryScene`; the build id covers it): the runtime enforces the loop budget through `ctx.budget` (§4.2) and refuses any request outside `baseUrl` (§6.5). No other mode writes the key. Decision 0075.
 
@@ -414,18 +422,22 @@ onAnimationFrame(nowMs):
   rawDelta = (lastMs === null) ? 0 : (nowMs - lastMs) / 1000; lastMs = nowMs   // first frame after mount/resume: 0
   delta    = min(rawDelta, maxFrameDelta)
   activeTime += delta                                    // f64
-  phase1_input()                                         // host inputs, input transitions, input handlers
-  accumulator += delta
-  steps = 0
-  while accumulator >= fixedStep and steps < maxCatchUpSteps:
-      phase2_tick(fixedStep); accumulator -= fixedStep; steps += 1
-  if accumulator >= fixedStep:
-      counters.discardedSteps += floor(accumulator / fixedStep); accumulator = accumulator % fixedStep
-  phase3_update(delta); phase4_flush(); phase5_bindings(); phase6_transforms(); phase7_render() // ends with host-output publication (§6.6)
+  phase1_input()                                         // pending swap (§11), host inputs, input transitions, input handlers
+  if not gamePaused:                                     // the game pause of pause()/resume() (decision 0143)
+      accumulator += delta
+      steps = 0
+      while accumulator >= fixedStep and steps < maxCatchUpSteps and not gamePaused:
+          phase2_tick(fixedStep); accumulator -= fixedStep; steps += 1
+      if accumulator >= fixedStep and not gamePaused:
+          counters.discardedSteps += floor(accumulator / fixedStep); accumulator = accumulator % fixedStep
+  if not gamePaused:
+      phase3_update(delta)                               // due timers on the game clock (decision 0142), then update(dt)
+  phase4_flush(); phase5_bindings(); phase6_transforms(); phase7_render() // ends with host-output publication (§6.6)
   requestNext()
 ```
 
 - `pause()` sets `state = paused` and stops accumulating; `resume()` sets `lastMs = null`, so the first frame after resuming has delta 0 and the paused interval is never simulated. Visibility changes call pause/resume when `pauseWhenHidden`.
+- **The game pause** (`pause()`/`resume()` of the program, decision 0143) is a flag of the scheduler, `gamePaused`, distinct from the application state: frames keep running and `activeTime` and `ctx.frame` keep advancing, but no tick runs, the accumulator does not grow and phase 3 is skipped, so `update`, `fixed_update`, physics and timers stand still while input handlers, the flush, bindings, transforms and rendering go on. A scene change (§11.4) clears it. This is the hook UI work builds on: a pause menu is input handlers and bindings, which keep running.
 - **Manual clock (tests).** With `options.test.manualClock`, `requestAnimationFrame` is not used; `app.debug.step(n, dtSeconds)` runs `n` frames with the given delta synchronously (rendering included). This makes every behavioural test deterministic.
 - **Flush points** (decision 0064): `phase2_tick` calls the entity flush before every fixed tick, `phase4_flush` after `update`. A flush removes the entities pending removal (releasing their resources), then creates the pending spawns in spawn order (`init`, first binding evaluation); a created entity first runs in the next phase that starts after its flush.
 - All per-frame iteration uses arrays in stable instance order. Never iterate `Object.keys` of user-named objects to decide execution order.
@@ -512,6 +524,8 @@ With `renderTarget`, frames render into an offscreen `rgba8unorm-srgb` texture o
 **Spawned entities** (decision 0064). A reload that does not restart the scene re-creates every spawned entity that exists in the same slot and generation, by the new program's `init` with the params it was spawned with, and carries its state, pose and imperative material params by identity like a named entity's; references kept in state stay valid for them. A spawned prefab whose param list (`name: type`) changed, or a prefab added to or removed from the program, restarts the scene (`W8070`). A prefab the program no longer spawns drops its live entities silently and their references stay dead. After a device loss the entities keep their slots and instance indices (§9.4).
 
 **Physics** (decision 0066). The physics world follows the swap: a new world is created for the candidate's scene, the bodies of the named entities are made from the poses the migration carried over, the bodies of the spawned entities the migration re-created are made as they are re-created, and the old world is disposed. Velocities and queued commands do not survive a reload (the new world starts at rest). A candidate whose physics module (`subsystems.physicsModule`) is another file than the one loaded is imported during `replaceProgram`; if it cannot be, the candidate is refused with `E8102` (phase `runtime:reload`) and nothing is swapped. Device loss does not touch physics: it is CPU state.
+
+11.4 **Scene changes** (every build; decisions 0140 and 0141). `go_to(S)` and `reset()` reuse the preparation of §11.2 for a scene started afresh. The runtime imports the program module of `S` named by `manifest.game.scenes` (`new URL(module, baseUrl)` with the query `?build=<buildId>`, so a hot reload never meets a stale copy; the scene that runs reuses its own module), fetches and validates its manifest, creates its shaders, loads its assets and physics module, and runs its `init`, while the current scene keeps running. At the start of the next frame after that (where a hot-reload swap happens) the new scene replaces the old one as a whole: no migration; the old world's timers, entities and bodies end; the values of the old scene's `shared state` are copied into the new scene's `shared state` of the same name and type (`go_to` only, not `reset()`); the game pause is cleared. A failure of any step reports `E5401` (notes: the underlying diagnostics) and leaves the running scene untouched. One scene change is prepared at a time: later `go_to`/`reset()` calls are ignored until it is applied or failed. A hot reload while a scene other than the entry runs reloads that scene (`game.scenes` of the candidate's manifest names its new module). Device recovery (§9.4) rebuilds the scene that runs.
 
 ## 12. Runtime diagnostics
 

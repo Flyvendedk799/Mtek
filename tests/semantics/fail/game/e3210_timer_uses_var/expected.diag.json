@@ -1,0 +1,40 @@
+[
+  {
+    "code": "MTEK-E3210",
+    "file": "src/main.mtek",
+    "startByte": 348,
+    "endByte": 353,
+    "message": "A timer block cannot use the variable 'combo' of the code that starts the timer.",
+    "related": [
+      {
+        "message": "'combo' is declared with `var` here",
+        "file": "src/main.mtek",
+        "startByte": 273,
+        "endByte": 278
+      }
+    ],
+    "notes": [
+      "the block runs later, after the handler has finished, when its `var` locals no longer exist",
+      "help: copy the value with `let combo_now = combo;` before the timer, or keep it in `state`"
+    ]
+  },
+  {
+    "code": "MTEK-E3210",
+    "file": "src/main.mtek",
+    "startByte": 367,
+    "endByte": 372,
+    "message": "A timer block cannot use the variable 'combo' of the code that starts the timer.",
+    "related": [
+      {
+        "message": "'combo' is declared with `var` here",
+        "file": "src/main.mtek",
+        "startByte": 273,
+        "endByte": 278
+      }
+    ],
+    "notes": [
+      "the block runs later, after the handler has finished, when its `var` locals no longer exist",
+      "help: copy the value with `let combo_now = combo;` before the timer, or keep it in `state`"
+    ]
+  }
+]

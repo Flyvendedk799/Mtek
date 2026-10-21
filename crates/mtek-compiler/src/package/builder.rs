@@ -31,7 +31,7 @@ use crate::assets::{AssetStore, ImageRef, MeshRef, pack::Packed};
 use crate::diagnostics::{Code, Diagnostic};
 use crate::emit_js::{CpuFlags, ProgramParts, emit_app_dts, emit_program, source_map};
 use crate::emit_wgsl::{ShaderArtifact, emit_shader};
-use crate::ir::{self, BehaviorKind, MeshDesc, Owner, Program};
+use crate::ir::{self, BehaviorKind, MeshDesc, Owner, Program, Symbol};
 use crate::layout::{LayoutRecord, builtin_blocks, compute};
 use crate::lowering::shader::lower_material;
 use crate::plan::{
@@ -48,8 +48,8 @@ use crate::{
 use super::html::{BOOTSTRAP_JS, index_html, preview_bootstrap};
 use super::identity::{BuildIdentity, h16};
 use super::manifest::{
-    Binding, BindingDep, BindingTarget, Body, Camera, Collider, Entity, EntityMaterial,
-    InstanceParam, Layout, Light as ManifestLight, LightClass, LightClasses,
+    Binding, BindingDep, BindingTarget, Body, Camera, Collider, Entity, EntityMaterial, Game,
+    GameScene, InstanceParam, Layout, Light as ManifestLight, LightClass, LightClasses,
     LightKind as ManifestLightKind, MANIFEST_SCHEMA, Manifest, Material, MaterialInstance,
     MaterialParam, MaterialResource, Mesh, MeshShape, Num, ParamClass as ManifestClass, Prefab,
     PrefabMaterial, PrefabParam, Preview, RequiredCapabilities, ResourceValue, RuntimeConfig,
@@ -119,8 +119,44 @@ struct BuiltMaterial<'p> {
     shader: ShaderArtifact,
 }
 
+/// The program files of one scene (decision 0141): `app.js`, `app.js.map` and
+/// `program.manifest.json` for the entry scene, `app.<Scene>.js`, `app.<Scene>.js.map` and
+/// `program.<Scene>.manifest.json` for every other scene of a multi-scene program.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SceneFiles {
+    pub module: String,
+    pub source_map: String,
+    pub manifest: String,
+}
+
+impl SceneFiles {
+    /// The files of scene `name`; `entry` says whether it is the entry scene.
+    #[must_use]
+    pub fn of(name: &str, entry: bool) -> Self {
+        if entry {
+            Self {
+                module: APP_JS.to_owned(),
+                source_map: APP_JS_MAP.to_owned(),
+                manifest: MANIFEST_JSON.to_owned(),
+            }
+        } else {
+            Self {
+                module: format!("app.{name}.js"),
+                source_map: format!("app.{name}.js.map"),
+                manifest: format!("program.{name}.manifest.json"),
+            }
+        }
+    }
+}
+
 /// Packages the checked `program` of `project`. The project's source map holds the prelude
 /// modules the program uses (the front end added them, decision 0044).
+///
+/// A program with several scenes (decision 0141) is packaged once per scene: the entry scene
+/// into `app.js` and `program.manifest.json`, every other scene into `app.<Scene>.js` and
+/// `program.<Scene>.manifest.json`, which `go_to` loads. The content-addressed files (shaders,
+/// assets, the runtime and physics bundles) are shared; every manifest lists the scenes in
+/// `game.scenes`. A single-scene program is packaged exactly as before.
 ///
 /// # Errors
 /// `E6001` for a parameter block over the target profile's limit; `E9999` (or `E6100` from
@@ -129,6 +165,79 @@ pub fn package(
     project: &Project,
     program: &Program,
     input: &PackageInput<'_>,
+) -> Result<Package, Vec<Diagnostic>> {
+    let entry = program.entry().ok_or_else(|| {
+        defect(format!(
+            "the entry scene '{}' is not in the IR",
+            program.entry_scene
+        ))
+    })?;
+    let mut scenes: Vec<(String, Symbol)> = program
+        .scenes()
+        .map(|scene| (scene.name.clone(), scene.symbol.clone()))
+        .collect();
+    if scenes.len() <= 1 {
+        return package_scene(
+            project,
+            program,
+            input,
+            &SceneFiles::of(&entry.name, true),
+            None,
+        );
+    }
+    scenes.sort();
+    let entry_symbol = entry.symbol.clone();
+    let game = Game {
+        scenes: scenes
+            .iter()
+            .map(|(name, symbol)| {
+                let files = SceneFiles::of(name, *symbol == entry_symbol);
+                GameScene {
+                    name: name.clone(),
+                    module: files.module,
+                    manifest: files.manifest,
+                }
+            })
+            .collect(),
+    };
+    let mut packaged = package_scene(
+        project,
+        program,
+        input,
+        &SceneFiles::of(&entry.name, true),
+        Some(&game),
+    )?;
+    for (name, symbol) in &scenes {
+        if *symbol == entry_symbol {
+            continue;
+        }
+        let mut other = program.clone();
+        other.entry_scene = symbol.clone();
+        let scene = package_scene(
+            project,
+            &other,
+            input,
+            &SceneFiles::of(name, false),
+            Some(&game),
+        )?;
+        for (path, bytes) in scene.files {
+            // The page, the host declarations and the preview bootstrap belong to the entry.
+            if path == INDEX_HTML || path == APP_DTS || path == BOOTSTRAP_JS {
+                continue;
+            }
+            packaged.files.entry(path).or_insert(bytes);
+        }
+    }
+    Ok(packaged)
+}
+
+/// Packages the scene `program.entry_scene` into `files`, with the manifest `game` object.
+fn package_scene(
+    project: &Project,
+    program: &Program,
+    input: &PackageInput<'_>,
+    scene_files: &SceneFiles,
+    game: Option<&Game>,
 ) -> Result<Package, Vec<Diagnostic>> {
     let sources = &project.sources;
     let scene = program.entry().ok_or_else(|| {
@@ -270,6 +379,8 @@ pub fn package(
         &ProgramParts {
             runtime_file: &runtime_file,
             layouts: &layouts,
+            manifest_file: &scene_files.manifest,
+            source_map_file: &scene_files.source_map,
             flags: CpuFlags {
                 release: matches!(input.mode, BuildMode::Release | BuildMode::Preview),
                 loop_budget: preview.is_some(),
@@ -278,7 +389,7 @@ pub fn package(
         &mut |span| spans.intern(span),
     )
     .map_err(defect)?;
-    let app_map = source_map(APP_JS, &app.mappings, sources).map_err(defect)?;
+    let app_map = source_map(&scene_files.module, &app.mappings, sources).map_err(defect)?;
     let span_entries = spans.into_entries();
 
     let source_entries: Vec<SourceEntry> = sources
@@ -334,6 +445,7 @@ pub fn package(
             max_entities: runtime.max_entities,
             pause_when_hidden: runtime.pause_when_hidden,
         },
+        game: game.cloned(),
         preview,
         entry_scene: scene.name.clone(),
         sources: source_entries,
@@ -354,8 +466,11 @@ pub fn package(
     if input.mode == BuildMode::Preview {
         files.insert(BOOTSTRAP_JS.to_owned(), preview_bootstrap().into_bytes());
     }
-    files.insert(APP_JS.to_owned(), app.text.into_bytes());
-    files.insert(APP_JS_MAP.to_owned(), app_map.to_json().into_bytes());
+    files.insert(scene_files.module.clone(), app.text.into_bytes());
+    files.insert(
+        scene_files.source_map.clone(),
+        app_map.to_json().into_bytes(),
+    );
     files.insert(
         APP_DTS.to_owned(),
         emit_app_dts(&host_inputs, &host_outputs).into_bytes(),
@@ -365,7 +480,10 @@ pub fn package(
     if let (Some(bundle), Some(module)) = (physics_bundle, &manifest.subsystems.physics_module) {
         files.insert(module.clone(), bundle.to_vec());
     }
-    files.insert(MANIFEST_JSON.to_owned(), manifest.to_json().into_bytes());
+    files.insert(
+        scene_files.manifest.clone(),
+        manifest.to_json().into_bytes(),
+    );
     for (path, bytes) in shader_files {
         files.insert(path, bytes);
     }
@@ -985,6 +1103,7 @@ fn manifest_prefabs(
                     name: state.name.clone(),
                     ty: state.ty.clone(),
                     symbol: state.symbol.to_string(),
+                    shared: false,
                 })
                 .collect(),
             update: has(&BehaviorKind::Update),
@@ -1080,6 +1199,7 @@ fn state_entries(scene: &crate::ir::Scene, owner: Owner) -> Vec<StateEntry> {
             name: state.name.clone(),
             ty: state.ty.clone(),
             symbol: state.symbol.to_string(),
+            shared: state.shared,
         })
         .collect()
 }

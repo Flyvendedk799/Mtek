@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E0013",
+    "file": "src/main.mtek",
+    "startByte": 142,
+    "endByte": 146,
+    "message": "`loop` is reserved for a future version of Mtek and cannot be used as a name.",
+    "notes": [
+      "help: there is no `loop`: write `while true { ... }` and leave it with `break`, or use the counted loop `for i in 0..n { ... }`"
+    ]
+  }
+]

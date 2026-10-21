@@ -74,6 +74,7 @@
       "function:exp2",
       "function:floor",
       "function:fract",
+      "function:go_to",
       "function:inverse_sqrt",
       "function:is_key_down",
       "function:length",
@@ -89,6 +90,8 @@
       "function:min",
       "function:mix",
       "function:normalize",
+      "function:pause",
+      "function:paused",
       "function:pow",
       "function:print",
       "function:quat.axis_angle",
@@ -97,6 +100,8 @@
       "function:radians",
       "function:random",
       "function:reflect",
+      "function:reset",
+      "function:resume",
       "function:round",
       "function:sample",
       "function:sampler.linear_clamp",
@@ -195,7 +200,6 @@
       "unsafe",
       "use",
       "where",
-      "while",
       "yield",
       "compute",
       "vertex",
@@ -207,7 +211,6 @@
       "component",
       "bitwise operators (& | ^ ~ << >>)",
       "stage functions other than `fragment` (vertex, compute)",
-      "switching the active scene at run time",
       "transparency (alpha blending)",
       "remote assets (URLs as asset paths)",
       "instancing a whole node hierarchy of a glTF asset"
@@ -242,7 +245,8 @@
       "state",
       "struct",
       "true",
-      "var"
+      "var",
+      "while"
     ],
     "precedence": [
       "level 8: call f(...), field .x, index [i] (left)",

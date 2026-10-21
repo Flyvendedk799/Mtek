@@ -35,7 +35,7 @@ use crate::resolve::{Def, DefId, DefKind, Res};
 use crate::source::Span;
 use crate::syntax::ast::{
     ArmBody, AssignOp, AssignStmt, Block, ElseBranch, Expr, ExprKind, FnDecl, ForIter, ForStmt,
-    IfStmt, LocalDecl, MatchStmt, NodeId, Stmt,
+    IfStmt, LocalDecl, MatchStmt, NodeId, Stmt, TimerKind, TimerStmt, WhileStmt,
 };
 
 /// The state of the body being checked.
@@ -56,6 +56,9 @@ pub(super) struct BodyState {
     vars: Vec<(DefId, String, Span)>,
     /// For a material's stage function: what the stage rules need.
     pub(super) stage: Option<StageState>,
+    /// Inside a timer block (decision 0142): the `var` locals declared outside it, which the
+    /// block cannot use (`E3210`).
+    timer_outer_vars: Option<BTreeSet<DefId>>,
 }
 
 /// What the checker tracks in a stage function (decision 0039).
@@ -94,6 +97,8 @@ fn stmt_span(stmt: &Stmt) -> Span {
         Stmt::Const(decl) => decl.span,
         Stmt::If(stmt) => stmt.span,
         Stmt::For(stmt) => stmt.span,
+        Stmt::While(stmt) => stmt.span,
+        Stmt::Timer(stmt) => stmt.span,
         Stmt::Return(stmt) => stmt.span,
         Stmt::Break(stmt) | Stmt::Continue(stmt) => stmt.span,
         Stmt::Block(block) => block.span,
@@ -123,6 +128,8 @@ impl<'a> Checker<'a> {
                 }
                 Stmt::Block(inner) => self.collect_block_constants(inner),
                 Stmt::For(stmt) => self.collect_block_constants(&stmt.body),
+                Stmt::While(stmt) => self.collect_block_constants(&stmt.body),
+                Stmt::Timer(stmt) => self.collect_block_constants(&stmt.body),
                 Stmt::Match(stmt) => {
                     for arm in &stmt.arms {
                         if let ArmBody::Block(block) = &arm.body {
@@ -230,6 +237,7 @@ impl<'a> Checker<'a> {
             assigned: BTreeSet::new(),
             vars: Vec::new(),
             stage,
+            timer_outer_vars: None,
         });
     }
 
@@ -356,6 +364,7 @@ impl<'a> Checker<'a> {
                 | Ty::Schema(_)
                 | Ty::Descriptor(_)
                 | Ty::PrefabDescriptor
+                | Ty::SceneName
                 | Ty::MaterialInstance(_) => return false,
             }
         }
@@ -416,6 +425,14 @@ impl<'a> Checker<'a> {
             Stmt::If(stmt) => self.if_stmt(stmt),
             Stmt::For(stmt) => {
                 self.for_stmt(stmt);
+                None
+            }
+            Stmt::While(stmt) => {
+                self.while_stmt(stmt);
+                None
+            }
+            Stmt::Timer(stmt) => {
+                self.timer_stmt(stmt);
                 None
             }
             Stmt::Return(ret) => {
@@ -590,13 +607,18 @@ impl<'a> Checker<'a> {
 
     /// The condition of an `if`: `bool`, no truthiness (`E3070`).
     fn condition(&mut self, cond: &Expr) {
+        self.loop_condition(cond, "if");
+    }
+
+    /// The condition of an `if` or a `while` (`word`): `bool`, no truthiness (`E3070`).
+    fn loop_condition(&mut self, cond: &Expr, word: &str) {
         let ty = self.value(cond, Some(TyId::BOOL));
         if ty != TyId::BOOL && !self.out.interner.is_error(ty) {
             let name = self.display(ty);
             self.report_diagnostic(
                 Diagnostic::new(
                     Code::E3070,
-                    format!("The condition of `if` must be bool, but it has type {name}."),
+                    format!("The condition of `{word}` must be bool, but it has type {name}."),
                 )
                 .at(cond.span)
                 .expected("bool")
@@ -681,6 +703,123 @@ impl<'a> Checker<'a> {
         }
         // How the body leaves concerns the loop only.
         self.block(&stmt.body);
+    }
+
+    /// `while cond { … }` (decision 0144): a `bool` condition (`E3070`), CPU only (`E4010` in
+    /// GPU code). It never counts as leaving its block, whatever its body does.
+    fn while_stmt(&mut self, stmt: &WhileStmt) {
+        self.loop_condition(&stmt.cond, "while");
+        if let Some(body) = &mut self.body {
+            body.facts.while_loops.push(stmt.cond.span);
+        }
+        self.block(&stmt.body);
+    }
+
+    /// `after(seconds) { … }` / `every(seconds) { … }` (decision 0142). The time is an `f32`
+    /// number of seconds; a constant one must be positive for `every` and not negative for
+    /// `after` (`E3211`). The statement is handler-only (`E5080` in a function or an
+    /// initialiser). The block runs later, so it cannot use a `var` of the enclosing body
+    /// (`E3210`), and its `return;` leaves only the block.
+    fn timer_stmt(&mut self, stmt: &TimerStmt) {
+        let word = stmt.kind.word();
+        let ty = self.value(&stmt.seconds, Some(TyId::F32));
+        if ty != TyId::F32 && !self.out.interner.is_error(ty) {
+            let name = self.display(ty);
+            self.report_diagnostic(
+                Diagnostic::new(
+                    Code::E3001,
+                    format!("The time of `{word}` is a number of seconds of type f32, but this expression has type {name}."),
+                )
+                .at(stmt.seconds.span)
+                .expected("f32")
+                .actual(name)
+                .help("write the time as a float, for example `1.5`; convert an integer with `f32(n)`"),
+            );
+        }
+        let folded = self.fold_in_body(&stmt.seconds);
+        if let Folded::Value(super::value::ConstValue::F32(seconds)) = &folded {
+            let seconds = f64::from(*seconds);
+            let bad = match stmt.kind {
+                TimerKind::After => seconds < 0.0 || !seconds.is_finite(),
+                TimerKind::Every => seconds <= 0.0 || !seconds.is_finite(),
+            };
+            if bad {
+                let rule = match stmt.kind {
+                    TimerKind::After => "cannot be negative",
+                    TimerKind::Every => "must be greater than zero",
+                };
+                self.report_diagnostic(
+                    Diagnostic::new(
+                        Code::E3211,
+                        format!("The time of `{word}` {rule}, but it is {seconds}."),
+                    )
+                    .at(stmt.seconds.span)
+                    .expected(if stmt.kind == TimerKind::Every {
+                        "a time > 0.0"
+                    } else {
+                        "a time >= 0.0"
+                    })
+                    .actual(format!("{seconds}"))
+                    .help("timers count seconds of game time; `every(0.5) { ... }` runs twice a second"),
+                );
+            }
+        }
+        if let Some(body) = &mut self.body {
+            body.facts.calls.push(super::facts::CallFact {
+                span: Span::new(stmt.word.file, stmt.word.start, stmt.seconds.span.end + 1),
+                callee: super::facts::Callee::Builtin(super::facts::BuiltinCall {
+                    name: word.to_owned(),
+                    domain: crate::stdlib::Domain::Cpu,
+                    handlers_only: true,
+                }),
+            });
+        }
+        // The block: the enclosing `var`s are out of reach, and `return` leaves it with unit.
+        let saved = self.body.as_mut().map(|body| {
+            let mut outer = body.timer_outer_vars.clone().unwrap_or_default();
+            outer.extend(body.vars.iter().map(|(id, _, _)| *id));
+            (
+                body.timer_outer_vars.replace(outer),
+                std::mem::replace(&mut body.ret, TyId::UNIT),
+                body.ret_span.take(),
+            )
+        });
+        self.block(&stmt.body);
+        if let (Some(body), Some((outer, ret, ret_span))) = (&mut self.body, saved) {
+            body.timer_outer_vars = outer;
+            body.ret = ret;
+            body.ret_span = ret_span;
+        }
+    }
+
+    /// `E3210` when `id` is a `var` local of the body that encloses the timer block being
+    /// checked (decision 0142). `span` is the use.
+    pub(super) fn timer_capture(&mut self, id: DefId, span: Span) {
+        let captured = self
+            .body
+            .as_ref()
+            .and_then(|body| body.timer_outer_vars.as_ref())
+            .is_some_and(|outer| outer.contains(&id));
+        if !captured {
+            return;
+        }
+        let name = self
+            .res
+            .def(id)
+            .map_or_else(String::new, |d| d.name.clone());
+        let declared = self.res.def(id).map(|d| d.span);
+        let mut diagnostic = Diagnostic::new(
+            Code::E3210,
+            format!("A timer block cannot use the variable '{name}' of the code that starts the timer."),
+        )
+        .at(span)
+        .note("the block runs later, after the handler has finished, when its `var` locals no longer exist")
+        .help(format!("copy the value with `let {name}_now = {name};` before the timer, or keep it in `state`"));
+        if let Some(declared) = declared {
+            diagnostic =
+                diagnostic.related(declared, format!("'{name}' is declared with `var` here"));
+        }
+        self.report_diagnostic(diagnostic);
     }
 
     /// `return;` or `return value;` against the function's result type.

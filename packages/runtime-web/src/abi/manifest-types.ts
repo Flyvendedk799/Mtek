@@ -267,6 +267,23 @@ export interface MtekStateEntry {
   readonly name: string;
   readonly type: MtekTypeName;
   readonly symbol: SymbolId;
+  /** `shared state` (decision 0141): carried over by `go_to` to a scene with a shared state of the same name and type. */
+  readonly shared?: true;
+}
+
+/** One scene of a multi-scene program (decision 0141): what `go_to` loads, relative to the program's `baseUrl`. */
+export interface MtekGameScene {
+  readonly name: string;
+  /** `app.js` for the entry scene, `app.<Scene>.js` for the others. */
+  readonly module: string;
+  /** `program.manifest.json` for the entry scene, `program.<Scene>.manifest.json` for the others. */
+  readonly manifest: string;
+}
+
+/** Game-level data (decision 0141); absent when there is none. */
+export interface MtekGame {
+  /** Every scene, sorted by name; absent for a single-scene program. */
+  readonly scenes?: readonly MtekGameScene[];
 }
 
 export interface MtekCamera {
@@ -496,6 +513,8 @@ export interface MtekManifest {
    */
   readonly subsystems: { readonly physics: boolean; readonly physicsModule?: string };
   readonly runtimeConfig: MtekRuntimeConfig;
+  /** Game-level data: the scenes `go_to` can load (decision 0141); absent for a single-scene program. */
+  readonly game?: MtekGame;
   /**
    * Present exactly in the manifest of a `--mode preview` build (decision 0075): the program was instrumented with a
    * loop budget the runtime enforces (`E8080`), and the runtime refuses every request outside `baseUrl`.

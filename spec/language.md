@@ -32,16 +32,16 @@ Conventions in this document: **must** / **must not** are requirements on the co
 ```
 bind  break  continue  cpu  else  entity  enum  export  false  fn  for  if
 import  in  let  match  material  on  param  prefab  return  scene  self
-state  struct  true  var  const
+state  struct  true  var  const  while
 ```
 
-The blueprint's list (§3.4) plus `struct`, `true`, `false`, `self`, `bind`, `break`, `continue` (decision 0008), and `enum` and `match` (decision 0129, which moved them here from §2.3).
+The blueprint's list (§3.4) plus `struct`, `true`, `false`, `self`, `bind`, `break`, `continue` (decision 0008), `enum` and `match` (decision 0129, which moved them here from §2.3), and `while` (decision 0144, likewise).
 
-2.3 **Reserved for future use.** Using these as identifiers is error `E0013` ("`while` is reserved for a future version"):
+2.3 **Reserved for future use.** Using these as identifiers is error `E0013` ("`loop` is reserved for a future version"):
 
 ```
 as  async  await  extern  impl  loop  mod  move  mut
-priv  pub  static  super  trait  type  unsafe  use  where  while  yield
+priv  pub  static  super  trait  type  unsafe  use  where  yield
 compute  vertex  storage  uniform  workgroup  system  query  component
 ```
 
@@ -51,6 +51,8 @@ compute  vertex  storage  uniform  workgroup  system  query  component
 - `fragment` — the stage function name inside a material body (`spec/materials.md` §3).
 - `from` — in an import clause (`import { A } from "…";`).
 - Event names after `on` (`key_down`, `collision_enter`, …), resolved against the registry.
+- `after`, `every` — a timer statement when the word is followed by `(…)` and a block (§7.11, decision 0142); anywhere else an ordinary name.
+- `shared` — before `state` in a scene, marks a shared state (`spec/scenes.md` §15.2, decision 0141).
 
 2.5 **Literals.**
 
@@ -67,10 +69,10 @@ compute  vertex  storage  uniform  workgroup  system  query  component
 ```
 { } ( ) [ ] < > , ; : . ..
 + - * / % ! = == != < <= > >= && ||
-+= -= *= /= ->
++= -= *= /= -> =>
 ```
 
-`<` and `>` double as generic brackets only inside type syntax (`array<f32, 4>`), which appears exclusively after `:` or `->`, so no expression ambiguity exists. `..` appears only in `for` headers (§7.5). Bitwise operators (`& | ^ ~ << >>`) are not part of v0.1; each is lexed so that it can be rejected with `E1901` ("bitwise operators are not supported in v0.1") rather than producing a confusing parse error.
+`<` and `>` double as generic brackets only inside type syntax (`array<f32, 4>`), which appears exclusively after `:` or `->`, so no expression ambiguity exists. `..` appears only in `for` headers (§7.5); `=>` only in `match` arms (decision 0129). Bitwise operators (`& | ^ ~ << >>`) are not part of v0.1; each is lexed so that it can be rejected with `E1901` ("bitwise operators are not supported in v0.1") rather than producing a confusing parse error.
 
 ## 3. Program structure
 
@@ -249,13 +251,23 @@ Vector `==` is not defined in v0.1 (`E3012`). `%` on `f32` is the truncated rema
 - Array: `for x in arr { … }` where `arr: array<T, N>`; `x: T` by value.
 The loop variable is immutable. In GPU-reachable code (§8.4) the range bounds must be constant expressions (`E4010` otherwise) and `N` is constant by construction.
 
-7.6 **`break`, `continue`** apply to the innermost `for`. Outside a loop: `E1030`.
+7.6 **`break`, `continue`** apply to the innermost `for` or `while` of the same body. Outside a loop: `E1030`. A timer block (§7.11) is a body of its own: a `break` in it does not leave a loop around the timer (`E1030`).
 
 7.7 **`return`.** `return expr;` in functions with a result type; `return;` in unit functions and handlers. Every path of a function with a result type must return (`E3080`). Unreachable statements after `return`/`break`/`continue` are warning `W3081`.
 
 7.8 **Blocks.** `{ … }` introduces a scope. Locals are visible from their declaration to the end of the block.
 
 7.9 **`match` statements** (decision 0129). `match value { Pattern => { … } … }` runs the block of the first arm whose pattern matches. The scrutinee, the patterns and the rules for exhaustiveness and unreachable arms are those of the `match` expression (§6.11: `E3201`–`E3205`). Each arm body is a block; a comma after it is optional. `break`, `continue` and `return` in an arm act as in any block. For §7.7, a `match` statement leaves its function only when it is exhaustive and every arm leaves it: a function may end with a `match` whose arms all `return`.
+
+7.10 **`while`** (decision 0144). `while cond { … }` runs its block as long as `cond`, a `bool` (`E3070`), is true; the condition is checked before every iteration. Like the condition of `if`, `cond` cannot start with a descriptor literal (wrap it in parentheses). `break` leaves the loop and `continue` starts the next check. `while` is CPU only: GPU-reachable code has no loops without a constant bound (`E4010`). There is no `loop`: write `while true { … }` and leave it with `break` (`loop` stays reserved, §2.3).
+
+Every `while` is **bounded**: one execution of a `while` statement runs at most 1 000 000 iterations (`WHILE_ITERATION_CAP`). The next iteration fails the frame with the run-time error `E8080` at the loop, and the scene stops like any frame failure (`spec/runtime-abi.md` §7). The cap is not a budget a program should approach; it turns an endless loop, which would hang the browser tab, into a reported error. A preview build's loop budget (decision 0075) also counts `while` iterations. For §7.7 a `while` never counts as leaving its function, even `while true` (a function with a result type needs a `return` after it).
+
+7.11 **Timers** (decision 0142). `after(seconds) { … }` runs its block once, `seconds` of game time from now; `every(seconds) { … }` runs its block every `seconds` of game time until the scene ends or, in an entity, until the entity is destroyed. `seconds` is an `f32` expression evaluated when the statement runs (`E3001`); a constant time must not be negative for `after` and must be greater than 0 for `every` (`E3211`). A time that is computed at run time is clamped: a negative or non-finite delay is 0, and a period that is not greater than 0 runs the block once per frame.
+
+- Timers are **handler-only**: they can be started in lifecycle functions and event handlers of scenes, entities and prefabs, not in functions or initialisers (`E5080`).
+- The block runs **later**, at the start of phase 3 of the frame in which it falls due (`spec/scenes.md` §15.3). It can read and write state, `self` and constants, and read the `let` locals, the parameters and the loop variables around it, whose values are captured when the timer starts. It cannot use a `var` of the body around it (`E3210`): that variable no longer exists when the block runs. A `return;` in the block leaves the block only; `break` and `continue` cannot reach a loop outside it (`E1030`).
+- `after` and `every` are contextual (§2.4): the statement is recognised only when the word is followed by a parenthesised argument and a block; `let after = 2.0;` is an ordinary name.
 
 ## 8. Constants, functions, effects
 
@@ -303,10 +315,10 @@ The authoritative list with signatures, domains, const-eligibility and CPU seman
 - `sign(0.0) = 0.0`.
 - Integer `abs(i32::MIN) = i32::MIN`.
 
-CPU-only intrinsics in v0.1: `random() -> f32` in `[0, 1)` (seeded per application from the mount option `seed`, default derived from time; tests always pass a seed), `print(message: string)` (development console; a no-op in release builds), `spawn`, `destroy`, `alive` (`spec/scenes.md` §9), `is_key_down(key: Key) -> bool` (`spec/scenes.md` §7.3).
+CPU-only intrinsics in v0.1: `random() -> f32` in `[0, 1)` (seeded per application from the mount option `seed`, default derived from time; tests always pass a seed), `print(message: string)` (development console; a no-op in release builds), `spawn`, `destroy`, `alive` (`spec/scenes.md` §9), `is_key_down(key: Key) -> bool` (`spec/scenes.md` §7.3), and the game-flow functions `go_to(Scene)`, `reset()`, `pause()`, `resume()` and `paused() -> bool` (`spec/scenes.md` §15, decisions 0140, 0141 and 0143).
 
 ## 11. What is not in v0.1
 
 Each of these is rejected with a diagnostic; `docs/limitations.md` gives the code of each. Only the reserved words (`E0013`), the bitwise operators (`E1901`) and the vertex and compute stages (`E4901`) have an unsupported-feature code of their own; the others are rejected by the general rule that names the construct (an unknown type is `E3003`, a numeric suffix or a hexadecimal literal `E0021`, `+` on strings `E3014`, and so on; decision 0102).
 
-`while`/`loop`; bitwise operators; integer/boolean vectors; `mat2`/`mat3`; `f16`/`f64`; numeric suffixes and hexadecimal literals; Unicode identifiers; closures and function values; generics; methods and `impl`; enum variants that carry data, explicit enum discriminants and conversions between enums and numbers (§5.7); optional/result types in the language; string formatting/concatenation (`+` on `string` is `E3014`); recursion; compute and vertex stages; storage buffers; patterns other than an enum variant and `_` (no literal, binding, range or guard patterns, no destructuring, §6.11). The unsupported-feature codes are the `x9xx` codes of each range (`spec/diagnostics.md` §3).
+`loop` (write `while true`, §7.10); bitwise operators; integer/boolean vectors; `mat2`/`mat3`; `f16`/`f64`; numeric suffixes and hexadecimal literals; Unicode identifiers; closures and function values; generics; methods and `impl`; enum variants that carry data, explicit enum discriminants and conversions between enums and numbers (§5.7); optional/result types in the language; string formatting/concatenation (`+` on `string` is `E3014`); recursion; compute and vertex stages; storage buffers; patterns other than an enum variant and `_` (no literal, binding, range or guard patterns, no destructuring, §6.11). The unsupported-feature codes are the `x9xx` codes of each range (`spec/diagnostics.md` §3).

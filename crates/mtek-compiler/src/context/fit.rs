@@ -172,7 +172,7 @@ mod tests {
                 context_format: 2,
                 supported: Supported {
                     features: vec!["scenes".to_owned()],
-                    not_supported: vec!["while".to_owned()],
+                    not_supported: vec!["loop".to_owned()],
                 },
                 syntax: SyntaxSection {
                     keywords: vec!["fn".to_owned()],

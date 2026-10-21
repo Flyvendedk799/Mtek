@@ -2,7 +2,7 @@
 
 use crate::syntax::ast::{
     ArmBody, AssignStmt, Block, ElseBranch, ForIter, ForStmt, IfStmt, LocalDecl, MatchArm,
-    MatchStmt, Pattern, PatternKind, ReturnStmt, Stmt,
+    MatchStmt, Pattern, PatternKind, ReturnStmt, Stmt, TimerStmt, WhileStmt,
 };
 
 use super::decls::closing;
@@ -29,6 +29,8 @@ impl Printer<'_> {
             Stmt::Const(decl) => self.const_decl(decl),
             Stmt::If(stmt) => self.if_stmt(stmt),
             Stmt::For(stmt) => self.for_stmt(stmt),
+            Stmt::While(stmt) => self.while_stmt(stmt),
+            Stmt::Timer(stmt) => self.timer_stmt(stmt),
             Stmt::Return(stmt) => self.return_stmt(stmt),
             Stmt::Break(jump) => {
                 let semicolon = self.semicolon(jump.span.end);
@@ -101,6 +103,25 @@ impl Printer<'_> {
             variable,
             Doc::text(" in "),
             iterable,
+            Doc::Space,
+            body,
+        ])
+    }
+
+    fn while_stmt(&mut self, stmt: &WhileStmt) -> Doc {
+        let condition = self.expr(&stmt.cond);
+        let body = self.block(&stmt.body);
+        Doc::concat(vec![Doc::text("while "), condition, Doc::Space, body])
+    }
+
+    fn timer_stmt(&mut self, stmt: &TimerStmt) -> Doc {
+        let seconds = self.expr(&stmt.seconds);
+        let body = self.block(&stmt.body);
+        Doc::concat(vec![
+            Doc::text(stmt.kind.word()),
+            Doc::text("("),
+            seconds,
+            Doc::text(")"),
             Doc::Space,
             body,
         ])

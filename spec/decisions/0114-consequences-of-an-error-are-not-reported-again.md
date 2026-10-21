@@ -32,4 +32,4 @@ Four constructs gave two or three diagnostics for one mistake, the later ones on
 
 ## Verification
 
-Fixtures `edits_e2003_key_member_by_part`, `e2003_key_member_ambiguous` (no `E5061`), `materials/e4012_texture_made_in_stage` (two `E4012`, no `E4011`), `e0013_while_loop` (one error), `tests/syntax/fail/e1001_if_as_expression` (one error), `e5061_filter_is_a_named_constant`, and the existing `recovery_*` fixtures unchanged in code and span.
+Fixtures `edits_e2003_key_member_by_part`, `e2003_key_member_ambiguous` (no `E5061`), `materials/e4012_texture_made_in_stage` (two `E4012`, no `E4011`), `e0013_loop_loop` (one error), `tests/syntax/fail/e1001_if_as_expression` (one error), `e5061_filter_is_a_named_constant`, and the existing `recovery_*` fixtures unchanged in code and span.

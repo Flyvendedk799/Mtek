@@ -1261,6 +1261,14 @@ impl<'a> Resolver<'a> {
                 self.block(&stmt.body);
                 self.pop();
             }
+            Stmt::While(stmt) => {
+                self.expr(&stmt.cond);
+                self.block(&stmt.body);
+            }
+            Stmt::Timer(stmt) => {
+                self.expr(&stmt.seconds);
+                self.block(&stmt.body);
+            }
             Stmt::Return(stmt) => {
                 if let Some(value) = &stmt.value {
                     self.expr(value);

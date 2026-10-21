@@ -37,7 +37,7 @@ bind(x)
 ---
 Box { size: bind }
 --- reserved words used as names (E0013), the tree is still built
-while + x
+loop + x
 ---
 a.type
 ---

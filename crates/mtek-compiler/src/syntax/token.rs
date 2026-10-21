@@ -60,6 +60,7 @@ pub enum TokenKind {
     KwStruct,
     KwTrue,
     KwVar,
+    KwWhile,
 
     // Punctuation and operators (`spec/language.md` 2.6).
     LBrace,
@@ -160,6 +161,7 @@ pub const KEYWORDS: &[(&str, TokenKind)] = &[
     ("struct", TokenKind::KwStruct),
     ("true", TokenKind::KwTrue),
     ("var", TokenKind::KwVar),
+    ("while", TokenKind::KwWhile),
 ];
 
 /// The words reserved for future use (`spec/language.md` 2.3). They lex as
@@ -183,7 +185,6 @@ pub const RESERVED_WORDS: &[&str] = &[
     "unsafe",
     "use",
     "where",
-    "while",
     "yield",
     "compute",
     "vertex",
@@ -314,6 +315,7 @@ impl TokenKind {
             TokenKind::KwStruct => "`struct`",
             TokenKind::KwTrue => "`true`",
             TokenKind::KwVar => "`var`",
+            TokenKind::KwWhile => "`while`",
             TokenKind::LBrace => "`{`",
             TokenKind::RBrace => "`}`",
             TokenKind::LParen => "`(`",
@@ -519,7 +521,7 @@ mod tests {
             assert_eq!(kind.describe(), format!("`{text}`"));
         }
         assert_eq!(keyword_kind("update"), None);
-        assert_eq!(keyword_kind("while"), None);
+        assert_eq!(keyword_kind("loop"), None);
         assert_eq!(keyword_kind("Fn"), None);
     }
 

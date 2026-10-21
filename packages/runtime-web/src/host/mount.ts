@@ -46,6 +46,7 @@ import { loadPhysicsBackend, type PhysicsLoadResult } from "../physics/load.js";
 import { PhysicsSystem } from "../physics/system.js";
 import { Xoshiro128 } from "../random/xoshiro.js";
 import { ExecutionBudgetExceeded } from "../scene/budget.js";
+import { GameLink } from "../scene/game.js";
 import type { CpuServices } from "../scene/world.js";
 import { checkProgram } from "../scene/program.js";
 import { resolveStructure } from "../scene/structure.js";
@@ -66,6 +67,14 @@ function mountDiagnostic(
 
 /** `E8080` for a loop of `init` that spent the last iteration of the preview's budget (decision 0075). */
 function budgetDiagnostic(manifest: MtekManifest, error: ExecutionBudgetExceeded): MtekDiagnostic {
+  if (error.whileCap) {
+    return makeRuntimeDiagnostic("E8080", {
+      phase: "runtime:mount",
+      message: "A `while` loop ran more than 1000000 iterations while the scene was initialised.",
+      source: resolveSpan(manifest, error.spanId),
+      notes: ["help: make sure the condition becomes false (every `while` is capped, decision 0144)"],
+    });
+  }
   const limit = manifest.preview?.loopBudget;
   return makeRuntimeDiagnostic("E8080", {
     phase: "runtime:mount",
@@ -369,7 +378,10 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
     const seed = options.seed === undefined ? (Math.floor(environment.now() * 1000) ^ Date.now()) >>> 0 : Math.trunc(options.seed) >>> 0;
     const generator = new Xoshiro128(seed);
     const input = new InputState();
+    // `go_to`, `reset`, `pause`, `resume`, `paused` (decisions 0140, 0141, 0143): the application connects the link.
+    const game = new GameLink();
     const services: CpuServices = {
+      game,
       random: () => generator.nextF32(),
       isKeyDown: (code) => input.isKeyDown(code),
       print: (message) => {
@@ -493,6 +505,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
       seed,
       input,
       services,
+      game,
       sceneFunctions: checked.program.scene,
       scene: started.scene,
       physics,

@@ -117,6 +117,9 @@ pub enum Ty {
     Descriptor(SchemaCategory),
     /// The argument of `spawn`: a prefab descriptor.
     PrefabDescriptor,
+    /// The argument of `go_to`: the name of a scene of the entry module (decision 0141). Only
+    /// that argument has this type; a scene is not a value anywhere else.
+    SceneName,
     /// The value of a descriptor literal of a user material (`Pulse { .. }`,
     /// decision 0039): nominal, identified by the material's declaration in
     /// any module, and accepted wherever a `material` is expected.
@@ -529,6 +532,7 @@ impl TyInterner {
             TypeRef::Enum(name) => Ty::Enum(name),
             TypeRef::Descriptor(category) => Ty::Descriptor(category),
             TypeRef::PrefabDescriptor => Ty::PrefabDescriptor,
+            TypeRef::SceneName => Ty::SceneName,
         };
         self.intern(ty)
     }
@@ -560,6 +564,7 @@ impl TyInterner {
             Ty::Enum(name) => TypeRef::Enum(name),
             Ty::Descriptor(category) => TypeRef::Descriptor(category),
             Ty::PrefabDescriptor => TypeRef::PrefabDescriptor,
+            Ty::SceneName => TypeRef::SceneName,
             Ty::Error
             | Ty::Array { .. }
             | Ty::Struct(_)
@@ -799,6 +804,7 @@ mod tests {
             TypeRef::Enum("Key"),
             TypeRef::Descriptor(SchemaCategory::Projection),
             TypeRef::PrefabDescriptor,
+            TypeRef::SceneName,
         ]);
         for type_ref in refs {
             let id = interner.from_type_ref(type_ref);

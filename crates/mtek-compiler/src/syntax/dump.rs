@@ -511,11 +511,15 @@ fn object_sexp(object: &SceneObject) -> Sexp {
 }
 
 fn state_sexp(state: &StateDecl) -> Sexp {
-    List::new("state")
-        .atom(state.name.name.as_str())
-        .child(type_sexp(&state.ty))
-        .child(expr_sexp(&state.value))
-        .done()
+    List::new(if state.shared.is_some() {
+        "shared-state"
+    } else {
+        "state"
+    })
+    .atom(state.name.name.as_str())
+    .child(type_sexp(&state.ty))
+    .child(expr_sexp(&state.value))
+    .done()
 }
 
 fn init_sexp(field: &FieldInit) -> Sexp {
@@ -569,6 +573,14 @@ fn stmt_sexp(stmt: &Stmt) -> Sexp {
         Stmt::Const(decl) => const_sexp(decl),
         Stmt::If(stmt) => if_sexp(stmt),
         Stmt::For(stmt) => for_sexp(stmt),
+        Stmt::While(stmt) => List::new("while")
+            .child(expr_sexp(&stmt.cond))
+            .child(block_sexp(&stmt.body))
+            .done(),
+        Stmt::Timer(stmt) => List::new(stmt.kind.word())
+            .child(expr_sexp(&stmt.seconds))
+            .child(block_sexp(&stmt.body))
+            .done(),
         Stmt::Return(stmt) => List::new("return")
             .opt(stmt.value.as_ref().map(expr_sexp))
             .done(),

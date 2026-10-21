@@ -173,6 +173,7 @@ export const RT_STRUCTURAL_EXPORTS: readonly string[] = [
   "copy",
   "refEq",
   "budgetExceeded",
+  "whileLimit",
   "srgbChannelToLinear",
   "I32_MIN",
   "I32_MAX",

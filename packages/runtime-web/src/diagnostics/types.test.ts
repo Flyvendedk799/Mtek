@@ -4,6 +4,7 @@ import {
   MtekMountError,
   RUNTIME_ASSET_DIAGNOSTICS,
   RUNTIME_DIAGNOSTIC_CATALOGUE,
+  RUNTIME_GAME_DIAGNOSTICS,
   makeRuntimeDiagnostic,
   mountErrorKindForCode,
   type MtekDiagnostic,
@@ -85,6 +86,19 @@ describe("the asset codes of the runtime (spec/diagnostics.md section 5.7)", () 
       expect(d.code).toBe(`MTEK-${code}`);
       expect(d.severity).toBe("error");
       expect(mountErrorKindForCode(code)).toBe("asset-failed");
+    }
+  });
+});
+
+describe("the game-flow codes of the runtime (spec/diagnostics.md section 5.5)", () => {
+  it("have the titles and anchors of the table, and the severity of their letter", () => {
+    for (const [code, title] of Object.entries(RUNTIME_GAME_DIAGNOSTICS)) {
+      const row = new RegExp(`^\\| <a id="mtek-${code.toLowerCase()}"></a>${code} \\| ([^|]+?) \\|`, "m").exec(specText);
+      expect(row?.[1], code).toBe(title);
+      const d = makeRuntimeDiagnostic(code as keyof typeof RUNTIME_GAME_DIAGNOSTICS, { message: "m", phase: "runtime:update" });
+      expect(d.docs).toBe(`spec/diagnostics.md#mtek-${code.toLowerCase()}`);
+      expect(d.code).toBe(`MTEK-${code}`);
+      expect(d.severity).toBe(code.startsWith("W") ? "warning" : "error");
     }
   });
 });

@@ -295,6 +295,7 @@ impl<'a> Checker<'a> {
                 | Ty::Schema(_)
                 | Ty::Descriptor(_)
                 | Ty::PrefabDescriptor
+                | Ty::SceneName
                 | Ty::MaterialInstance(_) => return Some(current),
             }
         }

@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1030",
+    "file": "e1030_break_in_timer.mtek",
+    "startByte": 78,
+    "endByte": 83,
+    "message": "`break` can only be used inside a `for` or `while` loop.",
+    "notes": [
+      "help: `break` and `continue` apply to the innermost `for` or `while` of the same body; they do not leave a timer block"
+    ]
+  }
+]

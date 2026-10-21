@@ -10,7 +10,7 @@
 
 A **scene** declares what exists (state, a camera, entities) and how it changes (lifecycle functions and event handlers). An **entity** is a named node with a transform and optional components (mesh, material, light, body, collider) drawn from typed registry schemas. A **prefab** is a reusable single-entity template. **State** is explicitly declared, typed, initialised data owned by a scene or an entity. A field's value comes from exactly one writer: its initialiser plus imperative handler writes, a live `bind(...)`, or the physics subsystem. The compiler checks all of this statically; the runtime executes it in one documented frame order (§10).
 
-v0.1 mounts **one scene** per application. Scene switching is not in v0.1 (`E5901`).
+An application mounts **one scene at a time**. A program may declare several scenes; `mtek.toml` `project.scene` names the one that starts (`E9006` without it), and `go_to(Scene)` switches to another, carrying its `shared state` over (§15, decision 0141). `reset()` restarts the scene that runs (decision 0140).
 
 ## 2. Scene declaration
 
@@ -195,7 +195,7 @@ The runtime's scheduler (`spec/runtime-abi.md` §7 is the implementation contrac
 
 1. **Input.** Apply queued host-input changes in arrival order; apply input transitions; dispatch input handlers in event-arrival order. For each event: scene handlers first, then entity handlers in **stable instance order** (§10.1).
 2. **Fixed ticks** (0 to `max_catch_up_steps` of them, default 4, step `1/60` s). For each tick: (a) flush the lifecycle queue; (b) apply pending physics commands once; (c) run `fixed_update` (scene, then entities in instance order); (d) step physics; (e) write authoritative poses back; (f) deliver collision events in a deterministic order (`spec/physics.md` §6). Commands issued in (f) apply in the next tick. Backlog beyond the catch-up limit is discarded and reported in the runtime counter `discardedSteps`. The physics half of a tick, its command categories, write-back, velocities and event delivery are decision `spec/decisions/0066-physics-integration.md`.
-3. **Update.** Run `update(dt)` — scene first, then entities in instance order — with `dt` = the clamped frame delta (§10.2).
+3. **Update.** Run the timers that fall due (`after`/`every`, §15.3), then `update(dt)` — scene first, then entities in instance order — with `dt` = the clamped frame delta (§10.2). While the game is paused (`pause()`, §15.4) phases 2 and 3 do not run; input, the flush, bindings, transforms and rendering go on.
 4. **Lifecycle flush.**
 5. **Bindings.** Evaluate every live binding against the now-consistent state, in dependency (topological) order; ties broken by declaration order.
 6. **Transforms.** Propagate local transforms to world matrices, parents before children. v0.1 renders the latest authoritative physics pose; render interpolation is not in v0.1.
@@ -203,7 +203,7 @@ The runtime's scheduler (`spec/runtime-abi.md` §7 is the implementation contrac
 
 10.1 **Stable instance order.** Static entities in declaration order (depth-first pre-order over nesting), followed by spawned entities in spawn order. Never JavaScript object-key enumeration order.
 
-10.2 **Time policy.** Frame delta is clamped to `max_frame_delta` (default 0.1 s). `pause()` stops clocks and the fixed-step accumulator; `resume()` continues without simulating the paused interval. Hidden documents are paused automatically and resumed when visible, unless the host opts out. All three constants are configurable in `mtek.toml` `[runtime]` and recorded in the manifest.
+10.2 **Time policy.** Frame delta is clamped to `max_frame_delta` (default 0.1 s). The host's `app.pause()` (`spec/runtime-abi.md` §6.2; not the program's `pause()` of §15.4) stops clocks and the fixed-step accumulator; `resume()` continues without simulating the paused interval. Hidden documents are paused automatically and resumed when visible, unless the host opts out. All three constants are configurable in `mtek.toml` `[runtime]` and recorded in the manifest.
 
 10.3 **Same-frame combinations** that must have conformance tests: spawn then destroy in the same handler; destroy then a collision involving the entity in the same tick; key down and up within one frame (both delivered, in order); input during pause (transitions that occur while paused are discarded; the held-key state is re-synchronised on resume exactly as on focus loss, §7.4). The unit tests are `host/spawn.test.ts` and `scene/slots.test.ts`; the browser conformance tests, with a real physics engine under them (destroy before, in and after the tick of a collision, key down and up in one frame, input during a pause, and spawn, destroy, input and a collision in one frame of three ticks), are `tests/browser/specs/m5/physics-combinations.spec.ts` (decision 0068 item 6).
 
@@ -230,4 +230,32 @@ The mounted application owns the scene; the scene owns entity instances; entitie
 
 ## 14. Not in v0.1
 
-Multiple or switchable scenes; run-time re-parenting; spawned prefabs with children; prefab instances nested within prefabs; reading/writing fields through `entity_ref`; user-defined components, queries and systems (v0.2); render interpolation; camera switching; text and UI; audio.
+Several scenes at once (one runs at a time, §15); run-time re-parenting; spawned prefabs with children; prefab instances nested within prefabs; reading/writing fields through `entity_ref`; user-defined components, queries and systems (v0.2); render interpolation; camera switching; text and UI; audio.
+
+## 15. Game flow: scenes, reset, pause and timers
+
+Decisions 0140 (`reset`), 0141 (scenes and `go_to`), 0142 (timers), 0143 (`pause`) and 0144 (`while`, `spec/language.md` §7.10).
+
+15.1 **Several scenes.** A program may declare any number of scenes in its entry module. With more than one, `mtek.toml` `project.scene` names the scene that runs first (`E9006` otherwise). `mtek build` packages every scene: the entry scene into `app.js` and `program.manifest.json`, every other scene `S` into `app.S.js` and `program.S.manifest.json`, sharing the content-addressed shaders, assets and bundles. Every manifest lists the scenes in `game.scenes` (`spec/runtime-abi.md` §5.2). A single-scene program is packaged exactly as before. Host inputs and outputs (`mtek.toml` `[host]`) are declared for the entry scene; another scene uses the ones whose state it also declares.
+
+15.2 **`go_to(Scene)` and `shared state`.** `go_to(Level)` — in a lifecycle function or an event handler (`E5080` elsewhere) — switches to the scene `Level`. The argument is the name of a scene of the program, written where `go_to` is called (`E5201` for anything else). The switch is not immediate: the current frame finishes, the runtime loads and initialises the new scene in the background (its module, manifest, shaders and assets, then `init`, §11), and the new scene becomes the live one at the start of a later frame, as a whole. Until then the current scene keeps running. Only the first `go_to` or `reset()` counts until it has been applied or has failed; later calls are ignored. `go_to` to the scene that runs restarts it like `reset()` but keeps the shared state.
+
+What carries over: nothing but **shared state**. A scene state declared `shared state score: i32 = 0;` is copied into the new scene when the new scene declares a shared state of the same name (with the same type, which the compiler guarantees: `E5204`); the copy is made before the first frame of the new scene, after its `init`, so its bindings see the carried value but its initialisers saw their own. Every other state, every entity (named or spawned), every timer, every body and every queued command ends with the old scene; the new scene starts from its initial values. Only scene state can be shared (`E5202`), and only plain data: `bool`, the numeric, vector and matrix types, `quat`, `color`, `string`, enums, and arrays and structs of these, no `entity_ref`, resource or descriptor (`E5203`). Held keys and the pointer state stay as they are: input is the application's, not the scene's. A scene starts with the game running (§15.4).
+
+If the new scene cannot be loaded or started (a file is missing, its manifest or module is invalid, its `init` fails), the runtime reports `E5401` with the underlying diagnostics as notes and the current scene keeps running. A program cannot observe the failure.
+
+15.3 **Timers.** `after(seconds) { … }` and `every(seconds) { … }` (`spec/language.md` §7.11) put a block on the scene's timer list. The timers run on the **game clock**: the sum of the frame deltas of the frames in which the game is not paused, counted from the start of the scene. At the start of phase 3 of every such frame, the timers whose time has come run, in order of their due time and then of the order they were started, before any `update`.
+
+- `after` runs once, in the first frame whose game time reaches its due time.
+- `every` runs at most once per frame. Its next due time is one period after the previous one; when the game fell behind (a long frame), one period after now, so it never runs a backlog in a burst.
+- A timer started while timers run waits for the next frame.
+- A timer started in an entity's or a prefab's handler belongs to that entity: it is dropped, without running, when the entity is destroyed (also when it is pending removal). The timers of a scene end with the scene (`go_to`, `reset()`).
+- A block that fails the frame (the `while` cap or the loop budget, `E8080`) stops the scene like any frame failure.
+
+15.4 **`pause()`, `resume()` and `paused()`.** `pause()` stops the **game**: from the next phase on, no fixed tick runs (no `fixed_update`, no physics step, no collision events), phase 3 does not run (no timers, no `update`), and the game clock and the fixed-step accumulator stand still. Everything else goes on: input handlers (`on key_down`, `on pointer_down`, …) are delivered, spawn and destroy are flushed, bindings are evaluated, transforms propagated, the scene is rendered, and `frame.time` and `frame.delta` keep counting real (active) time. `resume()` starts the game again; the paused interval is never simulated. `paused()` answers whether the game is paused. A pause in an input handler already holds the ticks and the update of that frame.
+
+This is the hook for pause menus and other UI: a handler that reacts to a key or a pointer while paused runs as usual, and a binding on a state the handler sets keeps the display current, because bindings and rendering keep running. UI elements (text, HUD) that must update while the game is paused should therefore be driven by input handlers and bindings, not by `update` or timers, which do not run. The runtime exposes the pause as `ctx.paused()` to generated code and the scheduler's `gamePaused` flag to the host (`spec/runtime-abi.md` §4.2).
+
+The game pause is the program's; the host's `app.pause()` (`spec/runtime-abi.md` §6.2) is different: it stops the whole application, input and rendering included, and is what a hidden page does (§10.2). The two are independent: `app.resume()` does not resume a paused game, and `paused()` reports only the game pause.
+
+15.5 **`reset()`.** `reset()` restarts the scene that runs: like `go_to` (§15.2) it prepares the scene afresh, from its initial values, and swaps it in at the start of a later frame. Unlike `go_to`, shared state does not carry over: `reset()` is a full restart of the scene, shared state included. To keep a value across a reset, switch with `go_to(ThisScene)` instead, which keeps the shared state.

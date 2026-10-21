@@ -834,7 +834,7 @@ fn e4901_does_not_hide_mistakes_inside_the_stage() {
 
 #[test]
 fn e0013_reserved_words_as_names() {
-    assert_eq!(diags("fn while() {}"), [d(Code::E0013, "while")]);
+    assert_eq!(diags("fn loop() {}"), [d(Code::E0013, "loop")]);
     assert_eq!(
         diags("scene S { type: 1; entity async {} }"),
         [d(Code::E0013, "type"), d(Code::E0013, "async")]
@@ -1239,7 +1239,7 @@ fn messages_name_the_construct() {
     let message = |src: &str| parse(src).diagnostics[0].message.clone();
     assert_eq!(
         message("fn f() { break; }"),
-        "`break` can only be used inside a `for` loop."
+        "`break` can only be used inside a `for` or `while` loop."
     );
     assert_eq!(
         message("scene S { param p: f32; }"),

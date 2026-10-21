@@ -287,6 +287,7 @@ impl Lowering<'_> {
             symbol: scope.child(&name),
             ty: self.type_name(info.ty),
             owner,
+            shared: decl.shared.is_some(),
             init: lowering.expr(&decl.value)?,
             span: decl.span,
         })
@@ -646,6 +647,17 @@ impl FnLowering<'_, '_> {
                     }
                 }
             },
+            ast::Stmt::While(stmt) => Stmt::While {
+                cond: self.expr(&stmt.cond)?,
+                body: self.block(&stmt.body)?,
+                span: stmt.span,
+            },
+            ast::Stmt::Timer(stmt) => Stmt::Timer {
+                every: stmt.kind == ast::TimerKind::Every,
+                seconds: self.expr(&stmt.seconds)?,
+                body: self.block(&stmt.body)?,
+                span: stmt.span,
+            },
             ast::Stmt::Return(ret) => Stmt::Return {
                 value: ret.value.as_ref().map(|v| self.expr(v)).transpose()?,
                 span: ret.span,
@@ -992,6 +1004,21 @@ impl FnLowering<'_, '_> {
         if let Some(value) = types.value(expr.id) {
             return Ok(make(ExprKind::Const {
                 value: value.into(),
+            }));
+        }
+        // The argument of `go_to` (decision 0141): the scene's name, as a string constant.
+        if matches!(types.interner().get(ty), Ty::SceneName) {
+            let mut inner = expr;
+            while let AstExpr::Paren(next) = &inner.kind {
+                inner = next;
+            }
+            let name = match self.lowering.resolution.res(inner.id) {
+                Some(Res::Def(def)) => self.lowering.resolution.def(def).map(|d| d.name.clone()),
+                _ => None,
+            }
+            .ok_or_else(|| self.defect("a scene name that does not name a scene"))?;
+            return Ok(make(ExprKind::Const {
+                value: Value::String(name),
             }));
         }
         let boxed = |e: &ast::Expr| self.expr(e).map(Box::new);

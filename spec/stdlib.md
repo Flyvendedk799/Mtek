@@ -184,5 +184,9 @@ Notation: `T` ranges over `f32, vec2, vec3, vec4` (component-wise), `I` over `i3
 | `spawn` | `(prefab descriptor) → entity_ref` | cpu (handlers only) | — | the argument is a prefab literal `Prefab { param: value; }`; params may be run-time values (decision 0064) |
 | `destroy` | `(entity_ref) → ()` | cpu (handlers only) | — | `E5030` for a named entity |
 | `alive` | `(entity_ref) → bool` | cpu | — | false for a pending spawn, a pending removal and a dead reference |
+| `go_to` | `(scene name) → ()` | cpu (handlers only) | — | the argument is the name of a scene of the program, `go_to(Level)` (`E5201` otherwise); switches scene at the start of a later frame, carrying `shared state` over (`spec/scenes.md` §15.2, decision 0141) |
+| `reset` | `() → ()` | cpu (handlers only) | — | restarts the scene that runs from its initial values, at the start of a later frame (`spec/scenes.md` §15.5, decision 0140) |
+| `pause`, `resume` | `() → ()` | cpu (handlers only) | — | stop and restart the game clock: ticks, physics, timers and `update` (`spec/scenes.md` §15.4, decision 0143) |
+| `paused` | `() → bool` | cpu | — | whether `pause()` holds the game |
 
 Conformance: `tests/semantics/intrinsics/` holds a table of inputs and expected CPU results for every row, and the GPU conformance test (`spec/testing.md` §5) evaluates the same inputs on the GPU through a probe shader and compares with the per-function tolerances.

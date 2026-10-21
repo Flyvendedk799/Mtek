@@ -27,26 +27,26 @@ KwState 196..201 "state"
 KwStruct 202..208 "struct"
 KwTrue 209..213 "true"
 KwVar 214..217 "var"
-trivia LineComment 219..294 "// Reserved words (2.3) are identifiers flagged reserved; no lexical error."
-Ident 295..297 "as" = reserved
-Ident 298..303 "async" = reserved
-Ident 304..309 "await" = reserved
-Ident 310..316 "extern" = reserved
-Ident 317..321 "impl" = reserved
-Ident 322..326 "loop" = reserved
-Ident 327..330 "mod" = reserved
-Ident 331..335 "move" = reserved
-Ident 336..339 "mut" = reserved
-Ident 340..344 "priv" = reserved
-Ident 345..348 "pub" = reserved
-Ident 349..355 "static" = reserved
-Ident 356..361 "super" = reserved
-Ident 362..367 "trait" = reserved
-Ident 368..372 "type" = reserved
-Ident 373..379 "unsafe" = reserved
-Ident 380..383 "use" = reserved
-Ident 384..389 "where" = reserved
-Ident 390..395 "while" = reserved
+KwWhile 218..223 "while"
+trivia LineComment 225..300 "// Reserved words (2.3) are identifiers flagged reserved; no lexical error."
+Ident 301..303 "as" = reserved
+Ident 304..309 "async" = reserved
+Ident 310..315 "await" = reserved
+Ident 316..322 "extern" = reserved
+Ident 323..327 "impl" = reserved
+Ident 328..332 "loop" = reserved
+Ident 333..336 "mod" = reserved
+Ident 337..341 "move" = reserved
+Ident 342..345 "mut" = reserved
+Ident 346..350 "priv" = reserved
+Ident 351..354 "pub" = reserved
+Ident 355..361 "static" = reserved
+Ident 362..367 "super" = reserved
+Ident 368..373 "trait" = reserved
+Ident 374..378 "type" = reserved
+Ident 379..385 "unsafe" = reserved
+Ident 386..389 "use" = reserved
+Ident 390..395 "where" = reserved
 Ident 396..401 "yield" = reserved
 Ident 402..409 "compute" = reserved
 Ident 410..416 "vertex" = reserved

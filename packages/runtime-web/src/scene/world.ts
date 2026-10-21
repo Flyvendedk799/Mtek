@@ -23,6 +23,8 @@ import { fromRotationTranslationScaleInto, multiplyInto, type Mat4 } from "../ma
 import type { LoopBudget } from "./budget.js";
 import { DynamicEntities, type DynamicHost, type PrefabRuntime } from "./dynamic.js";
 import { RuntimeInternalError } from "./errors.js";
+import { INERT_GAME, type GameHooks } from "./game.js";
+import { TimerList, type TimerOwner } from "./timers.js";
 import { makeRef, type EntityRef } from "./slots.js";
 import type { ResolvedEntity, ResolvedInstance, SceneStructure } from "./structure.js";
 import {
@@ -61,6 +63,13 @@ export const CONTEXT_MEMBERS = [
   "random",
   "isKeyDown",
   "print",
+  "goTo",
+  "reset",
+  "pause",
+  "resume",
+  "paused",
+  "after",
+  "every",
 ] as const;
 
 /**
@@ -136,6 +145,8 @@ export interface CpuServices {
   isKeyDown(code: string): boolean;
   /** `print`: development console output; `spanId` indexes the manifest spans table. */
   print(message: string, spanId: number): void;
+  /** `go_to`, `reset`, `pause`, `resume`, `paused` (decisions 0140, 0141, 0143); default: {@link INERT_GAME}. */
+  readonly game?: GameHooks;
 }
 
 /**
@@ -309,6 +320,8 @@ export class World {
   private visibility = 0;
   /** `ctx.budget` (decision 0075): the iterations of CPU loops left in this frame. Only a preview build checks it. */
   private readonly loopBudget: LoopBudget = { n: 0 };
+  /** The scene's `after`/`every` timers (decision 0142). */
+  readonly timers = new TimerList();
   /** `manifest.preview.loopBudget`: what {@link resetBudget} refills the counter with; `undefined` outside a preview. */
   private readonly loopBudgetLimit: number | undefined;
   private readonly materialParamTypes: ReadonlyMap<string, readonly { readonly name: string; readonly type: string }[]>;
@@ -393,6 +406,12 @@ export class World {
 
     this.sceneState = stateObject(this.manifest.scene.state);
     const services = options.services ?? INERT_SERVICES;
+    const game = services.game ?? INERT_GAME;
+    const timerOwner = (owner: unknown): TimerOwner => {
+      if (owner === null || owner === undefined) return null;
+      if (typeof owner === "object" && "ref" in owner) return owner as TimerOwner;
+      throw new RuntimeInternalError(`a timer got the owner ${describeValue(owner)}; expected an entity record or null.`);
+    };
     const members = {
       s: this.sceneState,
       e: this.entities,
@@ -435,6 +454,26 @@ export class World {
       print: (message: unknown, spanId: unknown): void => {
         services.print(typeof message === "string" ? message : describeValue(message), typeof spanId === "number" ? spanId : -1);
       },
+      goTo: (scene: unknown, spanId: unknown): void => {
+        if (typeof scene !== "string") throw new RuntimeInternalError(`ctx.goTo got ${describeValue(scene)}; expected a scene name.`);
+        game.goTo(scene, typeof spanId === "number" ? spanId : -1);
+      },
+      reset: (): void => {
+        game.reset();
+      },
+      pause: (): void => {
+        game.pause();
+      },
+      resume: (): void => {
+        game.resume();
+      },
+      paused: (): boolean => game.paused(),
+      after: (seconds: unknown, fn: unknown, owner: unknown, spanId: unknown): void => {
+        this.timers.after(seconds, fn, timerOwner(owner), spanId);
+      },
+      every: (seconds: unknown, fn: unknown, owner: unknown, spanId: unknown): void => {
+        this.timers.every(seconds, fn, timerOwner(owner), spanId);
+      },
     };
     Object.defineProperty(members, "frame", { enumerable: true, get: () => this.frameValues });
     this.ctx = guarded(members, "ctx");
@@ -448,6 +487,15 @@ export class World {
    */
   resetBudget(): void {
     if (this.loopBudgetLimit !== undefined) this.loopBudget.n = this.loopBudgetLimit;
+  }
+
+  /**
+   * Runs the timers that fall due after `delta` seconds more of game time (`after`/`every`, decision 0142). The
+   * application calls it at the start of phase 3 of every frame in which the game is not paused. The timers of a
+   * destroyed (or pending-removal) spawned entity are dropped.
+   */
+  advanceTimers(delta: number): void {
+    this.timers.advance(delta, (owner) => this.dynamic.alive(owner.ref));
   }
 
   /** `ctx.frame` as generated code sees it. */

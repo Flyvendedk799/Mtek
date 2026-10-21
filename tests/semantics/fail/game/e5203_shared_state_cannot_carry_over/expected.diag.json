@@ -1,0 +1,15 @@
+[
+  {
+    "code": "MTEK-E5203",
+    "file": "src/main.mtek",
+    "startByte": 141,
+    "endByte": 151,
+    "message": "The shared state 'target' has type entity_ref, whose values cannot carry over to another scene.",
+    "expected": "plain data: bool, numbers, vectors, quat, color, mat4, string, enums, and arrays and structs of these",
+    "actual": "entity_ref",
+    "notes": [
+      "an entity_ref belongs to one scene and ends with it",
+      "help: keep plain values in shared state, for example a score, a level number or a name"
+    ]
+  }
+]

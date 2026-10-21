@@ -852,6 +852,12 @@ fn intrinsic_rows() -> Vec<IntrinsicRow> {
     ));
     rows.push(("destroy", &["(entity_ref) -> ()"], Domain::Cpu, false));
     rows.push(("alive", &["(entity_ref) -> bool"], Domain::Cpu, false));
+    // Game flow (decisions 0140, 0141 and 0143).
+    rows.push(("go_to", &["(scene name) -> ()"], Domain::Cpu, false));
+    rows.push(("reset", &["() -> ()"], Domain::Cpu, false));
+    rows.push(("pause", &["() -> ()"], Domain::Cpu, false));
+    rows.push(("resume", &["() -> ()"], Domain::Cpu, false));
+    rows.push(("paused", &["() -> bool"], Domain::Cpu, false));
     rows
 }
 
@@ -883,10 +889,11 @@ fn every_intrinsic_row_of_section_6_is_present() {
     assert!(note("random").contains("xoshiro128**"));
     assert!(note("normalize").contains("zero vector"));
     // spawn and destroy are for handlers only.
-    for name in ["spawn", "destroy"] {
+    for name in ["spawn", "destroy", "go_to", "reset", "pause", "resume"] {
         assert!(registry.intrinsic(name).unwrap().handlers_only, "{name}");
     }
     assert!(!registry.intrinsic("alive").unwrap().handlers_only);
+    assert!(!registry.intrinsic("paused").unwrap().handlers_only);
 }
 
 #[test]

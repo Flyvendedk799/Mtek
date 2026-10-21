@@ -6,7 +6,7 @@
     "endByte": 166,
     "message": "`body.apply_impulse` may be called only in lifecycle functions and event handlers, not in the function 'kick'.",
     "notes": [
-      "spawning and destroying entities are lifecycle operations of the scene"
+      "this operation is a lifecycle operation of the scene"
     ]
   },
   {
@@ -16,7 +16,7 @@
     "endByte": 254,
     "message": "`body.apply_force` may be called only in lifecycle functions and event handlers, not in the function 'pure_kick'.",
     "notes": [
-      "spawning and destroying entities are lifecycle operations of the scene"
+      "this operation is a lifecycle operation of the scene"
     ]
   }
 ]

@@ -653,7 +653,7 @@ fn reserved_words_and_unsupported_codes_are_listed_from_their_catalogues() {
         .copied()
         .filter(|c| c.is_unsupported_feature())
         .collect();
-    assert!(unsupported.len() >= 6, "{unsupported:?}");
+    assert!(unsupported.len() >= 5, "{unsupported:?}");
     for code in &unsupported {
         assert!(
             listed.contains(unsupported_phrase(*code).as_str()),

@@ -114,9 +114,25 @@ export const RUNTIME_ASSET_DIAGNOSTICS = {
   E7031: "image decode failure",
 } as const;
 
-export type RuntimeDiagnosticCode = keyof typeof RUNTIME_DIAGNOSTIC_CATALOGUE | keyof typeof RUNTIME_ASSET_DIAGNOSTICS;
+/**
+ * The game-flow codes the runtime produces (`spec/diagnostics.md` section 5.5, decision 0141). They are
+ * catalogued with the other `54xx` codes, so they are not in {@link RUNTIME_DIAGNOSTIC_CATALOGUE}; a test asserts
+ * that their titles equal that table. None of them stops the application.
+ */
+export const RUNTIME_GAME_DIAGNOSTICS = {
+  E5401: "scene change failed",
+} as const;
 
-const RUNTIME_TITLES: Readonly<Record<RuntimeDiagnosticCode, string>> = { ...RUNTIME_DIAGNOSTIC_CATALOGUE, ...RUNTIME_ASSET_DIAGNOSTICS };
+export type RuntimeDiagnosticCode =
+  | keyof typeof RUNTIME_DIAGNOSTIC_CATALOGUE
+  | keyof typeof RUNTIME_ASSET_DIAGNOSTICS
+  | keyof typeof RUNTIME_GAME_DIAGNOSTICS;
+
+const RUNTIME_TITLES: Readonly<Record<RuntimeDiagnosticCode, string>> = {
+  ...RUNTIME_DIAGNOSTIC_CATALOGUE,
+  ...RUNTIME_ASSET_DIAGNOSTICS,
+  ...RUNTIME_GAME_DIAGNOSTICS,
+};
 
 export interface RuntimeDiagnosticInit {
   readonly message: string;

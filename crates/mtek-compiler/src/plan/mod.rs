@@ -621,6 +621,14 @@ fn spawned_prefabs(program: &Program, scene: &Scene) -> Vec<Symbol> {
                     expr(array, out);
                     literals(body, out);
                 }
+                ir::Stmt::While { cond, body, .. } => {
+                    expr(cond, out);
+                    literals(body, out);
+                }
+                ir::Stmt::Timer { seconds, body, .. } => {
+                    expr(seconds, out);
+                    literals(body, out);
+                }
                 ir::Stmt::Return { value, .. } => {
                     if let Some(value) = value {
                         expr(value, out);

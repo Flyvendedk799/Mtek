@@ -387,6 +387,7 @@ fn scene(b: &mut Build) -> Item {
     let state = StateDecl {
         id: b.id(),
         span: b.span(),
+        shared: None,
         name: state_name,
         ty: state_ty,
         value: state_value,

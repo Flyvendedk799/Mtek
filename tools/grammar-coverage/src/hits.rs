@@ -486,6 +486,18 @@ impl Hits<'_> {
                 }
                 self.block(&stmt.body);
             }
+            Stmt::While(stmt) => {
+                self.alt(P, "WhileStmt");
+                self.hit("WhileStmt");
+                self.expr_no_desc(&stmt.cond);
+                self.block(&stmt.body);
+            }
+            Stmt::Timer(stmt) => {
+                self.alt(P, "TimerStmt");
+                self.hit("TimerStmt");
+                self.expr(&stmt.seconds);
+                self.block(&stmt.body);
+            }
             Stmt::Return(stmt) => {
                 self.alt(P, "ReturnStmt");
                 self.hit("ReturnStmt");

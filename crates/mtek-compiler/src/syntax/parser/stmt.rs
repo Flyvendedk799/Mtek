@@ -13,7 +13,7 @@ use super::members::Place;
 use super::recover::{Nest, Sync, is_assign_op, is_item_keyword, starts_expression};
 use crate::syntax::ast::{
     AssignOp, AssignStmt, Block, ElseBranch, Expr, ExprKind, ExprStmt, ForIter, ForStmt, Ident,
-    IfStmt, JumpStmt, LocalDecl, ReturnStmt, Stmt,
+    IfStmt, JumpStmt, LocalDecl, ReturnStmt, Stmt, TimerKind, TimerStmt, WhileStmt,
 };
 use crate::syntax::token::TokenKind;
 
@@ -97,6 +97,7 @@ impl Parser<'_> {
             TokenKind::KwConst => self.const_stmt(),
             TokenKind::KwIf => self.if_statement(),
             TokenKind::KwFor => self.for_stmt(),
+            TokenKind::KwWhile => self.while_stmt(),
             TokenKind::KwMatch => self.match_stmt(),
             TokenKind::KwReturn => self.return_stmt(),
             TokenKind::KwBreak | TokenKind::KwContinue => self.jump_stmt(),
@@ -106,39 +107,106 @@ impl Parser<'_> {
             }
             kind if is_item_keyword(kind) => self.misplaced_in_block(),
             TokenKind::Ident if self.at_reserved_loop() => self.reserved_loop(),
+            TokenKind::Ident if self.at_timer().is_some() => self.timer_stmt(),
             kind if starts_expression(kind) => self.simple_stmt(),
             _ => self.not_a_statement(),
         }
     }
 
-    /// Whether the statement starts with the reserved word `while` or `loop`.
+    /// Whether the statement starts with the reserved word `loop`.
     fn at_reserved_loop(&self) -> bool {
-        self.tok().is_reserved_word() && matches!(self.text_of(self.span()), "while" | "loop")
+        self.tok().is_reserved_word() && self.text_of(self.span()) == "loop"
     }
 
-    /// `while cond { ... }` and `loop { ... }`: `E0013` once, with the loop v0.1 has, and the
-    /// rest is read as an `if` or a block so that nothing in it is reported as a cascade
-    /// (decision 0113). The program is rejected anyway.
+    /// `loop { ... }`: `E0013` once, with the loops the language has, and the body is read as
+    /// a block so that nothing in it is reported as a cascade (decision 0113). The program is
+    /// rejected anyway.
     #[inline(never)]
     fn reserved_loop(&mut self) -> Stmt {
-        let start = self.span().start;
-        let is_while = self.text_of(self.span()) == "while";
         self.report_if_reserved(self.span());
         self.bump();
-        let cond = is_while.then(|| self.expr(false));
         self.loop_depth += 1;
         let body = self.block();
         self.loop_depth -= 1;
-        match cond {
-            Some(cond) => Stmt::If(IfStmt {
-                id: self.id(),
-                span: self.span_from(start),
-                cond,
-                then_block: body,
-                else_branch: None,
-            }),
-            None => Stmt::Block(body),
+        Stmt::Block(body)
+    }
+
+    /// The timer statement that starts here, if any: the contextual word `after` or `every`,
+    /// a parenthesised argument list, then `{` (decision 0142). Anything else (a call of a
+    /// function named `after`, a local named `every`) is an ordinary statement.
+    fn at_timer(&self) -> Option<TimerKind> {
+        let kind = match self.text_of(self.span()) {
+            "after" => TimerKind::After,
+            "every" => TimerKind::Every,
+            _ => return None,
+        };
+        if self.kind_at(1) != TokenKind::LParen {
+            return None;
         }
+        // Find the `)` that closes the argument list without recursion; a statement whose
+        // argument list does not close before `;`, `{` or the end is not a timer.
+        let mut depth = 0u32;
+        for offset in 1..512 {
+            match self.kind_at(offset) {
+                TokenKind::LParen | TokenKind::LBracket => depth += 1,
+                TokenKind::RParen | TokenKind::RBracket => {
+                    depth = depth.saturating_sub(1);
+                    if depth == 0 {
+                        return (self.kind_at(offset + 1) == TokenKind::LBrace).then_some(kind);
+                    }
+                }
+                TokenKind::Semi | TokenKind::LBrace | TokenKind::RBrace | TokenKind::Eof => {
+                    return None;
+                }
+                _ => {}
+            }
+        }
+        None
+    }
+
+    /// `after(seconds) { ... }` / `every(seconds) { ... }`. The argument list holds exactly one
+    /// expression (`E1001` otherwise). The block is a body of its own: `break` and `continue`
+    /// do not reach a loop outside it (`E1030`), and `return;` leaves the block.
+    #[inline(never)]
+    fn timer_stmt(&mut self) -> Stmt {
+        let start = self.span().start;
+        let word = self.span();
+        let kind = self.at_timer().unwrap_or(TimerKind::After);
+        self.bump();
+        let open = self.span();
+        self.bump();
+        let seconds = if self.kind() == TokenKind::RParen {
+            self.expected("the number of seconds");
+            self.missing_expr()
+        } else {
+            self.expr(true)
+        };
+        if self.kind() == TokenKind::Comma {
+            let diagnostic = self
+                .expected_diagnostic("`)` after the number of seconds")
+                .help(format!(
+                    "`{}` takes one argument, the time in seconds: `{}(1.5) {{ ... }}`",
+                    kind.word(),
+                    kind.word()
+                ));
+            self.error(diagnostic);
+            while !matches!(
+                self.kind(),
+                TokenKind::RParen | TokenKind::LBrace | TokenKind::Eof
+            ) {
+                self.bump();
+            }
+        }
+        self.expect_close(open, TokenKind::RParen);
+        let body = self.fn_body();
+        Stmt::Timer(TimerStmt {
+            id: self.id(),
+            span: self.span_from(start),
+            kind,
+            word,
+            seconds,
+            body,
+        })
     }
 
     fn const_stmt(&mut self) -> Stmt {
@@ -333,6 +401,23 @@ impl Parser<'_> {
         })
     }
 
+    /// `while cond { ... }` (decision 0144). The condition is an `ExprNoDesc`, as in `if`.
+    fn while_stmt(&mut self) -> Stmt {
+        let start = self.span().start;
+        self.bump();
+        let cond = self.expr(false);
+        if self.kind() == TokenKind::Eq {
+            self.assignment_in_condition();
+        }
+        let body = self.loop_body();
+        Stmt::While(WhileStmt {
+            id: self.id(),
+            span: self.span_from(start),
+            cond,
+            body,
+        })
+    }
+
     /// `name in a..b` or `name in array`, after the `for`; `None` if the
     /// header is broken (reported). A function of its own so that the
     /// expressions it holds are gone from the stack when the body is parsed.
@@ -425,11 +510,11 @@ impl Parser<'_> {
         let name = if is_break { "break" } else { "continue" };
         let diagnostic = Diagnostic::new(
             Code::E1030,
-            format!("`{name}` can only be used inside a `for` loop."),
+            format!("`{name}` can only be used inside a `for` or `while` loop."),
         )
         .at(word)
         .help(
-            "`break` and `continue` apply to the innermost `for`; there is no other loop in v0.1",
+            "`break` and `continue` apply to the innermost `for` or `while` of the same body; they do not leave a timer block",
         );
         self.report(diagnostic);
     }

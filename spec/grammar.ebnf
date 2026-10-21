@@ -32,11 +32,11 @@ IdentContinue   ::= [A-Za-z0-9_]
 Keyword         ::= 'bind' | 'break' | 'const' | 'continue' | 'cpu' | 'else' | 'entity' | 'enum'
                   | 'export' | 'false' | 'fn' | 'for' | 'if' | 'import' | 'in' | 'let'
                   | 'match' | 'material' | 'on' | 'param' | 'prefab' | 'return' | 'scene' | 'self'
-                  | 'state' | 'struct' | 'true' | 'var'
+                  | 'state' | 'struct' | 'true' | 'var' | 'while'
 
 Reserved        ::= 'as' | 'async' | 'await' | 'extern' | 'impl' | 'loop'
                   | 'mod' | 'move' | 'mut' | 'priv' | 'pub' | 'static' | 'super' | 'trait'
-                  | 'type' | 'unsafe' | 'use' | 'where' | 'while' | 'yield' | 'compute'
+                  | 'type' | 'unsafe' | 'use' | 'where' | 'yield' | 'compute'
                   | 'vertex' | 'storage' | 'uniform' | 'workgroup' | 'system' | 'query'
                   | 'component'                                 /* E0013 when used as a name */
 
@@ -45,6 +45,8 @@ Reserved        ::= 'as' | 'async' | 'await' | 'extern' | 'impl' | 'loop'
    'update', 'fixed_update'  lifecycle functions    (LifecycleFn)
    'fragment'                material stage         (StageFn)
    'from'                    import clause          (Import)
+   'shared'                  scene state carry-over (StateDecl)
+   'after', 'every'          timer blocks           (TimerStmt)
    event names after 'on'    resolved via registry  (Handler)             */
 
 Int             ::= '0' | [1-9] [0-9]*                          /* no leading zeros, no suffixes */
@@ -125,7 +127,9 @@ EntityMember    ::= FieldInit | ConstDecl | StateDecl | ParamDecl | EntityDecl
 SceneObject     ::= Ident Ident '{' FieldInit* '}'
                     /* [S: scene-object-kind: first Ident is a registered scene-object kind: 'camera' (E5014 "unknown scene object kind" otherwise)] */
 
-StateDecl       ::= 'state' Ident ':' Type '=' Expr ';'
+StateDecl       ::= 'shared'? 'state' Ident ':' Type '=' Expr ';'
+                    /* [S: shared-state: 'shared' is contextual; shared state is declared in a scene only (E5202),
+                        has a type that can carry over a scene change (E5203) and one type in every scene (E5204)] */
 FieldInit       ::= Ident ':' FieldValue ';'
 FieldValue      ::= 'bind' '(' Expr ')' | Expr
                     /* [S: bind-bindable-field: bind only on bindable fields (E5004)] */
@@ -154,8 +158,8 @@ ArrayLength     ::= Int | Ident
    --------------------------------------------------------------------- */
 
 Block           ::= '{' Statement* '}'
-Statement       ::= LetStmt | VarStmt | ConstDecl | IfStmt | ForStmt | MatchStmt
-                  | ReturnStmt | BreakStmt | ContinueStmt | Block | SimpleStmt
+Statement       ::= LetStmt | VarStmt | ConstDecl | IfStmt | ForStmt | WhileStmt
+                  | TimerStmt | MatchStmt | ReturnStmt | BreakStmt | ContinueStmt | Block | SimpleStmt
 
 LetStmt         ::= 'let' Ident ( ':' Type )? '=' Expr ';'
 VarStmt         ::= 'var' Ident ( ':' Type )? '=' Expr ';'
@@ -166,6 +170,12 @@ AssignOp        ::= '=' | '+=' | '-=' | '*=' | '/='
 
 IfStmt          ::= 'if' ExprNoDesc Block ( 'else' ( IfStmt | Block ) )?
 ForStmt         ::= 'for' Ident 'in' ExprNoDesc ( '..' ExprNoDesc )? Block
+WhileStmt       ::= 'while' ExprNoDesc Block
+                    /* [S: while-loop: the condition is bool (E3070); CPU only (E4010 in GPU code)] */
+TimerStmt       ::= ( 'after' | 'every' ) '(' Expr ')' Block
+                    /* [S: timer: 'after' and 'every' are contextual; the time is f32 seconds (E3001), a constant one
+                        positive for 'every' and not negative for 'after' (E3211); handlers only (E5080);
+                        the block cannot use a 'var' of the enclosing body (E3210)] */
 ReturnStmt      ::= 'return' Expr? ';'
 BreakStmt       ::= 'break' ';'
 ContinueStmt    ::= 'continue' ';'

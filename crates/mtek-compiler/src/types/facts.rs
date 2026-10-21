@@ -19,6 +19,8 @@ pub struct BodyFacts {
     /// The `a..b` of every range loop whose bounds are not both constant
     /// expressions (`E4010` in GPU code).
     pub unbounded_loops: Vec<Span>,
+    /// The condition of every `while` loop (`E4010` in GPU code, decision 0144).
+    pub while_loops: Vec<Span>,
     /// Every parameter, local, loop variable, block constant and result
     /// type whose type has no GPU representation (`E4011` in GPU code).
     pub cpu_only: Vec<CpuOnlySite>,

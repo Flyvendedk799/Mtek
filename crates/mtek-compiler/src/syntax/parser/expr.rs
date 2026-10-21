@@ -505,7 +505,7 @@ impl Parser<'_> {
                     TokenKind::KwIf => diagnostic
                         .note("`if` is a statement and gives no value: v0.1 has no `if` expression and no ternary operator")
                         .help("declare the variable first and assign it in the branches: `var x = a; if cond { x = b; }`; for numbers, `mix(a, b, t)` with `t` 0.0 or 1.0 also selects between two values"),
-                    TokenKind::KwFor | TokenKind::KwReturn | TokenKind::KwLet | TokenKind::KwVar => {
+                    TokenKind::KwFor | TokenKind::KwWhile | TokenKind::KwReturn | TokenKind::KwLet | TokenKind::KwVar => {
                         diagnostic
                             .note(format!("{} starts a statement and gives no value, so it cannot be part of an expression", kind.describe()))
                             .help("write the statement on a line of its own, before the expression that needs its result")
@@ -778,8 +778,8 @@ impl Parser<'_> {
 /// What to write instead of a reserved word that stands where a name is expected (`E0013`).
 fn reserved_help(word: &str) -> &'static str {
     match word {
-        "while" | "loop" => {
-            "v0.1 has only the counted loop `for i in 0..n { ... }` (the bounds are integers, `break` leaves it early); there is no `while` or `loop`"
+        "loop" => {
+            "there is no `loop`: write `while true { ... }` and leave it with `break`, or use the counted loop `for i in 0..n { ... }`"
         }
         "mut" => {
             "variables are declared with `var` (assignable) or `let` (fixed); there is no `mut`"

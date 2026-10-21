@@ -19,7 +19,6 @@ struct Reserved {
     unsafe: f32;
     use: f32;
     where: f32;
-    while: f32;
     yield: f32;
     compute: f32;
     vertex: f32;

@@ -217,6 +217,50 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
         )
         .handlers_only(),
         function(
+            "go_to",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Switches scene, keeping shared state.",
+            vec![sig(&[p("scene", exact(TypeRef::SceneName))], exact(TypeRef::Unit))],
+        )
+        .handlers_only(),
+        function(
+            "reset",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Next frame, restarts the scene.",
+            vec![sig(&[], exact(TypeRef::Unit))],
+        )
+        .handlers_only(),
+        function(
+            "pause",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Stops update, physics and timers; input goes on.",
+            vec![sig(&[], exact(TypeRef::Unit))],
+        )
+        .handlers_only(),
+        function(
+            "resume",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Undoes pause().",
+            vec![sig(&[], exact(TypeRef::Unit))],
+        )
+        .handlers_only(),
+        function(
+            "paused",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Whether paused.",
+            vec![sig(&[], exact(TypeRef::Bool))],
+        ),
+        function(
             "alive",
             Domain::Cpu,
             false,

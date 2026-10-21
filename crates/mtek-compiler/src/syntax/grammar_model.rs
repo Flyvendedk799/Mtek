@@ -433,14 +433,14 @@ fn words(list: &[&'static str], breaks: &[usize]) -> Expr {
 }
 
 /// The keywords (`Keyword`), in grammar order.
-pub const KEYWORD_WORDS: [&str; 28] = [
+pub const KEYWORD_WORDS: [&str; 29] = [
     "bind", "break", "const", "continue", "cpu", "else", "entity", "enum", "export", "false", "fn",
     "for", "if", "import", "in", "let", "match", "material", "on", "param", "prefab", "return",
-    "scene", "self", "state", "struct", "true", "var",
+    "scene", "self", "state", "struct", "true", "var", "while",
 ];
 
 /// The words reserved for future use (`Reserved`), in grammar order.
-pub const RESERVED_WORDS_MODEL: [&str; 28] = [
+pub const RESERVED_WORDS_MODEL: [&str; 27] = [
     "as",
     "async",
     "await",
@@ -459,7 +459,6 @@ pub const RESERVED_WORDS_MODEL: [&str; 28] = [
     "unsafe",
     "use",
     "where",
-    "while",
     "yield",
     "compute",
     "vertex",
@@ -500,6 +499,8 @@ const CONTEXTUAL_WORDS: &str = "\
    'update', 'fixed_update'  lifecycle functions    (LifecycleFn)
    'fragment'                material stage         (StageFn)
    'from'                    import clause          (Import)
+   'shared'                  scene state carry-over (StateDecl)
+   'after', 'every'          timer blocks           (TimerStmt)
    event names after 'on'    resolved via registry  (Handler)             */";
 
 const PUNCTUATION: &str = "\
@@ -644,7 +645,7 @@ pub fn grammar() -> GrammarModel {
         lexical("Keyword", words(&KEYWORD_WORDS, &[8, 16, 24])),
         Blank,
         commented(
-            lexical("Reserved", words(&RESERVED_WORDS_MODEL, &[6, 14, 21, 27])),
+            lexical("Reserved", words(&RESERVED_WORDS_MODEL, &[6, 14, 20, 26])),
             4,
             33,
             "/* E0013 when used as a name */",
@@ -980,17 +981,24 @@ pub fn grammar() -> GrammarModel {
             ],
         ),
         Blank,
-        syntax(
-            "StateDecl",
-            seq(vec![
-                lit("state"),
-                r("Ident"),
-                lit(":"),
-                r("Type"),
-                lit("="),
-                r("Expr"),
-                lit(";"),
-            ]),
+        noted(
+            syntax(
+                "StateDecl",
+                seq(vec![
+                    opt(lit("shared")),
+                    lit("state"),
+                    r("Ident"),
+                    lit(":"),
+                    r("Type"),
+                    lit("="),
+                    r("Expr"),
+                    lit(";"),
+                ]),
+            ),
+            &[
+                "                    /* [S: shared-state: 'shared' is contextual; shared state is declared in a scene only (E5202),",
+                "                        has a type that can carry over a scene change (E5203) and one type in every scene (E5204)] */",
+            ],
         ),
         syntax(
             "FieldInit",
@@ -1097,6 +1105,8 @@ pub fn grammar() -> GrammarModel {
                     r("ConstDecl"),
                     r("IfStmt"),
                     r("ForStmt"),
+                    r("WhileStmt"),
+                    r("TimerStmt"),
                     r("MatchStmt"),
                     r("ReturnStmt"),
                     r("BreakStmt"),
@@ -1171,6 +1181,32 @@ pub fn grammar() -> GrammarModel {
                 opt(group(seq(vec![lit(".."), r("ExprNoDesc")]))),
                 r("Block"),
             ]),
+        ),
+        noted(
+            syntax(
+                "WhileStmt",
+                seq(vec![lit("while"), r("ExprNoDesc"), r("Block")]),
+            ),
+            &[
+                "                    /* [S: while-loop: the condition is bool (E3070); CPU only (E4010 in GPU code)] */",
+            ],
+        ),
+        noted(
+            syntax(
+                "TimerStmt",
+                seq(vec![
+                    group(alt(vec![lit("after"), lit("every")])),
+                    lit("("),
+                    r("Expr"),
+                    lit(")"),
+                    r("Block"),
+                ]),
+            ),
+            &[
+                "                    /* [S: timer: 'after' and 'every' are contextual; the time is f32 seconds (E3001), a constant one",
+                "                        positive for 'every' and not negative for 'after' (E3211); handlers only (E5080);",
+                "                        the block cannot use a 'var' of the enclosing body (E3210)] */",
+            ],
         ),
         syntax(
             "ReturnStmt",
@@ -1428,7 +1464,7 @@ mod tests {
                 );
             }
         }
-        assert_eq!(model.productions().count(), 80);
+        assert_eq!(model.productions().count(), 82);
     }
 
     #[test]

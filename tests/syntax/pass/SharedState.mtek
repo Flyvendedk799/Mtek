@@ -1,0 +1,7 @@
+scene Menu {
+    shared state score: i32 = 0;
+    shared state best: array<i32, 3> = [0, 0, 0];
+    state shared: bool = false;
+    state blink: f32 = 0.0;
+}
+fn shared(x: f32) -> f32 { return x; }

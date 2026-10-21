@@ -1,0 +1,22 @@
+[
+  {
+    "code": "MTEK-E5204",
+    "file": "src/main.mtek",
+    "startByte": 241,
+    "endByte": 244,
+    "message": "The shared state 'score' has type f32 in the scene 'Level', but type i32 in the scene 'Menu'.",
+    "expected": "i32",
+    "actual": "f32",
+    "related": [
+      {
+        "message": "'score' is declared as i32 here",
+        "file": "src/main.mtek",
+        "startByte": 130,
+        "endByte": 133
+      }
+    ],
+    "notes": [
+      "help: a shared state carries its value from scene to scene, so it has one type in every scene"
+    ]
+  }
+]

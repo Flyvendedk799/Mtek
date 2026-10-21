@@ -1337,6 +1337,18 @@
       "doc": "Fractional part of `x`."
     },
     {
+      "name": "go_to",
+      "signatures": [
+        "(scene: scene name) -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Switches scene, keeping shared state."
+    },
+    {
       "name": "inverse_sqrt",
       "signatures": [
         "(x: T) -> T"
@@ -1448,6 +1460,30 @@
       "doc": "The vector scaled to length 1."
     },
     {
+      "name": "pause",
+      "signatures": [
+        "() -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Stops update, physics and timers; input goes on."
+    },
+    {
+      "name": "paused",
+      "signatures": [
+        "() -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Whether paused."
+    },
+    {
       "name": "pow",
       "signatures": [
         "(base: T, exponent: T) -> T"
@@ -1506,6 +1542,30 @@
       "cpuSemantics": "`i - 2 * dot(n, i) * n`.",
       "since": "M1",
       "doc": "Reflects incident vector `i` about the surface normal `n`."
+    },
+    {
+      "name": "reset",
+      "signatures": [
+        "() -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Next frame, restarts the scene."
+    },
+    {
+      "name": "resume",
+      "signatures": [
+        "() -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Undoes pause()."
     },
     {
       "name": "round",

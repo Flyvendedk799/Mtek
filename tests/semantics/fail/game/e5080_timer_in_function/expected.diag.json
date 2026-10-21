@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5080",
+    "file": "src/main.mtek",
+    "startByte": 122,
+    "endByte": 132,
+    "message": "`after` may be called only in lifecycle functions and event handlers, not in the function 'later'.",
+    "notes": [
+      "a timer belongs to the scene or entity whose handler starts it (decision 0142)"
+    ]
+  }
+]

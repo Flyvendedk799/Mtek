@@ -369,6 +369,13 @@ impl Parser<'_> {
         match self.kind() {
             TokenKind::KwConst => self.const_member(),
             TokenKind::KwState => self.state_member(),
+            // `shared state name: T = v;` (decision 0141): `shared` is contextual.
+            TokenKind::Ident
+                if self.kind_at(1) == TokenKind::KwState
+                    && self.text_of(self.span()) == "shared" =>
+            {
+                self.state_member()
+            }
             TokenKind::KwParam => self.param_member(),
             TokenKind::KwEntity => self.entity_member(),
             TokenKind::KwOn => self.handler_member(),
@@ -381,6 +388,7 @@ impl Parser<'_> {
             | TokenKind::KwVar
             | TokenKind::KwIf
             | TokenKind::KwFor
+            | TokenKind::KwWhile
             | TokenKind::KwReturn
             | TokenKind::KwBreak
             | TokenKind::KwContinue => self.misplaced_statement(place),
@@ -593,6 +601,11 @@ impl Parser<'_> {
     /// `state name: Type = expr;`.
     pub(super) fn state_decl(&mut self) -> Option<StateDecl> {
         let start = self.span().start;
+        let shared = (self.kind() == TokenKind::Ident).then(|| {
+            let word = self.span();
+            self.bump();
+            word
+        });
         self.bump();
         let Some(name) = self.ident() else {
             self.expected("a name after `state`");
@@ -610,6 +623,7 @@ impl Parser<'_> {
         Some(StateDecl {
             id: self.id(),
             span: self.span_from(start),
+            shared,
             name,
             ty,
             value,

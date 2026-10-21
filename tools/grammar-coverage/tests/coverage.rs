@@ -31,7 +31,7 @@ fn every_production_alternative_and_rule_is_covered() {
     );
     // The grammar as frozen at M2 (`spec/grammar-notes.md`, "Frozen subset"):
     // a production, alternative or rule added or removed changes these.
-    assert_eq!((productions, alternatives, rules), (73, 116, 11));
+    assert_eq!((productions, alternatives, rules), (82, 122, 17));
 }
 
 #[test]
@@ -114,7 +114,7 @@ fn the_command_prints_the_report_and_succeeds() {
         .unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(output.status.success(), "{stdout}");
-    assert!(stdout.starts_with("Grammar coverage of spec/grammar.ebnf\nproductions:  73/73 hit\n"));
+    assert!(stdout.starts_with("Grammar coverage of spec/grammar.ebnf\nproductions:  82/82 hit\n"));
     // A directory that is no repository is an error, not a report.
     let missing = Command::new(env!("CARGO_BIN_EXE_grammar-coverage"))
         .arg(corpus::repository_root().join("no-such-directory"))

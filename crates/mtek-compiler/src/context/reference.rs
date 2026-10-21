@@ -266,11 +266,34 @@ fn builtins(registry: &Registry) -> (Vec<String>, Vec<String>) {
         .iter()
         .filter(|def| is_implemented(def.since))
         .partition(|def| def.domain == Domain::Both);
-    lines.extend(
-        documented
-            .into_iter()
-            .map(|def| function_line(def.name, def, true)),
-    );
+    // Global functions that take nothing and share their signatures, domain and placement are
+    // presets too (`reset|pause|resume() -> ()`, decisions 0140 and 0143): one line in the place of
+    // the first, no documentation.
+    let mut done: Vec<&'static str> = Vec::new();
+    for def in &documented {
+        if done.contains(&def.name) {
+            continue;
+        }
+        let presets: Vec<&'static str> = if def.signatures.iter().all(|sig| sig.params.is_empty()) {
+            documented
+                .iter()
+                .filter(|other| {
+                    other.signatures == def.signatures
+                        && other.domain == def.domain
+                        && other.handlers_only == def.handlers_only
+                })
+                .map(|other| other.name)
+                .collect()
+        } else {
+            Vec::new()
+        };
+        if presets.len() > 1 {
+            done.extend(presets.iter().copied());
+            lines.push(function_line(&presets.join("|"), def, false));
+        } else {
+            lines.push(function_line(def.name, def, true));
+        }
+    }
     let mut all = grouped_lines(&math);
     all.append(&mut lines);
     (classes, all)

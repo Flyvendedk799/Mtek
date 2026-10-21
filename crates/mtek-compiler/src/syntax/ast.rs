@@ -360,6 +360,9 @@ pub struct SceneObject {
 pub struct StateDecl {
     pub id: NodeId,
     pub span: Span,
+    /// The contextual word `shared` of `shared state` (decision 0141): the value carries over
+    /// `go_to` into a scene with a shared state of the same name and type.
+    pub shared: Option<Span>,
     pub name: Ident,
     pub ty: Type,
     pub value: Expr,
@@ -486,6 +489,10 @@ pub enum Stmt {
     Const(ConstDecl),
     If(IfStmt),
     For(ForStmt),
+    /// `while cond { ... }` (decision 0144).
+    While(WhileStmt),
+    /// `after(seconds) { ... }` and `every(seconds) { ... }` (decision 0142).
+    Timer(TimerStmt),
     Return(ReturnStmt),
     Break(JumpStmt),
     Continue(JumpStmt),
@@ -497,6 +504,53 @@ pub enum Stmt {
     /// An expression used as a statement (valid only for calls, `E1020`).
     Expr(ExprStmt),
     Error(ErrorNode),
+}
+
+/// `while cond { ... }`: a condition-controlled loop, CPU only, capped at
+/// [`WHILE_ITERATION_CAP`] iterations per execution (decision 0144).
+#[derive(Clone, PartialEq, Debug)]
+pub struct WhileStmt {
+    pub id: NodeId,
+    pub span: Span,
+    pub cond: Expr,
+    pub body: Block,
+}
+
+/// The most iterations one execution of a `while` loop may run before the frame is stopped
+/// with `E8080` (decision 0144).
+pub const WHILE_ITERATION_CAP: u32 = 1_000_000;
+
+/// Which timer statement (decision 0142).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum TimerKind {
+    /// `after(seconds) { ... }`: runs the block once, `seconds` of game time later.
+    After,
+    /// `every(seconds) { ... }`: runs the block every `seconds` of game time.
+    Every,
+}
+
+impl TimerKind {
+    /// The contextual word that starts the statement.
+    #[must_use]
+    pub const fn word(self) -> &'static str {
+        match self {
+            TimerKind::After => "after",
+            TimerKind::Every => "every",
+        }
+    }
+}
+
+/// `after(seconds) { ... }` / `every(seconds) { ... }` (decision 0142). `after` and `every`
+/// are contextual: they start a timer only as `word ( expr ) {` at the start of a statement.
+#[derive(Clone, PartialEq, Debug)]
+pub struct TimerStmt {
+    pub id: NodeId,
+    pub span: Span,
+    pub kind: TimerKind,
+    /// The span of the word `after` / `every`.
+    pub word: Span,
+    pub seconds: Expr,
+    pub body: Block,
 }
 
 /// The common shape of `let` and `var`.
@@ -837,6 +891,8 @@ impl_node!(
     LocalDecl,
     IfStmt,
     ForStmt,
+    WhileStmt,
+    TimerStmt,
     ReturnStmt,
     JumpStmt,
     AssignStmt,
@@ -880,6 +936,8 @@ impl_node_for_enum!(Stmt {
     Const,
     If,
     For,
+    While,
+    Timer,
     Return,
     Break,
     Continue,

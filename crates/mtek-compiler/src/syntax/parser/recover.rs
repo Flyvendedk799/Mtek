@@ -239,6 +239,7 @@ impl Parser<'_> {
                         | TokenKind::KwIf
                         | TokenKind::KwMatch
                         | TokenKind::KwFor
+                        | TokenKind::KwWhile
                         | TokenKind::KwReturn
                         | TokenKind::KwBreak
                         | TokenKind::KwContinue

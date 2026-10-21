@@ -1,0 +1,13 @@
+// A shared state has one type in every scene that declares it.
+// covers: [S: shared-state]
+scene Menu {
+    shared state score: i32 = 0;
+    shared state name: string = "player";
+    camera Main {}
+}
+
+scene Level {
+    shared state score: f32 = 0.0;
+    shared state name: string = "";
+    camera Main {}
+}

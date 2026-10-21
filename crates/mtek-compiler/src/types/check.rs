@@ -277,6 +277,9 @@ pub(super) struct Checker<'a> {
     pub(super) prefab_entity_counts: BTreeMap<DefId, usize>,
     /// The prefab literal that is the argument of the `spawn` being checked (decision 0064).
     pub(super) spawn_argument: Option<NodeId>,
+    /// The scene names that are the argument of a `go_to` (decision 0141): there, and only
+    /// there, a scene name is a value, of type `scene name`.
+    pub(super) scene_arguments: BTreeSet<NodeId>,
 }
 
 impl<'a> Checker<'a> {
@@ -342,6 +345,7 @@ impl<'a> Checker<'a> {
             prefab_params: BTreeMap::new(),
             prefab_entity_counts: BTreeMap::new(),
             spawn_argument: None,
+            scene_arguments: BTreeSet::new(),
         }
     }
 
@@ -431,6 +435,9 @@ impl<'a> Checker<'a> {
                 // Prefabs were checked above; imports have nothing to check here.
                 _ => {}
             }
+        }
+        if construct_implemented(Construct::State) {
+            self.shared_states(module);
         }
     }
 
@@ -1061,6 +1068,9 @@ impl<'a> Checker<'a> {
             // (`spec/scenes.md` 8.3); that is the only meaning of a bare
             // entity name.
             DefKind::Entity => TyId::ENTITY_REF,
+            DefKind::Scene if self.scene_arguments.contains(&expr.id) => {
+                self.out.interner.intern(Ty::SceneName)
+            }
             DefKind::SceneObject { kind: Some(_) }
             | DefKind::Scene
             | DefKind::Fn
@@ -1085,6 +1095,7 @@ impl<'a> Checker<'a> {
             // build (prefab params) are untyped.
             DefKind::FnParam | DefKind::Local { .. } | DefKind::LoopVar | DefKind::Param => {
                 self.note_surface_use(id);
+                self.timer_capture(id, expr.span);
                 let ty = self.out.locals.get(&id).copied().unwrap_or(TyId::ERROR);
                 if matches!(def.kind, DefKind::Param) && self.misused_resource(expr, ty) {
                     return TyId::ERROR;
@@ -1920,6 +1931,16 @@ impl<'a> Checker<'a> {
                     };
                     if name == "spawn" {
                         self.note_spawn_argument(args);
+                    }
+                    if name == "go_to" && !self.go_to_argument(args) {
+                        // `E5201` described a name already; an expression is still checked.
+                        let named = args.iter().all(|arg| {
+                            matches!(super::prefab::strip_parens(arg).kind, ExprKind::Name(_))
+                        });
+                        if !named {
+                            self.synth_args(args);
+                        }
+                        return TyId::UNIT;
                     }
                     let ty = self.function_call(expr, name, function, args, kind, expected);
                     if name == "destroy" {

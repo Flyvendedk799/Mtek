@@ -132,6 +132,7 @@ fn instantiate_scene(
                 symbol: instance_symbol(&state.symbol, &template.symbol, &symbol)?,
                 ty: state.ty.clone(),
                 owner: sub.owner(state.owner),
+                shared: false,
                 init: sub.expr(&state.init)?,
                 span: state.span,
             });
@@ -541,6 +542,22 @@ impl Substitution<'_> {
             } => Stmt::ForEach {
                 local: *local,
                 array: self.expr(array)?,
+                body: self.block(body)?,
+                span: *span,
+            },
+            Stmt::While { cond, body, span } => Stmt::While {
+                cond: self.expr(cond)?,
+                body: self.block(body)?,
+                span: *span,
+            },
+            Stmt::Timer {
+                every,
+                seconds,
+                body,
+                span,
+            } => Stmt::Timer {
+                every: *every,
+                seconds: self.expr(seconds)?,
                 body: self.block(body)?,
                 span: *span,
             },
