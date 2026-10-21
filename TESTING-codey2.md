@@ -216,4 +216,10 @@ Nothing below has code here. There is nothing to test until it is built.
 - `cargo test -p mtek-grammar-coverage`: `every_production_alternative_and_rule_is_covered` and `the_command_prints_the_report_and_succeeds` still expect 73 productions, but the grammar now has 80 after the base branch's `enum`/`match` productions. The interpolation work adds no production.
 - `npm run check:coverage`: "no demonstration and no positive fixture exercises the feature match" (base branch).
 
+- After the rebase onto CODEy's Phase 2 (7d59d0f9), `npm run check:release` still reports these CODEy-side items, which I left alone:
+  - `examples/lane-runner` is missing from the README table and counts;
+  - the `E5901` unsupported-feature phrases.
+  `npm run check:coverage` reports `stmt/timer:every` and the reserved word `while` without fixtures. None of these comes from this branch.
+- Merge note: a `sound` is not carryable as `shared state` (`types/game.rs`, `E5203`), like other resources.
+
 These were not re-run on the bare base commit; my evidence is only that the code they test was not changed here.

@@ -19,7 +19,7 @@ The release contract of v0.1 is what the specification promises **and** a test p
 
 The reasons and the restrictions of sections 2, 3 and 6 are written by hand in `tools/release-docs/data/limitations.json`; each is anchored to a quotation of the specification that a test looks for, so a reason cannot outlive the sentence it rests on. Where the specification gives no reason beyond "not in v0.1", the entry says so.
 
-## 2. Unsupported features: the `x9xx` diagnostics (6)
+## 2. Unsupported features: the `x9xx` diagnostics (7)
 
 `spec/diagnostics.md` section 3: within each range of codes, the `x9xx` codes mean "specified as not supported in v0.1". They are different from `E9010` (section 3 of this page) on purpose: a limit of the language is not a gap of the build.
 
@@ -27,7 +27,8 @@ The reasons and the restrictions of sections 2, 3 and 6 are written by hand in `
 |---|---|---|---|---|
 | `E1901` | bitwise operators not supported | v0.1 | Bitwise operators are not part of the v0.1 language. They are lexed only so that they are rejected with this code instead of a confusing parse error. | [tests/syntax/fail/e1901_bitwise_and.mtek](../tests/syntax/fail/e1901_bitwise_and.mtek) and 2 more |
 | `E4901` | stage not supported | `vertex`/`compute` | A material has exactly one stage function, `fragment`. Custom vertex and compute stages are planned for v0.2. | [tests/syntax/fail/e4901_compute_stage.mtek](../tests/syntax/fail/e4901_compute_stage.mtek) and 3 more |
-| `E5901` | scene switching not supported | Reserved: switching the active scene at run time; v0.1 mounts one scene and has no construct that could switch it, so no program produces it | A v0.1 application mounts one scene and has no construct that switches the active scene, so no program can produce this code: it is reserved. | none: no program produces it |
+| `E5901` | scene switching not supported | Reserved: retired by decision 0141: `go_to(Scene)` switches the active scene, so no program produces it; the code is kept so that the number is not reused | Retired: `go_to(Scene)` switches the active scene (decision 0141), so no program produces this code. It stays in the catalogue so that the number is not reused. | none: no program produces it |
+| `E5901` | scene switching not supported | Reserved: switching the active scene at run time; v0.1 mounts one scene and has no construct that could switch it, so no program produces it | Retired: `go_to(Scene)` switches the active scene (decision 0141), so no program produces this code. It stays in the catalogue so that the number is not reused. | none: no program produces it |
 | `E5902` | transparency not supported | Reserved: v0.1 has only opaque materials and no construct that asks for transparency, so no program produces it | v0.1 has only opaque materials and no construct that asks for transparency, so no program can produce this code: it is reserved. A transparent glTF material is rejected earlier, with E7015. | none: no program produces it |
 | `E7901` | remote assets not supported | an `http:`, `https:` or other URL as an asset path | Assets are compile-time dependencies that the compiler opens and validates while it checks the program (decision 0015); v0.1 offers no option to load remote assets. | [tests/assets/fail/e7901_remote_asset](../tests/assets/fail/e7901_remote_asset) |
 | `E7902` | node hierarchy instancing not supported | `model: asset` instancing a whole node hierarchy | Entities reference the meshes of a glTF asset individually, which keeps every drawn object a named, inspectable entity; instancing a whole node hierarchy is not provided. | [tests/assets/fail/e7902_model_field](../tests/assets/fail/e7902_model_field) |
@@ -46,11 +47,11 @@ The reasons and the restrictions of sections 2, 3 and 6 are written by hand in `
 - Records: [0039](../spec/decisions/0039-materials-in-the-checker-details.md), [0086](../spec/decisions/0086-diagnostic-wording-and-baseline-frame-order.md), [0094](../spec/decisions/0094-coverage-audit-findings.md).
 - Source: [spec/decisions/0086-diagnostic-wording-and-baseline-frame-order.md](../spec/decisions/0086-diagnostic-wording-and-baseline-frame-order.md): "the build still folds every initial value"
 
-## 4. Reserved words (28)
+## 4. Reserved words (27)
 
 The words are reserved for future use (spec/language.md 2.3); using one as a name is E0013 ("`while` is reserved for a future version"). The specification gives no further rationale. ([spec/language.md](../spec/language.md): "Using these as identifiers is error `E0013`")
 
-`as` `async` `await` `extern` `impl` `loop` `mod` `move` `mut` `priv` `pub` `static` `super` `trait` `type` `unsafe` `use` `where` `while` `yield` `compute` `vertex` `storage` `uniform` `workgroup` `system` `query` `component`
+`as` `async` `await` `extern` `impl` `loop` `mod` `move` `mut` `priv` `pub` `static` `super` `trait` `type` `unsafe` `use` `where` `yield` `compute` `vertex` `storage` `uniform` `workgroup` `system` `query` `component`
 
 ## 5. Specified, but no program can produce the diagnostic (4)
 
@@ -58,7 +59,7 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 
 | Code | Title | Mark in the catalogue | Why no program produces it |
 |---|---|---|---|
-| `E5901` | scene switching not supported | Reserved | No construct of v0.1 switches the active scene (spec/scenes.md section 1: one scene per application), so no program can produce it; the context export lists the feature as not supported. |
+| `E5901` | scene switching not supported | Reserved | Retired by decision 0141: go_to(Scene) switches the active scene, so no program can produce it; the catalogue keeps the code so that the number is not reused. |
 | `E5902` | transparency not supported | Reserved | No construct of v0.1 asks for transparency (spec/materials.md section 2: opaque materials only), so no program can produce it; the context export lists the feature as not supported. |
 | `E6003` | too many interpolated inputs | Reserved | v0.1 has at most 4 inter-stage variables (spec/materials.md section 3.3) and no custom vertex stage (E4901), so the limit of 16 cannot be reached; custom vertex stages are v0.2. |
 | `W0030` | naming convention | Not implemented | The naming lint is not part of v0.1 (spec/language.md section 3.3 as amended by decision 0102; decision 0070 item 11): neither the compiler nor mtek fmt implements it, the catalogue keeps the code so that the number is not reused, and no program can produce it. |
@@ -96,7 +97,7 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 
 | Restriction | Why | Diagnostics | Records and source |
 |---|---|---|---|
-| One scene per application; no scene switching, no camera switching, no run-time re-parenting, no spawned prefabs with children or nested prefab instances inside prefabs, no user-defined components, queries or systems, no render interpolation, no text in the 3D world, no UI layout or text input (screen-space text and buttons are the HUD, spec/hud.md). | Not in v0.1 (spec/scenes.md section 14). Scene switching is E5901 (reserved); `component`, `query` and `system` are reserved words (E0013). | `E5901`, `E0013` | [spec/scenes.md](../spec/scenes.md): "## 14. Not in v0.1" |
+| One scene runs at a time (`go_to(Scene)` switches between the scenes of a program); no camera switching, no run-time re-parenting, no spawned prefabs with children or nested prefab instances inside prefabs, no user-defined components, queries or systems, no render interpolation, no text in the 3D world, no UI layout or text input (screen-space text and buttons are the HUD, spec/hud.md). | Not in v0.1 (spec/scenes.md section 14). Scene switching landed with decision 0141; `component`, `query` and `system` are reserved words (E0013). | `E0013` | decisions [0141](../spec/decisions/0141-scenes-and-go-to.md); [spec/scenes.md](../spec/scenes.md): "## 14. Not in v0.1" |
 | The HUD is immediate mode and screen-space only: `hud.text`, `hud.rect` and `hud.button` drawn again every frame from lifecycle functions and handlers (not from functions), in the system UI font, with horizontal alignment as the only layout. No text in the 3D world, no images, no text input, no keyboard or gamepad navigation, and `mtek test` fixtures cannot see or click it. | Spec/hud.md section 6 (decision 0134): the smallest UI that covers scores, timers, bars and buttons, drawn as a DOM layer over the canvas. | `E5601`, `W8203`, `E5080` | decisions [0134](../spec/decisions/0134-hud-immediate-mode.md); [spec/hud.md](../spec/hud.md): "## 6. Not in this extension" |
 | Tweens are progress state plus ten CPU easing curves (`easing.in_quad` .. `easing.out_bounce`) used in bindings, lifecycle functions, handlers and `cpu fn`s: no tween objects, timelines, delays, callbacks or user curves in `bind`, no easing in a plain `fn` or on the GPU (`smoothstep` only), and no curve in a `const`. | Spec/tweens.md (decision 0135): curves are the smallest addition that makes bindings animate; tween bookkeeping is ordinary state logic that fixtures can observe. | `E4002`, `E3090` | decisions [0135](../spec/decisions/0135-tweens-easing.md); [spec/tweens.md](../spec/tweens.md): "## 4. Limits" |
 | Audio plays whole decoded WAV, Ogg or MP3 files: no streaming, no effects or buses beyond the master volume, no handle to stop a playing one-shot, one music track at a time, and nothing plays before the first user gesture (browser autoplay policy). | Spec/audio.md section 8 (decision 0130): the smallest audio model that covers hit, score and music sounds. | `E7101`, `E7102`, `E5501` | decisions [0130](../spec/decisions/0130-audio.md); [spec/audio.md](../spec/audio.md): "## 8. Not in this extension" |
@@ -176,7 +177,6 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 - `unsafe`
 - `use`
 - `where`
-- `while`
 - `yield`
 - `compute`
 - `vertex`
@@ -188,7 +188,6 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 - `component`
 - `bitwise operators (& | ^ ~ << >>)`
 - `` stage functions other than `fragment` (vertex, compute) ``
-- `switching the active scene at run time`
 - `transparency (alpha blending)`
 - `remote assets (URLs as asset paths)`
 - `instancing a whole node hierarchy of a glTF asset`
