@@ -37,7 +37,7 @@
       "required": ["features", "notSupported"],
       "properties": {
         "features": {
-          "description": "What this build implements: language constructs by name, then library items as kind:name. Derived from the build, never written by hand.",
+          "description": "What this build implements: language constructs by name, then library items as kind:name. Derived from the build, never written by hand. A cold-start context (one with reference.builtins) leaves out the function:* entries, whose signatures reference.builtins gives (decision 0148).",
           "type": "array",
           "items": { "type": "string", "minLength": 1 },
           "uniqueItems": true

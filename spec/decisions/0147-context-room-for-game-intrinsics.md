@@ -1,6 +1,6 @@
 # 0147. The cold-start context keeps 600 bytes for the project, not 1 000
 
-- Status: Accepted
+- Status: Accepted; item 1 superseded by decision 0148 (the room is 1 000 bytes again)
 - Date: 2026-10-21
 - Amends: decision 0112 item 1 (the room a test keeps for the project's own section and symbols). The budget of 24 000 bytes does not move.
 

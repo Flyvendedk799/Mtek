@@ -212,12 +212,26 @@ pub fn context(
             Reference::default(),
         )
     };
+    // A cold-start context lists every function in `reference.builtins` with its signature, so
+    // `supported.features` leaves out the `function:*` entries that would name them a second time
+    // (decision 0148). They come back if the budget drops `builtins`.
+    let full_features = cold.then(|| capabilities.features.clone());
+    let features = if cold {
+        capabilities
+            .features
+            .iter()
+            .filter(|feature| !feature.starts_with("function:"))
+            .cloned()
+            .collect()
+    } else {
+        capabilities.features
+    };
     let context = Context {
         language_version: LANGUAGE_VERSION,
         compiler_version: COMPILER_VERSION,
         context_format: CONTEXT_FORMAT,
         supported: Supported {
-            features: capabilities.features,
+            features,
             not_supported: capabilities.not_supported,
         },
         syntax: SyntaxSection {
@@ -258,7 +272,12 @@ pub fn context(
         diagnostics_guide: DIAGNOSTICS_GUIDE,
         truncated: None,
     };
-    match fit(Draft { context, neighbour }, options.max_bytes) {
+    let draft = Draft {
+        context,
+        neighbour,
+        full_features,
+    };
+    match fit(draft, options.max_bytes) {
         Ok((context, text)) => Ok(ContextOutput { context, text }),
         Err(minimum) => Err(ContextError::BudgetTooSmall {
             max_bytes: options.max_bytes,
