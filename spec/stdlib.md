@@ -17,7 +17,7 @@ pub struct Registry { pub types: Vec<TypeDef>, pub schemas: Vec<SchemaDef>, pub 
                       pub events: Vec<EventDef>, pub enums: Vec<EnumDef>, pub intrinsics: Vec<IntrinsicDef>,
                       pub namespaces: Vec<NamespaceDef>, pub prelude_sources: Vec<(&'static str, &'static str)> }
 
-pub struct SchemaDef { pub name: &'static str, pub category: SchemaCategory /* Mesh | Material | Light | Body | Collider | Projection | Object */,
+pub struct SchemaDef { pub name: &'static str, pub category: SchemaCategory /* Mesh | Material | Light | Body | Collider | Projection | Object | Emitter */,
                        pub fields: Vec<FieldDef>, pub since: Milestone, pub doc: &'static str }
 
 pub struct FieldDef { pub name: &'static str, pub ty: TypeRef, pub default: Option<ConstValue>,
@@ -84,6 +84,8 @@ Flags: **R** required · **W** writable from handlers · **B** bindable · **C**
 | `body` | body schema | — | C |
 | `collider` | collider schema | — | C |
 | `tag` | string | — | C |
+| `particles` | `Emitter` | — | C |
+| `clip` | string | — | C |
 
 ### 3.3 `Camera` (scene-object kind `camera`), `Perspective`, `Orthographic`
 As in `spec/scenes.md` §3, including `exposure: f32 = -1.9145305` (EV100, C, decision 0081). `Perspective { fov_y: f32 = 0.9 (0, π); near: f32 = 0.1 (> 0); far: f32 = 1000.0 (> near) }`, `Orthographic { height: f32 = 10.0 (> 0); near: f32 = 0.1; far: f32 = 1000.0 }`; all projection fields W B.
@@ -109,6 +111,9 @@ Out-of-range constants are `E5006` ("field value out of range"). Asset meshes co
 `SphereCollider { radius: f32 (R, > 0, finite); sensor: bool = false; friction: f32 = 0.5; restitution: f32 = 0.0 }`.
 
 A `collider` requires a `body` (`E5120`) and a `body` a `collider` (`E5121`); `Scene.gravity` is a finite `vec3`. The M5 gates of these rows, of `entity_ref` and of the collision events were lifted by task M5-03 (decision 0065).
+
+### 3.8 `Emitter` (category `emitter`, all C) — semantics in `spec/scenes.md` §4.6
+`Emitter { rate: f32 = 0.0 (≥ 0); lifetime: f32 = 1.0 (> 0, finite); speed: f32 = 1.0 (≥ 0); size: f32 = 0.05 (> 0, finite); gravity: f32 = 0.0 (finite) }` (decision 0155).
 
 ## 4. Primitive mesh generation (normative, runtime `src/mesh/`)
 
@@ -213,6 +218,8 @@ Notation: `T` ranges over `f32, vec2, vec3, vec4` (component-wise), `I` over `i3
 | `reset` | `() → ()` | cpu (handlers only) | — | restarts the scene that runs from its initial values, at the start of a later frame (`spec/scenes.md` §15.5, decision 0140) |
 | `pause`, `resume` | `() → ()` | cpu (handlers only) | — | stop and restart the game clock: ticks, physics, timers and `update` (`spec/scenes.md` §15.4, decision 0143) |
 | `paused` | `() → bool` | cpu | — | whether `pause()` holds the game |
+| `particle_count` | `() → i32` | cpu | — | how many particles are alive (`spec/scenes.md` §4.6, decision 0155) |
+| `set_camera` | `(camera name) → ()` | cpu (handlers only) | — | the argument is the name of a camera of this scene, `set_camera(Wide)` (`E5015` otherwise); that camera draws (`spec/scenes.md` §3, decision 0154) |
 | `save` | `() → ()` | cpu (handlers only) | — | writes every `saved` and `setting` state of the running scene to the game's storage at once (`spec/scenes.md` §16.3, decision 0145) |
 | `load` | `() → bool` | cpu (handlers only) | — | sets every `saved` and `setting` state of the running scene to its stored value; `false` when nothing is stored (`spec/scenes.md` §16.3, decision 0145) |
 | `clear_saved` | `() → ()` | cpu (handlers only) | — | deletes everything the game stored; the state of the running scene keeps its values (`spec/scenes.md` §16.3, decision 0145) |

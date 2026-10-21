@@ -643,7 +643,9 @@
         "state": { "type": "array", "items": { "$ref": "#/$defs/stateEntry" } },
         "update": { "type": "boolean", "description": "The entity declares update(dt)." },
         "fixedUpdate": { "type": "boolean", "description": "The entity declares fixed_update(dt)." },
-        "tag": { "$ref": "#/$defs/tag", "description": "`tag: \"name\";` (decision 0150). Absent when the entity has none." }
+        "tag": { "$ref": "#/$defs/tag", "description": "`tag: \"name\";` (decision 0150). Absent when the entity has none." },
+        "particles": { "$ref": "#/$defs/emitter", "description": "`particles: Emitter { .. }` (decision 0155). Absent when the entity emits none." },
+        "clip": { "$ref": "#/$defs/clip", "description": "A glTF clip that moves this entity (decision 0156). Absent when it plays none." }
       }
     },
     "body": {
@@ -792,13 +794,50 @@
         "fixedUpdate": { "type": "boolean", "description": "The prefab declares fixed_update(dt)." },
         "bindings": { "type": "array", "items": { "$ref": "#/$defs/binding" } },
         "span": { "$ref": "#/$defs/spanId", "description": "The declaration." },
-        "tag": { "$ref": "#/$defs/tag", "description": "The tag every instance carries (decision 0150). Absent when the prefab has none." }
+        "tag": { "$ref": "#/$defs/tag", "description": "The tag every instance carries (decision 0150). Absent when the prefab has none." },
+        "particles": { "$ref": "#/$defs/emitter", "description": "The emitter every instance starts with (decision 0155). Absent when the prefab has none." },
+        "clip": { "$ref": "#/$defs/clip", "description": "The clip every instance plays (decision 0156). Absent when the prefab plays none." }
       }
     },
     "tag": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9_]{0,31}$",
       "description": "An entity's group name for the tag queries (decision 0150): 1 to 32 lowercase letters, digits and `_`, starting with a letter."
+    },
+    "emitter": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A particle emitter (decision 0155). The runtime keeps at most 64 particles.",
+      "required": ["rate", "lifetime", "speed", "size", "gravity"],
+      "properties": {
+        "rate": { "type": "number", "minimum": 0 },
+        "lifetime": { "type": "number", "exclusiveMinimum": 0 },
+        "speed": { "type": "number", "minimum": 0 },
+        "size": { "type": "number", "exclusiveMinimum": 0 },
+        "gravity": { "type": "number" }
+      }
+    },
+    "clip": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A sampled TRS clip (decision 0156).",
+      "required": ["name", "duration", "channels"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "duration": { "type": "number", "minimum": 0 },
+        "channels": { "type": "array", "items": { "$ref": "#/$defs/clipChannel" } }
+      }
+    },
+    "clipChannel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "interpolation", "times", "values"],
+      "properties": {
+        "path": { "type": "string", "enum": ["translation", "rotation", "scale"] },
+        "interpolation": { "type": "string", "enum": ["linear", "step"] },
+        "times": { "type": "array", "items": { "type": "number" } },
+        "values": { "type": "array", "items": { "type": "number" } }
+      }
     },
 
     "materialInstance": {
@@ -940,7 +979,8 @@
         "field": {
           "type": "string",
           "enum": ["position", "target", "rotation", "projection.fov_y", "projection.height", "projection.near", "projection.far"]
-        }
+        },
+        "camera": { "$ref": "#/$defs/name", "description": "The camera the binding writes (decision 0154). Absent on manifests that bound the one active camera." }
       }
     },
     "lightTarget": {

@@ -447,6 +447,8 @@ export class DynamicEntities {
       parent: null,
       mesh: prefab.resolved.mesh,
       instance,
+      ...(prefab.resolved.particles === undefined ? {} : { particles: prefab.resolved.particles }),
+      ...(prefab.resolved.clip === undefined ? {} : { clip: prefab.resolved.clip }),
     };
     const host = this.options.host;
     const record = host.makeRecord(ref, resolved, prefab, params);

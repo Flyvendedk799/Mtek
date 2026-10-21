@@ -283,6 +283,9 @@ pub(super) struct Checker<'a> {
     /// The scene names that are the argument of a `go_to` (decision 0141): there, and only
     /// there, a scene name is a value, of type `scene name`.
     pub(super) scene_arguments: BTreeSet<NodeId>,
+    /// The camera names that are the argument of a `set_camera` (decision 0154): there, and
+    /// only there, a camera name is a value, of type `camera name`.
+    pub(super) camera_arguments: BTreeSet<NodeId>,
     /// The `tagged(..)` calls that are the iterable of a `for` loop (decision 0150): the only
     /// place where one is allowed.
     pub(super) tagged_iterables: BTreeSet<NodeId>,
@@ -352,6 +355,7 @@ impl<'a> Checker<'a> {
             prefab_entity_counts: BTreeMap::new(),
             spawn_argument: None,
             scene_arguments: BTreeSet::new(),
+            camera_arguments: BTreeSet::new(),
             tagged_iterables: BTreeSet::new(),
         }
     }
@@ -1082,6 +1086,9 @@ impl<'a> Checker<'a> {
             DefKind::Entity => TyId::ENTITY_REF,
             DefKind::Scene if self.scene_arguments.contains(&expr.id) => {
                 self.out.interner.intern(Ty::SceneName)
+            }
+            DefKind::SceneObject { kind } if self.is_set_camera_target(kind, expr.id) => {
+                self.out.interner.intern(Ty::CameraName)
             }
             DefKind::SceneObject { kind: Some(_) }
             | DefKind::Scene
@@ -1946,6 +1953,15 @@ impl<'a> Checker<'a> {
                     }
                     if name == "go_to" && !self.go_to_argument(args) {
                         // `E5201` described a name already; an expression is still checked.
+                        let named = args.iter().all(|arg| {
+                            matches!(super::prefab::strip_parens(arg).kind, ExprKind::Name(_))
+                        });
+                        if !named {
+                            self.synth_args(args);
+                        }
+                        return TyId::UNIT;
+                    }
+                    if name == "set_camera" && !self.set_camera_argument(args) {
                         let named = args.iter().all(|arg| {
                             matches!(super::prefab::strip_parens(arg).kind, ExprKind::Name(_))
                         });

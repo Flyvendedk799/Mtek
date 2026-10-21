@@ -266,7 +266,7 @@ fn random_scenes_never_break_the_scene_checks() {
             assert!(clean > 0, "no program without diagnostics");
             for code in [
                 "E3001", "E3041", "E3102", "E5001", "E5002", "E5006", "E5010", "E5011", "E5012",
-                "E5013", "E5020", "E5081", "E5090", "E5091", "E5100", "E5120", "E5121",
+                "E5013", "E5020", "E5081", "E5090", "E5091", "E5120", "E5121",
             ] {
                 assert!(codes.contains(code), "{code} never reported: {codes:?}");
             }

@@ -1,0 +1,59 @@
+// Two cameras, a spark fountain and a spinning prop (decisions 0154, 0155, 0156).
+const PROP = asset.glb("../models/prop.glb");
+
+scene Stage {
+    clear_color: #101418;
+    state view: i32 = 1;
+    state sparks: i32 = 0;
+    state spin: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 1.6, 4.5);
+        active: true;
+    }
+    camera Wide {
+        position: vec3(0.0, 3.2, 8.0);
+    }
+
+    entity Floor {
+        position: vec3(0.0, -0.05, 0.0);
+        mesh: Box { size: vec3(6.0, 0.1, 6.0) };
+        material: Unlit { color: #1c2430 };
+    }
+
+    entity Prop {
+        position: vec3(0.0, 0.6, 0.0);
+        mesh: PROP.mesh("Prop");
+        material: Unlit { color: #6b5cff };
+        clip: "Spin";
+    }
+
+    entity Fountain {
+        position: vec3(1.2, 0.0, 0.0);
+        visible: false;
+        mesh: Plane { size: vec2(1.0, 1.0) };
+        material: Unlit { color: #ffcc33 };
+        particles: Emitter {
+            rate: 24.0;
+            lifetime: 0.8;
+            speed: 1.6;
+            size: 0.12;
+            gravity: 3.0;
+        };
+    }
+
+    on key_down(Key.Digit1) {
+        view = 1;
+        set_camera(Main);
+    }
+
+    on key_down(Key.Digit2) {
+        view = 2;
+        set_camera(Wide);
+    }
+
+    update(dt: f32) {
+        sparks = particle_count();
+        spin = Prop.rotation.y;
+    }
+}

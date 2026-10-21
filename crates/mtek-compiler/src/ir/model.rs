@@ -901,6 +901,8 @@ pub enum BindingTarget {
         name: String,
     },
     Camera {
+        /// The camera the binding writes (decision 0154).
+        camera: String,
         field: String,
     },
     /// `color` or `intensity` of the light of an entity.
@@ -1188,6 +1190,29 @@ pub struct Entity {
     /// `tag: "name";` (decision 0150): the group the tag queries find the entity in.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tag: Option<String>,
+    /// `particles: Emitter { .. }` (decision 0155). Absent when the entity emits none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub particles: Option<Particles>,
+    /// `clip: "name"` (decision 0156): a glTF animation of this entity's mesh. Absent when
+    /// the entity plays none. The keyframes live in the manifest, not here.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub clip: Option<String>,
+}
+
+/// A particle emitter (decision 0155): construction-only numbers. The runtime keeps at most
+/// 64 particles and draws them as camera-facing copies of the entity's mesh.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Particles {
+    pub rate: f32,
+    pub lifetime: f32,
+    pub speed: f32,
+    pub size: f32,
+    pub gravity: f32,
+    pub origin: Origin,
+    /// The `particles: …;` member.
+    #[serde(serialize_with = "span")]
+    pub span: Span,
 }
 
 /// An entity's light component (`spec/materials.md` section 7, decision 0053).

@@ -181,6 +181,10 @@ fn every_implemented_descriptor_schema_is_lowered() {
         implemented_schemas(SchemaCategory::Collider),
         COLLIDER_SCHEMAS.into_iter().collect()
     );
+    assert_eq!(
+        implemented_schemas(SchemaCategory::Emitter),
+        ["Emitter"].into_iter().collect()
+    );
     let materials = implemented_schemas(SchemaCategory::Material);
     assert!(!materials.is_empty());
     // Every implemented built-in material is declared by the embedded prelude,

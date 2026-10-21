@@ -23,7 +23,9 @@ import { NO_HUD, type HudService } from "../hud/hud.js";
 import { resolveSpan, spanOfSymbol } from "../host/failures.js";
 import { fromRotationTranslationScaleInto, multiplyInto, type Mat4 } from "../math/mat4.js";
 import type { LoopBudget } from "./budget.js";
+import { ClipPlayers, type PlayableChannel } from "./clips.js";
 import { DynamicEntities, type DynamicHost, type PrefabRuntime } from "./dynamic.js";
+import { ParticleSim, type ParticleDraw } from "./particles.js";
 import { RuntimeInternalError } from "./errors.js";
 import { INERT_GAME, type GameHooks } from "./game.js";
 import { TimerList, type TimerOwner } from "./timers.js";
@@ -56,6 +58,8 @@ export const CONTEXT_MEMBERS = [
   "setVisible",
   "setParam",
   "setCamera",
+  "selectCamera",
+  "particleCount",
   "setLight",
   "spawn",
   "destroy",
@@ -322,7 +326,13 @@ export class World {
   readonly ctx: object;
   /** Entity records of the named entities by static index (`ctx.e`). Spawned entities: {@link World.dynamic}. */
   readonly entities: readonly EntityRecord[];
-  readonly camera: CameraRecord;
+  /** The active camera (decision 0154). `ctx.cam` reads this. */
+  private activeCamera: CameraRecord = {
+    position: CAMERA_POSITION,
+    target: null,
+    rotation: IDENTITY,
+    projection: { kind: "perspective", fov_y: DEFAULT_FOV_Y, near: DEFAULT_NEAR, far: DEFAULT_FAR },
+  };
   /** The scene state (`ctx.s`). */
   readonly sceneState: Record<string, unknown>;
   /** The spawned entities: queues, flush points, records (decision 0064). */
@@ -361,6 +371,13 @@ export class World {
   private readonly loopBudget: LoopBudget = { n: 0 };
   /** The scene's `after`/`every` timers (decision 0142). */
   readonly timers = new TimerList();
+  /** Living particles (decision 0155). */
+  private readonly particles = new ParticleSim();
+  /** Playing glTF clips (decision 0156). */
+  private readonly clips = new ClipPlayers();
+  private readonly cameraByName = new Map<string, CameraRecord>();
+  private readonly cameraMeta = new Map<CameraRecord, { name: string; symbol: string; exposure: number; hasTarget: boolean }>();
+  private nextRandom: () => number = Math.random;
   /** `manifest.preview.loopBudget`: what {@link resetBudget} refills the counter with; `undefined` outside a preview. */
   private readonly loopBudgetLimit: number | undefined;
   private readonly materialParamTypes: ReadonlyMap<string, readonly { readonly name: string; readonly type: string }[]>;
@@ -432,19 +449,39 @@ export class World {
       host,
     });
 
-    const camera = this.structure.camera;
-    this.camera = {
-      position: CAMERA_POSITION,
-      target: null,
-      rotation: IDENTITY,
-      projection:
-        camera.projection === "perspective"
-          ? { kind: "perspective", fov_y: DEFAULT_FOV_Y, near: DEFAULT_NEAR, far: DEFAULT_FAR }
-          : { kind: "orthographic", height: DEFAULT_HEIGHT, near: DEFAULT_NEAR, far: DEFAULT_FAR },
-    };
+    for (const camera of this.manifest.scene.cameras) {
+      const record: CameraRecord = {
+        position: { x: CAMERA_POSITION.x, y: CAMERA_POSITION.y, z: CAMERA_POSITION.z },
+        target: null,
+        rotation: { x: 0, y: 0, z: 0, w: 1 },
+        projection:
+          camera.projection === "perspective"
+            ? { kind: "perspective", fov_y: DEFAULT_FOV_Y, near: DEFAULT_NEAR, far: DEFAULT_FAR }
+            : { kind: "orthographic", height: DEFAULT_HEIGHT, near: DEFAULT_NEAR, far: DEFAULT_FAR },
+      };
+      this.cameraByName.set(camera.name, record);
+      this.cameraMeta.set(record, {
+        name: camera.name,
+        symbol: camera.symbol,
+        exposure: camera.exposure,
+        hasTarget: camera.hasTarget,
+      });
+      if (camera.active) this.activeCamera = record;
+    }
+    if (!this.cameraByName.has(this.structure.camera.name)) {
+      this.cameraByName.set(this.structure.camera.name, this.activeCamera);
+      this.cameraMeta.set(this.activeCamera, {
+        name: this.structure.camera.name,
+        symbol: this.structure.camera.symbol,
+        exposure: this.structure.camera.exposure,
+        hasTarget: this.structure.camera.hasTarget,
+      });
+    }
 
     this.sceneState = stateObject(this.manifest.scene.state);
     const services = options.services ?? INERT_SERVICES;
+    this.nextRandom = () => services.random();
+    for (const entity of this.structure.entities) this.trackMotion(entity.index, entity);
     const game = services.game ?? INERT_GAME;
     const timerOwner = (owner: unknown): TimerOwner => {
       if (owner === null || owner === undefined) return null;
@@ -469,7 +506,6 @@ export class World {
     const members = {
       s: this.sceneState,
       e: this.entities,
-      cam: this.camera,
       setTransform: (entity: unknown, field: unknown, value: unknown): void => {
         this.setTransform(entity, field, value);
       },
@@ -482,6 +518,10 @@ export class World {
       setCamera: (field: unknown, value: unknown): void => {
         this.setCamera(field, value);
       },
+      selectCamera: (name: unknown): void => {
+        this.selectCamera(name);
+      },
+      particleCount: (): number => this.particles.count(),
       setLight: (entity: unknown, field: unknown, value: unknown): void => {
         this.setLight(entity, field, value);
       },
@@ -564,6 +604,7 @@ export class World {
       audio: services.audio ?? SILENT_AUDIO,
       hud: services.hud ?? NO_HUD,
     };
+    Object.defineProperty(members, "cam", { enumerable: true, get: () => this.camera });
     Object.defineProperty(members, "frame", { enumerable: true, get: () => this.frameValues });
     this.ctx = guarded(members, "ctx");
     holder.ctx = this.ctx;
@@ -587,9 +628,48 @@ export class World {
     this.timers.advance(delta, (owner) => this.dynamic.alive(owner.ref));
   }
 
+  /** Samples every playing clip forward by `delta` seconds (decision 0156). Pause skips phase 3, so clips pause too. */
+  advanceClips(delta: number): void {
+    this.clips.advance(delta, (slot, channel, value) => {
+      this.writeChannel(slot, channel, value);
+    });
+  }
+
+  /** Spawns and integrates particles (decision 0155). */
+  advanceParticles(delta: number): void {
+    this.propagate();
+    this.particles.advance(delta, this.nextRandom, (slot) => {
+      const matrix = this.worlds[slot];
+      if (matrix === undefined) return { x: 0, y: 0, z: 0 };
+      return { x: matrix[12] ?? 0, y: matrix[13] ?? 0, z: matrix[14] ?? 0 };
+    });
+  }
+
   /** `ctx.frame` as generated code sees it. */
   get frame(): FrameValues {
     return this.frameValues;
+  }
+
+  /** The active camera. */
+  get camera(): CameraRecord {
+    return this.activeCamera;
+  }
+
+  /** Name, symbol, exposure and whether the active camera has a target (decision 0154). */
+  cameraInfo(): { name: string; symbol: string; exposure: number; hasTarget: boolean } {
+    return (
+      this.cameraMeta.get(this.activeCamera) ?? {
+        name: this.structure.camera.name,
+        symbol: this.structure.camera.symbol,
+        exposure: this.structure.camera.exposure,
+        hasTarget: this.structure.camera.hasTarget,
+      }
+    );
+  }
+
+  /** Living particles, grouped by the mesh they draw with (decision 0155). */
+  particleDraws(): readonly ParticleDraw[] {
+    return this.particles.draws();
   }
 
   /** Incremented by every `setVisible` that changed a value: the draw list depends on it. */
@@ -609,6 +689,8 @@ export class World {
       init(this.ctx);
       // Bindings are evaluated once after `init`, so bound fields have values before the first frame.
       afterInit?.();
+      // A clip is the pose at t = 0 once the defaults are written (decision 0156).
+      this.poseClips(0);
     } finally {
       this.initialising = false;
     }
@@ -791,6 +873,7 @@ export class World {
     this.transformDirty[slot] = 1;
     this.transformsPending = true;
     this.worldChanged[slot] = 0;
+    this.trackMotion(slot, resolved);
   }
 
   private unregisterDynamic(slot: number, record: EntityRecord): void {
@@ -800,6 +883,8 @@ export class World {
     this.worlds[slot] = undefined;
     this.transformDirty[slot] = 0;
     this.worldChanged[slot] = 0;
+    this.particles.remove(slot);
+    this.clips.remove(slot);
   }
 
   // ---- the setters of the context ----
@@ -994,8 +1079,8 @@ export class World {
       case "position":
       case "target": {
         if (!isVec3(value)) throw new RuntimeInternalError(`ctx.setCamera("${name}", ${describeValue(value)}) expects a vec3.`);
-        if (name === "target" && !this.structure.camera.hasTarget) {
-          throw new RuntimeInternalError(`ctx.setCamera("target", …) was called for camera '${this.structure.camera.name}', which declares no target.`);
+        if (name === "target" && !this.cameraInfo().hasTarget) {
+          throw new RuntimeInternalError(`ctx.setCamera("target", …) was called for camera '${this.cameraInfo().name}', which declares no target.`);
         }
         const next: CameraRecord = { ...camera, [name]: value };
         if (!this.acceptCamera(next, name, value)) return;
@@ -1062,15 +1147,84 @@ export class World {
   }
 
   private reportCamera(message: string): void {
-    const symbol = this.structure.camera.symbol;
-    const span = spanOfSymbol(this.manifest, symbol);
+    const info = this.cameraInfo();
+    const span = spanOfSymbol(this.manifest, info.symbol);
     this.report(
       makeRuntimeDiagnostic("E8011", {
         phase: this.phase,
-        message: `Invalid value for camera '${this.structure.camera.name}': ${message}`,
+        message: `Invalid value for camera '${info.name}': ${message}`,
         source: span === undefined ? null : resolveSpan(this.manifest, span),
       }),
     );
+  }
+
+  /** `ctx.selectCamera(name)` (decision 0154). */
+  selectCamera(name: unknown): void {
+    if (typeof name !== "string") {
+      throw new RuntimeInternalError(`ctx.selectCamera got ${describeValue(name)}; expected a camera name.`);
+    }
+    const record = this.cameraByName.get(name);
+    if (record === undefined) {
+      throw new RuntimeInternalError(`ctx.selectCamera(${JSON.stringify(name)}) names a camera this scene does not have.`);
+    }
+    this.activeCamera = record;
+  }
+
+  /** Writes `field` of the named camera without changing which camera is active. */
+  setCameraOn(name: string, field: unknown, value: unknown): void {
+    const record = this.cameraByName.get(name);
+    if (record === undefined) {
+      this.setCamera(field, value);
+      return;
+    }
+    const previous = this.activeCamera;
+    this.activeCamera = record;
+    try {
+      this.setCamera(field, value);
+    } finally {
+      this.activeCamera = previous;
+    }
+  }
+
+  private poseClips(time: number): void {
+    this.clips.pose((slot, channel, value) => {
+      this.writeChannel(slot, channel, value);
+    }, time);
+  }
+
+  private writeChannel(slot: number, channel: PlayableChannel, value: readonly number[]): void {
+    const record = this.records[slot];
+    if (record === undefined) return;
+    if (channel.path === "rotation") {
+      this.applyTransform(slot, record, "rotation", {
+        x: value[0] ?? 0,
+        y: value[1] ?? 0,
+        z: value[2] ?? 0,
+        w: value[3] ?? 1,
+      });
+      return;
+    }
+    const vec = { x: value[0] ?? 0, y: value[1] ?? 0, z: value[2] ?? 0 };
+    this.applyTransform(slot, record, channel.path === "translation" ? "position" : "scale", vec);
+  }
+
+  private trackMotion(slot: number, resolved: ResolvedEntity): void {
+    if (resolved.particles !== undefined) {
+      this.particles.add({
+        slot,
+        rate: resolved.particles.rate,
+        lifetime: resolved.particles.lifetime,
+        speed: resolved.particles.speed,
+        size: resolved.particles.size,
+        gravity: resolved.particles.gravity,
+        meshId: resolved.mesh?.id ?? null,
+        materialId: resolved.instance?.material.id ?? null,
+        instanceIndex: resolved.instance?.index ?? null,
+      });
+    }
+    if (resolved.clip !== undefined) {
+      this.clips.add({ slot, duration: resolved.clip.duration, channels: resolved.clip.channels });
+    }
   }
 
   /**

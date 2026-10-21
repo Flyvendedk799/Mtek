@@ -98,6 +98,8 @@ fn schema_rows() -> Vec<Row> {
         ("Entity", "body", "body", None, "C", None),
         ("Entity", "collider", "collider", None, "C", None),
         ("Entity", "tag", "string", None, "C", None),
+        ("Entity", "particles", "emitter", None, "C", None),
+        ("Entity", "clip", "string", None, "C", None),
         // 3.3 Camera (spec/scenes.md section 3)
         (
             "Camera",
@@ -345,6 +347,47 @@ fn schema_rows() -> Vec<Row> {
             "C",
             Some("0\u{2026}1"),
         ),
+        // Emitter (decision 0155)
+        (
+            "Emitter",
+            "rate",
+            "f32",
+            Some("0.0"),
+            "C",
+            Some("\u{2265} 0"),
+        ),
+        (
+            "Emitter",
+            "lifetime",
+            "f32",
+            Some("1.0"),
+            "C",
+            Some("> 0, finite"),
+        ),
+        (
+            "Emitter",
+            "speed",
+            "f32",
+            Some("1.0"),
+            "C",
+            Some("\u{2265} 0"),
+        ),
+        (
+            "Emitter",
+            "size",
+            "f32",
+            Some("0.05"),
+            "C",
+            Some("> 0, finite"),
+        ),
+        (
+            "Emitter",
+            "gravity",
+            "f32",
+            Some("0.0"),
+            "C",
+            Some("finite"),
+        ),
     ]
 }
 
@@ -394,6 +437,7 @@ fn schemas_have_exactly_the_specified_fields() {
         "Kinematic",
         "BoxCollider",
         "SphereCollider",
+        "Emitter",
     ];
     let mut registered: Vec<&str> = registry.schemas.iter().map(|s| s.name).collect();
     registered.sort_unstable();
@@ -438,6 +482,7 @@ fn schema_categories_match_the_specification() {
         ("Kinematic", SchemaCategory::Body),
         ("BoxCollider", SchemaCategory::Collider),
         ("SphereCollider", SchemaCategory::Collider),
+        ("Emitter", SchemaCategory::Emitter),
     ];
     for (name, category) in expected {
         assert_eq!(
@@ -1030,6 +1075,8 @@ fn intrinsic_rows() -> Vec<IntrinsicRow> {
     rows.push(("pause", &["() -> ()"], Domain::Cpu, false));
     rows.push(("resume", &["() -> ()"], Domain::Cpu, false));
     rows.push(("paused", &["() -> bool"], Domain::Cpu, false));
+    rows.push(("particle_count", &["() -> i32"], Domain::Cpu, false));
+    rows.push(("set_camera", &["(camera name) -> ()"], Domain::Cpu, false));
     // Saved state and settings (decisions 0145 and 0146).
     rows.push(("save", &["() -> ()"], Domain::Cpu, false));
     rows.push(("load", &["() -> bool"], Domain::Cpu, false));
@@ -1081,12 +1128,14 @@ fn every_intrinsic_row_of_section_6_is_present() {
         "stop_music",
         "set_volume",
         "set_muted",
+        "set_camera",
     ] {
         assert!(registry.intrinsic(name).unwrap().handlers_only, "{name}");
     }
     assert!(!registry.intrinsic("is_muted").unwrap().handlers_only);
     assert!(!registry.intrinsic("alive").unwrap().handlers_only);
     assert!(!registry.intrinsic("paused").unwrap().handlers_only);
+    assert!(!registry.intrinsic("particle_count").unwrap().handlers_only);
 }
 
 #[test]

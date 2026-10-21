@@ -1,0 +1,15 @@
+[
+  {
+    "code": "MTEK-E5015",
+    "file": "src/main.mtek",
+    "startByte": 128,
+    "endByte": 132,
+    "message": "`set_camera` takes the name of a camera of this scene, but its argument is the entity 'Cube'.",
+    "expected": "the name of a camera",
+    "actual": "the entity 'Cube'",
+    "notes": [
+      "the camera to switch to is fixed where `set_camera` is written",
+      "help: the cameras of this module are 'Main'"
+    ]
+  }
+]

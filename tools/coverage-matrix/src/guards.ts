@@ -123,13 +123,13 @@ export const AREAS: readonly Area[] = [
   {
     id: "scenes",
     title: "Scenes, cameras and scene objects",
-    features: ["scenes", "scene-fields", "scene-objects", "scene-object:*", "schema:Scene", "schema:Camera", "schema:Perspective", "schema:Orthographic", "camera/*"],
-    codes: ["E5001", "E5002", "E5003", "E5006", "E5010", "E5011", "E5012", "E5013", "E5014", "E9006"],
+    features: ["scenes", "scene-fields", "scene-objects", "scene-object:*", "schema:Scene", "schema:Camera", "schema:Perspective", "schema:Orthographic", "camera/*", "function:set_camera"],
+    codes: ["E5001", "E5002", "E5003", "E5006", "E5010", "E5011", "E5012", "E5013", "E5014", "E5015", "E5016", "E9006"],
   },
   {
     id: "entities",
     title: "Entities, meshes and transforms",
-    features: ["entities", "entity-fields", "schema:Entity", "schema:Box", "schema:Sphere", "schema:Plane", "entity/nested", "entity-field/*", "type:mesh"],
+    features: ["entities", "entity-fields", "schema:Entity", "schema:Box", "schema:Sphere", "schema:Plane", "schema:Emitter", "entity/nested", "entity-field/*", "type:mesh", "function:particle_count"],
     codes: ["E5001", "E5006", "E5020", "E5081", "E5090", "E5092"],
   },
   {

@@ -126,6 +126,9 @@ pub enum Ty {
     /// The argument of `go_to`: the name of a scene of the entry module (decision 0141). Only
     /// that argument has this type; a scene is not a value anywhere else.
     SceneName,
+    /// The argument of `set_camera`: the name of a camera of the current scene (decision 0154).
+    /// Only that argument has this type; a camera is not a value anywhere else.
+    CameraName,
     /// The result of `tagged(tag)` (decision 0150): only the iterable of a `for` loop has it.
     TaggedEntities,
     /// The value of a descriptor literal of a user material (`Pulse { .. }`,
@@ -547,6 +550,7 @@ impl TyInterner {
             TypeRef::Descriptor(category) => Ty::Descriptor(category),
             TypeRef::PrefabDescriptor => Ty::PrefabDescriptor,
             TypeRef::SceneName => Ty::SceneName,
+            TypeRef::CameraName => Ty::CameraName,
             TypeRef::TaggedEntities => Ty::TaggedEntities,
         };
         self.intern(ty)
@@ -582,6 +586,7 @@ impl TyInterner {
             Ty::Descriptor(category) => TypeRef::Descriptor(category),
             Ty::PrefabDescriptor => TypeRef::PrefabDescriptor,
             Ty::SceneName => TypeRef::SceneName,
+            Ty::CameraName => TypeRef::CameraName,
             Ty::TaggedEntities => TypeRef::TaggedEntities,
             Ty::Error
             | Ty::Array { .. }
@@ -823,6 +828,7 @@ mod tests {
             TypeRef::Descriptor(SchemaCategory::Projection),
             TypeRef::PrefabDescriptor,
             TypeRef::SceneName,
+            TypeRef::CameraName,
             TypeRef::TaggedEntities,
         ]);
         for type_ref in refs {

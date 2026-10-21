@@ -347,6 +347,8 @@ function entityFact(ctx: Context, entity: JsonObject): void {
     if (desc !== undefined && desc["sensor"] === true) add(ctx, "entity/sensor-collider");
     add(ctx, "entity/collider");
   }
+  if (entity["particles"] !== undefined) add(ctx, "schema:Emitter", "entity-field/particles");
+  if (typeof entity["clip"] === "string") add(ctx, "entity-field/clip");
   const prefab = obj(entity, "prefab");
   if (prefab !== undefined) {
     add(ctx, "prefab-instances", "entity/prefab-instance");

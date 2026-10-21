@@ -173,6 +173,9 @@ recorded here before code depends on it (blueprint §15).
 | 0151 | Reads of `position`, `rotation`, `scale` and `visible` through an `entity_ref`; every other field and every write stays `E5074`; a dead reference reads as zero |
 | 0152 | `choose(items) -> T` and `shuffle(items) -> array<T, N>`: one draw and Fisher-Yates, from the array argument |
 | 0153 | Input polling: `key_pressed`, `key_released`, `pointer_position` and `is_pointer_down`, beside `is_key_down` |
+| 0154 | Camera switching: `set_camera(Name)` among the cameras of the scene (`E5015`); every camera stays a record and `ctx.cam` follows the active one |
+| 0155 | Particles: `particles: Emitter { … }` (at most 64, upper hemisphere, gravity), drawn as camera-facing copies of the entity's mesh, and `particle_count()` |
+| 0156 | Animated GLB clips: LINEAR and STEP translation, rotation and scale play (`clip: "Name"`); skins, morphs and cubic spline stay `E7019`; a clip that cannot play is `E5016` |
 | 0160 | Audio (small-game plan phase 3): `asset.sound` validated like images (`E7101`, `E7102`), a CPU-only `sound` type, the intrinsics `play`, `play_at`, `play_music`, `stop_music`, `set_volume`, `set_muted`, `is_muted`, constant ranges (`E5501`) and run-time clamping (`W8201`), decoding failures as warnings (`W8202`), and the autoplay unlock on the first gesture |
 | 0161 | The prebuilt runtime in `crates/mtek-cli/prebuilt` (small-game plan phase 8.1): `build.rs` embeds `dist/` when built, else the prebuilt copy, so a fresh clone's `mtek build` works without Node; `npm run check:prebuilt` fails when the sources changed since the copy was written; Node.js `>=22.18.0` instead of exactly 24 |
 | 0162 | Browser support (small-game plan phase 8.2): WebGPU only with no WebGL2 backend, Chrome/Edge/Firefox/Safari as WebGPU browsers with evidence only where a run exists, the unsupported-browser panel for `E8004`/`E8005`, the Firefox zero-sized-canvas fix, an opt-in WebKit project |

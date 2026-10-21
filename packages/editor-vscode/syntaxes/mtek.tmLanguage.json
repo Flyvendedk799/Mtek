@@ -707,7 +707,7 @@
     },
     "builtin-function": {
       "name": "support.function.builtin.mtek",
-      "match": "(?<![A-Za-z0-9_.])(?:pointer_position|is_pointer_down|destroy_tagged|nearest_tagged|count_tagged|first_tagged|inverse_sqrt|key_released|random_range|clear_saved|is_key_down|key_pressed|play_music|random_int|set_volume|smoothstep|stop_music|normalize|set_muted|transpose|distance|is_muted|saturate|degrees|destroy|has_tag|play_at|radians|reflect|shuffle|chance|choose|length|paused|random|resume|sample|tagged|alive|atan2|clamp|cross|floor|fract|go_to|pause|print|reset|round|spawn|trunc|acos|asin|atan|ceil|exp2|load|log2|play|save|sign|sqrt|step|abs|cos|dot|exp|log|max|min|mix|pow|sin|tan)\\s*(?=\\()"
+      "match": "(?<![A-Za-z0-9_.])(?:pointer_position|is_pointer_down|destroy_tagged|nearest_tagged|particle_count|count_tagged|first_tagged|inverse_sqrt|key_released|random_range|clear_saved|is_key_down|key_pressed|play_music|random_int|set_camera|set_volume|smoothstep|stop_music|normalize|set_muted|transpose|distance|is_muted|saturate|degrees|destroy|has_tag|play_at|radians|reflect|shuffle|chance|choose|length|paused|random|resume|sample|tagged|alive|atan2|clamp|cross|floor|fract|go_to|pause|print|reset|round|spawn|trunc|acos|asin|atan|ceil|exp2|load|log2|play|save|sign|sqrt|step|abs|cos|dot|exp|log|max|min|mix|pow|sin|tan)\\s*(?=\\()"
     },
     "builtin-type": {
       "name": "support.type.builtin.mtek",
@@ -715,7 +715,7 @@
     },
     "schema": {
       "name": "support.class.schema.mtek",
-      "match": "(?<![A-Za-z0-9_.])(?:DirectionalLight|SphereCollider|Orthographic|BoxCollider|Perspective|PointLight|Kinematic|Dynamic|Camera|Entity|Sphere|Sprite|Static|Plane|Scene|Unlit|Box|Pbr)(?![A-Za-z0-9_])"
+      "match": "(?<![A-Za-z0-9_.])(?:DirectionalLight|SphereCollider|Orthographic|BoxCollider|Perspective|PointLight|Kinematic|Dynamic|Emitter|Camera|Entity|Sphere|Sprite|Static|Plane|Scene|Unlit|Box|Pbr)(?![A-Za-z0-9_])"
     },
     "call": {
       "match": "(?<![A-Za-z0-9_.])([A-Za-z_][A-Za-z0-9_]*)\\s*(?=\\()",

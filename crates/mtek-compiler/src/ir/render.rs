@@ -532,7 +532,7 @@ impl Tree<'_> {
             BindingTarget::Transform { entity, field } => format!("entity#{entity}.{field}"),
             BindingTarget::Visible { entity } => format!("entity#{entity}.visible"),
             BindingTarget::Param { entity, name } => format!("entity#{entity}.material.{name}"),
-            BindingTarget::Camera { field } => format!("camera.{field}"),
+            BindingTarget::Camera { camera, field } => format!("camera {camera}.{field}"),
             BindingTarget::Light { entity, field } => format!("entity#{entity}.light.{field}"),
         };
         let deps: Vec<String> = binding

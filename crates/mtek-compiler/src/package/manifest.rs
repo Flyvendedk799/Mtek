@@ -639,6 +639,44 @@ pub struct Entity {
     /// `tag: "name";` (decision 0150); absent when the entity has none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tag: Option<String>,
+    /// `particles: Emitter { .. }` (decision 0155); absent when the entity emits none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub particles: Option<Particles>,
+    /// A glTF clip that moves this entity (decision 0156); absent when it plays none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clip: Option<Clip>,
+}
+
+/// A particle emitter (decision 0155). The runtime keeps at most 64 particles.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Particles {
+    pub rate: Num,
+    pub lifetime: Num,
+    pub speed: Num,
+    pub size: Num,
+    pub gravity: Num,
+}
+
+/// A sampled TRS clip (decision 0156).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Clip {
+    pub name: String,
+    pub duration: Num,
+    pub channels: Vec<ClipChannel>,
+}
+
+/// One channel of a [`Clip`]. `path` is `translation`, `rotation` or `scale`; `interpolation`
+/// is `linear` or `step`. `values` holds `3` floats per key for translation and scale and `4`
+/// for rotation, in the same order as `times`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ClipChannel {
+    pub path: String,
+    pub interpolation: String,
+    pub times: Vec<Num>,
+    pub values: Vec<Num>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -669,6 +707,12 @@ pub struct Prefab {
     /// The tag every instance carries (decision 0150); absent when the prefab has none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tag: Option<String>,
+    /// The emitter every instance starts with (decision 0155); absent when the prefab has none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub particles: Option<Particles>,
+    /// The clip every instance plays (decision 0156); absent when the prefab plays none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clip: Option<Clip>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -800,11 +844,28 @@ pub struct Binding {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "lowercase")]
 pub enum BindingTarget {
-    Transform { entity: u32, field: String },
-    Visible { entity: u32 },
-    Param { instance: u32, name: String },
-    Camera { field: String },
-    Light { entity: u32, field: String },
+    Transform {
+        entity: u32,
+        field: String,
+    },
+    Visible {
+        entity: u32,
+    },
+    Param {
+        instance: u32,
+        name: String,
+    },
+    Camera {
+        field: String,
+        /// The camera the binding writes (decision 0154). Absent on manifests written before
+        /// camera switching, which bound the one active camera.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        camera: Option<String>,
+    },
+    Light {
+        entity: u32,
+        field: String,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

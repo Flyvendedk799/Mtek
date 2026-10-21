@@ -115,6 +115,8 @@ fn instantiate_scene(
             entity.body = template_entity.body.clone();
             entity.collider = template_entity.collider.clone();
             entity.tag = template_entity.tag.clone();
+            entity.particles = template_entity.particles.clone();
+            entity.clip = template_entity.clip.clone();
         }
         for child in &template.children {
             let mut copy = sub.entity(child)?;
@@ -418,7 +420,8 @@ impl Substitution<'_> {
                 entity: self.index(*entity),
                 name: name.clone(),
             },
-            BindingTarget::Camera { field } => BindingTarget::Camera {
+            BindingTarget::Camera { camera, field } => BindingTarget::Camera {
+                camera: camera.clone(),
                 field: field.clone(),
             },
             BindingTarget::Light { entity, field } => BindingTarget::Light {

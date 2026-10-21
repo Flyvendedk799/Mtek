@@ -54,6 +54,8 @@ pub enum SchemaCategory {
     Body,
     Collider,
     Projection,
+    /// `Emitter { .. }` on an entity (decision 0155).
+    Emitter,
     /// `Scene`, `Entity` and `Camera`: the declarations whose fields are written directly.
     Object,
 }
@@ -68,6 +70,7 @@ impl SchemaCategory {
             SchemaCategory::Body => "body",
             SchemaCategory::Collider => "collider",
             SchemaCategory::Projection => "projection",
+            SchemaCategory::Emitter => "emitter",
             SchemaCategory::Object => "object",
         }
     }
@@ -114,6 +117,8 @@ pub enum TypeRef {
     PrefabDescriptor,
     /// The argument of `go_to`: the name of a scene of the entry module (decision 0141).
     SceneName,
+    /// The argument of `set_camera`: the name of a camera of the current scene (decision 0154).
+    CameraName,
     /// The result of `tagged(tag)`: the entities a `for` loop runs over (decision 0150).
     TaggedEntities,
 }
@@ -146,6 +151,7 @@ impl TypeRef {
             TypeRef::Descriptor(category) => category.as_str(),
             TypeRef::PrefabDescriptor => "prefab descriptor",
             TypeRef::SceneName => "scene name",
+            TypeRef::CameraName => "camera name",
             TypeRef::TaggedEntities => "tagged entities",
         }
     }

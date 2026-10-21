@@ -306,7 +306,7 @@
     {
       "id": "scenes-scope",
       "area": "Scenes and entities",
-      "restriction": "One scene runs at a time (`go_to(Scene)` switches between the scenes of a program); no camera switching, no run-time re-parenting, no spawned prefabs with children or nested prefab instances inside prefabs, no user-defined components, queries or systems, no render interpolation, no text in the 3D world, no UI layout or text input (screen-space text and buttons are the HUD, spec/hud.md).",
+      "restriction": "One scene runs at a time (`go_to(Scene)` switches between the scenes of a program, and `set_camera(Name)` switches which of that scene's cameras draws); no run-time re-parenting, no spawned prefabs with children or nested prefab instances inside prefabs, no user-defined components, queries or systems, no render interpolation, no text in the 3D world, no UI layout or text input (screen-space text and buttons are the HUD, spec/hud.md).",
       "reason": "Not in v0.1 (spec/scenes.md section 14). Scene switching landed with decision 0141; `component`, `query` and `system` are reserved words (E0013).",
       "codes": [
         "E0013"
@@ -516,15 +516,16 @@
     {
       "id": "gltf-animation",
       "area": "Assets",
-      "restriction": "No skinning, morph targets or animations; no sparse accessors.",
-      "reason": "Decision 0015.",
+      "restriction": "No skinning, morph targets, cubic-spline interpolation or sparse accessors. A node clip of translation, rotation and scale with LINEAR or STEP interpolation plays (decision 0156).",
+      "reason": "Decision 0015 rejected every animation. Decision 0156 plays TRS clips and keeps the rest of that rejection.",
       "codes": [
         "E7008",
         "E7019",
         "E7011"
       ],
       "decisions": [
-        "0015"
+        "0015",
+        "0156"
       ],
       "source": {
         "file": "spec/decisions/0015-asset-strictness.md",

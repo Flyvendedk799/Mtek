@@ -1155,7 +1155,10 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       },
       phase3_update: (delta) => {
         this.framePhase = "runtime:update";
-        // Timers first (decision 0142): the scheduler skips phase 3 while the game is paused.
+        // Clips and particles run in phase 3, so pause stops them, and `update` sees the new count
+        // (decisions 0155 and 0156). Timers follow (decision 0142).
+        this.deps.scene.world.advanceClips(delta);
+        this.deps.scene.world.advanceParticles(delta);
         this.deps.scene.world.advanceTimers(delta);
         this.behaviors.update(delta);
       },

@@ -106,7 +106,10 @@ fn check_invariants(text: &str, lexed: &Lexed) {
             (TokenKind::Ident, TokenValue::Ident { .. }) => true,
             (TokenKind::Int, TokenValue::Int { .. } | TokenValue::Malformed) => true,
             (TokenKind::Float, TokenValue::Float { .. } | TokenValue::Malformed) => true,
-            (TokenKind::String, TokenValue::String(_) | TokenValue::Malformed) => true,
+            (
+                TokenKind::String,
+                TokenValue::String(_) | TokenValue::Interpolated(_) | TokenValue::Malformed,
+            ) => true,
             (TokenKind::Color, TokenValue::Color { .. } | TokenValue::Malformed) => true,
             (
                 TokenKind::Ident

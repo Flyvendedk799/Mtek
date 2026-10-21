@@ -1038,10 +1038,57 @@
           ],
           "order": 0,
           "span": 12
+        },
+        {
+          "id": 1,
+          "target": {
+            "kind": "camera",
+            "field": "position",
+            "camera": "Main"
+          },
+          "deps": [
+            {
+              "kind": "frame",
+              "name": "time"
+            }
+          ],
+          "order": 1,
+          "span": 13
         }
       ],
       "span": 11,
-      "tag": "crate"
+      "tag": "crate",
+      "particles": {
+        "rate": 1,
+        "lifetime": 1,
+        "speed": 1,
+        "size": 0.05,
+        "gravity": 0
+      },
+      "clip": {
+        "name": "Spin",
+        "duration": 1,
+        "channels": [
+          {
+            "path": "rotation",
+            "interpolation": "linear",
+            "times": [
+              0,
+              1
+            ],
+            "values": [
+              0,
+              0,
+              0,
+              1,
+              0,
+              1,
+              0,
+              0
+            ]
+          }
+        ]
+      }
     },
     {
       "symbol": "src/props.mtek::Marble",
@@ -1232,7 +1279,36 @@
         ],
         "update": true,
         "fixedUpdate": true,
-        "tag": "player"
+        "tag": "player",
+        "particles": {
+          "rate": 24,
+          "lifetime": 0.8,
+          "speed": 1.6,
+          "size": 0.12,
+          "gravity": 3
+        },
+        "clip": {
+          "name": "Spin",
+          "duration": 1,
+          "channels": [
+            {
+              "path": "translation",
+              "interpolation": "step",
+              "times": [
+                0,
+                1
+              ],
+              "values": [
+                0,
+                0,
+                0,
+                1,
+                0,
+                0
+              ]
+            }
+          ]
+        }
       },
       {
         "index": 1,
@@ -1507,7 +1583,8 @@
         "id": 3,
         "target": {
           "kind": "camera",
-          "field": "projection.fov_y"
+          "field": "projection.fov_y",
+          "camera": "Main"
         },
         "deps": [
           {

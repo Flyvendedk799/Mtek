@@ -9,7 +9,7 @@ runtime on browser WebGPU, and the toolchain works fully offline, without any AI
 ## Status: pre-alpha
 
 The specification is in [`spec/`](spec/README.md). The repository contains the compiler and the `mtek`
-command line tool (the commands are listed [below](#the-mtek-command)), the web runtime, ten
+command line tool (the commands are listed [below](#the-mtek-command)), the web runtime, eleven
 examples and the test and benchmark infrastructure. There is no release, no installer and no package
 registry: you build the tool from a checkout. **New here? Start with
 [`docs/getting-started.md`](docs/getting-started.md)**: install, create a project, run it, break it,
@@ -84,6 +84,7 @@ From a clean checkout:
 | [`examples/lane-runner`](examples/lane-runner) | three scenes, a saved best score and a difficulty setting (decisions 0140 to 0146) |
 | [`examples/small-game`](examples/small-game) | the `mtek new --template game` scaffold: a title, a run, tags, `choose`, a saved best score and pause (`spec/scenes.md`) |
 | [`examples/sprite-pop`](examples/sprite-pop) | a sprite on an orthographic camera, a fade, an easing bob and a pointer marker (decisions 0135, 0138 and 0170) |
+| [`examples/stage-show`](examples/stage-show) | two cameras, a spark fountain and a spinning GLB prop (decisions 0154, 0155 and 0156) |
 
 Global setup of the browser tests builds the first five with the CLI (`tests/browser/support/m3-fixtures.ts`, `m4-configurator.ts`, `product-configurator.ts`, `m5-playground.ts`, `m7-modular-scene.ts`).
 
@@ -123,7 +124,7 @@ node tests/browser/support/summarize-run.ts DIR                                 
 
 #### `mtek test`
 
-`mtek test [--allow-not-run] [--format human|json] [PATH]` runs the declarative fixtures `tests/*.test.toml` of a project (the ten examples have theirs) in Chromium with the launch configuration of the hardware project (`spec/tooling.md` section 6, decision 0074, report schema `spec/test-report.schema.json`). A fixture that cannot run (no WebGPU adapter, no Playwright, no Node) is reported **NOT-RUN**, never as a pass; that exits 1 unless `--allow-not-run`. It uses the browser variables above and these:
+`mtek test [--allow-not-run] [--format human|json] [PATH]` runs the declarative fixtures `tests/*.test.toml` of a project (the eleven examples have theirs) in Chromium with the launch configuration of the hardware project (`spec/tooling.md` section 6, decision 0074, report schema `spec/test-report.schema.json`). A fixture that cannot run (no WebGPU adapter, no Playwright, no Node) is reported **NOT-RUN**, never as a pass; that exits 1 unless `--allow-not-run`. It uses the browser variables above and these:
 
 | Variable | Effect |
 |---|---|

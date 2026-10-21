@@ -1,0 +1,13 @@
+// set_camera names a camera of this scene (decision 0154).
+scene Demo {
+    state which: i32 = 0;
+    camera Main {
+        active: true;
+    }
+    camera Wide {}
+
+    on key_down(Key.Digit2) {
+        which = 1;
+        set_camera(Wide);
+    }
+}

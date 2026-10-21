@@ -1008,8 +1008,9 @@ impl FnLowering<'_, '_> {
                 value: value.into(),
             }));
         }
-        // The argument of `go_to` (decision 0141): the scene's name, as a string constant.
-        if matches!(types.interner().get(ty), Ty::SceneName) {
+        // The argument of `go_to` (decision 0141) or `set_camera` (decision 0154): the
+        // declaration's name, as a string constant. Folding stores no value for either.
+        if matches!(types.interner().get(ty), Ty::SceneName | Ty::CameraName) {
             let mut inner = expr;
             while let AstExpr::Paren(next) = &inner.kind {
                 inner = next;
@@ -1018,7 +1019,7 @@ impl FnLowering<'_, '_> {
                 Some(Res::Def(def)) => self.lowering.resolution.def(def).map(|d| d.name.clone()),
                 _ => None,
             }
-            .ok_or_else(|| self.defect("a scene name that does not name a scene"))?;
+            .ok_or_else(|| self.defect("a scene or camera name that does not name one"))?;
             return Ok(make(ExprKind::Const {
                 value: Value::String(name),
             }));
@@ -1471,8 +1472,9 @@ impl Lowering<'_> {
                 .ok_or_else(|| format!("the binding {} has no source", info.id))?;
             let target = match &info.target {
                 crate::types::BindTarget::Field { object, field } => {
-                    if ctx.cameras.contains_key(object) {
+                    if let Some(name) = ctx.cameras.get(object) {
                         BindingTarget::Camera {
+                            camera: name.clone(),
                             field: field.clone(),
                         }
                     } else if field == "visible" {

@@ -25,10 +25,12 @@ The fields of an entity, a camera and a light, and whether a field can be bound 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
 | `body` | `body` | none | fixed at construction |  | A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; requires `collider`. |
+| `clip` | `string` | none | fixed at construction |  | The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. The clip is the only writer of the position, rotation and scale channels it has. |
 | `collider` | `collider` | none | fixed at construction |  | A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`. |
 | `light` | `light` | none | fixed at construction |  | A light component (`DirectionalLight`, `PointLight`). Its fields are writable and bindable as their schemas say. Named entities only. |
 | `material` | `material` | `Unlit {}` | fixed at construction |  | The material instance used to draw the mesh. The instance is construction-only; its parameters are writable and bindable. Requires `mesh`. |
 | `mesh` | `mesh` | none | fixed at construction |  | The mesh drawn for this entity: a mesh descriptor (`Box`, `Sphere`, `Plane`) or an asset mesh. |
+| `particles` | `emitter` | none | fixed at construction |  | A particle emitter (decision 0155). Up to 64 particles live at once. They are drawn with this entity's mesh as camera-facing billboards, in the colour of its material. Without a mesh the particles are still counted. |
 | `position` | `vec3` | `vec3(0.0, 0.0, 0.0)` | assignable, bindable |  | Position local to the parent, in metres. |
 | `rotation` | `quat` | `quat.identity()` | assignable, bindable |  | Rotation local to the parent. |
 | `scale` | `vec3` | `vec3(1.0, 1.0, 1.0)` | assignable, bindable | every component > 0, finite | Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body. |

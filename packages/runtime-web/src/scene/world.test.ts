@@ -108,6 +108,25 @@ describe("World records before init", () => {
     expect(ctx.frame).toEqual({ time: 0, delta: 0, index: 0 });
   });
 
+  it("selectCamera follows the named record and leaves the other", () => {
+    const json = minimalManifestJson();
+    const cameras = (json["scene"] as { cameras: Record<string, unknown>[] }).cameras;
+    const main = cameras[0];
+    if (main === undefined) throw new Error("minimal manifest has no camera");
+    cameras.push({ ...main, name: "Wide", symbol: "src/main.mtek::Demo.Wide", active: false });
+    const { world, ctx } = makeWorld(manifestFrom(json));
+    const wide = { x: 0, y: 3, z: 8 };
+    (ctx as unknown as { selectCamera(name: string): void; setCamera(field: string, value: unknown): void }).selectCamera("Wide");
+    ctx.setCamera("position", wide);
+    expect(world.cameraInfo().name).toBe("Wide");
+    expect(world.camera.position).toEqual(wide);
+    (ctx as unknown as { selectCamera(name: string): void }).selectCamera("Main");
+    expect(world.cameraInfo().name).toBe("Main");
+    expect(world.camera.position).toEqual({ x: 0, y: 0, z: 5 });
+    (ctx as unknown as { selectCamera(name: string): void }).selectCamera("Wide");
+    expect(world.camera.position).toEqual(wide);
+  });
+
   it("gives an orthographic camera the orthographic defaults", () => {
     const json = minimalManifestJson();
     const camera = (json["scene"] as { cameras: Record<string, unknown>[] }).cameras[0];

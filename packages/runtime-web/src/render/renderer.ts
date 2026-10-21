@@ -164,8 +164,6 @@ export class Renderer {
   private readonly writeLightCount: BlockWriter;
   private readonly writeAmbient: BlockWriter;
   private readonly writeExposure: BlockWriter;
-  /** `exposureScale` of the active camera's EV100 (construction-only, decision 0081). */
-  private readonly exposure: number;
   private readonly writeLights: BlockWriter;
   /** The value of `MtekFrame.lights`, refilled every frame. */
   private readonly packedLights: PackedLight[];
@@ -220,6 +218,9 @@ export class Renderer {
   private cullingEnabled = true;
   /** The instance vertex buffer (`INSTANCE_STRIDE` bytes per record); absent when no draw can ever be instanced. */
   private instanceBuffer: GPUBuffer | undefined;
+  /** Billboard matrices for particles (decision 0155). Created on the first frame that draws one. */
+  private particleBuffer: GPUBuffer | undefined;
+  private particleMirror = new Float32Array(0);
   /** How many instance records `instanceBuffer` holds. */
   private instanceRecords = 0;
   /** Whether draws can be instanced at all: instancing is on and some entity or prefab has a material with an instanced entry point. */
@@ -271,7 +272,6 @@ export class Renderer {
     this.writeLightCount = fieldWriter(frameWriters, "light_count", structure.frameLayout.id);
     this.writeAmbient = fieldWriter(frameWriters, "ambient", structure.frameLayout.id);
     this.writeExposure = fieldWriter(frameWriters, "exposure", structure.frameLayout.id);
-    this.exposure = exposureScale(structure.camera.exposure);
     this.writeLights = fieldWriter(frameWriters, "lights", structure.frameLayout.id);
     this.packedLights = emptyPackedLights(structure.lightCapacity);
     this.lightSource = {
@@ -474,6 +474,7 @@ export class Renderer {
     this.frameArena.dispose();
     this.objectArena.dispose();
     if (this.instanceBuffer !== undefined) this.options.registry.release(this.instanceBuffer);
+    if (this.particleBuffer !== undefined) this.options.registry.release(this.particleBuffer);
   }
 
   failMaterial(materialId: string, diagnostic: MtekDiagnostic): void {
@@ -556,6 +557,7 @@ export class Renderer {
     this.objectArena.flush(device.queue);
     const rendered = surface.render(clearColor, (pass) => {
       this.encode(pass, draws);
+      this.encodeParticles(pass);
     });
     this.drawCallsLastFrame = rendered ? this.batches.length : 0;
     this.instancedLastFrame = rendered ? instanced : 0;
@@ -747,12 +749,13 @@ export class Renderer {
   }
 
   private reportCamera(message: string): void {
-    const { manifest, structure, report } = this.options;
-    const span = spanOfSymbol(manifest, structure.camera.symbol);
+    const { manifest, report, world } = this.options;
+    const info = world.cameraInfo();
+    const span = spanOfSymbol(manifest, info.symbol);
     report(
       makeRuntimeDiagnostic("E8011", {
         phase: "runtime:render",
-        message: `Invalid value for camera '${structure.camera.name}': ${message}; the previous view is kept.`,
+        message: `Invalid value for camera '${info.name}': ${message}; the previous view is kept.`,
         source: span === undefined ? null : resolveSpan(manifest, span),
       }),
     );
@@ -769,7 +772,7 @@ export class Renderer {
       this.writeCameraPosition(memory, base, position);
       this.writeLightCount(memory, base, lightCount);
       this.writeAmbient(memory, base, this.ambient);
-      this.writeExposure(memory, base, this.exposure);
+      this.writeExposure(memory, base, exposureScale(this.options.world.cameraInfo().exposure));
       this.writeLights(memory, base, this.packedLights);
     });
     return viewProj;
@@ -895,6 +898,96 @@ export class Renderer {
       }
     }
   }
+
+  /**
+   * Camera-facing billboards for living particles (decision 0155). Each particle is one record of the
+   * instanced pipeline, because a shared object slot would show only the last write after submit.
+   * Opaque materials only: a translucent pipeline may still be compiling on the first frame.
+   */
+  private encodeParticles(pass: GPURenderPassEncoder): void {
+    const draws = this.options.world.particleDraws();
+    if (draws.length === 0) return;
+    const { device, pipelines, meshes, materials, plan, registry } = this.options;
+    const view = this.lastView;
+    const right = [view[0] ?? 1, view[4] ?? 0, view[8] ?? 0];
+    const up = [view[1] ?? 0, view[5] ?? 1, view[9] ?? 0];
+    const toward = [view[2] ?? 0, view[6] ?? 0, view[10] ?? 1];
+    let count = 0;
+    for (const draw of draws) count += draw.points.length;
+    count = Math.min(count, PARTICLE_DRAW_CAP);
+    if (count === 0) return;
+    if (this.particleMirror.length < count * INSTANCE_FLOATS) {
+      this.particleMirror = new Float32Array(count * INSTANCE_FLOATS);
+    }
+    const mirror = this.particleMirror;
+    const normal = new Float32Array(16);
+    let written = 0;
+    const batches: { pipeline: GPURenderPipeline; mesh: GpuMesh; attributes: readonly MtekVertexAttribute[]; instance: number; start: number; count: number }[] = [];
+    for (const draw of draws) {
+      const pipeline = pipelines.get(draw.materialId)?.instanced;
+      if (pipeline === undefined) continue;
+      let mesh: GpuMesh;
+      try {
+        mesh = meshes.get(draw.meshId);
+      } catch {
+        continue;
+      }
+      const material = this.options.structure.materials.find((item) => item.id === draw.materialId);
+      const attributes = material?.shader.vertexAttributes ?? (["position"] as const);
+      const start = written;
+      for (const point of draw.points) {
+        if (written >= count) break;
+        const base = written * INSTANCE_FLOATS;
+        const size = point.size;
+        writeBasis(mirror, base, right, size);
+        writeBasis(mirror, base + 4, toward, size);
+        writeBasis(mirror, base + 8, up, size);
+        mirror[base + 12] = point.x;
+        mirror[base + 13] = point.y;
+        mirror[base + 14] = point.z;
+        mirror[base + 15] = 1;
+        normalMatrixInto(normal, 0, mirror.subarray(base, base + 16));
+        mirror.set(normal, base + 16);
+        written += 1;
+      }
+      const batchCount = written - start;
+      if (batchCount > 0) batches.push({ pipeline, mesh, attributes, instance: draw.instanceIndex, start, count: batchCount });
+    }
+    if (written === 0) return;
+    if (this.particleBuffer === undefined || this.particleMirror.length > (this.particleBuffer.size ?? 0) / 4) {
+      if (this.particleBuffer !== undefined) registry.release(this.particleBuffer);
+      this.particleBuffer = registry.createBuffer({
+        label: "mtek particle billboards",
+        size: this.particleMirror.length * 4,
+        usage: BUFFER_USAGE_VERTEX | BUFFER_USAGE_COPY_DST,
+      });
+    }
+    registry.writeBuffer(device.queue, this.particleBuffer, 0, mirror.buffer as ArrayBuffer, 0, written * INSTANCE_STRIDE);
+    const objectGroup = this.objectArena.bindGroupDynamic(plan.object);
+    pass.setBindGroup(0, this.frameArena.bindGroupForSlot(this.frameSlot, plan.frame));
+    const dynamicOffset = this.dynamicOffset;
+    dynamicOffset[0] = 0;
+    pass.setBindGroup(2, objectGroup, dynamicOffset);
+    for (const batch of batches) {
+      pass.setPipeline(batch.pipeline);
+      pass.setBindGroup(1, materials.bindGroup(batch.instance));
+      for (let slot = 0; slot < batch.attributes.length; slot += 1) {
+        pass.setVertexBuffer(slot, vertexBufferOf(batch.mesh, batch.attributes[slot] as MtekVertexAttribute));
+      }
+      pass.setVertexBuffer(batch.attributes.length, this.particleBuffer);
+      pass.setIndexBuffer(batch.mesh.indexBuffer, batch.mesh.indexFormat);
+      pass.drawIndexed(batch.mesh.indexCount, batch.count, 0, 0, batch.start);
+    }
+  }
+}
+
+const PARTICLE_DRAW_CAP = 256;
+
+function writeBasis(out: Float32Array, at: number, axis: readonly number[], size: number): void {
+  out[at] = (axis[0] ?? 0) * size;
+  out[at + 1] = (axis[1] ?? 0) * size;
+  out[at + 2] = (axis[2] ?? 0) * size;
+  out[at + 3] = 0;
 }
 
 /**

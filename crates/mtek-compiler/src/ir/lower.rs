@@ -18,9 +18,9 @@
 use super::lower_fn::SceneCtx;
 use super::model::{
     Behavior, Binding, Body, BodyDesc, Camera, Collider, ColliderDesc, Const, Entity, Field, Item,
-    Light, LightKind, MaterialInstanceDesc, Mesh, MeshDesc, Module, Origin, Owner, Param, Program,
-    Projection, ProjectionDesc, Scene, SceneFields, Source, State, StructFieldItem, StructItem,
-    Symbol, UpdateClass, Value,
+    Light, LightKind, MaterialInstanceDesc, Mesh, MeshDesc, Module, Origin, Owner, Param,
+    Particles, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, State,
+    StructFieldItem, StructItem, Symbol, UpdateClass, Value,
 };
 use std::collections::BTreeMap;
 
@@ -54,9 +54,19 @@ pub(super) const CAMERA_FIELDS: [&str; 6] = [
     "exposure",
 ];
 /// The entity fields lowered into [`Entity`].
-pub(super) const ENTITY_FIELDS: [&str; 10] = [
-    "position", "rotation", "scale", "visible", "mesh", "material", "light", "body", "collider",
+pub(super) const ENTITY_FIELDS: [&str; 12] = [
+    "position",
+    "rotation",
+    "scale",
+    "visible",
+    "mesh",
+    "material",
+    "light",
+    "body",
+    "collider",
     "tag",
+    "particles",
+    "clip",
 ];
 /// The scene-object kinds lowered (into [`Camera`]).
 pub(super) const OBJECT_KINDS: [&str; 1] = ["camera"];
@@ -809,6 +819,17 @@ impl Lowering<'_> {
             },
             None => None,
         };
+        let particles = match fields.iter().find(|f| f.name == "particles") {
+            Some(field) => Some(emitter(&what, field, checked.span)?),
+            None => None,
+        };
+        let clip = match fields.iter().find(|f| f.name == "clip") {
+            Some(field) => match parts(&what, field, checked.span)?.0 {
+                crate::types::ConstValue::Str(name) => Some(name.clone()),
+                _ => return Err(format!("the clip of {what} is not a string")),
+            },
+            None => None,
+        };
         out.push(Entity {
             index,
             name: checked.name.clone(),
@@ -826,6 +847,8 @@ impl Lowering<'_> {
             collider,
             prefab: None,
             tag,
+            particles,
+            clip,
         });
         for child in &checked.children {
             self.entity(child, &symbol, Some(index), out)?;
@@ -977,6 +1000,26 @@ fn vec3_member(schema: &str, fields: &Fields, name: &str) -> Result<[f32; 3], De
         ConstValue::Vec3(v) => Ok(*v),
         _ => Err(format!("the field '{name}' of {schema} is not a vec3")),
     }
+}
+
+/// A completed `Emitter` descriptor (decision 0155).
+fn emitter(what: &str, field: &CheckedField, owner: Span) -> Result<Particles, Defect> {
+    let (value, origin, span) = parts(what, field, owner)?;
+    let (schema, fields) = descriptor(what, value)?;
+    if schema != "Emitter" {
+        return Err(format!(
+            "the particles of {what} are {schema}, not an Emitter"
+        ));
+    }
+    Ok(Particles {
+        rate: f32_member(schema, fields, "rate")?,
+        lifetime: f32_member(schema, fields, "lifetime")?,
+        speed: f32_member(schema, fields, "speed")?,
+        size: f32_member(schema, fields, "size")?,
+        gravity: f32_member(schema, fields, "gravity")?,
+        origin,
+        span,
+    })
 }
 
 /// A completed mesh descriptor.

@@ -168,6 +168,8 @@ catalogue! {
     E5012 Error "scene has no camera",
     E5013 Error "ambiguous active camera",
     E5014 Error "unknown scene object kind",
+    E5015 Error "set_camera target is not a camera",
+    E5016 Error "clip cannot play",
     E5020 Error "material without mesh",
     E5030 Error "named entity cannot be destroyed",
     E5040 Error "unsupported prefab assembly operation",

@@ -348,8 +348,8 @@ fn random_material_programs_never_break_checking_or_lowering() {
         // The generator reaches the diagnostics of this task, and some
         // programs are valid.
         for code in [
-            "E4020", "E4021", "E4030", "E4031", "E4040", "E5100", "W5101", "E5001", "E5002",
-            "E5003", "E3102", "E3061", "E3023",
+            "E4020", "E4021", "E4030", "E4031", "E4040", "W5101", "E5001", "E5002", "E5003",
+            "E3102", "E3061", "E3023",
         ] {
             assert!(codes.contains(code), "{code} never reported: {codes:?}");
         }

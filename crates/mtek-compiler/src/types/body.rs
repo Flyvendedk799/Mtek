@@ -367,6 +367,7 @@ impl<'a> Checker<'a> {
                 | Ty::Descriptor(_)
                 | Ty::PrefabDescriptor
                 | Ty::SceneName
+                | Ty::CameraName
                 | Ty::TaggedEntities
                 | Ty::MaterialInstance(_) => return false,
             }

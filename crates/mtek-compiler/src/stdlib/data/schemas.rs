@@ -48,7 +48,55 @@ pub(super) fn schemas() -> Vec<SchemaDef> {
     all.extend(lights());
     all.extend(bodies());
     all.extend(colliders());
+    all.extend(emitters());
     all
+}
+
+/// `Emitter { .. }` (decision 0155): a construction-only descriptor, not a spawned entity.
+fn emitters() -> Vec<SchemaDef> {
+    vec![schema(
+        "Emitter",
+        SchemaCategory::Emitter,
+        Milestone::M1,
+        "A bounded particle emitter: at most 64 particles, spawned at `rate` per second in a hemisphere around the entity's up axis.",
+        vec![
+            field(
+                "rate",
+                TypeRef::F32,
+                C,
+                "Particles spawned per second. A fraction carries to the next frame.",
+            )
+            .default(ConstValue::F32(0.0))
+            .range(ValueRange::non_negative()),
+            field(
+                "lifetime",
+                TypeRef::F32,
+                C,
+                "How long each particle lives, in seconds.",
+            )
+            .default(ConstValue::F32(1.0))
+            .range(ValueRange::positive().and_finite()),
+            field(
+                "speed",
+                TypeRef::F32,
+                C,
+                "Initial speed in metres per second.",
+            )
+            .default(ConstValue::F32(1.0))
+            .range(ValueRange::non_negative()),
+            field("size", TypeRef::F32, C, "Billboard size in metres.")
+                .default(ConstValue::F32(0.05))
+                .range(ValueRange::positive().and_finite()),
+            field(
+                "gravity",
+                TypeRef::F32,
+                C,
+                "Downward acceleration in metres per second squared.",
+            )
+            .default(ConstValue::F32(0.0))
+            .range(ValueRange::finite()),
+        ],
+    )]
 }
 
 fn objects() -> Vec<SchemaDef> {
@@ -164,6 +212,18 @@ fn objects() -> Vec<SchemaDef> {
                 TypeRef::String,
                 C,
                 "A group name (`\"rock\"`) that `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag` and `destroy_tagged` look the entity up by (decision 0150). A string literal of lowercase letters, digits and `_`.",
+            ),
+            field(
+                "particles",
+                TypeRef::Descriptor(SchemaCategory::Emitter),
+                C,
+                "A particle emitter (decision 0155). Up to 64 particles live at once. They are drawn with this entity's mesh as camera-facing billboards, in the colour of its material. Without a mesh the particles are still counted.",
+            ),
+            field(
+                "clip",
+                TypeRef::String,
+                C,
+                "The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. The clip is the only writer of the position, rotation and scale channels it has.",
             ),
         ],
     )

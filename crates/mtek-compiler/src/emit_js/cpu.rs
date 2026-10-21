@@ -1134,6 +1134,27 @@ impl FnLowering<'_, '_> {
                 let arguments = self.exprs(args)?;
                 Expr::ident("ctx").member("alive").call(arguments)
             }
+            // `set_camera(Name)`: `ctx.selectCamera("Name")` (decision 0154). An unknown camera
+            // is a compile error, so the call carries no span.
+            ir::ExprKind::Builtin { function, args } if function == "set_camera" => {
+                let [camera] = args.as_slice() else {
+                    return Err("a set_camera without one argument".to_owned());
+                };
+                let ir::ExprKind::Const {
+                    value: ir::Value::String(name),
+                } = &camera.kind
+                else {
+                    return Err("a set_camera whose argument is not a camera name".to_owned());
+                };
+                Expr::ident("ctx")
+                    .member("selectCamera")
+                    .call(vec![Expr::string(name)])
+            }
+            // `particle_count()`: `ctx.particleCount()` (decision 0155). Callable from `update`.
+            ir::ExprKind::Builtin { function, args } if function == "particle_count" => {
+                let _ = args;
+                Expr::ident("ctx").member("particleCount").call(Vec::new())
+            }
             // `go_to(Scene)`: `ctx.goTo("Scene", spanId)` (decision 0141); the span names the call
             // for `E5401` when the scene cannot be loaded.
             ir::ExprKind::Builtin { function, args } if function == "go_to" => {

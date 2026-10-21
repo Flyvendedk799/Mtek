@@ -48,12 +48,13 @@ use crate::{
 use super::html::{BOOTSTRAP_JS, index_html, preview_bootstrap};
 use super::identity::{BuildIdentity, h16};
 use super::manifest::{
-    Binding, BindingDep, BindingTarget, Body, Camera, Collider, Entity, EntityMaterial, Game,
-    GameScene, InstanceParam, Layout, Light as ManifestLight, LightClass, LightClasses,
-    LightKind as ManifestLightKind, MANIFEST_SCHEMA, Manifest, Material, MaterialInstance,
-    MaterialParam, MaterialResource, Mesh, MeshShape, Num, ParamClass as ManifestClass, Prefab,
-    PrefabMaterial, PrefabParam, Preview, RequiredCapabilities, ResourceValue, RuntimeConfig,
-    Scene, SceneFields, Shader, SourceEntry, StateEntry, Subsystems, SymbolEntry, SymbolKind,
+    Binding, BindingDep, BindingTarget, Body, Camera, Clip, ClipChannel, Collider, Entity,
+    EntityMaterial, Game, GameScene, InstanceParam, Layout, Light as ManifestLight, LightClass,
+    LightClasses, LightKind as ManifestLightKind, MANIFEST_SCHEMA, Manifest, Material,
+    MaterialInstance, MaterialParam, MaterialResource, Mesh, MeshShape, Num,
+    ParamClass as ManifestClass, Particles, Prefab, PrefabMaterial, PrefabParam, Preview,
+    RequiredCapabilities, ResourceValue, RuntimeConfig, Scene, SceneFields, Shader, SourceEntry,
+    StateEntry, Subsystems, SymbolEntry, SymbolKind,
 };
 use super::spans::SpanTable;
 
@@ -382,9 +383,11 @@ fn package_scene(
         &mut spans,
         &host_inputs,
         &host_outputs,
+        input.assets,
     )
     .map_err(defect)?;
-    let manifest_prefabs = manifest_prefabs(program, &plan, &packed, &mut spans).map_err(defect)?;
+    let manifest_prefabs =
+        manifest_prefabs(program, &plan, &packed, &mut spans, input.assets).map_err(defect)?;
 
     // `app.js` last: the spans its run-time warnings report (clamped indices) follow every
     // other span, so a program's span ids do not depend on its function bodies.
@@ -860,6 +863,7 @@ fn manifest_scene(
     spans: &mut SpanTable,
     host_inputs: &[ResolvedHostInput],
     host_outputs: &[ResolvedHostOutput],
+    assets: &AssetStore,
 ) -> Result<Scene, String> {
     let clear_color = match scene.fields.clear_color.source.as_const() {
         Some(ir::Value::Color(rgba)) => nums(rgba)?,
@@ -970,6 +974,12 @@ fn manifest_scene(
             update: has_behavior(scene, entity.index, &BehaviorKind::Update),
             fixed_update: has_behavior(scene, entity.index, &BehaviorKind::FixedUpdate),
             tag: entity.tag.clone(),
+            particles: entity
+                .particles
+                .as_ref()
+                .map(manifest_particles)
+                .transpose()?,
+            clip: manifest_clip(entity, assets)?,
         });
     }
     let material_instances = plan
@@ -1070,6 +1080,7 @@ fn manifest_prefabs(
     plan: &ResourcePlan,
     packed: &Packed,
     spans: &mut SpanTable,
+    assets: &AssetStore,
 ) -> Result<Vec<Prefab>, String> {
     let mut out = Vec::with_capacity(plan.prefabs.len());
     for planned in &plan.prefabs {
@@ -1135,9 +1146,86 @@ fn manifest_prefabs(
             bindings,
             span: spans.intern(item.span)?,
             tag: item.entity.tag.clone(),
+            particles: item
+                .entity
+                .particles
+                .as_ref()
+                .map(manifest_particles)
+                .transpose()?,
+            clip: manifest_clip(&item.entity, assets)?,
         });
     }
     Ok(out)
+}
+
+/// The manifest's emitter (decision 0155).
+fn manifest_particles(particles: &ir::Particles) -> Result<Particles, String> {
+    Ok(Particles {
+        rate: num(particles.rate)?,
+        lifetime: num(particles.lifetime)?,
+        speed: num(particles.speed)?,
+        size: num(particles.size)?,
+        gravity: num(particles.gravity)?,
+    })
+}
+
+/// The manifest's clip (decision 0156): keyframes copied out of the GLB, because lowering has
+/// no asset store. A clip the checker accepted and that cannot be found here is a defect.
+fn manifest_clip(entity: &ir::Entity, assets: &AssetStore) -> Result<Option<Clip>, String> {
+    let Some(name) = &entity.clip else {
+        return Ok(None);
+    };
+    let Some(mesh) = &entity.mesh else {
+        return Err(format!(
+            "entity '{}' has a clip without a mesh",
+            entity.name
+        ));
+    };
+    let MeshDesc::Asset { file, mesh, .. } = &mesh.desc else {
+        return Err(format!(
+            "the clip of entity '{}' is not on an asset mesh",
+            entity.name
+        ));
+    };
+    let declared = assets.glb(file).ok_or_else(|| {
+        format!(
+            "the clip of entity '{}' names a GLB that was not loaded",
+            entity.name
+        )
+    })?;
+    let clip = declared.file.clip_for(name, mesh).ok_or_else(|| {
+        format!(
+            "the clip '{name}' of entity '{}' does not play on '{mesh}'",
+            entity.name
+        )
+    })?;
+    let channels = clip
+        .channels
+        .iter()
+        .map(|channel| {
+            Ok(ClipChannel {
+                path: channel.path.as_str().to_owned(),
+                interpolation: channel.interpolation.as_str().to_owned(),
+                times: channel
+                    .times
+                    .iter()
+                    .copied()
+                    .map(num)
+                    .collect::<Result<Vec<_>, _>>()?,
+                values: channel
+                    .values
+                    .iter()
+                    .copied()
+                    .map(num)
+                    .collect::<Result<Vec<_>, _>>()?,
+            })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    Ok(Some(Clip {
+        name: clip.name,
+        duration: num(clip.duration)?,
+        channels,
+    }))
 }
 
 /// The manifest's update class of a light field: a light field is never a resource.
@@ -1172,8 +1260,9 @@ fn manifest_bindings(
                 instance: instance(*entity)?,
                 name: name.clone(),
             },
-            ir::BindingTarget::Camera { field } => BindingTarget::Camera {
+            ir::BindingTarget::Camera { camera, field } => BindingTarget::Camera {
                 field: field.clone(),
+                camera: Some(camera.clone()),
             },
             ir::BindingTarget::Light { entity, field } => BindingTarget::Light {
                 entity: *entity,

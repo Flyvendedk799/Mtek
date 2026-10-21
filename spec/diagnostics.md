@@ -234,6 +234,8 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5012"></a>E5012 | scene has no camera | |
 | <a id="mtek-e5013"></a>E5013 | ambiguous active camera | |
 | <a id="mtek-e5014"></a>E5014 | unknown scene object kind | `lamp Main { … }`; v0.1 kinds: `camera` |
+| <a id="mtek-e5015"></a>E5015 | set_camera target is not a camera | `set_camera` argument is not the name of a camera of this scene (decision 0154) |
+| <a id="mtek-e5016"></a>E5016 | clip cannot play | `clip` names no playable channel of the entity's GLB mesh, the entity also writes a channel the clip writes, or a scale keyframe is not positive (decision 0156) |
 | <a id="mtek-e5020"></a>E5020 | material without mesh | |
 | <a id="mtek-e5030"></a>E5030 | named entity cannot be destroyed | `destroy(Cube)`, or `self` of a named entity (decision 0064) |
 | <a id="mtek-e5040"></a>E5040 | unsupported prefab assembly operation | spawning a prefab with children, or a prefab instance nested inside another prefab (decision 0128) |
@@ -314,7 +316,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e7016"></a>E7016 | unsupported material feature | normal, occlusion, emissive or metallic-roughness texture, non-zero emissive factor, `doubleSided` |
 | <a id="mtek-e7017"></a>E7017 | unsupported or oversized image | image is not PNG/JPEG, has no embedded bytes, is unreadable, exceeds `max_texture_dimension`, or is a JPEG with an EXIF orientation other than 1 (decision 0082) |
 | <a id="mtek-e7018"></a>E7018 | unsupported sampler mode | MIRRORED_REPEAT, or wrap or filter modes that no sampler preset can express |
-| <a id="mtek-e7019"></a>E7019 | animation present | `animations` or `skins` present in the file |
+| <a id="mtek-e7019"></a>E7019 | animation present | a skin, a morph-weight channel, cubic-spline or any other interpolation, a path other than translation, rotation or scale, a duplicate animation name, or a channel with no keyframes or more than 4096 (decision 0156). LINEAR and STEP translation, rotation and scale are clips |
 | <a id="mtek-e7020"></a>E7020 | asset file not found | the file named by an `asset.*` call does not exist or cannot be read (decision 0058) |
 | <a id="mtek-e7021"></a>E7021 | asset path outside project | the path escapes the project root, is absolute or malformed |
 | <a id="mtek-e7022"></a>E7022 | invalid use of asset value | a `glb_asset` outside a `const` and its accessors, or a path that is not a string literal |

@@ -46,7 +46,8 @@ Members may appear in any order except that **initialisation order follows decla
 - Without `target`, the camera looks along its local `-Z` rotated by `rotation`.
 - Projection formulas (right-handed, view looks down `-Z`, clip depth `[0, 1]`) are normative and defined in `spec/runtime-abi.md` §8.3. `fov_y` is the full vertical field of view in radians. `near > 0`, `far > near`, `fov_y` in `(0, π)`, `height > 0`; constant violations are `E5011`, run-time violations from writes are `E8011` (write ignored).
 - **Exposure** (decision 0081): the camera's exposure value at ISO 100. Lit materials (`lighting.pbr`) multiply their result by `1 / (1.2 · 2^exposure)` (`spec/materials.md` §8 rule 9); Unlit and other materials are not affected. The default makes a white Lambertian surface under the default 1 lux `DirectionalLight` render white; real-world values work as on a camera (a sunny day of about 100 000 lux is about `15`, an office of about 500 lux about `7`). One EV more halves the brightness. A constant (`E3090` otherwise); writing and binding it is not in v0.1.
-- **Exactly one active camera.** A scene with no camera is `E5012` (an unexplained black canvas is not acceptable). With several cameras, exactly one must declare `active: true` (`E5013`). Camera switching at run time is not in v0.1.
+- **Exactly one active camera at the start.** A scene with no camera is `E5012` (an unexplained black canvas is not acceptable). With several cameras, exactly one must declare `active: true` (`E5013`). That camera draws first.
+- **Switching** (decision 0154). `set_camera(Name)` — in a lifecycle function or an event handler (`E5080` elsewhere) — makes `Name` the camera that draws. The argument is the name of a camera of this scene, written where `set_camera` is called (`E5015` for anything else). The other cameras keep their values. A binding that writes a camera field names that camera. Exposure stays a constant of each camera.
 
 ## 4. Entities
 
@@ -76,8 +77,10 @@ entity Cube {
 | `body` | `Static {}` / `Dynamic {…}` / `Kinematic {}` | none | `spec/physics.md` |
 | `collider` | `BoxCollider {…}` / `SphereCollider {…}` | none | `spec/physics.md` |
 | `tag` | `string` constant | none | §17 |
+| `particles` | `Emitter { … }` | none | construction-only; §4.6 |
+| `clip` | `string` constant | none | construction-only; the name of a glTF clip (§4.7) |
 
-A `material` without a `mesh` is `E5020`. Unknown, duplicate and mistyped fields are `E5001`/`E5002`/`E3102`. All values inside `mesh`, `body` and `collider` descriptors must be **constant expressions** (`E3090`) — they are construction-only data transported in the manifest.
+A `material` without a `mesh` is `E5020`. Unknown, duplicate and mistyped fields are `E5001`/`E5002`/`E3102`. All values inside `mesh`, `body`, `collider` and `particles` descriptors must be **constant expressions** (`E3090`) — they are construction-only data transported in the manifest.
 
 4.2 **Names.** Entity names are `PascalCase` by convention and **unique within the scene**, including nested entities (`E2002`). A named entity is referenced by its bare name anywhere in the scene (`Cube.position`). Entity names share the scene scope with state and cameras.
 
@@ -86,6 +89,10 @@ A `material` without a `mesh` is `E5020`. Unknown, duplicate and mistyped fields
 4.4 **Entity state.** `state name: T = expr;` inside an entity (or prefab) is per-instance state, accessed as `self.name` from the entity's own functions and as `EntityName.name` from elsewhere in the scene. Entity state may not use the name of an `Entity` schema field (`state position: …` would make `self.position` ambiguous) — `E2002`, with a note naming the field.
 
 4.5 **Lifetime.** Statically declared (named) entities live exactly as long as the scene. They cannot be destroyed in v0.1 (`destroy(Cube)` is `E5030`; at run time, destroying a named entity through an `entity_ref` is `E8030`, a no-op). Hide them with `visible: false`. This makes every static entity reference permanently valid.
+
+4.6 **Particles** (decision 0155). `particles: Emitter { rate: 24.0; lifetime: 0.8; speed: 1.6; size: 0.12; gravity: 3.0 }` keeps at most 64 particles. Each frame spawns `floor(rate · dt)` of them (a fraction waits for the next frame) on the upper hemisphere around the entity's world position, at `speed` metres per second, and `gravity` pulls them down. They are drawn as camera-facing copies of this entity's mesh, in the colour of its material. Without a mesh they are still simulated. `particle_count() -> i32` is how many are alive. The pool advances at the start of phase 3, so `pause()` stops it and `update` reads the new count.
+
+4.7 **Clips** (decision 0156). `clip: "Spin"` plays that animation of the GLB this entity's `mesh` was loaded from. The clip writes `position`, `rotation` and `scale` for the channels it has, and it is their only writer (`E5016` when the entity also writes one, when the mesh is not from that file, when the name is missing, or when a scale keyframe is not positive). Skins, morph weights and cubic-spline channels stay `E7019`. The pose at time 0 is applied after `init`; phase 3 then advances the clip before particles, timers and `update`. Time wraps after the duration.
 
 ## 5. Prefabs
 
@@ -167,7 +174,7 @@ A key that goes down and up in one frame makes both `key_pressed` and `key_relea
 - read and write scene state (bare name) — scene bodies and entities inside the scene;
 - read and write own entity state (`self.x`) and named entities' state (`Name.x`) — within the scene;
 - read entity fields (`self.position`, `Cube.rotation`, `Cube.material.tint`), and write them subject to §8.2;
-- call `cpu fn`s, pure functions and CPU intrinsics (`spawn`, `destroy`, `alive`, `random`, `print`, `is_key_down`, `key_pressed`, `key_released`, `pointer_position`, `is_pointer_down`, `choose`, `shuffle`, body commands from `spec/physics.md`);
+- call `cpu fn`s, pure functions and CPU intrinsics (`spawn`, `destroy`, `alive`, `random`, `print`, `is_key_down`, `key_pressed`, `key_released`, `pointer_position`, `is_pointer_down`, `choose`, `shuffle`, `particle_count`, `set_camera`, body commands from `spec/physics.md`);
 - read `frame.*`.
 
 8.2 **Single writer.** Every writable field of every entity, camera, light and material instance has exactly one writer, decided statically:
@@ -177,6 +184,7 @@ A key that goes down and up in one frame makes both `key_pressed` and `key_relea
 | **Imperative** | default | handlers may assign it (if the schema marks it `writable`) |
 | **Binding** | the field's value is `bind(expr)` | any assignment to it anywhere is `E5070`, with a related span at the `bind` — "update its source instead" |
 | **Physics** | the entity has any `body`: `Dynamic` (solver owns `position`, `rotation`), `Kinematic` (pose set only through `set_kinematic_target`/`teleport`), `Static` (pose fixed at creation) | assignment to `position`/`rotation` is `E5071` with a note naming the allowed operation (`apply_impulse`, `set_kinematic_target`, `teleport`, or "static bodies cannot move"); a `bind` on those fields is `E5072` |
+| **Clip** | the entity's `clip` has a channel for the field (`translation` writes `position`, `rotation` writes `rotation`, `scale` writes `scale`) | the entity must not also write or bind that field (`E5016`, decision 0156) |
 
 Fields the schema marks construction-only (e.g. `mesh`, `body`, `scale` of bodies) cannot be assigned at all (`E5073`). The physics rules hold for every entity with a body, also an instance of a prefab that declares one and `self` inside such a prefab; decision `spec/decisions/0065-physics-schemas-and-ownership.md` records where each is reported.
 
@@ -206,7 +214,7 @@ The runtime's scheduler (`spec/runtime-abi.md` §7 is the implementation contrac
 
 1. **Input.** Apply queued host-input changes in arrival order; apply input transitions; dispatch input handlers in event-arrival order. For each event: scene handlers first, then entity handlers in **stable instance order** (§10.1).
 2. **Fixed ticks** (0 to `max_catch_up_steps` of them, default 4, step `1/60` s). For each tick: (a) flush the lifecycle queue; (b) apply pending physics commands once; (c) run `fixed_update` (scene, then entities in instance order); (d) step physics; (e) write authoritative poses back; (f) deliver collision events in a deterministic order (`spec/physics.md` §6). Commands issued in (f) apply in the next tick. Backlog beyond the catch-up limit is discarded and reported in the runtime counter `discardedSteps`. The physics half of a tick, its command categories, write-back, velocities and event delivery are decision `spec/decisions/0066-physics-integration.md`.
-3. **Update.** Run the timers that fall due (`after`/`every`, §15.3), then `update(dt)` — scene first, then entities in instance order — with `dt` = the clamped frame delta (§10.2). While the game is paused (`pause()`, §15.4) phases 2 and 3 do not run; input, the flush, bindings, transforms and rendering go on.
+3. **Update.** Advance clips (§4.7), then particles (§4.6), then the timers that fall due (`after`/`every`, §15.3), then `update(dt)` — scene first, then entities in instance order — with `dt` = the clamped frame delta (§10.2). While the game is paused (`pause()`, §15.4) phases 2 and 3 do not run; input, the flush, bindings, transforms and rendering go on.
 4. **Lifecycle flush.**
 5. **Bindings.** Evaluate every live binding against the now-consistent state, in dependency (topological) order; ties broken by declaration order.
 6. **Transforms.** Propagate local transforms to world matrices, parents before children. v0.1 renders the latest authoritative physics pose; render interpolation is not in v0.1.
@@ -223,7 +231,7 @@ The runtime's scheduler (`spec/runtime-abi.md` §7 is the implementation contrac
 1. Module constants (compile time).
 2. Scene fields, then scene `state` in declaration order. A state initialiser may read constants, earlier scene state, and call pure and `cpu` functions (e.g. `random()`); it may not spawn (`E5080`) or read entity fields (`E5081`).
 3. Cameras and entities in declaration order (depth-first pre-order). For each entity: params (for prefab instances), then entity `state` in declaration order, then fields in declaration order. Field and state initialisers may read constants, scene state, own params and own earlier state; they may not read entity fields, including `self.x` fields (`E5081`).
-4. All bindings are evaluated once (so bound fields have values before the first frame), then transforms are propagated.
+4. All bindings are evaluated once (so bound fields have values before the first frame). Clips then sample time 0 (§4.7). Transforms are propagated.
 5. Physics bodies are created (if any).
 6. Resources required at startup are loaded; `mountMtek` resolves (`spec/runtime-abi.md` §6).
 
@@ -241,13 +249,15 @@ The mounted application owns the scene; the scene owns entity instances; entitie
 
 ## 14. Not in v0.1
 
-Several scenes at once (one runs at a time, §15); run-time re-parenting; spawned prefabs with children; prefab instances nested within prefabs; writing fields through `entity_ref`, and reading any field but `position`, `rotation`, `scale` and `visible` (§8.3); user-defined components and systems (v0.2); render interpolation; camera switching; text in the 3D world, UI layout and text input.
+Several scenes at once (one runs at a time, §15); run-time re-parenting; spawned prefabs with children; prefab instances nested within prefabs; writing fields through `entity_ref`, and reading any field but `position`, `rotation`, `scale` and `visible` (§8.3); user-defined components and systems (v0.2); render interpolation; text in the 3D world, UI layout and text input.
 
 Audio is no longer in this list: `spec/audio.md` (decision 0130).
 
 Screen-space text and buttons are no longer in this list: `spec/hud.md` (decision 0134) adds the immediate-mode HUD and `spec/language.md` §5.8 (decision 0133) interpolated strings.
 
-Tweens are covered by easing curves in bindings: `spec/tweens.md` (decision 0135) adds the `easing` namespace; a tween is progress state plus `bind(mix(a, b, easing.curve(t)))`. There is still no tween object, timeline or animation clip.
+Tweens are covered by easing curves in bindings: `spec/tweens.md` (decision 0135) adds the `easing` namespace; a tween is progress state plus `bind(mix(a, b, easing.curve(t)))`. There is still no tween object or timeline.
+
+Camera switching is `set_camera` (decision 0154). A particle emitter is `particles: Emitter` (decision 0155). A glTF node clip plays with `clip` (decision 0156); skins, morphs and cubic spline stay out.
 
 ## 15. Game flow: scenes, reset, pause and timers
 

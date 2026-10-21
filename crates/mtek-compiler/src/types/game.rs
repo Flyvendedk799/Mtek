@@ -21,7 +21,8 @@ use crate::diagnostics::{Code, Diagnostic};
 use crate::resolve::{DefKind, Res};
 use crate::source::Span;
 use crate::syntax::ast::{
-    EntityDecl, EntityMember, Expr, ExprKind, ItemKind, Module, Persist, SceneMember, StateDecl,
+    EntityDecl, EntityMember, Expr, ExprKind, ItemKind, Module, NodeId, Persist, SceneMember,
+    StateDecl,
 };
 
 impl Checker<'_> {
@@ -75,6 +76,85 @@ impl Checker<'_> {
             diagnostic.help(format!(
                 "the scenes of this module are {}",
                 scenes.join(", ")
+            ))
+        };
+        self.report(diagnostic);
+        false
+    }
+
+    /// Whether `kind` is the camera scene-object and `id` is a `set_camera` argument.
+    /// The keyword stays in this file: `check.rs` may not name a registry schema or
+    /// scene-object kind (`the_checker_names_no_schema_and_no_field`).
+    pub(super) fn is_set_camera_target(&self, kind: Option<&str>, id: NodeId) -> bool {
+        kind == Some("camera") && self.camera_arguments.contains(&id)
+    }
+
+    /// The argument of a `set_camera` call: one name of a camera of this scene (decision 0154).
+    /// Records it so the name types as a camera name and answers `true`; otherwise reports
+    /// `E5015` and answers `false`. A call with another number of arguments is left to the
+    /// arity check (`E3002`).
+    pub(super) fn set_camera_argument(&mut self, args: &[Expr]) -> bool {
+        let [arg] = args else {
+            return true;
+        };
+        let target = strip_parens(arg);
+        if let ExprKind::Name(_) = &target.kind
+            && let Some(Res::Def(id)) = self.res.res(target.id)
+            && self.res.def(id).is_some_and(|d| {
+                matches!(
+                    d.kind,
+                    DefKind::SceneObject {
+                        kind: Some("camera")
+                    }
+                )
+            })
+        {
+            self.camera_arguments.insert(target.id);
+            if target.id != arg.id {
+                self.camera_arguments.insert(arg.id);
+            }
+            return true;
+        }
+        let cameras: Vec<String> = self
+            .res
+            .defs()
+            .iter()
+            .filter(|d| {
+                matches!(
+                    d.kind,
+                    DefKind::SceneObject {
+                        kind: Some("camera")
+                    }
+                )
+            })
+            .map(|d| format!("'{}'", d.name))
+            .collect();
+        let found = match &target.kind {
+            ExprKind::Name(_) => match self.res.res(target.id) {
+                Some(Res::Def(id)) => self.res.def(id).map_or_else(
+                    || "a name".to_owned(),
+                    |d| format!("the {} '{}'", d.kind.noun(), d.name),
+                ),
+                _ => "a name that is not a camera".to_owned(),
+            },
+            ExprKind::Str { .. } => "a string".to_owned(),
+            _ => "an expression".to_owned(),
+        };
+        let mut diagnostic = Diagnostic::new(
+            Code::E5015,
+            format!("`set_camera` takes the name of a camera of this scene, but its argument is {found}."),
+        )
+        .at(arg.span)
+        .expected("the name of a camera")
+        .actual(found)
+        .note("the camera to switch to is fixed where `set_camera` is written");
+        diagnostic = if cameras.is_empty() {
+            diagnostic
+                .help("declare a camera with `camera Name { ... }` and write `set_camera(Name);`")
+        } else {
+            diagnostic.help(format!(
+                "the cameras of this module are {}",
+                cameras.join(", ")
             ))
         };
         self.report(diagnostic);
@@ -398,6 +478,7 @@ impl Checker<'_> {
                 | Ty::Descriptor(_)
                 | Ty::PrefabDescriptor
                 | Ty::SceneName
+                | Ty::CameraName
                 | Ty::TaggedEntities => return Some(format!("a {} value", interner.display(ty))),
             }
         }

@@ -1002,8 +1002,9 @@ nodeProject(
 );
 
 // ----- row 12: animations and skins -------------------------------------------
+// A LINEAR translation is a clip (decision 0156). A skin is still E7019.
 
-fail("e7019_animation", (() => {
+function animatedTri() {
   const m = tri();
   const input = m.accessor(f32(0, 1), { componentType: FLOAT, type: "SCALAR", count: 2, min: [0], max: [1] });
   const output = m.accessor(f32(0, 0, 0, 1, 0, 0), { componentType: FLOAT, type: "VEC3", count: 2 });
@@ -1011,7 +1012,21 @@ fail("e7019_animation", (() => {
     { channels: [{ sampler: 0, target: { node: 0, path: "translation" } }], samplers: [{ input, output }] },
   ];
   return m.glb();
-})());
+}
+const CLIP_MAIN = `const MODEL = asset.glb("../models/model.glb");
+
+scene Demo {
+    camera Main {}
+    entity Part {
+        mesh: MODEL.mesh("Tri");
+        clip: "animation_0";
+    }
+}
+`;
+project("pass/animated_clip", animatedTri(), { main: CLIP_MAIN });
+fail("e5016_unknown_clip", animatedTri(), {
+  main: CLIP_MAIN.replace('clip: "animation_0"', 'clip: "Nope"'),
+});
 fail("e7019_skin", (() => {
   const m = tri();
   const ibm = m.accessor(f32(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1), {

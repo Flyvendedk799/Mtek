@@ -608,7 +608,8 @@
         "id": 0,
         "target": {
           "kind": "camera",
-          "field": "target"
+          "field": "target",
+          "camera": "Main"
         },
         "deps": [
           {

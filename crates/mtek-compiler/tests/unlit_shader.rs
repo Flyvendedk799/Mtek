@@ -287,7 +287,14 @@ fn the_prelude_is_the_last_module_and_source_after_the_project() {
     assert_eq!(program.modules[3].file, prelude.id().0);
     // Every built-in this build implements, used or not (`Pbr` since task M4-03, decision 0057).
     let materials: Vec<&str> = program.materials().map(|m| m.symbol.as_str()).collect();
-    assert_eq!(materials, [UNLIT, "std/materials.mtek::Pbr"]);
+    assert_eq!(
+        materials,
+        [
+            UNLIT,
+            "std/materials.mtek::Pbr",
+            "std/materials.mtek::Sprite"
+        ]
+    );
     // The entity's instance names the prelude's material item.
     let crate_entity = &program.entry().unwrap().entities[0];
     let instance = crate_entity.material.as_ref().unwrap();
@@ -321,7 +328,7 @@ fn every_prelude_material_agrees_with_its_registry_schema() {
         .collect();
     assert_eq!(
         builtins.iter().map(|s| s.name).collect::<Vec<_>>(),
-        ["Unlit", "Pbr"]
+        ["Unlit", "Pbr", "Sprite"]
     );
     for schema in builtins {
         let symbol = format!("{MATERIALS_PATH}::{}", schema.name);

@@ -235,6 +235,74 @@
       ]
     },
     {
+      "name": "Emitter",
+      "category": "emitter",
+      "since": "M1",
+      "doc": "A bounded particle emitter: at most 64 particles, spawned at `rate` per second in a hemisphere around the entity's up axis.",
+      "fields": [
+        {
+          "name": "gravity",
+          "type": "f32",
+          "default": "0.0",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "finite",
+          "since": "M1",
+          "doc": "Downward acceleration in metres per second squared."
+        },
+        {
+          "name": "lifetime",
+          "type": "f32",
+          "default": "1.0",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "> 0, finite",
+          "since": "M1",
+          "doc": "How long each particle lives, in seconds."
+        },
+        {
+          "name": "rate",
+          "type": "f32",
+          "default": "0.0",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "≥ 0",
+          "since": "M1",
+          "doc": "Particles spawned per second. A fraction carries to the next frame."
+        },
+        {
+          "name": "size",
+          "type": "f32",
+          "default": "0.05",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "> 0, finite",
+          "since": "M1",
+          "doc": "Billboard size in metres."
+        },
+        {
+          "name": "speed",
+          "type": "f32",
+          "default": "1.0",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "≥ 0",
+          "since": "M1",
+          "doc": "Initial speed in metres per second."
+        }
+      ]
+    },
+    {
       "name": "Entity",
       "category": "object",
       "since": "M1",
@@ -251,6 +319,18 @@
           "range": null,
           "since": "M1",
           "doc": "A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; requires `collider`."
+        },
+        {
+          "name": "clip",
+          "type": "string",
+          "default": null,
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. The clip is the only writer of the position, rotation and scale channels it has."
         },
         {
           "name": "collider",
@@ -300,6 +380,18 @@
           "range": null,
           "since": "M1",
           "doc": "The mesh drawn for this entity: a mesh descriptor (`Box`, `Sphere`, `Plane`) or an asset mesh."
+        },
+        {
+          "name": "particles",
+          "type": "emitter",
+          "default": null,
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "A particle emitter (decision 0155). Up to 64 particles live at once. They are drawn with this entity's mesh as camera-facing billboards, in the colour of its material. Without a mesh the particles are still counted."
         },
         {
           "name": "position",
@@ -1708,6 +1800,18 @@
       "doc": "The vector scaled to length 1."
     },
     {
+      "name": "particle_count",
+      "signatures": [
+        "() -> i32"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "How many particles are alive."
+    },
+    {
       "name": "pause",
       "signatures": [
         "() -> ()"
@@ -1938,6 +2042,18 @@
       "cpuSemantics": "",
       "since": "M1",
       "doc": "Writes the saved and setting state to storage."
+    },
+    {
+      "name": "set_camera",
+      "signatures": [
+        "(camera: camera name) -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Switches the active camera."
     },
     {
       "name": "set_muted",

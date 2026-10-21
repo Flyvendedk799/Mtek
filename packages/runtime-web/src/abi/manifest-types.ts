@@ -374,6 +374,31 @@ export interface MtekEntity {
   readonly fixedUpdate: boolean;
   /** `tag: "name";` (decision 0150); absent when the entity has none. */
   readonly tag?: string;
+  /** `particles: Emitter { .. }` (decision 0155); absent when the entity emits none. */
+  readonly particles?: MtekParticles;
+  /** A glTF clip that moves this entity (decision 0156); absent when it plays none. */
+  readonly clip?: MtekClip;
+}
+
+export interface MtekParticles {
+  readonly rate: number;
+  readonly lifetime: number;
+  readonly speed: number;
+  readonly size: number;
+  readonly gravity: number;
+}
+
+export interface MtekClipChannel {
+  readonly path: "translation" | "rotation" | "scale";
+  readonly interpolation: "linear" | "step";
+  readonly times: readonly number[];
+  readonly values: readonly number[];
+}
+
+export interface MtekClip {
+  readonly name: string;
+  readonly duration: number;
+  readonly channels: readonly MtekClipChannel[];
 }
 
 export type MtekBuiltinResourceName =
@@ -429,6 +454,10 @@ export interface MtekPrefab {
   readonly span: SpanId;
   /** The tag every instance carries (decision 0150); absent when the prefab has none. */
   readonly tag?: string;
+  /** The emitter every instance starts with (decision 0155). */
+  readonly particles?: MtekParticles;
+  /** The clip every instance plays (decision 0156). */
+  readonly clip?: MtekClip;
 }
 
 export type MtekBindingTarget =
@@ -437,6 +466,8 @@ export type MtekBindingTarget =
   | { readonly kind: "param"; readonly instance: number; readonly name: string }
   | {
       readonly kind: "camera";
+      /** The camera the binding writes (decision 0154). Absent on older manifests, which bound the active camera. */
+      readonly camera?: string;
       readonly field:
         | "position"
         | "target"

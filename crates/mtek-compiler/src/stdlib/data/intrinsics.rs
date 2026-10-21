@@ -385,6 +385,18 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
         )
         .handlers_only(),
         function(
+            "set_camera",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Switches the active camera.",
+            vec![sig(
+                &[p("camera", exact(TypeRef::CameraName))],
+                exact(TypeRef::Unit),
+            )],
+        )
+        .handlers_only(),
+        function(
             "reset",
             Domain::Cpu,
             false,
@@ -418,6 +430,14 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Milestone::M1,
             "Whether paused.",
             vec![sig(&[], exact(TypeRef::Bool))],
+        ),
+        function(
+            "particle_count",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "How many particles are alive.",
+            vec![sig(&[], exact(TypeRef::I32))],
         ),
         function(
             "save",

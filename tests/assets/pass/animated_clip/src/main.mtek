@@ -4,5 +4,6 @@ scene Demo {
     camera Main {}
     entity Part {
         mesh: MODEL.mesh("Tri");
+        clip: "animation_0";
     }
 }
