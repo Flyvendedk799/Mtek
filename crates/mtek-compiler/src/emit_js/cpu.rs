@@ -1036,7 +1036,7 @@ impl FnLowering<'_, '_> {
                 arguments.push(Expr::Num(Number::U32(span_id)));
                 Expr::ident("ctx").member("destroy").call(arguments)
             }
-            // Audio (decision 0160): `ctx.audio.<method>(spanId, ..args)`; the span names the call
+            // Audio (decision 0130): `ctx.audio.<method>(spanId, ..args)`; the span names the call
             // in `W8201`, and the runtime supplies the defaults of omitted arguments.
             ir::ExprKind::Builtin { function, args } if audio_method(function).is_some() => {
                 let method = audio_method(function).unwrap_or_default();
@@ -1334,7 +1334,7 @@ fn swizzle(ty: &str, components: &[u32], value: Expr) -> Result<Expr, String> {
     }
 }
 
-/// The `ctx.audio` method of an audio intrinsic (decision 0160).
+/// The `ctx.audio` method of an audio intrinsic (decision 0130).
 fn audio_method(function: &str) -> Option<&'static str> {
     Some(match function {
         "play" => "play",

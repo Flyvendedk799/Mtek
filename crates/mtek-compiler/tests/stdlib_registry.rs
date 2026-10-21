@@ -857,7 +857,7 @@ fn intrinsic_rows() -> Vec<IntrinsicRow> {
         false,
     ));
     rows.push(("destroy", &["(entity_ref) -> ()"], Domain::Cpu, false));
-    // Audio (spec/audio.md section 3, decision 0160).
+    // Audio (spec/audio.md section 3, decision 0130).
     rows.push((
         "play",
         &[

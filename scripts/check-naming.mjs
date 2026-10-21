@@ -26,7 +26,7 @@ const files = [...new Set(listing.split("\0").filter((name) => name.length > 0))
 const violations = [];
 for (const file of files) {
   if (EXEMPT.has(file)) continue;
-  // The prebuilt bundles (decision 0161) are generated copies of the ignored dist/ files; the physics
+  // The prebuilt bundles (decision 0131) are generated copies of the ignored dist/ files; the physics
   // bundle embeds Rapier's WebAssembly as base64, where any letter sequence can occur by chance.
   if (file.startsWith("crates/mtek-cli/prebuilt/") && file.endsWith(".js")) continue;
   let data;

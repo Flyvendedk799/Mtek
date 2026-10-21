@@ -1,4 +1,4 @@
-# 0160. Audio: sound assets, playback intrinsics and the autoplay unlock
+# 0130. Audio: sound assets, playback intrinsics and the autoplay unlock
 
 - Status: Accepted
 - Date: 2026-10-21

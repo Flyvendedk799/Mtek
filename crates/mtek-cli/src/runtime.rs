@@ -1,6 +1,6 @@
 //! The runtime bundles compiled into this binary by `build.rs` (`spec/tooling.md` section 1):
 //! `runtime.js`, `runtime.dev.js` and `runtime.d.ts` from `packages/runtime-web/dist/` when they
-//! were built, else from the prebuilt copy in `crates/mtek-cli/prebuilt/` (decision 0161), or
+//! were built, else from the prebuilt copy in `crates/mtek-cli/prebuilt/` (decision 0131), or
 //! nothing if neither existed (`mtek build` then reports `E9030`); and, separately, `physics.js`
 //! from `packages/physics-rapier/dist/` or the prebuilt copy (decision 0063).
 
@@ -54,7 +54,7 @@ mod tests {
     #[test]
     fn the_embedded_files_are_the_built_runtime() {
         let runtime = embedded().unwrap();
-        // `dist/` when the runtime was built, the prebuilt copy otherwise (decision 0161).
+        // `dist/` when the runtime was built, the prebuilt copy otherwise (decision 0131).
         let dist = env!("MTEK_RUNTIME_ORIGIN_DIR");
         assert_eq!(
             runtime.bundle,

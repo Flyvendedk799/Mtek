@@ -316,7 +316,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e7026"></a>E7026 | asset limit exceeded | more vertices than `max_vertices_per_primitive`, or packaged assets over `max_total_bytes` |
 | <a id="mtek-e7030"></a>E7030 | asset fetch or integrity failure | runtime: fetch failed, length or SHA-256 mismatch (M4-06, decision 0060) |
 | <a id="mtek-e7031"></a>E7031 | image decode failure | runtime: the browser could not decode the image (M4-06, decision 0060) |
-| <a id="mtek-e7101"></a>E7101 | unsupported audio file | `asset.sound(path)` names a file that is not WAV (PCM or IEEE float), Ogg (Vorbis or Opus) or MP3, by extension or by content (`spec/audio.md` §2, decision 0160) |
+| <a id="mtek-e7101"></a>E7101 | unsupported audio file | `asset.sound(path)` names a file that is not WAV (PCM or IEEE float), Ogg (Vorbis or Opus) or MP3, by extension or by content (`spec/audio.md` §2, decision 0130) |
 | <a id="mtek-e7102"></a>E7102 | malformed audio file | the header of a WAV, Ogg or MP3 file is truncated or inconsistent (no `fmt `/`data` chunk, zero channels or sample rate, no Ogg page, no MPEG frame) (`spec/audio.md` §2) |
 | <a id="mtek-e7901"></a>E7901 | remote assets not supported | an `http:`, `https:` or other URL as an asset path |
 | <a id="mtek-e7902"></a>E7902 | node hierarchy instancing not supported | `model: asset` instancing a whole node hierarchy |
@@ -369,7 +369,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e9010"></a>E9010 | not implemented by this compiler build | specified, not yet built |
 | <a id="mtek-e9020"></a>E9020 | host input target not exposable | input target or output source: not scene state, or unsupported type |
 | <a id="mtek-e9021"></a>E9021 | unknown host input target | also an unknown host output source |
-| <a id="mtek-e9030"></a>E9030 | runtime bundle not embedded | CLI built with neither `packages/runtime-web/dist` nor the prebuilt runtime of `crates/mtek-cli/prebuilt` (decision 0161); also a program that uses physics built without `packages/physics-rapier/dist/physics.js` (decision 0063) |
+| <a id="mtek-e9030"></a>E9030 | runtime bundle not embedded | CLI built with neither `packages/runtime-web/dist` nor the prebuilt runtime of `crates/mtek-cli/prebuilt` (decision 0131); also a program that uses physics built without `packages/physics-rapier/dist/physics.js` (decision 0063) |
 | <a id="mtek-e9031"></a>E9031 | build output not written | `mtek build` could not write the output directory (I/O failure; exit code 3, the previous output stays in place; decision 0032) |
 | <a id="mtek-e9032"></a>E9032 | compilation timed out | `mtek build --mode preview` did not finish within the compile time limit (10 s, a constant of the command line tool); no files are written (decision 0075) |
 | <a id="mtek-e9999"></a>E9999 | internal compiler error | panic converted; asks for a report |

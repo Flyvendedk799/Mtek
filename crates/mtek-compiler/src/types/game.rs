@@ -387,7 +387,7 @@ impl Checker<'_> {
                 | Ty::Texture
                 | Ty::Sampler
                 | Ty::GlbAsset
-                // A sound is an asset of the scene's manifest (decision 0160).
+                // A sound is an asset of the scene's manifest (decision 0130).
                 | Ty::Sound
                 | Ty::MaterialInstance(_) => {
                     return Some(format!("a {} resource", interner.display(ty)));

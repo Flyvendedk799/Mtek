@@ -67,7 +67,7 @@ export class FailureOverlay {
     const root = this.root ?? this.createRoot();
     root.replaceChildren();
 
-    // A browser without WebGPU gets plain advice first (decision 0162); the diagnostics follow as details.
+    // A browser without WebGPU gets plain advice first (decision 0132); the diagnostics follow as details.
     const unsupported = this.diagnostics.find((d) => UNSUPPORTED_BROWSER_CODES.includes(d.code));
     if (unsupported !== undefined) root.append(this.renderUnsupported(unsupported.code));
 

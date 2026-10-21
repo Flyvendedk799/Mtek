@@ -1,5 +1,5 @@
 /**
- * The audio subsystem against a fake Web Audio (decision 0160): unlock on the first gesture, music remembered until
+ * The audio subsystem against a fake Web Audio (decision 0130): unlock on the first gesture, music remembered until
  * then, clamping with W8201, a file the browser cannot decode with W8202, mute and global volume on the master gain,
  * and positional sound relative to the camera.
  */

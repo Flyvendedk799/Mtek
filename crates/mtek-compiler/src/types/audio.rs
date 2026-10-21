@@ -1,4 +1,4 @@
-//! Audio calls in the checker (`spec/audio.md` section 3, decision 0160): `E5501` for a constant
+//! Audio calls in the checker (`spec/audio.md` section 3, decision 0130): `E5501` for a constant
 //! volume or pitch outside its range. Run-time values outside the range are clamped by the
 //! runtime with `W8201`.
 

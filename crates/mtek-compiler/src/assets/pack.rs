@@ -497,7 +497,7 @@ pub fn pack(
         sources.insert(wanted.source_path.to_owned(), wanted.source_sha.to_owned());
         packed.files.insert(url, wanted.bytes.to_vec());
     }
-    // Sounds (decision 0160): every declared sound file, byte for byte, one entry per file. The
+    // Sounds (decision 0130): every declared sound file, byte for byte, one entry per file. The
     // runtime finds an entry by `source`, the project path generated code names the sound by.
     for (path, declared) in store.sounds() {
         let file = &declared.file;

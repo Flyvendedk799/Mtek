@@ -1,4 +1,4 @@
-// Sounds are assets (spec/audio.md section 2, decision 0160): declared in a constant, validated by the compiler,
+// Sounds are assets (spec/audio.md section 2, decision 0130): declared in a constant, validated by the compiler,
 // packaged byte for byte, and played from handlers.
 const BLIP = asset.sound("../sounds/blip.wav");
 

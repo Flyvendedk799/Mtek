@@ -1409,7 +1409,7 @@ pub enum Value {
     /// A texture from an image file or an image embedded in a GLB (decision 0058):
     /// `{ "image": { "source": { "file": "textures/wood.png" }, "space": "srgb", "mipmapped": false } }`.
     Image(crate::assets::AssetImage),
-    /// A sound file (`asset.sound`, decision 0160), by project path: `{ "sound": "sfx/hit.wav" }`.
+    /// A sound file (`asset.sound`, decision 0130), by project path: `{ "sound": "sfx/hit.wav" }`.
     /// The runtime finds the packaged file by this path in the manifest's `audio` entries.
     Sound(String),
 }

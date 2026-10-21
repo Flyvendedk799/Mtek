@@ -46,11 +46,11 @@ The reasons and the restrictions of sections 2, 3 and 6 are written by hand in `
 - Records: [0039](../spec/decisions/0039-materials-in-the-checker-details.md), [0086](../spec/decisions/0086-diagnostic-wording-and-baseline-frame-order.md), [0094](../spec/decisions/0094-coverage-audit-findings.md).
 - Source: [spec/decisions/0086-diagnostic-wording-and-baseline-frame-order.md](../spec/decisions/0086-diagnostic-wording-and-baseline-frame-order.md): "the build still folds every initial value"
 
-## 4. Reserved words (30)
+## 4. Reserved words (28)
 
 The words are reserved for future use (spec/language.md 2.3); using one as a name is E0013 ("`while` is reserved for a future version"). The specification gives no further rationale. ([spec/language.md](../spec/language.md): "Using these as identifiers is error `E0013`")
 
-`as` `async` `await` `enum` `extern` `impl` `loop` `match` `mod` `move` `mut` `priv` `pub` `static` `super` `trait` `type` `unsafe` `use` `where` `while` `yield` `compute` `vertex` `storage` `uniform` `workgroup` `system` `query` `component`
+`as` `async` `await` `extern` `impl` `loop` `mod` `move` `mut` `priv` `pub` `static` `super` `trait` `type` `unsafe` `use` `where` `while` `yield` `compute` `vertex` `storage` `uniform` `workgroup` `system` `query` `component`
 
 ## 5. Specified, but no program can produce the diagnostic (4)
 
@@ -77,7 +77,8 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 | Identifiers are ASCII only. | Not in v0.1; the diagnostic says so ("Unicode identifiers are not supported in v0.1"). | `E0010` | [spec/language.md](../spec/language.md): "ASCII only in v0.1" |
 | No closures or function values; functions are module items only. | Not in v0.1. There is no dedicated diagnostic: the `\|` that would start a closure is read as the (unsupported) bitwise operator, E1901, and its parameter is an unknown name, E2003. | `E1901`, `E2003` | [spec/language.md](../spec/language.md): "closures and function values" |
 | No generics: a function cannot take type parameters (`fn f<T>(x: T)`). | Not in v0.1. There is no dedicated diagnostic: the `<` after the name is a syntax error, E1001. | `E1001` | [spec/language.md](../spec/language.md): "generics" |
-| No methods or `impl`, no user-defined enums, no pattern matching (`match`), no `use`, `mod`, `trait`, `type`, `async` or any other word of the reserved list. | Reserved for future versions (E0013); the built-in registry enums such as `Key` are the only enums. | `E0013` | [spec/language.md](../spec/language.md): "methods and `impl`; enums" |
+| No methods or `impl`, no `use`, `mod`, `trait`, `type`, `async` or any other word of the reserved list. | Reserved for future versions (E0013). | `E0013` | [spec/language.md](../spec/language.md): "methods and `impl`;" |
+| Enum variants carry no data and have no explicit discriminants; an enum does not convert to or from a number, has no ordering, and is CPU-only. A `match` pattern is an enum variant or `_`: no literal, binding, range or guard patterns and no destructuring. | Decision 0129 adds the closed, data-free enum and the exhaustive `match` that a game-state machine needs and leaves the rest for a later version; an enum is erased to its variant index, which the language does not expose. | `E3001`, `E3014`, `E3204`, `E4011` | decisions [0129](../spec/decisions/0129-enums-and-match.md); [spec/language.md](../spec/language.md): "enum variants that carry data, explicit enum discriminants" |
 | No optional or result types and no null. | Fallibility exists only at host boundaries (spec/runtime-abi.md section 6) and in a few built-in operations that return a `bool` plus a documented default, such as `alive(r)`. | none | [spec/language.md](../spec/language.md): "There is no implicit `null`, no `any`, no implicit optional." |
 | Strings are immutable, CPU-only values with no concatenation or formatting; `+` on strings is an error. | Not in v0.1. Strings have no GPU representation. | `E3014` | [spec/language.md](../spec/language.md): "string formatting/concatenation" |
 | No recursion, direct or mutual, in either execution domain. | Decision 0016 item 3: GPU code cannot recurse, and v0.1 forbids it on the CPU too, which keeps effect analysis simple and the rules identical for code that may run in either domain. To be revisited with evidence of need. | `E4001` | decisions [0016](../spec/decisions/0016-v0.1-restrictions.md); [spec/language.md](../spec/language.md): "Recursion, direct or mutual, is error `E4001`" |
@@ -96,7 +97,7 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 | Restriction | Why | Diagnostics | Records and source |
 |---|---|---|---|
 | One scene per application; no scene switching, no camera switching, no run-time re-parenting, no spawned prefabs with children or nested prefab instances inside prefabs, no user-defined components, queries or systems, no render interpolation, no text or UI. | Not in v0.1 (spec/scenes.md section 14). Scene switching is E5901 (reserved); `component`, `query` and `system` are reserved words (E0013). | `E5901`, `E0013` | [spec/scenes.md](../spec/scenes.md): "## 14. Not in v0.1" |
-| Audio plays whole decoded WAV, Ogg or MP3 files: no streaming, no effects or buses beyond the master volume, no handle to stop a playing one-shot, one music track at a time, and nothing plays before the first user gesture (browser autoplay policy). | Spec/audio.md section 8 (decision 0160): the smallest audio model that covers hit, score and music sounds. | `E7101`, `E7102`, `E5501` | decisions [0160](../spec/decisions/0160-audio.md); [spec/audio.md](../spec/audio.md): "## 8. Not in this extension" |
+| Audio plays whole decoded WAV, Ogg or MP3 files: no streaming, no effects or buses beyond the master volume, no handle to stop a playing one-shot, one music track at a time, and nothing plays before the first user gesture (browser autoplay policy). | Spec/audio.md section 8 (decision 0130): the smallest audio model that covers hit, score and music sounds. | `E7101`, `E7102`, `E5501` | decisions [0130](../spec/decisions/0130-audio.md); [spec/audio.md](../spec/audio.md): "## 8. Not in this extension" |
 | An `entity_ref` (the result of `spawn`, the argument of a collision handler) can be passed to `destroy`, `alive` and body commands, but its fields and state cannot be read or written. | Decision 0064: not in v0.1. | `E5074` | decisions [0064](../spec/decisions/0064-spawn-destroy-entity-ref.md); [spec/diagnostics.md](../spec/diagnostics.md): "field access through entity_ref" |
 
 ### Physics
@@ -141,7 +142,7 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 | Restriction | Why | Diagnostics | Records and source |
 |---|---|---|---|
 | The target profile `webgpu-core-2026` is exactly the WebGPU default limits and requires no optional feature; a device below it cannot run a program. | Keeps the required capabilities of every v0.1 program empty (`features: []`, `limits: {}`); the consistency check compares this with the manifest the compiler writes. | `E8002` | [spec/runtime-abi.md](../spec/runtime-abi.md): "the v0.1 profile `webgpu-core-2026` is exactly the default limits" |
-| WebGPU is the only renderer: there is no WebGL2 fallback, and a browser without WebGPU (or without an adapter) shows the unsupported-browser screen instead of the game. Only Chromium has a full automated run; Firefox has one Windows run and Safari none. | Decision 0162: a second backend would need a second shader language and layout for every feature; spec/browser-support.md section 2 marks which browsers are expectations. | `E8004`, `E8005` | decisions [0162](../spec/decisions/0162-browser-support-webgpu-only.md); [spec/browser-support.md](../spec/browser-support.md): "## 1. The stance: WebGPU only, no WebGL2" |
+| WebGPU is the only renderer: there is no WebGL2 fallback, and a browser without WebGPU (or without an adapter) shows the unsupported-browser screen instead of the game. Only Chromium has a full automated run; Firefox has one Windows run and Safari none. | Decision 0132: a second backend would need a second shader language and layout for every feature; spec/browser-support.md section 2 marks which browsers are expectations. | `E8004`, `E8005` | decisions [0132](../spec/decisions/0132-browser-support-webgpu-only.md); [spec/browser-support.md](../spec/browser-support.md): "## 1. The stance: WebGPU only, no WebGL2" |
 
 ### Tooling
 
@@ -157,11 +158,9 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 - `as`
 - `async`
 - `await`
-- `enum`
 - `extern`
 - `impl`
 - `loop`
-- `match`
 - `mod`
 - `move`
 - `mut`

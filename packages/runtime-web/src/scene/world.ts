@@ -155,7 +155,7 @@ export interface CpuServices {
   print(message: string, spanId: number): void;
   /** `go_to`, `reset`, `pause`, `resume`, `paused` (decisions 0140, 0141, 0143), `save`, `load`, `clear_saved` (0145); default: {@link INERT_GAME}. */
   readonly game?: GameHooks;
-  /** `ctx.audio` (decision 0160); silent when absent. */
+  /** `ctx.audio` (decision 0130); silent when absent. */
   readonly audio?: AudioService;
 }
 

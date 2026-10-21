@@ -1,5 +1,5 @@
 //! Sound files: the container and header of a `.wav`, `.ogg` or `.mp3` declared with
-//! `asset.sound(..)` (`spec/audio.md` section 2, decision 0160).
+//! `asset.sound(..)` (`spec/audio.md` section 2, decision 0130).
 //!
 //! Like images, sounds are checked without decoding: the compiler reads enough of the header to
 //! know that the file is what its extension says, that it is not truncated where the header can

@@ -106,7 +106,7 @@ export class Surface {
   private rendered = 0;
   private skipped = 0;
   private configured = false;
-  /** Unconfigured because the canvas has no pixels; configured again when it has (decision 0162). */
+  /** Unconfigured because the canvas has no pixels; configured again when it has (decision 0132). */
   private parked = false;
 
   constructor(private readonly options: SurfaceOptions) {
@@ -190,7 +190,7 @@ export class Surface {
     // A configured context whose canvas becomes zero-sized makes Firefox create a zero-sized swap-chain
     // texture, an uncaptured validation error ("Dimension X is zero", evidence/M7/environments/
     // windows11-rx7900xtx-firefox-155). So the context is unconfigured while there are no pixels and
-    // configured again when they return (decision 0162). Nothing is drawn meanwhile either way.
+    // configured again when they return (decision 0132). Nothing is drawn meanwhile either way.
     const empty = width === 0 || height === 0;
     if (empty && this.configured) {
       this.options.context.unconfigure();

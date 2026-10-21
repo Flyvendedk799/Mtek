@@ -1,5 +1,5 @@
 /**
- * The "unsupported browser" screen (decision 0162). Mtek renders with WebGPU only; a browser without it
+ * The "unsupported browser" screen (decision 0132). Mtek renders with WebGPU only; a browser without it
  * fails the mount with `E8004` (no `navigator.gpu`) or `E8005` (no adapter). Instead of only the technical
  * diagnostic, the failure overlay then tells a player what to do in plain words, for the browser they use.
  *

@@ -528,7 +528,7 @@ describe("resize and zero-sized canvases", () => {
     host.canvas.clientWidth = 0;
     host.resizeObservers[0]?.trigger();
     expect(host.canvas.width).toBe(0);
-    // The context is unconfigured while there are no pixels (Firefox, decision 0162).
+    // The context is unconfigured while there are no pixels (Firefox, decision 0132).
     expect(host.context.configuration).toBeNull();
     debugOf(app).step(3, 0.016);
     expect(host.device.queue.submits).toBe(1); // nothing was drawn

@@ -7,7 +7,7 @@
 //! 1. `packages/runtime-web/dist/`, written by `npm run build`: a checkout that builds the runtime
 //!    embeds what it built;
 //! 2. `crates/mtek-cli/prebuilt/`, the prebuilt runtime checked into the repository (decision
-//!    0161), so that `cargo build` on a fresh clone gives an `mtek` that can `build` without Node.
+//!    0131), so that `cargo build` on a fresh clone gives an `mtek` that can `build` without Node.
 //!
 //! They are copied into `OUT_DIR`, where `src/runtime.rs` includes them with `include_bytes!`, and
 //! the cfg `mtek_runtime_embedded` is set; `MTEK_RUNTIME_ORIGIN` names the directory used (`dist`

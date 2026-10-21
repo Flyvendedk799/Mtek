@@ -41,7 +41,7 @@ impl TyId {
     pub const SAMPLER: TyId = TyId(16);
     pub const ENTITY_REF: TyId = TyId(17);
     pub const GLB_ASSET: TyId = TyId(18);
-    /// `asset.sound(..)` (`spec/audio.md`, decision 0160).
+    /// `asset.sound(..)` (`spec/audio.md`, decision 0130).
     pub const SOUND: TyId = TyId(19);
 
     /// The id as an index into the interner.

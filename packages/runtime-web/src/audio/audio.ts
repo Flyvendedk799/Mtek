@@ -1,5 +1,5 @@
 /**
- * Audio (`spec/audio.md`, decision 0160): what generated code reaches as `ctx.audio`.
+ * Audio (`spec/audio.md`, decision 0130): what generated code reaches as `ctx.audio`.
  *
  * Sound files are fetched and verified with the other assets (a missing or changed file fails the mount with
  * `E7030`, like an image). Decoding uses an `OfflineAudioContext`, which browsers allow before any user gesture;

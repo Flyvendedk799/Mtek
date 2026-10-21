@@ -433,7 +433,7 @@
     },
     "audioAsset": {
       "type": "object",
-      "description": "A sound file declared with asset.sound(..), copied byte for byte (spec/audio.md section 4, decision 0160).",
+      "description": "A sound file declared with asset.sound(..), copied byte for byte (spec/audio.md section 4, decision 0130).",
       "additionalProperties": false,
       "required": ["url", "sha256", "bytes", "kind", "format", "mime", "source", "span"],
       "properties": {

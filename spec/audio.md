@@ -1,7 +1,7 @@
 # Audio: Sound Assets, Playback, Volume and Browser Autoplay (v0.1 extension)
 
 - Repository path: `spec/audio.md`
-- Status: Normative for the small-game extension (decision 0160). Lifts "audio" from `spec/scenes.md` section 14.
+- Status: Normative for the small-game extension (decision 0130). Lifts "audio" from `spec/scenes.md` section 14.
 - Depends on: `spec/assets.md` (declarations, packaging, loading), `spec/stdlib.md` section 6 (the intrinsics), `spec/runtime-abi.md` (the `ctx` contract).
 
 ---

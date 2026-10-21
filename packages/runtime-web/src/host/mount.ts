@@ -388,6 +388,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
     const saveStorage = options.storage ?? pageStorage ?? new MemorySaveStorage();
     const saveStorageUnavailable = options.storage === undefined && options.test === undefined && pageStorage === null;
     // Audio (decision 0160): decoded now, played after the first user gesture unlocks it.
+    // Audio (decision 0130): decoded now, played after the first user gesture unlocks it.
     const listening: { world?: { readonly camera: ListenerPose } } = {};
     audio = new AudioSystem({
       manifest,

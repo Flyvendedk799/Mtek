@@ -2494,7 +2494,7 @@
       "kind": "handle",
       "gpu": false,
       "since": "M1",
-      "doc": "A sound file declared with `asset.sound(..)`; CPU only. Played with `play`, `play_at` and `play_music` (decision 0160).",
+      "doc": "A sound file declared with `asset.sound(..)`; CPU only. Played with `play`, `play_at` and `play_music` (decision 0130).",
       "fields": [],
       "methods": []
     },

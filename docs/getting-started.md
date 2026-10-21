@@ -24,7 +24,7 @@ works, and what it normalises, is in the maintenance note at the end.
 `mtek check`, `mtek build`, `mtek fmt` and the editor-facing commands never touch the GPU. Only
 *looking* at the result needs a browser with WebGPU. Without one the page still opens, but it shows
 **This browser cannot show this game**, with steps for the browser in use (update it, a flag to switch
-on, or a browser that works; decision 0162), and below that **Mtek could not run this program** and a
+on, or a browser that works; decision 0132), and below that **Mtek could not run this program** and a
 runtime diagnostic: `MTEK-E8004` (`WebGPU unavailable`, the
 browser has no `navigator.gpu`) or `MTEK-E8005` (`no suitable adapter`, it has WebGPU but found no
 GPU). Everything in sections 3 to 5 and 8 to 11 works the same on such a machine, and the build
@@ -56,7 +56,7 @@ If you only want to try it, the second step is enough: the tool is then `target/
 your `PATH`. If you build the tool **without** building the runtime bundle (for example
 `cargo build -p mtek-cli --locked` in a fresh checkout, with no Node.js at all), it embeds the
 prebuilt runtime that the repository carries in `crates/mtek-cli/prebuilt/` instead, and every
-command works (decision 0161). Run `npm run build` when you change the runtime: the freshly built
+command works (decision 0131). Run `npm run build` when you change the runtime: the freshly built
 bundle then takes precedence. Only a binary built with neither (the prebuilt files deleted) fails
 `mtek build` and `mtek dev` with `MTEK-E9030`.
 

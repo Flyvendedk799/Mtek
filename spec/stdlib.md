@@ -186,7 +186,7 @@ Notation: `T` ranges over `f32, vec2, vec3, vec4` (component-wise), `I` over `i3
 | `is_key_down` | `(Key) → bool` | cpu | — | |
 | `spawn` | `(prefab descriptor) → entity_ref` | cpu (handlers only) | — | the argument is a prefab literal `Prefab { param: value; }`; params may be run-time values (decision 0064) |
 | `destroy` | `(entity_ref) → ()` | cpu (handlers only) | — | `E5030` for a named entity |
-| `play` | `(sound) → ()`, `(sound, f32) → ()`, `(sound, f32, f32) → ()` | cpu (handlers only) | — | volume `0..4` (default 1), pitch `0.0625..16` (default 1); `spec/audio.md` §3 (decision 0160) |
+| `play` | `(sound) → ()`, `(sound, f32) → ()`, `(sound, f32, f32) → ()` | cpu (handlers only) | — | volume `0..4` (default 1), pitch `0.0625..16` (default 1); `spec/audio.md` §3 (decision 0130) |
 | `play_at` | `(sound, vec3) → ()`, `(sound, vec3, f32) → ()` | cpu (handlers only) | — | positional: distance attenuation and panning from the active camera; `spec/audio.md` §3 |
 | `play_music` | `(sound) → ()`, `(sound, f32) → ()` | cpu (handlers only) | — | loops; replaces the music that plays |
 | `stop_music` | `() → ()` | cpu (handlers only) | — | |

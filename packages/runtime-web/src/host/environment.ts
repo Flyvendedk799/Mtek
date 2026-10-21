@@ -75,7 +75,7 @@ export interface HostEnvironment {
   setTimeout(callback: () => void, delayMs: number): unknown;
   clearTimeout(handle: unknown): void;
   /**
-   * Web Audio (decision 0160): absent means the browser's (`AudioContext` and `OfflineAudioContext`), `null` means
+   * Web Audio (decision 0130): absent means the browser's (`AudioContext` and `OfflineAudioContext`), `null` means
    * none (every audio call is then a no-op). Tests inject a fake.
    */
   readonly audio?: import("../audio/audio.js").AudioBackend | null;

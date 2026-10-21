@@ -271,7 +271,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                     &[p("path", string)],
                     TypeRef::Texture,
                 )),
-                // Decision 0160 (spec/audio.md): sounds are assets like images.
+                // Decision 0130 (spec/audio.md): sounds are assets like images.
                 NamespaceMember::Function(compile_time(
                     "sound",
                     Milestone::M1,
@@ -499,7 +499,7 @@ pub(super) fn types() -> Vec<TypeDef> {
         handle(
             "sound",
             Milestone::M1,
-            "A sound file declared with `asset.sound(..)`; CPU only. Played with `play`, `play_at` and `play_music` (decision 0160).",
+            "A sound file declared with `asset.sound(..)`; CPU only. Played with `play`, `play_at` and `play_music` (decision 0130).",
         ),
         TypeDef {
             methods: glb_methods(),

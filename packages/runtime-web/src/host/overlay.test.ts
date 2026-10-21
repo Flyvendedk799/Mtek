@@ -143,7 +143,7 @@ describe("FailureOverlay", () => {
   });
 });
 
-describe("FailureOverlay for a browser without WebGPU (decision 0162)", () => {
+describe("FailureOverlay for a browser without WebGPU (decision 0132)", () => {
   it("puts the unsupported-browser advice above the diagnostics, and only for E8004 and E8005", () => {
     const { doc, make } = setup();
     const overlay = make();

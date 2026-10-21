@@ -259,12 +259,12 @@
     },
     {
       "code": "W8201",
-      "reason": "A runtime code of the audio subsystem (decision 0160).",
+      "reason": "A runtime code of the audio subsystem (decision 0130).",
       "test": "packages/runtime-web/src/audio/audio.test.ts"
     },
     {
       "code": "W8202",
-      "reason": "A runtime code of the audio subsystem (decision 0160).",
+      "reason": "A runtime code of the audio subsystem (decision 0130).",
       "test": "packages/runtime-web/src/audio/audio.test.ts"
     }
   ]

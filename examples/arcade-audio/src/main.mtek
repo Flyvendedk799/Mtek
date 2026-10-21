@@ -1,4 +1,4 @@
-// Arcade audio (spec/audio.md, decision 0160): hit and score sounds, looping music and a mute button.
+// Arcade audio (spec/audio.md, decision 0130): hit and score sounds, looping music and a mute button.
 //
 //   Space      hit the ball: a hit sound, panned to where the ball is
 //   S          score: the score sound, pitched up with every point

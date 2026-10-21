@@ -60,7 +60,7 @@ pub enum ConstValue {
     /// A texture from an image file or an image embedded in a GLB (decision 0058).
     AssetTexture(AssetImage),
     /// A sound file declared with `asset.sound(..)`: the project path of the validated file
-    /// (`spec/audio.md`, decision 0160).
+    /// (`spec/audio.md`, decision 0130).
     AssetSound(String),
     /// An instance of a user material (decision 0039): the material, its
     /// name, and every parameter in declaration order, written or defaulted.

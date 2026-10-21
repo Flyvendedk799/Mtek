@@ -246,7 +246,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             vec![sig(&[p("target", exact(TypeRef::EntityRef))], exact(TypeRef::Unit))],
         )
         .handlers_only(),
-        // Audio (spec/audio.md, decision 0160): CPU intrinsics that reach `ctx.audio`.
+        // Audio (spec/audio.md, decision 0130): CPU intrinsics that reach `ctx.audio`.
         function(
             "play",
             Domain::Cpu,

@@ -1,13 +1,13 @@
 # Browser Support: WebGPU Only, the Browsers It Covers, and the Unsupported-Browser Screen (v0.1 extension)
 
 - Repository path: `spec/browser-support.md`
-- Status: Normative for the small-game extensions (decision 0162).
+- Status: Normative for the small-game extensions (decision 0132).
 
 ---
 
 ## 1. The stance: WebGPU only, no WebGL2
 
-Mtek draws with WebGPU and nothing else. There is no WebGL2 backend and none is planned for v0.1: the compiler's GPU target is WGSL (`spec/materials.md`), the runtime's resource model is WebGPU's bind groups, storage buffers and render pipelines (`spec/gpu-layout.md`), and a second backend would need a second shader language, a second layout and a second test matrix for every feature. Decision 0162 records the trade-off. A browser without WebGPU gets a clear screen (section 3), not a degraded game.
+Mtek draws with WebGPU and nothing else. There is no WebGL2 backend and none is planned for v0.1: the compiler's GPU target is WGSL (`spec/materials.md`), the runtime's resource model is WebGPU's bind groups, storage buffers and render pipelines (`spec/gpu-layout.md`), and a second backend would need a second shader language, a second layout and a second test matrix for every feature. Decision 0132 records the trade-off. A browser without WebGPU gets a clear screen (section 3), not a degraded game.
 
 ## 2. Browsers
 

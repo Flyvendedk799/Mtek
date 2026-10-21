@@ -29,7 +29,7 @@ pub enum AssetKind {
     Texture,
     /// `asset.linear_texture(..)`.
     LinearTexture,
-    /// `asset.sound(..)` (`spec/audio.md`, decision 0160).
+    /// `asset.sound(..)` (`spec/audio.md`, decision 0130).
     Sound,
 }
 
@@ -59,7 +59,7 @@ pub enum AssetHandle {
     Glb { path: String },
     /// A standalone image at this project path, in a colour space.
     Image { path: String, space: ImageSpace },
-    /// A validated sound file at this project path (decision 0160).
+    /// A validated sound file at this project path (decision 0130).
     Sound { path: String },
 }
 
@@ -96,7 +96,7 @@ pub struct ImageFile {
     pub info: ImageInfo,
 }
 
-/// A sound file (`asset.sound`, decision 0160).
+/// A sound file (`asset.sound`, decision 0130).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SoundFile {
     pub path: String,

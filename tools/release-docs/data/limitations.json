@@ -316,14 +316,14 @@
       "id": "audio-scope",
       "area": "Scenes and entities",
       "restriction": "Audio plays whole decoded WAV, Ogg or MP3 files: no streaming, no effects or buses beyond the master volume, no handle to stop a playing one-shot, one music track at a time, and nothing plays before the first user gesture (browser autoplay policy).",
-      "reason": "Spec/audio.md section 8 (decision 0160): the smallest audio model that covers hit, score and music sounds.",
+      "reason": "Spec/audio.md section 8 (decision 0130): the smallest audio model that covers hit, score and music sounds.",
       "codes": [
         "E7101",
         "E7102",
         "E5501"
       ],
       "decisions": [
-        "0160"
+        "0130"
       ],
       "source": {
         "file": "spec/audio.md",
@@ -557,13 +557,13 @@
       "id": "webgpu-only",
       "area": "Runtime",
       "restriction": "WebGPU is the only renderer: there is no WebGL2 fallback, and a browser without WebGPU (or without an adapter) shows the unsupported-browser screen instead of the game. Only Chromium has a full automated run; Firefox has one Windows run and Safari none.",
-      "reason": "Decision 0162: a second backend would need a second shader language and layout for every feature; spec/browser-support.md section 2 marks which browsers are expectations.",
+      "reason": "Decision 0132: a second backend would need a second shader language and layout for every feature; spec/browser-support.md section 2 marks which browsers are expectations.",
       "codes": [
         "E8004",
         "E8005"
       ],
       "decisions": [
-        "0162"
+        "0132"
       ],
       "source": {
         "file": "spec/browser-support.md",

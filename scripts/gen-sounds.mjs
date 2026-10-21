@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Writes the tiny, deterministic WAV files of examples/arcade-audio/sounds and of the audio fixtures
-// (spec/audio.md section 7, decision 0160). No recording is checked in that this script cannot
+// (spec/audio.md section 7, decision 0130). No recording is checked in that this script cannot
 // reproduce: every sample is computed here, 8-bit mono PCM at 11 025 Hz, so the files stay small.
 //
 //   node scripts/gen-sounds.mjs           writes the files

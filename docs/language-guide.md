@@ -54,7 +54,7 @@ scene Demo {
 - One scene runs (`scene = "Name"` in `mtek.toml` if the entry file has several), with exactly one active camera. Entity names are unique in the scene.
 - Fields and statements end in `;`. A descriptor separates its fields with `;` too (`Box { size: vec3(1.0, 1.0, 1.0) }`; a comma is `MTEK-E1001`). `state` and `param` need a type.
 - Metres, seconds, radians, kilograms; right-handed, `+Y` up, a camera or light looks along its `-Z`. An entity with a `mesh` and no `material` is `Unlit {}`; a `material` without a `mesh` is `MTEK-E5020`.
-- Not in the language: `while`, closures, generics, null, ternary, string joining, user enums. 30 words are reserved (`move`, `type`, `use`, `loop`, `static`, `mod`, ...): `MTEK-E0013`.
+- Not in the language: `while`, closures, generics, null, ternary, string joining, user enums. 28 words are reserved (`move`, `type`, `use`, `loop`, `static`, `mod`, ...): `MTEK-E0013`.
 
 ## 2. Values
 

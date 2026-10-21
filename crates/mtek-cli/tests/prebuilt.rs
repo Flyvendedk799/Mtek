@@ -1,4 +1,4 @@
-//! The prebuilt runtime of `crates/mtek-cli/prebuilt/` (decision 0161): `build.rs` embeds it when
+//! The prebuilt runtime of `crates/mtek-cli/prebuilt/` (decision 0131): `build.rs` embeds it when
 //! `packages/runtime-web/dist/` was not built, so it must be complete and match its provenance
 //! record. Whether it is *current* (built from today's sources) is `npm run check:prebuilt`, which
 //! hashes the sources; this test needs no Node.

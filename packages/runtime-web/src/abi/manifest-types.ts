@@ -251,7 +251,7 @@ export interface MtekImageAsset {
   readonly source?: string;
 }
 
-/** A sound file declared with `asset.sound(..)`, copied byte for byte (`spec/audio.md` section 4, decision 0160). */
+/** A sound file declared with `asset.sound(..)`, copied byte for byte (`spec/audio.md` section 4, decision 0130). */
 export interface MtekAudioAsset {
   readonly url: string;
   readonly sha256: string;

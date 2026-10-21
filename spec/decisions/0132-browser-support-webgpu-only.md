@@ -1,4 +1,4 @@
-# 0162. Browser support: WebGPU only, Firefox and Safari as WebGPU browsers, and an unsupported-browser screen
+# 0132. Browser support: WebGPU only, Firefox and Safari as WebGPU browsers, and an unsupported-browser screen
 
 - Status: Accepted
 - Date: 2026-10-21
