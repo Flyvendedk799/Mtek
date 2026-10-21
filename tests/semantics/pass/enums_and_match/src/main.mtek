@@ -1,0 +1,69 @@
+// Enums and match (decision 0129): a game-state machine held in scene
+// state, compared with `==`, switched with a match statement and read with
+// a match expression; constants fold through a match.
+enum Phase { Menu, Playing, Paused, GameOver }
+
+enum Difficulty {
+    Easy,
+    Normal,
+    Hard,
+}
+
+const START: Phase = Phase.Menu;
+const LIVES: i32 = match Difficulty.Normal {
+    Difficulty.Easy => 5,
+    Difficulty.Normal => 3,
+    Difficulty.Hard => 1,
+};
+
+fn speed(phase: Phase) -> f32 {
+    return match phase {
+        Phase.Playing => 1.0,
+        Phase.Menu | Phase.Paused => 0.0,
+        _ => 0.25,
+    };
+}
+
+fn is_running(phase: Phase) -> bool {
+    match phase {
+        Phase.Playing => { return true; }
+        Phase.Menu | Phase.Paused | Phase.GameOver => { return false; }
+    }
+}
+
+scene Demo {
+    state phase: Phase = START;
+    state lives: i32 = LIVES;
+    state time: f32 = 0.0;
+    camera Main {
+        position: vec3(0.0, 2.0, 8.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+    entity Floor {
+        mesh: Plane { size: vec2(10.0, 10.0) };
+    }
+    update(dt: f32) {
+        if is_running(phase) {
+            time += dt * speed(phase);
+        }
+        if phase == Phase.Playing && time > 30.0 {
+            phase = Phase.GameOver;
+        }
+    }
+    on key_down(Key.Space) {
+        match phase {
+            Phase.Menu => {
+                phase = Phase.Playing;
+                time = 0.0;
+            }
+            Phase.Playing => { phase = Phase.Paused; }
+            Phase.Paused => { phase = Phase.Playing; }
+            Phase.GameOver => {
+                lives -= 1;
+                if lives > 0 {
+                    phase = Phase.Menu;
+                }
+            }
+        }
+    }
+}

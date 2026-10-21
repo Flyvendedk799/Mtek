@@ -1,0 +1,24 @@
+// An imported enum keeps its identity (decision 0129, like structs in
+// decision 0035): its variants, `==`, `match` and the functions of its
+// module work across the import, and a struct field may hold it.
+import { Phase, next } from "./phase.mtek";
+
+struct Round {
+    phase: Phase;
+    score: i32;
+}
+
+scene Demo {
+    state round: Round = Round { phase: Phase.Menu; score: 0 };
+    camera Main {}
+    on key_down(Key.Space) {
+        round.phase = next(round.phase);
+        match round.phase {
+            Phase.GameOver => { round.score = 0; }
+            _ => { round.score += 1; }
+        }
+        if round.phase == Phase.Menu {
+            round.score = 0;
+        }
+    }
+}

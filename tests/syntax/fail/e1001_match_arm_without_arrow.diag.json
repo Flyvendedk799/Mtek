@@ -1,0 +1,9 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_match_arm_without_arrow.mtek",
+    "startByte": 109,
+    "endByte": 110,
+    "message": "Expected `=>` after the pattern, found `{`."
+  }
+]

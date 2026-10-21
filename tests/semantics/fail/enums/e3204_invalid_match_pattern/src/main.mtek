@@ -1,0 +1,17 @@
+// A pattern is `_` or a variant of the matched enum: not a literal or a
+// variant of another enum.
+// covers: [S: match-patterns]
+enum Phase { Menu, Playing }
+enum Direction { North, South }
+
+fn speed(phase: Phase) -> f32 {
+    return match phase {
+        1 => 1.0,
+        Direction.North => 2.0,
+        _ => 3.0,
+    };
+}
+
+scene Demo {
+    camera Main {}
+}

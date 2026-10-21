@@ -1,0 +1,14 @@
+// Match expressions: each arm is patterns, `=>` and one expression; arms are
+// separated by commas, a trailing comma is allowed.
+fn speed(phase: GameState) -> f32 {
+    let base = match phase {
+        GameState.Menu => 0.0,
+        GameState.Playing | GameState.Paused => 1.0,
+        _ => 2.0,
+    };
+    let bonus = match phase { GameState.GameOver => 0.5, _ => 0.0 };
+    if match phase { GameState.Menu => true, _ => false } {
+        return 0.0;
+    }
+    return base * 2.0 + bonus;
+}

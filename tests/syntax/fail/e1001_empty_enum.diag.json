@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_empty_enum.mtek",
+    "startByte": 85,
+    "endByte": 87,
+    "message": "An enum needs at least one variant.",
+    "notes": [
+      "help: list the variants separated by commas: `enum State { Menu, Playing }`"
+    ]
+  }
+]

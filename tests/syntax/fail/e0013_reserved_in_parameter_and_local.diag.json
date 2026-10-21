@@ -4,9 +4,9 @@
     "file": "e0013_reserved_in_parameter_and_local.mtek",
     "startByte": 5,
     "endByte": 10,
-    "message": "`match` is reserved for a future version of Mtek and cannot be used as a name.",
+    "message": "`trait` is reserved for a future version of Mtek and cannot be used as a name.",
     "notes": [
-      "help: v0.1 has no pattern matching; compare with `==` in an `if ... else if ... else` chain"
+      "help: choose another name"
     ]
   }
 ]

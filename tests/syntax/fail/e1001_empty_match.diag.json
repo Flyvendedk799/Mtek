@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_empty_match.mtek",
+    "startByte": 76,
+    "endByte": 78,
+    "message": "A `match` needs at least one arm.",
+    "notes": [
+      "help: write one arm per variant, `Enum.Variant => ...`, or `_ => ...` for the rest"
+    ]
+  }
+]

@@ -1,0 +1,20 @@
+// A match covers every variant of the enum, or ends with `_`.
+// covers: [S: match-patterns]
+enum Phase { Menu, Playing, Paused, GameOver }
+
+fn speed(phase: Phase) -> f32 {
+    return match phase {
+        Phase.Menu => 0.0,
+        Phase.Playing => 1.0,
+    };
+}
+
+scene Demo {
+    state phase: Phase = Phase.Menu;
+    camera Main {}
+    update(dt: f32) {
+        match phase {
+            Phase.Menu | Phase.Paused => {}
+        }
+    }
+}

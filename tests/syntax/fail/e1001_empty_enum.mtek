@@ -1,0 +1,4 @@
+// An enum needs at least one variant; the parser reports it and goes on.
+enum Empty {}
+
+const AFTER = 1;

@@ -1,0 +1,12 @@
+// Enum declarations: a closed set of named variants, one line or many, with
+// an optional trailing comma (spec/language.md, enums).
+enum GameState { Menu, Playing, Paused, GameOver }
+
+enum Direction {
+    North,
+    East,
+    South,
+    West,
+}
+
+export enum Single { Only }
