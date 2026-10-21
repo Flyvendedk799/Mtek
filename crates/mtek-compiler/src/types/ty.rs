@@ -107,6 +107,8 @@ pub enum Ty {
     GlbAsset,
     /// A sound file declared with `asset.sound(..)` (`spec/audio.md`): CPU only.
     Sound,
+    /// A font declared with `asset.font(..)` or `hud.pixel_font()` (decision 0139): CPU only.
+    Font,
     /// A built-in record type of the registry (`SurfaceInput`, `PointerEvent`).
     Record(&'static str),
     /// A registry enum (`Key`).
@@ -131,7 +133,7 @@ pub enum Ty {
 }
 
 /// The types with fixed ids, in id order.
-const PRIMITIVES: [Ty; 20] = [
+const PRIMITIVES: [Ty; 21] = [
     Ty::Error,
     Ty::Unit,
     Ty::Bool,
@@ -152,12 +154,13 @@ const PRIMITIVES: [Ty; 20] = [
     Ty::EntityRef,
     Ty::GlbAsset,
     Ty::Sound,
+    Ty::Font,
 ];
 
 /// The registry types without parameters, by which the registry's type names
 /// are mapped to [`Ty`] (through [`TypeRef::spelling`], so the registry stays
 /// the only place that spells them).
-const NAMED_TYPE_REFS: [TypeRef; 18] = [
+const NAMED_TYPE_REFS: [TypeRef; 19] = [
     TypeRef::Bool,
     TypeRef::I32,
     TypeRef::U32,
@@ -176,6 +179,7 @@ const NAMED_TYPE_REFS: [TypeRef; 18] = [
     TypeRef::EntityRef,
     TypeRef::GlbAsset,
     TypeRef::Sound,
+    TypeRef::Font,
 ];
 
 /// The identity of a user struct type: its declaration, by the file that
@@ -534,6 +538,7 @@ impl TyInterner {
             TypeRef::EntityRef => Ty::EntityRef,
             TypeRef::GlbAsset => Ty::GlbAsset,
             TypeRef::Sound => Ty::Sound,
+            TypeRef::Font => Ty::Font,
             TypeRef::Unit => Ty::Unit,
             TypeRef::Record(name) => Ty::Record(name),
             TypeRef::Enum(name) => Ty::Enum(name),
@@ -567,6 +572,7 @@ impl TyInterner {
             Ty::EntityRef => TypeRef::EntityRef,
             Ty::GlbAsset => TypeRef::GlbAsset,
             Ty::Sound => TypeRef::Sound,
+            Ty::Font => TypeRef::Font,
             Ty::Unit => TypeRef::Unit,
             Ty::Record(name) => TypeRef::Record(name),
             Ty::Enum(name) => TypeRef::Enum(name),

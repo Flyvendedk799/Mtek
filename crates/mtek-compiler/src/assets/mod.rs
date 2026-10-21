@@ -15,6 +15,7 @@
 pub mod access;
 pub(crate) mod attributes;
 pub mod audio;
+pub mod font;
 mod glb;
 mod host;
 mod image;
@@ -26,7 +27,7 @@ pub use glb::{
     IndexKind, IndexSource, LocalTransform, SamplerChoice, Strided, read_glb,
 };
 pub use host::{
-    AssetHandle, AssetHost, AssetKind, AssetLoader, AssetStore, DeclaredFile, ImageFile,
+    AssetHandle, AssetHost, AssetKind, AssetLoader, AssetStore, DeclaredFile, FontFile, ImageFile,
     ImageSpace, SoundFile,
 };
 pub use image::{ImageInfo, sniff_image};

@@ -212,6 +212,17 @@ fn row(
             preprocessing: Vec::new(),
             primitives: Vec::new(),
         },
+        AssetKind::Font { source, span, .. } => AssetRow {
+            url: asset.url.clone(),
+            sha256: asset.sha256.clone(),
+            bytes: asset.bytes,
+            kind: "font",
+            color_space: None,
+            sources: vec![source.clone()],
+            declared_at: located(*span)?,
+            preprocessing: Vec::new(),
+            primitives: Vec::new(),
+        },
     })
 }
 

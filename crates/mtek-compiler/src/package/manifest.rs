@@ -507,6 +507,16 @@ pub enum AssetKind {
         source: String,
         span: u32,
     },
+    /// A font file of `asset.font(..)` (decision 0139), copied byte for byte.
+    #[serde(rename = "font")]
+    Font {
+        /// `ttf`, `otf`, `woff` or `woff2`.
+        format: String,
+        mime: String,
+        /// The project path of the declaring `asset.font(..)`: generated code names the font by it.
+        source: String,
+        span: u32,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

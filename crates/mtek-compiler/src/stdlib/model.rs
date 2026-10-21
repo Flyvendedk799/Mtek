@@ -100,6 +100,8 @@ pub enum TypeRef {
     GlbAsset,
     /// A sound file declared with `asset.sound(..)` (`spec/audio.md`).
     Sound,
+    /// A font for `hud.text` (`asset.font(..)` or `hud.pixel_font()`, decision 0139).
+    Font,
     /// The result of a function without `->`.
     Unit,
     /// A built-in record type, by name (`SurfaceInput`, `PointerEvent`).
@@ -136,6 +138,7 @@ impl TypeRef {
             TypeRef::EntityRef => "entity_ref",
             TypeRef::GlbAsset => "glb_asset",
             TypeRef::Sound => "sound",
+            TypeRef::Font => "font",
             TypeRef::Unit => "()",
             TypeRef::Record(name) | TypeRef::Enum(name) => name,
             TypeRef::Descriptor(category) => category.as_str(),

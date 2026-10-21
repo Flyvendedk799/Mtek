@@ -18,6 +18,7 @@ import {
   type MtekDiagnostic,
 } from "../diagnostics/types.js";
 import { resolveSpan } from "../host/failures.js";
+import { CELL_HEIGHT, PIXEL_FONT, pixelTextSvg, svgUrl } from "./pixel-font.js";
 
 /** The ranges of `spec/hud.md` section 3; the compiler checks constants against the same numbers (E5601). */
 export const TEXT_SIZE_RANGE = [1, 512] as const;
@@ -35,7 +36,10 @@ export interface HudService {
     size?: unknown,
     tint?: unknown,
     align?: unknown,
+    font?: unknown,
   ): void;
+  /** `hud.pixel_font()`: the built-in font (decision 0139). */
+  pixel_font?(spanId: unknown): string;
   rect(
     spanId: unknown,
     at: unknown,
@@ -55,6 +59,7 @@ export interface HudService {
 /** A world without a display: draws nothing, no button is ever clicked. */
 export const NO_HUD: HudService = Object.freeze({
   text: () => undefined,
+  pixel_font: () => PIXEL_FONT,
   rect: () => undefined,
   button: () => false,
 });
@@ -95,6 +100,11 @@ export interface HudOptions {
   readonly document: HudDocument;
   readonly manifest: MtekManifest;
   readonly report: (diagnostic: MtekDiagnostic) => void;
+  /**
+   * The CSS family of the font file an `asset.font(..)` names by its project path (decision 0139), registered
+   * with the page by the host; `undefined` while it is unknown, and the text uses the default family.
+   */
+  readonly fontFamily?: (source: string) => string | undefined;
 }
 
 type Item =
@@ -106,6 +116,8 @@ type Item =
       readonly size: number;
       readonly tint: string;
       readonly align: number;
+      /** "" for the default family, {@link PIXEL_FONT}, or a CSS family list. */
+      readonly font: string;
     }
   | {
       readonly kind: "rect";
@@ -132,6 +144,7 @@ interface Shown {
   readonly written: Map<string, string>;
 }
 
+const DEFAULT_FAMILY = "system-ui,-apple-system,'Segoe UI',sans-serif";
 const TEXT_STYLE =
   "position:absolute;white-space:pre;line-height:1.2;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;text-shadow:0 1px 2px rgba(0,0,0,.65);user-select:none;pointer-events:none";
 const RECT_STYLE = "position:absolute;pointer-events:none";
@@ -203,10 +216,18 @@ export class HudSystem implements HudService {
     size?: unknown,
     tint?: unknown,
     align?: unknown,
+    font?: unknown,
   ): void {
     const { x, y } = point(at);
+    let family = "";
+    if (font === PIXEL_FONT) family = PIXEL_FONT;
+    else if (typeof font === "string") {
+      const registered = this.options.fontFamily?.(font);
+      if (registered !== undefined) family = `"${registered}",${DEFAULT_FAMILY}`;
+    }
     this.push(spanId, {
       kind: "text",
+      font: family,
       content: typeof content === "string" ? content : "",
       x,
       y,
@@ -214,6 +235,11 @@ export class HudSystem implements HudService {
       tint: cssColor(tint),
       align: clamp(finite(align) ?? 0.5, 0, 1),
     });
+  }
+
+  /** `hud.pixel_font()` (decision 0139). */
+  pixel_font(): string {
+    return PIXEL_FONT;
   }
 
   rect(
@@ -385,6 +411,7 @@ export class HudSystem implements HudService {
       if (shown.written.get(name) === value) return;
       shown.written.set(name, value);
       if (name === "#text") shown.element.textContent = value;
+      else if (name === "#label") shown.element.setAttribute("aria-label", value);
       else set(shown.element.style, name, value);
     };
     const { left, top } = placement(item.x, item.y);
@@ -392,10 +419,27 @@ export class HudSystem implements HudService {
     write("top", top);
     switch (item.kind) {
       case "text":
+        write("transform", `translate(${String(-item.align * 100)}%,-50%)`);
+        if (item.font === PIXEL_FONT) {
+          // The built-in font: the text as an SVG background, `size` px tall (decision 0139).
+          const { svg, width } = pixelTextSvg(item.content, item.tint);
+          const scale = item.size / CELL_HEIGHT;
+          write("#text", "");
+          write("#label", item.content);
+          write("backgroundImage", svgUrl(svg));
+          write("backgroundSize", "100% 100%");
+          write("width", `${String(width * scale)}px`);
+          write("height", `${String(item.size)}px`);
+          break;
+        }
+        write("#label", "");
+        write("backgroundImage", "none");
+        write("width", "");
+        write("height", "");
         write("#text", item.content);
         write("fontSize", `${String(item.size)}px`);
         write("color", item.tint);
-        write("transform", `translate(${String(-item.align * 100)}%,-50%)`);
+        write("fontFamily", item.font === "" ? DEFAULT_FAMILY : item.font);
         break;
       case "rect":
         write("width", `${String(item.width)}px`);

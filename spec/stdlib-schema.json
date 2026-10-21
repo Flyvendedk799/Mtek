@@ -1879,6 +1879,19 @@
       "doc": "Compile-time asset declarations. The argument must be a string literal naming a file inside the project.",
       "members": [
         {
+          "name": "font",
+          "kind": "function",
+          "signatures": [
+            "(path: string) -> font"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "A font file (`.ttf`, `.otf`, `.woff` or `.woff2`) for `hud.text`."
+        },
+        {
           "name": "glb",
           "kind": "function",
           "signatures": [
@@ -2153,6 +2166,19 @@
           "doc": "Draws a button centred at `at` (canvas NDC) with the label `label` (`size` in CSS pixels, default 24.0). Returns true in the frame after the button was clicked, once per click; buttons are told apart by their label and their order among buttons with that label."
         },
         {
+          "name": "pixel_font",
+          "kind": "function",
+          "signatures": [
+            "() -> font"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "Returns the built-in font; draws nothing.",
+          "since": "M1",
+          "doc": "The built-in font: a 5x7 pixel bitmap of printable ASCII, the same in every browser (decision 0139). Other characters show as a box."
+        },
+        {
           "name": "rect",
           "kind": "function",
           "signatures": [
@@ -2173,14 +2199,15 @@
             "(content: string, at: vec2) -> ()",
             "(content: string, at: vec2, size: f32) -> ()",
             "(content: string, at: vec2, size: f32, tint: color) -> ()",
-            "(content: string, at: vec2, size: f32, tint: color, align: f32) -> ()"
+            "(content: string, at: vec2, size: f32, tint: color, align: f32) -> ()",
+            "(content: string, at: vec2, size: f32, tint: color, align: f32, font: font) -> ()"
           ],
           "domain": "cpu",
           "constEligible": false,
           "handlersOnly": true,
           "cpuSemantics": "A DOM element over the canvas; the text is set as text, never as HTML.",
           "since": "M1",
-          "doc": "Draws a line of text at `at` (canvas NDC, y up): `size` in CSS pixels (default 24.0), `tint` (default white), `align` 0.0 puts the left edge at `at`, 0.5 the centre (default), 1.0 the right edge. The line is centred vertically on `at`."
+          "doc": "Draws a line of text at `at` (canvas NDC, y up): `size` in CSS pixels (default 24.0), `tint` (default white), `align` 0.0 puts the left edge at `at`, 0.5 the centre (default), 1.0 the right edge, `font` an `asset.font(..)` or `hud.pixel_font()` (default: the page's sans-serif). The line is centred vertically on `at`."
         }
       ]
     },
@@ -2502,6 +2529,15 @@
       "gpu": true,
       "since": "M1",
       "doc": "IEEE-754 binary32 floating-point number.",
+      "fields": [],
+      "methods": []
+    },
+    {
+      "name": "font",
+      "kind": "handle",
+      "gpu": false,
+      "since": "M1",
+      "doc": "A font for `hud.text`: `asset.font(..)` or the built-in `hud.pixel_font()`; CPU only (decision 0139).",
       "fields": [],
       "methods": []
     },

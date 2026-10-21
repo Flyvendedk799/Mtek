@@ -62,6 +62,8 @@ pub enum ConstValue {
     /// A sound file declared with `asset.sound(..)`: the project path of the validated file
     /// (`spec/audio.md`, decision 0130).
     AssetSound(String),
+    /// A font file declared with `asset.font(..)`: the project path (decision 0139).
+    AssetFont(String),
     /// An instance of a user material (decision 0039): the material, its
     /// name, and every parameter in declaration order, written or defaulted.
     Material {
@@ -155,6 +157,7 @@ impl fmt::Display for ConstValue {
             } => write!(f, "{file}: mesh {mesh:?} primitive {primitive}"),
             ConstValue::AssetTexture(image) => write!(f, "{image}"),
             ConstValue::AssetSound(file) => write!(f, "asset.sound({file:?})"),
+            ConstValue::AssetFont(file) => write!(f, "asset.font({file:?})"),
         }
     }
 }

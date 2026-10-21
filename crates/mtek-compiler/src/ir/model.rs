@@ -1412,6 +1412,8 @@ pub enum Value {
     /// A sound file (`asset.sound`, decision 0130), by project path: `{ "sound": "sfx/hit.wav" }`.
     /// The runtime finds the packaged file by this path in the manifest's `audio` entries.
     Sound(String),
+    /// A font file (`asset.font`, decision 0139), by project path: `{ "font": "fonts/title.woff2" }`.
+    Font(String),
 }
 
 /// A field of a [`Value::Struct`].
@@ -1451,6 +1453,7 @@ impl From<&crate::types::ConstValue> for Value {
             C::Sampler(sampler) => Value::Sampler(sampler.name().to_owned()),
             C::AssetTexture(image) => Value::Image(image.clone()),
             C::AssetSound(file) => Value::Sound(file.clone()),
+            C::AssetFont(file) => Value::Font(file.clone()),
             // The handle of a GLB and an asset mesh are consumed by the lowering of entities
             // (`MeshDesc::Asset`); as plain values they are only descriptive text.
             C::GlbAsset(file) => Value::String(file.clone()),
@@ -1548,6 +1551,7 @@ impl fmt::Display for Value {
             Value::Texture(name) | Value::Sampler(name) => write!(f, "{name}()"),
             Value::Image(image) => write!(f, "{image}"),
             Value::Sound(file) => write!(f, "asset.sound({file:?})"),
+            Value::Font(file) => write!(f, "asset.font({file:?})"),
             Value::String(text) => {
                 f.write_str("\"")?;
                 for c in text.chars() {

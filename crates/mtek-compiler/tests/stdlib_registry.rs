@@ -577,7 +577,7 @@ fn types_cover_section_2() {
 }
 
 /// `(namespace, member, signature shape or value type)`.
-const NAMESPACE_ROWS: [(&str, &str, &str); 24] = [
+const NAMESPACE_ROWS: [(&str, &str, &str); 25] = [
     ("quat", "identity", "() -> quat"),
     ("quat", "axis_angle", "(vec3, f32) -> quat"),
     ("quat", "euler", "(f32, f32, f32) -> quat"),
@@ -601,6 +601,7 @@ const NAMESPACE_ROWS: [(&str, &str, &str); 24] = [
     ("asset", "texture", "(string) -> texture"),
     ("asset", "linear_texture", "(string) -> texture"),
     ("asset", "sound", "(string) -> sound"),
+    ("asset", "font", "(string) -> font"),
     (
         "lighting",
         "pbr",
@@ -659,7 +660,7 @@ fn every_namespace_member_of_section_2_is_present() {
             count("hud"),
             count("easing")
         ],
-        [3, 5, 2, 2, 4, 3, 4, 1, 3, 10]
+        [3, 5, 2, 2, 4, 3, 5, 1, 4, 10]
     );
 }
 
@@ -714,8 +715,11 @@ fn the_hud_namespace_has_its_overloads() {
             "(string, vec2, f32) -> ()",
             "(string, vec2, f32, color) -> ()",
             "(string, vec2, f32, color, f32) -> ()",
+            "(string, vec2, f32, color, f32, font) -> ()",
         ]
     );
+    // Decision 0139: the built-in pixel font.
+    assert_eq!(shapes("pixel_font"), ["() -> font"]);
     assert_eq!(
         shapes("rect"),
         [

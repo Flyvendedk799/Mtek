@@ -161,6 +161,7 @@ impl Checker<'_> {
             "glb" => AssetKind::Glb,
             "texture" => AssetKind::Texture,
             "sound" => AssetKind::Sound,
+            "font" => AssetKind::Font,
             _ => AssetKind::LinearTexture,
         };
         if !self.asset_state.attempted.insert(expr.id) {
@@ -193,6 +194,7 @@ impl Checker<'_> {
             Some(AssetHandle::Sound { path }) => {
                 Folded::Value(ConstValue::AssetSound(path.clone()))
             }
+            Some(AssetHandle::Font { path }) => Folded::Value(ConstValue::AssetFont(path.clone())),
             None => Folded::Unknown,
         }
     }

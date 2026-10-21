@@ -718,6 +718,7 @@ pub fn value_expr(value: &Value) -> Result<Expr, String> {
         Value::Texture(name) | Value::Sampler(name) => Expr::string(name),
         Value::Image(image) => Expr::string(&image.to_string()),
         Value::Sound(file) => Expr::string(file),
+        Value::Font(file) => Expr::string(file),
     })
 }
 

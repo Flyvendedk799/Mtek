@@ -242,3 +242,21 @@ These were not re-run on the bare base commit; my evidence is only that the code
   4. Two overlapping translucent objects swap their draw order as the camera passes between them.
   5. The opaque scenes from before this change look identical (the canvas is opaque).
 - **Known issue in the cold-start context, not caused by 6.1:** the empty-project context is now about 27.9 KB, over the 24 000-byte default. 3 of the 13 tests in `mtek-compiler --test context_cold_start` fail because they expect no truncation; the 4th (`an_empty_project_lists_the_signature_of_every_built_in`) still fails after `MTEK_BLESS=1` and was not investigated. These failures were already there before this change: I measured 27 881 bytes without the 6.1 diff and 27 842 with it.
+
+## Phase 1 fonts (decision 0139)
+
+- **Done:**
+  - `asset.font(..)` for `.ttf`, `.otf`, `.woff` and `.woff2`, validated like GLB (`E7105` extension, `E7106` header);
+  - packed as `font` manifest entries;
+  - `hud.text(.., font)`;
+  - the built-in `hud.pixel_font()` (a 5x8 ASCII bitmap drawn as SVG);
+  - `FontFace` registration on first use (`W8204` if the browser rejects the file).
+- **Cheap tests:**
+  - `cargo test -p mtek-compiler --test assets --test stdlib_registry`;
+  - `cargo test -p mtek-compiler --lib font`;
+  - `cd packages/runtime-web && npx vitest run src/hud`.
+- **Browser checks (for Abe, not run):**
+  1. Build `tests/assets/pass/hud_fonts`, or the Phase 6 example, and serve it.
+  2. "SCORE 0" is in Russo One. DevTools > Network shows the `.ttf` loaded once, and `document.fonts` has `mtek-font-…`.
+  3. "PRESS SPACE" is crisp pixel text exactly 16 px tall, the same in Chrome, Firefox and Safari. Zoom to 200 %: there are no blurry edges.
+  4. Replace the font file with a renamed PNG that keeps a valid sfnt header: the console shows W8204 once and the text falls back to the system font.

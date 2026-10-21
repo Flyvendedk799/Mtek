@@ -399,7 +399,7 @@
     "assetUrl": { "type": "string", "pattern": "^assets/[0-9a-f]{16}\\.[a-z0-9]+$" },
     "asset": {
       "type": "object",
-      "oneOf": [{ "$ref": "#/$defs/meshDataAsset" }, { "$ref": "#/$defs/imageAsset" }, { "$ref": "#/$defs/audioAsset" }],
+      "oneOf": [{ "$ref": "#/$defs/meshDataAsset" }, { "$ref": "#/$defs/imageAsset" }, { "$ref": "#/$defs/audioAsset" }, { "$ref": "#/$defs/fontAsset" }],
       "discriminator": { "propertyName": "kind" }
     },
     "meshDataAsset": {
@@ -429,6 +429,22 @@
         "preprocessing": { "$ref": "#/$defs/preprocessing" },
         "span": { "$ref": "#/$defs/spanId" },
         "source": { "type": "string", "minLength": 1, "description": "The author's file (decision 0082): the project path of a standalone image, or \"<glb path>#images[N]\" for an image embedded in a GLB. Optional; shown by the runtime when the image fails." }
+      }
+    },
+    "fontAsset": {
+      "type": "object",
+      "description": "A font file declared with asset.font(..), copied byte for byte (spec/hud.md section 6, decision 0139).",
+      "additionalProperties": false,
+      "required": ["url", "sha256", "bytes", "kind", "format", "mime", "source", "span"],
+      "properties": {
+        "url": { "$ref": "#/$defs/assetUrl" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "bytes": { "$ref": "#/$defs/index" },
+        "kind": { "const": "font" },
+        "format": { "type": "string", "enum": ["ttf", "otf", "woff", "woff2"] },
+        "mime": { "type": "string", "enum": ["font/ttf", "font/otf", "font/woff", "font/woff2"] },
+        "source": { "type": "string", "minLength": 1, "description": "The project path of the declaring asset.font(..); generated code names the font by it." },
+        "span": { "$ref": "#/$defs/spanId" }
       }
     },
     "audioAsset": {

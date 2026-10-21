@@ -524,6 +524,32 @@ pub fn pack(
         sources.insert(path.clone(), file.sha256.clone());
         packed.files.insert(url, file.bytes.clone());
     }
+    // Fonts (decision 0139): every declared font file, byte for byte, found by `source` like sounds.
+    for (path, declared) in store.fonts() {
+        let file = &declared.file;
+        total += file.bytes.len() as u64;
+        if total > limit {
+            return Err(exceeded(declared.span, total));
+        }
+        let mut stamped = b"font".to_vec();
+        stamped.push(0);
+        stamped.extend_from_slice(&file.bytes);
+        let url = format!("assets/{}.{}", h16(&stamped), file.info.format.extension());
+        let span = intern(declared.span).ok_or_else(|| defect("the declaring span is unknown"))?;
+        packed.assets.push(Asset {
+            url: url.clone(),
+            sha256: file.sha256.clone(),
+            bytes: file.bytes.len() as u64,
+            kind: AssetKind::Font {
+                format: file.info.format.extension().to_owned(),
+                mime: file.info.format.mime().to_owned(),
+                source: path.clone(),
+                span,
+            },
+        });
+        sources.insert(path.clone(), file.sha256.clone());
+        packed.files.insert(url, file.bytes.clone());
+    }
     packed.sources = sources.into_iter().collect();
     Ok(packed)
 }

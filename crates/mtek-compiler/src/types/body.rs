@@ -360,6 +360,7 @@ impl<'a> Checker<'a> {
                 | Ty::EntityRef
                 | Ty::GlbAsset
                 | Ty::Sound
+                | Ty::Font
                 | Ty::Enum(_)
                 | Ty::UserEnum(_)
                 | Ty::Schema(_)

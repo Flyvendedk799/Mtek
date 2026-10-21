@@ -1365,6 +1365,7 @@ fn cpu_type_help(ty: &str) -> Option<&'static str> {
         "sound" => Some(
             "sounds exist only on the CPU: play them from a handler with `play(..)`; a material that should react to a sound reads a `state` set by that handler through a `param` and `bind(...)`",
         ),
+        "font" => Some("fonts exist only on the CPU: pass them to `hud.text(..)`"),
         "entity_ref" | "mesh" | "material" => Some(
             "handles exist only on the CPU; give the stage the number, vector or color it needs as a `param` of the material and set it from the entity, with `bind(...)` for a value that changes",
         ),

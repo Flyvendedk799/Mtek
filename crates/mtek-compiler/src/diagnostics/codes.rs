@@ -250,6 +250,8 @@ catalogue! {
     E7102 Error "malformed audio file",
     E7103 Error "invalid favicon",
     E7104 Error "game package exceeds itch.io limits",
+    E7105 Error "unsupported font file",
+    E7106 Error "malformed font file",
     E7901 Error "remote assets not supported",
     E7902 Error "node hierarchy instancing not supported",
     // 5.8 Runtime (`8xxx`)
@@ -284,6 +286,7 @@ catalogue! {
     W8201 Warning "audio value clamped",
     W8202 Warning "sound could not be decoded",
     W8203 Warning "too many HUD items",
+    W8204 Warning "font could not be loaded",
     // 5.9 Project and internal (`9xxx`)
     E9001 Error "invalid project configuration",
     E9002 Error "too many modules",

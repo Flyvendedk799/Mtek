@@ -22,6 +22,7 @@
  * `onDiagnostic`, shows the overlay (unless `failureDisplay: "none"`), and leaves no live resource,
  * listener or device behind.
  */
+import { FontRegistry, browserFontPage } from "../hud/fonts.js";
 import {
   checkDeviceCapabilities,
   checkManifest,
@@ -414,6 +415,19 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
               if (app !== undefined) app.report(diagnostic);
               else earlyReports.push(diagnostic);
             },
+            // Fonts of `asset.font(..)` (decision 0139), registered with the page on first use.
+            fontFamily: (() => {
+              const fonts = new FontRegistry({
+                manifest,
+                bytes: (url) => (assets.has(url) ? assets.bytes(url) : undefined),
+                page: browserFontPage(environment.document),
+                report: (diagnostic) => {
+                  if (app !== undefined) app.report(diagnostic);
+                  else earlyReports.push(diagnostic);
+                },
+              });
+              return (source: string) => fonts.family(source);
+            })(),
           });
     const services: CpuServices = {
       game,

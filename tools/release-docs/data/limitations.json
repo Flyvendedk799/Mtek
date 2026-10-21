@@ -319,8 +319,8 @@
     {
       "id": "hud-scope",
       "area": "Scenes and entities",
-      "restriction": "The HUD is immediate mode and screen-space only: `hud.text`, `hud.rect` and `hud.button` drawn again every frame from lifecycle functions and handlers (not from functions), in the system UI font, with horizontal alignment as the only layout. No text in the 3D world, no images, no text input, no keyboard or gamepad navigation, and `mtek test` fixtures cannot see or click it.",
-      "reason": "Spec/hud.md section 6 (decision 0134): the smallest UI that covers scores, timers, bars and buttons, drawn as a DOM layer over the canvas.",
+      "restriction": "The HUD is immediate mode and screen-space only: `hud.text`, `hud.rect` and `hud.button` drawn again every frame from lifecycle functions and handlers (not from functions), in the system UI font, an `asset.font(..)` file or the built-in ASCII pixel font, with horizontal alignment as the only layout. No text in the 3D world, no images, no text input, no keyboard or gamepad navigation, and `mtek test` fixtures cannot see or click it.",
+      "reason": "Spec/hud.md section 7 (decisions 0134, 0139): the smallest UI that covers scores, timers, bars and buttons, drawn as a DOM layer over the canvas.",
       "codes": [
         "E5601",
         "W8203",
@@ -331,7 +331,7 @@
       ],
       "source": {
         "file": "spec/hud.md",
-        "quote": "## 6. Not in this extension"
+        "quote": "## 7. Not in this extension"
       }
     },
     {

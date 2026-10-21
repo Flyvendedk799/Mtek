@@ -24,12 +24,12 @@ Columns: **CFG** `examples/material-configurator`, **PHY** `examples/physics-pla
 |---|---|
 | Each demonstration exercises a feature no other demonstration does | holds (CFG 23, PHY 23, MOD 21) |
 | Each demonstration exercises its pressure of decision 0002, and no other demonstration does | holds |
-| Every v0.1 feature is exercised by a demonstration or a named positive program | FAILS (342 features: 172 by a demonstration, 41 by other examples only, 128 by a fixture only) |
+| Every v0.1 feature is exercised by a demonstration or a named positive program | FAILS (345 features: 172 by a demonstration, 41 by other examples only, 131 by a fixture only) |
 | Every feature belongs to a negative-test area whose codes are all tested | holds (23 areas) |
 | Every nearest unsupported neighbour is rejected by a fixture or a registry reservation | holds (32 entries) |
 | Diagnostic codes without a fail fixture, a named negative test or a registry mark | none |
 
-170 positive fixture programs were read; 0 directories under the fixture roots do not check and are not positive (section 9).
+171 positive fixture programs were read; 0 directories under the fixture roots do not check and are not positive (section 9).
 
 ## 3. The demonstrations
 
@@ -80,7 +80,7 @@ Every fact that only this demonstration exercises (21):
 
 `binding/dep:entityState`, `binding/dep:frame`, `expr/state-read:entity`, `fn/cpu-reachable`, `function:sin`, `local/var`, `module/cross-file-call`, `module/cross-file-prefab`, `module/cross-file-spawn`, `namespace:frame`, `op/binary:%`, `op/binary:==`, `place/root:local`, `place/root:state:entity`, `remainder`, `schema:Sphere`, `state/owner:entity`, `state/owner:prefab`, `stmt/assign:=`, `stmt/var`, `value:frame.time`
 
-## 4. Features of the registry (202)
+## 4. Features of the registry (205)
 
 `supported.features` of `mtek context`, by kind.
 
@@ -93,7 +93,7 @@ Every fact that only this demonstration exercises (21):
 | `bind` |  | x | x | x | x | `tests/semantics/pass/lights` (+29) |
 | `body-constants` |  |  |  |  |  | `tests/semantics/pass/order_independent_names` (+3) |
 | `comparison` |  |  | x | x | x | `tests/semantics/pass/functions/every_path_returns` (+28) |
-| `constants` |  | x | x | x | x | `tests/semantics/pass/types/ctor_vec3_components` (+72) |
+| `constants` |  | x | x | x | x | `tests/semantics/pass/types/ctor_vec3_components` (+73) |
 | `cpu-functions` |  |  |  |  | x | `tests/semantics/pass/functions/w4003_cpu_fn_could_be_fn` (+9) |
 | `descriptors` |  | x | x | x | x | `tests/semantics/pass/functions/imported_functions` (+117) |
 | `entities` |  | x | x | x | x | `tests/semantics/pass/modules_diamond_load_order` (+112) |
@@ -105,7 +105,7 @@ Every fact that only this demonstration exercises (21):
 | `handlers` |  |  | x | x | x | `tests/semantics/pass/handler_key_down` (+39) |
 | `imports` |  | x | x | x | x | `tests/semantics/pass/modules_diamond_load_order` (+92) |
 | `indexing` |  |  |  |  | x | `tests/semantics/pass/types/array_literals_and_indexing` (+15) |
-| `lifecycle-functions` |  |  | x |  | x | `tests/semantics/pass/lifecycle_update` (+38) |
+| `lifecycle-functions` |  |  | x |  | x | `tests/semantics/pass/lifecycle_update` (+39) |
 | `logical` |  |  |  |  | x | `tests/browser/fixtures/m2/mixed_layout` (+15) |
 | `match` |  |  |  |  |  |  |
 | `materials` |  | x | x | x | x | `tests/semantics/pass/translucent_param_default` (+112) |
@@ -114,14 +114,14 @@ Every fact that only this demonstration exercises (21):
 | `prefabs` |  |  | x | x | x | `tests/semantics/pass/spawn_physics_prefab` (+24) |
 | `remainder` |  |  |  | x | x | `tests/semantics/pass/materials/surface_inputs` (+7) |
 | `scene-fields` |  | x | x | x | x | `tests/semantics/pass/types/ctor_color_linear` (+47) |
-| `scene-objects` |  | x | x | x | x | `tests/semantics/pass/state_scene` (+169) |
-| `scenes` |  | x | x | x | x | `tests/semantics/pass/state_scene` (+169) |
+| `scene-objects` |  | x | x | x | x | `tests/semantics/pass/state_scene` (+170) |
+| `scenes` |  | x | x | x | x | `tests/semantics/pass/state_scene` (+170) |
 | `self` |  |  | x | x | x | `tests/semantics/pass/lights` (+31) |
-| `state` |  | x | x | x | x | `tests/semantics/pass/state_scene` (+59) |
-| `strings` |  | x |  |  | x | `tests/semantics/pass/types/string_constant` (+10) |
+| `state` |  | x | x | x | x | `tests/semantics/pass/state_scene` (+60) |
+| `strings` |  | x |  |  | x | `tests/semantics/pass/types/string_constant` (+11) |
 | `structs` |  |  |  |  |  | `tests/semantics/pass/functions/imported_functions` (+17) |
 
-### Types (21)
+### Types (22)
 
 | Feature | Neg | CFG | PHY | MOD | EX | Positive fixture |
 |---|:-:|:-:|:-:|:-:|:-:|---|
@@ -129,21 +129,22 @@ Every fact that only this demonstration exercises (21):
 | `type:SurfaceInput` | 0 | x | x | x | x | `tests/semantics/pass/translucent_param_default` (+112) |
 | `type:array` | 0 |  |  |  | x | `tests/semantics/pass/functions/w3081_unreachable_code` (+16) |
 | `type:bool` | 0 |  | x | x | x | `tests/semantics/pass/functions/every_path_returns` (+53) |
-| `type:color` | 5 | x | x | x | x | `tests/semantics/pass/translucent_param_default` (+118) |
+| `type:color` | 5 | x | x | x | x | `tests/semantics/pass/translucent_param_default` (+119) |
 | `type:entity_ref` | 1 |  | x | x |  | `tests/semantics/pass/spawn_physics_prefab` (+17) |
-| `type:f32` | 3 | x | x | x | x | `tests/semantics/pass/state_scene` (+138) |
+| `type:f32` | 3 | x | x | x | x | `tests/semantics/pass/state_scene` (+139) |
+| `type:font` | 0 |  |  |  |  | `tests/assets/pass/hud_fonts` |
 | `type:glb_asset` | 2 | x |  |  |  | `tests/assets/pass/assets_imported` (+2) |
-| `type:i32` | 1 |  | x | x | x | `tests/semantics/pass/redundant_conversion` (+56) |
+| `type:i32` | 1 |  | x | x | x | `tests/semantics/pass/redundant_conversion` (+57) |
 | `type:mat4` | 1 |  |  |  |  | `tests/semantics/pass/types/ctor_mat4_identity` (+14) |
 | `type:material` | 9 | x | x | x | x | `tests/semantics/pass/translucent_instance_value` (+109) |
 | `type:mesh` | 6 | x | x | x | x | `tests/semantics/pass/translucent_instance_value` (+109) |
 | `type:quat` | 3 |  |  |  | x | `tests/semantics/pass/types/ctor_quat_euler` (+20) |
 | `type:sampler` | 1 | x | x |  | x | `tests/browser/fixtures/m4/texture_sampling` (+90) |
 | `type:sound` | 0 |  |  |  |  | `tests/assets/pass/audio_sounds` |
-| `type:string` | 0 | x |  |  | x | `tests/semantics/pass/types/string_constant` (+10) |
+| `type:string` | 0 | x |  |  | x | `tests/semantics/pass/types/string_constant` (+11) |
 | `type:texture` | 0 | x | x |  | x | `tests/browser/fixtures/m4/texture_sampling` (+90) |
 | `type:u32` | 1 |  |  |  | x | `tests/semantics/pass/types/conv_to_f32` (+27) |
-| `type:vec2` | 0 | x | x |  | x | `tests/semantics/pass/types/ctor_vec2_components` (+113) |
+| `type:vec2` | 0 | x | x |  | x | `tests/semantics/pass/types/ctor_vec2_components` (+114) |
 | `type:vec3` | 4 | x | x | x | x | `tests/semantics/pass/types/ctor_vec3_components` (+147) |
 | `type:vec4` | 0 | x | x |  | x | `tests/semantics/pass/types/ctor_vec4_components` (+106) |
 
@@ -153,14 +154,14 @@ Every fact that only this demonstration exercises (21):
 |---|:-:|:-:|:-:|:-:|:-:|---|
 | `schema:Box` | 1 |  | x | x | x | `tests/semantics/pass/translucent_instance_value` (+84) |
 | `schema:BoxCollider` | 0 |  | x |  |  | `tests/semantics/pass/spawn_physics_prefab` (+15) |
-| `schema:Camera` | 1 | x | x | x | x | `tests/semantics/pass/state_scene` (+169) |
+| `schema:Camera` | 1 | x | x | x | x | `tests/semantics/pass/state_scene` (+170) |
 | `schema:DirectionalLight` | 0 | x | x |  | x | `tests/semantics/pass/lights` (+12) |
 | `schema:Dynamic` | 0 |  | x |  |  | `tests/semantics/pass/spawn_physics_prefab` (+15) |
 | `schema:Entity` | 0 | x | x | x | x | `tests/semantics/pass/modules_diamond_load_order` (+112) |
 | `schema:Kinematic` | 0 |  |  |  |  | `tests/semantics/pass/physics_body_collider_matrix` (+3) |
 | `schema:Orthographic` | 0 |  |  |  |  | `tests/browser/fixtures/m4/texture_sampling` (+7) |
 | `schema:Pbr` | 0 | x | x |  | x | `tests/browser/fixtures/m4/exposure` (+12) |
-| `schema:Perspective` | 0 | x | x | x | x | `tests/semantics/pass/state_scene` (+162) |
+| `schema:Perspective` | 0 | x | x | x | x | `tests/semantics/pass/state_scene` (+163) |
 | `schema:Plane` | 0 |  |  |  |  | `tests/semantics/pass/materials/resource_limit` (+15) |
 | `schema:PointLight` | 0 | x |  |  | x | `tests/semantics/pass/lights` (+6) |
 | `schema:Scene` | 0 | x | x | x | x | `tests/semantics/pass/types/ctor_color_linear` (+47) |
@@ -173,7 +174,7 @@ Every fact that only this demonstration exercises (21):
 
 | Feature | Neg | CFG | PHY | MOD | EX | Positive fixture |
 |---|:-:|:-:|:-:|:-:|:-:|---|
-| `scene-object:camera` | 0 | x | x | x | x | `tests/semantics/pass/state_scene` (+169) |
+| `scene-object:camera` | 0 | x | x | x | x | `tests/semantics/pass/state_scene` (+170) |
 
 ### Events (7)
 
@@ -197,18 +198,18 @@ Every fact that only this demonstration exercises (21):
 
 | Feature | Neg | CFG | PHY | MOD | EX | Positive fixture |
 |---|:-:|:-:|:-:|:-:|:-:|---|
-| `namespace:asset` | 0 | x |  |  |  | `tests/browser/fixtures/m4/assets_corrupt` (+4) |
+| `namespace:asset` | 0 | x |  |  |  | `tests/assets/pass/hud_fonts` (+5) |
 | `namespace:color` | 5 | x | x | x | x | `tests/semantics/pass/types/ctor_color_linear` (+116) |
 | `namespace:easing` | 0 |  |  |  |  | `tests/semantics/pass/translucent_fade_binding` (+1) |
 | `namespace:frame` | 0 |  |  | x | x | `tests/semantics/pass/frame_and_camera_reads` (+13) |
-| `namespace:hud` | 0 |  |  |  |  | `tests/semantics/pass/hud_text_rect_button` |
+| `namespace:hud` | 0 |  |  |  |  | `tests/assets/pass/hud_fonts` (+1) |
 | `namespace:lighting` | 0 | x | x |  | x | `tests/semantics/pass/translucent_material_color` (+85) |
 | `namespace:mat4` | 1 |  |  |  |  | `tests/semantics/pass/types/ctor_mat4_identity` (+14) |
 | `namespace:quat` | 3 | x | x |  | x | `tests/semantics/pass/types/ctor_quat_euler` (+41) |
 | `namespace:sampler` | 1 | x | x |  | x | `tests/browser/fixtures/m4/texture_sampling` (+90) |
 | `namespace:texture` | 0 | x | x |  | x | `tests/browser/fixtures/m4/texture_sampling` (+90) |
 
-### Functions (93)
+### Functions (95)
 
 | Feature | Neg | CFG | PHY | MOD | EX | Positive fixture |
 |---|:-:|:-:|:-:|:-:|:-:|---|
@@ -216,6 +217,7 @@ Every fact that only this demonstration exercises (21):
 | `function:acos` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+1) |
 | `function:alive` | 0 |  |  |  |  | `tests/semantics/pass/spawn_destroy_in_lifecycle` (+3) |
 | `function:asin` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+1) |
+| `function:asset.font` † | 1 |  |  |  |  | `tests/assets/pass/hud_fonts` |
 | `function:asset.glb` | 1 | x |  |  |  | `tests/assets/pass/assets_imported` (+2) |
 | `function:asset.linear_texture` | 0 |  |  |  |  | `tests/assets/pass/assets_supported` (+1) |
 | `function:asset.sound` † | 1 |  |  |  |  | `tests/assets/pass/audio_sounds` |
@@ -249,8 +251,9 @@ Every fact that only this demonstration exercises (21):
 | `function:fract` | 0 | x |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+2) |
 | `function:go_to` | 1 |  |  |  | x | `tests/semantics/pass/saved_state` (+1) |
 | `function:hud.button` | 1 |  |  |  |  | `tests/semantics/pass/hud_text_rect_button` |
+| `function:hud.pixel_font` | 0 |  |  |  |  | `tests/assets/pass/hud_fonts` |
 | `function:hud.rect` | 1 |  |  |  |  | `tests/semantics/pass/hud_text_rect_button` |
-| `function:hud.text` | 1 |  |  |  |  | `tests/semantics/pass/hud_text_rect_button` |
+| `function:hud.text` | 1 |  |  |  |  | `tests/assets/pass/hud_fonts` (+1) |
 | `function:inverse_sqrt` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+2) |
 | `function:is_key_down` | 0 |  |  |  |  | `tests/browser/fixtures/m5/physics_combos` |
 | `function:is_muted` | 0 |  |  |  |  | `tests/assets/pass/audio_sounds` |
@@ -375,7 +378,7 @@ Reference: spec/language.md section 7.
 | `stmt/break` | `break` |  |  |  |  | `tests/codegen/wgsl-materials/loops` (+2) |
 | `stmt/continue` | `continue` |  |  |  |  | `tests/codegen/wgsl-materials/loops` (+2) |
 | `stmt/block` | nested block |  |  |  |  | `tests/semantics/pass/functions/every_path_returns` (+4) |
-| `stmt/expr` | call as statement |  | x | x | x | `tests/semantics/pass/hud_text_rect_button` (+27) |
+| `stmt/expr` | call as statement |  | x | x | x | `tests/assets/pass/hud_fonts` (+28) |
 
 ### Locals (4)
 
@@ -383,7 +386,7 @@ Reference: spec/language.md section 7.1.
 
 | Feature | Form | CFG | PHY | MOD | EX | Positive fixture |
 |---|---|:-:|:-:|:-:|:-:|---|
-| `local/param` | function, stage or handler parameter | x | x | x | x | `tests/semantics/pass/lifecycle_update` (+129) |
+| `local/param` | function, stage or handler parameter | x | x | x | x | `tests/semantics/pass/lifecycle_update` (+130) |
 | `local/let` | `let` local | x | x |  | x | `tests/semantics/pass/prelude_function_names_may_be_reused` (+105) |
 | `local/var` | `var` local |  |  | x | x | `tests/semantics/pass/functions/w2010_var_never_reassigned` (+16) |
 | `local/loop` | `for` loop variable |  |  |  | x | `tests/semantics/pass/functions/w3081_unreachable_code` (+11) |
@@ -423,7 +426,7 @@ Reference: spec/language.md section 6.
 | `expr/component` | single component `.x` | x | x | x | x | `tests/semantics/pass/frame_and_camera_reads` (+31) |
 | `expr/struct-field` | field of a struct value | x | x |  | x | `tests/semantics/pass/materials/w5101_constant_alpha` (+108) |
 | `expr/struct-literal` | struct literal |  |  |  |  | `tests/codegen/wgsl-materials/same_named_structs` (+5) |
-| `expr/state-read:scene` | read of scene `state` | x | x | x | x | `tests/semantics/pass/hud_text_rect_button` (+39) |
+| `expr/state-read:scene` | read of scene `state` | x | x | x | x | `tests/assets/pass/hud_fonts` (+40) |
 | `expr/state-read:entity` | read of entity `state` |  |  | x | x | `tests/codegen/state_and_handlers` (+14) |
 | `expr/entity-field-read` | read of an entity field (`Cube.position`, `self.rotation`) |  | x |  |  | `tests/codegen/bindings` (+12) |
 | `expr/camera-field-read` | read of a camera field |  |  |  |  | `tests/semantics/pass/frame_and_camera_reads` |
@@ -460,14 +463,14 @@ Reference: spec/scenes.md sections 6 and 7.
 
 | Feature | Form | CFG | PHY | MOD | EX | Positive fixture |
 |---|---|:-:|:-:|:-:|:-:|---|
-| `behavior/update` | `update` lifecycle function |  |  |  | x | `tests/semantics/pass/lifecycle_update` (+32) |
+| `behavior/update` | `update` lifecycle function |  |  |  | x | `tests/semantics/pass/lifecycle_update` (+33) |
 | `behavior/fixedUpdate` | `fixed_update` lifecycle function |  | x |  |  | `tests/codegen/state_and_handlers` (+11) |
 | `behavior/event` | `on event` handler |  | x | x | x | `tests/semantics/pass/handler_key_down` (+39) |
 | `behavior/event-filter` | handler with a filter (`on key_down(Key.Space)`) |  | x | x | x | `tests/semantics/pass/handler_key_down` (+36) |
-| `behavior/owner:scene` | behaviour in a scene body |  | x | x | x | `tests/semantics/pass/lifecycle_update` (+45) |
+| `behavior/owner:scene` | behaviour in a scene body |  | x | x | x | `tests/semantics/pass/lifecycle_update` (+46) |
 | `behavior/owner:entity` | behaviour in an entity body |  | x | x | x | `tests/semantics/pass/lights` (+31) |
 | `behavior/owner:prefab` | behaviour in a prefab body |  | x | x |  | `tests/semantics/pass/prefab_crate` (+19) |
-| `state/owner:scene` | scene `state` | x | x | x | x | `tests/semantics/pass/state_scene` (+50) |
+| `state/owner:scene` | scene `state` | x | x | x | x | `tests/semantics/pass/state_scene` (+51) |
 | `state/owner:entity` | entity `state` |  |  | x | x | `tests/semantics/pass/prefab_crate` (+17) |
 | `state/owner:prefab` | prefab `state` |  |  | x | x | `tests/semantics/pass/prefab_crate` (+18) |
 
@@ -680,13 +683,13 @@ A feature has no diagnostic of its own that a tool could derive, so the features
 | Arrays and indexing | 3 | E3030 | `tests/semantics/fail/functions/e3030_constant_index_in_assignment` |
 |  |  | E3031 | `tests/semantics/fail/types/e3031_array_length_not_an_integer_constant` |
 |  |  | E3032 | `tests/semantics/fail/types/e3032_struct_nesting_too_deep` |
-| Types, conversions and vectors | 26 | E3001 | `tests/semantics/fail/e3001_body_as_value` |
+| Types, conversions and vectors | 27 | E3001 | `tests/semantics/fail/e3001_body_as_value` |
 |  |  | E3003 | `tests/semantics/fail/e3003_constant_is_not_a_type` |
 |  |  | E3013 | `tests/semantics/fail/e3013_color_swizzle` |
 |  |  | E3014 | `tests/semantics/fail/e3014_entity_ref_has_no_ordering` |
 |  |  | E3041 | `tests/semantics/fail/e3041_float_literal_as_integer` |
 |  |  | W3050 | `tests/semantics/pass/redundant_conversion` |
-| Math intrinsics and constructors | 107 | E3001 | `tests/semantics/fail/e3001_body_as_value` |
+| Math intrinsics and constructors | 109 | E3001 | `tests/semantics/fail/e3001_body_as_value` |
 |  |  | E3002 | `tests/semantics/fail/e3002_body_command_arity` |
 |  |  | E4012 | `tests/semantics/fail/materials/e4012_builtin_texture_called_in_stage` |
 |  |  | E4013 | `tests/semantics/fail/e4013_gpu_only_builtin_in_cpu_code` |
@@ -705,7 +708,7 @@ A feature has no diagnostic of its own that a tool could derive, so the features
 | Textures and samplers | 11 | E4041 | `tests/semantics/fail/materials/e4041_sampler_outside_sample` |
 |  |  | E6002 | `tests/semantics/fail/materials/e6002_too_many_resources` |
 |  |  | E5004 | `tests/semantics/fail/e5004_bind_in_a_prefab_literal` |
-| Static GLB assets and images | 18 | E7001 | `tests/assets/fail/e7001_bin_chunk_first` |
+| Static GLB assets and images | 19 | E7001 | `tests/assets/fail/e7001_bin_chunk_first` |
 |  |  | E7002 | `tests/assets/fail/e7002_file_too_large` |
 |  |  | E7003 | `tests/assets/fail/e7003_data_uri_buffer` |
 |  |  | E7004 | `tests/assets/fail/e7004_required_extension` |
@@ -782,12 +785,12 @@ A feature has no diagnostic of its own that a tool could derive, so the features
 
 ## 8. Diagnostic codes
 
-The catalogue of `spec/diagnostics.md` section 5 has 230 codes. A code has a fixture when the expected diagnostics of some fixture contain it (for a warning, a passing program that lists it). `tests/semantics/code-coverage-exceptions.json` lists, with a reason, the codes that no fixture can produce; the compiler's own test (`every_catalogue_code_has_a_fixture_or_a_listed_reason`) and this tool read the same file.
+The catalogue of `spec/diagnostics.md` section 5 has 233 codes. A code has a fixture when the expected diagnostics of some fixture contain it (for a warning, a passing program that lists it). `tests/semantics/code-coverage-exceptions.json` lists, with a reason, the codes that no fixture can produce; the compiler's own test (`every_catalogue_code_has_a_fixture_or_a_listed_reason`) and this tool read the same file.
 
 | Negative test | Codes |
 |---|--:|
-| A fixture | 173 |
-| A named test, because a fixture cannot express the code (generated sizes, files the source manager rejects, runtime codes) | 50 |
+| A fixture | 175 |
+| A named test, because a fixture cannot express the code (generated sizes, files the source manager rejects, runtime codes) | 51 |
 | A named test, because only a compiler defect produces the code | 2 |
 | Reserved or not implemented, marked in the catalogue | 5 |
 | **None** | 0 |
@@ -855,6 +858,7 @@ None.
 | W8201 | audio value clamped | `packages/runtime-web/src/audio/audio.test.ts` | A runtime code of the audio subsystem (decision 0130). |
 | W8202 | sound could not be decoded | `packages/runtime-web/src/audio/audio.test.ts` | A runtime code of the audio subsystem (decision 0130). |
 | W8203 | too many HUD items | `packages/runtime-web/src/hud/hud.test.ts` | A runtime code of the HUD (decision 0134). |
+| W8204 | font could not be loaded | `packages/runtime-web/src/hud/fonts.test.ts` | A runtime code of the HUD fonts (decision 0139): the browser rejects a font file only at run time. |
 | E9002 | too many modules \| | `crates/mtek-compiler/src/project/modules/tests.rs` | More than 1 024 modules, generated in the test. |
 | W9003 | further diagnostics suppressed \| | `crates/mtek-compiler/src/diagnostics/sink.rs` | More than 200 diagnostics in one file: too large to review as a fixture, generated in the test. |
 | E9004 | project file not found | `crates/mtek-compiler/src/project/load/tests.rs` | A fixture is a project directory with mtek.toml; this code is about the missing project file. |
@@ -865,6 +869,6 @@ None.
 
 ## 9. Programs read
 
-Positive fixture programs: 170. The roots are listed in `tools/coverage-matrix/src/projects.ts`. Directories under them that do not check (a variant that must fail on purpose) are not positive fixtures and name no feature:
+Positive fixture programs: 171. The roots are listed in `tools/coverage-matrix/src/projects.ts`. Directories under them that do not check (a variant that must fail on purpose) are not positive fixtures and name no feature:
 
 None.

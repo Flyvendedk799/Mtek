@@ -1,0 +1,7 @@
+// E7106: the bytes must be the format the extension names.
+const FAKE = asset.font("../fonts/fake.woff2");
+const RENAMED = asset.font("../fonts/renamed.woff2");
+
+scene Demo {
+    camera Main {}
+}

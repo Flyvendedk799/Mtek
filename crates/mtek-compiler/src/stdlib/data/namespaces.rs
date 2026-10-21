@@ -79,6 +79,7 @@ fn hud_namespace() -> NamespaceDef {
     let tint = exact(TypeRef::Color);
     let unit = exact(TypeRef::Unit);
     let boolean = exact(TypeRef::Bool);
+    let font = exact(TypeRef::Font);
     let member = |name, doc, signatures, semantics| {
         NamespaceMember::Function(
             function(name, Domain::Cpu, false, Milestone::M1, doc, signatures)
@@ -93,7 +94,7 @@ fn hud_namespace() -> NamespaceDef {
         vec![
             member(
                 "text",
-                "Draws a line of text at `at` (canvas NDC, y up): `size` in CSS pixels (default 24.0), `tint` (default white), `align` 0.0 puts the left edge at `at`, 0.5 the centre (default), 1.0 the right edge. The line is centred vertically on `at`.",
+                "Draws a line of text at `at` (canvas NDC, y up): `size` in CSS pixels (default 24.0), `tint` (default white), `align` 0.0 puts the left edge at `at`, 0.5 the centre (default), 1.0 the right edge, `font` an `asset.font(..)` or `hud.pixel_font()` (default: the page's sans-serif). The line is centred vertically on `at`.",
                 vec![
                     sig(&[p("content", string), p("at", vec2)], unit),
                     sig(&[p("content", string), p("at", vec2), p("size", F32)], unit),
@@ -116,8 +117,25 @@ fn hud_namespace() -> NamespaceDef {
                         ],
                         unit,
                     ),
+                    sig(
+                        &[
+                            p("content", string),
+                            p("at", vec2),
+                            p("size", F32),
+                            p("tint", tint),
+                            p("align", F32),
+                            p("font", font),
+                        ],
+                        unit,
+                    ),
                 ],
                 "A DOM element over the canvas; the text is set as text, never as HTML.",
+            ),
+            member(
+                "pixel_font",
+                "The built-in font: a 5x7 pixel bitmap of printable ASCII, the same in every browser (decision 0139). Other characters show as a box.",
+                vec![sig(&[], font)],
+                "Returns the built-in font; draws nothing.",
             ),
             member(
                 "rect",
@@ -426,6 +444,14 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                     &[p("path", string)],
                     TypeRef::Sound,
                 )),
+                // Decision 0139 (spec/hud.md section 6): fonts for `hud.text`.
+                NamespaceMember::Function(compile_time(
+                    "font",
+                    Milestone::M1,
+                    "A font file (`.ttf`, `.otf`, `.woff` or `.woff2`) for `hud.text`.",
+                    &[p("path", string)],
+                    TypeRef::Font,
+                )),
             ],
         ),
         // Decision 0134 (spec/hud.md): immediate-mode HUD drawn over the canvas each frame.
@@ -646,6 +672,11 @@ pub(super) fn types() -> Vec<TypeDef> {
             "entity_ref",
             Milestone::M1,
             "A generation-checked reference to an entity. Supports comparison, `alive`, `destroy` and body commands only.",
+        ),
+        handle(
+            "font",
+            Milestone::M1,
+            "A font for `hud.text`: `asset.font(..)` or the built-in `hud.pixel_font()`; CPU only (decision 0139).",
         ),
         handle(
             "sound",

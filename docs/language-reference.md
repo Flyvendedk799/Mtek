@@ -365,6 +365,7 @@ Generated from [spec/stdlib-schema.json](../spec/stdlib-schema.json) (registry v
 | `color` | color | yes |  |  | Linear-light RGBA with straight alpha; distinct from `vec4`. A literal `#rrggbb` is sRGB-encoded and converted; `color.linear(rgb, a)` takes linear components, `color.srgb(rgb, a)` sRGB ones. Fields `.r .g .b .a` and `.rgb`; no arithmetic. |
 | `entity_ref` | handle | no |  |  | A generation-checked reference to an entity. Supports comparison, `alive`, `destroy` and body commands only. |
 | `f32` | scalar | yes |  |  | IEEE-754 binary32 floating-point number. |
+| `font` | handle | no |  |  | A font for `hud.text`: `asset.font(..)` or the built-in `hud.pixel_font()`; CPU only (decision 0139). |
 | `glb_asset` | handle | no |  | material, material_base_color, material_metallic, material_roughness, material_texture, mesh, node_position, node_rotation, node_scale, primitive | The compile-time handle of `asset.glb(..)`; may be stored only in a `const` and used through its accessors. |
 | `i32` | scalar | yes |  |  | 32-bit signed integer. |
 | `mat4` | matrix | yes |  |  | 4x4 `f32` matrix, column-major; multiplies column vectors on the right. |
@@ -655,6 +656,7 @@ Compile-time asset declarations. The argument must be a string literal naming a 
 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
+| `asset.font` | function | `(path: string) -> font` | cpu | yes | A font file (`.ttf`, `.otf`, `.woff` or `.woff2`) for `hud.text`. |
 | `asset.glb` | function | `(path: string) -> glb_asset` | cpu | yes | A static GLB model. May be stored only in a `const` and used through its accessors. |
 | `asset.linear_texture` | function | `(path: string) -> texture` | cpu | yes | A linear data texture (masks, normal data). |
 | `asset.sound` | function | `(path: string) -> sound` | cpu | yes | A sound file (`.wav`, `.ogg` or `.mp3`) for `play`, `play_at` and `play_music`. |
@@ -703,8 +705,9 @@ The heads-up display: text, rectangles and buttons drawn over the canvas. Immedi
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
 | `hud.button` | function | `(label: string, at: vec2) -> bool`<br>`(label: string, at: vec2, size: f32) -> bool` | cpu | no | Draws a button centred at `at` (canvas NDC) with the label `label` (`size` in CSS pixels, default 24.0). Returns true in the frame after the button was clicked, once per click; buttons are told apart by their label and their order among buttons with that label. |
+| `hud.pixel_font` | function | `() -> font` | cpu | no | The built-in font: a 5x7 pixel bitmap of printable ASCII, the same in every browser (decision 0139). Other characters show as a box. |
 | `hud.rect` | function | `(at: vec2, size: vec2, tint: color) -> ()`<br>`(at: vec2, size: vec2, tint: color, align: f32) -> ()` | cpu | no | Draws a filled rectangle of `size` CSS pixels at `at` (canvas NDC), aligned like `hud.text` (default centred). For panels and bars. |
-| `hud.text` | function | `(content: string, at: vec2) -> ()`<br>`(content: string, at: vec2, size: f32) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color, align: f32) -> ()` | cpu | no | Draws a line of text at `at` (canvas NDC, y up): `size` in CSS pixels (default 24.0), `tint` (default white), `align` 0.0 puts the left edge at `at`, 0.5 the centre (default), 1.0 the right edge. The line is centred vertically on `at`. |
+| `hud.text` | function | `(content: string, at: vec2) -> ()`<br>`(content: string, at: vec2, size: f32) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color, align: f32) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color, align: f32, font: font) -> ()` | cpu | no | Draws a line of text at `at` (canvas NDC, y up): `size` in CSS pixels (default 24.0), `tint` (default white), `align` 0.0 puts the left edge at `at`, 0.5 the centre (default), 1.0 the right edge, `font` an `asset.font(..)` or `hud.pixel_font()` (default: the page's sans-serif). The line is centred vertically on `at`. |
 
 #### `lighting`
 
@@ -837,7 +840,7 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `angular_velocity` | `vec3` | Dynamic, Kinematic | Angular velocity as of the last completed tick. Read-only. |
 | `linear_velocity` | `vec3` | Dynamic, Kinematic | Linear velocity as of the last completed tick. Read-only. |
 
-## Part C. Features of this build (202)
+## Part C. Features of this build (205)
 
 The list below is `supported.features` of `mtek context`, printed by the compiler this document was generated with. It is derived by the compiler from its construct table and from the registry, never typed in. A feature is supported when a test that would fail without it passes in a recorded environment (`spec/testing.md`); `docs/coverage-matrix.md` shows which program or fixture exercises each one.
 
@@ -861,9 +864,9 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 `event:collision_enter` `event:collision_exit` `event:key_down` `event:key_up` `event:pointer_down` `event:pointer_move` `event:pointer_up`
 
-### Functions (93)
+### Functions (95)
 
-`function:abs` `function:acos` `function:alive` `function:asin` `function:asset.glb` `function:asset.linear_texture` `function:asset.sound` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:clamp` `function:clear_saved` `function:color.linear` `function:color.srgb` `function:cos` `function:cross` `function:degrees` `function:destroy` `function:distance` `function:dot` `function:easing.in_cubic` `function:easing.in_out_cubic` `function:easing.in_out_quad` `function:easing.in_out_sine` `function:easing.in_quad` `function:easing.out_back` `function:easing.out_bounce` `function:easing.out_cubic` `function:easing.out_elastic` `function:easing.out_quad` `function:exp` `function:exp2` `function:floor` `function:fract` `function:go_to` `function:hud.button` `function:hud.rect` `function:hud.text` `function:inverse_sqrt` `function:is_key_down` `function:is_muted` `function:length` `function:lighting.pbr` `function:load` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:normalize` `function:pause` `function:paused` `function:play` `function:play_at` `function:play_music` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:reflect` `function:reset` `function:resume` `function:round` `function:sample` `function:sampler.linear_clamp` `function:sampler.linear_repeat` `function:sampler.nearest_clamp` `function:sampler.nearest_repeat` `function:saturate` `function:save` `function:set_muted` `function:set_volume` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:stop_music` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc`
+`function:abs` `function:acos` `function:alive` `function:asin` `function:asset.font` `function:asset.glb` `function:asset.linear_texture` `function:asset.sound` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:clamp` `function:clear_saved` `function:color.linear` `function:color.srgb` `function:cos` `function:cross` `function:degrees` `function:destroy` `function:distance` `function:dot` `function:easing.in_cubic` `function:easing.in_out_cubic` `function:easing.in_out_quad` `function:easing.in_out_sine` `function:easing.in_quad` `function:easing.out_back` `function:easing.out_bounce` `function:easing.out_cubic` `function:easing.out_elastic` `function:easing.out_quad` `function:exp` `function:exp2` `function:floor` `function:fract` `function:go_to` `function:hud.button` `function:hud.pixel_font` `function:hud.rect` `function:hud.text` `function:inverse_sqrt` `function:is_key_down` `function:is_muted` `function:length` `function:lighting.pbr` `function:load` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:normalize` `function:pause` `function:paused` `function:play` `function:play_at` `function:play_music` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:reflect` `function:reset` `function:resume` `function:round` `function:sample` `function:sampler.linear_clamp` `function:sampler.linear_repeat` `function:sampler.nearest_clamp` `function:sampler.nearest_repeat` `function:saturate` `function:save` `function:set_muted` `function:set_volume` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:stop_music` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc`
 
 ### Type methods (10)
 
@@ -881,9 +884,9 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 `schema:Box` `schema:BoxCollider` `schema:Camera` `schema:DirectionalLight` `schema:Dynamic` `schema:Entity` `schema:Kinematic` `schema:Orthographic` `schema:Pbr` `schema:Perspective` `schema:Plane` `schema:PointLight` `schema:Scene` `schema:Sphere` `schema:SphereCollider` `schema:Static` `schema:Unlit`
 
-### Types (21)
+### Types (22)
 
-`type:PointerEvent` `type:SurfaceInput` `type:array` `type:bool` `type:color` `type:entity_ref` `type:f32` `type:glb_asset` `type:i32` `type:mat4` `type:material` `type:mesh` `type:quat` `type:sampler` `type:sound` `type:string` `type:texture` `type:u32` `type:vec2` `type:vec3` `type:vec4`
+`type:PointerEvent` `type:SurfaceInput` `type:array` `type:bool` `type:color` `type:entity_ref` `type:f32` `type:font` `type:glb_asset` `type:i32` `type:mat4` `type:material` `type:mesh` `type:quat` `type:sampler` `type:sound` `type:string` `type:texture` `type:u32` `type:vec2` `type:vec3` `type:vec4`
 
 ### Namespace values (3)
 
@@ -891,7 +894,7 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 What the build does **not** support is on [limitations.md](limitations.md); `supported.notSupported` of `mtek context` has the same list.
 
-## Part D. Diagnostics (230 codes)
+## Part D. Diagnostics (233 codes)
 
 Every diagnostic has a stable code: `E` for an error, `W` for a warning, then four digits; the first digit is the area. The full catalogue, the JSON form (`mtek check --format json`), the human rendering and the suggested edits are in [spec/diagnostics.md](../spec/diagnostics.md).
 
@@ -904,8 +907,8 @@ Every diagnostic has a stable code: `E` for an error, `W` for a warning, then fo
 | `4xxx` | functions, effects, execution domains, material stages | 15 |
 | `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 55 |
 | `6xxx` | GPU layout, target profile, generated-shader validation | 4 |
-| `7xxx` | assets | 34 |
-| `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 31 |
+| `7xxx` | assets | 36 |
+| `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 32 |
 | `9xxx` | project, configuration, tooling, internal | 13 |
 
 Within each range the `x9xx` codes mean "specified as not supported in v0.1"; all of them are listed, with their reasons, on [limitations.md](limitations.md).

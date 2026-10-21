@@ -33,7 +33,7 @@ scene Hud {
 
 | Call | Draws |
 |---|---|
-| `hud.text(content: string, at: vec2[, size: f32[, tint: color[, align: f32]]])` | One line of text. `size` is in CSS pixels (default `24.0`) and `tint` defaults to white. `align` places the text horizontally relative to `at`: `0.0` puts the left edge at `at`, `0.5` the centre (the default) and `1.0` the right edge. The line is centred vertically on `at`. Newlines in `content` start new lines. |
+| `hud.text(content: string, at: vec2[, size: f32[, tint: color[, align: f32[, font: font]]]])` | One line of text. `font` is an `asset.font(..)` or `hud.pixel_font()` (§6); by default the page's sans-serif UI font. `size` is in CSS pixels (default `24.0`) and `tint` defaults to white. `align` places the text horizontally relative to `at`: `0.0` puts the left edge at `at`, `0.5` the centre (the default) and `1.0` the right edge. The line is centred vertically on `at`. Newlines in `content` start new lines. |
 | `hud.rect(at: vec2, size: vec2, tint: color[, align: f32])` | A filled rectangle of `size` CSS pixels, centred vertically on `at` and aligned horizontally like `hud.text`. Panels and bars. |
 | `hud.button(label: string, at: vec2[, size: f32]) -> bool` | A button centred on `at` (`size` is the label's size, default `24.0`). Returns `true` in the frame after the button was clicked, once per click (§4). |
 
@@ -65,10 +65,20 @@ Sizes are CSS pixels:
 - Without a document (a worker, a test without a DOM) the calls do nothing and `hud.button` returns `false`.
 - Release, dev, test and preview builds behave the same (no inline HTML, so preview CSPs allow it).
 
-## 6. Not in this extension
+## 6. Fonts (decision 0139)
+
+- `asset.font(path)` declares a font file, validated like a GLB when the program is checked:
+  - the extension must be `.ttf`, `.otf`, `.woff` or `.woff2` (`E7105`);
+  - the bytes must show that format with a consistent header (`E7106`): an sfnt signature (`0x00010000`, `true` or `OTTO`) and a complete table directory for TTF and OTF; the `wOFF` or `wOF2` signature and a length field equal to the file's size for WOFF and WOFF2; at least one table.
+  - The file counts against the asset size limits and is packed byte for byte, like a sound. The manifest entry has the kind `font`.
+- `hud.pixel_font()` returns the **built-in font**: a 5×8 pixel bitmap of printable ASCII (32–126) that ships with the runtime. It is drawn as a crisp SVG, `size` pixels tall, and looks the same in every browser. Any other character is drawn as a box.
+- `font` is a CPU-only resource type: a constant, a `state` or an argument of `hud.text`. It is never carried by `go_to`, and never a material param or a body value.
+- At run time the first `hud.text` call with an asset font registers the file with the page as a `FontFace`. The family is named after the file's hash. Until the face has loaded the browser shows the default family. A file that the browser cannot parse after all keeps the default family and is reported once (`W8204`).
+
+## 7. Not in this extension
 
 - Text in the 3D world (labels that follow an entity).
-- Fonts other than the system UI font, and rich text.
+- Rich text (several fonts or styles in one call), and characters outside ASCII in the pixel font.
 - Layout (rows, columns, wrapping to a width).
 - Text input fields.
 - Images in the HUD.

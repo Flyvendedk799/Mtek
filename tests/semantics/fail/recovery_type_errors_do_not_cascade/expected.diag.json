@@ -6,7 +6,7 @@
     "endByte": 150,
     "message": "Unknown type 'vec5'.",
     "notes": [
-      "the built-in types are: bool, i32, u32, f32, string, vec2, vec3, vec4, mat4, quat, color, array, mesh, material, texture, sampler, entity_ref, sound, glb_asset, SurfaceInput, PointerEvent, and your own `struct`s and `enum`s"
+      "the built-in types are: bool, i32, u32, f32, string, vec2, vec3, vec4, mat4, quat, color, array, mesh, material, texture, sampler, entity_ref, font, sound, glb_asset, SurfaceInput, PointerEvent, and your own `struct`s and `enum`s"
     ]
   },
   {

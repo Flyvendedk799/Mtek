@@ -322,6 +322,8 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e7102"></a>E7102 | malformed audio file | the header of a WAV, Ogg or MP3 file is truncated or inconsistent (no `fmt `/`data` chunk, zero channels or sample rate, no Ogg page, no MPEG frame) (`spec/audio.md` §2) |
 | <a id="mtek-e7103"></a>E7103 | invalid favicon | `mtek build --release` found `assets/favicon.svg`, `.png` or `.ico` whose content is not that format (PNG signature, ICO header, an `<svg` root) or that is larger than 1 MiB (`spec/tooling.md` §2.1, decision 0136) |
 | <a id="mtek-e7104"></a>E7104 | game package exceeds itch.io limits | `mtek build --release --itch` would write a zip with more than 1000 files, more than 500 MB uncompressed, or a path longer than 240 characters, the HTML5 upload limits of itch.io (`spec/tooling.md` §2.1, decision 0136) |
+| <a id="mtek-e7105"></a>E7105 | unsupported font file | `asset.font` names a file that is not `.ttf`, `.otf`, `.woff` or `.woff2` (decision 0139) |
+| <a id="mtek-e7106"></a>E7106 | malformed font file | the bytes of an `asset.font` file do not match its extension, or its header is inconsistent (decision 0139) |
 | <a id="mtek-e7901"></a>E7901 | remote assets not supported | an `http:`, `https:` or other URL as an asset path |
 | <a id="mtek-e7902"></a>E7902 | node hierarchy instancing not supported | `model: asset` instancing a whole node hierarchy |
 | (E7032–E7099) | further asset codes | reserved; added with the feature that needs them |
@@ -360,6 +362,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-w8201"></a>W8201 | audio value clamped | runtime: a volume or pitch outside its range, or not finite, was given to an audio call; the nearest valid value is used (`spec/audio.md` §3) |
 | <a id="mtek-w8202"></a>W8202 | sound could not be decoded | runtime: the browser could not decode a sound file; playing it does nothing and the program keeps running (`spec/audio.md` §5) |
 | <a id="mtek-w8203"></a>W8203 | too many HUD items | runtime: a frame drew more than 512 `hud` items; the rest of that frame is not shown (reported once per call site, decision 0134) |
+| <a id="mtek-w8204"></a>W8204 | font could not be loaded | the browser rejected an `asset.font` file when the HUD first used it; the text uses the default family (decision 0139) |
 | (E8105–E8199) | further physics runtime codes | reserved; added with the feature that needs them |
 
 ### 5.9 Project and internal (`9xxx`)

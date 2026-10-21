@@ -264,7 +264,20 @@ export interface MtekAudioAsset {
   readonly span: SpanId;
 }
 
-export type MtekAsset = MtekMeshDataAsset | MtekImageAsset | MtekAudioAsset;
+/** A font file of `asset.font(..)` (decision 0139). */
+export interface MtekFontAsset {
+  readonly url: string;
+  readonly sha256: string;
+  readonly bytes: number;
+  readonly kind: "font";
+  readonly format: "ttf" | "otf" | "woff" | "woff2";
+  readonly mime: "font/ttf" | "font/otf" | "font/woff" | "font/woff2";
+  /** The project path generated code names the font by. */
+  readonly source: string;
+  readonly span: SpanId;
+}
+
+export type MtekAsset = MtekMeshDataAsset | MtekImageAsset | MtekAudioAsset | MtekFontAsset;
 
 // ---- scene structure (spec/runtime-abi.md section 5.2) ----
 
