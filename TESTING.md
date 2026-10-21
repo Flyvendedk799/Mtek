@@ -201,7 +201,7 @@ Editor: in VS Code, `enum` and `match` are highlighted as keywords, `=>` as an o
 ```sh
 cargo test -p mtek-compiler --locked --test fixtures --test lexer_fixtures --test stdlib_registry --test stdlib_schema --test build --test context --test context_cold_start
 cargo test --workspace --locked
-cargo run -p mtek-grammar-coverage --locked          # productions 82/82, alternatives 122/122, rules 17/17
+cargo run -p mtek-grammar-coverage --locked          # productions 82/82, alternatives 122/122, rules 17/17 (18/18 after section 3)
 cd packages/runtime-web && npx vitest run src/host/game.test.ts src/diagnostics/types.test.ts && npx tsc -p . --noEmit
 npm run check:grammar -w mtek-vscode                 # TextMate: while, shared, after/every, match-arm `|`
 npm run check:coverage                               # coverage matrix area "game-flow"
@@ -250,3 +250,97 @@ These edits in `game_flow` or the example should report:
   - `reset|pause|resume` now share one line without docs (the preset rule extended to global functions; decision 0140);
   - the docs of `go_to` and `paused` are short.
   - The empty project is 22 995 bytes, 5 bytes under the limit of the test that keeps 1 000 bytes free. **Any new intrinsic, keyword or schema field (Phases 1, 4, 5, 7) will hit this limit.** It needs a decision (0112 item 5).
+
+## 3. Saved state and settings: `saved state`, `setting state`, `save()`, `load()`, `clear_saved()` (decisions 0145–0147)
+
+### What it does
+
+- **`saved state`** (0145) is scene state the browser keeps between visits. Write `saved state best: i32 = 0;`, or `shared saved state best …` when it is shared too. `shared` comes first.
+  - `save()` writes every saved and setting state of the running scene at once.
+  - `load()` reads the stored values back and returns `false` when nothing was stored.
+  - `clear_saved()` deletes everything the program stored. The running scene keeps its values; follow it with `reset()` to start over.
+  - All three are handler-only (`E5080` in a `fn`).
+- **`setting state`** (0146) is persistent like `saved state` and is also written at the end of every frame in which it changed.
+- **When values are applied.** When a scene starts (mount, `go_to`, `reset()`), the stored values are applied after `init` and before the shared carry. `init` sees the declared values; the first `update` and the bindings see the stored ones. A carried shared value wins over a stored one.
+- **The store.** There is one `localStorage` document per program, under `mtek.save.<project name>`: `{"format":1,"values":{name:{type,value}}}`. A name is one value across all scenes.
+  - The manifest gives each persistent state `persist` and a structural `storedType` (`{volume: f32, lefty: bool}`, `enum(Easy|Normal|Hard)`), and gives the program `game.storage`. A single-scene program gets a `game` object with only `storage`.
+  - A stored value whose type or shape no longer fits is ignored with runtime `W5402`.
+  - A refused write, or a page without `localStorage` (values then live in memory), is runtime `W5403`.
+  - Under test options the store is a fresh in-memory one. `mountMtek(…, { storage })` lets a host pass its own store, or `null` for memory only.
+- **Keywords.** `saved` and `setting` are contextual (only before `state`). New intrinsics: `save`, `load`, `clear_saved`.
+- **New codes:**
+  - `E5210`: persistent state in an entity or a prefab.
+  - `E5211`: a type that cannot be stored (`entity_ref`, resources, descriptors).
+  - `E5212`: one name with different types, or `saved` in one scene and `setting` in another (related span).
+  - `W5402`, `W5403` (runtime).
+- **Context budget** (0147): the empty project is now 23 195 bytes. The test keeps 600 bytes free for the project instead of 1 000.
+- **Spec:**
+  - `spec/scenes.md` §16, `spec/language.md` §2.4, `spec/stdlib.md` §6;
+  - `spec/runtime-abi.md` §4.2, §5 and §6.1;
+  - `spec/manifest.schema.json` (`sceneStateEntry.persist`, `storedType`, `game.storage`), `spec/diagnostics.md`;
+  - `spec/decisions/0145`–`0147`.
+
+### Fixtures
+
+| Kind | Path | Expected |
+|---|---|---|
+| syntax pass | `tests/syntax/pass/SavedState.mtek` | 0 diagnostics; every modifier combination; `saved` and `setting` still work as names; the `spec/scenes.md` §16 example |
+| syntax fail | `tests/syntax/fail/e1001_saved_before_shared` | `E1001` (`saved shared state`: `shared` comes first) |
+| semantics pass | `tests/semantics/pass/saved_state` | 0 diagnostics; a struct setting, an enum, an array, a shared saved state in two scenes, `save`/`load`/`clear_saved` |
+| semantics fail | `tests/semantics/fail/game/e5210_saved_state_outside_a_scene` | 2× `E5210` (a prefab `setting`, an entity `saved`) |
+| semantics fail | `…/game/e5211_saved_state_cannot_be_stored` | 2× `E5211` (`entity_ref`, a struct holding one) |
+| semantics fail | `…/game/e5212_saved_state_types` | 2× `E5212` (type differs; kind differs), related span at the other scene |
+| semantics fail | `…/game/e5080_save_in_function` | 3× `E5080` |
+| runtime unit | `packages/runtime-web/src/scene/saves.test.ts` | document format and key, value round-trip, shape checks, `W5402` (type, shape, non-integer, enum out of range, changed enum, unreadable document), autosave only on change, `W5403` (refused write, no storage) |
+| runtime unit | `packages/runtime-web/src/host/game.test.ts` (6 new) | restore after `init`, `save`/`load`/`clear_saved` through `ctx`, end-of-frame setting write, `go_to` restore with the carried value winning, `W5402`/`W5403` keep the game running |
+| ABI | `tests/abi/manifests/valid/full.json`; `invalid/game-storage-bad-name.json`, `invalid/state-persist-unknown.json` | validate / `E8006` at `game.storage` and `scene.state[0].persist` |
+| context | `tests/context/golden/*.json` | re-blessed: `save`/`clear_saved` on the `reset\|pause\|resume\|…` line, `load` on its own line |
+| example | `examples/lane-runner` | checks and builds 15 files; `best` is `shared saved state`, `difficulty` a `setting state` (an enum, read with `match`); new `tests/difficulty-setting.test.toml` |
+
+### Commands
+
+```sh
+cargo test -p mtek-compiler --locked --test fixtures --test stdlib_registry --test stdlib_schema --test context_cold_start --test diagnostics_audit --test diagnostics_catalogue
+cargo test -p mtek-grammar-coverage --locked          # rules 18/18 ([S: saved-state])
+cd packages/runtime-web && npx vitest run src/scene/saves.test.ts src/host/game.test.ts src/abi && npx tsc -p . --noEmit
+npm run check:grammar -w mtek-vscode                  # saved/setting before state, save/load/clear_saved
+npm run check:coverage                                # area "game-flow" now lists E5210–E5212
+mtek build examples/lane-runner && mtek test examples/lane-runner
+```
+
+### Try it by hand
+
+Run `mtek dev examples/lane-runner`:
+
+- **Title.** ArrowRight twice: the logo turns faster (Hard). Reload the page: it still turns fast. The setting was written without a `save()`.
+- **Beat the best score**, then reload. The title's green bar shows the best.
+- **DevTools → Application → Local Storage.** `mtek.save.lane-runner` holds `best` (`"type":"i32"`) and `difficulty` (`"type":"enum(Easy|Normal|Hard)"`).
+  - Set `best`'s value to `"many"` and reload: `W5402` in the console, and the bar starts at 0.
+  - Set `"type"` of `difficulty` to `"enum(Easy|Hard)"`: also `W5402`.
+- **Backspace on the title.** The key is gone, the bar is 0 and the logo is back to Normal speed.
+- **Add a variant** to `Difficulty` (e.g. `Insane` at the end) and reload with a stored difficulty: `W5402`, and Normal is used. This is the structural `storedType` at work.
+- **Private window or blocked storage.** The first write warns `W5403`; the game runs on.
+
+Edits in `saved_state` or the example that should report:
+
+| Edit | Expect |
+|---|---|
+| `saved state` in an entity, or `setting state` in a prefab | `E5210` |
+| `saved state r: entity_ref = Player;` | `E5211` |
+| `saved state best: f32` in one scene and `i32` in another | `E5212` |
+| `saved state volume` in one scene and `setting state volume` in another | `E5212` |
+| `save();` in a `fn` | `E5080` |
+| `saved shared state x: i32 = 0;` | `E1001` |
+| `let saved = 1;` | fine (contextual) |
+
+### Not done or not verified (saved state)
+
+- Browser tests and `mtek test` (WebGPU) were not run. The new `difficulty-setting.test.toml` parses, but has not run. It checks `difficulty` as its variant index (Normal = 1).
+- Not run here, because this box has no physics bundle (`E9030` for `examples/physics-playground`), which the tools need:
+  - the coverage-matrix audit and its generated `docs/coverage-matrix.md`;
+  - the release-docs live tests and the generated docs.
+  - Regenerate both and commit after a full `npm run build`.
+  - `packages/runtime-web/src/host/output-app.test.ts` fails under Bun only: Bun has a global `reportError`, so a listener error is rethrown instead of logged. This was not changed here.
+- The scene-start restore runs after `init` (like the shared carry), so `init` cannot read a stored value. This is documented in §16.3 and decision 0145, and the example reads it in its first `update`.
+- Values are only checked one level deep for integers. A struct field of type `i32` holding `1.5` (a hand-edited store) is accepted as the number it is. A field type change is caught by `storedType`.
+- The cold-start context has 805 bytes of room left. **Phases 1, 4 and 5 will need the structural choice decision 0147 item 3 names.**

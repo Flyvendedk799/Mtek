@@ -1,13 +1,16 @@
-// Lane Runner: a small game in three scenes (decisions 0140 to 0144).
+// Lane Runner: a small game in three scenes (decisions 0140 to 0146).
 //
-// Title    Enter starts a run; Backspace clears the best score (`reset()` restarts the scene,
-//          shared state included).
+// Title    Enter starts a run. ArrowLeft/ArrowRight choose the difficulty, a setting that is
+//          stored by itself. Backspace deletes the stored best score and setting (`clear_saved()`)
+//          and restarts the title (`reset()`).
 // Run      ArrowLeft/ArrowRight change lanes, rocks fall in the three lanes, every second survived
 //          is a point. Escape pauses and resumes; R restarts the run (`go_to(Run)` keeps `best`).
 //          A rock in the player's lane at the player's height ends the run.
 // GameOver shows the result for three seconds, then returns to the title; Enter starts a new run.
 //
-// `score` and `best` are `shared state`: they are copied into the next scene by name.
+// `score` and `best` are `shared state`: they are copied into the next scene by name. `best` is
+// also `saved`: `save()` at the end of a run stores it, and the next visit starts with it.
+// `difficulty` is a `setting`: stored whenever it changes.
 
 const LANES: array<f32, 3> = [-2.0, 0.0, 2.0];
 
@@ -17,6 +20,17 @@ const TOP: f32 = 9.0;
 
 const PLAYER_Y: f32 = 0.0;
 
+enum Difficulty { Easy, Normal, Hard }
+
+// How fast the rocks fall at the start of a run.
+fn fall_speed_of(difficulty: Difficulty) -> f32 {
+    return match difficulty {
+        Difficulty.Easy => 3.5,
+        Difficulty.Normal => 5.0,
+        Difficulty.Hard => 7.0,
+    };
+}
+
 // A pseudo-random lane in 0..2.
 cpu fn random_lane() -> i32 {
     return min(i32(random() * 3.0), 2);
@@ -25,7 +39,8 @@ cpu fn random_lane() -> i32 {
 scene Title {
     clear_color: #10141c;
     shared state score: i32 = 0;
-    shared state best: i32 = 0;
+    shared saved state best: i32 = 0;
+    setting state difficulty: Difficulty = Difficulty.Normal;
     state started: bool = false;
     state prompt: bool = true;
     state spin: f32 = 0.0;
@@ -59,7 +74,8 @@ scene Title {
     }
 
     update(dt: f32) {
-        spin += 0.8 * dt;
+        // The logo turns faster on a harder difficulty.
+        spin += 0.16 * fall_speed_of(difficulty) * dt;
         if !started {
             started = true;
             every(0.5) {
@@ -73,7 +89,23 @@ scene Title {
         go_to(Run);
     }
 
+    on key_down(Key.ArrowLeft) {
+        difficulty = match difficulty {
+            Difficulty.Hard => Difficulty.Normal,
+            _ => Difficulty.Easy,
+        };
+    }
+
+    on key_down(Key.ArrowRight) {
+        difficulty = match difficulty {
+            Difficulty.Easy => Difficulty.Normal,
+            _ => Difficulty.Hard,
+        };
+    }
+
+    // Forget the stored best score and difficulty, then start the title over from its initial values.
     on key_down(Key.Backspace) {
+        clear_saved();
         reset();
     }
 }
@@ -81,7 +113,8 @@ scene Title {
 scene Run {
     clear_color: #0b0e14;
     shared state score: i32 = 0;
-    shared state best: i32 = 0;
+    shared saved state best: i32 = 0;
+    setting state difficulty: Difficulty = Difficulty.Normal;
     state started: bool = false;
     state lane: i32 = 1;
     state fall_speed: f32 = 5.0;
@@ -127,6 +160,8 @@ scene Run {
     update(dt: f32) {
         if !started {
             started = true;
+            // The stored setting is restored after `init`, so the first update reads it.
+            fall_speed = fall_speed_of(difficulty);
             // A point per second survived.
             every(1.0) {
                 score += 1;
@@ -145,7 +180,7 @@ scene Run {
             }
             // After 20 s the rocks fall faster.
             after(20.0) {
-                fall_speed = 8.0;
+                fall_speed += 3.0;
             }
         }
         for i in 0..3 {
@@ -160,6 +195,7 @@ scene Run {
         if hit {
             if score > best {
                 best = score;
+                save();
             }
             go_to(GameOver);
         }
@@ -194,7 +230,7 @@ scene Run {
 scene GameOver {
     clear_color: #1c0b0b;
     shared state score: i32 = 0;
-    shared state best: i32 = 0;
+    shared saved state best: i32 = 0;
     state started: bool = false;
 
     camera Main {
