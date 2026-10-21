@@ -666,6 +666,16 @@ Per-frame values, readable in CPU code and in `bind` expressions, not in GPU sta
 | `frame.index` | value | `u32` | cpu | no | Rendered frame counter since mount, wrapping. |
 | `frame.time` | value | `f32` | cpu | no | Active application time in seconds since mount, excluding paused time. |
 
+#### `hud`
+
+The heads-up display: text, rectangles and buttons drawn over the canvas. Immediate mode: what a frame draws is shown until the next frame, so draw from `update`.
+
+| Member | Kind | Signatures | Domain | Constant | Description |
+|---|---|---|---|---|---|
+| `hud.button` | function | `(label: string, at: vec2) -> bool`<br>`(label: string, at: vec2, size: f32) -> bool` | cpu | no | Draws a button centred at `at` (canvas NDC) with the label `label` (`size` in CSS pixels, default 24.0). Returns true in the frame after the button was clicked, once per click; buttons are told apart by their label and their order among buttons with that label. |
+| `hud.rect` | function | `(at: vec2, size: vec2, tint: color) -> ()`<br>`(at: vec2, size: vec2, tint: color, align: f32) -> ()` | cpu | no | Draws a filled rectangle of `size` CSS pixels at `at` (canvas NDC), aligned like `hud.text` (default centred). For panels and bars. |
+| `hud.text` | function | `(content: string, at: vec2) -> ()`<br>`(content: string, at: vec2, size: f32) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color, align: f32) -> ()` | cpu | no | Draws a line of text at `at` (canvas NDC, y up): `size` in CSS pixels (default 24.0), `tint` (default white), `align` 0.0 puts the left edge at `at`, 0.5 the centre (default), 1.0 the right edge. The line is centred vertically on `at`. |
+
 #### `lighting`
 
 Lighting functions for material fragment stages.
@@ -789,7 +799,7 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `angular_velocity` | `vec3` | Dynamic, Kinematic | Angular velocity as of the last completed tick. Read-only. |
 | `linear_velocity` | `vec3` | Dynamic, Kinematic | Linear velocity as of the last completed tick. Read-only. |
 
-## Part C. Features of this build (179)
+## Part C. Features of this build (183)
 
 The list below is `supported.features` of `mtek context`, printed by the compiler this document was generated with. It is derived by the compiler from its construct table and from the registry, never typed in. A feature is supported when a test that would fail without it passes in a recorded environment (`spec/testing.md`); `docs/coverage-matrix.md` shows which program or fixture exercises each one.
 
@@ -813,17 +823,17 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 `event:collision_enter` `event:collision_exit` `event:key_down` `event:key_up` `event:pointer_down` `event:pointer_move` `event:pointer_up`
 
-### Functions (72)
+### Functions (75)
 
-`function:abs` `function:acos` `function:alive` `function:asin` `function:asset.glb` `function:asset.linear_texture` `function:asset.sound` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:clamp` `function:color.linear` `function:color.srgb` `function:cos` `function:cross` `function:degrees` `function:destroy` `function:distance` `function:dot` `function:exp` `function:exp2` `function:floor` `function:fract` `function:inverse_sqrt` `function:is_key_down` `function:is_muted` `function:length` `function:lighting.pbr` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:normalize` `function:play` `function:play_at` `function:play_music` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:reflect` `function:round` `function:sample` `function:sampler.linear_clamp` `function:sampler.linear_repeat` `function:sampler.nearest_clamp` `function:sampler.nearest_repeat` `function:saturate` `function:set_muted` `function:set_volume` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:stop_music` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc`
+`function:abs` `function:acos` `function:alive` `function:asin` `function:asset.glb` `function:asset.linear_texture` `function:asset.sound` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:clamp` `function:color.linear` `function:color.srgb` `function:cos` `function:cross` `function:degrees` `function:destroy` `function:distance` `function:dot` `function:exp` `function:exp2` `function:floor` `function:fract` `function:hud.button` `function:hud.rect` `function:hud.text` `function:inverse_sqrt` `function:is_key_down` `function:is_muted` `function:length` `function:lighting.pbr` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:normalize` `function:play` `function:play_at` `function:play_music` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:reflect` `function:round` `function:sample` `function:sampler.linear_clamp` `function:sampler.linear_repeat` `function:sampler.nearest_clamp` `function:sampler.nearest_repeat` `function:saturate` `function:set_muted` `function:set_volume` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:stop_music` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc`
 
 ### Type methods (10)
 
 `method:glb_asset.material` `method:glb_asset.material_base_color` `method:glb_asset.material_metallic` `method:glb_asset.material_roughness` `method:glb_asset.material_texture` `method:glb_asset.mesh` `method:glb_asset.node_position` `method:glb_asset.node_rotation` `method:glb_asset.node_scale` `method:glb_asset.primitive`
 
-### Namespaces (8)
+### Namespaces (9)
 
-`namespace:asset` `namespace:color` `namespace:frame` `namespace:lighting` `namespace:mat4` `namespace:quat` `namespace:sampler` `namespace:texture`
+`namespace:asset` `namespace:color` `namespace:frame` `namespace:hud` `namespace:lighting` `namespace:mat4` `namespace:quat` `namespace:sampler` `namespace:texture`
 
 ### Scene objects (1)
 
@@ -843,7 +853,7 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 What the build does **not** support is on [limitations.md](limitations.md); `supported.notSupported` of `mtek context` has the same list.
 
-## Part D. Diagnostics (214 codes)
+## Part D. Diagnostics (216 codes)
 
 Every diagnostic has a stable code: `E` for an error, `W` for a warning, then four digits; the first digit is the area. The full catalogue, the JSON form (`mtek check --format json`), the human rendering and the suggested edits are in [spec/diagnostics.md](../spec/diagnostics.md).
 
@@ -854,10 +864,10 @@ Every diagnostic has a stable code: `E` for an error, `W` for a warning, then fo
 | `2xxx` | names, scopes, modules | 14 |
 | `3xxx` | types, values, constant evaluation | 33 |
 | `4xxx` | functions, effects, execution domains, material stages | 15 |
-| `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 44 |
+| `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 45 |
 | `6xxx` | GPU layout, target profile, generated-shader validation | 4 |
 | `7xxx` | assets | 32 |
-| `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 30 |
+| `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 31 |
 | `9xxx` | project, configuration, tooling, internal | 13 |
 
 Within each range the `x9xx` codes mean "specified as not supported in v0.1"; all of them are listed, with their reasons, on [limitations.md](limitations.md).

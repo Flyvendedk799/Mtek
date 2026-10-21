@@ -2293,6 +2293,9 @@ impl<'a> Checker<'a> {
                 if name == "lighting.pbr" {
                     self.note_lighting_surface(args);
                 }
+                if namespace == "hud" && ty != TyId::ERROR {
+                    self.check_hud_args(member, args);
+                }
                 ty
             }
             Some(NamespaceMember::Value(value)) => {

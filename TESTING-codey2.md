@@ -78,6 +78,41 @@ In a browser (dev mode, any WebGPU browser): add `print("t=${frame.time:.2} at $
 
 Not done: the formatting is not covered by a browser test.
 
+## 5. Phase 1.2: HUD (decision 0134, `spec/hud.md`)
+
+Automated (cheap, already green here):
+- `cargo test -p mtek-compiler --test fixtures` covers `tests/semantics/pass/hud_text_rect_button`, `tests/semantics/fail/e5601_hud_size_out_of_range` (three `E5601`) and `tests/syntax/pass/HudCalls.mtek`.
+- `--test stdlib_registry` includes `the_hud_namespace_has_its_overloads`.
+- `--test stdlib_schema` checks that `spec/stdlib-schema.json` has the `hud` namespace.
+- `npx vitest run src/hud` in `packages/runtime-web` (7 tests: element reuse, removal, click reported once, unclaimed click dropped, 512-item cap with one `W8203`, size clamping, linear to sRGB, dispose).
+- The host and scene vitest suites (`src/host`, `src/scene`) were **not** run here; they took over 5 minutes and were stopped. Run them: `npx vitest run src/host src/scene` in `packages/runtime-web`. Pass: all green. The wiring touched `scene/world.ts` (`ctx.hud`, CONTEXT_MEMBERS), `host/app.ts` (phase 1 `beginFrame`, phase 7 `present`, dispose) and `host/mount.ts` (creates the `HudSystem` when there is a document).
+
+Manual, in a WebGPU browser:
+1. `cargo run -p mtek-cli -- dev examples/hud-score --open`.
+2. Expected at first:
+   - top left: "Score: 0" in white;
+   - top right: "Best: 0" in yellow;
+   - under the score: a green bar on a dark track that shrinks over 30 s, with "29.9 s" style text under it;
+   - bottom centre: a "Reset" button;
+   - a rotating blue cube.
+3. **Space**: the score goes up by one and the cube pulses. "Best" follows.
+4. Click **Reset**: the score and the timer restart (exactly one reset per click). Clicking the button must not count as a canvas click. After clicking, Space must still score; it should not "press" the button again.
+5. Wait 30 s: the bar is empty and "Time! N points" appears in the centre; Space no longer scores. **R** restarts.
+6. Resize the window: the HUD stays in the same corners of the canvas. Text size stays in CSS pixels.
+7. DevTools → Elements: one `div[data-mtek-hud]` after the canvas. It has `div[data-mtek-hud-text]`, `div[data-mtek-hud-rect]` and `button[data-mtek-hud-button]` children, and they are **not** re-created every frame (no flashing in the Elements panel except changed text).
+8. `mtek test examples/hud-score` (hardware project, needs a GPU): the fixture `space-scores-r-resets` passes. It checks state only, not the HUD.
+
+What fails looks like:
+- no HUD at all;
+- the HUD at the page's top-left instead of the canvas's;
+- Reset needing two clicks, or firing twice;
+- Space activating the button;
+- console errors about `ctx.hud`.
+
+Negative: `mtek check tests/semantics/fail/e5601_hud_size_out_of_range` gives `E5601` three times. A `hud.text` call in a `fn` or `cpu fn` gives `E5080`.
+
+Known limits are in `spec/hud.md` §6. The release-docs limitation row is `hud-scope`.
+
 ## Pre-existing failures seen while running targeted tests (not caused by this branch)
 
 - `cargo test -p mtek-compiler --lib syntax::lexer_tests::longest_match_wins_for_operators` expects `=>` to lex as `Eq Gt`. The base branch's `match` work made it `FatArrow`.

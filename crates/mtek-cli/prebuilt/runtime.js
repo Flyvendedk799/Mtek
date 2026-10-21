@@ -29,7 +29,8 @@ var RUNTIME_DIAGNOSTIC_CATALOGUE = {
   E8103: "non-finite pose produced by the solver",
   E8104: "non-finite value given to a body",
   W8201: "audio value clamped",
-  W8202: "sound could not be decoded"
+  W8202: "sound could not be decoded",
+  W8203: "too many HUD items"
 }, RUNTIME_ASSET_DIAGNOSTICS = {
   E7030: "asset fetch or integrity failure",
   E7031: "image decode failure"
@@ -6550,8 +6551,8 @@ function isMappedKeyCode(code) {
 
 // src/input/dom.ts
 function pointerPosition(canvas, clientX, clientY) {
-  let rect = canvas.getBoundingClientRect(), width = rect.width > 0 ? rect.width : 1, height = rect.height > 0 ? rect.height : 1, clamp2 = (v) => Math.fround(Math.min(1, Math.max(-1, v)));
-  return { x: clamp2((clientX - rect.left) / width * 2 - 1), y: clamp2(1 - (clientY - rect.top) / height * 2) };
+  let rect = canvas.getBoundingClientRect(), width = rect.width > 0 ? rect.width : 1, height = rect.height > 0 ? rect.height : 1, clamp3 = (v) => Math.fround(Math.min(1, Math.max(-1, v)));
+  return { x: clamp3((clientX - rect.left) / width * 2 - 1), y: clamp3(1 - (clientY - rect.top) / height * 2) };
 }
 function attachInputListeners(input, targets) {
   let { canvas, registry, handledKeys } = targets;
@@ -7396,6 +7397,188 @@ function describe3(value) {
   return typeof value == "number" || typeof value == "boolean" || typeof value == "bigint" ? String(value) : typeof value == "string" ? JSON.stringify(value) : typeof value;
 }
 
+// src/hud/hud.ts
+var TEXT_SIZE_RANGE = [1, 512], RECT_SIZE_RANGE = [0, 8192], MAX_HUD_ITEMS = 512, DEFAULT_SIZE = 24, NO_HUD = Object.freeze({
+  text: () => {
+  },
+  rect: () => {
+  },
+  button: () => !1
+}), TEXT_STYLE = "position:absolute;white-space:pre;line-height:1.2;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;text-shadow:0 1px 2px rgba(0,0,0,.65);user-select:none;pointer-events:none", RECT_STYLE = "position:absolute;pointer-events:none", BUTTON_STYLE = "position:absolute;white-space:pre;line-height:1.2;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;padding:.3em .9em;border:1px solid rgba(255,255,255,.5);border-radius:.4em;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;user-select:none;pointer-events:auto;transform:translate(-50%,-50%)";
+function finite2(value) {
+  return typeof value == "number" && Number.isFinite(value) ? value : void 0;
+}
+function clamp(value, lo, hi) {
+  return Math.min(hi, Math.max(lo, value));
+}
+function linearToSrgb(c) {
+  let v = clamp(c, 0, 1);
+  return v <= 31308e-7 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055;
+}
+function cssColor(value) {
+  if (typeof value != "object" || value === null) return "rgba(255,255,255,1)";
+  let c = value, channel = (x) => String(Math.round(linearToSrgb(finite2(x) ?? 1) * 255)), alpha = clamp(finite2(c.a) ?? 1, 0, 1);
+  return `rgba(${channel(c.r)},${channel(c.g)},${channel(c.b)},${String(Math.round(alpha * 1e3) / 1e3)})`;
+}
+function point(value) {
+  if (typeof value != "object" || value === null) return { x: 0, y: 0 };
+  let v = value;
+  return { x: finite2(v.x) ?? 0, y: finite2(v.y) ?? 0 };
+}
+function placement(x, y) {
+  return {
+    left: `${String((x + 1) / 2 * 100)}%`,
+    top: `${String((1 - y) / 2 * 100)}%`
+  };
+}
+var HudSystem = class {
+  constructor(options) {
+    this.options = options;
+  }
+  options;
+  items = [];
+  shown = [];
+  layer = null;
+  geometry = { left: -1, top: -1, width: -1, height: -1 };
+  pendingClicks = /* @__PURE__ */ new Set();
+  buttonKeys = /* @__PURE__ */ new WeakMap();
+  labelCounts = /* @__PURE__ */ new Map();
+  warnedSpans = /* @__PURE__ */ new Set();
+  disposed = !1;
+  /** Phase 1: a new frame draws a new list. */
+  beginFrame() {
+    this.items = [], this.labelCounts.clear();
+  }
+  text(spanId, content, at3, size, tint, align) {
+    let { x, y } = point(at3);
+    this.push(spanId, {
+      kind: "text",
+      content: typeof content == "string" ? content : "",
+      x,
+      y,
+      size: clamp(finite2(size) ?? DEFAULT_SIZE, ...TEXT_SIZE_RANGE),
+      tint: cssColor(tint),
+      align: clamp(finite2(align) ?? 0.5, 0, 1)
+    });
+  }
+  rect(spanId, at3, size, tint, align) {
+    let { x, y } = point(at3), extent = point(size);
+    this.push(spanId, {
+      kind: "rect",
+      x,
+      y,
+      width: clamp(extent.x, ...RECT_SIZE_RANGE),
+      height: clamp(extent.y, ...RECT_SIZE_RANGE),
+      tint: cssColor(tint),
+      align: clamp(finite2(align) ?? 0.5, 0, 1)
+    });
+  }
+  button(spanId, label, at3, size) {
+    let content = typeof label == "string" ? label : "", index = this.labelCounts.get(content) ?? 0;
+    this.labelCounts.set(content, index + 1);
+    let key = `${String(index)}:${content}`, { x, y } = point(at3);
+    return this.push(spanId, {
+      kind: "button",
+      content,
+      x,
+      y,
+      size: clamp(finite2(size) ?? DEFAULT_SIZE, ...TEXT_SIZE_RANGE),
+      key
+    }), this.pendingClicks.delete(key);
+  }
+  /** After the frame's updates: the DOM shows this frame's list. Clicks no call claimed are dropped. */
+  present() {
+    if (this.disposed || (this.pendingClicks.clear(), this.items.length === 0 && this.layer === null)) return;
+    let layer = this.ensureLayer();
+    this.placeLayer(layer);
+    for (let i = 0; i < this.items.length; i++) {
+      let item = this.items[i];
+      if (item === void 0) continue;
+      let shown = this.shown[i];
+      if (shown?.kind !== item.kind) {
+        shown?.element.remove(), shown = this.create(item.kind);
+        let next = this.shown[i + 1]?.element ?? null;
+        layer.insertBefore(shown.element, next), this.shown[i] = shown;
+      }
+      this.update(shown, item);
+    }
+    for (let extra of this.shown.splice(this.items.length))
+      extra.element.remove();
+  }
+  /** Removes the layer; later calls draw nothing. Idempotent. */
+  dispose() {
+    this.disposed = !0, this.layer?.remove(), this.layer = null, this.shown = [], this.items = [], this.pendingClicks.clear();
+  }
+  push(spanId, item) {
+    if (!this.disposed) {
+      if (this.items.length >= MAX_HUD_ITEMS) {
+        let span = typeof spanId == "number" ? spanId : -1;
+        this.warnedSpans.has(span) || (this.warnedSpans.add(span), this.options.report(
+          makeRuntimeDiagnostic("W8203", {
+            phase: "runtime:update",
+            message: `This frame drew more than ${String(MAX_HUD_ITEMS)} HUD items; the rest are not shown.`,
+            source: span >= 0 ? resolveSpan(this.options.manifest, span) : null,
+            expected: `at most ${String(MAX_HUD_ITEMS)} items per frame`
+          })
+        ));
+        return;
+      }
+      this.items.push(item);
+    }
+  }
+  ensureLayer() {
+    if (this.layer !== null) return this.layer;
+    let { canvas, document: document2 } = this.options, layer = document2.createElement("div");
+    return layer.setAttribute("data-mtek-hud", ""), layer.setAttribute("aria-live", "off"), set(
+      layer.style,
+      "cssText",
+      "position:absolute;overflow:hidden;pointer-events:none;z-index:1"
+    ), (canvas.parentElement ?? document2.body).insertBefore(
+      layer,
+      canvas.parentElement === null ? null : canvas.nextSibling
+    ), this.layer = layer, layer;
+  }
+  placeLayer(layer) {
+    let { canvas } = this.options, g = this.geometry;
+    g.left === canvas.offsetLeft && g.top === canvas.offsetTop && g.width === canvas.offsetWidth && g.height === canvas.offsetHeight || (g.left = canvas.offsetLeft, g.top = canvas.offsetTop, g.width = canvas.offsetWidth, g.height = canvas.offsetHeight, set(layer.style, "left", `${String(g.left)}px`), set(layer.style, "top", `${String(g.top)}px`), set(layer.style, "width", `${String(g.width)}px`), set(layer.style, "height", `${String(g.height)}px`));
+  }
+  create(kind) {
+    let element = this.options.document.createElement(
+      kind === "button" ? "button" : "div"
+    );
+    return element.setAttribute(`data-mtek-hud-${kind}`, ""), kind === "button" ? (element.setAttribute("type", "button"), set(element.style, "cssText", BUTTON_STYLE), element.addEventListener(
+      "mousedown",
+      (event) => event.preventDefault?.()
+    ), element.addEventListener(
+      "pointerdown",
+      (event) => event.stopPropagation?.()
+    ), element.addEventListener("click", (event) => {
+      event.stopPropagation?.();
+      let key = this.buttonKeys.get(element);
+      key !== void 0 && this.pendingClicks.add(key);
+    })) : set(element.style, "cssText", kind === "text" ? TEXT_STYLE : RECT_STYLE), { kind, element, written: /* @__PURE__ */ new Map() };
+  }
+  update(shown, item) {
+    let write = (name, value) => {
+      shown.written.get(name) !== value && (shown.written.set(name, value), name === "#text" ? shown.element.textContent = value : set(shown.element.style, name, value));
+    }, { left, top } = placement(item.x, item.y);
+    switch (write("left", left), write("top", top), item.kind) {
+      case "text":
+        write("#text", item.content), write("fontSize", `${String(item.size)}px`), write("color", item.tint), write("transform", `translate(${String(-item.align * 100)}%,-50%)`);
+        break;
+      case "rect":
+        write("width", `${String(item.width)}px`), write("height", `${String(item.height)}px`), write("background", item.tint), write("transform", `translate(${String(-item.align * 100)}%,-50%)`);
+        break;
+      case "button":
+        write("#text", item.content), write("fontSize", `${String(item.size)}px`), this.buttonKeys.set(shown.element, item.key);
+        break;
+    }
+  }
+};
+function set(style, name, value) {
+  style[name] = value;
+}
+
 // src/math/mat4.ts
 function at(a, i) {
   let value = a[i];
@@ -7928,7 +8111,8 @@ var CONTEXT_MEMBERS = [
   "random",
   "isKeyDown",
   "print",
-  "audio"
+  "audio",
+  "hud"
 ], INERT_SERVICES = Object.freeze({
   random: () => 0,
   isKeyDown: () => !1,
@@ -8147,7 +8331,8 @@ var World = class {
       print: (message, spanId) => {
         services.print(typeof message == "string" ? message : describeValue(message), typeof spanId == "number" ? spanId : -1);
       },
-      audio: services.audio ?? SILENT_AUDIO
+      audio: services.audio ?? SILENT_AUDIO,
+      hud: services.hud ?? NO_HUD
     };
     Object.defineProperty(members, "frame", { enumerable: !0, get: () => this.frameValues }), this.ctx = guarded(members, "ctx"), holder.ctx = this.ctx;
   }
@@ -11942,7 +12127,7 @@ var MountedApp = class {
     if (this.current === "disposed") return;
     this.current = "disposed", this.hostOutputs.dispose(), this.pendingSwap !== void 0 && (this.pendingSwap.scene.materials.dispose(), this.pendingSwap.scene.meshes.dispose(), this.pendingSwap.scene.renderer.dispose(), this.pendingSwap = void 0);
     let { device, registry, surface, overlay } = this.deps;
-    this.deps.physics?.dispose(), this.deps.services.audio?.dispose?.(), this.scheduler.stop(), this.clearRecoveryTimer(), this.resizeObserver?.disconnect(), surface.dispose(), overlay?.remove(), registry.destroyAll(), device.onuncapturederror = null, device.destroy();
+    this.deps.physics?.dispose(), this.deps.services.audio?.dispose?.(), this.deps.services.hud?.dispose?.(), this.scheduler.stop(), this.clearRecoveryTimer(), this.resizeObserver?.disconnect(), surface.dispose(), overlay?.remove(), registry.destroyAll(), device.onuncapturederror = null, device.destroy();
   }
   /**
    * Called when `device.lost` resolves (`spec/runtime-abi.md` section 9.4, decision 0056). `epoch` names the
@@ -12211,7 +12396,7 @@ var MountedApp = class {
       phase1_input: () => {
         this.applyPendingSwap(), this.framePhase = "runtime:input", this.frameStartMs = now();
         let { world } = this.deps.scene;
-        world.resetBudget(), world.setFrame(this.scheduler.activeTime, this.scheduler.delta, this.scheduler.frameIndex), this.hostInputs.applyQueued({ state: world.sceneState }), this.behaviors.dispatchInput(this.input.deliver());
+        world.resetBudget(), world.setFrame(this.scheduler.activeTime, this.scheduler.delta, this.scheduler.frameIndex), this.hostInputs.applyQueued({ state: world.sceneState }), this.deps.services.hud?.beginFrame?.(), this.behaviors.dispatchInput(this.input.deliver());
       },
       phase2_tick: (step2) => {
         this.framePhase = "runtime:tick", this.deps.scene.world.dynamic.flush();
@@ -12231,7 +12416,7 @@ var MountedApp = class {
         this.deps.scene.world.propagate();
       },
       phase7_render: () => {
-        this.renderStartMs = now(), this.deps.scene.renderer.frame();
+        this.renderStartMs = now(), this.deps.scene.renderer.frame(), this.deps.services.hud?.present?.();
         let end = now();
         this.cpuUpdateMs = this.renderStartMs - this.frameStartMs, this.renderPrepMs = end - this.renderStartMs, this.frameTimeMs = end - this.frameStartMs, this.hostOutputs.publish(this.deps.scene.world.sceneState);
       }
@@ -12709,7 +12894,7 @@ function mountMtek(canvas, program, options) {
 }
 async function mountMtekWith(environment, canvas, program, options = {}) {
   validateOptions(options), FailureOverlay.removeFor(canvas);
-  let sink = new DiagnosticSink(options.onDiagnostic), overlay = options.failureDisplay === "none" ? null : new FailureOverlay(canvas), acquired, registry, surface, app, images, physics, audio, early = {}, allocationFailures = [], earlyReports = [];
+  let sink = new DiagnosticSink(options.onDiagnostic), overlay = options.failureDisplay === "none" ? null : new FailureOverlay(canvas), acquired, registry, surface, app, images, physics, audio, hud, early = {}, allocationFailures = [], earlyReports = [];
   try {
     if (program.abi !== 1)
       throw mountError([
@@ -12824,6 +13009,13 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
         app !== void 0 ? app.report(diagnostic2) : earlyReports.push(diagnostic2);
       },
       listener: () => listening.world?.camera
+    }), hud = environment.document === void 0 ? void 0 : new HudSystem({
+      canvas,
+      document: environment.document,
+      manifest,
+      report: (diagnostic2) => {
+        app !== void 0 ? app.report(diagnostic2) : earlyReports.push(diagnostic2);
+      }
     });
     let services = {
       random: () => generator.nextF32(),
@@ -12831,7 +13023,8 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
       print: (message) => {
         environment.log?.(message);
       },
-      audio
+      audio,
+      ...hud === void 0 ? {} : { hud }
     }, started;
     try {
       started = await startScene({
@@ -12936,7 +13129,7 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
     for (let diagnostic2 of earlyReports) app.report(diagnostic2);
     return app;
   } catch (error) {
-    if (images !== void 0 && closeImages(images), audio?.dispose(), physics?.dispose(), surface?.dispose(), registry?.destroyAll(), acquired !== void 0 && (acquired.device.onuncapturederror = null, acquired.device.destroy()), error instanceof MtekMountError) {
+    if (images !== void 0 && closeImages(images), audio?.dispose(), hud?.dispose(), physics?.dispose(), surface?.dispose(), registry?.destroyAll(), acquired !== void 0 && (acquired.device.onuncapturederror = null, acquired.device.destroy()), error instanceof MtekMountError) {
       for (let diagnostic2 of error.diagnostics) sink.report(diagnostic2);
       overlay?.show(error.diagnostics);
     }
@@ -12973,7 +13166,7 @@ function min(a, b) {
 function max(a, b) {
   return b > a || a !== a ? b : a;
 }
-function clamp(x, lo, hi) {
+function clamp2(x, lo, hi) {
   return min(max(x, lo), hi);
 }
 function saturate(x) {
@@ -12986,7 +13179,7 @@ function step(edge, x) {
   return x >= edge ? 1 : 0;
 }
 function smoothstep(e0, e1, x) {
-  let t = clamp(fr2(fr2(x - e0) / fr2(e1 - e0)), 0, 1);
+  let t = clamp2(fr2(fr2(x - e0) / fr2(e1 - e0)), 0, 1);
   return fr2(fr2(t * t) * fr2(3 - fr2(2 * t)));
 }
 function sqrt(x) {
@@ -13252,7 +13445,7 @@ var v3divs = zip3s(fdiv), v3neg = map3(fneg), v4add = zip4(fadd), v4sub = zip4(f
 function v4smul(scale, v) {
   return v4scale(v, scale);
 }
-var v4divs = zip4s(fdiv), v4neg = map4(fneg), v2abs = map2(abs), v3abs = map3(abs), v4abs = map4(abs), v2min = zip2(min), v3min = zip3(min), v4min = zip4(min), v2max = zip2(max), v3max = zip3(max), v4max = zip4(max), v2clamp = tri2(clamp), v3clamp = tri3(clamp), v4clamp = tri4(clamp), v2saturate = map2(saturate), v3saturate = map3(saturate), v4saturate = map4(saturate), v2mix = tri2(mix), v3mix = tri3(mix), v4mix = tri4(mix), v2mixs = tri2s(mix), v3mixs = tri3s(mix), v4mixs = tri4s(mix), v2step = zip2(step), v3step = zip3(step), v4step = zip4(step), v2smoothstep = tri2(smoothstep), v3smoothstep = tri3(smoothstep), v4smoothstep = tri4(smoothstep), v2sqrt = map2(sqrt), v3sqrt = map3(sqrt), v4sqrt = map4(sqrt), v2inverseSqrt = map2(inverseSqrt), v3inverseSqrt = map3(inverseSqrt), v4inverseSqrt = map4(inverseSqrt), v2pow = zip2(pow), v3pow = zip3(pow), v4pow = zip4(pow), v2exp = map2(exp), v3exp = map3(exp), v4exp = map4(exp), v2exp2 = map2(exp2), v3exp2 = map3(exp2), v4exp2 = map4(exp2), v2log = map2(log), v3log = map3(log), v4log = map4(log), v2log2 = map2(log2), v3log2 = map3(log2), v4log2 = map4(log2), v2sin = map2(sin), v3sin = map3(sin), v4sin = map4(sin), v2cos = map2(cos), v3cos = map3(cos), v4cos = map4(cos), v2tan = map2(tan), v3tan = map3(tan), v4tan = map4(tan), v2asin = map2(asin), v3asin = map3(asin), v4asin = map4(asin), v2acos = map2(acos), v3acos = map3(acos), v4acos = map4(acos), v2atan = map2(atan), v3atan = map3(atan), v4atan = map4(atan), v2atan2 = zip2(atan2), v3atan2 = zip3(atan2), v4atan2 = zip4(atan2), v2floor = map2(floor), v3floor = map3(floor), v4floor = map4(floor), v2ceil = map2(ceil), v3ceil = map3(ceil), v4ceil = map4(ceil), v2trunc = map2(trunc), v3trunc = map3(trunc), v4trunc = map4(trunc), v2fract = map2(fract), v3fract = map3(fract), v4fract = map4(fract), v2sign = map2(sign), v3sign = map3(sign), v4sign = map4(sign), v2round = map2(round), v3round = map3(round), v4round = map4(round), v2radians = map2(radians), v3radians = map3(radians), v4radians = map4(radians), v2degrees = map2(degrees), v3degrees = map3(degrees), v4degrees = map4(degrees);
+var v4divs = zip4s(fdiv), v4neg = map4(fneg), v2abs = map2(abs), v3abs = map3(abs), v4abs = map4(abs), v2min = zip2(min), v3min = zip3(min), v4min = zip4(min), v2max = zip2(max), v3max = zip3(max), v4max = zip4(max), v2clamp = tri2(clamp2), v3clamp = tri3(clamp2), v4clamp = tri4(clamp2), v2saturate = map2(saturate), v3saturate = map3(saturate), v4saturate = map4(saturate), v2mix = tri2(mix), v3mix = tri3(mix), v4mix = tri4(mix), v2mixs = tri2s(mix), v3mixs = tri3s(mix), v4mixs = tri4s(mix), v2step = zip2(step), v3step = zip3(step), v4step = zip4(step), v2smoothstep = tri2(smoothstep), v3smoothstep = tri3(smoothstep), v4smoothstep = tri4(smoothstep), v2sqrt = map2(sqrt), v3sqrt = map3(sqrt), v4sqrt = map4(sqrt), v2inverseSqrt = map2(inverseSqrt), v3inverseSqrt = map3(inverseSqrt), v4inverseSqrt = map4(inverseSqrt), v2pow = zip2(pow), v3pow = zip3(pow), v4pow = zip4(pow), v2exp = map2(exp), v3exp = map3(exp), v4exp = map4(exp), v2exp2 = map2(exp2), v3exp2 = map3(exp2), v4exp2 = map4(exp2), v2log = map2(log), v3log = map3(log), v4log = map4(log), v2log2 = map2(log2), v3log2 = map3(log2), v4log2 = map4(log2), v2sin = map2(sin), v3sin = map3(sin), v4sin = map4(sin), v2cos = map2(cos), v3cos = map3(cos), v4cos = map4(cos), v2tan = map2(tan), v3tan = map3(tan), v4tan = map4(tan), v2asin = map2(asin), v3asin = map3(asin), v4asin = map4(asin), v2acos = map2(acos), v3acos = map3(acos), v4acos = map4(acos), v2atan = map2(atan), v3atan = map3(atan), v4atan = map4(atan), v2atan2 = zip2(atan2), v3atan2 = zip3(atan2), v4atan2 = zip4(atan2), v2floor = map2(floor), v3floor = map3(floor), v4floor = map4(floor), v2ceil = map2(ceil), v3ceil = map3(ceil), v4ceil = map4(ceil), v2trunc = map2(trunc), v3trunc = map3(trunc), v4trunc = map4(trunc), v2fract = map2(fract), v3fract = map3(fract), v4fract = map4(fract), v2sign = map2(sign), v3sign = map3(sign), v4sign = map4(sign), v2round = map2(round), v3round = map3(round), v4round = map4(round), v2radians = map2(radians), v3radians = map3(radians), v4radians = map4(radians), v2degrees = map2(degrees), v3degrees = map3(degrees), v4degrees = map4(degrees);
 function v2dot(a, b) {
   return fr3(fr3(a.x * b.x) + fr3(a.y * b.y));
 }
@@ -13518,7 +13711,7 @@ export {
   checkCompatibility,
   checkDeviceCapabilities,
   checkManifest,
-  clamp,
+  clamp2 as clamp,
   clampIndex,
   clinear,
   color,

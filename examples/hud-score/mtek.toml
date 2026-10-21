@@ -1,0 +1,9 @@
+[project]
+name = "hud-score"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Score"
+
+[build]
+target = "web"
+title = "HUD Score"

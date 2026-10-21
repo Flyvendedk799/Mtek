@@ -55,6 +55,7 @@ Types: `bool i32 u32 f32 string vec2 vec3 vec4 mat4 quat color mesh material tex
 | `frame` | `time: f32`, `delta: f32`, `index: u32` (`spec/scenes.md` §7.5) |
 | `asset` | `glb(path: string) -> glb_asset`, `texture(path: string) -> texture`, `linear_texture(path: string) -> texture`, `sound(path: string) -> sound` (`spec/assets.md` §2, `spec/audio.md` §2; `glb_asset` accessors in §2.1 there; implemented by task M4-05 ahead of the M4 gate, decision 0058) |
 | `lighting` | `pbr(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32) -> color` — GPU only (implemented by M4-03, decision 0057) |
+| `hud` | `text(content: string, at: vec2[, size: f32[, tint: color[, align: f32]]])`, `rect(at: vec2, size: vec2, tint: color[, align: f32])`, `button(label: string, at: vec2[, size: f32]) -> bool` — CPU, handlers and lifecycle functions only; immediate mode, drawn over the canvas (`spec/hud.md`, decision 0134) |
 | `Key` | enum constants (§5.2) |
 
 ## 3. Schemas

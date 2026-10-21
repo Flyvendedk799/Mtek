@@ -46,6 +46,7 @@ import { loadPhysicsBackend, type PhysicsLoadResult } from "../physics/load.js";
 import { PhysicsSystem } from "../physics/system.js";
 import { Xoshiro128 } from "../random/xoshiro.js";
 import { AudioSystem, browserAudioBackend, type ListenerPose } from "../audio/audio.js";
+import { HudSystem, type HudCanvas, type HudDocument } from "../hud/hud.js";
 import { ExecutionBudgetExceeded } from "../scene/budget.js";
 import { defaultSaveStorage, MemorySaveStorage } from "../scene/saves.js";
 import { GameLink } from "../scene/game.js";
@@ -221,6 +222,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
   // The physics world, freed on every failure after it exists.
   let physics: PhysicsSystem | undefined;
   let audio: AudioSystem | undefined;
+  let hud: HudSystem | undefined;
   // A holder object, because the callbacks below assign it and TypeScript does not track that.
   const early: { lost?: GPUDeviceLostInfo } = {};
   const allocationFailures: MtekDiagnostic[] = [];
@@ -400,6 +402,19 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
       },
       listener: () => listening.world?.camera,
     });
+    // The HUD (decision 0134): a DOM layer over the canvas, when there is a document.
+    hud =
+      environment.document === undefined
+        ? undefined
+        : new HudSystem({
+            canvas: canvas as unknown as HudCanvas,
+            document: environment.document as unknown as HudDocument,
+            manifest,
+            report: (diagnostic) => {
+              if (app !== undefined) app.report(diagnostic);
+              else earlyReports.push(diagnostic);
+            },
+          });
     const services: CpuServices = {
       game,
       random: () => generator.nextF32(),
@@ -408,6 +423,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
         environment.log?.(message);
       },
       audio,
+      ...(hud === undefined ? {} : { hud }),
     };
 
     // The scene: init(ctx), meshes and every startup pipeline. Run-time diagnostics of init (E8090,
@@ -566,6 +582,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
     // Release everything acquired so far, then make the failure visible.
     if (images !== undefined) closeImages(images);
     audio?.dispose();
+    hud?.dispose();
     physics?.dispose();
     surface?.dispose();
     registry?.destroyAll();

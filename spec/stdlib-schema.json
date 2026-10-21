@@ -1985,6 +1985,57 @@
       ]
     },
     {
+      "name": "hud",
+      "since": "M1",
+      "doc": "The heads-up display: text, rectangles and buttons drawn over the canvas. Immediate mode: what a frame draws is shown until the next frame, so draw from `update`.",
+      "members": [
+        {
+          "name": "button",
+          "kind": "function",
+          "signatures": [
+            "(label: string, at: vec2) -> bool",
+            "(label: string, at: vec2, size: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "A DOM button over the canvas; clicks are queued and reported by the next frame's call.",
+          "since": "M1",
+          "doc": "Draws a button centred at `at` (canvas NDC) with the label `label` (`size` in CSS pixels, default 24.0). Returns true in the frame after the button was clicked, once per click; buttons are told apart by their label and their order among buttons with that label."
+        },
+        {
+          "name": "rect",
+          "kind": "function",
+          "signatures": [
+            "(at: vec2, size: vec2, tint: color) -> ()",
+            "(at: vec2, size: vec2, tint: color, align: f32) -> ()"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "A DOM element over the canvas.",
+          "since": "M1",
+          "doc": "Draws a filled rectangle of `size` CSS pixels at `at` (canvas NDC), aligned like `hud.text` (default centred). For panels and bars."
+        },
+        {
+          "name": "text",
+          "kind": "function",
+          "signatures": [
+            "(content: string, at: vec2) -> ()",
+            "(content: string, at: vec2, size: f32) -> ()",
+            "(content: string, at: vec2, size: f32, tint: color) -> ()",
+            "(content: string, at: vec2, size: f32, tint: color, align: f32) -> ()"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "A DOM element over the canvas; the text is set as text, never as HTML.",
+          "since": "M1",
+          "doc": "Draws a line of text at `at` (canvas NDC, y up): `size` in CSS pixels (default 24.0), `tint` (default white), `align` 0.0 puts the left edge at `at`, 0.5 the centre (default), 1.0 the right edge. The line is centred vertically on `at`."
+        }
+      ]
+    },
+    {
       "name": "lighting",
       "since": "M1",
       "doc": "Lighting functions for material fragment stages.",

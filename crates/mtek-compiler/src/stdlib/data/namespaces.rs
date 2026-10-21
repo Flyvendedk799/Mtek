@@ -70,6 +70,88 @@ fn compile_time(
     )
 }
 
+/// `hud` (decision 0134, `spec/hud.md`): text, rectangles and buttons over the canvas, drawn again
+/// every frame. Positions are normalised device coordinates of the canvas (as `PointerEvent`),
+/// sizes CSS pixels.
+fn hud_namespace() -> NamespaceDef {
+    let string = exact(TypeRef::String);
+    let vec2 = exact(TypeRef::Vec2);
+    let tint = exact(TypeRef::Color);
+    let unit = exact(TypeRef::Unit);
+    let boolean = exact(TypeRef::Bool);
+    let member = |name, doc, signatures, semantics| {
+        NamespaceMember::Function(
+            function(name, Domain::Cpu, false, Milestone::M1, doc, signatures)
+                .handlers_only()
+                .cpu_semantics(semantics),
+        )
+    };
+    namespace(
+        "hud",
+        Milestone::M1,
+        "The heads-up display: text, rectangles and buttons drawn over the canvas. Immediate mode: what a frame draws is shown until the next frame, so draw from `update`.",
+        vec![
+            member(
+                "text",
+                "Draws a line of text at `at` (canvas NDC, y up): `size` in CSS pixels (default 24.0), `tint` (default white), `align` 0.0 puts the left edge at `at`, 0.5 the centre (default), 1.0 the right edge. The line is centred vertically on `at`.",
+                vec![
+                    sig(&[p("content", string), p("at", vec2)], unit),
+                    sig(&[p("content", string), p("at", vec2), p("size", F32)], unit),
+                    sig(
+                        &[
+                            p("content", string),
+                            p("at", vec2),
+                            p("size", F32),
+                            p("tint", tint),
+                        ],
+                        unit,
+                    ),
+                    sig(
+                        &[
+                            p("content", string),
+                            p("at", vec2),
+                            p("size", F32),
+                            p("tint", tint),
+                            p("align", F32),
+                        ],
+                        unit,
+                    ),
+                ],
+                "A DOM element over the canvas; the text is set as text, never as HTML.",
+            ),
+            member(
+                "rect",
+                "Draws a filled rectangle of `size` CSS pixels at `at` (canvas NDC), aligned like `hud.text` (default centred). For panels and bars.",
+                vec![
+                    sig(&[p("at", vec2), p("size", vec2), p("tint", tint)], unit),
+                    sig(
+                        &[
+                            p("at", vec2),
+                            p("size", vec2),
+                            p("tint", tint),
+                            p("align", F32),
+                        ],
+                        unit,
+                    ),
+                ],
+                "A DOM element over the canvas.",
+            ),
+            member(
+                "button",
+                "Draws a button centred at `at` (canvas NDC) with the label `label` (`size` in CSS pixels, default 24.0). Returns true in the frame after the button was clicked, once per click; buttons are told apart by their label and their order among buttons with that label.",
+                vec![
+                    sig(&[p("label", string), p("at", vec2)], boolean),
+                    sig(
+                        &[p("label", string), p("at", vec2), p("size", F32)],
+                        boolean,
+                    ),
+                ],
+                "A DOM button over the canvas; clicks are queued and reported by the next frame's call.",
+            ),
+        ],
+    )
+}
+
 /// Every namespace of the v0.1 registry. (`Key` is an enum, see `events::enums`.)
 pub(super) fn namespaces() -> Vec<NamespaceDef> {
     let vec3 = exact(TypeRef::Vec3);
@@ -281,6 +363,8 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                 )),
             ],
         ),
+        // Decision 0134 (spec/hud.md): immediate-mode HUD drawn over the canvas each frame.
+        hud_namespace(),
         // `lighting.pbr` and the `Pbr` material landed with task M4-03, before the M4 gate
         // (decision 0057).
         namespace(

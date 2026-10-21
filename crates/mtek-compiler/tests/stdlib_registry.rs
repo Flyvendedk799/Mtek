@@ -638,11 +638,11 @@ fn every_namespace_member_of_section_2_is_present() {
     }
     let namespaces: Vec<&str> = registry.namespaces.iter().map(|n| n.name).collect();
     for name in [
-        "quat", "mat4", "color", "texture", "sampler", "frame", "asset", "lighting",
+        "quat", "mat4", "color", "texture", "sampler", "frame", "asset", "lighting", "hud",
     ] {
         assert!(namespaces.contains(&name), "missing namespace {name}");
     }
-    assert_eq!(namespaces.len(), 8);
+    assert_eq!(namespaces.len(), 9);
     // Member counts: nothing beyond the specification.
     let count = |name: &str| registry.namespace(name).map_or(0, |n| n.members.len());
     assert_eq!(
@@ -654,9 +654,46 @@ fn every_namespace_member_of_section_2_is_present() {
             count("sampler"),
             count("frame"),
             count("asset"),
-            count("lighting")
+            count("lighting"),
+            count("hud")
         ],
-        [3, 5, 2, 2, 4, 3, 4, 1]
+        [3, 5, 2, 2, 4, 3, 4, 1, 3]
+    );
+}
+
+/// The `hud` namespace (decision 0134): CPU-only, handlers-only, with overloads for the optional
+/// trailing arguments.
+#[test]
+fn the_hud_namespace_has_its_overloads() {
+    let registry = registry();
+    let shapes = |name: &str| match registry.namespace_member("hud", name) {
+        Some(NamespaceMember::Function(f)) => {
+            assert_eq!(f.domain, Domain::Cpu, "hud.{name}");
+            assert!(f.handlers_only, "hud.{name}");
+            assert!(!f.const_eligible, "hud.{name}");
+            f.signatures.iter().map(shape).collect::<Vec<_>>()
+        }
+        _ => panic!("hud.{name} is not a function"),
+    };
+    assert_eq!(
+        shapes("text"),
+        [
+            "(string, vec2) -> ()",
+            "(string, vec2, f32) -> ()",
+            "(string, vec2, f32, color) -> ()",
+            "(string, vec2, f32, color, f32) -> ()",
+        ]
+    );
+    assert_eq!(
+        shapes("rect"),
+        [
+            "(vec2, vec2, color) -> ()",
+            "(vec2, vec2, color, f32) -> ()"
+        ]
+    );
+    assert_eq!(
+        shapes("button"),
+        ["(string, vec2) -> bool", "(string, vec2, f32) -> bool"]
     );
 }
 

@@ -266,6 +266,11 @@
       "code": "W8202",
       "reason": "A runtime code of the audio subsystem (decision 0130).",
       "test": "packages/runtime-web/src/audio/audio.test.ts"
+    },
+    {
+      "code": "W8203",
+      "reason": "A runtime code of the HUD (decision 0134).",
+      "test": "packages/runtime-web/src/hud/hud.test.ts"
     }
   ]
 }

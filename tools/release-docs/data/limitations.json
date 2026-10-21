@@ -303,7 +303,7 @@
     {
       "id": "scenes-scope",
       "area": "Scenes and entities",
-      "restriction": "One scene runs at a time (`go_to(Scene)` switches between the scenes of a program); no camera switching, no run-time re-parenting, no spawned prefabs with children or nested prefab instances inside prefabs, no user-defined components, queries or systems, no render interpolation, no text or UI.",
+      "restriction": "One scene runs at a time (`go_to(Scene)` switches between the scenes of a program); no camera switching, no run-time re-parenting, no spawned prefabs with children or nested prefab instances inside prefabs, no user-defined components, queries or systems, no render interpolation, no text in the 3D world, no UI layout or text input (screen-space text and buttons are the HUD, spec/hud.md).",
       "reason": "Not in v0.1 (spec/scenes.md section 14). Scene switching landed with decision 0141; `component`, `query` and `system` are reserved words (E0013).",
       "codes": [
         "E0013"
@@ -314,6 +314,24 @@
       "source": {
         "file": "spec/scenes.md",
         "quote": "## 14. Not in v0.1"
+      }
+    },
+    {
+      "id": "hud-scope",
+      "area": "Scenes and entities",
+      "restriction": "The HUD is immediate mode and screen-space only: `hud.text`, `hud.rect` and `hud.button` drawn again every frame from lifecycle functions and handlers (not from functions), in the system UI font, with horizontal alignment as the only layout. No text in the 3D world, no images, no text input, no keyboard or gamepad navigation, and `mtek test` fixtures cannot see or click it.",
+      "reason": "Spec/hud.md section 6 (decision 0134): the smallest UI that covers scores, timers, bars and buttons, drawn as a DOM layer over the canvas.",
+      "codes": [
+        "E5601",
+        "W8203",
+        "E5080"
+      ],
+      "decisions": [
+        "0134"
+      ],
+      "source": {
+        "file": "spec/hud.md",
+        "quote": "## 6. Not in this extension"
       }
     },
     {

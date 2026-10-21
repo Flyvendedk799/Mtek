@@ -726,6 +726,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
     // `spec/runtime-abi.md` section 9.3: the physics world, with every body, collider and the event queue.
     this.deps.physics?.dispose();
     this.deps.services.audio?.dispose?.();
+    this.deps.services.hud?.dispose?.();
     this.scheduler.stop();
     this.clearRecoveryTimer();
     this.resizeObserver?.disconnect();
@@ -1136,6 +1137,8 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         world.resetBudget();
         world.setFrame(this.scheduler.activeTime, this.scheduler.delta, this.scheduler.frameIndex);
         this.hostInputs.applyQueued({ state: world.sceneState });
+        // The HUD (decision 0134) is drawn again by every frame's handlers, ticks and update.
+        this.deps.services.hud?.beginFrame?.();
         this.behaviors.dispatchInput(this.input.deliver());
       },
       phase2_tick: (step) => {
@@ -1171,6 +1174,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       phase7_render: () => {
         this.renderStartMs = now();
         this.deps.scene.renderer.frame();
+        this.deps.services.hud?.present?.();
         const end = now();
         this.cpuUpdateMs = this.renderStartMs - this.frameStartMs;
         this.renderPrepMs = end - this.renderStartMs;

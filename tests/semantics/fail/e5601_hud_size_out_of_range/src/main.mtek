@@ -1,0 +1,13 @@
+scene Main {
+    camera Cam {
+        position: vec3(0.0, 0.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    update(dt: f32) {
+        // Sizes are CSS pixels: text from 1.0 to 512.0, rectangle sides from 0.0 to 8192.0.
+        hud.text("huge", vec2(0.0, 0.0), 1000.0);
+        hud.button("tiny", vec2(0.0, -0.5), 0.5);
+        hud.rect(vec2(0.0, 0.5), vec2(-4.0, 10.0), #ffffff);
+    }
+}

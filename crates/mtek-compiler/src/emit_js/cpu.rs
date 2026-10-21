@@ -1089,6 +1089,18 @@ impl FnLowering<'_, '_> {
                     ],
                 )
             }
+            // The HUD (decision 0134): `ctx.hud.<member>(spanId, ..args)`; the runtime supplies the
+            // defaults of omitted arguments and names the call in `W8203`.
+            ir::ExprKind::Builtin { function, args } if function.starts_with("hud.") => {
+                let member = function.trim_start_matches("hud.");
+                let span_id = (self.span_id)(expr.span)?;
+                let mut arguments = vec![Expr::Num(Number::U32(span_id))];
+                arguments.extend(self.exprs(args)?);
+                Expr::ident("ctx")
+                    .member("hud")
+                    .member(member)
+                    .call(arguments)
+            }
             ir::ExprKind::Builtin { function, args } if function == "alive" => {
                 let arguments = self.exprs(args)?;
                 Expr::ident("ctx").member("alive").call(arguments)
