@@ -160,15 +160,34 @@
     {
       "id": "lang-future-constructs",
       "area": "Language",
-      "restriction": "No methods or `impl`, no user-defined enums, no pattern matching (`match`), no `use`, `mod`, `trait`, `type`, `async` or any other word of the reserved list.",
-      "reason": "Reserved for future versions (E0013); the built-in registry enums such as `Key` are the only enums.",
+      "restriction": "No methods or `impl`, no `use`, `mod`, `trait`, `type`, `async` or any other word of the reserved list.",
+      "reason": "Reserved for future versions (E0013).",
       "codes": [
         "E0013"
       ],
       "decisions": [],
       "source": {
         "file": "spec/language.md",
-        "quote": "methods and `impl`; enums"
+        "quote": "methods and `impl`;"
+      }
+    },
+    {
+      "id": "lang-enum-limits",
+      "area": "Language",
+      "restriction": "Enum variants carry no data and have no explicit discriminants; an enum does not convert to or from a number, has no ordering, and is CPU-only. A `match` pattern is an enum variant or `_`: no literal, binding, range or guard patterns and no destructuring.",
+      "reason": "Decision 0129 adds the closed, data-free enum and the exhaustive `match` that a game-state machine needs and leaves the rest for a later version; an enum is erased to its variant index, which the language does not expose.",
+      "codes": [
+        "E3001",
+        "E3014",
+        "E3204",
+        "E4011"
+      ],
+      "decisions": [
+        "0129"
+      ],
+      "source": {
+        "file": "spec/language.md",
+        "quote": "enum variants that carry data, explicit enum discriminants"
       }
     },
     {

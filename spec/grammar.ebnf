@@ -29,12 +29,12 @@ IdentStart      ::= [A-Za-z_]
 IdentContinue   ::= [A-Za-z0-9_]
                     /* [S: reserved-identifiers: '_' alone and names starting with '__' are rejected (E0012, E0011)] */
 
-Keyword         ::= 'bind' | 'break' | 'const' | 'continue' | 'cpu' | 'else' | 'entity'
+Keyword         ::= 'bind' | 'break' | 'const' | 'continue' | 'cpu' | 'else' | 'entity' | 'enum'
                   | 'export' | 'false' | 'fn' | 'for' | 'if' | 'import' | 'in' | 'let'
-                  | 'material' | 'on' | 'param' | 'prefab' | 'return' | 'scene' | 'self'
+                  | 'match' | 'material' | 'on' | 'param' | 'prefab' | 'return' | 'scene' | 'self'
                   | 'state' | 'struct' | 'true' | 'var'
 
-Reserved        ::= 'as' | 'async' | 'await' | 'enum' | 'extern' | 'impl' | 'loop' | 'match'
+Reserved        ::= 'as' | 'async' | 'await' | 'extern' | 'impl' | 'loop'
                   | 'mod' | 'move' | 'mut' | 'priv' | 'pub' | 'static' | 'super' | 'trait'
                   | 'type' | 'unsafe' | 'use' | 'where' | 'while' | 'yield' | 'compute'
                   | 'vertex' | 'storage' | 'uniform' | 'workgroup' | 'system' | 'query'
@@ -59,10 +59,11 @@ Hex             ::= [0-9A-Fa-f]
 Bool            ::= 'true' | 'false'
 
 /* Punctuation and operators */
-/*  {  }  (  )  [  ]  <  >  ,  ;  :  .  ..  ->
+/*  {  }  (  )  [  ]  <  >  ,  ;  :  .  ..  ->  =>
     +  -  *  /  %  !  =  ==  !=  <=  >=  &&  ||  +=  -=  *=  /=
     The lexer also recognises  &  |  ^  ~  <<  >>  so they can be rejected
-    with E1901 (bitwise operators are not in v0.1).                       */
+    with E1901 (bitwise operators are not in v0.1); '|' also separates the
+    patterns of a match arm (Patterns).                                   */
 
 /* ---------------------------------------------------------------------
    2. Modules and items
@@ -70,7 +71,7 @@ Bool            ::= 'true' | 'false'
 
 Module          ::= Item* EOF
 Item            ::= Import
-                  | 'export'? ( ConstDecl | FnDecl | StructDecl | MaterialDecl
+                  | 'export'? ( ConstDecl | FnDecl | StructDecl | EnumDecl | MaterialDecl
                               | PrefabDecl | SceneDecl )
 
 Import          ::= 'import' '{' Ident ( ',' Ident )* ','? '}' 'from' String ';'
@@ -83,6 +84,10 @@ Param           ::= Ident ':' Type
 
 StructDecl      ::= 'struct' Ident '{' StructField+ '}'
 StructField     ::= Ident ':' Type ';'
+
+EnumDecl        ::= 'enum' Ident '{' Ident ( ',' Ident )* ','? '}'
+                    /* The Idents in braces are the variants, numbered from 0 in order (decision 0129).
+                       [S: enum-variants: variant names are distinct (E2002)] */
 
 /* ---------------------------------------------------------------------
    3. Materials
@@ -149,8 +154,8 @@ ArrayLength     ::= Int | Ident
    --------------------------------------------------------------------- */
 
 Block           ::= '{' Statement* '}'
-Statement       ::= LetStmt | VarStmt | ConstDecl | IfStmt | ForStmt | ReturnStmt
-                  | BreakStmt | ContinueStmt | Block | SimpleStmt
+Statement       ::= LetStmt | VarStmt | ConstDecl | IfStmt | ForStmt | MatchStmt
+                  | ReturnStmt | BreakStmt | ContinueStmt | Block | SimpleStmt
 
 LetStmt         ::= 'let' Ident ( ':' Type )? '=' Expr ';'
 VarStmt         ::= 'var' Ident ( ':' Type )? '=' Expr ';'
@@ -164,6 +169,15 @@ ForStmt         ::= 'for' Ident 'in' ExprNoDesc ( '..' ExprNoDesc )? Block
 ReturnStmt      ::= 'return' Expr? ';'
 BreakStmt       ::= 'break' ';'
 ContinueStmt    ::= 'continue' ';'
+
+MatchStmt       ::= 'match' ExprNoDesc '{' MatchStmtArm+ '}'
+MatchStmtArm    ::= Patterns '=>' Block ','?
+Patterns        ::= Pattern ( '|' Pattern )*
+Pattern         ::= '_' | Ident '.' Ident
+                    /* Ident '.' Ident names a variant: Enum.Variant (decision 0129).
+                       [S: match-patterns: the value matched is of an enum type (E3203); each Pattern
+                       is a variant of that enum (E3204); every arm can match (E3202); the arms cover
+                       every variant or one is '_' (E3201)] */
 
 /* ---------------------------------------------------------------------
    7. Expressions (precedence from loosest to tightest; see the table in
@@ -188,10 +202,15 @@ Primary         ::= Int | Float | String | Color | Bool
                   | '(' Expr ')'
                   | ArrayLiteral
                   | DescriptorLiteral
+                  | MatchExpr
 
 ArrayLiteral    ::= '[' Expr ( ',' Expr )* ','? ']'
 DescriptorLiteral ::= Ident '{' ( DescField ( ';' DescField )* ';'? )? '}'
 DescField       ::= Ident ':' FieldValue
+MatchExpr       ::= 'match' ExprNoDesc '{' MatchExprArm ( ',' MatchExprArm )* ','? '}'
+                    /* A 'match' that starts a statement is a MatchStmt. [S: match-arm-types: the
+                       arm values have one type (E3206)] */
+MatchExprArm    ::= Patterns '=>' Expr
 
 /* ExprNoDesc is Expr with DescriptorLiteral removed from Primary at the top
    level (it is still allowed inside parentheses, brackets and call arguments).

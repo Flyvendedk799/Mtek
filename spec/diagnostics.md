@@ -190,6 +190,12 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-w3081"></a>W3081 | unreachable code | |
 | <a id="mtek-e3090"></a>E3090 | not a constant expression | |
 | <a id="mtek-e3102"></a>E3102 | field or parameter type mismatch | schema/material field |
+| <a id="mtek-e3201"></a>E3201 | non-exhaustive match | a `match` without `_` misses variants of its enum; the message lists them (decision 0129) |
+| <a id="mtek-e3202"></a>E3202 | unreachable match arm | a variant matched twice, a pattern after `_`, or a `_` after every variant; a related span at the earlier pattern |
+| <a id="mtek-e3203"></a>E3203 | match on a value that is not an enum | the scrutinee of `match` has another type |
+| <a id="mtek-e3204"></a>E3204 | invalid match pattern | a pattern that is not `Enum.Variant` of the scrutinee's enum, or `_` |
+| <a id="mtek-e3205"></a>E3205 | unknown enum variant | `Enum.Name` where the enum declares no `Name`; the nearest variant (help) and every variant (note) |
+| <a id="mtek-e3206"></a>E3206 | match arms of different types | the arm values of a `match` expression; a related span at the first arm |
 
 ### 5.4 Functions, effects, stages (`4xxx`)
 | Code | Title | Trigger |
