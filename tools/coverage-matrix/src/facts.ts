@@ -265,6 +265,10 @@ function stmtFact(ctx: Context, node: JsonObject): void {
     case "const":
       add(ctx, "body-constants");
       break;
+    case "timer":
+      // `after(t) { }` and `every(t) { }` (decision 0142).
+      add(ctx, node["every"] === true ? "stmt/timer:every" : "stmt/timer:after");
+      break;
     default:
       break;
   }

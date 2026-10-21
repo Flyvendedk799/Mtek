@@ -16,10 +16,10 @@
       }
     },
     "E5901": {
-      "reason": "A v0.1 application mounts one scene and has no construct that switches the active scene, so no program can produce this code: it is reserved.",
+      "reason": "Retired: `go_to(Scene)` switches the active scene (decision 0141), so no program produces this code. It stays in the catalogue so that the number is not reused.",
       "source": {
-        "file": "spec/scenes.md",
-        "quote": "v0.1 mounts **one scene** per application"
+        "file": "spec/diagnostics.md",
+        "quote": "retired by decision 0141"
       }
     },
     "E5902": {
@@ -299,13 +299,14 @@
     {
       "id": "scenes-scope",
       "area": "Scenes and entities",
-      "restriction": "One scene per application; no scene switching, no camera switching, no run-time re-parenting, no spawned prefabs with children or nested prefab instances inside prefabs, no user-defined components, queries or systems, no render interpolation, no text or UI, no audio.",
-      "reason": "Not in v0.1 (spec/scenes.md section 14). Scene switching is E5901 (reserved); `component`, `query` and `system` are reserved words (E0013).",
+      "restriction": "One scene runs at a time (`go_to(Scene)` switches between the scenes of a program); no camera switching, no run-time re-parenting, no spawned prefabs with children or nested prefab instances inside prefabs, no user-defined components, queries or systems, no render interpolation, no text or UI, no audio.",
+      "reason": "Not in v0.1 (spec/scenes.md section 14). Scene switching landed with decision 0141; `component`, `query` and `system` are reserved words (E0013).",
       "codes": [
-        "E5901",
         "E0013"
       ],
-      "decisions": [],
+      "decisions": [
+        "0141"
+      ],
       "source": {
         "file": "spec/scenes.md",
         "quote": "## 14. Not in v0.1"

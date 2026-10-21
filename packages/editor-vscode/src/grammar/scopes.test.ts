@@ -84,7 +84,7 @@ describe("keywords", () => {
   });
 
   it("scopes a reserved word as illegal", () => {
-    expect(has(scopes("let while = 1;", "while"), "invalid.illegal.reserved-word")).toBe(true);
+    expect(has(scopes("let loop = 1;", "loop"), "invalid.illegal.reserved-word")).toBe(true);
     expect(has(scopes("compute f() {}", "compute"), "invalid.illegal.reserved-word")).toBe(true);
   });
 

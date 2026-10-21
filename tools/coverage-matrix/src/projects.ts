@@ -23,7 +23,7 @@ export interface Project {
  * name a feature as covered.
  */
 export const DEMONSTRATIONS: readonly string[] = ["examples/material-configurator", "examples/physics-playground", "examples/modular-scene"];
-export const OTHER_EXAMPLES: readonly string[] = ["examples/pulse-cube", "examples/product-configurator"];
+export const OTHER_EXAMPLES: readonly string[] = ["examples/pulse-cube", "examples/product-configurator", "examples/lane-runner"];
 
 /** Directories that hold positive fixtures: projects (a directory with `mtek.toml`) that must check. */
 export const FIXTURE_ROOTS: readonly string[] = [

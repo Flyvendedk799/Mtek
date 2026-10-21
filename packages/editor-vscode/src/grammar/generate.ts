@@ -37,7 +37,7 @@ export interface TmGrammar {
 const LANG = "mtek";
 
 /** Keywords that steer control flow. */
-const CONTROL = ["break", "continue", "else", "for", "if", "in", "match", "return"];
+const CONTROL = ["break", "continue", "else", "for", "if", "in", "match", "return", "while"];
 /** Keywords that start a declaration or a member. */
 const DECLARATION = [
   "const",
@@ -175,11 +175,15 @@ export function generateGrammar(source: GrammarSource, builtins: Builtins): TmGr
   const stage = contextual("StageFn");
   const importWords = contextual("Import");
   const sceneObjectWords = contextual("SceneObject");
+  const sharedWords = contextual("StateDecl");
+  const timerWords = contextual("TimerStmt");
   for (const [rule, list] of [
     ["LifecycleFn", lifecycle],
     ["StageFn", stage],
     ["Import", importWords],
     ["SceneObject", sceneObjectWords],
+    ["StateDecl", sharedWords],
+    ["TimerStmt", timerWords],
   ] as const) {
     if (list.length === 0) throw new Error(`no contextual word for the rule ${rule}`);
   }
@@ -326,6 +330,15 @@ export function generateGrammar(source: GrammarSource, builtins: Builtins): TmGr
     match: `${START}(${words(importWords)})(?=\\s*")`,
     captures: { "1": { name: `keyword.control.import.${LANG}` } },
   });
+  // `shared state x: T = v;` (decision 0141) and `after(t) { }`, `every(t) { }` (decision 0142).
+  add("shared-state", {
+    match: `${START}(${words(sharedWords)})(?=\\s+state\\b)`,
+    captures: { "1": { name: `storage.modifier.${LANG}` } },
+  });
+  add("timer", {
+    match: `${START}(${words(timerWords)})(?=\\s*\\()`,
+    captures: { "1": { name: `keyword.control.timer.${LANG}` } },
+  });
 
   // --- the standard library ---------------------------------------------------------------------
   const byNamespace = (list: readonly { namespace: string; name: string }[]): Map<string, string[]> => {
@@ -413,6 +426,12 @@ export function generateGrammar(source: GrammarSource, builtins: Builtins): TmGr
     match: `(?<![A-Za-z0-9_])${IDENT}`,
   });
 
+  // `|` between the patterns of a match arm (`A.X | A.Y => ...`, decision 0129) is a separator,
+  // not the bitwise operator: the arm's `=>` follows on the same line.
+  add("pattern-separator", {
+    name: `punctuation.separator.pattern.${LANG}`,
+    match: "\\|(?!\\|)(?=[^;{}|]*(?:\\|[^;{}|]*)*=>)",
+  });
   // --- operators and punctuation: longest first, so `<=` is not `<` and `=` ---------------------
   const operatorTokens: [string, string][] = [
     ...Object.entries(OPERATOR_SCOPES),

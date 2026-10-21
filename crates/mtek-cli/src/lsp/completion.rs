@@ -752,7 +752,7 @@ fn declared_fields(
 }
 
 const STATEMENT_KEYWORDS: &[&str] = &[
-    "let", "var", "const", "if", "for", "return", "break", "continue", "match",
+    "let", "var", "const", "if", "for", "while", "return", "break", "continue", "match",
 ];
 const LIFECYCLE_KEYWORDS: &[&str] = &["update", "fixed_update"];
 
@@ -786,7 +786,7 @@ fn member_start_candidates(
                     .filter(|k| is_implemented(k.since))
                     .map(|k| Candidate::new(k.keyword, CompletionItemKind::KEYWORD, 8).doc(k.doc)),
             );
-            out.extend(keywords(&["const", "state", "entity", "on"]));
+            out.extend(keywords(&["const", "state", "shared", "entity", "on"]));
             out.extend(keywords(LIFECYCLE_KEYWORDS));
             out
         }

@@ -140,7 +140,6 @@ function classifyNotSupported(entry: string): NotSupportedRow["kind"] {
 const UNSUPPORTED_CODES: Readonly<Record<string, string>> = {
   "bitwise operators (& | ^ ~ << >>)": "E1901",
   "stage functions other than `fragment` (vertex, compute)": "E4901",
-  "switching the active scene at run time": "E5901",
   "transparency (alpha blending)": "E5902",
   "remote assets (URLs as asset paths)": "E7901",
   "instancing a whole node hierarchy of a glTF asset": "E7902",
