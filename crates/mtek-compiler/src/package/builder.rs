@@ -969,6 +969,7 @@ fn manifest_scene(
             ),
             update: has_behavior(scene, entity.index, &BehaviorKind::Update),
             fixed_update: has_behavior(scene, entity.index, &BehaviorKind::FixedUpdate),
+            tag: entity.tag.clone(),
         });
     }
     let material_instances = plan
@@ -1133,6 +1134,7 @@ fn manifest_prefabs(
             fixed_update: has(&BehaviorKind::FixedUpdate),
             bindings,
             span: spans.intern(item.span)?,
+            tag: item.entity.tag.clone(),
         });
     }
     Ok(out)

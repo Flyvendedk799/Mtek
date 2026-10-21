@@ -407,7 +407,7 @@
         "state": [],
         "update": false,
         "fixedUpdate": false,
-        "tags": []
+        "labels": []
       }
     ],
     "materialInstances": [

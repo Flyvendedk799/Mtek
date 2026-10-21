@@ -33,11 +33,36 @@ export class InputState {
   private readonly deliveredKeys = new Set<string>();
   private readonly arrivalButtons = new Map<number, { x: number; y: number }>();
   private readonly deliveredButtons = new Map<number, { x: number; y: number }>();
+  /** Keys that went down or up in the last {@link deliver} (decision 0153). */
+  private readonly pressed = new Set<string>();
+  private readonly released = new Set<string>();
+  /** The last delivered pointer position. `(0, 0)` until the pointer moves or a button changes. */
+  private pointer = { x: 0, y: 0 };
   private paused = false;
 
   /** `is_key_down(code)`: the delivered state, as of the end of phase 1 of the current frame. */
   isKeyDown(code: string): boolean {
     return this.deliveredKeys.has(code);
+  }
+
+  /** `key_pressed`: the key went down in the transitions delivered this frame. */
+  keyPressed(code: string): boolean {
+    return this.pressed.has(code);
+  }
+
+  /** `key_released`: the key went up in the transitions delivered this frame. */
+  keyReleased(code: string): boolean {
+    return this.released.has(code);
+  }
+
+  /** `pointer_position`: NDC, as of the end of phase 1. A copy, so a caller cannot move the stored point. */
+  pointerPosition(): { x: number; y: number } {
+    return { x: this.pointer.x, y: this.pointer.y };
+  }
+
+  /** `is_pointer_down`: button 0, 1 or 2 was down at the end of phase 1. Any other button is false. */
+  isPointerDown(button: number): boolean {
+    return this.deliveredButtons.has(button);
   }
 
   /** The number of transitions waiting for the next phase 1. */
@@ -120,6 +145,8 @@ export class InputState {
    * delivery order.
    */
   deliver(): readonly InputTransition[] {
+    this.pressed.clear();
+    this.released.clear();
     const out = this.queue;
     this.queue = [];
     if (this.pendingMove !== null) {
@@ -131,17 +158,22 @@ export class InputState {
       switch (transition.kind) {
         case "key_down":
           this.deliveredKeys.add(transition.code);
+          this.pressed.add(transition.code);
           break;
         case "key_up":
           this.deliveredKeys.delete(transition.code);
+          this.released.add(transition.code);
           break;
         case "pointer_down":
           this.deliveredButtons.set(transition.button, { x: transition.x, y: transition.y });
+          this.pointer = { x: transition.x, y: transition.y };
           break;
         case "pointer_up":
           this.deliveredButtons.delete(transition.button);
+          this.pointer = { x: transition.x, y: transition.y };
           break;
         case "pointer_move":
+          this.pointer = { x: transition.x, y: transition.y };
           break;
       }
     }

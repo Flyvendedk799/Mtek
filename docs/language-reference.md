@@ -363,7 +363,7 @@ Generated from [spec/stdlib-schema.json](../spec/stdlib-schema.json) (registry v
 | `array` | array | yes |  |  | The generic `array<T, N>`: a fixed-length array of `N` (1 to 65536) elements of type `T`. |
 | `bool` | scalar | yes |  |  | Truth value. |
 | `color` | color | yes |  |  | Linear-light RGBA with straight alpha; distinct from `vec4`. A literal `#rrggbb` is sRGB-encoded and converted; `color.linear(rgb, a)` takes linear components, `color.srgb(rgb, a)` sRGB ones. Fields `.r .g .b .a` and `.rgb`; no arithmetic. |
-| `entity_ref` | handle | no |  |  | A generation-checked reference to an entity. Supports comparison, `alive`, `destroy` and body commands only. |
+| `entity_ref` | handle | no |  |  | A generation-checked reference to an entity. Compare it, test `alive`, `destroy` it, command its body, and read `position`, `rotation`, `scale` and `visible`. |
 | `f32` | scalar | yes |  |  | IEEE-754 binary32 floating-point number. |
 | `font` | handle | no |  |  | A font for `hud.text`: `asset.font(..)` or the built-in `hud.pixel_font()`; CPU only (decision 0139). |
 | `glb_asset` | handle | no |  | material, material_base_color, material_metallic, material_roughness, material_texture, mesh, node_position, node_rotation, node_scale, primitive | The compile-time handle of `asset.glb(..)`; may be stored only in a `const` and used through its accessors. |
@@ -468,6 +468,7 @@ The fields of an entity or prefab body: a named node with a transform and option
 | `position` | `vec3` | `vec3(0.0, 0.0, 0.0)` | no | writable, bindable |  | Position local to the parent, in metres. |
 | `rotation` | `quat` | `quat.identity()` | no | writable, bindable |  | Rotation local to the parent. |
 | `scale` | `vec3` | `vec3(1.0, 1.0, 1.0)` | no | writable, bindable | every component > 0, finite | Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body. |
+| `tag` | `string` | none | no | construction only |  | A group name (`"rock"`) that `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag` and `destroy_tagged` look the entity up by (decision 0150). A string literal of lowercase letters, digits and `_`. |
 | `visible` | `bool` | `true` | no | writable, bindable |  | Hides the mesh draw only; the entity's behaviour keeps running. |
 
 ##### `Scene`
@@ -785,22 +786,31 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `atan` | `(x: T) -> T` | both | yes | no | Arc tangent, in radians. |
 | `atan2` | `(y: T, x: T) -> T` | both | yes | no | Angle of the point `(x, y)` in radians; note the argument order `atan2(y, x)`. |
 | `ceil` | `(x: T) -> T` | both | yes | no | Smallest integer value not below `x`. |
+| `chance` | `(p: f32) -> bool` | cpu | no | no | True with probability `p`. |
+| `choose` | `(items: array<T, N>) -> T` | cpu | no | no | One element of an array, chosen uniformly. |
 | `clamp` | `(x: T, lo: T, hi: T) -> T`<br>`(x: I, lo: I, hi: I) -> I` | both | yes | no | Limits `x` to the range `lo..hi`. |
 | `clear_saved` | `() -> ()` | cpu | no | yes | Deletes everything stored. |
 | `cos` | `(x: T) -> T` | both | yes | no | Cosine of an angle in radians. |
+| `count_tagged` | `(tag: string) -> i32` | cpu | no | no | The number of live entities with the tag. |
 | `cross` | `(a: vec3, b: vec3) -> vec3` | both | yes | no | Cross product of two 3D vectors. |
 | `degrees` | `(x: T) -> T` | both | yes | no | Radians to degrees. |
 | `destroy` | `(target: entity_ref) -> ()` | cpu | no | yes | Queues removal of a spawned entity; it counts as dead from the moment of the call. |
+| `destroy_tagged` | `(tag: string) -> ()` | cpu | no | yes | Queues removal of every live spawned entity with the tag; the tag must not be one a named entity has. |
 | `distance` | `(a: T, b: T) -> f32` | both | yes | no | Distance between two points. |
 | `dot` | `(a: V, b: V) -> f32` | both | yes | no | Dot product of two vectors. |
 | `exp` | `(x: T) -> T` | both | yes | no | e raised to `x`. |
 | `exp2` | `(x: T) -> T` | both | yes | no | 2 raised to `x`. |
+| `first_tagged` | `(tag: string) -> entity_ref` | cpu | no | no | The first live entity with the tag in instance order; a dead reference (`alive` is false) if there is none. |
 | `floor` | `(x: T) -> T` | both | yes | no | Largest integer value not above `x`. |
 | `fract` | `(x: T) -> T` | both | yes | no | Fractional part of `x`. |
 | `go_to` | `(scene: scene name) -> ()` | cpu | no | yes | Switches scene, keeping shared state. |
+| `has_tag` | `(target: entity_ref, tag: string) -> bool` | cpu | no | no | Whether the entity is live and has the tag. |
 | `inverse_sqrt` | `(x: T) -> T` | both | yes | no | Reciprocal of the square root. |
 | `is_key_down` | `(key: Key) -> bool` | cpu | no | no | Whether the key was down at the end of input handling in the current frame. |
 | `is_muted` | `() -> bool` | cpu | no | no | Whether audio is muted with `set_muted`. |
+| `is_pointer_down` | `(button: i32) -> bool` | cpu | no | no | Whether pointer button `button` was down at the end of input handling. |
+| `key_pressed` | `(key: Key) -> bool` | cpu | no | no | Whether the key went down during input handling of the current frame. |
+| `key_released` | `(key: Key) -> bool` | cpu | no | no | Whether the key went up during input handling of the current frame. |
 | `length` | `(x: T) -> f32` | both | yes | no | Length of a vector, or the absolute value of a scalar. |
 | `load` | `() -> bool` | cpu | no | yes | Reads saved values back; false if none. |
 | `log` | `(x: T) -> T` | both | yes | no | Natural logarithm. |
@@ -808,16 +818,20 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `max` | `(a: T, b: T) -> T`<br>`(a: I, b: I) -> I` | both | yes | no | Larger of two values, component-wise. |
 | `min` | `(a: T, b: T) -> T`<br>`(a: I, b: I) -> I` | both | yes | no | Smaller of two values, component-wise. |
 | `mix` | `(a: T, b: T, t: f32) -> T`<br>`(a: T, b: T, t: T) -> T` | both | yes | no | Linear interpolation `a * (1 - t) + b * t`, with a scalar or a component-wise `t`. |
+| `nearest_tagged` | `(tag: string, point: vec3) -> entity_ref` | cpu | no | no | The live entity with the tag whose world position is nearest `point`; a dead reference if there is none. |
 | `normalize` | `(v: V) -> V` | both | yes | no | The vector scaled to length 1. |
 | `pause` | `() -> ()` | cpu | no | yes | Stops update, physics and timers; input goes on. |
 | `paused` | `() -> bool` | cpu | no | no | Whether paused. |
 | `play` | `(sound: sound) -> ()`<br>`(sound: sound, volume: f32) -> ()`<br>`(sound: sound, volume: f32, pitch: f32) -> ()` | cpu | no | yes | Plays a sound once, at a volume (default 1.0, range 0..4) and a pitch (playback rate, default 1.0, range 0.0625..16). |
 | `play_at` | `(sound: sound, position: vec3) -> ()`<br>`(sound: sound, position: vec3, volume: f32) -> ()` | cpu | no | yes | Plays a sound once from a world position: it is quieter further from the active camera and panned left or right. |
 | `play_music` | `(sound: sound) -> ()`<br>`(sound: sound, volume: f32) -> ()` | cpu | no | yes | Starts a sound as looping music, replacing the music that plays (one music track at a time). |
+| `pointer_position` | `() -> vec2` | cpu | no | no | The pointer position at the end of input handling, in canvas NDC. |
 | `pow` | `(base: T, exponent: T) -> T` | both | yes | no | `base` raised to `exponent`, component-wise. |
 | `print` | `(message: string) -> ()` | cpu | no | no | Writes a message to the development console. |
 | `radians` | `(x: T) -> T` | both | yes | no | Degrees to radians. |
 | `random` | `() -> f32` | cpu | no | no | A pseudo-random number in `[0, 1)`. |
+| `random_int` | `(lo: i32, hi: i32) -> i32` | cpu | no | no | A random i32 in `[lo, hi)`; `lo` if `hi <= lo`. |
+| `random_range` | `(lo: f32, hi: f32) -> f32` | cpu | no | no | A random f32 in `[lo, hi)`. |
 | `reflect` | `(i: V, n: V) -> V` | both | yes | no | Reflects incident vector `i` about the surface normal `n`. |
 | `reset` | `() -> ()` | cpu | no | yes | Next frame, restarts the scene. |
 | `resume` | `() -> ()` | cpu | no | yes | Undoes pause(). |
@@ -827,6 +841,7 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `save` | `() -> ()` | cpu | no | yes | Writes the saved and setting state to storage. |
 | `set_muted` | `(muted: bool) -> ()` | cpu | no | yes | Mutes or unmutes all audio; the volume is kept. |
 | `set_volume` | `(volume: f32) -> ()` | cpu | no | yes | Sets the global volume of every sound and the music (default 1.0, range 0..4). |
+| `shuffle` | `(items: array<T, N>) -> array<T, N>` | cpu | no | no | A new array with the same elements in a random order. |
 | `sign` | `(x: T) -> T` | both | yes | no | -1, 0 or 1 according to the sign of `x`. |
 | `sin` | `(x: T) -> T` | both | yes | no | Sine of an angle in radians. |
 | `smoothstep` | `(edge0: T, edge1: T, x: T) -> T` | both | yes | no | Smooth Hermite interpolation between `edge0` and `edge1`. |
@@ -834,6 +849,7 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `sqrt` | `(x: T) -> T` | both | yes | no | Square root. |
 | `step` | `(edge: T, x: T) -> T` | both | yes | no | 0 where `x < edge`, otherwise 1, component-wise. WGSL argument order: `step(edge, x)`. |
 | `stop_music` | `() -> ()` | cpu | no | yes | Stops the music started with `play_music`; does nothing when none plays. |
+| `tagged` | `(tag: string) -> tagged entities` | cpu | no | no | The live entities with the tag, in instance order: only the iterable of a `for` loop (`for r in tagged("rock") { .. }`). |
 | `tan` | `(x: T) -> T` | both | yes | no | Tangent of an angle in radians. |
 | `transpose` | `(m: mat4) -> mat4` | both | yes | no | Transpose of a 4x4 matrix. |
 | `trunc` | `(x: T) -> T` | both | yes | no | Integer part of `x`, rounding toward zero. |
@@ -853,7 +869,7 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `angular_velocity` | `vec3` | Dynamic, Kinematic | Angular velocity as of the last completed tick. Read-only. |
 | `linear_velocity` | `vec3` | Dynamic, Kinematic | Linear velocity as of the last completed tick. Read-only. |
 
-## Part C. Features of this build (206)
+## Part C. Features of this build (221)
 
 The list below is `supported.features` of `mtek context`, printed by the compiler this document was generated with. It is derived by the compiler from its construct table and from the registry, never typed in. A feature is supported when a test that would fail without it passes in a recorded environment (`spec/testing.md`); `docs/coverage-matrix.md` shows which program or fixture exercises each one.
 
@@ -877,9 +893,9 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 `event:collision_enter` `event:collision_exit` `event:key_down` `event:key_up` `event:pointer_down` `event:pointer_move` `event:pointer_up`
 
-### Functions (95)
+### Functions (110)
 
-`function:abs` `function:acos` `function:alive` `function:asin` `function:asset.font` `function:asset.glb` `function:asset.linear_texture` `function:asset.sound` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:clamp` `function:clear_saved` `function:color.linear` `function:color.srgb` `function:cos` `function:cross` `function:degrees` `function:destroy` `function:distance` `function:dot` `function:easing.in_cubic` `function:easing.in_out_cubic` `function:easing.in_out_quad` `function:easing.in_out_sine` `function:easing.in_quad` `function:easing.out_back` `function:easing.out_bounce` `function:easing.out_cubic` `function:easing.out_elastic` `function:easing.out_quad` `function:exp` `function:exp2` `function:floor` `function:fract` `function:go_to` `function:hud.button` `function:hud.pixel_font` `function:hud.rect` `function:hud.text` `function:inverse_sqrt` `function:is_key_down` `function:is_muted` `function:length` `function:lighting.pbr` `function:load` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:normalize` `function:pause` `function:paused` `function:play` `function:play_at` `function:play_music` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:reflect` `function:reset` `function:resume` `function:round` `function:sample` `function:sampler.linear_clamp` `function:sampler.linear_repeat` `function:sampler.nearest_clamp` `function:sampler.nearest_repeat` `function:saturate` `function:save` `function:set_muted` `function:set_volume` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:stop_music` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc`
+`function:abs` `function:acos` `function:alive` `function:asin` `function:asset.font` `function:asset.glb` `function:asset.linear_texture` `function:asset.sound` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:chance` `function:choose` `function:clamp` `function:clear_saved` `function:color.linear` `function:color.srgb` `function:cos` `function:count_tagged` `function:cross` `function:degrees` `function:destroy` `function:destroy_tagged` `function:distance` `function:dot` `function:easing.in_cubic` `function:easing.in_out_cubic` `function:easing.in_out_quad` `function:easing.in_out_sine` `function:easing.in_quad` `function:easing.out_back` `function:easing.out_bounce` `function:easing.out_cubic` `function:easing.out_elastic` `function:easing.out_quad` `function:exp` `function:exp2` `function:first_tagged` `function:floor` `function:fract` `function:go_to` `function:has_tag` `function:hud.button` `function:hud.pixel_font` `function:hud.rect` `function:hud.text` `function:inverse_sqrt` `function:is_key_down` `function:is_muted` `function:is_pointer_down` `function:key_pressed` `function:key_released` `function:length` `function:lighting.pbr` `function:load` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:nearest_tagged` `function:normalize` `function:pause` `function:paused` `function:play` `function:play_at` `function:play_music` `function:pointer_position` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:random_int` `function:random_range` `function:reflect` `function:reset` `function:resume` `function:round` `function:sample` `function:sampler.linear_clamp` `function:sampler.linear_repeat` `function:sampler.nearest_clamp` `function:sampler.nearest_repeat` `function:saturate` `function:save` `function:set_muted` `function:set_volume` `function:shuffle` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:stop_music` `function:tagged` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc`
 
 ### Type methods (10)
 
@@ -907,7 +923,7 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 What the build does **not** support is on [limitations.md](limitations.md); `supported.notSupported` of `mtek context` has the same list.
 
-## Part D. Diagnostics (234 codes)
+## Part D. Diagnostics (239 codes)
 
 Every diagnostic has a stable code: `E` for an error, `W` for a warning, then four digits; the first digit is the area. The full catalogue, the JSON form (`mtek check --format json`), the human rendering and the suggested edits are in [spec/diagnostics.md](../spec/diagnostics.md).
 
@@ -918,7 +934,7 @@ Every diagnostic has a stable code: `E` for an error, `W` for a warning, then fo
 | `2xxx` | names, scopes, modules | 14 |
 | `3xxx` | types, values, constant evaluation | 35 |
 | `4xxx` | functions, effects, execution domains, material stages | 15 |
-| `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 56 |
+| `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 61 |
 | `6xxx` | GPU layout, target profile, generated-shader validation | 4 |
 | `7xxx` | assets | 36 |
 | `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 32 |

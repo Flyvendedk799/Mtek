@@ -75,15 +75,18 @@
     {
       "id": "lang-loops",
       "area": "Language",
-      "restriction": "No `while` or `loop`; the only loops are `for i in a..b` and `for x in array`.",
-      "reason": "Listed as not in v0.1; the specification records no rationale beyond scope.",
+      "restriction": "No `loop`. Write `while true { … }` and leave it with `break`. `while` runs at most 1 000 000 iterations.",
+      "reason": "`loop` stays reserved (decision 0144). A `while` that runs past the cap fails the frame with E8080.",
       "codes": [
-        "E0013"
+        "E0013",
+        "E8080"
       ],
-      "decisions": [],
+      "decisions": [
+        "0144"
+      ],
       "source": {
         "file": "spec/language.md",
-        "quote": "`while`/`loop`"
+        "quote": "There is no `loop`"
       }
     },
     {
@@ -389,13 +392,15 @@
     {
       "id": "scenes-entity-ref-fields",
       "area": "Scenes and entities",
-      "restriction": "An `entity_ref` (the result of `spawn`, the argument of a collision handler) can be passed to `destroy`, `alive` and body commands, but its fields and state cannot be read or written.",
-      "reason": "Decision 0064: not in v0.1.",
+      "restriction": "An `entity_ref` can be compared, passed to `destroy` and `alive`, given body commands, and read for `position`, `rotation`, `scale` and `visible`. Writing a field, or reading any other field or state, is rejected, and a `bind` cannot read a field through a reference.",
+      "reason": "Decision 0151 allows the four transform reads. Writes stay rejected because the single-writer rules need the entity's declaration (decision 0064).",
       "codes": [
-        "E5074"
+        "E5074",
+        "E5005"
       ],
       "decisions": [
-        "0064"
+        "0064",
+        "0151"
       ],
       "source": {
         "file": "spec/diagnostics.md",

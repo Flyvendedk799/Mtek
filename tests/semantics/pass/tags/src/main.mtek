@@ -1,0 +1,46 @@
+// Tags (decision 0150): named entities, placed and spawned prefab instances, and every query.
+import { Coin } from "./coin.mtek";
+
+const ROCK: string = "rock";
+
+prefab Rock {
+    param lane: i32 = 0;
+    tag: "rock";
+    mesh: Box {};
+}
+
+scene Run {
+    camera Main {}
+    state rocks: i32 = 0;
+    state near: entity_ref = Player;
+    entity Player {
+        tag: "player";
+        mesh: Sphere {};
+        entity Shield {
+            tag: "shield_2";
+            mesh: Box {};
+        }
+    }
+    entity Gold: Coin {}
+
+    update(dt: f32) {
+        rocks = count_tagged(ROCK) + count_tagged("coin");
+        near = nearest_tagged("rock", Player.position);
+        if has_tag(near, "rock") && !has_tag(first_tagged("player"), "rock") {
+            rocks -= 1;
+        }
+        for r in tagged(("rock")) {
+            if r == near {
+                destroy(r);
+            }
+        }
+    }
+
+    on key_down(Key.Space) {
+        spawn(Rock { lane: random_int(0, 3) });
+        spawn(Coin { value: 2 });
+        if count_tagged("rock") > 8 {
+            destroy_tagged("rock");
+        }
+    }
+}

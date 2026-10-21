@@ -1,6 +1,6 @@
 //! Global intrinsic functions (`spec/stdlib.md` section 6).
 
-use super::build::{F32, I, T, V, exact, function, p, sig};
+use super::build::{ARRAY_TN, ELEMENT_T, F32, I, T, V, exact, function, p, sig};
 use crate::stdlib::model::{Domain, IntrinsicDef, Milestone, TypeRef};
 
 /// A both-domain, const-eligible math function. Planned for M2 (the milestone that adds
@@ -208,6 +208,25 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             vec![sig(&[p("p", F32)], exact(TypeRef::Bool))],
         )
         .cpu_semantics("`random() < p`; one draw."),
+        // `choose` and `shuffle` (decision 0152). The checker reads `T` and `N` off the argument.
+        function(
+            "choose",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "One element of an array, chosen uniformly.",
+            vec![sig(&[p("items", ARRAY_TN)], ELEMENT_T)],
+        )
+        .cpu_semantics("One draw of `random()`: index `floor(random() * N)`. `N` is at least 1."),
+        function(
+            "shuffle",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "A new array with the same elements in a random order.",
+            vec![sig(&[p("items", ARRAY_TN)], ARRAY_TN)],
+        )
+        .cpu_semantics("Fisher-Yates: `N - 1` draws of `random()` (`N` below 2 draws none). Does not modify `items`."),
         function(
             "print",
             Domain::Cpu,
@@ -225,6 +244,41 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             "Whether the key was down at the end of input handling in the current frame.",
             vec![sig(&[p("key", exact(TypeRef::Enum("Key")))], exact(TypeRef::Bool))],
         ),
+        // Input polling (decision 0153).
+        function(
+            "key_pressed",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Whether the key went down during input handling of the current frame.",
+            vec![sig(&[p("key", exact(TypeRef::Enum("Key")))], exact(TypeRef::Bool))],
+        ),
+        function(
+            "key_released",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Whether the key went up during input handling of the current frame.",
+            vec![sig(&[p("key", exact(TypeRef::Enum("Key")))], exact(TypeRef::Bool))],
+        ),
+        function(
+            "pointer_position",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "The pointer position at the end of input handling, in canvas NDC.",
+            vec![sig(&[], exact(TypeRef::Vec2))],
+        )
+        .cpu_semantics("`x` right, `y` up, both in `[-1, 1]`. `(0, 0)` until the pointer moves or a button changes."),
+        function(
+            "is_pointer_down",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Whether pointer button `button` was down at the end of input handling.",
+            vec![sig(&[p("button", exact(TypeRef::I32))], exact(TypeRef::Bool))],
+        )
+        .cpu_semantics("0 primary, 1 middle, 2 secondary. Any other button is false."),
         function(
             "spawn",
             Domain::Cpu,
@@ -400,5 +454,64 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             "Whether the entity reference points at a live entity.",
             vec![sig(&[p("target", exact(TypeRef::EntityRef))], exact(TypeRef::Bool))],
         ),
+        // Tag queries (decision 0150): the tag is a string literal that some entity or prefab of
+        // the program declares as its `tag`.
+        function(
+            "count_tagged",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "The number of live entities with the tag.",
+            vec![sig(&[p("tag", exact(TypeRef::String))], exact(TypeRef::I32))],
+        ),
+        function(
+            "first_tagged",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "The first live entity with the tag in instance order; a dead reference (`alive` is false) if there is none.",
+            vec![sig(&[p("tag", exact(TypeRef::String))], exact(TypeRef::EntityRef))],
+        ),
+        function(
+            "nearest_tagged",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "The live entity with the tag whose world position is nearest `point`; a dead reference if there is none.",
+            vec![sig(
+                &[p("tag", exact(TypeRef::String)), p("point", exact(TypeRef::Vec3))],
+                exact(TypeRef::EntityRef),
+            )],
+        )
+        .cpu_semantics("Ties go to the first in instance order."),
+        function(
+            "has_tag",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Whether the entity is live and has the tag.",
+            vec![sig(
+                &[p("target", exact(TypeRef::EntityRef)), p("tag", exact(TypeRef::String))],
+                exact(TypeRef::Bool),
+            )],
+        ),
+        function(
+            "tagged",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "The live entities with the tag, in instance order: only the iterable of a `for` loop (`for r in tagged(\"rock\") { .. }`).",
+            vec![sig(&[p("tag", exact(TypeRef::String))], exact(TypeRef::TaggedEntities))],
+        )
+        .cpu_semantics("The loop skips an entity that is destroyed before its turn and does not visit one spawned during the loop."),
+        function(
+            "destroy_tagged",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Queues removal of every live spawned entity with the tag; the tag must not be one a named entity has.",
+            vec![sig(&[p("tag", exact(TypeRef::String))], exact(TypeRef::Unit))],
+        )
+        .handlers_only(),
     ]
 }

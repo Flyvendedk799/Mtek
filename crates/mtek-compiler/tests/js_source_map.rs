@@ -201,7 +201,9 @@ fn expr(e: &Expr, out: &mut Expected) {
             }
         }
         ExprKind::Convert { arg } => children.push(arg),
-        ExprKind::Components { base, .. } | ExprKind::Field { base, .. } => children.push(base),
+        ExprKind::Components { base, .. }
+        | ExprKind::Field { base, .. }
+        | ExprKind::RefField { target: base, .. } => children.push(base),
         ExprKind::Index { base, index } => children.extend([&**base, &**index]),
         ExprKind::Match {
             scrutinee,

@@ -97,12 +97,13 @@ export const AREAS: readonly Area[] = [
       "materials",
       "schema:Unlit",
       "schema:Pbr",
+      "schema:Sprite",
       "form/*",
       "param-update/*",
       "expr/material-*",
       "project/user-material-shaders",
     ],
-    codes: ["E4020", "E4021", "E4030", "E4031", "E4032", "E4040", "E5002", "E5003", "E5100", "W5101", "E6001"],
+    codes: ["E4020", "E4021", "E4030", "E4031", "E4032", "E4040", "E5002", "E5003", "E5100", "W5101", "E5701", "E6001"],
   },
   {
     id: "textures",
@@ -146,8 +147,14 @@ export const AREAS: readonly Area[] = [
   {
     id: "prefabs",
     title: "Prefabs, spawn and destroy",
-    features: ["prefabs", "prefab-instances", "prefab/*", "self", "entity/prefab-instance", "expr/prefab-*", "expr/entity-ref", "function:spawn", "function:destroy", "function:alive", "type:entity_ref"],
+    features: ["prefabs", "prefab-instances", "prefab/*", "self", "entity/prefab-instance", "expr/prefab-*", "expr/entity-ref", "expr/ref-field-read", "function:spawn", "function:destroy", "function:alive", "type:entity_ref"],
     codes: ["E5030", "E5040", "E5041", "E5042", "E5074", "E5080", "E5110"],
+  },
+  {
+    id: "tags",
+    title: "Tags and tag queries",
+    features: ["function:count_tagged", "function:first_tagged", "function:nearest_tagged", "function:has_tag", "function:tagged", "function:destroy_tagged"],
+    codes: ["E5220", "E5221", "E5222", "E5223", "E5224"],
   },
   {
     id: "lights",

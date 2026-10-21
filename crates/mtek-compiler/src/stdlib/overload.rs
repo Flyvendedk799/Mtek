@@ -57,6 +57,12 @@ impl Signature {
     /// Every concrete instantiation of the signature: one per member of each class it uses
     /// (the product when it uses several classes).
     pub fn instantiations(&self) -> Vec<ConcreteSignature> {
+        // A documented form (`array<T, N>`) is resolved by the checker, not by overload resolution.
+        if self.params.iter().any(|p| matches!(p.ty, SigType::Form(_)))
+            || matches!(self.ret, SigType::Form(_))
+        {
+            return Vec::new();
+        }
         let mut used: Vec<TypeClass> = Vec::new();
         for ty in self.params.iter().map(|p| p.ty).chain([self.ret]) {
             if let SigType::Class(class) = ty
@@ -84,6 +90,8 @@ impl Signature {
                 .iter()
                 .find(|(c, _)| *c == class)
                 .map_or(TypeRef::Unit, |(_, member)| *member),
+            // Filtered out above: a form has no concrete instantiation.
+            SigType::Form(_) => TypeRef::Unit,
         };
         bindings
             .iter()

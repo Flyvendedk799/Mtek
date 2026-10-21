@@ -1,0 +1,28 @@
+[
+  {
+    "code": "MTEK-E5221",
+    "file": "src/main.mtek",
+    "startByte": 341,
+    "endByte": 347,
+    "message": "The tag argument of `count_tagged` must be a string constant, but it is a name that is not a constant.",
+    "expected": "a string literal such as \"rock\", or a `const` string",
+    "actual": "a name that is not a constant",
+    "notes": [
+      "tags are fixed where entities and prefabs declare them, so every use is checked against them when the program is built",
+      "help: write the tag itself, for example `count_tagged(\"rock\")`"
+    ]
+  },
+  {
+    "code": "MTEK-E5221",
+    "file": "src/main.mtek",
+    "startByte": 374,
+    "endByte": 384,
+    "message": "The tag argument of `tagged` must be a string constant, but it is an expression computed at run time.",
+    "expected": "a string literal such as \"rock\", or a `const` string",
+    "actual": "an expression computed at run time",
+    "notes": [
+      "tags are fixed where entities and prefabs declare them, so every use is checked against them when the program is built",
+      "help: write the tag itself, for example `count_tagged(\"rock\")`"
+    ]
+  }
+]

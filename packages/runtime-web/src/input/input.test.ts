@@ -193,6 +193,33 @@ describe("pointer", () => {
     expect(kinds(input.deliver()).at(-1)).toBe("pointer_move:0@0.5,0.5");
   });
 
+  it("reports the pointer and the buttons as of the end of phase 1, and clears edges next frame", () => {
+    const input = new InputState();
+    expect(input.pointerPosition()).toEqual({ x: 0, y: 0 });
+    expect(input.isPointerDown(0)).toBe(false);
+    expect(input.isPointerDown(3)).toBe(false);
+    input.keyDown("KeyA");
+    input.pointerDown(0.1, 0.2, 0);
+    input.pointerMove(-0.25, 0.5);
+    input.deliver();
+    expect(input.keyPressed("KeyA")).toBe(true);
+    expect(input.keyReleased("KeyA")).toBe(false);
+    // The coalesced move is delivered after the button, so it is the position of the frame.
+    expect(input.pointerPosition()).toEqual({ x: -0.25, y: 0.5 });
+    expect(input.isPointerDown(0)).toBe(true);
+    expect(input.isPointerDown(1)).toBe(false);
+    const point = input.pointerPosition();
+    point.x = 9;
+    expect(input.pointerPosition().x).toBe(-0.25);
+    input.keyUp("KeyA");
+    input.deliver();
+    expect(input.keyPressed("KeyA")).toBe(false);
+    expect(input.keyReleased("KeyA")).toBe(true);
+    expect(input.isKeyDown("KeyA")).toBe(false);
+    input.deliver();
+    expect(input.keyReleased("KeyA")).toBe(false);
+  });
+
   it("ignores unknown buttons, duplicate downs and releases of buttons that are not down", () => {
     const input = new InputState();
     expect(input.pointerDown(0, 0, 3)).toBe(false);

@@ -1,0 +1,20 @@
+// A misspelt tag is an error, not an empty result.
+prefab Rock {
+    tag: "rock";
+    mesh: Box {};
+}
+
+scene Demo {
+    camera Main {}
+    state n: i32 = 0;
+    entity Player {
+        tag: "player";
+        mesh: Sphere {};
+    }
+    update(dt: f32) {
+        n = count_tagged("rocks");
+        if has_tag(first_tagged("enemy"), "player") {
+            n = 0;
+        }
+    }
+}

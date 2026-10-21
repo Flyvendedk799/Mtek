@@ -22,6 +22,16 @@ pub struct Game {
     pub itch: bool,
 }
 
+/// `mtek new --template`.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ValueEnum)]
+pub enum NewTemplate {
+    /// The blueprint Demo: a cube whose pulse a host input tints.
+    #[default]
+    Demo,
+    /// A two-scene game: a title, a run, tags, a saved best score and a pause key.
+    Game,
+}
+
 /// The output format of `--format`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ValueEnum)]
 pub enum Format {
@@ -165,10 +175,13 @@ enum CliCommand {
         /// The project directory or a directory inside it [default: the current directory]
         path: Option<PathBuf>,
     },
-    /// Scaffold a project from the built-in Demo template
+    /// Scaffold a project from a built-in template
     New {
         /// Project name (`[a-z0-9-]+`); also the directory created in the working directory
         name: String,
+        /// `demo` (the pulse cube) or `game` (a title scene, a run, tags and a saved score)
+        #[arg(long, value_enum, default_value_t)]
+        template: NewTemplate,
     },
     /// Format Mtek files canonically (in place, or only check them)
     Fmt {
@@ -237,8 +250,8 @@ pub enum Request {
         open: bool,
         path: Option<PathBuf>,
     },
-    /// `mtek new NAME`.
-    New { name: String },
+    /// `mtek new NAME [--template demo|game]`.
+    New { name: String, template: NewTemplate },
     /// `mtek fmt [--check] [PATHS…]`.
     Fmt { check: bool, paths: Vec<PathBuf> },
     /// `mtek context --entry FILE`.
@@ -377,7 +390,7 @@ where
             Ok(Request::Inspect { view, format, path })
         }
         CliCommand::Dev { port, open, path } => Ok(Request::Dev { port, open, path }),
-        CliCommand::New { name } => Ok(Request::New { name }),
+        CliCommand::New { name, template } => Ok(Request::New { name, template }),
         CliCommand::Fmt { check, paths } => Ok(Request::Fmt { check, paths }),
         CliCommand::Test(args) => Ok(Request::Test(args)),
         CliCommand::Context {
@@ -610,11 +623,20 @@ mod tests {
         assert_eq!(
             parse_args(&["new", "pulse-cube"]),
             Ok(Request::New {
-                name: "pulse-cube".into()
+                name: "pulse-cube".into(),
+                template: NewTemplate::Demo,
+            })
+        );
+        assert_eq!(
+            parse_args(&["new", "my-game", "--template", "game"]),
+            Ok(Request::New {
+                name: "my-game".into(),
+                template: NewTemplate::Game,
             })
         );
         usage(&["new"]);
         usage(&["new", "a", "b"]);
+        usage(&["new", "my-game", "--template", "nope"]);
     }
 
     #[test]

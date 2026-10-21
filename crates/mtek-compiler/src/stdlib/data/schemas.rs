@@ -159,6 +159,12 @@ fn objects() -> Vec<SchemaDef> {
                 C,
                 "A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`.",
             ),
+            field(
+                "tag",
+                TypeRef::String,
+                C,
+                "A group name (`\"rock\"`) that `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag` and `destroy_tagged` look the entity up by (decision 0150). A string literal of lowercase letters, digits and `_`.",
+            ),
         ],
     )
     // `spec/scenes.md` section 4.1: a material without a mesh is `E5020`.

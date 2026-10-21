@@ -73,6 +73,7 @@ export const FORMS: readonly Form[] = [
     ["expr/state-read:scene", "read of scene `state`"],
     ["expr/state-read:entity", "read of entity `state`"],
     ["expr/entity-field-read", "read of an entity field (`Cube.position`, `self.rotation`)"],
+    ["expr/ref-field-read", "read of `position`, `rotation`, `scale` or `visible` through an `entity_ref` (decision 0151)"],
     ["expr/camera-field-read", "read of a camera field"],
     ["expr/instance-param-read", "read of a material instance param (`Cube.material.phase`)"],
     ["expr/light-field-read", "read of a light field (`Sun.light.intensity`)"],
@@ -83,7 +84,14 @@ export const FORMS: readonly Form[] = [
     ["expr/entity-ref", "entity used as a value (`entity_ref`)"],
     ["expr/body-target:entity", "body command or velocity read on a named entity or `self`"],
     ["expr/body-target:ref", "body command or velocity read through an `entity_ref`"],
-  ]).map((form) => ({ ...form, ref: form.id.startsWith("expr/body-target") ? "spec/physics.md section 3" : form.ref })),
+  ]).map((form) => ({
+    ...form,
+    ref: form.id.startsWith("expr/body-target")
+      ? "spec/physics.md section 3"
+      : form.id === "expr/ref-field-read"
+        ? "spec/scenes.md section 8.3"
+        : form.ref,
+  })),
   ...forms("places", "spec/language.md section 7.2", [
     ["place/root:local", "assignment to a `var` local"],
     ["place/root:state:scene", "assignment to scene `state`"],
@@ -236,6 +244,7 @@ export const IR_VARIANTS: Readonly<Record<string, string>> = {
   "ExprKind.Descriptor": "descriptors",
   "ExprKind.State": "expr/state-read:scene",
   "ExprKind.EntityField": "expr/entity-field-read",
+  "ExprKind.RefField": "expr/ref-field-read",
   "ExprKind.CameraField": "expr/camera-field-read",
   "ExprKind.InstanceParam": "expr/instance-param-read",
   "ExprKind.LightField": "expr/light-field-read",

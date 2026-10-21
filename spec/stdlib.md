@@ -83,6 +83,7 @@ Flags: **R** required · **W** writable from handlers · **B** bindable · **C**
 | `light` | light schema | — | C (fields W B) |
 | `body` | body schema | — | C |
 | `collider` | collider schema | — | C |
+| `tag` | string | — | C |
 
 ### 3.3 `Camera` (scene-object kind `camera`), `Perspective`, `Orthographic`
 As in `spec/scenes.md` §3, including `exposure: f32 = -1.9145305` (EV100, C, decision 0081). `Perspective { fov_y: f32 = 0.9 (0, π); near: f32 = 0.1 (> 0); far: f32 = 1000.0 (> near) }`, `Orthographic { height: f32 = 10.0 (> 0); near: f32 = 0.1; far: f32 = 1000.0 }`; all projection fields W B.
@@ -184,8 +185,14 @@ Notation: `T` ranges over `f32, vec2, vec3, vec4` (component-wise), `I` over `i3
 | `random_range` | `(f32, f32) → f32` | cpu | — | `lo + (hi − lo) · random()` rounded to f32: in `[lo, hi)`; one draw of `random()` (decision 0149) |
 | `random_int` | `(i32, i32) → i32` | cpu | — | `lo + floor(random() · (hi − lo))`: in `[lo, hi)`, `lo` when `hi ≤ lo`; one draw, also then (decision 0149) |
 | `chance` | `(f32) → bool` | cpu | — | `random() < p`: true with probability `p` (never for `p ≤ 0`, always for `p ≥ 1`); one draw (decision 0149) |
+| `choose` | `(array<T, N>) → T` | cpu | — | one element, index `floor(random() · N)`; one draw; `N` is at least 1 (decision 0152) |
+| `shuffle` | `(array<T, N>) → array<T, N>` | cpu | — | a new array, Fisher-Yates, `N − 1` draws (`N` below 2 draws none); does not modify the argument (decision 0152) |
 | `print` | `(string) → ()` | cpu | — | dev console; no-op in release builds |
-| `is_key_down` | `(Key) → bool` | cpu | — | |
+| `is_key_down` | `(Key) → bool` | cpu | — | down at the end of input handling (decision 0153) |
+| `key_pressed` | `(Key) → bool` | cpu | — | went down in the transitions delivered this frame (decision 0153) |
+| `key_released` | `(Key) → bool` | cpu | — | went up in the transitions delivered this frame (decision 0153) |
+| `pointer_position` | `() → vec2` | cpu | — | pointer in canvas NDC, `x` right and `y` up; `(0, 0)` until the pointer moves or a button changes (decision 0153) |
+| `is_pointer_down` | `(i32) → bool` | cpu | — | button 0, 1 or 2 was down; any other button is false (decision 0153) |
 | `spawn` | `(prefab descriptor) → entity_ref` | cpu (handlers only) | — | the argument is a prefab literal `Prefab { param: value; }`; params may be run-time values (decision 0064) |
 | `destroy` | `(entity_ref) → ()` | cpu (handlers only) | — | `E5030` for a named entity |
 | `play` | `(sound) → ()`, `(sound, f32) → ()`, `(sound, f32, f32) → ()` | cpu (handlers only) | — | volume `0..4` (default 1), pitch `0.0625..16` (default 1); `spec/audio.md` §3 (decision 0130) |
@@ -196,6 +203,12 @@ Notation: `T` ranges over `f32, vec2, vec3, vec4` (component-wise), `I` over `i3
 | `set_muted` | `(bool) → ()` | cpu (handlers only) | — | the volume is kept |
 | `is_muted` | `() → bool` | cpu | — | |
 | `alive` | `(entity_ref) → bool` | cpu | — | false for a pending spawn, a pending removal and a dead reference |
+| `count_tagged` | `(string) → i32` | cpu | — | the live entities with the tag (`spec/scenes.md` §17, decision 0150); the tag is a string constant that some entity or prefab declares (`E5221`, `E5222`) |
+| `first_tagged` | `(string) → entity_ref` | cpu | — | the first live entity with the tag in instance order; a dead reference when there is none |
+| `nearest_tagged` | `(string, vec3) → entity_ref` | cpu | — | the live entity with the tag whose world position is nearest the point; a tie goes to the first in instance order; a dead reference when there is none |
+| `has_tag` | `(entity_ref, string) → bool` | cpu | — | false for a reference that is not alive |
+| `tagged` | `(string) → tagged entities` | cpu | — | only the iterable of a `for` loop, `for r in tagged("rock") { .. }` (`E5224`); skips an entity destroyed before its turn |
+| `destroy_tagged` | `(string) → ()` | cpu (handlers only) | — | queues the removal of every live spawned entity with the tag; `E5223` when a named entity has the tag |
 | `go_to` | `(scene name) → ()` | cpu (handlers only) | — | the argument is the name of a scene of the program, `go_to(Level)` (`E5201` otherwise); switches scene at the start of a later frame, carrying `shared state` over (`spec/scenes.md` §15.2, decision 0141) |
 | `reset` | `() → ()` | cpu (handlers only) | — | restarts the scene that runs from its initial values, at the start of a later frame (`spec/scenes.md` §15.5, decision 0140) |
 | `pause`, `resume` | `() → ()` | cpu (handlers only) | — | stop and restart the game clock: ticks, physics, timers and `update` (`spec/scenes.md` §15.4, decision 0143) |

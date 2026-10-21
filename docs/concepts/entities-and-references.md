@@ -11,7 +11,7 @@ An entity is a named node of a scene. You can reach the entities you declared by
 3. **Nesting is parenting.** An entity declared inside another has a transform relative to its parent. It does not inherit fields, state or handlers. Re-parenting at run time does not exist, and a body is allowed on a root entity only (`MTEK-E5091`).
 4. **Declared entities live as long as the scene.** `destroy(Cube)` is `MTEK-E5030`. Hide an entity with `visible: false` instead.
 5. **`entity_ref` is a handle type.** A reference comes from `spawn(...)`, from the parameter of a collision handler, from naming an entity where a reference is expected (`other == Floor`), and from `self`. A reference can be stored in `state`, in an array and in a prefab `param`, and passed to a function.
-6. **What a reference can do.** Compare with `==` and `!=`, ask `alive(r)`, remove with `destroy(r)`, and issue body commands (`r.body.apply_impulse(v)`). That is all. Reading or writing a field or state through a reference is `MTEK-E5074`: every access to an entity is checked by the compiler against a declaration, and a reference could point at anything.
+6. **What a reference can do.** Compare with `==` and `!=`, ask `alive(r)`, remove with `destroy(r)`, issue body commands (`r.body.apply_impulse(v)`), and read `position`, `rotation`, `scale` and `visible`. Writing a field, or reading any other field or state, is `MTEK-E5074`: those need the entity's declaration, and a reference could point at anything. A reference that is not alive reads as zero.
 7. **References do not dangle.** A reference is a slot number and a generation. When an entity is destroyed, the generation of its slot moves on, so an old reference never reaches the entity that later reuses the slot: `alive(r)` stays `false`, `destroy(r)` is a no-op and a body command is dropped, each with a warning at run time.
 8. **There is no `null`, and no optional type.** To model "no entity", keep a `bool` next to the reference, or let `alive` answer. A `state` of type `entity_ref` needs an initial value, which must be a declared entity: use an empty one (`entity Nothing {}`, which draws nothing) as the placeholder, and a flag such as `has_target` to say whether the reference means anything.
 9. **`spawn(Prefab { ... })`** creates an instance of a prefab at run time. It may be called in a handler or a lifecycle function only (`MTEK-E5080` in an initialiser or a `cpu fn`), takes a prefab literal (the parameters may be run-time values) and returns an `entity_ref` that is valid at once. The entity itself is created at the next flush point (the start of the next fixed tick, or the end of this frame), so `alive(r)` is `false` until then, and a spawned entity first runs in the phase after it was created. It is a root entity of the scene.
@@ -171,7 +171,7 @@ scene Demo {
 }
 ```
 
-A field cannot be read or written through an `entity_ref` (`MTEK-E5074`). Give the prefab a parameter for what the scene needs to tell it, or let the instance move itself in its own `update`. A body command such as `last.body.teleport(...)` is allowed.
+A field cannot be written through an `entity_ref` (`MTEK-E5074`). `position`, `rotation`, `scale` and `visible` can be read; give the prefab a parameter for anything else, or let the instance move itself in its own `update`. A body command such as `last.body.teleport(...)` is allowed.
 
 ### Destroying a declared entity
 
@@ -251,7 +251,7 @@ scene Demo {
 }
 ```
 
-A prefab is a module item and does not know the scene around it (`MTEK-E2003`, unknown name `Boss`). Pass the position in as a parameter when you spawn it, or pass the entity as an `entity_ref` to ask `alive`; fields still cannot be read through the reference.
+A prefab is a module item and does not know the scene around it (`MTEK-E2003`, unknown name `Boss`). Pass the position in as a parameter when you spawn it, or pass the entity as an `entity_ref` and read `position`.
 
 ### The same name twice
 

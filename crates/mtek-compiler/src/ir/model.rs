@@ -702,6 +702,8 @@ pub enum ExprKind {
     State { owner: Owner, name: String },
     /// A read of a field of a named entity (`Cube.position`) or of `self`.
     EntityField { entity: u32, field: String },
+    /// A read of `position`, `rotation`, `scale` or `visible` through an `entity_ref` (decision 0151).
+    RefField { target: Box<Expr>, field: String },
     /// A read of a camera field (`Main.position`).
     CameraField { camera: String, field: String },
     /// A read of a param of the material instance of a named entity.
@@ -1183,6 +1185,9 @@ pub struct Entity {
     /// `state`, `behaviors` and `bindings` hold the copies that belong to the instance.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub prefab: Option<PrefabInstance>,
+    /// `tag: "name";` (decision 0150): the group the tag queries find the entity in.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tag: Option<String>,
 }
 
 /// An entity's light component (`spec/materials.md` section 7, decision 0053).

@@ -126,6 +126,8 @@ pub enum Ty {
     /// The argument of `go_to`: the name of a scene of the entry module (decision 0141). Only
     /// that argument has this type; a scene is not a value anywhere else.
     SceneName,
+    /// The result of `tagged(tag)` (decision 0150): only the iterable of a `for` loop has it.
+    TaggedEntities,
     /// The value of a descriptor literal of a user material (`Pulse { .. }`,
     /// decision 0039): nominal, identified by the material's declaration in
     /// any module, and accepted wherever a `material` is expected.
@@ -545,6 +547,7 @@ impl TyInterner {
             TypeRef::Descriptor(category) => Ty::Descriptor(category),
             TypeRef::PrefabDescriptor => Ty::PrefabDescriptor,
             TypeRef::SceneName => Ty::SceneName,
+            TypeRef::TaggedEntities => Ty::TaggedEntities,
         };
         self.intern(ty)
     }
@@ -579,6 +582,7 @@ impl TyInterner {
             Ty::Descriptor(category) => TypeRef::Descriptor(category),
             Ty::PrefabDescriptor => TypeRef::PrefabDescriptor,
             Ty::SceneName => TypeRef::SceneName,
+            Ty::TaggedEntities => TypeRef::TaggedEntities,
             Ty::Error
             | Ty::Array { .. }
             | Ty::Struct(_)
@@ -819,6 +823,7 @@ mod tests {
             TypeRef::Descriptor(SchemaCategory::Projection),
             TypeRef::PrefabDescriptor,
             TypeRef::SceneName,
+            TypeRef::TaggedEntities,
         ]);
         for type_ref in refs {
             let id = interner.from_type_ref(type_ref);

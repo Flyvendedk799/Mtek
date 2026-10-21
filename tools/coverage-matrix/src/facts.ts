@@ -168,6 +168,9 @@ function exprFact(ctx: Context, node: JsonObject): void {
       add(ctx, "expr/entity-field-read");
       selfFact(ctx, node["entity"]);
       break;
+    case "refField":
+      add(ctx, "expr/ref-field-read");
+      break;
     case "cameraField":
       add(ctx, "expr/camera-field-read");
       break;
@@ -515,6 +518,8 @@ const EXPR_KINDS = new Set([
   "lightField",
   "bodyCommand",
   "bodyProperty",
+  "match",
+  "refField",
   "frame",
   "enumMember",
   "param",

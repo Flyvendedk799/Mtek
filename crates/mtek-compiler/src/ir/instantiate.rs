@@ -114,6 +114,7 @@ fn instantiate_scene(
             entity.light = None;
             entity.body = template_entity.body.clone();
             entity.collider = template_entity.collider.clone();
+            entity.tag = template_entity.tag.clone();
         }
         for child in &template.children {
             let mut copy = sub.entity(child)?;
@@ -826,6 +827,10 @@ impl Substitution<'_> {
             },
             ExprKind::EntityField { entity, field } => ExprKind::EntityField {
                 entity: self.index(*entity),
+                field: field.clone(),
+            },
+            ExprKind::RefField { target, field } => ExprKind::RefField {
+                target: self.boxed(target)?,
                 field: field.clone(),
             },
             ExprKind::CameraField { camera, field } => ExprKind::CameraField {

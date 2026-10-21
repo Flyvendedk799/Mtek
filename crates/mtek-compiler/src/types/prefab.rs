@@ -16,7 +16,7 @@
 //!   param without a default is given (`E5041`). The scene reads and writes its fields, state and
 //!   material params like those of any entity.
 
-use super::check::Checker;
+use super::check::{Checker, FieldKind};
 use super::consteval::Folded;
 use super::scene::{CheckedInstance, CheckedParam, FieldOrigin};
 use super::ty::TyId;
@@ -707,21 +707,35 @@ impl<'a> Checker<'a> {
         );
     }
 
-    /// `E5074`: a field of an `entity_ref`. Through a reference an entity can be compared,
-    /// tested with `alive`, destroyed and given body commands; its fields stay out of reach so
-    /// that every field access is statically checkable (`spec/scenes.md` section 8.3).
+    /// A field of an `entity_ref` (decision 0151). `position`, `rotation`, `scale` and `visible`
+    /// can be read. Every other field, and every write, is `E5074` (`spec/scenes.md` section 8.3).
     pub(super) fn entity_ref_field(&mut self, expr: &Expr, name: &Ident) -> TyId {
+        let ty = match name.name.as_str() {
+            "position" | "scale" => Some(TyId::VEC3),
+            "rotation" => Some(TyId::QUAT),
+            "visible" => Some(TyId::BOOL),
+            _ => None,
+        };
+        if let Some(ty) = ty {
+            self.fields.insert(
+                expr.id,
+                FieldKind::RefField {
+                    field: name.name.clone(),
+                },
+            );
+            return ty;
+        }
         self.report(
             Diagnostic::new(
                 Code::E5074,
                 format!(
-                    "'.{}' accesses a field through an entity_ref, but fields cannot be read or written through an entity_ref in v0.1.",
+                    "'.{}' cannot be read through an entity_ref. Only `position`, `rotation`, `scale` and `visible` can.",
                     name.name
                 ),
             )
             .at(expr.span)
-            .note("through an entity_ref you may compare it (`==`, `!=`), test `alive(r)`, `destroy(r)` it and issue body commands")
-            .help("a named entity's fields are read by its name: `Floor.position`; keep the data you need in state"),
+            .note("state, material params and other fields stay on the named entity, because an entity_ref does not say which entity it will be")
+            .help("read `position`, `rotation`, `scale` or `visible`, or keep the value in scene state"),
         );
         TyId::ERROR
     }

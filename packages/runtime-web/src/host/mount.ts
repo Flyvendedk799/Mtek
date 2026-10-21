@@ -433,6 +433,10 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
       game,
       random: () => generator.nextF32(),
       isKeyDown: (code) => input.isKeyDown(code),
+      keyPressed: (code) => input.keyPressed(code),
+      keyReleased: (code) => input.keyReleased(code),
+      pointerPosition: () => input.pointerPosition(),
+      isPointerDown: (button) => input.isPointerDown(button),
       print: (message) => {
         environment.log?.(message);
       },

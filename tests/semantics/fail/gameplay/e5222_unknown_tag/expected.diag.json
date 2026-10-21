@@ -1,0 +1,34 @@
+[
+  {
+    "code": "MTEK-E5222",
+    "file": "src/main.mtek",
+    "startByte": 279,
+    "endByte": 286,
+    "message": "No entity or prefab of the program has the tag 'rocks'.",
+    "expected": "a tag declared with `tag: \"..\";`",
+    "actual": "\"rocks\"",
+    "related": [
+      {
+        "message": "the tag 'rock' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 70,
+        "endByte": 82
+      }
+    ],
+    "notes": [
+      "help: did you mean \"rock\"?"
+    ]
+  },
+  {
+    "code": "MTEK-E5222",
+    "file": "src/main.mtek",
+    "startByte": 321,
+    "endByte": 328,
+    "message": "No entity or prefab of the program has the tag 'enemy'.",
+    "expected": "a tag declared with `tag: \"..\";`",
+    "actual": "\"enemy\"",
+    "notes": [
+      "help: the tags of the program are \"player\", \"rock\""
+    ]
+  }
+]

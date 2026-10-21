@@ -75,6 +75,7 @@ entity Cube {
 | `light` | `DirectionalLight {…}` / `PointLight {…}` | none | `spec/materials.md` §7 |
 | `body` | `Static {}` / `Dynamic {…}` / `Kinematic {}` | none | `spec/physics.md` |
 | `collider` | `BoxCollider {…}` / `SphereCollider {…}` | none | `spec/physics.md` |
+| `tag` | `string` constant | none | §17 |
 
 A `material` without a `mesh` is `E5020`. Unknown, duplicate and mistyped fields are `E5001`/`E5002`/`E3102`. All values inside `mesh`, `body` and `collider` descriptors must be **constant expressions** (`E3090`) — they are construction-only data transported in the manifest.
 
@@ -136,7 +137,17 @@ The parameter name is free; its type must be `f32`, and there must be exactly on
 
 7.2 **Keys** are the registry enum `Key`, mapped from the DOM `KeyboardEvent.code` (physical key, layout-independent): `Key.A`–`Key.Z`, `Key.Digit0`–`Key.Digit9`, `Key.Space`, `Key.Enter`, `Key.Escape`, `Key.Tab`, `Key.Backspace`, `Key.ShiftLeft`, `Key.ShiftRight`, `Key.ControlLeft`, `Key.ControlRight`, `Key.AltLeft`, `Key.AltRight`, `Key.ArrowUp`, `Key.ArrowDown`, `Key.ArrowLeft`, `Key.ArrowRight`. The complete mapping table is in `spec/stdlib.md` §5.
 
-7.3 **Polling.** `is_key_down(Key.W) -> bool` (CPU intrinsic) returns the key state as of the end of phase 1 of the current frame.
+7.3 **Polling.** These are CPU intrinsics. They read the state as of the end of phase 1 of the current frame (decision 0153).
+
+| Built-in | Meaning |
+|---|---|
+| `is_key_down(Key.W) -> bool` | the key was down |
+| `key_pressed(Key.W) -> bool` | the key went down in the transitions delivered this frame |
+| `key_released(Key.W) -> bool` | the key went up in the transitions delivered this frame |
+| `pointer_position() -> vec2` | the pointer, in the same coordinates as `PointerEvent.position`; `(0, 0)` until the pointer moves or a button changes |
+| `is_pointer_down(button: i32) -> bool` | button 0, 1 or 2 was down; any other button is false |
+
+A key that goes down and up in one frame makes both `key_pressed` and `key_released` true, and `is_key_down` false. The edges last until the next frame's phase 1.
 
 7.4 **Focus loss.** When the canvas's document loses focus or becomes hidden, the runtime records `key_up` transitions for every held key and a release for held pointer buttons; they are delivered at the start of the next frame. Input is therefore re-synchronised, never stuck.
 
@@ -156,7 +167,7 @@ The parameter name is free; its type must be `f32`, and there must be exactly on
 - read and write scene state (bare name) — scene bodies and entities inside the scene;
 - read and write own entity state (`self.x`) and named entities' state (`Name.x`) — within the scene;
 - read entity fields (`self.position`, `Cube.rotation`, `Cube.material.tint`), and write them subject to §8.2;
-- call `cpu fn`s, pure functions and CPU intrinsics (`spawn`, `destroy`, `alive`, `random`, `print`, `is_key_down`, body commands from `spec/physics.md`);
+- call `cpu fn`s, pure functions and CPU intrinsics (`spawn`, `destroy`, `alive`, `random`, `print`, `is_key_down`, `key_pressed`, `key_released`, `pointer_position`, `is_pointer_down`, `choose`, `shuffle`, body commands from `spec/physics.md`);
 - read `frame.*`.
 
 8.2 **Single writer.** Every writable field of every entity, camera, light and material instance has exactly one writer, decided statically:
@@ -169,7 +180,7 @@ The parameter name is free; its type must be `f32`, and there must be exactly on
 
 Fields the schema marks construction-only (e.g. `mesh`, `body`, `scale` of bodies) cannot be assigned at all (`E5073`). The physics rules hold for every entity with a body, also an instance of a prefab that declares one and `self` inside such a prefab; decision `spec/decisions/0065-physics-schemas-and-ownership.md` records where each is reported.
 
-8.3 **`entity_ref` access is limited in v0.1.** Through an `entity_ref` you may only: compare (`==`, `!=`), test `alive(r)`, `destroy(r)`, and issue body commands (`r.body.apply_impulse(v)`, …, `spec/physics.md` §3). Field reads and writes through an `entity_ref` are `E5074` in v0.1. A named entity used where an `entity_ref` is expected converts implicitly (`other == Floor`). These limits keep all field access statically checkable.
+8.3 **`entity_ref` access** (decision 0151). Through an `entity_ref` you may: compare (`==`, `!=`), test `alive(r)`, `destroy(r)`, issue body commands (`r.body.apply_impulse(v)`, …, `spec/physics.md` §3), and **read** `position`, `rotation`, `scale` and `visible`. A write of any field, and a read of any other field or of state, is `E5074`. A reference that is not alive reads as zero: `position` and `scale` are `(0, 0, 0)`, `rotation` is the identity and `visible` is false. A named entity used where an `entity_ref` is expected converts implicitly (`other == Floor`). A `bind` cannot read these fields through a reference (`E5005`: no dependency kind covers a reference that might change entity).
 
 8.4 **`bind` rules** (blueprint §3.2).
 - `bind(expr)` may appear only as the whole value of a field the schema marks **bindable** (`spec/stdlib.md` §3), or of a value param in a material instance descriptor; anywhere else it is `E5004`. It is not a value: it cannot be stored, passed or returned.
@@ -230,7 +241,7 @@ The mounted application owns the scene; the scene owns entity instances; entitie
 
 ## 14. Not in v0.1
 
-Several scenes at once (one runs at a time, §15); run-time re-parenting; spawned prefabs with children; prefab instances nested within prefabs; reading/writing fields through `entity_ref`; user-defined components, queries and systems (v0.2); render interpolation; camera switching; text in the 3D world, UI layout and text input.
+Several scenes at once (one runs at a time, §15); run-time re-parenting; spawned prefabs with children; prefab instances nested within prefabs; writing fields through `entity_ref`, and reading any field but `position`, `rotation`, `scale` and `visible` (§8.3); user-defined components and systems (v0.2); render interpolation; camera switching; text in the 3D world, UI layout and text input.
 
 Audio is no longer in this list: `spec/audio.md` (decision 0130).
 
@@ -296,3 +307,51 @@ The value of a persistent state is kept in the browser's storage and outlives th
 16.4 **What can go wrong.** Nothing about storage stops the program or reaches it as an error. A stored value of another type than the state now has (the program changed), of another shape, or unreadable, is ignored, and the state keeps its value. The runtime warns once per state with `W5402`. A write the browser refuses (the storage is full or disabled) warns with `W5403`. On a page with no usable `localStorage` (a sandboxed frame, a privacy mode) the values are kept in memory until the page closes, and the first write warns with `W5403`. An enum is stored as its variant index: reordering an enum's variants changes what an old save means, and removing variants makes an index out of range, which is then ignored (`W5402`).
 
 16.5 **Tests and hosts.** `mtek test` and any mount with test options start with an empty in-memory store, so tests do not depend on what an earlier run saved. A host may pass its own store, or `storage: null` for memory only (`spec/runtime-abi.md` §6.1).
+
+## 17. Tags
+
+Decision 0150.
+
+17.1 **Declaring a tag.** An entity or a prefab may name the group it belongs to with the construction-only field `tag`:
+
+```mtek
+prefab Rock {
+    param lane: i32 = 0;
+    tag: "rock";
+    mesh: Box {};
+}
+
+scene Run {
+    camera Main {}
+    entity Player {
+        tag: "player";
+        mesh: Sphere {};
+    }
+    on key_down(Key.Space) {
+        spawn(Rock { lane: random_int(0, 3) });
+    }
+    update(dt: f32) {
+        if count_tagged("rock") > 8 {
+            destroy_tagged("rock");
+        }
+        // Keep only the rock nearest the player.
+        let near = nearest_tagged("rock", Player.position);
+        for r in tagged("rock") {
+            if r != near && !has_tag(r, "player") {
+                destroy(r);
+            }
+        }
+    }
+}
+```
+
+A tag is a string constant of 1 to 32 lowercase letters, digits and `_`, starting with a letter (`E5220`). An entity has at most one tag. Every instance of a prefab has the prefab's tag, placed or spawned. An instance cannot set `tag` (`E5042`), and a prefab's tag cannot read a param (`E3090`).
+
+17.2 **Finding entities by tag.** `count_tagged(tag)`, `first_tagged(tag)`, `nearest_tagged(tag, point)`, `has_tag(r, tag)`, `tagged(tag)` and `destroy_tagged(tag)` (`spec/stdlib.md` §6) look at the entities for which `alive` is true, in stable instance order (§10.1): the named entities, then the spawned ones in spawn order. A spawned entity pending removal is not found. One spawned in the current frame is found after the next flush (§9).
+
+- The tag argument is a string constant (`E5221`) that some entity or prefab of the program declares (`E5222`, with the closest declared tag as a suggestion). A misspelt tag is a build error, not an empty result.
+- `first_tagged` and `nearest_tagged` give a dead reference (`alive(r)` is false) when no entity has the tag. `nearest_tagged` measures the world position (§12). A tie goes to the first in instance order.
+- `tagged(tag)` is only the iterable of a `for` loop (`E5224`). The loop visits the named entities and the spawned entities that existed when it started. It skips one destroyed before its turn.
+- `destroy_tagged(tag)` (lifecycle functions and handlers, `E5080` elsewhere) queues the removal of every live spawned entity with the tag, as `destroy` does for each. Named entities cannot be destroyed, so a tag that a named entity has (its own, or its prefab's for a placed instance) is `E5223`.
+
+17.3 **Run time.** The manifest carries the tag of each entity and prefab (`spec/runtime-abi.md` §5), and the generated code calls `ctx.countTagged(tag)` and its siblings (§4.2).

@@ -166,6 +166,9 @@ pub enum CallKind {
 pub enum FieldKind {
     /// Components of a vector, quaternion or colour (a swizzle when several).
     Components(Vec<usize>),
+    /// A transform field read through an `entity_ref` (`r.position`, decision 0151).
+    /// Writes stay `E5074`.
+    RefField { field: String },
     /// A field of a named entity or scene object (`Cube.position`).
     ObjectField {
         noun: &'static str,
@@ -280,6 +283,9 @@ pub(super) struct Checker<'a> {
     /// The scene names that are the argument of a `go_to` (decision 0141): there, and only
     /// there, a scene name is a value, of type `scene name`.
     pub(super) scene_arguments: BTreeSet<NodeId>,
+    /// The `tagged(..)` calls that are the iterable of a `for` loop (decision 0150): the only
+    /// place where one is allowed.
+    pub(super) tagged_iterables: BTreeSet<NodeId>,
 }
 
 impl<'a> Checker<'a> {
@@ -346,6 +352,7 @@ impl<'a> Checker<'a> {
             prefab_entity_counts: BTreeMap::new(),
             spawn_argument: None,
             scene_arguments: BTreeSet::new(),
+            tagged_iterables: BTreeSet::new(),
         }
     }
 
@@ -1947,13 +1954,21 @@ impl<'a> Checker<'a> {
                         }
                         return TyId::UNIT;
                     }
-                    let ty = self.function_call(expr, name, function, args, kind, expected);
+                    if !self.tag_call_allowed(expr, name, args) {
+                        return TyId::ERROR;
+                    }
+                    let ty = if matches!(name, "choose" | "shuffle") {
+                        self.array_sample(expr, name, function, args, kind)
+                    } else {
+                        self.function_call(expr, name, function, args, kind, expected)
+                    };
                     if name == "destroy" {
                         self.check_destroy_target(args);
                     }
                     if super::audio::AUDIO_FUNCTIONS.contains(&name) {
                         self.check_audio_args(name, args);
                     }
+                    self.note_tag_argument(function.name, args);
                     return ty;
                 }
                 Some(Res::Def(id)) if self.names_function(id) => {
@@ -2369,7 +2384,7 @@ impl<'a> Checker<'a> {
             let plain = function
                 .signatures
                 .iter()
-                .all(|s| s.params.iter().all(|p| matches!(p.ty, SigType::Exact(_))));
+                .all(|s| s.params.iter().all(|p| matches!(p.ty, SigType::Exact(_)))); // Form signatures are not plain types.
             let listed = match &only {
                 Some(params) if plain && !params.is_empty() => format!(" ({})", params.join(", ")),
                 _ => String::new(),
@@ -2409,7 +2424,7 @@ impl<'a> Checker<'a> {
                 .iter()
                 .map(|p| match p.ty {
                     SigType::Exact(t) => Some(t),
-                    SigType::Class(_) => None,
+                    SigType::Class(_) | SigType::Form(_) => None,
                 })
                 .collect();
             if let (Some(params), SigType::Exact(ret)) = (exact, signature.ret) {
@@ -2538,6 +2553,44 @@ impl<'a> Checker<'a> {
         }
         self.calls.insert(expr.id, kind);
         self.out.interner.from_type_ref(resolution.ret)
+    }
+
+    /// `choose(items)` and `shuffle(items)` (decision 0152). `T` and `N` come from the argument,
+    /// which the signature spells `array<T, N>` without an overload for each element type.
+    fn array_sample(
+        &mut self,
+        expr: &Expr,
+        name: &str,
+        function: &IntrinsicDef,
+        args: &[Expr],
+        kind: CallKind,
+    ) -> TyId {
+        if args.len() != 1 {
+            return self.function_call(expr, name, function, args, kind, None);
+        }
+        let arg = &args[0];
+        let ty = self.check(arg, None);
+        let Some(element) = (match self.out.interner.get(ty) {
+            Ty::Array { element, .. } => Some(element),
+            _ => None,
+        }) else {
+            if !self.is_error(ty) {
+                let found = self.display(ty);
+                self.report(
+                    Diagnostic::new(
+                        Code::E3001,
+                        format!("`{name}` takes an array, but this argument has type {found}."),
+                    )
+                    .at(arg.span)
+                    .expected("an array, such as `[1, 2, 3]`")
+                    .actual(found),
+                );
+            }
+            return TyId::ERROR;
+        };
+        // An array is at least one element long (`E3031`), so `choose` always has an element.
+        self.calls.insert(expr.id, kind);
+        if name == "choose" { element } else { ty }
     }
 
     // ----- field access ----------------------------------------------------

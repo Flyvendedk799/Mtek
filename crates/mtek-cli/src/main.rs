@@ -25,7 +25,7 @@ use std::process::ExitCode;
 
 use mtek_compiler::{COMPILER_VERSION, LANGUAGE_VERSION, RUNTIME_ABI};
 
-use args::{Request, UsageError};
+use args::{NewTemplate, Request, UsageError};
 use commands::{Context, EXIT_INTERNAL, EXIT_USAGE, Outcome};
 
 /// The single line printed by `mtek --version`.
@@ -65,8 +65,12 @@ fn run(request: Request) -> Outcome {
                     ..Outcome::default()
                 };
             }
-            if let Request::New { name } = request {
-                return scaffold::create(&context.cwd, &name);
+            if let Request::New { name, template } = request {
+                let kind = match template {
+                    NewTemplate::Demo => scaffold::ProjectTemplate::Demo,
+                    NewTemplate::Game => scaffold::ProjectTemplate::Game,
+                };
+                return scaffold::create(&context.cwd, &name, kind);
             }
             let (format, verb) = (request.format(), request.verb());
             match guard::run_guarded(move || commands::execute(&request, &context)) {

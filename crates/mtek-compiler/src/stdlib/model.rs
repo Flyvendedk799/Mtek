@@ -114,6 +114,8 @@ pub enum TypeRef {
     PrefabDescriptor,
     /// The argument of `go_to`: the name of a scene of the entry module (decision 0141).
     SceneName,
+    /// The result of `tagged(tag)`: the entities a `for` loop runs over (decision 0150).
+    TaggedEntities,
 }
 
 impl TypeRef {
@@ -144,6 +146,7 @@ impl TypeRef {
             TypeRef::Descriptor(category) => category.as_str(),
             TypeRef::PrefabDescriptor => "prefab descriptor",
             TypeRef::SceneName => "scene name",
+            TypeRef::TaggedEntities => "tagged entities",
         }
     }
 }
@@ -471,14 +474,18 @@ impl TypeClass {
 pub enum SigType {
     Exact(TypeRef),
     Class(TypeClass),
+    /// A form the checker reads off the argument, not an overload (`choose`, `shuffle`, decision 0152).
+    /// The text is the spelling in the schema and the context (`array<T, N>`, `T`).
+    Form(&'static str),
 }
 
 impl SigType {
-    /// The spelling: the type name or the class letter.
+    /// The spelling: the type name, the class letter, or the documented form.
     pub const fn spelling(&self) -> &'static str {
         match self {
             SigType::Exact(ty) => ty.spelling(),
             SigType::Class(class) => class.name(),
+            SigType::Form(text) => text,
         }
     }
 }

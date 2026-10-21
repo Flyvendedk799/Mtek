@@ -249,7 +249,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5071"></a>E5071 | write to physics-owned field | an assignment to the `position` or `rotation` of an entity with any body, or to a body velocity; names the allowed operation (decision 0065) |
 | <a id="mtek-e5072"></a>E5072 | binding on physics-owned field | `bind` on the `position` or `rotation` of an entity or prefab with any body (decision 0065) |
 | <a id="mtek-e5073"></a>E5073 | write to construction-only field | |
-| <a id="mtek-e5074"></a>E5074 | field access through entity_ref | not in v0.1; read or write of a field or state through a reference (decision 0064) |
+| <a id="mtek-e5074"></a>E5074 | field access through entity_ref | a write, or a read of anything but `position`, `rotation`, `scale` and `visible`, through a reference (decisions 0064 and 0151) |
 | <a id="mtek-e5075"></a>E5075 | binding cycle | full path |
 | <a id="mtek-e5080"></a>E5080 | lifecycle operation during initialisation | `spawn` or `destroy` in initialisers (decision 0064); a handler-only built-in function (`spawn`, `destroy`, a body command) called in a function (decision 0065) |
 | <a id="mtek-e5081"></a>E5081 | entity field read during initialisation | includes body-property reads reached through helper calls |
@@ -271,6 +271,11 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5210"></a>E5210 | persistent state outside a scene | `saved state` or `setting state` in an entity or a prefab; only a scene's state is kept in storage (decision 0145) |
 | <a id="mtek-e5211"></a>E5211 | persistent state of a type that cannot be stored | a `saved state` or `setting state` whose type holds an `entity_ref`, a resource or a descriptor, which have no meaning in a later run (decision 0145) |
 | <a id="mtek-e5212"></a>E5212 | persistent state with different types or kinds | two scenes declare a persistent state of the same name with different types, or one `saved` and the other `setting`; a related span at the other one (decisions 0145 and 0146) |
+| <a id="mtek-e5220"></a>E5220 | invalid tag | the `tag` of an entity or prefab is not 1 to 32 lowercase letters, digits and `_` starting with a letter (decision 0150) |
+| <a id="mtek-e5221"></a>E5221 | tag argument is not a string literal | the tag argument of `count_tagged`, `first_tagged`, `nearest_tagged`, `has_tag`, `tagged` or `destroy_tagged` is not a string constant (decision 0150) |
+| <a id="mtek-e5222"></a>E5222 | unknown tag | no entity or prefab of the program declares the tag a tag built-in names; the help suggests the closest declared tag (decision 0150) |
+| <a id="mtek-e5223"></a>E5223 | destroying a tag of a named entity | `destroy_tagged` names a tag that a named entity has, its own or its prefab's; a related span at the entity (decision 0150) |
+| <a id="mtek-e5224"></a>E5224 | tagged entities outside a for loop | `tagged(tag)` is used other than as the iterable of a `for` loop (decision 0150) |
 | <a id="mtek-e5401"></a>E5401 | scene change failed | run time: the scene of `go_to` or `reset()` could not be loaded or started (its module or manifest is missing or invalid); the current scene keeps running, the notes carry the underlying diagnostics (decision 0141) |
 | <a id="mtek-w5402"></a>W5402 | saved data ignored | run time: a stored value is unreadable, of another type than the state now has, or of another shape; the state keeps its value, reported once per state (decision 0145) |
 | <a id="mtek-w5403"></a>W5403 | saving failed | run time: the browser's storage refused the write (full or disabled), or the page has no usable `localStorage` and the values last only until it closes (decision 0145) |

@@ -1000,9 +1000,38 @@ impl FnLowering<'_, '_> {
                 let arguments = self.exprs(args)?;
                 Expr::ident("ctx").member(member).call(arguments)
             }
+            // The tag built-ins (decision 0150): `ctx.countTagged(tag)` and friends.
+            ir::ExprKind::Builtin { function, args } if tag_member(function).is_some() => {
+                let member = tag_member(function).unwrap_or_default();
+                let arguments = self.exprs(args)?;
+                Expr::ident("ctx").member(member).call(arguments)
+            }
             ir::ExprKind::Builtin { function, args } if function == "is_key_down" => {
                 let arguments = self.exprs(args)?;
                 Expr::ident("ctx").member("isKeyDown").call(arguments)
+            }
+            // Input polling (decision 0153) and array draws (decision 0152).
+            ir::ExprKind::Builtin { function, args }
+                if matches!(
+                    function.as_str(),
+                    "key_pressed"
+                        | "key_released"
+                        | "pointer_position"
+                        | "is_pointer_down"
+                        | "choose"
+                        | "shuffle"
+                ) =>
+            {
+                let member = match function.as_str() {
+                    "key_pressed" => "keyPressed",
+                    "key_released" => "keyReleased",
+                    "pointer_position" => "pointerPosition",
+                    "is_pointer_down" => "isPointerDown",
+                    "choose" => "choose",
+                    _ => "shuffle",
+                };
+                let arguments = self.exprs(args)?;
+                Expr::ident("ctx").member(member).call(arguments)
             }
             ir::ExprKind::Builtin { function, args } if function == "print" => {
                 let mut arguments = self.exprs(args)?;
@@ -1155,6 +1184,12 @@ impl FnLowering<'_, '_> {
                 ));
             }
             ir::ExprKind::EntityField { entity, field } => self.entity(*entity).member(field),
+            ir::ExprKind::RefField { target, field } => {
+                let value = self.expr(target)?;
+                Expr::ident("ctx")
+                    .member("refField")
+                    .call(vec![value, Expr::string(field)])
+            }
             ir::ExprKind::CameraField { field, .. } => {
                 Expr::ident("ctx").member("cam").member(field)
             }
@@ -1453,7 +1488,9 @@ mod tests {
                 | ir::ExprKind::Builtin { args, .. }
                 | ir::ExprKind::Construct { args } => args.iter().for_each(|a| expr(a, out)),
                 ir::ExprKind::Convert { arg } => expr(arg, out),
-                ir::ExprKind::Components { base, .. } | ir::ExprKind::Field { base, .. } => {
+                ir::ExprKind::Components { base, .. }
+                | ir::ExprKind::Field { base, .. }
+                | ir::ExprKind::RefField { target: base, .. } => {
                     expr(base, out);
                 }
                 ir::ExprKind::Index { base, index } => {
@@ -2202,4 +2239,17 @@ pub fn emit_prefab_behaviors(
         emitted.bindings.push(name);
     }
     Ok(emitted)
+}
+
+/// The context member of a tag built-in (decision 0150).
+fn tag_member(function: &str) -> Option<&'static str> {
+    Some(match function {
+        "count_tagged" => "countTagged",
+        "first_tagged" => "firstTagged",
+        "nearest_tagged" => "nearestTagged",
+        "has_tag" => "hasTag",
+        "tagged" => "tagged",
+        "destroy_tagged" => "destroyTagged",
+        _ => return None,
+    })
 }

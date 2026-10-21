@@ -677,6 +677,9 @@ impl Tree<'_> {
         self.field(depth + 1, "rotation", &entity.rotation);
         self.field(depth + 1, "scale", &entity.scale);
         self.field(depth + 1, "visible", &entity.visible);
+        if let Some(tag) = &entity.tag {
+            self.line(depth + 1, format!("tag {tag:?}"));
+        }
         if let Some(mesh) = &entity.mesh {
             self.mesh(depth + 1, mesh);
         }
@@ -869,6 +872,9 @@ fn expr_text(expr: &Expr) -> String {
         ExprKind::Param { param, name } => return format!("param {name}#{param}"),
         ExprKind::State { owner, name } => return format!("{}{name}", owner_prefix(*owner)),
         ExprKind::EntityField { entity, field } => return format!("entity#{entity}.{field}"),
+        ExprKind::RefField { target, field } => {
+            return format!("({}).{field}", expr_text(target));
+        }
         ExprKind::CameraField { camera, field } => return format!("{camera}.{field}"),
         ExprKind::InstanceParam { entity, param } => {
             return format!("entity#{entity}.material.{param}");

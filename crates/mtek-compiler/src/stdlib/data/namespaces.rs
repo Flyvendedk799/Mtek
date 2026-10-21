@@ -671,7 +671,7 @@ pub(super) fn types() -> Vec<TypeDef> {
         handle(
             "entity_ref",
             Milestone::M1,
-            "A generation-checked reference to an entity. Supports comparison, `alive`, `destroy` and body commands only.",
+            "A generation-checked reference to an entity. Compare it, test `alive`, `destroy` it, command its body, and read `position`, `rotation`, `scale` and `visible`.",
         ),
         handle(
             "font",

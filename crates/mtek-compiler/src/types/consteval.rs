@@ -730,6 +730,11 @@ impl Checker<'_> {
                 kind: NonConstantKind::ObjectField,
                 reason: format!("it reads the body property '{property}' of an entity"),
             }),
+            FieldKind::RefField { field } => Folded::NotConstant(NonConstant {
+                span: expr.span,
+                kind: NonConstantKind::ObjectField,
+                reason: format!("it reads the field '{field}' of an entity_ref"),
+            }),
             FieldKind::NamespaceValue(name) => Folded::NotConstant(NonConstant {
                 span: expr.span,
                 kind: NonConstantKind::RunTimeValue,

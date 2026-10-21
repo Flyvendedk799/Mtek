@@ -311,6 +311,7 @@ fn access_referent(
                 _ => None,
             }
         }
+        FieldKind::RefField { .. } => None,
         FieldKind::LightField { entity, field } => {
             let schema = types.entity_light(*entity)?;
             let field = registry().schema_field(schema, field)?;

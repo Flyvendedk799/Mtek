@@ -636,6 +636,9 @@ pub struct Entity {
     pub state: Vec<StateEntry>,
     pub update: bool,
     pub fixed_update: bool,
+    /// `tag: "name";` (decision 0150); absent when the entity has none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tag: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -663,6 +666,9 @@ pub struct Prefab {
     pub fixed_update: bool,
     pub bindings: Vec<Binding>,
     pub span: u32,
+    /// The tag every instance carries (decision 0150); absent when the prefab has none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tag: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

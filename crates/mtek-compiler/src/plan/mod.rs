@@ -562,7 +562,9 @@ fn spawned_prefabs(program: &Program, scene: &Scene) -> Vec<Symbol> {
                     args.iter().for_each(|a| expr(a, out));
                 }
                 K::Convert { arg } => expr(arg, out),
-                K::Components { base, .. } | K::Field { base, .. } => expr(base, out),
+                K::Components { base, .. }
+                | K::Field { base, .. }
+                | K::RefField { target: base, .. } => expr(base, out),
                 K::Index { base, index } => {
                     expr(base, out);
                     expr(index, out);

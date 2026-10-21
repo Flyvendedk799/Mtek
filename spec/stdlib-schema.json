@@ -338,6 +338,18 @@
           "doc": "Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body."
         },
         {
+          "name": "tag",
+          "type": "string",
+          "default": null,
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "A group name (`\"rock\"`) that `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag` and `destroy_tagged` look the entity up by (decision 0150). A string literal of lowercase letters, digits and `_`."
+        },
+        {
           "name": "visible",
           "type": "bool",
           "default": "true",
@@ -1296,6 +1308,18 @@
       "doc": "True with probability `p`."
     },
     {
+      "name": "choose",
+      "signatures": [
+        "(items: array<T, N>) -> T"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "One draw of `random()`: index `floor(random() * N)`. `N` is at least 1.",
+      "since": "M1",
+      "doc": "One element of an array, chosen uniformly."
+    },
+    {
       "name": "clamp",
       "signatures": [
         "(x: T, lo: T, hi: T) -> T",
@@ -1333,6 +1357,18 @@
       "doc": "Cosine of an angle in radians."
     },
     {
+      "name": "count_tagged",
+      "signatures": [
+        "(tag: string) -> i32"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "The number of live entities with the tag."
+    },
+    {
       "name": "cross",
       "signatures": [
         "(a: vec3, b: vec3) -> vec3"
@@ -1367,6 +1403,18 @@
       "cpuSemantics": "",
       "since": "M1",
       "doc": "Queues removal of a spawned entity; it counts as dead from the moment of the call."
+    },
+    {
+      "name": "destroy_tagged",
+      "signatures": [
+        "(tag: string) -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Queues removal of every live spawned entity with the tag; the tag must not be one a named entity has."
     },
     {
       "name": "distance",
@@ -1417,6 +1465,18 @@
       "doc": "2 raised to `x`."
     },
     {
+      "name": "first_tagged",
+      "signatures": [
+        "(tag: string) -> entity_ref"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "The first live entity with the tag in instance order; a dead reference (`alive` is false) if there is none."
+    },
+    {
       "name": "floor",
       "signatures": [
         "(x: T) -> T"
@@ -1453,6 +1513,18 @@
       "doc": "Switches scene, keeping shared state."
     },
     {
+      "name": "has_tag",
+      "signatures": [
+        "(target: entity_ref, tag: string) -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Whether the entity is live and has the tag."
+    },
+    {
       "name": "inverse_sqrt",
       "signatures": [
         "(x: T) -> T"
@@ -1487,6 +1559,42 @@
       "cpuSemantics": "",
       "since": "M1",
       "doc": "Whether audio is muted with `set_muted`."
+    },
+    {
+      "name": "is_pointer_down",
+      "signatures": [
+        "(button: i32) -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "0 primary, 1 middle, 2 secondary. Any other button is false.",
+      "since": "M1",
+      "doc": "Whether pointer button `button` was down at the end of input handling."
+    },
+    {
+      "name": "key_pressed",
+      "signatures": [
+        "(key: Key) -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Whether the key went down during input handling of the current frame."
+    },
+    {
+      "name": "key_released",
+      "signatures": [
+        "(key: Key) -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Whether the key went up during input handling of the current frame."
     },
     {
       "name": "length",
@@ -1576,6 +1684,18 @@
       "doc": "Linear interpolation `a * (1 - t) + b * t`, with a scalar or a component-wise `t`."
     },
     {
+      "name": "nearest_tagged",
+      "signatures": [
+        "(tag: string, point: vec3) -> entity_ref"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "Ties go to the first in instance order.",
+      "since": "M1",
+      "doc": "The live entity with the tag whose world position is nearest `point`; a dead reference if there is none."
+    },
+    {
       "name": "normalize",
       "signatures": [
         "(v: V) -> V"
@@ -1650,6 +1770,18 @@
       "cpuSemantics": "",
       "since": "M1",
       "doc": "Starts a sound as looping music, replacing the music that plays (one music track at a time)."
+    },
+    {
+      "name": "pointer_position",
+      "signatures": [
+        "() -> vec2"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "`x` right, `y` up, both in `[-1, 1]`. `(0, 0)` until the pointer moves or a button changes.",
+      "since": "M1",
+      "doc": "The pointer position at the end of input handling, in canvas NDC."
     },
     {
       "name": "pow",
@@ -1832,6 +1964,18 @@
       "doc": "Sets the global volume of every sound and the music (default 1.0, range 0..4)."
     },
     {
+      "name": "shuffle",
+      "signatures": [
+        "(items: array<T, N>) -> array<T, N>"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "Fisher-Yates: `N - 1` draws of `random()` (`N` below 2 draws none). Does not modify `items`.",
+      "since": "M1",
+      "doc": "A new array with the same elements in a random order."
+    },
+    {
       "name": "sign",
       "signatures": [
         "(x: T) -> T"
@@ -1914,6 +2058,18 @@
       "cpuSemantics": "",
       "since": "M1",
       "doc": "Stops the music started with `play_music`; does nothing when none plays."
+    },
+    {
+      "name": "tagged",
+      "signatures": [
+        "(tag: string) -> tagged entities"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "The loop skips an entity that is destroyed before its turn and does not visit one spawned during the loop.",
+      "since": "M1",
+      "doc": "The live entities with the tag, in instance order: only the iterable of a `for` loop (`for r in tagged(\"rock\") { .. }`)."
     },
     {
       "name": "tan",
@@ -2599,7 +2755,7 @@
       "kind": "handle",
       "gpu": false,
       "since": "M1",
-      "doc": "A generation-checked reference to an entity. Supports comparison, `alive`, `destroy` and body commands only.",
+      "doc": "A generation-checked reference to an entity. Compare it, test `alive`, `destroy` it, command its body, and read `position`, `rotation`, `scale` and `visible`.",
       "fields": [],
       "methods": []
     },

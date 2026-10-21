@@ -1,0 +1,13 @@
+// A prefab of another module: its tag counts for the queries of the scene.
+export prefab Coin {
+    param value: i32 = 1;
+    tag: "coin";
+    mesh: Sphere { radius: 0.2 };
+
+    on key_down(Key.X) {
+        // A tag of the entry module is known here too: tags belong to the program.
+        if alive(first_tagged("player")) {
+            destroy(self);
+        }
+    }
+}

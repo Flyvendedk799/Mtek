@@ -54,8 +54,9 @@ pub(super) const CAMERA_FIELDS: [&str; 6] = [
     "exposure",
 ];
 /// The entity fields lowered into [`Entity`].
-pub(super) const ENTITY_FIELDS: [&str; 9] = [
+pub(super) const ENTITY_FIELDS: [&str; 10] = [
     "position", "rotation", "scale", "visible", "mesh", "material", "light", "body", "collider",
+    "tag",
 ];
 /// The scene-object kinds lowered (into [`Camera`]).
 pub(super) const OBJECT_KINDS: [&str; 1] = ["camera"];
@@ -801,6 +802,13 @@ impl Lowering<'_> {
                 "{what} has a body without a collider or the reverse"
             ));
         }
+        let tag = match fields.iter().find(|f| f.name == "tag") {
+            Some(field) => match parts(&what, field, checked.span)?.0 {
+                crate::types::ConstValue::Str(tag) => Some(tag.clone()),
+                _ => return Err(format!("the tag of {what} is not a string")),
+            },
+            None => None,
+        };
         out.push(Entity {
             index,
             name: checked.name.clone(),
@@ -817,6 +825,7 @@ impl Lowering<'_> {
             body,
             collider,
             prefab: None,
+            tag,
         });
         for child in &checked.children {
             self.entity(child, &symbol, Some(index), out)?;

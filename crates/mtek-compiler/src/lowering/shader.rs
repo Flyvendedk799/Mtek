@@ -681,6 +681,7 @@ impl<'p> ShaderLowering<'p> {
             ir::ExprKind::State { .. }
             | ir::ExprKind::EntityRef { .. }
             | ir::ExprKind::EntityField { .. }
+            | ir::ExprKind::RefField { .. }
             | ir::ExprKind::CameraField { .. }
             | ir::ExprKind::InstanceParam { .. }
             | ir::ExprKind::LightField { .. }

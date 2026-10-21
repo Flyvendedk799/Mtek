@@ -3,7 +3,9 @@ name = "the scene owns the confirmed configuration and quote"
 steps = [
   { step = 1, dt = 0.0 },
   { expect_state = { finish = 0, frame_finish = 0, quantity = 1, unit_price = 340, total_price = 340 } },
-  { set_input = { finish = 1, frame_finish = 1, quantity = 3 } },
+  { set_input = { finish = 1 } },
+  { set_input = { frame_finish = 1 } },
+  { set_input = { quantity = 3 } },
   { step = 1, dt = 0.0 },
   { expect_state = { finish = 1, frame_finish = 1, quantity = 3, unit_price = 415, total_price = 1245 } },
 ]

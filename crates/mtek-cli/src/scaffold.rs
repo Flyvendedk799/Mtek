@@ -1,8 +1,7 @@
-//! `mtek new NAME`: scaffold a project from the built-in Demo template
-//! (`spec/tooling.md` section 1).
+//! `mtek new NAME [--template demo|game]`: scaffold a project (`spec/tooling.md` section 1).
 //!
-//! Writes `mtek.toml` (with `[host.inputs] tint = "Demo.tint"`), `src/main.mtek`
-//! (the blueprint §3.1 `Demo`), and `.gitignore` into a new directory named `NAME`.
+//! `demo` writes `mtek.toml` (with `[host.inputs] tint = "Demo.tint"`), `src/main.mtek`
+//! (the blueprint §3.1 `Demo`), and `.gitignore`. `game` writes a two-scene game and no host input.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -14,6 +13,18 @@ pub const GITIGNORE: &str = include_str!("../templates/gitignore");
 
 /// The body of `src/main.mtek`: the blueprint §3.1 complete `Demo`.
 pub const MAIN_MTEK: &str = include_str!("../templates/main.mtek");
+
+/// The body of `src/main.mtek` for `--template game`.
+pub const GAME_MTEK: &str = include_str!("../templates/game.mtek");
+
+/// Which scaffold `mtek new --template` writes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ProjectTemplate {
+    /// The pulse-cube Demo.
+    Demo,
+    /// Title and Play, with tags, a saved best score and a pause key.
+    Game,
+}
 
 /// Whether `name` is a valid project / directory name (`[a-z0-9-]+`).
 pub fn valid_name(name: &str) -> bool {
@@ -42,38 +53,56 @@ pub fn title_for(name: &str) -> String {
         .join(" ")
 }
 
-/// Contents of `mtek.toml` for a project named `name`.
+/// Contents of `mtek.toml` for a project named `name` (the Demo template).
 pub fn mtek_toml(name: &str) -> String {
+    mtek_toml_for(name, ProjectTemplate::Demo)
+}
+
+/// Contents of `mtek.toml` for `template`.
+pub fn mtek_toml_for(name: &str, template: ProjectTemplate) -> String {
     let title = title_for(name);
+    let scene = match template {
+        ProjectTemplate::Demo => "Demo",
+        ProjectTemplate::Game => "Title",
+    };
+    let host = match template {
+        ProjectTemplate::Demo => "\n[host.inputs]\ntint = \"Demo.tint\"\n",
+        ProjectTemplate::Game => "\n",
+    };
     format!(
         "\
 [project]
 name = \"{name}\"
 language = \"0.1\"
 entry = \"src/main.mtek\"
-scene = \"Demo\"
+scene = \"{scene}\"
 
 [build]
 target = \"web\"
 title = \"{title}\"
-
-[host.inputs]
-tint = \"Demo.tint\"
-"
+{host}"
     )
 }
 
 /// The three files a scaffold writes, as `(relative path, contents)`.
-pub fn template_files(name: &str) -> [(&'static str, String); 3] {
+pub fn template_files(name: &str, template: ProjectTemplate) -> [(&'static str, String); 3] {
+    let main = match template {
+        ProjectTemplate::Demo => MAIN_MTEK,
+        ProjectTemplate::Game => GAME_MTEK,
+    };
+    let toml = match template {
+        ProjectTemplate::Demo => mtek_toml(name),
+        ProjectTemplate::Game => mtek_toml_for(name, template),
+    };
     [
-        ("mtek.toml", mtek_toml(name)),
-        ("src/main.mtek", MAIN_MTEK.to_owned()),
+        ("mtek.toml", toml),
+        ("src/main.mtek", main.to_owned()),
         (".gitignore", GITIGNORE.to_owned()),
     ]
 }
 
 /// Create the scaffold under `cwd/name`.
-pub fn create(cwd: &Path, name: &str) -> Outcome {
+pub fn create(cwd: &Path, name: &str, template: ProjectTemplate) -> Outcome {
     if !valid_name(name) {
         return Outcome {
             stdout: String::new(),
@@ -101,7 +130,7 @@ pub fn create(cwd: &Path, name: &str) -> Outcome {
             code: EXIT_INTERNAL,
         };
     }
-    for (rel, contents) in template_files(name) {
+    for (rel, contents) in template_files(name, template) {
         let path = dir.join(rel);
         if let Err(error) = fs::write(&path, contents) {
             let _ = fs::remove_dir_all(&dir);
@@ -112,8 +141,12 @@ pub fn create(cwd: &Path, name: &str) -> Outcome {
             };
         }
     }
+    let label = match template {
+        ProjectTemplate::Demo => "the Demo scene",
+        ProjectTemplate::Game => "the small-game template",
+    };
     Outcome::stdout(format!(
-        "created '{name}' with the Demo scene (mtek.toml, src/main.mtek, .gitignore)\n"
+        "created '{name}' with {label} (mtek.toml, src/main.mtek, .gitignore)\n"
     ))
 }
 

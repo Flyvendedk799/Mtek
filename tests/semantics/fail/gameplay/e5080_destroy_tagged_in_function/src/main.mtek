@@ -1,0 +1,17 @@
+// `destroy_tagged` is a lifecycle operation of the scene: handlers and lifecycle functions only.
+prefab Rock {
+    tag: "rock";
+    mesh: Box {};
+}
+
+cpu fn clear() {
+    destroy_tagged("rock");
+}
+
+scene Demo {
+    camera Main {}
+    on key_down(Key.Space) {
+        spawn(Rock {});
+        clear();
+    }
+}

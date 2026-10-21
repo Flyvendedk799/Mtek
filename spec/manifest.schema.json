@@ -642,7 +642,8 @@
         },
         "state": { "type": "array", "items": { "$ref": "#/$defs/stateEntry" } },
         "update": { "type": "boolean", "description": "The entity declares update(dt)." },
-        "fixedUpdate": { "type": "boolean", "description": "The entity declares fixed_update(dt)." }
+        "fixedUpdate": { "type": "boolean", "description": "The entity declares fixed_update(dt)." },
+        "tag": { "$ref": "#/$defs/tag", "description": "`tag: \"name\";` (decision 0150). Absent when the entity has none." }
       }
     },
     "body": {
@@ -790,8 +791,14 @@
         "update": { "type": "boolean", "description": "The prefab declares update(dt)." },
         "fixedUpdate": { "type": "boolean", "description": "The prefab declares fixed_update(dt)." },
         "bindings": { "type": "array", "items": { "$ref": "#/$defs/binding" } },
-        "span": { "$ref": "#/$defs/spanId", "description": "The declaration." }
+        "span": { "$ref": "#/$defs/spanId", "description": "The declaration." },
+        "tag": { "$ref": "#/$defs/tag", "description": "The tag every instance carries (decision 0150). Absent when the prefab has none." }
       }
+    },
+    "tag": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,31}$",
+      "description": "An entity's group name for the tag queries (decision 0150): 1 to 32 lowercase letters, digits and `_`, starting with a letter."
     },
 
     "materialInstance": {

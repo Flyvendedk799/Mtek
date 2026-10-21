@@ -1403,10 +1403,12 @@ const GOLDENS: &[Golden] = &[
         max_bytes: DEFAULT_MAX_BYTES,
     },
     Golden {
-        name: "pulse-cube.max-bytes-9600.json",
+        name: "pulse-cube.max-bytes-9800.json",
         project: "examples/pulse-cube",
         symbols: &["Demo.Cube", "Pulse"],
-        max_bytes: 9600,
+        // The floor rose with the game intrinsics (tags, choose, input polling): a context
+        // below about 9 750 bytes is rejected as too small.
+        max_bytes: 9800,
     },
     Golden {
         name: "physics-playground.default.json",

@@ -544,6 +544,10 @@ impl Checker<'_> {
                     FieldKind::BodyProperty { property, .. } => {
                         unbindable.push((span, format!("the body property `body.{property}`")));
                     }
+                    // The manifest has no dependency on "whichever entity this reference names".
+                    FieldKind::RefField { field } => {
+                        unbindable.push((span, format!("the field `.{field}` of an entity_ref")));
+                    }
                     FieldKind::NamespaceValue(name) => {
                         if let Some(member) = name.strip_prefix("frame.") {
                             push(BindDep::Frame(member.to_owned()));

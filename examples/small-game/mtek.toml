@@ -1,0 +1,9 @@
+[project]
+name = "small-game"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Title"
+
+[build]
+target = "web"
+title = "Small Game"

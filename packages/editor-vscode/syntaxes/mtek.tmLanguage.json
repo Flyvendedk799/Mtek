@@ -123,6 +123,12 @@
       "include": "#function-asset"
     },
     {
+      "include": "#function-easing"
+    },
+    {
+      "include": "#function-hud"
+    },
+    {
       "include": "#function-color"
     },
     {
@@ -566,7 +572,35 @@
       }
     },
     "function-asset": {
-      "match": "(?<![A-Za-z0-9_.])(asset)(\\.)((?:linear_texture|texture|glb))\\s*(?=\\()",
+      "match": "(?<![A-Za-z0-9_.])(asset)(\\.)((?:linear_texture|texture|sound|font|glb))\\s*(?=\\()",
+      "captures": {
+        "1": {
+          "name": "support.class.namespace.mtek"
+        },
+        "2": {
+          "name": "punctuation.accessor.mtek"
+        },
+        "3": {
+          "name": "support.function.builtin.mtek"
+        }
+      }
+    },
+    "function-easing": {
+      "match": "(?<![A-Za-z0-9_.])(easing)(\\.)((?:in_out_cubic|in_out_quad|in_out_sine|out_elastic|out_bounce|out_cubic|in_cubic|out_back|out_quad|in_quad))\\s*(?=\\()",
+      "captures": {
+        "1": {
+          "name": "support.class.namespace.mtek"
+        },
+        "2": {
+          "name": "punctuation.accessor.mtek"
+        },
+        "3": {
+          "name": "support.function.builtin.mtek"
+        }
+      }
+    },
+    "function-hud": {
+      "match": "(?<![A-Za-z0-9_.])(hud)(\\.)((?:pixel_font|button|rect|text))\\s*(?=\\()",
       "captures": {
         "1": {
           "name": "support.class.namespace.mtek"
@@ -665,7 +699,7 @@
     },
     "namespace": {
       "name": "support.class.namespace.mtek",
-      "match": "(?<![A-Za-z0-9_.])(?:lighting|sampler|texture|asset|color|frame|mat4|quat)(?=\\s*\\.)"
+      "match": "(?<![A-Za-z0-9_.])(?:lighting|sampler|texture|easing|asset|color|frame|mat4|quat|hud)(?=\\s*\\.)"
     },
     "enum": {
       "name": "support.type.enum.mtek",
@@ -673,15 +707,15 @@
     },
     "builtin-function": {
       "name": "support.function.builtin.mtek",
-      "match": "(?<![A-Za-z0-9_.])(?:inverse_sqrt|random_range|clear_saved|is_key_down|random_int|smoothstep|normalize|transpose|distance|saturate|degrees|destroy|radians|reflect|chance|length|paused|random|resume|sample|alive|atan2|clamp|cross|floor|fract|go_to|pause|print|reset|round|spawn|trunc|acos|asin|atan|ceil|exp2|load|log2|save|sign|sqrt|step|abs|cos|dot|exp|log|max|min|mix|pow|sin|tan)\\s*(?=\\()"
+      "match": "(?<![A-Za-z0-9_.])(?:pointer_position|is_pointer_down|destroy_tagged|nearest_tagged|count_tagged|first_tagged|inverse_sqrt|key_released|random_range|clear_saved|is_key_down|key_pressed|play_music|random_int|set_volume|smoothstep|stop_music|normalize|set_muted|transpose|distance|is_muted|saturate|degrees|destroy|has_tag|play_at|radians|reflect|shuffle|chance|choose|length|paused|random|resume|sample|tagged|alive|atan2|clamp|cross|floor|fract|go_to|pause|print|reset|round|spawn|trunc|acos|asin|atan|ceil|exp2|load|log2|play|save|sign|sqrt|step|abs|cos|dot|exp|log|max|min|mix|pow|sin|tan)\\s*(?=\\()"
     },
     "builtin-type": {
       "name": "support.type.builtin.mtek",
-      "match": "(?<![A-Za-z0-9_.])(?:PointerEvent|SurfaceInput|entity_ref|glb_asset|material|sampler|texture|string|array|color|bool|mat4|mesh|quat|vec2|vec3|vec4|f32|i32|u32)(?![A-Za-z0-9_])"
+      "match": "(?<![A-Za-z0-9_.])(?:PointerEvent|SurfaceInput|entity_ref|glb_asset|material|sampler|texture|string|array|color|sound|bool|font|mat4|mesh|quat|vec2|vec3|vec4|f32|i32|u32)(?![A-Za-z0-9_])"
     },
     "schema": {
       "name": "support.class.schema.mtek",
-      "match": "(?<![A-Za-z0-9_.])(?:DirectionalLight|SphereCollider|Orthographic|BoxCollider|Perspective|PointLight|Kinematic|Dynamic|Camera|Entity|Sphere|Static|Plane|Scene|Unlit|Box|Pbr)(?![A-Za-z0-9_])"
+      "match": "(?<![A-Za-z0-9_.])(?:DirectionalLight|SphereCollider|Orthographic|BoxCollider|Perspective|PointLight|Kinematic|Dynamic|Camera|Entity|Sphere|Sprite|Static|Plane|Scene|Unlit|Box|Pbr)(?![A-Za-z0-9_])"
     },
     "call": {
       "match": "(?<![A-Za-z0-9_.])([A-Za-z_][A-Za-z0-9_]*)\\s*(?=\\()",

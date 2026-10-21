@@ -28,6 +28,7 @@ import { RuntimeInternalError } from "./errors.js";
 import { INERT_GAME, type GameHooks } from "./game.js";
 import { TimerList, type TimerOwner } from "./timers.js";
 import { makeRef, type EntityRef } from "./slots.js";
+import { TagQueries } from "./tags.js";
 import type { ResolvedEntity, ResolvedInstance, SceneStructure } from "./structure.js";
 import {
   describeValue,
@@ -59,6 +60,12 @@ export const CONTEXT_MEMBERS = [
   "spawn",
   "destroy",
   "alive",
+  "countTagged",
+  "firstTagged",
+  "nearestTagged",
+  "hasTag",
+  "tagged",
+  "destroyTagged",
   "body",
   "budget",
   "warn",
@@ -67,6 +74,13 @@ export const CONTEXT_MEMBERS = [
   "randomInt",
   "chance",
   "isKeyDown",
+  "keyPressed",
+  "keyReleased",
+  "pointerPosition",
+  "isPointerDown",
+  "choose",
+  "shuffle",
+  "refField",
   "print",
   "goTo",
   "reset",
@@ -153,6 +167,13 @@ export interface CpuServices {
   random(): number;
   /** `is_key_down`: the delivered key state. `code` is a DOM `KeyboardEvent.code`. */
   isKeyDown(code: string): boolean;
+  /** `key_pressed` / `key_released` (decision 0153): transitions delivered this frame. */
+  keyPressed(code: string): boolean;
+  keyReleased(code: string): boolean;
+  /** `pointer_position`: canvas NDC. */
+  pointerPosition(): { x: number; y: number };
+  /** `is_pointer_down`: button 0, 1 or 2. */
+  isPointerDown(button: number): boolean;
   /** `print`: development console output; `spanId` indexes the manifest spans table. */
   print(message: string, spanId: number): void;
   /** `go_to`, `reset`, `pause`, `resume`, `paused` (decisions 0140, 0141, 0143), `save`, `load`, `clear_saved` (0145); default: {@link INERT_GAME}. */
@@ -176,6 +197,10 @@ export interface BodyService {
 export const INERT_SERVICES: CpuServices = Object.freeze({
   random: () => 0,
   isKeyDown: () => false,
+  keyPressed: () => false,
+  keyReleased: () => false,
+  pointerPosition: () => ({ x: 0, y: 0 }),
+  isPointerDown: () => false,
   print: () => undefined,
 });
 
@@ -426,6 +451,21 @@ export class World {
       if (typeof owner === "object" && "ref" in owner) return owner as TimerOwner;
       throw new RuntimeInternalError(`a timer got the owner ${describeValue(owner)}; expected an entity record or null.`);
     };
+    const staticTags = this.structure.entities.map((entity) => this.manifest.scene.entities[entity.index]?.tag);
+    const tags = new TagQueries({
+      staticTags,
+      staticRef: (index) => (this.entities[index] as EntityRecord).ref,
+      spawned: () => this.dynamic.live.map((entity) => ({ ref: entity.ref, removing: entity.removing, tag: entity.prefab.resolved.tag })),
+      worldPosition: (slot) => {
+        this.propagate();
+        const world = this.worldMatrix(slot);
+        return { x: world[12] as number, y: world[13] as number, z: world[14] as number };
+      },
+      alive: (ref) => this.dynamic.alive(ref),
+      destroy: (ref) => {
+        this.dynamic.destroy(ref, -1);
+      },
+    });
     const members = {
       s: this.sceneState,
       e: this.entities,
@@ -450,6 +490,15 @@ export class World {
         this.dynamic.destroy(ref, spanId);
       },
       alive: (ref: unknown): boolean => this.dynamic.alive(ref),
+      // Decision 0150: the tag queries.
+      countTagged: (tag: unknown): number => tags.countTagged(tag),
+      firstTagged: (tag: unknown): EntityRef => tags.firstTagged(tag),
+      nearestTagged: (tag: unknown, point: unknown): EntityRef => tags.nearestTagged(tag, point),
+      hasTag: (ref: unknown, tag: unknown): boolean => tags.hasTag(ref, tag),
+      tagged: (tag: unknown): Iterable<EntityRef> => tags.tagged(tag),
+      destroyTagged: (tag: unknown): void => {
+        tags.destroyTagged(tag);
+      },
       body: (target: unknown, spanId: unknown): object => {
         if (this.bodies === undefined) {
           throw new RuntimeInternalError("generated code called ctx.body, but the physics subsystem is not mounted (the manifest says subsystems.physics is false, or the scene is still initialising).");
@@ -465,10 +514,23 @@ export class World {
       randomRange: (lo: unknown, hi: unknown): number => randomRange(services.random(), num(lo, "randomRange"), num(hi, "randomRange")),
       randomInt: (lo: unknown, hi: unknown): number => randomInt(services.random(), num(lo, "randomInt"), num(hi, "randomInt")),
       chance: (p: unknown): boolean => services.random() < num(p, "chance"),
+      choose: (items: unknown): unknown => chooseItem(services.random(), items),
+      shuffle: (items: unknown): unknown => shuffled(items, () => services.random()),
+      refField: (ref: unknown, field: unknown): unknown => this.refField(ref, field),
       isKeyDown: (code: unknown): boolean => {
         if (typeof code !== "string") throw new RuntimeInternalError(`ctx.isKeyDown got ${describeValue(code)}; expected a DOM key code.`);
         return services.isKeyDown(code);
       },
+      keyPressed: (code: unknown): boolean => {
+        if (typeof code !== "string") throw new RuntimeInternalError(`ctx.keyPressed got ${describeValue(code)}; expected a DOM key code.`);
+        return services.keyPressed(code);
+      },
+      keyReleased: (code: unknown): boolean => {
+        if (typeof code !== "string") throw new RuntimeInternalError(`ctx.keyReleased got ${describeValue(code)}; expected a DOM key code.`);
+        return services.keyReleased(code);
+      },
+      pointerPosition: (): { x: number; y: number } => services.pointerPosition(),
+      isPointerDown: (button: unknown): boolean => services.isPointerDown(num(button, "isPointerDown")),
       print: (message: unknown, spanId: unknown): void => {
         services.print(typeof message === "string" ? message : describeValue(message), typeof spanId === "number" ? spanId : -1);
       },
@@ -1011,6 +1073,42 @@ export class World {
     );
   }
 
+  /**
+   * `r.position` and the other transform reads through an `entity_ref` (decision 0151).
+   * A reference that is not alive reads as zero: position and scale `(0, 0, 0)`, rotation identity,
+   * `visible` false. The live fields are the same objects the named-entity reads return.
+   */
+  refField(ref: unknown, field: unknown): unknown {
+    const name = typeof field === "string" ? field : "";
+    const zero = (): unknown => {
+      if (name === "visible") return false;
+      if (name === "rotation") return { x: 0, y: 0, z: 0, w: 1 };
+      return { x: 0, y: 0, z: 0 };
+    };
+    if (typeof ref !== "object" || ref === null || !("slot" in ref) || !("gen" in ref)) {
+      throw new RuntimeInternalError(`ctx.refField got ${describeValue(ref)}; expected an entity_ref.`);
+    }
+    if (name !== "position" && name !== "rotation" && name !== "scale" && name !== "visible") {
+      throw new RuntimeInternalError(`ctx.refField got the field ${describeValue(field)}; expected position, rotation, scale or visible.`);
+    }
+    const target = ref as EntityRef;
+    if (!this.dynamic.alive(target)) return zero();
+    const record = this.records[target.slot];
+    if (record === undefined) return zero();
+    switch (name) {
+      case "position":
+        return record.position;
+      case "rotation":
+        return record.rotation;
+      case "scale":
+        return record.scale;
+      case "visible":
+        return record.visible;
+      default:
+        return zero();
+    }
+  }
+
   private warn(code: unknown, spanId: unknown): void {
     if (typeof code !== "string" || !isWarningCode(code)) {
       throw new RuntimeInternalError(`ctx.warn got the code ${describeValue(code)}, which is not a runtime warning code.`);
@@ -1027,6 +1125,35 @@ export class World {
       }),
     );
   }
+}
+
+/**
+ * `choose(items)` (decision 0152): one draw `r` in `[0, 1)` picks `floor(r * length)`.
+ * An empty array is a bug of generated code: arrays are at least one element long.
+ */
+export function chooseItem(r: number, items: unknown): unknown {
+  if (!Array.isArray(items) || items.length === 0) {
+    throw new RuntimeInternalError(`ctx.choose got ${describeValue(items)}; expected a non-empty array.`);
+  }
+  let index = Math.floor(r * items.length);
+  if (index >= items.length) index = items.length - 1;
+  if (index < 0) index = 0;
+  return items[index];
+}
+
+/** `shuffle(items)`: Fisher-Yates into a new array. `N - 1` draws; none when `N` is below 2. */
+export function shuffled(items: unknown, random: () => number): unknown[] {
+  if (!Array.isArray(items)) throw new RuntimeInternalError(`ctx.shuffle got ${describeValue(items)}; expected an array.`);
+  const out = items.slice();
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    let j = Math.floor(random() * (i + 1));
+    if (j > i) j = i;
+    if (j < 0) j = 0;
+    const swap = out[i];
+    out[i] = out[j];
+    out[j] = swap;
+  }
+  return out;
 }
 
 /** A numeric argument of a random helper; anything else is a bug of generated code. */

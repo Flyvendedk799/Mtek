@@ -13,7 +13,7 @@
 | `mtek build [--target web] [--mode release\|dev\|test\|preview] [--loop-budget N] [--release [--itch]] [--out DIR] [--format human\|json] [PATH]` | M1 (`preview`: M6; `--release`: decision 0136) | produce `dist/` (`spec/runtime-abi.md` §2). `--target` accepts only `web` in v0.1 (the default; any other value is a usage error). `--release` packages a game (§2.1) |
 | `mtek dev [--port N] [--open] [PATH]` | M1 (reload: M3) | build, serve, watch, rebuild; candidate-based hot reload from M3 |
 | `mtek inspect --ir\|--bindings\|--shaders\|--assets [--format human\|json] [PATH]` | M1 (`--ir`), M2 (`--shaders`, `--bindings`), M4 (`--assets`) | inspection (`spec/gpu-layout.md` §10; the views are decision 0044; `--assets` is the packaged assets of `spec/assets.md` §4, decision 0058) |
-| `mtek new NAME` | M3 | scaffold a project from the built-in template (`mtek.toml`, `src/main.mtek` with the Demo scene, `.gitignore`) |
+| `mtek new NAME [--template demo\|game]` | M3 | scaffold a project (`mtek.toml`, `src/main.mtek`, `.gitignore`). `demo` (the default) is the Demo scene; `game` is a title scene, a run, tags and a saved score |
 | `mtek fmt [--check] [PATHS…]` | M6 | canonical formatter |
 | `mtek test [--allow-not-run] [--format human\|json] [PATH]` | M6 | run a project's declarative test fixtures (§6; decision 0074) |
 | `mtek context --entry FILE [--symbol NAME…] --format json` | M6 | AI context export (`spec/ai-and-benchmarks.md` §2; `--max-bytes N` defaults to 24000; format `spec/context.schema.json`; exit codes, `--entry` and the failure modes are decision 0072) |

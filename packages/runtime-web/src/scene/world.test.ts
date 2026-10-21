@@ -7,7 +7,7 @@ import { minimalManifestJson } from "../test-support/fake-host.js";
 import { CODEGEN_FIXTURES, loadGoldenProgram } from "../test-support/program.js";
 import { checkProgram } from "./program.js";
 import { resolveStructure } from "./structure.js";
-import { CONTEXT_MEMBERS, RuntimeInternalError, World, type CameraRecord, type EntityRecord } from "./world.js";
+import { chooseItem, CONTEXT_MEMBERS, RuntimeInternalError, shuffled, World, type CameraRecord, type EntityRecord } from "./world.js";
 
 interface ParamWrite {
   readonly instance: number;
@@ -446,6 +446,30 @@ describe("the golden programs' init against the real world", () => {
     });
     expect(world.entities[0]?.position).toEqual({ x: 0, y: 0.5, z: 0 });
     expect(world.worldMatrix(0)[13]).toBe(0.5);
+  });
+
+  it("reads a live transform through refField and zeros a dead reference", () => {
+    const { world } = makeWorld();
+    const live = world.entities[0]?.ref;
+    expect(world.refField(live, "position")).toBe(world.entities[0]?.position);
+    expect(world.refField(live, "visible")).toBe(true);
+    expect(world.refField({ slot: -1, gen: 0 }, "position")).toEqual({ x: 0, y: 0, z: 0 });
+    expect(world.refField({ slot: -1, gen: 0 }, "rotation")).toEqual(IDENTITY);
+    expect(world.refField({ slot: -1, gen: 0 }, "scale")).toEqual({ x: 0, y: 0, z: 0 });
+    expect(world.refField({ slot: -1, gen: 0 }, "visible")).toBe(false);
+    expect(() => world.refField(live, "hits")).toThrow(RuntimeInternalError);
+  });
+
+  it("choose picks floor(r * length) and shuffle does not modify the source", () => {
+    const items = [10, 20, 30];
+    expect(chooseItem(0, items)).toBe(10);
+    expect(chooseItem(0.99, items)).toBe(30);
+    expect(chooseItem(1 / 3, items)).toBe(20);
+    const copy = items.slice();
+    expect(shuffled(items, () => 0)).toEqual([20, 30, 10]);
+    expect(items).toEqual(copy);
+    expect(shuffled([7], () => 0.5)).toEqual([7]);
+    expect(() => chooseItem(0, [])).toThrow(RuntimeInternalError);
   });
 
   it("scene B: the orthographic camera and the nested, scaled sphere", async () => {

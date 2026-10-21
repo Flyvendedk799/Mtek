@@ -397,7 +397,8 @@ impl Checker<'_> {
                 | Ty::Schema(_)
                 | Ty::Descriptor(_)
                 | Ty::PrefabDescriptor
-                | Ty::SceneName => return Some(format!("a {} value", interner.display(ty))),
+                | Ty::SceneName
+                | Ty::TaggedEntities => return Some(format!("a {} value", interner.display(ty))),
             }
         }
         None

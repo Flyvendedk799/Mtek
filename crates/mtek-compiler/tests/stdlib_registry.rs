@@ -97,6 +97,7 @@ fn schema_rows() -> Vec<Row> {
         ("Entity", "light", "light", None, "C", None),
         ("Entity", "body", "body", None, "C", None),
         ("Entity", "collider", "collider", None, "C", None),
+        ("Entity", "tag", "string", None, "C", None),
         // 3.3 Camera (spec/scenes.md section 3)
         (
             "Camera",
@@ -946,8 +947,21 @@ fn intrinsic_rows() -> Vec<IntrinsicRow> {
     rows.push(("random_range", &["(f32, f32) -> f32"], Domain::Cpu, false));
     rows.push(("random_int", &["(i32, i32) -> i32"], Domain::Cpu, false));
     rows.push(("chance", &["(f32) -> bool"], Domain::Cpu, false));
+    // choose and shuffle (decision 0152): the element type comes from the argument.
+    rows.push(("choose", &["(array<T, N>) -> T"], Domain::Cpu, false));
+    rows.push((
+        "shuffle",
+        &["(array<T, N>) -> array<T, N>"],
+        Domain::Cpu,
+        false,
+    ));
     rows.push(("print", &["(string) -> ()"], Domain::Cpu, false));
     rows.push(("is_key_down", &["(Key) -> bool"], Domain::Cpu, false));
+    // Input polling (decision 0153).
+    rows.push(("key_pressed", &["(Key) -> bool"], Domain::Cpu, false));
+    rows.push(("key_released", &["(Key) -> bool"], Domain::Cpu, false));
+    rows.push(("pointer_position", &["() -> vec2"], Domain::Cpu, false));
+    rows.push(("is_pointer_down", &["(i32) -> bool"], Domain::Cpu, false));
     rows.push((
         "spawn",
         &["(prefab descriptor) -> entity_ref"],
@@ -983,6 +997,33 @@ fn intrinsic_rows() -> Vec<IntrinsicRow> {
     rows.push(("set_muted", &["(bool) -> ()"], Domain::Cpu, false));
     rows.push(("is_muted", &["() -> bool"], Domain::Cpu, false));
     rows.push(("alive", &["(entity_ref) -> bool"], Domain::Cpu, false));
+    // Tags (decision 0150).
+    rows.push(("count_tagged", &["(string) -> i32"], Domain::Cpu, false));
+    rows.push((
+        "first_tagged",
+        &["(string) -> entity_ref"],
+        Domain::Cpu,
+        false,
+    ));
+    rows.push((
+        "nearest_tagged",
+        &["(string, vec3) -> entity_ref"],
+        Domain::Cpu,
+        false,
+    ));
+    rows.push((
+        "has_tag",
+        &["(entity_ref, string) -> bool"],
+        Domain::Cpu,
+        false,
+    ));
+    rows.push((
+        "tagged",
+        &["(string) -> tagged entities"],
+        Domain::Cpu,
+        false,
+    ));
+    rows.push(("destroy_tagged", &["(string) -> ()"], Domain::Cpu, false));
     // Game flow (decisions 0140, 0141 and 0143).
     rows.push(("go_to", &["(scene name) -> ()"], Domain::Cpu, false));
     rows.push(("reset", &["() -> ()"], Domain::Cpu, false));

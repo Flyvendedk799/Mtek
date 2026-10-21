@@ -301,6 +301,7 @@ const RELATED_REQUIRED: &[(&str, Option<&str>, &str)] = &[
         None,
         "the persistent state of the same name in the other scene",
     ),
+    ("E5223", None, "the named entity that has the tag"),
     ("E5070", None, "section 5.5: a related span at `bind`"),
     ("E5075", None, "section 5.5: the full path of the cycle"),
     (

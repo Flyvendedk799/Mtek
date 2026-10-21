@@ -1,0 +1,8 @@
+// choose and shuffle take an array.
+scene Demo {
+    camera Main {}
+    update(dt: f32) {
+        let n = choose(1);
+        let order = shuffle(1);
+    }
+}

@@ -322,6 +322,8 @@ pub(crate) fn front_end_with(
     {
         let typecks: Vec<&Typeck> = types.iter().flatten().collect();
         check_attributes(&typecks, &assets, sink);
+        // Tags over the whole program (decision 0150).
+        crate::types::check_tags(&typecks, sink);
     }
 
     // Effects, recursion and reachability over the whole program, once every

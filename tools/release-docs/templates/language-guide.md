@@ -117,7 +117,7 @@ scene Demo {
 }
 ```
 
-- An `entity_ref` is compared (`other == Floor`), tested with `alive`, passed to `destroy`, given body commands, and kept in state, arrays and prefab params. Reading or writing a field through it is `MTEK-E5074`. A declared entity cannot be destroyed (`MTEK-E5030`): set `visible = false`.
+- An `entity_ref` is compared (`other == Floor`), tested with `alive`, passed to `destroy`, given body commands, and kept in state, arrays and prefab params. `position`, `rotation`, `scale` and `visible` can be read; writing a field, or reading any other, is `MTEK-E5074`. A declared entity cannot be destroyed (`MTEK-E5030`): set `visible = false`.
 - A prefab has a root entity and may have ordinary children in static instances. Spawning an assembly or nesting prefab instances inside a prefab is `MTEK-E5040`. A prefab has no light (`MTEK-E5110`) and does not see the scene (`MTEK-E2003`): pass values in as `param`s. `entity E: Prefab { param: constant; }` sets params only (`MTEK-E5042`, `MTEK-E3090`).
 
 ## 6. Time and input

@@ -1136,6 +1136,10 @@ impl FnLowering<'_, '_> {
                 })
             }
             AstExpr::Field { base, name } => match types.field_kind(expr.id) {
+                Some(FieldKind::RefField { field }) => make(ExprKind::RefField {
+                    target: boxed(base)?,
+                    field: field.clone(),
+                }),
                 Some(
                     kind @ (FieldKind::EntityState { .. }
                     | FieldKind::ObjectField { .. }

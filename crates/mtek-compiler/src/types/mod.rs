@@ -77,6 +77,7 @@ mod scene_body;
 #[cfg(test)]
 mod scene_tests;
 mod structs;
+mod tags;
 #[cfg(test)]
 mod tests;
 pub mod ty;
@@ -94,6 +95,7 @@ pub use scene::{
     CheckedEntity, CheckedField, CheckedInstance, CheckedObject, CheckedParam, CheckedPrefab,
     CheckedScene, CheckedState, FieldOrigin,
 };
+pub use tags::{MAX_TAG_LEN, TagUse, check_tags, valid_tag};
 pub use ty::{EnumDef, EnumKey, MaterialKey, StructDef, StructKey, Ty, TyId, TyInterner};
 pub use value::{ArithOp, ConstValue, EvalError, EvalResult, Scalar};
 
@@ -540,6 +542,8 @@ pub struct Typeck {
     init_params: BTreeMap<NodeId, Vec<(String, NodeId)>>,
     /// The prefab literals that are the argument of a `spawn`, without errors (decision 0064).
     prefab_literals: BTreeMap<NodeId, PrefabLiteral>,
+    /// The constant tags the tag built-ins name, in source order (decision 0150).
+    tag_uses: Vec<TagUse>,
 }
 
 impl Typeck {
@@ -570,7 +574,14 @@ impl Typeck {
             checked_prefabs: Vec::new(),
             init_params: BTreeMap::new(),
             prefab_literals: BTreeMap::new(),
+            tag_uses: Vec::new(),
         }
+    }
+
+    /// The constant tags the tag built-ins name, in source order (decision 0150).
+    #[must_use]
+    pub fn tag_uses(&self) -> &[TagUse] {
+        &self.tag_uses
     }
 
     /// The prefab literal `node` (the argument of a `spawn`), if it was checked without errors.
