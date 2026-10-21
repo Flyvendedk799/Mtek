@@ -190,6 +190,26 @@ Abe, on each GPU machine (NVIDIA, Intel, Apple silicon):
 
 On a 120 Hz or 144 Hz display the intervals are about 8.3 or 6.9 ms. The budget still applies, and the refresh rate shows in p50. A headless run on Linux may not be vsync-capped; set `MTEK_HEADLESS=0` to measure a real window.
 
+## 9. Not done on this branch (deferred), stated honestly
+
+Nothing below has code here. There is nothing to test until it is built.
+
+- **Phase 1, fonts.** There is no font selection and there are no local font assets: the HUD uses the system UI font only (`spec/hud.md` §6, limitation `hud-scope`). A proper design needs either a font resource type (`asset.font(path)`, validated by content like audio) or a packaging convention. It must also carry the font to the HUD's DOM layer in every build mode. Both cross the type checker, the asset compiler and the runtime, and were not started.
+- **Phase 1, panels and buttons.** These are covered by the existing `hud.rect` and `hud.button` (decision 0134). There is no layout or nine-slice panel component.
+- **Phase 6, still open:**
+  - alpha and fades (`E5902` is still "not supported");
+  - animated GLBs (`E7019` still rejects animations);
+  - 2D sprites and a 2D camera preset;
+  - texture swapping at run time (`E5073` still rejects writes to texture params);
+  - normal maps;
+  - GLB node hierarchies (`E7902`);
+  - particles;
+  - multiple cameras and switching.
+  Each one changes the renderer, the manifest or WGSL generation, and each needs GPU verification that cannot happen on this box. Only 6.2 (tweens via `easing`) is done.
+- **Phase 8.2.** This is decision 0132 and the unsupported-browser screen, committed earlier (ff5fd55d). It is WebGPU-only, with no WebGL2 fallback, by decision. Nothing new was added in this round.
+- **Phase 8.3 CI.** The workflow change is a patch (`ci/small-games-ci.patch`), not applied: the push token lacks the `workflow` scope.
+- **Hardware frame-time evidence.** There is none for NVIDIA, Intel or Apple. It needs Abe's machines (§8).
+
 ## Pre-existing failures seen while running targeted tests (not caused by this branch)
 
 - `cargo test -p mtek-compiler --lib syntax::lexer_tests::longest_match_wins_for_operators` expects `=>` to lex as `Eq Gt`. The base branch's `match` work made it `FatArrow`.
