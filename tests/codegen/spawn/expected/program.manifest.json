@@ -814,9 +814,9 @@
   ],
   "shaders": [
     {
-      "hash": "c7cfabe6cbe016ee45c3e9b2ca230c7a318178bdea1e62cb2e8d9ecb24734bd1",
-      "url": "shaders/c7cfabe6cbe016ee.wgsl",
-      "map": "shaders/c7cfabe6cbe016ee.mtek-map.json",
+      "hash": "f8029443d689cb5b7d86b8c488e38870d17d5d91f69ed48d06f6145c9de7363a",
+      "url": "shaders/f8029443d689cb5b.wgsl",
+      "map": "shaders/f8029443d689cb5b.mtek-map.json",
       "material": "src/main.mtek::Glow",
       "vertexEntry": "mtek_vs",
       "instancedVertexEntry": "mtek_vs_instanced",
@@ -827,9 +827,9 @@
       "surfaceInputs": []
     },
     {
-      "hash": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584",
-      "url": "shaders/385b28531dc27b69.wgsl",
-      "map": "shaders/385b28531dc27b69.mtek-map.json",
+      "hash": "b210f9e70a40be73d5343f39f0247957359d67c6f7dab6eadf1dc887efec91e2",
+      "url": "shaders/b210f9e70a40be73.wgsl",
+      "map": "shaders/b210f9e70a40be73.mtek-map.json",
       "material": "std/materials.mtek::Unlit",
       "vertexEntry": "mtek_vs",
       "instancedVertexEntry": "mtek_vs_instanced",
@@ -844,7 +844,7 @@
     {
       "id": "src/main.mtek::Glow",
       "layout": "material:src/main.mtek::Glow",
-      "shader": "c7cfabe6cbe016ee45c3e9b2ca230c7a318178bdea1e62cb2e8d9ecb24734bd1",
+      "shader": "f8029443d689cb5b7d86b8c488e38870d17d5d91f69ed48d06f6145c9de7363a",
       "resources": [],
       "params": [
         {
@@ -862,7 +862,7 @@
     {
       "id": "std/materials.mtek::Unlit",
       "layout": "material:std/materials.mtek::Unlit",
-      "shader": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584",
+      "shader": "b210f9e70a40be73d5343f39f0247957359d67c6f7dab6eadf1dc887efec91e2",
       "resources": [],
       "params": [
         {

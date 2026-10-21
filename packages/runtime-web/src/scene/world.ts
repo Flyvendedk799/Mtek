@@ -183,7 +183,7 @@ export interface WorldOptions {
   readonly manifest: MtekManifest;
   readonly structure: SceneStructure;
   readonly params: ParamSink;
-  /** Receives run-time diagnostics (`E8011`, `E8090`, `E8100`, warnings from `ctx.warn`). */
+  /** Receives run-time diagnostics (`E8011`, `E8090`, warnings from `ctx.warn`). */
   readonly report: (diagnostic: MtekDiagnostic) => void;
   /** Defaults to {@link INERT_SERVICES}. */
   readonly services?: CpuServices;
@@ -822,8 +822,8 @@ export class World {
   /**
    * `app.debug.setParam` (`spec/runtime-abi.md` section 10.2): writes a material param of the entity called
    * `entityName` (its name, or its qualified symbol when several entities share the name) through the same
-   * path as `ctx.setParam`, so the generated field writer, the mirror and the opaque-colour rule
-   * (`E8100`) apply. Mistakes of the caller throw plain errors naming what exists; they are not diagnostics.
+   * path as `ctx.setParam`, so the generated field writer, and the mirror apply (any colour alpha is
+   * accepted, decision 0138). Mistakes of the caller throw plain errors naming what exists; they are not diagnostics.
    */
   setParamByName(entityName: string, param: string, value: unknown): void {
     const matches = this.structure.entities.filter((entity) => entity.name === entityName || entity.symbol === entityName);
@@ -896,16 +896,7 @@ export class World {
   ): void {
     if (param.type === "color") {
       if (!isColor(value)) throw new RuntimeInternalError(`ctx.setParam(…, "${param.name}", ${describeValue(value)}) expects a color.`);
-      if (value.a !== 1) {
-        this.report(
-          makeRuntimeDiagnostic("E8100", {
-            phase: this.phase,
-            message: `The colour ${describeValue(value)} for param '${param.name}' of entity '${this.resolvedBySlot[index]?.name ?? String(index)}' is not opaque: material colours must have alpha 1.0 in v0.1. The previous value stays.`,
-            source: this.entitySource(index),
-          }),
-        );
-        return;
-      }
+      // Any alpha is accepted: below 1 the draw is translucent (decision 0138).
     }
     this.params.writeParam(instance.index, param.name, value);
     mat.p[param.name] = value;

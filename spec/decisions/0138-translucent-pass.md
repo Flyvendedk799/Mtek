@@ -1,38 +1,36 @@
-# 0138. Transparency: a translucent pass driven by colour alpha (partially implemented)
+# 0138. Transparency: colour alpha drives a translucent pass
 
-- Status: Accepted. Runtime part implemented; compiler part not yet (see "Not done").
+- Status: Accepted
 - Date: 2026-10-21
-- Specification: `spec/materials.md` §2 and §10 are **not yet amended**. They still say opaque only (`E5100`, `E8100`, `E5902`).
-- Small-game plan: phase 6, step 1 (alpha and fades).
+- Specification: `spec/materials.md` §2 (colour alpha), §3 (fragment output), §3.4 (translucent draws), §10; `spec/diagnostics.md` (`E5100` and `E5902` retired, `E8100` narrowed).
+- Small-game plan: phase 6, step 1 (alpha and fades). It lifts `E5902`.
 
 ## Decision
 
-1. **Alpha comes from the colour.** A draw is translucent when its material instance's `color` (Unlit) or `base_color` (Pbr) param, or any user material param with those names of type `color`, has alpha below 1. There is no new field or blend-mode enum. A fade is a binding on that colour: `color: bind(color.linear(rgb, 1.0 - easing.in_quad(t)))` (decision 0135).
-2. **Pass.**
+1. **Alpha comes from the colours.**
+   - Every `color`-typed material param takes any alpha: in a default, an instance constant, a run-time write or a binding.
+   - While any colour param of an instance has an alpha below 1, its draw is translucent. There is no new field and no blend-mode enum.
+   - A fade is a binding on the alpha, for example `color: bind(color.linear(rgb, 1.0 - easing.in_quad(t)))` (decision 0135). Alpha is therefore tweenable with the same tools as position.
+   - `E5100` (constant non-opaque colour) and `E5902` (transparency not supported) are retired and stay reserved, so their numbers are not reused.
+   - `E8100` remains only for a host input whose declared codec is `color-hex-opaque`; that codec's contract is opacity.
+2. **The fragment writes its real alpha.** The generated fragment entry point returns the fragment's colour unchanged instead of `vec4(result.rgb, 1.0)`.
+   - The canvas is configured `alphaMode: "opaque"`, so opaque draws look exactly as before.
+   - This changes every generated WGSL module, and with it every shader hash. The codegen goldens under `tests/codegen/*/expected/shaders` were re-blessed deliberately. The only difference in each module is the return statement of `mtek_fs`.
+   - Historical evidence and benchmark files that mention the old hashes are records of past runs and were left unchanged.
+3. **The pass.**
    - Translucent draws sort after every opaque draw (key prefix U+FFFF).
    - Each frame they are reordered back to front by the clip-space w of their bounding-sphere centre; ties keep draw-list order.
-   - They use a pipeline variant with straight-alpha "over" blending and depth test without depth write.
+   - They use a pipeline variant with straight-alpha "over" blending, depth test and no depth write.
    - They are never instanced.
-3. **Lazy pipeline.** The blended variant is created the first time a draw needs it, so programs without translucency create exactly the pipelines they did before. Until it exists the draw stays opaque, normally for one or two frames.
-4. **Tracking.** `MaterialStore.writeParam` tracks the alpha of `color` and `base_color` per instance. A change of translucency bumps the block version, so the draw list is rebuilt.
+4. **Lazy pipeline.** The blended variant of a material is made the first time one of its draws turns translucent. Programs that never fade create exactly the pipelines they did before. Until the variant exists, normally for one or two frames, the draw stays opaque.
+5. **Tracking.** `MaterialStore.writeParam` tracks which colour params of each instance are translucent. A change of the instance's translucency bumps the block version, so the draw list is rebuilt.
+6. **`W5101` stays.** A constant returned alpha other than 1 still warns, now because it blends only while a colour param of the instance is translucent.
 
-## Implemented (runtime)
+## Consequences
 
-- `render/pipelines.ts`: `ALPHA_PARAMS`, `canBlend`, `ALPHA_BLEND`, and the `blended` request with its own key suffix, blend state and no depth write.
-- `render/materials.ts`: `isTranslucent` and the alpha tracking.
-- `render/renderer.ts`:
-  - `TRANSLUCENT_KEY_PREFIX` and `orderTranslucent`;
-  - the lazy `blend` option;
-  - translucent draw items.
-- `render/startup.ts` supplies `blend`.
-- Tests: `render/translucency.test.ts`, plus the whole `src/render` suite (189 tests) green.
-
-## Not done (needed before any program can be translucent)
-
-- The compiler still rejects constant non-opaque material colours (`E5100`) and the runtime still rejects run-time ones (`E8100`). Until both are lifted for these params, no instance ever becomes translucent, so this change alters no current program.
-- Generated WGSL still writes `vec4(result.rgb, 1.0)` (`lowering/standard_stage.rs`). It must write the fragment's alpha, at least for the blended variant. This changes every shader hash and the codegen goldens.
-- `E5902` is still listed as not supported in `context/capabilities.rs`.
-- Still to do:
-  - the spec text;
-  - fixtures: a pass fixture with a fading colour, and the four `E5100` fail fixtures turned into pass fixtures or retired;
-  - the Phase 6 example.
+- Sorting is per object, not per triangle. Intersecting translucent objects, or a concave translucent mesh, can show order artefacts; this is a documented limitation (`materials-translucency`).
+- There are no additive or multiply blend modes. Particles (a later step) use alpha "over" too.
+- Fixtures:
+  - the four `E5100` fail fixtures are now pass fixtures (`translucent_*`);
+  - `pass/translucent_fade_binding` fades an Unlit colour through an eased binding, beside a constant translucent Pbr box and an opaque wall.
+- Tests: `render/translucency.test.ts`; `scene/world.test.ts` and `render/renderer.test.ts` (a translucent write is uploaded, with no diagnostic).

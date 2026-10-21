@@ -13,9 +13,9 @@
         "endLine": 8,
         "endColumn": 2
       },
-      "hash": "385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584",
-      "url": "shaders/385b28531dc27b69.wgsl",
-      "map": "shaders/385b28531dc27b69.mtek-map.json",
+      "hash": "b210f9e70a40be73d5343f39f0247957359d67c6f7dab6eadf1dc887efec91e2",
+      "url": "shaders/b210f9e70a40be73.wgsl",
+      "map": "shaders/b210f9e70a40be73.mtek-map.json",
       "vertexEntry": "mtek_vs",
       "instancedVertexEntry": "mtek_vs_instanced",
       "fragmentEntry": "mtek_fs",
@@ -24,7 +24,7 @@
       ],
       "surfaceInputs": [],
       "layout": "material:std/materials.mtek::Unlit",
-      "wgsl": "struct MtekLight {\n    color: vec3<f32>,\n    kind: u32,\n    position: vec3<f32>,\n    range: f32,\n    direction: vec3<f32>,\n    reserved: f32,\n}\n\nstruct MtekFrame {\n    view_proj: mat4x4<f32>,\n    camera_position: vec3<f32>,\n    light_count: u32,\n    ambient: vec3<f32>,\n    exposure: f32,\n    @align(16) lights: array<MtekLight, 4>,\n}\n\nstruct MtekParams_2b212d15_Unlit {\n    u_color: vec4<f32>,\n}\n\nstruct MtekObject {\n    model: mat4x4<f32>,\n    normal_matrix: mat4x4<f32>,\n}\n\nstruct MtekVertexOutput {\n    @builtin(position) clip_position: vec4<f32>,\n}\n\n@group(0) @binding(0) var<uniform> mtek_frame: MtekFrame;\n@group(1) @binding(0) var<uniform> mtek_params: MtekParams_2b212d15_Unlit;\n@group(2) @binding(0) var<uniform> mtek_object: MtekObject;\n\nfn mtek_fragment() -> vec4<f32> {\n    return mtek_params.u_color;\n}\n\n@vertex\nfn mtek_vs(@location(0) mtek_position: vec3<f32>) -> MtekVertexOutput {\n    let mtek_world = mtek_object.model * vec4<f32>(mtek_position, 1.0);\n    return MtekVertexOutput(mtek_frame.view_proj * mtek_world);\n}\n\n@vertex\nfn mtek_vs_instanced(@location(0) mtek_position: vec3<f32>, @location(3) mtek_model_c0: vec4<f32>, @location(4) mtek_model_c1: vec4<f32>, @location(5) mtek_model_c2: vec4<f32>, @location(6) mtek_model_c3: vec4<f32>, @location(7) mtek_normal_c0: vec4<f32>, @location(8) mtek_normal_c1: vec4<f32>, @location(9) mtek_normal_c2: vec4<f32>, @location(10) mtek_normal_c3: vec4<f32>) -> MtekVertexOutput {\n    let mtek_world = mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3) * vec4<f32>(mtek_position, 1.0);\n    return MtekVertexOutput(mtek_frame.view_proj * mtek_world);\n}\n\n@fragment\nfn mtek_fs() -> @location(0) vec4<f32> {\n    let mtek_color = mtek_fragment();\n    return vec4<f32>(mtek_color.xyz, 1.0);\n}\n",
+      "wgsl": "struct MtekLight {\n    color: vec3<f32>,\n    kind: u32,\n    position: vec3<f32>,\n    range: f32,\n    direction: vec3<f32>,\n    reserved: f32,\n}\n\nstruct MtekFrame {\n    view_proj: mat4x4<f32>,\n    camera_position: vec3<f32>,\n    light_count: u32,\n    ambient: vec3<f32>,\n    exposure: f32,\n    @align(16) lights: array<MtekLight, 4>,\n}\n\nstruct MtekParams_2b212d15_Unlit {\n    u_color: vec4<f32>,\n}\n\nstruct MtekObject {\n    model: mat4x4<f32>,\n    normal_matrix: mat4x4<f32>,\n}\n\nstruct MtekVertexOutput {\n    @builtin(position) clip_position: vec4<f32>,\n}\n\n@group(0) @binding(0) var<uniform> mtek_frame: MtekFrame;\n@group(1) @binding(0) var<uniform> mtek_params: MtekParams_2b212d15_Unlit;\n@group(2) @binding(0) var<uniform> mtek_object: MtekObject;\n\nfn mtek_fragment() -> vec4<f32> {\n    return mtek_params.u_color;\n}\n\n@vertex\nfn mtek_vs(@location(0) mtek_position: vec3<f32>) -> MtekVertexOutput {\n    let mtek_world = mtek_object.model * vec4<f32>(mtek_position, 1.0);\n    return MtekVertexOutput(mtek_frame.view_proj * mtek_world);\n}\n\n@vertex\nfn mtek_vs_instanced(@location(0) mtek_position: vec3<f32>, @location(3) mtek_model_c0: vec4<f32>, @location(4) mtek_model_c1: vec4<f32>, @location(5) mtek_model_c2: vec4<f32>, @location(6) mtek_model_c3: vec4<f32>, @location(7) mtek_normal_c0: vec4<f32>, @location(8) mtek_normal_c1: vec4<f32>, @location(9) mtek_normal_c2: vec4<f32>, @location(10) mtek_normal_c3: vec4<f32>) -> MtekVertexOutput {\n    let mtek_world = mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3) * vec4<f32>(mtek_position, 1.0);\n    return MtekVertexOutput(mtek_frame.view_proj * mtek_world);\n}\n\n@fragment\nfn mtek_fs() -> @location(0) vec4<f32> {\n    let mtek_color = mtek_fragment();\n    return mtek_color;\n}\n",
       "spanMap": [
         {
           "wgsl": {
@@ -1305,7 +1305,7 @@
           "wgsl": {
             "line": 55,
             "colStart": 5,
-            "colEnd": 43
+            "colEnd": 23
           },
           "source": {
             "file": "std/materials.mtek",
@@ -1322,58 +1322,7 @@
           "wgsl": {
             "line": 55,
             "colStart": 12,
-            "colEnd": 42
-          },
-          "source": {
-            "file": "std/materials.mtek",
-            "startByte": 255,
-            "endByte": 370,
-            "startLine": 5,
-            "startColumn": 8,
-            "endLine": 8,
-            "endColumn": 2
-          },
-          "symbol": "std/materials.mtek::Unlit"
-        },
-        {
-          "wgsl": {
-            "line": 55,
-            "colStart": 22,
-            "colEnd": 36
-          },
-          "source": {
-            "file": "std/materials.mtek",
-            "startByte": 255,
-            "endByte": 370,
-            "startLine": 5,
-            "startColumn": 8,
-            "endLine": 8,
-            "endColumn": 2
-          },
-          "symbol": "std/materials.mtek::Unlit"
-        },
-        {
-          "wgsl": {
-            "line": 55,
-            "colStart": 22,
-            "colEnd": 32
-          },
-          "source": {
-            "file": "std/materials.mtek",
-            "startByte": 255,
-            "endByte": 370,
-            "startLine": 5,
-            "startColumn": 8,
-            "endLine": 8,
-            "endColumn": 2
-          },
-          "symbol": "std/materials.mtek::Unlit"
-        },
-        {
-          "wgsl": {
-            "line": 55,
-            "colStart": 38,
-            "colEnd": 41
+            "colEnd": 22
           },
           "source": {
             "file": "std/materials.mtek",

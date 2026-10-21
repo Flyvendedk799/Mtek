@@ -334,7 +334,7 @@ impl Code {
     /// in v0.1"), except the internal error `E9999`.
     #[must_use]
     pub fn is_unsupported_feature(self) -> bool {
-        !matches!(self, Code::E9999 | Code::E5901) && self.short().get(2..3) == Some("9")
+        !matches!(self, Code::E9999 | Code::E5901 | Code::E5902) && self.short().get(2..3) == Some("9")
     }
 
     /// The anchor of this code inside `spec/diagnostics.md`, for the `docs`
@@ -432,11 +432,12 @@ mod tests {
         assert_eq!(Code::E3102.range(), 3);
         assert_eq!(Code::E9999.range(), 9);
         assert!(Code::E1901.is_unsupported_feature());
-        assert!(Code::E5902.is_unsupported_feature());
         assert!(Code::E4901.is_unsupported_feature());
         assert!(!Code::E9999.is_unsupported_feature());
         // Retired by decision 0141: scene switching is `go_to`.
         assert!(!Code::E5901.is_unsupported_feature());
+        // Retired by decision 0138: materials can be translucent.
+        assert!(!Code::E5902.is_unsupported_feature());
         assert!(!Code::E9010.is_unsupported_feature());
         assert!(!Code::E3102.is_unsupported_feature());
     }

@@ -16,7 +16,7 @@
 //!   material reads). It returns the same `MtekVertexOutput`, so `mtek_fs` serves both;
 //! - `mtek_fs` rebuilds `SurfaceInput` from the varyings (re-normalising `world_normal`),
 //!   calls the fragment body function `mtek_fragment` and writes
-//!   `vec4(result.rgb, 1.0)` to colour target 0: alpha is always 1.0 in v0.1.
+//!   the fragment's result to colour target 0, alpha included (decision 0138).
 //!
 //! Bindings are always `mtek_frame` (group 0), `mtek_params` (group 1, only when the
 //! material has value params) and `mtek_object` (group 2), each at binding 0.
@@ -652,16 +652,9 @@ fn fragment_entry(inputs: &[SurfaceField], symbol: &str, span: Span) -> Function
         ),
         span,
     });
-    // return vec4<f32>(mtek_color.xyz, 1.0);
+    // return mtek_color; (the fragment's alpha drives blending, decision 0138)
     body.push(Statement::Return {
-        value: Some(Expr::construct(
-            ShaderType::VEC4,
-            vec![
-                Expr::local(color_name, ShaderType::VEC4, span).swizzle(&XYZ, span),
-                Expr::f32(FiniteF32::ONE, span),
-            ],
-            span,
-        )),
+        value: Some(Expr::local(color_name, ShaderType::VEC4, span)),
         span,
     });
     Function {
@@ -1026,11 +1019,11 @@ mod tests {
     }
 
     #[test]
-    fn the_wrapper_writes_alpha_one_and_renormalises_the_world_normal() {
+    fn the_wrapper_writes_the_fragment_alpha_and_renormalises_the_world_normal() {
         let shader = build_standard_stage(&material(&SurfaceField::ALL, None)).expect("built");
         let text = print_module(&shader.module).text;
         assert!(
-            text.contains("    return vec4<f32>(mtek_color.xyz, 1.0);\n"),
+            text.contains("    return mtek_color;\n"),
             "{text}"
         );
         assert!(

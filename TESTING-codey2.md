@@ -224,12 +224,21 @@ Nothing below has code here. There is nothing to test until it is built.
 
 These were not re-run on the bare base commit; my evidence is only that the code they test was not changed here.
 
-## Phase 6.1 alpha (decision 0138): partially implemented
+## Phase 6.1 alpha and fades (decision 0138)
 
-- **Done (runtime):**
-  - the translucent pass, ordered after opaque draws and back to front;
-  - a lazily created blended pipeline (straight-alpha "over", no depth write);
-  - alpha tracking in `MaterialStore`.
-- **Cheap test:** `cd packages/runtime-web && npx vitest run src/render`. This covers `translucency.test.ts` and checks that the pipeline counts are unchanged; the whole suite of 189 tests was green on 2026-10-21.
-- **Not yet reachable from a program.** `E5100` (compiler) and `E8100` (runtime) still reject non-opaque material colours, and generated WGSL still writes alpha 1.0. The remaining work is listed in `spec/decisions/0138-translucent-pass.md`.
-- **No GPU or browser test is possible yet:** no program can currently produce a translucent draw.
+- **Done:**
+  - material colours take any alpha (`E5100` and `E5902` retired);
+  - the fragment writes its real alpha;
+  - translucent draws are sorted after opaque ones and back to front;
+  - the blended pipeline is created lazily.
+- **Cheap tests:**
+  - `cd packages/runtime-web && npx vitest run`: the whole suite (1364 tests) was green on 2026-10-21.
+  - `cargo test -p mtek-compiler --test fixtures --test codegen`.
+- **Fixture:** `tests/semantics/pass/translucent_fade_binding`.
+- **GPU and browser checks (for Abe, not run):**
+  1. `mtek build` the fixture, or the Phase 6 example, and serve it.
+  2. The orange sphere fades out over about 1 s with no popping; the wall stays visible through it.
+  3. The light-blue Pbr box is see-through and the wall shows behind it.
+  4. Two overlapping translucent objects swap their draw order as the camera passes between them.
+  5. The opaque scenes from before this change look identical (the canvas is opaque).
+- **Known issue in the cold-start context, not caused by 6.1:** the empty-project context is now about 27.9 KB, over the 24 000-byte default. 3 of the 13 tests in `mtek-compiler --test context_cold_start` fail because they expect no truncation; the 4th (`an_empty_project_lists_the_signature_of_every_built_in`) still fails after `MTEK_BLESS=1` and was not investigated. These failures were already there before this change: I measured 27 881 bytes without the 6.1 diff and 27 842 with it.

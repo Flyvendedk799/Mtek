@@ -257,11 +257,10 @@
     {
       "id": "materials-scope",
       "area": "Materials and rendering",
-      "restriction": "No vertex or compute stages, no transparency or blending, no shadows, no post-processing, no multiple render targets, no material inheritance, no mip-map generation, no derivatives (`dpdx`), no storage buffers, no texture arrays or cube maps.",
-      "reason": "Not in v0.1 (spec/materials.md section 10); the specification records no rationale beyond scope. Vertex and compute stages are E4901 and transparency is E5902 (reserved).",
+      "restriction": "No vertex or compute stages, no blend modes other than alpha over, no shadows, no post-processing, no multiple render targets, no material inheritance, no mip-map generation, no derivatives (`dpdx`), no storage buffers, no texture arrays or cube maps.",
+      "reason": "Not in v0.1 (spec/materials.md section 10); the specification records no rationale beyond scope. Vertex and compute stages are E4901.",
       "codes": [
-        "E4901",
-        "E5902"
+        "E4901"
       ],
       "decisions": [],
       "source": {
@@ -270,18 +269,19 @@
       }
     },
     {
-      "id": "materials-opaque-colours",
+      "id": "materials-translucency",
       "area": "Materials and rendering",
-      "restriction": "Every `color` parameter of a material holds an opaque colour (alpha exactly 1.0).",
-      "reason": "Transparency is not part of v0.1. A constant with another alpha is E5100; a run-time value with another alpha (a write, a binding or a host input) is rejected with E8100 and the previous value stays. Use `vec4` for non-colour four-component data.",
+      "restriction": "Translucency is per object: translucent draws are sorted back to front by their centre, blend alpha \"over\" only, write no depth and are never instanced.",
+      "reason": "Decision 0138 keeps the small-game transparency to one blend mode, with no order-independent transparency. Intersecting translucent objects can show order artefacts. A host input with the `color-hex-opaque` codec still rejects alpha (E8100).",
       "codes": [
-        "E5100",
         "E8100"
       ],
-      "decisions": [],
+      "decisions": [
+        "0138"
+      ],
       "source": {
         "file": "spec/materials.md",
-        "quote": "must hold an opaque colour (alpha exactly `1.0`) in v0.1"
+        "quote": "Order is per object, not per triangle"
       }
     },
     {

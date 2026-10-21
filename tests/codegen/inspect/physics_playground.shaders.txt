@@ -1,12 +1,12 @@
 shaders of scene src/main.mtek::Playground (target profile webgpu-core-2026)
 
 shader of material std/materials.mtek::Unlit (declared at std/materials.mtek:5:8-8:2)
-  file shaders/385b28531dc27b69.wgsl (sha256 385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584)
+  file shaders/b210f9e70a40be73.wgsl (sha256 b210f9e70a40be73d5343f39f0247957359d67c6f7dab6eadf1dc887efec91e2)
   entry points mtek_vs (vertex), mtek_vs_instanced (instanced vertex), mtek_fs (fragment)
   vertex attributes position
   surface inputs none
   parameter block material:std/materials.mtek::Unlit (group 1 binding 0)
-  span map 80 entries over 56 lines; a line is followed by `// <source> <symbol>` where its origin changes
+  span map 77 entries over 56 lines; a line is followed by `// <source> <symbol>` where its origin changes
    1 | struct MtekLight {  // std/materials.mtek:5:8-8:2 std/materials.mtek::Unlit
    2 |     color: vec3<f32>,
    3 |     kind: u32,
@@ -61,5 +61,5 @@ shader of material std/materials.mtek::Unlit (declared at std/materials.mtek:5:8
   52 | @fragment
   53 | fn mtek_fs() -> @location(0) vec4<f32> {
   54 |     let mtek_color = mtek_fragment();
-  55 |     return vec4<f32>(mtek_color.xyz, 1.0);
+  55 |     return mtek_color;
   56 | }

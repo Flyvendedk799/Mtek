@@ -1,12 +1,12 @@
 shaders of scene src/main.mtek::Gallery (target profile webgpu-core-2026)
 
 shader of material src/main.mtek::Banded (declared at src/main.mtek:14:1-26:2)
-  file shaders/7548e10704aa895b.wgsl (sha256 7548e10704aa895b4b67debd2e450f4ed5540e1aff327220f4fff49311a176b7)
+  file shaders/eabd30c05cd5d546.wgsl (sha256 eabd30c05cd5d546c337dd4bea93eb49e46ef0fb0612eccacf2f9bf98e898e63)
   entry points mtek_vs (vertex), mtek_vs_instanced (instanced vertex), mtek_fs (fragment)
   vertex attributes position, normal, uv
   surface inputs world_position, world_normal, uv
   parameter block material:src/main.mtek::Banded (group 1 binding 0)
-  span map 470 entries over 122 lines; a line is followed by `// <source> <symbol>` where its origin changes
+  span map 467 entries over 122 lines; a line is followed by `// <source> <symbol>` where its origin changes
     1 | struct MtekLight {  // src/main.mtek:14:1-26:2 src/main.mtek::Banded
     2 |     color: vec3<f32>,
     3 |     kind: u32,
@@ -127,16 +127,16 @@ shader of material src/main.mtek::Banded (declared at src/main.mtek:14:1-26:2)
   118 | fn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {
   119 |     let mtek_surface = MtekSurfaceInput(mtek_in.world_position, normalize(mtek_in.world_normal), mtek_in.uv);
   120 |     let mtek_color = mtek_fragment(mtek_surface);
-  121 |     return vec4<f32>(mtek_color.xyz, 1.0);
+  121 |     return mtek_color;
   122 | }
 
 shader of material src/main.mtek::Shiny (declared at src/main.mtek:4:1-12:2)
-  file shaders/6ad988cb245671aa.wgsl (sha256 6ad988cb245671aad5b2b09d478f2dcbd08303b2ae584109cde3475e15a68cb5)
+  file shaders/02111d301ca75c02.wgsl (sha256 02111d301ca75c021c064e1721cc0ca72c1bf88908664fc03e3c12c0e253a165)
   entry points mtek_vs (vertex), mtek_vs_instanced (instanced vertex), mtek_fs (fragment)
   vertex attributes position, normal
   surface inputs world_position, world_normal
   parameter block material:src/main.mtek::Shiny (group 1 binding 0)
-  span map 432 entries over 116 lines; a line is followed by `// <source> <symbol>` where its origin changes
+  span map 429 entries over 116 lines; a line is followed by `// <source> <symbol>` where its origin changes
     1 | struct MtekLight {  // src/main.mtek:4:1-12:2 src/main.mtek::Shiny
     2 |     color: vec3<f32>,
     3 |     kind: u32,
@@ -251,16 +251,16 @@ shader of material src/main.mtek::Shiny (declared at src/main.mtek:4:1-12:2)
   112 | fn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {
   113 |     let mtek_surface = MtekSurfaceInput(mtek_in.world_position, normalize(mtek_in.world_normal));
   114 |     let mtek_color = mtek_fragment(mtek_surface);
-  115 |     return vec4<f32>(mtek_color.xyz, 1.0);
+  115 |     return mtek_color;
   116 | }
 
 shader of material std/materials.mtek::Pbr (declared at std/materials.mtek:10:8-21:2)
-  file shaders/1594a8ef1d1b39e6.wgsl (sha256 1594a8ef1d1b39e6546736563445876c2fdde62abf73dcd1e1456a9ba78ff1cd)
+  file shaders/2a8a1044d0d828ef.wgsl (sha256 2a8a1044d0d828eff6612944d10981aaad61ffe671bfc54f72aa5099a86ef9bf)
   entry points mtek_vs (vertex), mtek_vs_instanced (instanced vertex), mtek_fs (fragment)
   vertex attributes position, normal, uv
   surface inputs world_position, world_normal, uv
   parameter block material:std/materials.mtek::Pbr (group 1 binding 0)
-  span map 457 entries over 122 lines; a line is followed by `// <source> <symbol>` where its origin changes
+  span map 454 entries over 122 lines; a line is followed by `// <source> <symbol>` where its origin changes
     1 | struct MtekLight {  // std/materials.mtek:10:8-21:2 std/materials.mtek::Pbr
     2 |     color: vec3<f32>,
     3 |     kind: u32,
@@ -381,16 +381,16 @@ shader of material std/materials.mtek::Pbr (declared at std/materials.mtek:10:8-
   118 | fn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {
   119 |     let mtek_surface = MtekSurfaceInput(mtek_in.world_position, normalize(mtek_in.world_normal), mtek_in.uv);
   120 |     let mtek_color = mtek_fragment(mtek_surface);
-  121 |     return vec4<f32>(mtek_color.xyz, 1.0);
+  121 |     return mtek_color;
   122 | }
 
 shader of material std/materials.mtek::Unlit (declared at std/materials.mtek:5:8-8:2)
-  file shaders/385b28531dc27b69.wgsl (sha256 385b28531dc27b69772238d151fa2ff0796064be536bbe994b002e117a8f2584)
+  file shaders/b210f9e70a40be73.wgsl (sha256 b210f9e70a40be73d5343f39f0247957359d67c6f7dab6eadf1dc887efec91e2)
   entry points mtek_vs (vertex), mtek_vs_instanced (instanced vertex), mtek_fs (fragment)
   vertex attributes position
   surface inputs none
   parameter block material:std/materials.mtek::Unlit (group 1 binding 0)
-  span map 80 entries over 56 lines; a line is followed by `// <source> <symbol>` where its origin changes
+  span map 77 entries over 56 lines; a line is followed by `// <source> <symbol>` where its origin changes
    1 | struct MtekLight {  // std/materials.mtek:5:8-8:2 std/materials.mtek::Unlit
    2 |     color: vec3<f32>,
    3 |     kind: u32,
@@ -445,5 +445,5 @@ shader of material std/materials.mtek::Unlit (declared at std/materials.mtek:5:8
   52 | @fragment
   53 | fn mtek_fs() -> @location(0) vec4<f32> {
   54 |     let mtek_color = mtek_fragment();
-  55 |     return vec4<f32>(mtek_color.xyz, 1.0);
+  55 |     return mtek_color;
   56 | }

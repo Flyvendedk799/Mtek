@@ -568,15 +568,14 @@ describe("debug.setParam (the M2 gate hook, spec/runtime-abi.md section 10.2)", 
     app.dispose();
   });
 
-  it("a non-opaque colour is E8100 and the previous value stays", async () => {
+  it("a translucent colour is uploaded and makes the draw translucent (decision 0138)", async () => {
     const { host, debug, app, reported, manifest } = await mountTwoMaterials();
     debug.step(1, 0.016);
     debug.setParam("E3", "color", { r: 0, g: 1, b: 0, a: 0.5 });
     debug.step(1, 0.016);
-    expect(reported.map((d) => d.code)).toEqual(["MTEK-E8100"]);
-    expect(reported[0]?.message).toContain("E3");
+    expect(reported).toEqual([]);
     const color = memberOffset(manifest, "material:std/materials.mtek::Unlit", "color");
-    expect(floats(bufferLabelled(host, UNLIT_ARENA), 3 * 256 + color, 4)).toEqual(new Float32Array([0.25, 0.5, 0.75, 1]));
+    expect(floats(bufferLabelled(host, UNLIT_ARENA), 3 * 256 + color, 4)).toEqual(new Float32Array([0, 1, 0, 0.5]));
     app.dispose();
   });
 

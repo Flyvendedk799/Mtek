@@ -199,14 +199,14 @@ describe("setters", () => {
     expect(reported[0]?.source).toMatchObject({ file: "src/main.mtek", startByte: 40 });
   });
 
-  it("a non-opaque colour is E8100 and the previous value stays", () => {
+  it("a translucent colour is written like any other (decision 0138)", () => {
     const { ctx, writes, reported } = makeWorld();
     const e0 = ctx.e[0];
     ctx.setParam(e0, "color", { r: 1, g: 0, b: 0, a: 1 });
     ctx.setParam(e0, "color", { r: 0, g: 1, b: 0, a: 0.5 });
-    expect(e0?.mat?.p["color"]).toEqual({ r: 1, g: 0, b: 0, a: 1 });
-    expect(writes).toHaveLength(1);
-    expect(reported.map((d) => d.code)).toEqual(["MTEK-E8100"]);
+    expect(e0?.mat?.p["color"]).toEqual({ r: 0, g: 1, b: 0, a: 0.5 });
+    expect(writes).toHaveLength(2);
+    expect(reported).toEqual([]);
   });
 
   it("creates the light record of an entity with the registry defaults and its construction-time range", () => {

@@ -11,10 +11,11 @@ const draw = (entity: number, translucent: boolean, order = entity): DrawItem =>
 const viewProj = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0]);
 
 describe("translucent draws (decision 0138)", () => {
-  it("blend only materials with a colour param named color or base_color", () => {
+  it("blend only materials with a colour param", () => {
     expect(canBlend({ params: [{ name: "color", type: "color" }] })).toBe(true);
     expect(canBlend({ params: [{ name: "base_color", type: "color" }, { name: "metallic", type: "f32" }] })).toBe(true);
-    expect(canBlend({ params: [{ name: "tint", type: "color" }] })).toBe(false);
+    expect(canBlend({ params: [{ name: "tint", type: "color" }] })).toBe(true);
+    expect(canBlend({ params: [{ name: "metallic", type: "f32" }] })).toBe(false);
     expect(canBlend({ params: [{ name: "color", type: "vec4" }] })).toBe(false);
   });
 

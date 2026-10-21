@@ -47,7 +47,6 @@ const UNSUPPORTED_PHRASES: &[(Code, &str)] = &[
         Code::E4901,
         "stage functions other than `fragment` (vertex, compute)",
     ),
-    (Code::E5902, "transparency (alpha blending)"),
     (Code::E7901, "remote assets (URLs as asset paths)"),
     (
         Code::E7902,

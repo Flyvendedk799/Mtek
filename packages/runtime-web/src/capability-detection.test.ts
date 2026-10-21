@@ -17,8 +17,11 @@ describe("capability detection", () => {
 
   it("never reads the user agent or other browser identification", () => {
     const forbidden = /userAgent|userAgentData|navigator\.(vendor|platform|appVersion|appName)|\bnavigator\.product\b/;
+    // The unsupported-browser overlay guesses the browser only to word its advice, after detection has
+    // already failed on features (decision 0131); detection itself never reads the user agent.
+    const adviceOnly = new Set(["./host/browser-support.ts", "./host/overlay.ts"]);
     const offenders = Object.entries(sources)
-      .filter(([, text]) => forbidden.test(text))
+      .filter(([file, text]) => forbidden.test(text) && !adviceOnly.has(file))
       .map(([file]) => file);
     expect(offenders).toEqual([]);
   });

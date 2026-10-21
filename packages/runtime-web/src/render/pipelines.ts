@@ -178,12 +178,9 @@ export interface PipelineRequest {
   readonly blended?: boolean;
 }
 
-/** The parameter names whose colour alpha makes a draw translucent (decision 0138). */
-export const ALPHA_PARAMS: ReadonlySet<string> = new Set(["color", "base_color"]);
-
-/** Whether `material` has a colour param that can make its draws translucent (decision 0138). */
+/** Whether `material` has a colour param, whose alpha below 1 makes its draws translucent (decision 0138). */
 export function canBlend(material: { readonly params: readonly { readonly name: string; readonly type: string }[] }): boolean {
-  return material.params.some((param) => ALPHA_PARAMS.has(param.name) && param.type === "color");
+  return material.params.some((param) => param.type === "color");
 }
 
 /** Straight-alpha "over" blending of the translucent pass (decision 0138). */

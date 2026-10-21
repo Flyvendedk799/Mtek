@@ -82,8 +82,8 @@ export interface MtekDebug {
   releaseKey(code: string): void;
   /**
    * Writes a material param of the named entity (its name, or its qualified symbol when the name is shared)
-   * without `bind`: uploaded by the next frame, never creates a shader, pipeline or bind group; a non-opaque
-   * colour is `E8100` and the previous value stays. A wrong entity, param or value throws (decision 0046).
+   * without `bind`: uploaded by the next frame, never creates a shader, pipeline or bind group; a colour with
+   * alpha below 1 makes the draw translucent (decision 0138). A wrong entity, param or value throws (decision 0046).
    */
   setParam(entityName: string, param: string, value: unknown): void;
   /**

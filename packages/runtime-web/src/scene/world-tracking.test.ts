@@ -232,7 +232,7 @@ describe("the resolved setters of the bindings do what the context's setters do"
   const paramCases: readonly [string, unknown][] = [
     ["color", { r: 1, g: 0.5, b: 0.25, a: 1 }],
     ["color", { r: 1, g: 0.5, b: 0.25, a: 1 }],
-    ["color", { r: 1, g: 0.5, b: 0.25, a: 0.5 }], // E8100
+    ["color", { r: 1, g: 0.5, b: 0.25, a: 0.5 }], // translucent (decision 0138)
     ["color", { r: 1, g: 0.5 }], // not a colour
     ["tint", { r: 1, g: 1, b: 1, a: 1 }], // not a param of the material
   ];
@@ -249,7 +249,6 @@ describe("the resolved setters of the bindings do what the context's setters do"
       expect(JSON.stringify(resolved.world.entities[3]?.mat)).toBe(JSON.stringify(direct.world.entities[3]?.mat));
     }
     expect(resolved.reported.map((d) => [d.code, d.message])).toEqual(direct.reported.map((d) => [d.code, d.message]));
-    expect(resolved.reported.map((d) => d.code)).toContain("MTEK-E8100");
   });
 
   it("a paramSetter keeps writing to the parameter store the world points at now (device recovery rebinds it)", () => {

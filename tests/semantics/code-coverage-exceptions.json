@@ -3,12 +3,16 @@
   "notYetImplemented": [],
   "reserved": [
     {
+      "code": "E5100",
+      "reason": "Retired by decision 0138: material colour params take any alpha (an alpha below 1 makes the draw translucent), so no program can produce it; the catalogue keeps the code so that the number is not reused."
+    },
+    {
       "code": "E5901",
       "reason": "Retired by decision 0141: go_to(Scene) switches the active scene, so no program can produce it; the catalogue keeps the code so that the number is not reused."
     },
     {
       "code": "E5902",
-      "reason": "No construct of v0.1 asks for transparency (spec/materials.md section 2: opaque materials only), so no program can produce it; the context export lists the feature as not supported."
+      "reason": "Retired by decision 0138: a material colour param with an alpha below 1 makes the draw translucent, so no program can produce it; the catalogue keeps the code so that the number is not reused."
     },
     {
       "code": "E6003",

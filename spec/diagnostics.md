@@ -256,7 +256,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5090"></a>E5090 | invalid scale | non-positive or non-finite constant |
 | <a id="mtek-e5091"></a>E5091 | body on non-root entity | a body on a nested entity, or a static instance of a prefab with a body nested in an entity (decision 0065) |
 | <a id="mtek-e5092"></a>E5092 | too many static entities | |
-| <a id="mtek-e5100"></a>E5100 | non-opaque color in material parameter | |
+| <a id="mtek-e5100"></a>E5100 | non-opaque color in material parameter | **Reserved:** retired by decision 0138: material colours take any alpha, an alpha below 1 makes the draw translucent; the code is kept so that the number is not reused |
 | <a id="mtek-w5101"></a>W5101 | fragment alpha ignored | constant alpha ≠ 1 |
 | <a id="mtek-e5110"></a>E5110 | light in prefab | at the `light` member; the light is not part of the prefab's entity (decisions 0053, 0062) |
 | <a id="mtek-e5111"></a>E5111 | too many lights | > 4 |
@@ -277,8 +277,8 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5901"></a>E5901 | scene switching not supported | **Reserved:** retired by decision 0141: `go_to(Scene)` switches the active scene, so no program produces it; the code is kept so that the number is not reused |
 | <a id="mtek-e5501"></a>E5501 | audio argument out of range | a constant volume of `play`, `play_at`, `play_music` or `set_volume` outside `0.0..=4.0`, or a constant pitch outside `0.0625..=16.0` (`spec/audio.md` §3) |
 | <a id="mtek-e5601"></a>E5601 | HUD size out of range | a constant `size` argument of `hud.text` or `hud.button` outside 1.0 to 512.0 CSS pixels, or a constant `hud.rect` size component outside 0.0 to 8192.0 (decision 0134) |
-| <a id="mtek-e5901"></a>E5901 | scene switching not supported | **Reserved:** switching the active scene at run time; v0.1 mounts one scene and has no construct that could switch it, so no program produces it |
-| <a id="mtek-e5902"></a>E5902 | transparency not supported | **Reserved:** v0.1 has only opaque materials and no construct that asks for transparency, so no program produces it |
+| <a id="mtek-e5901"></a>E5901 | scene switching not supported | **Reserved:** retired by decision 0141: `go_to(Scene)` switches the active scene, so no program produces it; the code is kept so that the number is not reused |
+| <a id="mtek-e5902"></a>E5902 | transparency not supported | **Reserved:** retired by decision 0138: materials are translucent when a colour param has an alpha below 1, so no program produces it; the code is kept so that the number is not reused |
 
 ### 5.6 GPU and target (`6xxx`)
 | Code | Title | Trigger |
@@ -353,7 +353,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-w8070"></a>W8070 | scene restarted on reload | names the forcing declaration |
 | <a id="mtek-e8080"></a>E8080 | execution budget exceeded | a loop of a `--mode preview` build ran past the frame's loop budget (`manifest.preview.loopBudget`, default 10 million iterations): reported at the loop, the scene stops and the overlay shows it; during `init` the mount fails with the kind `budget-exceeded` (decision 0075) |
 | <a id="mtek-e8090"></a>E8090 | invalid scale value | run-time write ignored |
-| <a id="mtek-e8100"></a>E8100 | non-opaque color value | run-time value rejected |
+| <a id="mtek-e8100"></a>E8100 | non-opaque color value | a host input with the `color-hex-opaque` codec rejected a colour with alpha (material param writes take any alpha since decision 0138) |
 | <a id="mtek-e8101"></a>E8101 | command not valid for the target's body kind | a body command through an `entity_ref` (or a velocity read) whose body kind, or lack of a body, it does not support; the command is dropped and a read gives zero (decision 0066) |
 | <a id="mtek-e8102"></a>E8102 | physics module failed to load | mount fails with the kind `physics-failed`; a reload whose physics module cannot load is refused (decision 0066) |
 | <a id="mtek-e8103"></a>E8103 | non-finite pose produced by the solver | the body is frozen (taken out of the simulation, the entity keeps its last finite pose) and the code is reported once per body (decision 0066) |
