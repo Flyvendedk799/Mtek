@@ -144,3 +144,109 @@ Editor: in VS Code, `enum` and `match` are highlighted as keywords, `=>` as an o
 - The GBNF export uses a no-descriptor expansion: in a no-descriptor context, a `match` expression's arm values cannot be bare descriptor literals. This is stricter than the parser.
 - Host IO describes an enum `state` by its enum name, while the IR and manifest say `u32`. Enum host inputs and outputs are unspecified.
 - Some messages built from a kind noun read "a enum" (for example "'Phase' is a enum; …"). This is the same article quirk as the existing "a entity".
+
+## 2. Game flow: scenes and `go_to`, `reset()`, timers, `pause()`, `while` (decisions 0140–0144)
+
+### What it does
+
+- **Several scenes** (0141). The entry module may declare any number of scenes, and `mtek.toml` `project.scene` picks the first one.
+  - `mtek build` packages every scene. The entry scene keeps `app.js` and `program.manifest.json`; every other scene `S` gets `app.S.js` (plus its `.map`) and `program.S.manifest.json`. Shaders, assets and the runtime are shared.
+  - Every manifest of a multi-scene program has `game.scenes`. A single-scene build has no `game` object and is unchanged.
+- **`go_to(Scene)`** (0141) is handler-only. The new scene is prepared in the background and swapped in at the start of a later frame.
+  - `shared state x: T = v;` (scene state only) is copied into the next scene by name.
+  - Only the first request counts.
+  - A failure is runtime `E5401`, and the old scene keeps running.
+- **`reset()`** (0140) restarts the running scene from its initial values, shared state included.
+- **Timers** (0142): `after(t) { … }` and `every(t) { … }` run on the game clock (paused time excluded) at the start of phase 3, before `update`. A timer belongs to its entity in entity and prefab bodies.
+- **`pause()`/`resume()`/`paused()`** (0143) stop ticks, physics, timers and `update`. Input handlers, bindings and rendering keep running.
+- **`while cond { … }`** (0144) is CPU only and capped at 1 000 000 iterations per execution (`E8080`).
+- Keywords: `while` is a keyword now. `after`, `every` and `shared` are contextual. New intrinsics: `go_to`, `reset`, `pause`, `resume`, `paused`.
+- New codes:
+  - `E3210`: a `var` used in a timer block.
+  - `E3211`: a constant timer time out of range.
+  - `E5201`: `go_to` needs a scene name.
+  - `E5202`: `shared` outside scene state.
+  - `E5203`: shared state of a type that cannot be carried.
+  - `E5204`: shared state with one name and different types.
+  - `E5401` (runtime): the scene change failed.
+  - `E5901` is retired (kept as reserved).
+- Spec:
+  - `spec/language.md` §2.2–2.4, §7.6, §7.10, §7.11 and §10;
+  - `spec/scenes.md` §1, §10, §14 and §15;
+  - `spec/runtime-abi.md` §2, §4.2, §5, §7 and §11.4;
+  - `spec/stdlib.md` §6, `spec/diagnostics.md`, `spec/manifest.schema.json` (`game`, `sceneStateEntry.shared`);
+  - `spec/decisions/0140`–`0144`.
+
+### Fixtures
+
+| Kind | Path | Expected |
+|---|---|---|
+| syntax pass | `tests/syntax/pass/WhileStmt.mtek`, `TimerStmt.mtek`, `SharedState.mtek` | 0 diagnostics; `after`, `every` and `shared` still work as names |
+| syntax fail | `tests/syntax/fail/e1001_timer_two_arguments`, `e1001_while_without_block`, `e1030_break_in_timer` | as in their `.diag.json` |
+| syntax (updated) | `keywords.mtek` (`while` → `KwWhile`), `recovery_every_reserved_word`, `e0013_reserved_function_name` (`fn loop`), `fail_syntax.mtek` | goldens re-blessed |
+| semantics pass | `tests/semantics/pass/game_flow` | 0 diagnostics; builds 12 files including `app.Level.js` and `program.Level.manifest.json` |
+| semantics fail | `tests/semantics/fail/game/e3210_timer_uses_var` | 2× `E3210` |
+| semantics fail | `…/game/e3211_invalid_timer_time` | 3× `E3211` (negative `after`, zero and negative `every`) |
+| semantics fail | `…/game/e3001_timer_time_not_f32`, `e5080_timer_in_function`, `e3070_while_condition_not_bool`, `e4010_while_in_material` | the named code |
+| semantics fail | `…/game/e5201_go_to_not_a_scene` | 2× `E5201` (a camera, an expression) |
+| semantics fail | `…/game/e5202_shared_state_outside_a_scene`, `e5203_shared_state_cannot_carry_over`, `e5204_shared_state_types` | the named code (`E5204` with a related span at the other scene) |
+| semantics fail (renamed) | `tests/semantics/fail/e0013_loop_loop` (was `e0013_while_loop`) | `loop` is still reserved |
+| runtime unit | `packages/runtime-web/src/host/game.test.ts` | pause/resume, timer order and paused time, owner death, `reset`, `go_to` with shared carry, `E5401`, the `while` cap → `E8080` |
+| runtime unit | `packages/runtime-web/src/diagnostics/types.test.ts` | `E5401` is a runtime game code |
+| ABI | `tests/abi/manifests/valid/full.json` | `game.scenes` and `"shared": true` validate and round-trip |
+| example | `examples/lane-runner` | checks and builds 15 files; `tests/title-blink.test.toml` |
+
+### Commands
+
+```sh
+cargo test -p mtek-compiler --locked --test fixtures --test lexer_fixtures --test stdlib_registry --test stdlib_schema --test build --test context --test context_cold_start
+cargo test --workspace --locked
+cargo run -p mtek-grammar-coverage --locked          # productions 82/82, alternatives 122/122, rules 17/17
+cd packages/runtime-web && npx vitest run src/host/game.test.ts src/diagnostics/types.test.ts && npx tsc -p . --noEmit
+npm run check:grammar -w mtek-vscode                 # TextMate: while, shared, after/every, match-arm `|`
+npm run check:coverage                               # coverage matrix area "game-flow"
+npm run generate -w @mtek/release-docs && npm run check:release
+mtek build examples/lane-runner && mtek test examples/lane-runner
+```
+
+### Try it by hand
+
+Run `mtek dev examples/lane-runner` and check each of these:
+
+- **Title.** The yellow cube turns, and the white bar blinks twice a second.
+- **Enter.** The run starts:
+  - ArrowLeft and ArrowRight move the blue cube between three lanes.
+  - Red balls fall.
+  - The green bar at the top grows by one step per second.
+- **Escape** freezes the balls, the bar and the lane keys, while the page keeps rendering. Escape again continues from the same point; no time jump.
+- **Hit a ball.** You see the GameOver scene: a red bar for this run and a green bar for the best. After 3 s it goes back to the title, whose bar now shows the best score.
+- **R during a run** restarts the run, and the best is kept. **Backspace on the title** sets the best back to 0 (`reset()`).
+- **DevTools network.** `app.Run.js?build=…` and `program.Run.manifest.json` load only on the first switch.
+- **Make a scene change fail.** Delete `dist/app.GameOver.js` from a build and lose a run. The console or overlay shows `E5401`, and the run keeps going.
+
+These edits in `game_flow` or the example should report:
+
+| Edit | Expect |
+|---|---|
+| `go_to(Main)` (a camera) | `E5201` |
+| `shared state` in an entity | `E5202` |
+| `shared state r: entity_ref = …` | `E5203` |
+| `shared state score: f32` in one scene and `i32` in another | `E5204` |
+| `var n = 1; after(1.0) { n += 1; }` | `E3210` |
+| `every(0.0) { }` | `E3211` |
+| `after(1.0) { }` in a `fn` | `E5080` |
+| `while 1 { }` | `E3070` |
+| `while true { }` in a handler | runs, then fails the frame with `E8080` ("A `while` loop ran more than 1000000 iterations …") |
+| `fn reset() {}` | `E2001` (prelude name) |
+
+### Not done or not verified (game flow)
+
+- Browser tests, `mtek test` (needs WebGPU), and the npm checks other than the runtime typecheck and its unit tests were not run here.
+- The generated docs were **not** regenerated:
+  - `docs/limitations.md`, `docs/coverage-matrix.md`, `docs/language-*.md`;
+  - the inputs they come from did change: `tools/release-docs/data/limitations.json` (E5901 reason, the scenes-scope restriction), the coverage-matrix forms and area, and the prefabs-and-scenes page template.
+- Hot reload while a non-entry scene runs follows that scene by design. Only the unit test covers it, not a live `mtek dev` session.
+- The cold-start context has to fit its budget. To make room:
+  - `reset|pause|resume` now share one line without docs (the preset rule extended to global functions; decision 0140);
+  - the docs of `go_to` and `paused` are short.
+  - The empty project is 22 995 bytes, 5 bytes under the limit of the test that keeps 1 000 bytes free. **Any new intrinsic, keyword or schema field (Phases 1, 4, 5, 7) will hit this limit.** It needs a decision (0112 item 5).
