@@ -1,0 +1,23 @@
+// Interpolated strings (spec/language.md 5.8, decision 0133).
+const LIVES: u32 = u32(3);
+
+fn label(points: i32, t: f32) -> string {
+    return "Score: ${points} (${LIVES} lives) after ${t:.1}s";
+}
+
+scene Main {
+    state points: i32 = 0;
+    state best: string = "none";
+
+    camera Cam {
+        position: vec3(0.0, 0.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    update(dt: f32) {
+        points += 1;
+        let where_: vec3 = vec3(1.0, 2.0, dt);
+        best = "${label(points, frame.time)} at ${where_:.2}, done=${points > 10}, ${best}";
+        print("${best} \${literal}");
+    }
+}

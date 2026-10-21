@@ -205,15 +205,19 @@
     {
       "id": "lang-string-operations",
       "area": "Language",
-      "restriction": "Strings are immutable, CPU-only values with no concatenation or formatting; `+` on strings is an error.",
-      "reason": "Not in v0.1. Strings have no GPU representation.",
+      "restriction": "Strings are immutable, CPU-only values with no concatenation; `+` on strings is an error. Strings are built by interpolation (`\"Score: ${points}\"`, format spec `.N` only), which is formatted at run time and is not a constant expression.",
+      "reason": "Strings have no GPU representation. Interpolation covers HUD text (decision 0133); other format specs (width, padding, hexadecimal) are not specified yet.",
       "codes": [
-        "E3014"
+        "E3014",
+        "E3501",
+        "E3502"
       ],
-      "decisions": [],
+      "decisions": [
+        "0133"
+      ],
       "source": {
         "file": "spec/language.md",
-        "quote": "string formatting/concatenation"
+        "quote": "string concatenation (`+` on `string` is `E3014`"
       }
     },
     {

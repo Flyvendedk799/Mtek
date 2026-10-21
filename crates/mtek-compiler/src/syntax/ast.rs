@@ -746,6 +746,26 @@ impl AssignOp {
 // Expressions (`spec/grammar.ebnf` section 7)
 // ---------------------------------------------------------------------------
 
+/// One part of an interpolated string literal (decision 0133).
+#[derive(Clone, PartialEq, Debug)]
+pub enum InterpPart {
+    /// Literal text, escapes decoded; never empty.
+    Text(String),
+    /// `${expr}` or `${expr:spec}`.
+    Expr {
+        expr: Expr,
+        spec: Option<FormatSpec>,
+    },
+}
+
+/// The format spec after the `:` of `${expr:spec}`, as written (checked by the type checker,
+/// `E3502`).
+#[derive(Clone, PartialEq, Debug)]
+pub struct FormatSpec {
+    pub text: String,
+    pub span: Span,
+}
+
 /// An expression.
 #[derive(Clone, PartialEq, Debug)]
 pub struct Expr {
@@ -770,6 +790,11 @@ pub enum ExprKind {
     /// A string literal, escapes decoded.
     Str {
         value: String,
+    },
+    /// An interpolated string literal, `"Score: ${points}"` (decision 0133): text and
+    /// expressions in source order.
+    Interp {
+        parts: Vec<InterpPart>,
     },
     /// A color literal as sRGB-encoded bytes (`spec/language.md` 5.4).
     Color {

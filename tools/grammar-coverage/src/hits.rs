@@ -568,6 +568,16 @@ impl Hits<'_> {
             ExprKind::Int { .. } => primary(self, "Int"),
             ExprKind::Float { .. } => primary(self, "Float"),
             ExprKind::Str { .. } => primary(self, "String"),
+            // An interpolated string is a `String` token (decision 0133); its expressions are
+            // parsed as `Expr`.
+            ExprKind::Interp { parts } => {
+                primary(self, "String");
+                for part in parts {
+                    if let mtek_compiler::syntax::ast::InterpPart::Expr { expr, .. } = part {
+                        self.expr(expr);
+                    }
+                }
+            }
             ExprKind::Color { .. } => primary(self, "Color"),
             ExprKind::Bool(_) => primary(self, "Bool"),
             ExprKind::SelfValue => primary(self, "'self'"),

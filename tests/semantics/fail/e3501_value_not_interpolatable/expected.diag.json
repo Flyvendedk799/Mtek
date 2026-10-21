@@ -1,0 +1,15 @@
+[
+  {
+    "code": "MTEK-E3501",
+    "file": "src/main.mtek",
+    "startByte": 193,
+    "endByte": 217,
+    "message": "A value of type `quat` cannot be shown in a string.",
+    "expected": "string, bool, i32, u32, f32, vec2, vec3 or vec4",
+    "actual": "quat",
+    "notes": [
+      "an interpolation `${..}` shows a number, a bool, a string or a vector",
+      "help: show one of its fields or components instead, as in `${v.x}`"
+    ]
+  }
+]

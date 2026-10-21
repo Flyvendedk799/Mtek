@@ -1,0 +1,3 @@
+fn label(points: i32) -> string {
+    return "open ${points";
+}

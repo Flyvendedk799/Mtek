@@ -9,10 +9,10 @@
 use super::ast::{
     ArmBody, ArrayLength, Bind, Block, ConstDecl, DescField, ElseBranch, EntityDecl, EntityMember,
     EnumDecl, Expr, ExprKind, FieldInit, FieldValue, FnDecl, ForIter, ForStmt, Handler, HandlerArg,
-    Ident, IfStmt, ImportDecl, Item, ItemKind, LifecycleFn, LocalDecl, MatchArm, MaterialDecl,
-    MaterialMember, Module, Node, NodeId, Param, ParamDecl, Pattern, PatternKind, PrefabDecl,
-    SceneDecl, SceneMember, SceneObject, StageFn, StateDecl, Stmt, StructDecl, StructField, Type,
-    TypeKind,
+    Ident, IfStmt, ImportDecl, InterpPart, Item, ItemKind, LifecycleFn, LocalDecl, MatchArm,
+    MaterialDecl, MaterialMember, Module, Node, NodeId, Param, ParamDecl, Pattern, PatternKind,
+    PrefabDecl, SceneDecl, SceneMember, SceneObject, StageFn, StateDecl, Stmt, StructDecl,
+    StructField, Type, TypeKind,
 };
 use crate::source::Span;
 
@@ -437,6 +437,13 @@ impl Walker<'_> {
             | ExprKind::SelfValue
             | ExprKind::Name(_)
             | ExprKind::Error => {}
+            ExprKind::Interp { parts } => {
+                for part in parts {
+                    if let InterpPart::Expr { expr, .. } = part {
+                        w.expr(expr);
+                    }
+                }
+            }
             ExprKind::Paren(inner) => w.expr(inner),
             ExprKind::Array(elements) => {
                 for element in elements {
@@ -493,6 +500,7 @@ fn expr_label(kind: &ExprKind) -> &'static str {
         | ExprKind::Str { .. }
         | ExprKind::Color { .. }
         | ExprKind::Bool(_) => "lit",
+        ExprKind::Interp { .. } => "interp",
         ExprKind::SelfValue => "self",
         ExprKind::Name(_) => "name",
         ExprKind::Paren(_) => "paren",

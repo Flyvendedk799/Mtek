@@ -198,6 +198,8 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e3206"></a>E3206 | match arms of different types | the arm values of a `match` expression; a related span at the first arm |
 | <a id="mtek-e3210"></a>E3210 | timer block uses an enclosing variable | an `after`/`every` block reads or writes a `var` local of the body around it; the block runs later, when the `var` no longer exists (decision 0142). `let` locals, parameters and loop variables are captured with their value; state, `self` and constants are fine |
 | <a id="mtek-e3211"></a>E3211 | invalid timer time | a constant delay of `after` that is negative or not finite, or a constant period of `every` that is not greater than 0 (decision 0142) |
+| <a id="mtek-e3501"></a>E3501 | value cannot be interpolated | an interpolation `${expr}` in a string literal whose value is not a string, bool, i32, u32, f32, vec2, vec3 or vec4 (decision 0133) |
+| <a id="mtek-e3502"></a>E3502 | invalid format spec | the format spec of `${expr:spec}` is not `.N` with one digit, or `.N` is given for a value that is not f32 or a vector (decision 0133) |
 
 ### 5.4 Functions, effects, stages (`4xxx`)
 | Code | Title | Trigger |

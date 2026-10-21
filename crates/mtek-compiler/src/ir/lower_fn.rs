@@ -1301,6 +1301,51 @@ impl FnLowering<'_, '_> {
                     }
                 }
             }
+            // `"a ${x:.2} b"` (decision 0133): `interp("a ", fmt(x, 2), " b")`, where `fmt` takes
+            // the precision of a `.N` spec or -1; both builtins exist only in the IR.
+            AstExpr::Interp { parts } => {
+                let mut args = Vec::with_capacity(parts.len());
+                for part in parts {
+                    match part {
+                        ast::InterpPart::Text(text) => args.push(Expr {
+                            kind: ExprKind::Const {
+                                value: Value::String(text.clone()),
+                            },
+                            ty: "string".to_owned(),
+                            span: expr.span,
+                        }),
+                        ast::InterpPart::Expr { expr: inner, spec } => {
+                            let precision = spec
+                                .as_ref()
+                                .and_then(|spec| crate::types::interp_precision(&spec.text))
+                                .map_or(-1, i32::from);
+                            let value = self.expr(inner)?;
+                            let span = value.span;
+                            args.push(Expr {
+                                kind: ExprKind::Builtin {
+                                    function: "fmt".to_owned(),
+                                    args: vec![
+                                        value,
+                                        Expr {
+                                            kind: ExprKind::Const {
+                                                value: Value::I32(precision),
+                                            },
+                                            ty: "i32".to_owned(),
+                                            span,
+                                        },
+                                    ],
+                                },
+                                ty: "string".to_owned(),
+                                span,
+                            });
+                        }
+                    }
+                }
+                make(ExprKind::Builtin {
+                    function: "interp".to_owned(),
+                    args,
+                })
+            }
             AstExpr::Int { .. }
             | AstExpr::Float { .. }
             | AstExpr::Str { .. }

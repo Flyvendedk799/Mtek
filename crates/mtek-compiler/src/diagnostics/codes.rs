@@ -138,6 +138,8 @@ catalogue! {
     E3206 Error "match arms of different types",
     E3210 Error "timer block uses an enclosing variable",
     E3211 Error "invalid timer time",
+    E3501 Error "value cannot be interpolated",
+    E3502 Error "invalid format spec",
     // 5.4 Functions, effects, stages (`4xxx`)
     E4001 Error "recursion not supported",
     E4002 Error "impure call from pure function",

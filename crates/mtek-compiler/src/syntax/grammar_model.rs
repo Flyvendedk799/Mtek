@@ -678,13 +678,18 @@ pub fn grammar() -> GrammarModel {
                 plus(digits()),
             ]),
         ),
-        lexical(
-            "String",
-            seq(vec![
-                lit("\""),
-                star(group(alt(vec![r("StringChar"), r("Escape")]))),
-                lit("\""),
-            ]),
+        commented(
+            lexical(
+                "String",
+                seq(vec![
+                    lit("\""),
+                    star(group(alt(vec![r("StringChar"), r("Escape")]))),
+                    lit("\""),
+                ]),
+            ),
+            0,
+            3,
+            "/* '${' Expr ( ':' '.' [0-9] )? '}' inside is an interpolation (language.md 5.8) */",
         ),
         lexical(
             "StringChar",
@@ -701,6 +706,7 @@ pub fn grammar() -> GrammarModel {
                     lit("t"),
                     lit("r"),
                     lit("0"),
+                    lit("$"),
                     seq(vec![
                         lit("u{"),
                         hex(),

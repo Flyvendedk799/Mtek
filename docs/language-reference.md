@@ -71,7 +71,7 @@ compute  vertex  storage  uniform  workgroup  system  query  component
 | Integer | `0` or `[1-9][0-9]*` | No sign (unary minus is an operator), no leading zeros (`007` is `E0020`), no separators, no suffixes, no hexadecimal in v0.1 (`0x1F` is `E0021`). |
 | Float | `[0-9]+ '.' [0-9]+ ( [eE] [+-]? [0-9]+ )?` | Digits are required on both sides of the point: `1.0`, `0.5`, `2.5e-3`. `1.`, `.5`, `1e3` are `E0022` with a suggested edit (`1.0`, `0.5`, `1.0e3`). |
 | Boolean | `true`, `false` | |
-| String | `"…"` | Escapes: `\"`, `\\`, `\n`, `\t`, `\r`, `\0`, `\u{H…}` (1–6 hex digits, a Unicode scalar value). Any other escape is `E0023`. A raw line terminator inside a string is `E0024` (unterminated). Strings are CPU-only (§5.1). |
+| String | `"…"` | Escapes: `\"`, `\\`, `\n`, `\t`, `\r`, `\0`, `\u{H…}` (1–6 hex digits, a Unicode scalar value). Any other escape is `E0023`. A raw line terminator inside a string is `E0024` (unterminated). `${expr}` inside a string is an interpolation (§5.8) and `\$` a literal `$`. Strings are CPU-only (§5.1). |
 | Color | `#RRGGBB` or `#RRGGBBAA` | Hex digits, case-insensitive (formatter lowercases). Any other length (`#fff`) is `E0025`. Meaning: §5.4. |
 
 2.6 **Punctuation and operators.**
@@ -161,6 +161,20 @@ There is no implicit `null`, no `any`, no implicit optional. Fallibility exists 
 - Operators: only `==` and `!=`, between two values of the same enum (§6.2). There is no ordering (`<` is `E3014`) and no conversion to or from numbers (`i32(Phase.Menu)` is `E3001`).
 - Enums are **CPU only**: a value of an enum type never reaches GPU code (`E4011`, §8.4), and an enum is not a material param type (`E4030`). In the IR and the program manifest an enum value is its variant's index, `u32`, numbered from 0 in declaration order; the index is not observable in the language.
 - A value of an enum type is consumed with `==`/`!=` or with `match` (§6.11, §7.9).
+
+5.8 **Interpolated strings** (decision 0133). A string literal may contain interpolations `${expr}` and `${expr:.N}`; its type is `string`:
+
+```mtek
+fn label(points: i32, t: f32, at: vec3) -> string {
+    return "Score: ${points} after ${t:.2}s at ${at}; ${points > 10} \${not}";
+}
+```
+
+- The expression is any expression without a string literal in it (a `"` inside `${` ends the string, `E0024`), parsed as a whole expression up to the `}` that closes the `${`; braces inside it nest. `${}` is `E1001`. `\$` writes a literal `$`, so `\${x}` is the text `${x}`.
+- Its type must be `string`, `bool`, `i32`, `u32`, `f32`, `vec2`, `vec3` or `vec4` (`E3501` otherwise; show a field or component of anything else).
+- Text forms: a string as it is; `true`/`false`; integers in decimal; an `f32` as the shortest decimal that reads back as the same `f32`, with `.0` on whole numbers (`3.0`, `0.1`), and `NaN`, `inf`, `-inf`; a vector as `(x, y, z)` with each component an `f32`.
+- The format spec `.N` (one digit, 0–9) prints exactly `N` digits after the decimal point, for an `f32` or each component of a vector. Any other spec, or `.N` on another type, is `E3502`.
+- An interpolated string is formatted at run time: it is not a constant expression (§6.3, `E3090` in a `const`), even when every part is constant. Like every string it is CPU only.
 
 ### 6. Expressions
 
@@ -321,7 +335,7 @@ CPU-only intrinsics in v0.1: `random() -> f32` in `[0, 1)` (seeded per applicati
 
 Each of these is rejected with a diagnostic; `docs/limitations.md` gives the code of each. Only the reserved words (`E0013`), the bitwise operators (`E1901`) and the vertex and compute stages (`E4901`) have an unsupported-feature code of their own; the others are rejected by the general rule that names the construct (an unknown type is `E3003`, a numeric suffix or a hexadecimal literal `E0021`, `+` on strings `E3014`, and so on; decision 0102).
 
-`while`/`loop`; bitwise operators; integer/boolean vectors; `mat2`/`mat3`; `f16`/`f64`; numeric suffixes and hexadecimal literals; Unicode identifiers; closures and function values; generics; methods and `impl`; enum variants that carry data, explicit enum discriminants and conversions between enums and numbers (§5.7); optional/result types in the language; string formatting/concatenation (`+` on `string` is `E3014`); recursion; compute and vertex stages; storage buffers; patterns other than an enum variant and `_` (no literal, binding, range or guard patterns, no destructuring, §6.11). The unsupported-feature codes are the `x9xx` codes of each range (`spec/diagnostics.md` §3).
+`while`/`loop`; bitwise operators; integer/boolean vectors; `mat2`/`mat3`; `f16`/`f64`; numeric suffixes and hexadecimal literals; Unicode identifiers; closures and function values; generics; methods and `impl`; enum variants that carry data, explicit enum discriminants and conversions between enums and numbers (§5.7); optional/result types in the language; string concatenation (`+` on `string` is `E3014`; interpolation, §5.8, builds strings); recursion; compute and vertex stages; storage buffers; patterns other than an enum variant and `_` (no literal, binding, range or guard patterns, no destructuring, §6.11). The unsupported-feature codes are the `x9xx` codes of each range (`spec/diagnostics.md` §3).
 
 ## Part B. The standard library
 
@@ -829,7 +843,7 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 What the build does **not** support is on [limitations.md](limitations.md); `supported.notSupported` of `mtek context` has the same list.
 
-## Part D. Diagnostics (212 codes)
+## Part D. Diagnostics (214 codes)
 
 Every diagnostic has a stable code: `E` for an error, `W` for a warning, then four digits; the first digit is the area. The full catalogue, the JSON form (`mtek check --format json`), the human rendering and the suggested edits are in [spec/diagnostics.md](../spec/diagnostics.md).
 
@@ -838,7 +852,7 @@ Every diagnostic has a stable code: `E` for an error, `W` for a warning, then fo
 | `0xxx` | source text and lexical structure | 18 |
 | `1xxx` | syntax | 11 |
 | `2xxx` | names, scopes, modules | 14 |
-| `3xxx` | types, values, constant evaluation | 31 |
+| `3xxx` | types, values, constant evaluation | 33 |
 | `4xxx` | functions, effects, execution domains, material stages | 15 |
 | `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 44 |
 | `6xxx` | GPU layout, target profile, generated-shader validation | 4 |

@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E1001",
+    "file": "e1001_empty_interpolation.mtek",
+    "startByte": 43,
+    "endByte": 43,
+    "message": "Expected an expression inside `${}`, found nothing.",
+    "notes": [
+      "help: write the value to show, as in `${score}`, or `\\${` for a literal `${`"
+    ]
+  }
+]

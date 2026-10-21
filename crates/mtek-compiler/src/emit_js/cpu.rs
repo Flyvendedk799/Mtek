@@ -1048,6 +1048,47 @@ impl FnLowering<'_, '_> {
                     .member(method)
                     .call(arguments)
             }
+            // An interpolated string (decision 0133): its pieces joined with `+`, each value
+            // through `rt.fmt(value, type, precision)`; a leading `""` makes the sum a string.
+            ir::ExprKind::Builtin { function, args } if function == "interp" => {
+                let mut joined: Option<Expr> = None;
+                for arg in args {
+                    let piece = self.expr(arg)?;
+                    joined = Some(match joined {
+                        None if matches!(
+                            &arg.kind,
+                            ir::ExprKind::Const {
+                                value: ir::Value::String(_)
+                            }
+                        ) =>
+                        {
+                            piece
+                        }
+                        None => Expr::binary("+", Expr::string(""), piece),
+                        Some(left) => Expr::binary("+", left, piece),
+                    });
+                }
+                joined.unwrap_or_else(|| Expr::string(""))
+            }
+            ir::ExprKind::Builtin { function, args } if function == "fmt" => {
+                let [value, precision] = args.as_slice() else {
+                    return Err("a fmt without a value and a precision".to_owned());
+                };
+                let ir::ExprKind::Const {
+                    value: ir::Value::I32(precision),
+                } = &precision.kind
+                else {
+                    return Err("a fmt whose precision is not a constant".to_owned());
+                };
+                rt(
+                    "fmt",
+                    vec![
+                        self.expr(value)?,
+                        Expr::string(&value.ty),
+                        Expr::Num(Number::I32(*precision)),
+                    ],
+                )
+            }
             ir::ExprKind::Builtin { function, args } if function == "alive" => {
                 let arguments = self.exprs(args)?;
                 Expr::ident("ctx").member("alive").call(arguments)

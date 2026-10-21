@@ -283,6 +283,13 @@ impl Checker<'_> {
                     }
                 }
             }
+            ExprKind::Interp { parts } => {
+                for part in parts {
+                    if let crate::syntax::ast::InterpPart::Expr { expr, .. } = part {
+                        self.constant_uses(expr, uses);
+                    }
+                }
+            }
             ExprKind::Int { .. }
             | ExprKind::Float { .. }
             | ExprKind::Str { .. }
@@ -506,6 +513,27 @@ impl Checker<'_> {
             ExprKind::Call { callee, args } => self.fold_call(expr, callee, args),
             ExprKind::Field { base, .. } => self.fold_field(expr, base),
             ExprKind::Descriptor { fields, .. } => self.fold_descriptor(expr, fields),
+            // Interpolated strings are formatted at run time (decision 0133); their parts are
+            // folded so that constant parts are lowered as constants.
+            ExprKind::Interp { parts } => {
+                let mut first: Option<Folded> = None;
+                for part in parts {
+                    if let crate::syntax::ast::InterpPart::Expr { expr: inner, .. } = part {
+                        let folded = self.fold(inner);
+                        if first.is_none() && !matches!(folded, Folded::Value(_)) {
+                            first = Some(folded);
+                        }
+                    }
+                }
+                first.unwrap_or_else(|| {
+                    Folded::NotConstant(NonConstant {
+                        span: expr.span,
+                        kind: NonConstantKind::Call,
+                        reason: "it is an interpolated string, which is formatted at run time"
+                            .to_owned(),
+                    })
+                })
+            }
             ExprKind::Str { value } => match self.typed(expr) {
                 Some(_) => Folded::Value(ConstValue::Str(value.clone())),
                 None => Folded::Unknown,

@@ -15,8 +15,8 @@ use std::sync::OnceLock;
 /// The `rt` exports the emitter uses that implement no callee of the table
 /// (`RT_STRUCTURAL_EXPORTS` of the runtime): swizzles, single-component replacement, the
 /// colour's `.rgb`, a `mat4` column, index clamping, the value copy of assignable places, `entity_ref` equality, the loop budget of
-/// preview builds and the iteration cap of `while` (decision 0144).
-pub const STRUCTURAL_HELPERS: [&str; 13] = [
+/// preview builds and the iteration cap of `while` (decision 0144); `fmt` formats an interpolated value (decision 0133).
+pub const STRUCTURAL_HELPERS: [&str; 14] = [
     "swizzle2",
     "swizzle3",
     "swizzle4",
@@ -30,6 +30,7 @@ pub const STRUCTURAL_HELPERS: [&str; 13] = [
     "refEq",
     "budgetExceeded",
     "whileLimit",
+    "fmt",
 ];
 
 /// `"(a, b) -> r"`, the signature key of the table.

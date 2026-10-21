@@ -54,6 +54,8 @@
 
 mod assets;
 mod audio;
+mod interp;
+pub(crate) use interp::precision as interp_precision;
 mod bind;
 mod body;
 mod check;

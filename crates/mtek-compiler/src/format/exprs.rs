@@ -35,6 +35,9 @@ impl Printer<'_> {
             ExprKind::Int { .. }
             | ExprKind::Float { .. }
             | ExprKind::Str { .. }
+            // An interpolated string is printed as written too, its expressions included
+            // (decision 0133).
+            | ExprKind::Interp { .. }
             | ExprKind::Bool(_)
             | ExprKind::Error => Doc::text(self.slice(expr.span)),
             ExprKind::Color { .. } => Doc::text(self.slice(expr.span).to_ascii_lowercase()),

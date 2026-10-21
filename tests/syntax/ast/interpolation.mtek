@@ -1,0 +1,3 @@
+fn label(points: i32, t: f32) -> string {
+    return "Score: ${points} after ${t:.2}s, ${points * 2} doubled, \${literal}";
+}

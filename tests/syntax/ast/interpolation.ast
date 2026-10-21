@@ -1,0 +1,14 @@
+(module
+  (fn label
+    (params (param points (type i32)) (param t (type f32)))
+    (ret (type string))
+    (block
+      (return
+        (interp
+          (lit string "Score: ")
+          (part (name points))
+          (lit string " after ")
+          (part (name t) ".2")
+          (lit string "s, ")
+          (part (binary * (name points) (lit int 2)))
+          (lit string " doubled, ${literal}"))))))

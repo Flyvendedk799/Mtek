@@ -13703,6 +13703,53 @@ function refEq(a, b) {
   return a.slot === b.slot && a.gen === b.gen;
 }
 
+// src/math/format.ts
+function formatF32(value) {
+  if (Number.isNaN(value)) return "NaN";
+  if (value === 1 / 0) return "inf";
+  if (value === -1 / 0) return "-inf";
+  if (value === 0) return Object.is(value, -0) ? "-0.0" : "0.0";
+  let text = String(value);
+  for (let digits = 1; digits <= 9; digits++) {
+    let candidate = value.toPrecision(digits);
+    if (Math.fround(Number(candidate)) === value) {
+      text = String(Number(candidate));
+      break;
+    }
+  }
+  return /[.eEn]/.test(text) ? text : `${text}.0`;
+}
+function formatFloat(value, precision) {
+  return precision < 0 || !Number.isFinite(value) ? formatF32(value) : value.toFixed(precision);
+}
+function fmt(value, type, precision) {
+  switch (type) {
+    case "string":
+      return typeof value == "string" ? value : "";
+    case "bool":
+      return value === !0 ? "true" : "false";
+    case "i32":
+    case "u32":
+      return typeof value == "number" ? String(value) : "0";
+    case "f32":
+      return typeof value == "number" ? formatFloat(value, precision) : "NaN";
+    case "vec2": {
+      let v = value;
+      return `(${formatFloat(v.x, precision)}, ${formatFloat(v.y, precision)})`;
+    }
+    case "vec3": {
+      let v = value;
+      return `(${formatFloat(v.x, precision)}, ${formatFloat(v.y, precision)}, ${formatFloat(v.z, precision)})`;
+    }
+    case "vec4": {
+      let v = value;
+      return `(${formatFloat(v.x, precision)}, ${formatFloat(v.y, precision)}, ${formatFloat(v.z, precision)}, ${formatFloat(v.w, precision)})`;
+    }
+    default:
+      return typeof value == "string" ? value : "";
+  }
+}
+
 // src/index.ts
 var RUNTIME_ABI = 1, RUNTIME_VERSION = "0.1.0-dev";
 export {
@@ -13747,6 +13794,7 @@ export {
   fadd,
   fdiv,
   floor,
+  fmt,
   fmul,
   fneg,
   fract,

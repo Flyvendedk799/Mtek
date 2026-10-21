@@ -19,9 +19,9 @@ use crate::stdlib::{
 use crate::syntax::ast::{
     ArmBody, ArrayLength, ArrayLengthKind, Block, ConstDecl, DescField, ElseBranch, EntityDecl,
     EntityMember, EnumDecl, Expr, ExprKind, FieldInit, FieldValue, FnDecl, ForIter, Handler,
-    HandlerArg, Ident, IfStmt, Item, ItemKind, LifecycleFn, MatchArm, MaterialDecl, MaterialMember,
-    Module, NodeId, Param, ParamDecl, PatternKind, PrefabDecl, SceneDecl, SceneMember, SceneObject,
-    Stmt, StructDecl, Type, TypeKind,
+    HandlerArg, Ident, IfStmt, InterpPart, Item, ItemKind, LifecycleFn, MatchArm, MaterialDecl,
+    MaterialMember, Module, NodeId, Param, ParamDecl, PatternKind, PrefabDecl, SceneDecl,
+    SceneMember, SceneObject, Stmt, StructDecl, Type, TypeKind,
 };
 
 /// The reserved identifier (`spec/language.md` 2.1, `E0012`).
@@ -1446,6 +1446,15 @@ impl<'a> Resolver<'a> {
             | ExprKind::Error => {}
             ExprKind::Str { .. } => {
                 let entered = self.enter(Construct::StringLiteral, expr.span);
+                self.leave(entered);
+            }
+            ExprKind::Interp { parts } => {
+                let entered = self.enter(Construct::StringLiteral, expr.span);
+                for part in parts {
+                    if let InterpPart::Expr { expr, .. } = part {
+                        self.expr(expr);
+                    }
+                }
                 self.leave(entered);
             }
             ExprKind::SelfValue => self.self_value(expr),

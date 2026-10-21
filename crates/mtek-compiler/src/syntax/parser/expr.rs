@@ -40,8 +40,11 @@ use crate::diagnostics::{Code, Diagnostic, SuggestedEdit};
 use crate::source::Span;
 
 use super::{CandidateEdit, MAX_TREE_HEIGHT, Parser};
-use crate::syntax::ast::{BinaryOp, Bind, DescField, Expr, ExprKind, FieldValue, Ident, UnaryOp};
-use crate::syntax::token::{TokenKind, TokenValue};
+use crate::syntax::ast::{
+    BinaryOp, Bind, DescField, Expr, ExprKind, FieldValue, FormatSpec, Ident, InterpPart, UnaryOp,
+};
+use crate::syntax::lexer::lex_str;
+use crate::syntax::token::{StrPiece, TokenKind, TokenValue};
 
 /// An expression together with the height of its tree: 0 for a leaf, 1 more
 /// than the tallest child otherwise.
@@ -286,6 +289,15 @@ impl Parser<'_> {
     }
 
     fn literal(&mut self) -> Sub {
+        if let TokenValue::Interpolated(pieces) = &self.tok().value {
+            let pieces = pieces.clone();
+            let span = self.span();
+            self.bump();
+            let parts = self.interpolation_parts(&pieces);
+            let mut sub = self.leaf(span, ExprKind::Interp { parts });
+            sub.height = 1;
+            return sub;
+        }
         let token = self.tok();
         let span = token.span;
         let kind = if token.is_malformed() {
@@ -310,6 +322,61 @@ impl Parser<'_> {
         };
         self.bump();
         self.leaf(span, kind)
+    }
+
+    /// The expressions of an interpolated string (decision 0133): each is lexed and parsed on
+    /// its own, from a copy of the file text blanked up to where it starts so that its spans
+    /// are those of the file (followed by the closing `}`), with the node ids of this parser.
+    fn interpolation_parts(&mut self, pieces: &[StrPiece]) -> Vec<InterpPart> {
+        let mut parts = Vec::with_capacity(pieces.len());
+        for piece in pieces {
+            match piece {
+                StrPiece::Text(text) => parts.push(InterpPart::Text(text.clone())),
+                StrPiece::Expr { expr, spec } => {
+                    let start = expr.start as usize;
+                    let end = (expr.end as usize).min(self.text.len());
+                    let source = self.text.get(start..end).unwrap_or("");
+                    // The closing `}` is lexed too, so that a missing operand reads "found `}`".
+                    let padded = format!("{}{source}}}", " ".repeat(start));
+                    let mut lexed = lex_str(self.file, &padded);
+                    lexed.report_into(self.sink);
+                    let mut sub = Parser::new(&padded, &lexed.tokens, self.sink);
+                    sub.next_id = self.next_id;
+                    let parsed = if sub.kind() == TokenKind::RBrace {
+                        let diagnostic = Diagnostic::new(
+                            Code::E1001,
+                            "Expected an expression inside `${}`, found nothing.",
+                        )
+                        .at(*expr)
+                        .help("write the value to show, as in `${score}`, or `\\${` for a literal `${`");
+                        sub.error(diagnostic);
+                        let leaf = sub.error_leaf(*expr);
+                        *leaf.expr
+                    } else {
+                        let parsed = sub.expr(true);
+                        if sub.kind() != TokenKind::RBrace {
+                            let found = sub.found();
+                            let diagnostic = Diagnostic::new(
+                                Code::E1001,
+                                format!("Expected `}}` to end the interpolation, found {found}."),
+                            )
+                            .at(sub.span());
+                            sub.error(diagnostic);
+                        }
+                        parsed
+                    };
+                    self.next_id = sub.next_id;
+                    parts.push(InterpPart::Expr {
+                        expr: parsed,
+                        spec: spec.as_ref().map(|(text, span)| FormatSpec {
+                            text: text.clone(),
+                            span: *span,
+                        }),
+                    });
+                }
+            }
+        }
+        parts
     }
 
     /// `Ident`, or `Ident { ... }` where a descriptor literal is allowed.

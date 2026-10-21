@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E3502",
+    "file": "src/main.mtek",
+    "startByte": 243,
+    "endByte": 245,
+    "message": "The format spec `:.2` needs a floating-point value; this one is `i32`.",
+    "notes": [
+      "`.N` sets the digits after the decimal point of an f32 or of each vector component",
+      "help: remove the format spec"
+    ]
+  }
+]

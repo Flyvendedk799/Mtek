@@ -1,0 +1,14 @@
+[
+  {
+    "code": "MTEK-E3502",
+    "file": "src/main.mtek",
+    "startByte": 199,
+    "endByte": 200,
+    "message": "`:x` is not a format spec.",
+    "expected": "`.N` with one digit N, as in `${time:.2}`",
+    "actual": "`:x`",
+    "notes": [
+      "the only format spec is `.N`: N digits after the decimal point"
+    ]
+  }
+]

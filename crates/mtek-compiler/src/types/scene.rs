@@ -1473,6 +1473,13 @@ impl Checker<'_> {
                     }
                 }
             }
+            ExprKind::Interp { parts } => {
+                for part in parts {
+                    if let crate::syntax::ast::InterpPart::Expr { expr, .. } = part {
+                        self.descriptors_in(expr);
+                    }
+                }
+            }
             ExprKind::Int { .. }
             | ExprKind::Float { .. }
             | ExprKind::Str { .. }

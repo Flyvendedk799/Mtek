@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E0024",
+    "file": "fail_interpolation.mtek",
+    "startByte": 6,
+    "endByte": 14,
+    "message": "The interpolation `${` is not closed: a `}` must end it before the string ends.",
+    "notes": [
+      "an interpolated expression cannot contain a string literal",
+      "help: close it with `}`, or write `\\${` for a literal `${`"
+    ]
+  },
+  {
+    "code": "MTEK-E0024",
+    "file": "fail_interpolation.mtek",
+    "startByte": 22,
+    "endByte": 30,
+    "message": "String literal is not terminated: the interpolation `${` is not closed with `}` on the same line."
+  }
+]

@@ -401,11 +401,28 @@ pub enum TokenValue {
     Float { value: f64 },
     /// A string literal with its escapes decoded.
     String(String),
+    /// A string literal with at least one interpolation `${expr}` (decision 0133): the text
+    /// pieces with their escapes decoded and, between them, where each interpolated expression
+    /// is in the source. The parser parses those expressions.
+    Interpolated(Vec<StrPiece>),
     /// A color literal as `[r, g, b, a]` bytes; the alpha of `#RRGGBB` is 255.
     /// The values are still sRGB-encoded (`spec/language.md` 5.4).
     Color { rgba: [u8; 4] },
     /// A literal with a lexical error; see the type documentation.
     Malformed,
+}
+
+/// One piece of an interpolated string literal (`"Score: ${points}"`, decision 0133).
+#[derive(Clone, PartialEq, Debug)]
+pub enum StrPiece {
+    /// Literal text, escapes decoded.
+    Text(String),
+    /// `${expr}` or `${expr:spec}`: `expr` is the source between `${` and the `}` (or the `:`
+    /// of the format spec), `spec` the text after the `:` with its span.
+    Expr {
+        expr: Span,
+        spec: Option<(String, Span)>,
+    },
 }
 
 /// One token: its kind, where it is and what it carries.

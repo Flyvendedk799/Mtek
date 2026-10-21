@@ -1010,6 +1010,9 @@ impl<'a> Checker<'a> {
             ExprKind::Bool(_) => TyId::BOOL,
             ExprKind::Color { .. } => TyId::COLOR,
             ExprKind::Str { .. } if construct_implemented(Construct::StringLiteral) => TyId::STRING,
+            ExprKind::Interp { parts } if construct_implemented(Construct::StringLiteral) => {
+                self.interpolation(parts)
+            }
             ExprKind::Array(items) if construct_implemented(Construct::ArrayLiteral) => {
                 self.array_literal(expr, items, expected)
             }
@@ -1025,6 +1028,7 @@ impl<'a> Checker<'a> {
                 }
             }
             ExprKind::Str { .. }
+            | ExprKind::Interp { .. }
             | ExprKind::Array(_)
             | ExprKind::Index { .. }
             | ExprKind::SelfValue

@@ -31,6 +31,10 @@ use super::ast::{
     MatchArm, MaterialDecl, MaterialMember, Module, Param, ParamDecl, Pattern, PatternKind,
     Persist, PrefabDecl, SceneDecl, SceneMember, SceneObject, StageFn, StateDecl, Stmt, StructDecl,
     StructField, Type, TypeKind,
+    ForStmt, Handler, HandlerArg, IfStmt, ImportDecl, InterpPart, Item, ItemKind, LifecycleFn,
+    LocalDecl, MatchArm, MaterialDecl, MaterialMember, Module, Param, ParamDecl, Pattern,
+    PatternKind, PrefabDecl, SceneDecl, SceneMember, SceneObject, StageFn, StateDecl, Stmt,
+    StructDecl, StructField, Type, TypeKind,
 };
 
 /// Lists are kept on one line when they fit in this many columns.
@@ -209,6 +213,18 @@ fn expr_sexp(expr: &Expr) -> Sexp {
         ExprKind::Int { value: None } => lit("int", "overflow"),
         ExprKind::Float { value } => lit("float", format!("{value:?}")),
         ExprKind::Str { value } => lit("string", format!("{value:?}")),
+        ExprKind::Interp { parts } => List::new("interp")
+            .children(parts.iter().map(|part| match part {
+                InterpPart::Text(text) => lit("string", format!("{text:?}")),
+                InterpPart::Expr { expr, spec } => {
+                    let list = List::new("part").child(expr_sexp(expr));
+                    match spec {
+                        Some(spec) => list.atom(format!("{:?}", spec.text)).done(),
+                        None => list.done(),
+                    }
+                }
+            }))
+            .done(),
         ExprKind::Color { rgba: [r, g, b, a] } => {
             let mut text = format!("#{r:02x}{g:02x}{b:02x}");
             if *a != 255 {
