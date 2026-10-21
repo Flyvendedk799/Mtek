@@ -369,7 +369,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e9010"></a>E9010 | not implemented by this compiler build | specified, not yet built |
 | <a id="mtek-e9020"></a>E9020 | host input target not exposable | input target or output source: not scene state, or unsupported type |
 | <a id="mtek-e9021"></a>E9021 | unknown host input target | also an unknown host output source |
-| <a id="mtek-e9030"></a>E9030 | runtime bundle not embedded | CLI built without `packages/runtime-web/dist`; also a program that uses physics built without `packages/physics-rapier/dist/physics.js` (decision 0063) |
+| <a id="mtek-e9030"></a>E9030 | runtime bundle not embedded | CLI built with neither `packages/runtime-web/dist` nor the prebuilt runtime of `crates/mtek-cli/prebuilt` (decision 0161); also a program that uses physics built without `packages/physics-rapier/dist/physics.js` (decision 0063) |
 | <a id="mtek-e9031"></a>E9031 | build output not written | `mtek build` could not write the output directory (I/O failure; exit code 3, the previous output stays in place; decision 0032) |
 | <a id="mtek-e9032"></a>E9032 | compilation timed out | `mtek build --mode preview` did not finish within the compile time limit (10 s, a constant of the command line tool); no files are written (decision 0075) |
 | <a id="mtek-e9999"></a>E9999 | internal compiler error | panic converted; asks for a report |

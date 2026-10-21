@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=24 <25"
+    "node": ">=22.18.0"
   },
   "packageManager": "npm@11.16.0",
   "workspaces": [
@@ -21,12 +21,14 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present && cargo build -p mtek-cli --locked",
-    "check": "cargo fmt --check && cargo clippy --workspace --all-targets --locked -- -D warnings && npm run check:ts && npm run lint && npm run check:naming && npm run check:tasks && npm run check:assets",
+    "check": "cargo fmt --check && cargo clippy --workspace --all-targets --locked -- -D warnings && npm run check:ts && npm run lint && npm run check:naming && npm run check:tasks && npm run check:assets && npm run check:prebuilt",
     "check:ts": "node scripts/gen-manifest-validator.mjs && tsc -b",
     "check:naming": "node scripts/check-naming.mjs",
     "evidence:sanitize": "node tests/browser/support/sanitize-report.ts",
     "check:tasks": "node benchmarks/tools/validate-tasks.mjs",
     "check:assets": "node tests/assets/tools/make-glb.mjs --check",
+    "check:prebuilt": "node scripts/prebuilt-runtime.mjs --check",
+    "prebuilt:write": "node scripts/prebuilt-runtime.mjs --write",
     "check:coverage": "npm run coverage -w @mtek/coverage-matrix",
     "check:release": "npm run check -w @mtek/release-docs",
     "lint": "npm run lint --workspaces --if-present",

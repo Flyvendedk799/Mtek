@@ -18,16 +18,18 @@ works, and what it normalises, is in the maintenance note at the end.
 | You need | Version | What for |
 |---|---|---|
 | Rust, installed with [rustup](https://rustup.rs) | **1.99.0** (rustup installs it by itself from `rust-toolchain.toml`) | building the `mtek` command line tool |
-| Node.js with npm | **24** (`.nvmrc`) | building the runtime bundle that is embedded into `mtek`; not needed to use `mtek` afterwards, except for `mtek test` |
+| Node.js with npm | **24** (`.nvmrc`; 22.18.0 or later works) | rebuilding the runtime bundle that is embedded into `mtek` (a fresh clone embeds the prebuilt one of `crates/mtek-cli/prebuilt`, so `mtek build` works without Node); `mtek test` |
 | A browser with WebGPU | Chromium (the one the project's tests use) | seeing the program run |
 
 `mtek check`, `mtek build`, `mtek fmt` and the editor-facing commands never touch the GPU. Only
 *looking* at the result needs a browser with WebGPU. Without one the page still opens, but it shows
-**Mtek could not run this program** and a runtime diagnostic: `MTEK-E8004` (`WebGPU unavailable`, the
+**This browser cannot show this game**, with steps for the browser in use (update it, a flag to switch
+on, or a browser that works; decision 0162), and below that **Mtek could not run this program** and a
+runtime diagnostic: `MTEK-E8004` (`WebGPU unavailable`, the
 browser has no `navigator.gpu`) or `MTEK-E8005` (`no suitable adapter`, it has WebGPU but found no
 GPU). Everything in sections 3 to 5 and 8 to 11 works the same on such a machine, and the build
-errors of section 9 are shown in the page either way. Only Chromium is tested; another browser may
-work and is not covered by this page. WebGPU needs a secure context, which `http://127.0.0.1` is.
+errors of section 9 are shown in the page either way. Only Chromium is tested automatically;
+Firefox and Safari with WebGPU are expected to work and are checked by hand (`spec/browser-support.md`). WebGPU needs a secure context, which `http://127.0.0.1` is.
 
 This page was written on Windows 11. The command line parts are run on Windows and Ubuntu by the
 project's CI. macOS is not tested.
@@ -51,9 +53,12 @@ cargo install --path crates/mtek-cli --locked
 
 If you only want to try it, the second step is enough: the tool is then `target/debug/mtek`
 (`target\debug\mtek.exe` on Windows) in the checkout; call it by that path or add `target/debug` to
-your `PATH`. If you build the tool **without** the runtime bundle (for example `cargo build` in a
-fresh checkout, before `npm run build`), `mtek check` still works but `mtek build` and `mtek dev`
-fail with `MTEK-E9030` and tell you to run `npm run build` first.
+your `PATH`. If you build the tool **without** building the runtime bundle (for example
+`cargo build -p mtek-cli --locked` in a fresh checkout, with no Node.js at all), it embeds the
+prebuilt runtime that the repository carries in `crates/mtek-cli/prebuilt/` instead, and every
+command works (decision 0161). Run `npm run build` when you change the runtime: the freshly built
+bundle then takes precedence. Only a binary built with neither (the prebuilt files deleted) fails
+`mtek build` and `mtek dev` with `MTEK-E9030`.
 
 Check that the tool runs:
 
@@ -387,7 +392,7 @@ built 'hello-mtek' (release): 9 files in dist, build <build id>; 0 errors, 0 war
 | You see | Because | Do |
 |---|---|---|
 | `MTEK-E9004` | there is no `mtek.toml` in the current directory or above it | `cd` into the project |
-| `MTEK-E9030` from `mtek build` or `mtek dev` | the `mtek` binary was built before the runtime bundle existed | `npm run build`, then rebuild the tool |
+| `MTEK-E9030` from `mtek build` or `mtek dev` | the `mtek` binary was built with neither the runtime bundle nor the prebuilt copy in `crates/mtek-cli/prebuilt/` | restore `crates/mtek-cli/prebuilt/` (`git checkout`) or `npm run build`, then rebuild the tool |
 | `mtek dev: port 5173 is in use; using port 5174` | another program holds the port | open the URL it prints, or pass `--port N` |
 | the page says **Mtek could not run this program** | no WebGPU (`MTEK-E8004`, `MTEK-E8005`) | use a Chromium with WebGPU enabled; compile errors still show |
 

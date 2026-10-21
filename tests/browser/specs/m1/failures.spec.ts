@@ -78,5 +78,10 @@ test.describe("M1 failures are visible (spec/testing.md section 6.7)", () => {
     expect(failure.kind).toBe("webgpu-unavailable");
     expect(failure.diagnostics[0]?.code).toBe("MTEK-E8004");
     await expectVisibleOverlay(page, failure, "MTEK-E8004");
+    // The unsupported-browser screen (decision 0162): plain advice for this browser above the diagnostic.
+    const advice = page.locator('[data-mtek-unsupported-browser="MTEK-E8004"]');
+    await expect(advice).toBeVisible();
+    await expect(advice).toContainText("This browser cannot show this game");
+    await expect(advice).toContainText("Safari 26");
   });
 });

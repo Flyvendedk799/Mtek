@@ -1336,14 +1336,11 @@ fn the_prerequisites_and_the_install_commands_are_the_repositorys() {
     );
     let package: Value =
         serde_json::from_str(&fs::read_to_string(root.join("package.json")).unwrap()).unwrap();
-    assert_eq!(
-        package["engines"]["node"],
-        format!(
-            ">={} <{}",
-            nvmrc.trim(),
-            nvmrc.trim().parse::<u32>().unwrap() + 1
-        )
-    );
+    // `.nvmrc` pins the version CI uses; `engines` accepts it and everything from the floor of
+    // decision 0161 on.
+    let engines = package["engines"]["node"].as_str().unwrap();
+    assert_eq!(engines, ">=22.18.0");
+    assert!(nvmrc.trim().parse::<u32>().unwrap() >= 22);
 
     let items = parse_document(DOC);
     let install: Vec<&Fence> = items

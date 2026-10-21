@@ -141,6 +141,7 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 | Restriction | Why | Diagnostics | Records and source |
 |---|---|---|---|
 | The target profile `webgpu-core-2026` is exactly the WebGPU default limits and requires no optional feature; a device below it cannot run a program. | Keeps the required capabilities of every v0.1 program empty (`features: []`, `limits: {}`); the consistency check compares this with the manifest the compiler writes. | `E8002` | [spec/runtime-abi.md](../spec/runtime-abi.md): "the v0.1 profile `webgpu-core-2026` is exactly the default limits" |
+| WebGPU is the only renderer: there is no WebGL2 fallback, and a browser without WebGPU (or without an adapter) shows the unsupported-browser screen instead of the game. Only Chromium has a full automated run; Firefox has one Windows run and Safari none. | Decision 0162: a second backend would need a second shader language and layout for every feature; spec/browser-support.md section 2 marks which browsers are expectations. | `E8004`, `E8005` | decisions [0162](../spec/decisions/0162-browser-support-webgpu-only.md); [spec/browser-support.md](../spec/browser-support.md): "## 1. The stance: WebGPU only, no WebGL2" |
 
 ### Tooling
 

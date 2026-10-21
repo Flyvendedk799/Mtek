@@ -32,15 +32,21 @@ const softwareArgs = softwareLaunchArgs();
 // project exists only when asked for, `MTEK_EXPERIMENTAL_BROWSER=firefox npm run test:browser -- --project=firefox`,
 // so that a default run is unchanged. The preferences are recorded in the environment record.
 const FIREFOX_PREFERENCES = { "dom.webgpu.enabled": true, "gfx.webgpu.ignore-blocklist": true } as const;
-const experimentalProjects =
-  process.env["MTEK_EXPERIMENTAL_BROWSER"] === "firefox"
+// WebKit (decision 0162) is opt-in the same way, `MTEK_EXPERIMENTAL_BROWSER=webkit` (or `firefox,webkit`):
+// Playwright's WebKit build is not Safari, and whether it exposes WebGPU depends on the platform and the
+// build, so a run records what it found and is no substitute for a check in Safari 26 itself.
+const experimental = new Set((process.env["MTEK_EXPERIMENTAL_BROWSER"] ?? "").split(",").map((name) => name.trim()));
+const experimentalProjects = [
+  ...(experimental.has("firefox")
     ? [
         {
           name: "firefox",
           use: { browserName: "firefox" as const, headless: false, launchOptions: { firefoxUserPrefs: { ...FIREFOX_PREFERENCES } } },
         },
       ]
-    : [];
+    : []),
+  ...(experimental.has("webkit") ? [{ name: "webkit", use: { browserName: "webkit" as const, headless } }] : []),
+];
 
 export default defineConfig({
   testDir: "specs",

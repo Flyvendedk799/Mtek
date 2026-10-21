@@ -24,9 +24,10 @@ which its subject was delivered.
 | `assets.md` | Assets: Declarations, the Static GLB Profile, Packaging and Loading | M4 |
 | `physics.md` | Physics: Semantics, Adapter Contract and Rapier Mapping | M5 |
 | `audio.md` | Audio: Sound Assets, Playback, Volume and Browser Autoplay | small-game extension (decision 0160) |
+| `browser-support.md` | Browser Support: WebGPU Only, the Browsers It Covers, and the Unsupported-Browser Screen | small-game extension (decision 0162) |
 | `tooling.md` | Developer Tooling: CLI, Project File, Dev Server, Formatter, LSP | M0 (`--version`), M1 onward |
 | `ai-and-benchmarks.md` | AI Workflow, Untrusted Previews and Benchmarks | M0 (initial benchmark tasks), M6 |
-| `decisions/` | Decision records 0001–0160 (indexed in `README.md`), the sources list `sources.md` | M0 |
+| `decisions/` | Decision records 0001–0162 (indexed in `README.md`), the sources list `sources.md` | M0 |
 
 The "First needed" column is a planning aid taken from the milestone markers inside the documents;
 the documents themselves are authoritative.

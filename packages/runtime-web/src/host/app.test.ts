@@ -528,6 +528,8 @@ describe("resize and zero-sized canvases", () => {
     host.canvas.clientWidth = 0;
     host.resizeObservers[0]?.trigger();
     expect(host.canvas.width).toBe(0);
+    // The context is unconfigured while there are no pixels (Firefox, decision 0162).
+    expect(host.context.configuration).toBeNull();
     debugOf(app).step(3, 0.016);
     expect(host.device.queue.submits).toBe(1); // nothing was drawn
     expect(debugOf(app).counters()["framesSkipped"]).toBe(3);
@@ -537,9 +539,11 @@ describe("resize and zero-sized canvases", () => {
 
     host.canvas.clientWidth = 100;
     host.resizeObservers[0]?.trigger();
+    expect(host.context.configuration).not.toBeNull();
     debugOf(app).step(1, 0.016);
     expect(host.device.queue.submits).toBe(2);
     app.dispose();
+    expect(host.context.unconfigureCalls).toBe(host.context.configureCalls);
   });
 
   it("mounts on a zero-sized canvas without error", async () => {

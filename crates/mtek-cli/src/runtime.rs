@@ -1,7 +1,8 @@
 //! The runtime bundles compiled into this binary by `build.rs` (`spec/tooling.md` section 1):
-//! `packages/runtime-web/dist/runtime.js`, `runtime.dev.js` and `runtime.d.ts` as they were when
-//! the binary was built, or nothing if they did not exist then (`mtek build` then reports
-//! `E9030`), and, separately, `packages/physics-rapier/dist/physics.js` (decision 0063).
+//! `runtime.js`, `runtime.dev.js` and `runtime.d.ts` from `packages/runtime-web/dist/` when they
+//! were built, else from the prebuilt copy in `crates/mtek-cli/prebuilt/` (decision 0161), or
+//! nothing if neither existed (`mtek build` then reports `E9030`); and, separately, `physics.js`
+//! from `packages/physics-rapier/dist/` or the prebuilt copy (decision 0063).
 
 /// The embedded runtime files.
 #[derive(Clone, Copy, Debug)]
@@ -53,10 +54,8 @@ mod tests {
     #[test]
     fn the_embedded_files_are_the_built_runtime() {
         let runtime = embedded().unwrap();
-        let dist = concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../../packages/runtime-web/dist"
-        );
+        // `dist/` when the runtime was built, the prebuilt copy otherwise (decision 0161).
+        let dist = env!("MTEK_RUNTIME_ORIGIN_DIR");
         assert_eq!(
             runtime.bundle,
             std::fs::read(format!("{dist}/runtime.js")).unwrap()
@@ -98,11 +97,7 @@ mod tests {
         let physics = embedded().unwrap().physics_bundle.unwrap();
         assert_eq!(
             physics,
-            std::fs::read(concat!(
-                env!("CARGO_MANIFEST_DIR"),
-                "/../../packages/physics-rapier/dist/physics.js"
-            ))
-            .unwrap()
+            std::fs::read(concat!(env!("MTEK_PHYSICS_ORIGIN_DIR"), "/physics.js")).unwrap()
         );
         // The adapter and Rapier's WebAssembly, not a stub.
         assert!(physics.len() > 1_000_000);

@@ -31,7 +31,8 @@ What a clean checkout needs. The list comes from building and testing fresh clon
 
 - Git, to clone.
 - Rust **1.99.0** (installed automatically by `rustup` from `rust-toolchain.toml`). On Windows `rustup`'s default toolchain targets MSVC (`x86_64-pc-windows-msvc`), which needs the Visual Studio Build Tools with the C++ workload for its linker.
-- Node.js **24** (`.nvmrc`) with the bundled npm (`packageManager` names npm 11.16.0, which Node 24.18 bundles). `.npmrc` sets `engine-strict=true` and `engines` says `>=24 <25`: `npm ci` refuses another major version.
+- Node.js **24** (`.nvmrc`, the version CI and the recorded runs use) with the bundled npm (`packageManager` names npm 11.16.0, which Node 24.18 bundles). Any Node.js from **22.18.0** on also works: `engines` says `>=22.18.0` (the first release that runs TypeScript without a flag, which the tools rely on) and `.npmrc` sets `engine-strict=true`, so `npm ci` refuses only an older Node (decision 0161).
+- Node.js is not needed just to build and use `mtek`: the CLI embeds the prebuilt runtime of [`crates/mtek-cli/prebuilt`](crates/mtek-cli/prebuilt) when `packages/runtime-web/dist` was not built, so `cargo build -p mtek-cli` on a fresh clone gives an `mtek` whose `build` works (decision 0161). Node is needed to change the runtime, for `mtek test` and for the test suites.
 - Network access for `npm ci` (npm registry) and for the first `cargo` run (crates.io, locked by `Cargo.lock`).
 
 Only for running the browser tests, the editor tests or the grammar backend, none of which `npm ci` and `npm run build` need:
@@ -50,13 +51,15 @@ From a clean checkout:
 |---|---|
 | `npm ci` | install the exact locked npm dependencies |
 | `npm run build` | bundle `@mtek/runtime-web` to `packages/runtime-web/dist/runtime.js`, the Rapier adapter to `packages/physics-rapier/dist/physics.js` and the VS Code extension to `packages/editor-vscode/dist/extension.cjs`, then `cargo build -p mtek-cli --locked` |
-| `npm run check` | `cargo fmt --check`, `cargo clippy --workspace --all-targets --locked -- -D warnings`, `npm run check:ts`, `npm run lint`, `npm run check:naming`, `npm run check:tasks`, `npm run check:assets` |
+| `npm run check` | `cargo fmt --check`, `cargo clippy --workspace --all-targets --locked -- -D warnings`, `npm run check:ts`, `npm run lint`, `npm run check:naming`, `npm run check:tasks`, `npm run check:assets`, `npm run check:prebuilt` (the prebuilt runtime of `crates/mtek-cli/prebuilt` matches its sources, decision 0161) |
 | `npm run check:ts` | `tsc -b` over all TypeScript projects |
 | `npm run lint` | ESLint (`recommended-type-checked`, no `any`) |
 | `npm run check:naming` | fails if the retired placeholder name appears outside the two decision records that explain the rename (decision 0017) |
 | `npm run test:unit` | Vitest unit tests |
 | `npm run test:browser` | builds, then runs the Playwright browser tests (`hardware`, `software` and `benchmarks` projects; add `--project=<name>` to select one); tests without a WebGPU adapter are reported NOT-RUN, never passed |
 | `npm run check:assets` | fails if a generated GLB test asset on disk differs from what `tests/assets/tools/make-glb.mjs` writes (`spec/assets.md` section 7, decision 0058) |
+| `npm run check:prebuilt` | fails if the runtime or physics sources changed since the prebuilt runtime of `crates/mtek-cli/prebuilt` was written (decision 0161) |
+| `npm run prebuilt:write` | copies the freshly built `dist/` bundles into `crates/mtek-cli/prebuilt` and records their hashes; run `npm run build` first |
 | `npm run check:tasks` | validates the benchmark tasks and the recorded holdout hash (`benchmarks/README.md`, decision 0021) |
 | `npm run check:coverage` | the feature coverage matrix (decision 0093): derives from the compiled examples and fixtures what each uses, fails when a v0.1 feature has no demonstration or positive fixture, a diagnostic code no negative test, or `docs/coverage-matrix.md` is stale (`npm run generate -w @mtek/coverage-matrix` rewrites it); needs `npm run build` first |
 | `npm run check:release` | the release documentation and the capability consistency check (decisions 0100, 0101, 0104 and 0116 to 0118): regenerates `docs/language-guide.md`, `docs/language-reference.md`, `docs/limitations.md` and the index, tutorial and concept pages (`tools/release-docs/templates/pages`) and fails if they are stale; compiles every Mtek code block of the concept pages, the tutorial and the guide, checks their links, anchors and cited diagnostic codes, and holds the guide to 16 384 bytes; compares the compiler's supported features, the registry, the runtime's ABI and capabilities, the specification and the claims of this README, naming both sides of every mismatch; checks that every claim of `docs/release-notes-v0.1.md` links to evidence (`npm run generate -w @mtek/release-docs` rewrites the pages); needs `npm run build` first |

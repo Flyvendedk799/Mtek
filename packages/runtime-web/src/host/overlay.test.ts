@@ -142,3 +142,21 @@ describe("FailureOverlay", () => {
     expect(doc.body.find("data-mtek-overlay")).toBeUndefined();
   });
 });
+
+describe("FailureOverlay for a browser without WebGPU (decision 0162)", () => {
+  it("puts the unsupported-browser advice above the diagnostics, and only for E8004 and E8005", () => {
+    const { doc, make } = setup();
+    const overlay = make();
+    overlay.show([makeRuntimeDiagnostic("E8004", { phase: "runtime:mount", message: "WebGPU is not available: navigator.gpu is missing." })]);
+    const root = rootOf(doc);
+    const panel = root.find("data-mtek-unsupported-browser");
+    expect(panel?.getAttribute("data-mtek-unsupported-browser")).toBe("MTEK-E8004");
+    expect(panel?.textContent).toContain("This browser cannot show this game");
+    expect(root.children[0]?.getAttribute("data-mtek-unsupported-browser")).toBe("MTEK-E8004");
+    // The technical diagnostic is still listed.
+    expect(root.find("data-mtek-diagnostic")?.getAttribute("data-mtek-diagnostic")).toBe("MTEK-E8004");
+
+    overlay.show([diagnostic()]);
+    expect(rootOf(doc).find("data-mtek-unsupported-browser")).toBeUndefined();
+  });
+});
