@@ -346,6 +346,8 @@ export interface MtekEntity {
   readonly state: readonly MtekStateEntry[];
   readonly update: boolean;
   readonly fixedUpdate: boolean;
+  /** `tag: "name";` (decision 0150); absent when the entity has none. */
+  readonly tag?: string;
 }
 
 export type MtekBuiltinResourceName =
@@ -399,6 +401,8 @@ export interface MtekPrefab {
   readonly fixedUpdate: boolean;
   readonly bindings: readonly MtekBinding[];
   readonly span: SpanId;
+  /** The tag every instance carries (decision 0150); absent when the prefab has none. */
+  readonly tag?: string;
 }
 
 export type MtekBindingTarget =

@@ -75,6 +75,7 @@ entity Cube {
 | `light` | `DirectionalLight {…}` / `PointLight {…}` | none | `spec/materials.md` §7 |
 | `body` | `Static {}` / `Dynamic {…}` / `Kinematic {}` | none | `spec/physics.md` |
 | `collider` | `BoxCollider {…}` / `SphereCollider {…}` | none | `spec/physics.md` |
+| `tag` | `string` constant | none | §17 |
 
 A `material` without a `mesh` is `E5020`. Unknown, duplicate and mistyped fields are `E5001`/`E5002`/`E3102`. All values inside `mesh`, `body` and `collider` descriptors must be **constant expressions** (`E3090`) — they are construction-only data transported in the manifest.
 
@@ -290,3 +291,51 @@ The value of a persistent state is kept in the browser's storage and outlives th
 16.4 **What can go wrong.** Nothing about storage stops the program or reaches it as an error. A stored value of another type than the state now has (the program changed), of another shape, or unreadable, is ignored, and the state keeps its value. The runtime warns once per state with `W5402`. A write the browser refuses (the storage is full or disabled) warns with `W5403`. On a page with no usable `localStorage` (a sandboxed frame, a privacy mode) the values are kept in memory until the page closes, and the first write warns with `W5403`. An enum is stored as its variant index: reordering an enum's variants changes what an old save means, and removing variants makes an index out of range, which is then ignored (`W5402`).
 
 16.5 **Tests and hosts.** `mtek test` and any mount with test options start with an empty in-memory store, so tests do not depend on what an earlier run saved. A host may pass its own store, or `storage: null` for memory only (`spec/runtime-abi.md` §6.1).
+
+## 17. Tags
+
+Decision 0150.
+
+17.1 **Declaring a tag.** An entity or a prefab may name the group it belongs to with the construction-only field `tag`:
+
+```mtek
+prefab Rock {
+    param lane: i32 = 0;
+    tag: "rock";
+    mesh: Box {};
+}
+
+scene Run {
+    camera Main {}
+    entity Player {
+        tag: "player";
+        mesh: Sphere {};
+    }
+    on key_down(Key.Space) {
+        spawn(Rock { lane: random_int(0, 3) });
+    }
+    update(dt: f32) {
+        if count_tagged("rock") > 8 {
+            destroy_tagged("rock");
+        }
+        // Keep only the rock nearest the player.
+        let near = nearest_tagged("rock", Player.position);
+        for r in tagged("rock") {
+            if r != near && !has_tag(r, "player") {
+                destroy(r);
+            }
+        }
+    }
+}
+```
+
+A tag is a string constant of 1 to 32 lowercase letters, digits and `_`, starting with a letter (`E5220`). An entity has at most one tag. Every instance of a prefab has the prefab's tag, placed or spawned. An instance cannot set `tag` (`E5042`), and a prefab's tag cannot read a param (`E3090`).
+
+17.2 **Finding entities by tag.** `count_tagged(tag)`, `first_tagged(tag)`, `nearest_tagged(tag, point)`, `has_tag(r, tag)`, `tagged(tag)` and `destroy_tagged(tag)` (`spec/stdlib.md` §6) look at the entities for which `alive` is true, in stable instance order (§10.1): the named entities, then the spawned ones in spawn order. A spawned entity pending removal is not found. One spawned in the current frame is found after the next flush (§9).
+
+- The tag argument is a string constant (`E5221`) that some entity or prefab of the program declares (`E5222`, with the closest declared tag as a suggestion). A misspelt tag is a build error, not an empty result.
+- `first_tagged` and `nearest_tagged` give a dead reference (`alive(r)` is false) when no entity has the tag. `nearest_tagged` measures the world position (§12). A tie goes to the first in instance order.
+- `tagged(tag)` is only the iterable of a `for` loop (`E5224`). The loop visits the named entities and the spawned entities that existed when it started. It skips one destroyed before its turn.
+- `destroy_tagged(tag)` (lifecycle functions and handlers, `E5080` elsewhere) queues the removal of every live spawned entity with the tag, as `destroy` does for each. Named entities cannot be destroyed, so a tag that a named entity has (its own, or its prefab's for a placed instance) is `E5223`.
+
+17.3 **Run time.** The manifest carries the tag of each entity and prefab (`spec/runtime-abi.md` §5), and the generated code calls `ctx.countTagged(tag)` and its siblings (§4.2).

@@ -158,3 +158,4 @@ recorded here before code depends on it (blueprint §15).
 | 0147 | The cold-start context keeps 600 bytes (not 1 000) for the project after the game intrinsics; the next growth makes a structural choice |
 | 0148 | A cold-start context leaves `function:*` out of `supported.features` (`reference.builtins` names every function; restored if the budget drops `builtins`); the project room is 1 000 bytes again |
 | 0149 | Random helpers: `random_range(lo, hi) -> f32`, `random_int(lo, hi) -> i32` (both `[lo, hi)`, `lo` if `hi <= lo`) and `chance(p) -> bool`, CPU only, one draw of `random()` each |
+| 0150 | Tags: a construction-only `tag: "name";` entity field (one per entity, `[a-z][a-z0-9_]{0,31}`), and `count_tagged`, `first_tagged`, `nearest_tagged`, `has_tag`, `for r in tagged(..)`, `destroy_tagged`, with tags checked against the program (`E5220`–`E5224`) |

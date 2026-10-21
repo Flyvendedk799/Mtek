@@ -31,7 +31,7 @@ use super::facts::{BodyFacts, CpuOnlySite};
 use super::ty::{Ty, TyId};
 use super::{FnInfo, FnSig};
 use crate::diagnostics::{Code, Diagnostic};
-use crate::resolve::{Def, DefId, DefKind, Res};
+use crate::resolve::{Def, DefId, DefKind, PreludeItem, Res};
 use crate::source::Span;
 use crate::syntax::ast::{
     ArmBody, AssignOp, AssignStmt, Block, ElseBranch, Expr, ExprKind, FnDecl, ForIter, ForStmt,
@@ -365,6 +365,7 @@ impl<'a> Checker<'a> {
                 | Ty::Descriptor(_)
                 | Ty::PrefabDescriptor
                 | Ty::SceneName
+                | Ty::TaggedEntities
                 | Ty::MaterialInstance(_) => return false,
             }
         }
@@ -672,10 +673,21 @@ impl<'a> Checker<'a> {
                 ty
             }
             ForIter::Each(array) => {
+                // `for r in tagged("rock")` (decision 0150): the one place a `tagged` call stands.
+                let target = super::prefab::strip_parens(array);
+                if let ExprKind::Call { callee, .. } = &target.kind
+                    && matches!(
+                        self.res.res(callee.id),
+                        Some(Res::Prelude(PreludeItem::Function("tagged")))
+                    )
+                {
+                    self.tagged_iterables.insert(target.id);
+                }
                 let ty = self.value(array, None);
                 let element = match self.out.interner.get(ty) {
                     Ty::Error => TyId::ERROR,
                     Ty::Array { element, .. } => element,
+                    Ty::TaggedEntities => TyId::ENTITY_REF,
                     _ => {
                         let name = self.display(ty);
                         self.report_diagnostic(

@@ -338,6 +338,18 @@
           "doc": "Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body."
         },
         {
+          "name": "tag",
+          "type": "string",
+          "default": null,
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "A group name (`\"rock\"`) that `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag` and `destroy_tagged` look the entity up by (decision 0150). A string literal of lowercase letters, digits and `_`."
+        },
+        {
           "name": "visible",
           "type": "bool",
           "default": "true",
@@ -1253,6 +1265,18 @@
       "doc": "Cosine of an angle in radians."
     },
     {
+      "name": "count_tagged",
+      "signatures": [
+        "(tag: string) -> i32"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "The number of live entities with the tag."
+    },
+    {
       "name": "cross",
       "signatures": [
         "(a: vec3, b: vec3) -> vec3"
@@ -1287,6 +1311,18 @@
       "cpuSemantics": "",
       "since": "M1",
       "doc": "Queues removal of a spawned entity; it counts as dead from the moment of the call."
+    },
+    {
+      "name": "destroy_tagged",
+      "signatures": [
+        "(tag: string) -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Queues removal of every live spawned entity with the tag; the tag must not be one a named entity has."
     },
     {
       "name": "distance",
@@ -1337,6 +1373,18 @@
       "doc": "2 raised to `x`."
     },
     {
+      "name": "first_tagged",
+      "signatures": [
+        "(tag: string) -> entity_ref"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "The first live entity with the tag in instance order; a dead reference (`alive` is false) if there is none."
+    },
+    {
       "name": "floor",
       "signatures": [
         "(x: T) -> T"
@@ -1371,6 +1419,18 @@
       "cpuSemantics": "",
       "since": "M1",
       "doc": "Switches scene, keeping shared state."
+    },
+    {
+      "name": "has_tag",
+      "signatures": [
+        "(target: entity_ref, tag: string) -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Whether the entity is live and has the tag."
     },
     {
       "name": "inverse_sqrt",
@@ -1482,6 +1542,18 @@
       "cpuSemantics": "`a * (1 - t) + b * t`.",
       "since": "M1",
       "doc": "Linear interpolation `a * (1 - t) + b * t`, with a scalar or a component-wise `t`."
+    },
+    {
+      "name": "nearest_tagged",
+      "signatures": [
+        "(tag: string, point: vec3) -> entity_ref"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "Ties go to the first in instance order.",
+      "since": "M1",
+      "doc": "The live entity with the tag whose world position is nearest `point`; a dead reference if there is none."
     },
     {
       "name": "normalize",
@@ -1746,6 +1818,18 @@
       "cpuSemantics": "`x >= edge ? 1 : 0` per component.",
       "since": "M1",
       "doc": "0 where `x < edge`, otherwise 1, component-wise. WGSL argument order: `step(edge, x)`."
+    },
+    {
+      "name": "tagged",
+      "signatures": [
+        "(tag: string) -> tagged entities"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "The loop skips an entity that is destroyed before its turn and does not visit one spawned during the loop.",
+      "since": "M1",
+      "doc": "The live entities with the tag, in instance order: only the iterable of a `for` loop (`for r in tagged(\"rock\") { .. }`)."
     },
     {
       "name": "tan",

@@ -280,6 +280,9 @@ pub(super) struct Checker<'a> {
     /// The scene names that are the argument of a `go_to` (decision 0141): there, and only
     /// there, a scene name is a value, of type `scene name`.
     pub(super) scene_arguments: BTreeSet<NodeId>,
+    /// The `tagged(..)` calls that are the iterable of a `for` loop (decision 0150): the only
+    /// place where one is allowed.
+    pub(super) tagged_iterables: BTreeSet<NodeId>,
 }
 
 impl<'a> Checker<'a> {
@@ -346,6 +349,7 @@ impl<'a> Checker<'a> {
             prefab_entity_counts: BTreeMap::new(),
             spawn_argument: None,
             scene_arguments: BTreeSet::new(),
+            tagged_iterables: BTreeSet::new(),
         }
     }
 
@@ -1943,10 +1947,14 @@ impl<'a> Checker<'a> {
                         }
                         return TyId::UNIT;
                     }
+                    if !self.tag_call_allowed(expr, name, args) {
+                        return TyId::ERROR;
+                    }
                     let ty = self.function_call(expr, name, function, args, kind, expected);
                     if name == "destroy" {
                         self.check_destroy_target(args);
                     }
+                    self.note_tag_argument(function.name, args);
                     return ty;
                 }
                 Some(Res::Def(id)) if self.names_function(id) => {

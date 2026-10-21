@@ -1,0 +1,28 @@
+[
+  {
+    "code": "MTEK-E5224",
+    "file": "src/main.mtek",
+    "startByte": 192,
+    "endByte": 206,
+    "message": "`tagged(..)` is not a value: it can only be the iterable of a `for` loop.",
+    "expected": "`for r in tagged(..) { .. }`",
+    "actual": "`tagged(..)` used as a value",
+    "notes": [
+      "the entities with a tag change as they are spawned and destroyed, so they are visited by a loop, not kept",
+      "help: write `for r in tagged(\"rock\") { .. }`, or use `count_tagged(\"rock\")`, `first_tagged(\"rock\")` or `nearest_tagged(\"rock\", point)`"
+    ]
+  },
+  {
+    "code": "MTEK-E5224",
+    "file": "src/main.mtek",
+    "startByte": 226,
+    "endByte": 240,
+    "message": "`tagged(..)` is not a value: it can only be the iterable of a `for` loop.",
+    "expected": "`for r in tagged(..) { .. }`",
+    "actual": "`tagged(..)` used as a value",
+    "notes": [
+      "the entities with a tag change as they are spawned and destroyed, so they are visited by a loop, not kept",
+      "help: write `for r in tagged(\"rock\") { .. }`, or use `count_tagged(\"rock\")`, `first_tagged(\"rock\")` or `nearest_tagged(\"rock\", point)`"
+    ]
+  }
+]

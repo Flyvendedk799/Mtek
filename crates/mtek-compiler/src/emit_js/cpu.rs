@@ -1000,6 +1000,12 @@ impl FnLowering<'_, '_> {
                 let arguments = self.exprs(args)?;
                 Expr::ident("ctx").member(member).call(arguments)
             }
+            // The tag built-ins (decision 0150): `ctx.countTagged(tag)` and friends.
+            ir::ExprKind::Builtin { function, args } if tag_member(function).is_some() => {
+                let member = tag_member(function).unwrap_or_default();
+                let arguments = self.exprs(args)?;
+                Expr::ident("ctx").member(member).call(arguments)
+            }
             ir::ExprKind::Builtin { function, args } if function == "is_key_down" => {
                 let arguments = self.exprs(args)?;
                 Expr::ident("ctx").member("isKeyDown").call(arguments)
@@ -2123,4 +2129,17 @@ pub fn emit_prefab_behaviors(
         emitted.bindings.push(name);
     }
     Ok(emitted)
+}
+
+/// The context member of a tag built-in (decision 0150).
+fn tag_member(function: &str) -> Option<&'static str> {
+    Some(match function {
+        "count_tagged" => "countTagged",
+        "first_tagged" => "firstTagged",
+        "nearest_tagged" => "nearestTagged",
+        "has_tag" => "hasTag",
+        "tagged" => "tagged",
+        "destroy_tagged" => "destroyTagged",
+        _ => return None,
+    })
 }

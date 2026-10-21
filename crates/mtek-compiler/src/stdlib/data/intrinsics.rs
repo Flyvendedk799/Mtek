@@ -323,5 +323,64 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             "Whether the entity reference points at a live entity.",
             vec![sig(&[p("target", exact(TypeRef::EntityRef))], exact(TypeRef::Bool))],
         ),
+        // Tag queries (decision 0150): the tag is a string literal that some entity or prefab of
+        // the program declares as its `tag`.
+        function(
+            "count_tagged",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "The number of live entities with the tag.",
+            vec![sig(&[p("tag", exact(TypeRef::String))], exact(TypeRef::I32))],
+        ),
+        function(
+            "first_tagged",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "The first live entity with the tag in instance order; a dead reference (`alive` is false) if there is none.",
+            vec![sig(&[p("tag", exact(TypeRef::String))], exact(TypeRef::EntityRef))],
+        ),
+        function(
+            "nearest_tagged",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "The live entity with the tag whose world position is nearest `point`; a dead reference if there is none.",
+            vec![sig(
+                &[p("tag", exact(TypeRef::String)), p("point", exact(TypeRef::Vec3))],
+                exact(TypeRef::EntityRef),
+            )],
+        )
+        .cpu_semantics("Ties go to the first in instance order."),
+        function(
+            "has_tag",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Whether the entity is live and has the tag.",
+            vec![sig(
+                &[p("target", exact(TypeRef::EntityRef)), p("tag", exact(TypeRef::String))],
+                exact(TypeRef::Bool),
+            )],
+        ),
+        function(
+            "tagged",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "The live entities with the tag, in instance order: only the iterable of a `for` loop (`for r in tagged(\"rock\") { .. }`).",
+            vec![sig(&[p("tag", exact(TypeRef::String))], exact(TypeRef::TaggedEntities))],
+        )
+        .cpu_semantics("The loop skips an entity that is destroyed before its turn and does not visit one spawned during the loop."),
+        function(
+            "destroy_tagged",
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            "Queues removal of every live spawned entity with the tag; the tag must not be one a named entity has.",
+            vec![sig(&[p("tag", exact(TypeRef::String))], exact(TypeRef::Unit))],
+        )
+        .handlers_only(),
     ]
 }

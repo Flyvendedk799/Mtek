@@ -150,6 +150,12 @@ export const AREAS: readonly Area[] = [
     codes: ["E5030", "E5040", "E5041", "E5042", "E5074", "E5080", "E5110"],
   },
   {
+    id: "tags",
+    title: "Tags and tag queries",
+    features: ["function:count_tagged", "function:first_tagged", "function:nearest_tagged", "function:has_tag", "function:tagged", "function:destroy_tagged"],
+    codes: ["E5220", "E5221", "E5222", "E5223", "E5224"],
+  },
+  {
     id: "lights",
     title: "Lights",
     features: ["schema:DirectionalLight", "schema:PointLight", "entity/light", "project/lights"],

@@ -114,6 +114,7 @@ fn instantiate_scene(
             entity.light = None;
             entity.body = template_entity.body.clone();
             entity.collider = template_entity.collider.clone();
+            entity.tag = template_entity.tag.clone();
         }
         for child in &template.children {
             let mut copy = sub.entity(child)?;

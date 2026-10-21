@@ -26,6 +26,7 @@ import { RuntimeInternalError } from "./errors.js";
 import { INERT_GAME, type GameHooks } from "./game.js";
 import { TimerList, type TimerOwner } from "./timers.js";
 import { makeRef, type EntityRef } from "./slots.js";
+import { TagQueries } from "./tags.js";
 import type { ResolvedEntity, ResolvedInstance, SceneStructure } from "./structure.js";
 import {
   describeValue,
@@ -57,6 +58,12 @@ export const CONTEXT_MEMBERS = [
   "spawn",
   "destroy",
   "alive",
+  "countTagged",
+  "firstTagged",
+  "nearestTagged",
+  "hasTag",
+  "tagged",
+  "destroyTagged",
   "body",
   "budget",
   "warn",
@@ -418,6 +425,21 @@ export class World {
       if (typeof owner === "object" && "ref" in owner) return owner as TimerOwner;
       throw new RuntimeInternalError(`a timer got the owner ${describeValue(owner)}; expected an entity record or null.`);
     };
+    const staticTags = this.structure.entities.map((entity) => this.manifest.scene.entities[entity.index]?.tag);
+    const tags = new TagQueries({
+      staticTags,
+      staticRef: (index) => (this.entities[index] as EntityRecord).ref,
+      spawned: () => this.dynamic.live.map((entity) => ({ ref: entity.ref, removing: entity.removing, tag: entity.prefab.resolved.tag })),
+      worldPosition: (slot) => {
+        this.propagate();
+        const world = this.worldMatrix(slot);
+        return { x: world[12] as number, y: world[13] as number, z: world[14] as number };
+      },
+      alive: (ref) => this.dynamic.alive(ref),
+      destroy: (ref) => {
+        this.dynamic.destroy(ref, -1);
+      },
+    });
     const members = {
       s: this.sceneState,
       e: this.entities,
@@ -442,6 +464,15 @@ export class World {
         this.dynamic.destroy(ref, spanId);
       },
       alive: (ref: unknown): boolean => this.dynamic.alive(ref),
+      // Decision 0150: the tag queries.
+      countTagged: (tag: unknown): number => tags.countTagged(tag),
+      firstTagged: (tag: unknown): EntityRef => tags.firstTagged(tag),
+      nearestTagged: (tag: unknown, point: unknown): EntityRef => tags.nearestTagged(tag, point),
+      hasTag: (ref: unknown, tag: unknown): boolean => tags.hasTag(ref, tag),
+      tagged: (tag: unknown): Iterable<EntityRef> => tags.tagged(tag),
+      destroyTagged: (tag: unknown): void => {
+        tags.destroyTagged(tag);
+      },
       body: (target: unknown, spanId: unknown): object => {
         if (this.bodies === undefined) {
           throw new RuntimeInternalError("generated code called ctx.body, but the physics subsystem is not mounted (the manifest says subsystems.physics is false, or the scene is still initialising).");

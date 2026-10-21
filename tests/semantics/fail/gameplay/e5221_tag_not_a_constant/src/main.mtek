@@ -1,0 +1,21 @@
+// The tag of a query is fixed where it is written, so that it can be checked against the tags declared.
+prefab Rock {
+    tag: "rock";
+    mesh: Box {};
+}
+
+fn rock_tag() -> string {
+    return "rock";
+}
+
+scene Demo {
+    camera Main {}
+    state wanted: string = "rock";
+    state n: i32 = 0;
+    update(dt: f32) {
+        n = count_tagged(wanted);
+        for r in tagged(rock_tag()) {
+            destroy(r);
+        }
+    }
+}

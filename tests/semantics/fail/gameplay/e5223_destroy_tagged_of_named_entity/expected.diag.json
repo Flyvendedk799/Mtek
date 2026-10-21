@@ -1,0 +1,40 @@
+[
+  {
+    "code": "MTEK-E5223",
+    "file": "src/main.mtek",
+    "startByte": 380,
+    "endByte": 386,
+    "message": "`destroy_tagged` cannot remove the tag 'coin': the named entity 'Gold' has it.",
+    "related": [
+      {
+        "message": "the entity 'Gold' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 223,
+        "endByte": 227
+      }
+    ],
+    "notes": [
+      "named entities are part of the scene and cannot be destroyed; `destroy_tagged` removes spawned entities",
+      "help: give the spawned entities a tag of their own, for example `tag: \"coin_spawned\";` in their prefab, and destroy that one"
+    ]
+  },
+  {
+    "code": "MTEK-E5223",
+    "file": "src/main.mtek",
+    "startByte": 412,
+    "endByte": 418,
+    "message": "`destroy_tagged` cannot remove the tag 'wall': the named entity 'Wall' has it.",
+    "related": [
+      {
+        "message": "the entity 'Wall' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 248,
+        "endByte": 252
+      }
+    ],
+    "notes": [
+      "named entities are part of the scene and cannot be destroyed; `destroy_tagged` removes spawned entities",
+      "help: give the spawned entities a tag of their own, for example `tag: \"wall_spawned\";` in their prefab, and destroy that one"
+    ]
+  }
+]

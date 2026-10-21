@@ -235,7 +235,7 @@ struct Step {
 /// The note of `E5080` for the handler-only built-in `name`.
 fn handler_only_note(name: &str) -> &'static str {
     match name {
-        "spawn" | "destroy" => {
+        "spawn" | "destroy" | "destroy_tagged" => {
             "spawning and destroying entities are lifecycle operations of the scene"
         }
         "after" | "every" => {

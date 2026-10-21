@@ -677,6 +677,9 @@ impl Tree<'_> {
         self.field(depth + 1, "rotation", &entity.rotation);
         self.field(depth + 1, "scale", &entity.scale);
         self.field(depth + 1, "visible", &entity.visible);
+        if let Some(tag) = &entity.tag {
+            self.line(depth + 1, format!("tag {tag:?}"));
+        }
         if let Some(mesh) = &entity.mesh {
             self.mesh(depth + 1, mesh);
         }

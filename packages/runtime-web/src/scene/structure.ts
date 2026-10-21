@@ -122,6 +122,8 @@ export interface ResolvedPrefab {
   /** In binding-id order; entity 0 is the instance and material instance 0 its material. */
   readonly bindings: readonly MtekBinding[];
   readonly span: number;
+  /** The tag every instance carries (decision 0150). */
+  readonly tag?: string;
 }
 
 /** A light of `scene.lights`: which entity carries it and what it was constructed with. */
@@ -540,6 +542,7 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
       fixedUpdate: prefab.fixedUpdate,
       bindings: prefab.bindings,
       span: prefab.span,
+      ...(prefab.tag === undefined ? {} : { tag: prefab.tag }),
     });
   });
 

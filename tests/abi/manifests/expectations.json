@@ -159,7 +159,11 @@
     },
     "invalid/entity-extra-key.json": {
       "code": "E8006",
-      "field": "scene.entities[0].tags"
+      "field": "scene.entities[0].labels"
+    },
+    "invalid/entity-tag-invalid.json": {
+      "code": "E8006",
+      "field": "scene.entities[0].tag"
     },
     "invalid/entity-mesh-id-malformed.json": {
       "code": "E8006",
@@ -255,7 +259,7 @@
     },
     "invalid/prefab-extra-key.json": {
       "code": "E8006",
-      "field": "prefabs[0].tags"
+      "field": "prefabs[0].labels"
     },
     "invalid/prefab-material-without-shareable.json": {
       "code": "E8006",

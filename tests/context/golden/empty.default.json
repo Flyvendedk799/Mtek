@@ -268,7 +268,8 @@
         "material: material = Unlit {} [C] // The material instance used to draw the mesh. The instance is construction-only; its parameters are writable and bindable. Requires `mesh`.",
         "light: light [C] // A light component (`DirectionalLight`, `PointLight`). Its fields are writable and bindable as their schemas say. Named entities only.",
         "body: body [C] // A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; requires `collider`.",
-        "collider: collider [C] // A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`."
+        "collider: collider [C] // A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`.",
+        "tag: string [C] // A group name (`\"rock\"`) that `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag` and `destroy_tagged` look the entity up by (decision 0150). A string literal of lowercase letters, digits and `_`."
       ]
     },
     {
@@ -415,7 +416,13 @@
       "reset|pause|resume|save|clear_saved() -> () [handlers and lifecycle functions only]",
       "paused() -> bool [cpu only] // Whether paused.",
       "load() -> bool [handlers and lifecycle functions only] // Reads saved values back; false if none.",
-      "alive(target: entity_ref) -> bool [cpu only] // Whether the entity reference points at a live entity."
+      "alive(target: entity_ref) -> bool [cpu only] // Whether the entity reference points at a live entity.",
+      "count_tagged(tag: string) -> i32 [cpu only] // The number of live entities with the tag.",
+      "first_tagged(tag: string) -> entity_ref [cpu only] // The first live entity with the tag in instance order; a dead reference (`alive` is false) if there is none.",
+      "nearest_tagged(tag: string, point: vec3) -> entity_ref [cpu only] // The live entity with the tag whose world position is nearest `point`; a dead reference if there is none.",
+      "has_tag(target: entity_ref, tag: string) -> bool [cpu only] // Whether the entity is live and has the tag.",
+      "tagged(tag: string) -> tagged entities [cpu only] // The live entities with the tag, in instance order: only the iterable of a `for` loop (`for r in tagged(\"rock\") { .. }`).",
+      "destroy_tagged(tag: string) -> () [handlers and lifecycle functions only] // Queues removal of every live spawned entity with the tag; the tag must not be one a named entity has."
     ],
     "events": [
       "on key_down(Key.<member>) // Delivered when the filtered key transitions to pressed. Auto-repeat is ignored.",

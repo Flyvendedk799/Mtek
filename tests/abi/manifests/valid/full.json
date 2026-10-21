@@ -1030,7 +1030,8 @@
           "span": 12
         }
       ],
-      "span": 11
+      "span": 11,
+      "tag": "crate"
     },
     {
       "symbol": "src/props.mtek::Marble",
@@ -1220,7 +1221,8 @@
           }
         ],
         "update": true,
-        "fixedUpdate": true
+        "fixedUpdate": true,
+        "tag": "player"
       },
       {
         "index": 1,

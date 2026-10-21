@@ -110,6 +110,8 @@ pub enum TypeRef {
     PrefabDescriptor,
     /// The argument of `go_to`: the name of a scene of the entry module (decision 0141).
     SceneName,
+    /// The result of `tagged(tag)`: the entities a `for` loop runs over (decision 0150).
+    TaggedEntities,
 }
 
 impl TypeRef {
@@ -138,6 +140,7 @@ impl TypeRef {
             TypeRef::Descriptor(category) => category.as_str(),
             TypeRef::PrefabDescriptor => "prefab descriptor",
             TypeRef::SceneName => "scene name",
+            TypeRef::TaggedEntities => "tagged entities",
         }
     }
 }

@@ -6,7 +6,7 @@
     "endByte": 60,
     "message": "The entity 'Cube' has no field 'speed'.",
     "notes": [
-      "the fields of Entity are position, rotation, scale, visible, mesh, material, light, body, collider"
+      "the fields of Entity are position, rotation, scale, visible, mesh, material, light, body, collider, tag"
     ]
   }
 ]

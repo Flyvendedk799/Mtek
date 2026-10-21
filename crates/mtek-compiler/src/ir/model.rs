@@ -1183,6 +1183,9 @@ pub struct Entity {
     /// `state`, `behaviors` and `bindings` hold the copies that belong to the instance.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub prefab: Option<PrefabInstance>,
+    /// `tag: "name";` (decision 0150): the group the tag queries find the entity in.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tag: Option<String>,
 }
 
 /// An entity's light component (`spec/materials.md` section 7, decision 0053).

@@ -81,6 +81,7 @@ Flags: **R** required · **W** writable from handlers · **B** bindable · **C**
 | `light` | light schema | — | C (fields W B) |
 | `body` | body schema | — | C |
 | `collider` | collider schema | — | C |
+| `tag` | string | — | C |
 
 ### 3.3 `Camera` (scene-object kind `camera`), `Perspective`, `Orthographic`
 As in `spec/scenes.md` §3, including `exposure: f32 = -1.9145305` (EV100, C, decision 0081). `Perspective { fov_y: f32 = 0.9 (0, π); near: f32 = 0.1 (> 0); far: f32 = 1000.0 (> near) }`, `Orthographic { height: f32 = 10.0 (> 0); near: f32 = 0.1; far: f32 = 1000.0 }`; all projection fields W B.
@@ -187,6 +188,12 @@ Notation: `T` ranges over `f32, vec2, vec3, vec4` (component-wise), `I` over `i3
 | `spawn` | `(prefab descriptor) → entity_ref` | cpu (handlers only) | — | the argument is a prefab literal `Prefab { param: value; }`; params may be run-time values (decision 0064) |
 | `destroy` | `(entity_ref) → ()` | cpu (handlers only) | — | `E5030` for a named entity |
 | `alive` | `(entity_ref) → bool` | cpu | — | false for a pending spawn, a pending removal and a dead reference |
+| `count_tagged` | `(string) → i32` | cpu | — | the live entities with the tag (`spec/scenes.md` §17, decision 0150); the tag is a string constant that some entity or prefab declares (`E5221`, `E5222`) |
+| `first_tagged` | `(string) → entity_ref` | cpu | — | the first live entity with the tag in instance order; a dead reference when there is none |
+| `nearest_tagged` | `(string, vec3) → entity_ref` | cpu | — | the live entity with the tag whose world position is nearest the point; a tie goes to the first in instance order; a dead reference when there is none |
+| `has_tag` | `(entity_ref, string) → bool` | cpu | — | false for a reference that is not alive |
+| `tagged` | `(string) → tagged entities` | cpu | — | only the iterable of a `for` loop, `for r in tagged("rock") { .. }` (`E5224`); skips an entity destroyed before its turn |
+| `destroy_tagged` | `(string) → ()` | cpu (handlers only) | — | queues the removal of every live spawned entity with the tag; `E5223` when a named entity has the tag |
 | `go_to` | `(scene name) → ()` | cpu (handlers only) | — | the argument is the name of a scene of the program, `go_to(Level)` (`E5201` otherwise); switches scene at the start of a later frame, carrying `shared state` over (`spec/scenes.md` §15.2, decision 0141) |
 | `reset` | `() → ()` | cpu (handlers only) | — | restarts the scene that runs from its initial values, at the start of a later frame (`spec/scenes.md` §15.5, decision 0140) |
 | `pause`, `resume` | `() → ()` | cpu (handlers only) | — | stop and restart the game clock: ticks, physics, timers and `update` (`spec/scenes.md` §15.4, decision 0143) |
