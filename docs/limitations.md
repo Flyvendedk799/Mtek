@@ -19,7 +19,7 @@ The release contract of v0.1 is what the specification promises **and** a test p
 
 The reasons and the restrictions of sections 2, 3 and 6 are written by hand in `tools/release-docs/data/limitations.json`; each is anchored to a quotation of the specification that a test looks for, so a reason cannot outlive the sentence it rests on. Where the specification gives no reason beyond "not in v0.1", the entry says so.
 
-## 2. Unsupported features: the `x9xx` diagnostics (7)
+## 2. Unsupported features: the `x9xx` diagnostics (6)
 
 `spec/diagnostics.md` section 3: within each range of codes, the `x9xx` codes mean "specified as not supported in v0.1". They are different from `E9010` (section 3 of this page) on purpose: a limit of the language is not a gap of the build.
 
@@ -28,8 +28,7 @@ The reasons and the restrictions of sections 2, 3 and 6 are written by hand in `
 | `E1901` | bitwise operators not supported | v0.1 | Bitwise operators are not part of the v0.1 language. They are lexed only so that they are rejected with this code instead of a confusing parse error. | [tests/syntax/fail/e1901_bitwise_and.mtek](../tests/syntax/fail/e1901_bitwise_and.mtek) and 2 more |
 | `E4901` | stage not supported | `vertex`/`compute` | A material has exactly one stage function, `fragment`. Custom vertex and compute stages are planned for v0.2. | [tests/syntax/fail/e4901_compute_stage.mtek](../tests/syntax/fail/e4901_compute_stage.mtek) and 3 more |
 | `E5901` | scene switching not supported | Reserved: retired by decision 0141: `go_to(Scene)` switches the active scene, so no program produces it; the code is kept so that the number is not reused | Retired: `go_to(Scene)` switches the active scene (decision 0141), so no program produces this code. It stays in the catalogue so that the number is not reused. | none: no program produces it |
-| `E5901` | scene switching not supported | Reserved: switching the active scene at run time; v0.1 mounts one scene and has no construct that could switch it, so no program produces it | Retired: `go_to(Scene)` switches the active scene (decision 0141), so no program produces this code. It stays in the catalogue so that the number is not reused. | none: no program produces it |
-| `E5902` | transparency not supported | Reserved: v0.1 has only opaque materials and no construct that asks for transparency, so no program produces it | v0.1 has only opaque materials and no construct that asks for transparency, so no program can produce this code: it is reserved. A transparent glTF material is rejected earlier, with E7015. | none: no program produces it |
+| `E5902` | transparency not supported | Reserved: retired by decision 0138: materials are translucent when a colour param has an alpha below 1, so no program produces it; the code is kept so that the number is not reused | Retired: a material colour param with an alpha below 1 makes the draw translucent (decision 0138), so no program produces this code. It stays in the catalogue so that the number is not reused. A transparent glTF material is still rejected with E7015. | none: no program produces it |
 | `E7901` | remote assets not supported | an `http:`, `https:` or other URL as an asset path | Assets are compile-time dependencies that the compiler opens and validates while it checks the program (decision 0015); v0.1 offers no option to load remote assets. | [tests/assets/fail/e7901_remote_asset](../tests/assets/fail/e7901_remote_asset) |
 | `E7902` | node hierarchy instancing not supported | `model: asset` instancing a whole node hierarchy | Entities reference the meshes of a glTF asset individually, which keeps every drawn object a named, inspectable entity; instancing a whole node hierarchy is not provided. | [tests/assets/fail/e7902_model_field](../tests/assets/fail/e7902_model_field) |
 
@@ -53,14 +52,15 @@ The words are reserved for future use (spec/language.md 2.3); using one as a nam
 
 `as` `async` `await` `extern` `impl` `loop` `mod` `move` `mut` `priv` `pub` `static` `super` `trait` `type` `unsafe` `use` `where` `yield` `compute` `vertex` `storage` `uniform` `workgroup` `system` `query` `component`
 
-## 5. Specified, but no program can produce the diagnostic (4)
+## 5. Specified, but no program can produce the diagnostic (5)
 
 These codes are in the catalogue and are marked there. Each stays in the catalogue so that the number is not reused; none has a negative test, because no program of v0.1 can reach it. `tests/semantics/code-coverage-exceptions.json` holds the reasons, and a test fails when one of these codes gains a fixture without leaving the list.
 
 | Code | Title | Mark in the catalogue | Why no program produces it |
 |---|---|---|---|
+| `E5100` | non-opaque color in material parameter | Reserved | Retired by decision 0138: material colour params take any alpha (an alpha below 1 makes the draw translucent), so no program can produce it; the catalogue keeps the code so that the number is not reused. |
 | `E5901` | scene switching not supported | Reserved | Retired by decision 0141: go_to(Scene) switches the active scene, so no program can produce it; the catalogue keeps the code so that the number is not reused. |
-| `E5902` | transparency not supported | Reserved | No construct of v0.1 asks for transparency (spec/materials.md section 2: opaque materials only), so no program can produce it; the context export lists the feature as not supported. |
+| `E5902` | transparency not supported | Reserved | Retired by decision 0138: a material colour param with an alpha below 1 makes the draw translucent, so no program can produce it; the catalogue keeps the code so that the number is not reused. |
 | `E6003` | too many interpolated inputs | Reserved | v0.1 has at most 4 inter-stage variables (spec/materials.md section 3.3) and no custom vertex stage (E4901), so the limit of 16 cannot be reached; custom vertex stages are v0.2. |
 | `W0030` | naming convention | Not implemented | The naming lint is not part of v0.1 (spec/language.md section 3.3 as amended by decision 0102; decision 0070 item 11): neither the compiler nor mtek fmt implements it, the catalogue keeps the code so that the number is not reused, and no program can produce it. |
 
@@ -89,8 +89,8 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 
 | Restriction | Why | Diagnostics | Records and source |
 |---|---|---|---|
-| No vertex or compute stages, no transparency or blending, no shadows, no post-processing, no multiple render targets, no material inheritance, no mip-map generation, no derivatives (`dpdx`), no storage buffers, no texture arrays or cube maps. | Not in v0.1 (spec/materials.md section 10); the specification records no rationale beyond scope. Vertex and compute stages are E4901 and transparency is E5902 (reserved). | `E4901`, `E5902` | [spec/materials.md](../spec/materials.md): "## 10. Not in v0.1" |
-| Every `color` parameter of a material holds an opaque colour (alpha exactly 1.0). | Transparency is not part of v0.1. A constant with another alpha is E5100; a run-time value with another alpha (a write, a binding or a host input) is rejected with E8100 and the previous value stays. Use `vec4` for non-colour four-component data. | `E5100`, `E8100` | [spec/materials.md](../spec/materials.md): "must hold an opaque colour (alpha exactly `1.0`) in v0.1" |
+| No vertex or compute stages, no blend modes other than alpha over, no shadows, no post-processing, no multiple render targets, no material inheritance, no mip-map generation, no derivatives (`dpdx`), no storage buffers, no texture arrays or cube maps. | Not in v0.1 (spec/materials.md section 10); the specification records no rationale beyond scope. Vertex and compute stages are E4901. | `E4901` | [spec/materials.md](../spec/materials.md): "## 10. Not in v0.1" |
+| Translucency is per object: translucent draws are sorted back to front by their centre, blend alpha "over" only, write no depth and are never instanced. | Decision 0138 keeps the small-game transparency to one blend mode, with no order-independent transparency. Intersecting translucent objects can show order artefacts. A host input with the `color-hex-opaque` codec still rejects alpha (E8100). | `E8100` | decisions [0138](../spec/decisions/0138-translucent-pass.md); [spec/materials.md](../spec/materials.md): "Order is per object, not per triangle" |
 | `texture` and `sampler` parameters are fixed when the instance is constructed; a texture cannot be replaced at run time. | Decision 0016 item 2: texture and sampler parameters are construction-only, so resource identity never changes while the program runs; replacing a texture is v0.2. | `E5073` | decisions [0016](../spec/decisions/0016-v0.1-restrictions.md); [spec/decisions/0016-v0.1-restrictions.md](../spec/decisions/0016-v0.1-restrictions.md): "Texture identity fixed per instance." |
 
 ### Scenes and entities
@@ -188,6 +188,5 @@ These codes are in the catalogue and are marked there. Each stays in the catalog
 - `component`
 - `bitwise operators (& | ^ ~ << >>)`
 - `` stage functions other than `fragment` (vertex, compute) ``
-- `transparency (alpha blending)`
 - `remote assets (URLs as asset paths)`
 - `instancing a whole node hierarchy of a glTF asset`

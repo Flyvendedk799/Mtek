@@ -305,12 +305,7 @@ impl<'a> Checker<'a> {
 
     /// Check the default of the param `name` of type `ty`: a constant
     /// expression of that type (`E4031`); a colour may have any alpha (decision 0138).
-    fn param_default(
-        &mut self,
-        name: &Ident,
-        ty: TyId,
-        default: &Expr,
-    ) -> Option<ConstValue> {
+    fn param_default(&mut self, name: &Ident, ty: TyId, default: &Expr) -> Option<ConstValue> {
         let error = self.out.interner.is_error(ty);
         let actual = self.check(default, (!error).then_some(ty));
         let folded = self.fold(default);
@@ -354,9 +349,7 @@ impl<'a> Checker<'a> {
             return None;
         }
         match folded {
-            Folded::Value(value) => {
-                Some(value)
-            }
+            Folded::Value(value) => Some(value),
             Folded::NotConstant(_) | Folded::Unknown => None,
         }
     }

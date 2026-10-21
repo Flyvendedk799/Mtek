@@ -334,7 +334,8 @@ impl Code {
     /// in v0.1"), except the internal error `E9999`.
     #[must_use]
     pub fn is_unsupported_feature(self) -> bool {
-        !matches!(self, Code::E9999 | Code::E5901 | Code::E5902) && self.short().get(2..3) == Some("9")
+        !matches!(self, Code::E9999 | Code::E5901 | Code::E5902)
+            && self.short().get(2..3) == Some("9")
     }
 
     /// The anchor of this code inside `spec/diagnostics.md`, for the `docs`

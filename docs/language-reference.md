@@ -65,6 +65,7 @@ compute  vertex  storage  uniform  workgroup  system  query  component
 - Event names after `on` (`key_down`, `collision_enter`, …), resolved against the registry.
 - `after`, `every` — a timer statement when the word is followed by `(…)` and a block (§7.11, decision 0142); anywhere else an ordinary name.
 - `shared` — before `state` in a scene, marks a shared state (`spec/scenes.md` §15.2, decision 0141).
+- `saved`, `setting` — before `state` in a scene (after `shared`, if any), mark a persistent state (`spec/scenes.md` §16, decisions 0145 and 0146). Anywhere else they are ordinary names.
 
 2.5 **Literals.**
 
@@ -769,6 +770,7 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `atan2` | `(y: T, x: T) -> T` | both | yes | no | Angle of the point `(x, y)` in radians; note the argument order `atan2(y, x)`. |
 | `ceil` | `(x: T) -> T` | both | yes | no | Smallest integer value not below `x`. |
 | `clamp` | `(x: T, lo: T, hi: T) -> T`<br>`(x: I, lo: I, hi: I) -> I` | both | yes | no | Limits `x` to the range `lo..hi`. |
+| `clear_saved` | `() -> ()` | cpu | no | yes | Deletes everything stored. |
 | `cos` | `(x: T) -> T` | both | yes | no | Cosine of an angle in radians. |
 | `cross` | `(a: vec3, b: vec3) -> vec3` | both | yes | no | Cross product of two 3D vectors. |
 | `degrees` | `(x: T) -> T` | both | yes | no | Radians to degrees. |
@@ -784,6 +786,7 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `is_key_down` | `(key: Key) -> bool` | cpu | no | no | Whether the key was down at the end of input handling in the current frame. |
 | `is_muted` | `() -> bool` | cpu | no | no | Whether audio is muted with `set_muted`. |
 | `length` | `(x: T) -> f32` | both | yes | no | Length of a vector, or the absolute value of a scalar. |
+| `load` | `() -> bool` | cpu | no | yes | Reads saved values back; false if none. |
 | `log` | `(x: T) -> T` | both | yes | no | Natural logarithm. |
 | `log2` | `(x: T) -> T` | both | yes | no | Base-2 logarithm. |
 | `max` | `(a: T, b: T) -> T`<br>`(a: I, b: I) -> I` | both | yes | no | Larger of two values, component-wise. |
@@ -805,6 +808,7 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `round` | `(x: T) -> T` | both | yes | no | Nearest integer value, halves to even. |
 | `sample` | `(t: texture, s: sampler, uv: vec2) -> vec4` | gpu | no | no | Filtered texel of `t` at `uv`. `texture` and `sampler` parameters may be used only as direct arguments to `sample`. |
 | `saturate` | `(x: T) -> T` | both | yes | no | Limits `x` to 0..1. |
+| `save` | `() -> ()` | cpu | no | yes | Writes the saved and setting state to storage. |
 | `set_muted` | `(muted: bool) -> ()` | cpu | no | yes | Mutes or unmutes all audio; the volume is kept. |
 | `set_volume` | `(volume: f32) -> ()` | cpu | no | yes | Sets the global volume of every sound and the music (default 1.0, range 0..4). |
 | `sign` | `(x: T) -> T` | both | yes | no | -1, 0 or 1 according to the sign of `x`. |
@@ -833,7 +837,7 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `angular_velocity` | `vec3` | Dynamic, Kinematic | Angular velocity as of the last completed tick. Read-only. |
 | `linear_velocity` | `vec3` | Dynamic, Kinematic | Linear velocity as of the last completed tick. Read-only. |
 
-## Part C. Features of this build (199)
+## Part C. Features of this build (202)
 
 The list below is `supported.features` of `mtek context`, printed by the compiler this document was generated with. It is derived by the compiler from its construct table and from the registry, never typed in. A feature is supported when a test that would fail without it passes in a recorded environment (`spec/testing.md`); `docs/coverage-matrix.md` shows which program or fixture exercises each one.
 
@@ -857,9 +861,9 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 `event:collision_enter` `event:collision_exit` `event:key_down` `event:key_up` `event:pointer_down` `event:pointer_move` `event:pointer_up`
 
-### Functions (90)
+### Functions (93)
 
-`function:abs` `function:acos` `function:alive` `function:asin` `function:asset.glb` `function:asset.linear_texture` `function:asset.sound` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:clamp` `function:color.linear` `function:color.srgb` `function:cos` `function:cross` `function:degrees` `function:destroy` `function:distance` `function:dot` `function:easing.in_cubic` `function:easing.in_out_cubic` `function:easing.in_out_quad` `function:easing.in_out_sine` `function:easing.in_quad` `function:easing.out_back` `function:easing.out_bounce` `function:easing.out_cubic` `function:easing.out_elastic` `function:easing.out_quad` `function:exp` `function:exp2` `function:floor` `function:fract` `function:go_to` `function:hud.button` `function:hud.rect` `function:hud.text` `function:inverse_sqrt` `function:is_key_down` `function:is_muted` `function:length` `function:lighting.pbr` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:normalize` `function:pause` `function:paused` `function:play` `function:play_at` `function:play_music` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:reflect` `function:reset` `function:resume` `function:round` `function:sample` `function:sampler.linear_clamp` `function:sampler.linear_repeat` `function:sampler.nearest_clamp` `function:sampler.nearest_repeat` `function:saturate` `function:set_muted` `function:set_volume` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:stop_music` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc`
+`function:abs` `function:acos` `function:alive` `function:asin` `function:asset.glb` `function:asset.linear_texture` `function:asset.sound` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:clamp` `function:clear_saved` `function:color.linear` `function:color.srgb` `function:cos` `function:cross` `function:degrees` `function:destroy` `function:distance` `function:dot` `function:easing.in_cubic` `function:easing.in_out_cubic` `function:easing.in_out_quad` `function:easing.in_out_sine` `function:easing.in_quad` `function:easing.out_back` `function:easing.out_bounce` `function:easing.out_cubic` `function:easing.out_elastic` `function:easing.out_quad` `function:exp` `function:exp2` `function:floor` `function:fract` `function:go_to` `function:hud.button` `function:hud.rect` `function:hud.text` `function:inverse_sqrt` `function:is_key_down` `function:is_muted` `function:length` `function:lighting.pbr` `function:load` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:normalize` `function:pause` `function:paused` `function:play` `function:play_at` `function:play_music` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:reflect` `function:reset` `function:resume` `function:round` `function:sample` `function:sampler.linear_clamp` `function:sampler.linear_repeat` `function:sampler.nearest_clamp` `function:sampler.nearest_repeat` `function:saturate` `function:save` `function:set_muted` `function:set_volume` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:stop_music` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc`
 
 ### Type methods (10)
 
@@ -887,7 +891,7 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 What the build does **not** support is on [limitations.md](limitations.md); `supported.notSupported` of `mtek context` has the same list.
 
-## Part D. Diagnostics (226 codes)
+## Part D. Diagnostics (230 codes)
 
 Every diagnostic has a stable code: `E` for an error, `W` for a warning, then four digits; the first digit is the area. The full catalogue, the JSON form (`mtek check --format json`), the human rendering and the suggested edits are in [spec/diagnostics.md](../spec/diagnostics.md).
 
@@ -898,7 +902,7 @@ Every diagnostic has a stable code: `E` for an error, `W` for a warning, then fo
 | `2xxx` | names, scopes, modules | 14 |
 | `3xxx` | types, values, constant evaluation | 35 |
 | `4xxx` | functions, effects, execution domains, material stages | 15 |
-| `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 51 |
+| `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 55 |
 | `6xxx` | GPU layout, target profile, generated-shader validation | 4 |
 | `7xxx` | assets | 34 |
 | `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 31 |

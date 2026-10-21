@@ -23,10 +23,10 @@
       }
     },
     "E5902": {
-      "reason": "v0.1 has only opaque materials and no construct that asks for transparency, so no program can produce this code: it is reserved. A transparent glTF material is rejected earlier, with E7015.",
+      "reason": "Retired: a material colour param with an alpha below 1 makes the draw translucent (decision 0138), so no program produces this code. It stays in the catalogue so that the number is not reused. A transparent glTF material is still rejected with E7015.",
       "source": {
-        "file": "spec/materials.md",
-        "quote": "Transparency is not part of v0.1"
+        "file": "spec/diagnostics.md",
+        "quote": "retired by decision 0138"
       }
     },
     "E7901": {

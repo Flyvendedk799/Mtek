@@ -1716,6 +1716,18 @@
       "doc": "Limits `x` to 0..1."
     },
     {
+      "name": "save",
+      "signatures": [
+        "() -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Writes the saved and setting state to storage."
+    },
+    {
       "name": "set_muted",
       "signatures": [
         "(muted: bool) -> ()"

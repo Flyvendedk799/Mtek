@@ -15,7 +15,7 @@ Lights in Mtek use physical units, and the camera has an exposure, as a photogra
 7. **Ambient light.** The scene fields `ambient_color` and `ambient_intensity` (default {{default Scene.ambient_intensity}}, so there is none unless you ask) add `(1 - metallic) * base_color * ambient_color * ambient_intensity` to every lit surface, and that sum is multiplied by the same exposure scale as the lights. Compared with a light of `E` lux shining straight at a white surface, which contributes `E / pi`, an ambient intensity `A` is as bright as a light of `pi * A` lux. Raising the exposure to suit a bright sun therefore makes a fixed ambient almost invisible, and the other way round. Metals receive no ambient light. Both fields are constants.
 8. **There is no tone mapping.** Lit results above 1.0 clip to white. A very bright light is visible as a saturated area, not as an error.
 9. **Colour spaces.** A `color` is linear. A colour literal `#rrggbb` is sRGB and is converted exactly when the program is compiled; `color.srgb(vec3, a)` converts sRGB components at run time and `color.linear(vec3, a)` takes linear components. The image is written through an sRGB view, so the display encoding is applied once, at the end. An `Unlit` colour therefore appears on the screen as the colour you wrote. Textures are decoded as sRGB unless declared with `asset.linear_texture` (see [Textures, samplers and assets](textures-samplers-and-assets.md)).
-10. **Opaque colours.** Every `color` parameter of a material has alpha exactly 1.0 (`MTEK-E5100` for a constant, `MTEK-E8100` at run time). Alpha that a fragment stage returns is ignored (`MTEK-W5101` when it is a constant other than 1.0).
+10. **Colour alpha.** A `color` parameter of a material takes any alpha. Below 1 the draw is translucent: it is drawn after the opaque draws, back to front, and blends with what is behind it (decision 0138). A constant alpha returned by a fragment stage only blends while the draw is translucent (`MTEK-W5101`).
 
 The fields of the objects involved, as the compiler knows them:
 
@@ -162,14 +162,14 @@ scene Demo {
 
 The number of lights is known when the program is compiled, so lights live on named entities of the scene (`MTEK-E5110`). To get a lamp you can move, give a named entity a `PointLight` and bind its `position`.
 
-### A colour that is not opaque
+### A translucent colour
 
-```mtek wrong=MTEK-E5100 wrap=entity
+```mtek wrap=entity
 mesh: Box {};
 material: Unlit { color: #ff000080 };
 ```
 
-Colour parameters are opaque (`MTEK-E5100`: the alpha of `#ff000080` is 0.5). Transparency is not part of this version, and `vec4` is the type for four-component data that is not a colour.
+The alpha of `#ff000080` is 0.5, so the box is translucent. To fade it, bind the alpha: `color: bind(color.linear(vec3(1.0, 0.0, 0.0), 1.0 - t))`. `vec4` is the type for four-component data that is not a colour.
 
 ### Aiming the sun with `position`
 

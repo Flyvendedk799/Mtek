@@ -132,6 +132,7 @@
       "function:sampler.nearest_clamp",
       "function:sampler.nearest_repeat",
       "function:saturate",
+      "function:save",
       "function:set_muted",
       "function:set_volume",
       "function:sign",

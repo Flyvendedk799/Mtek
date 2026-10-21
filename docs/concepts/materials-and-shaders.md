@@ -8,8 +8,8 @@ A material is the one place where Mtek code runs on the GPU. It is a list of typ
 
 1. **Shape.** `material Name { param ...; fragment(input: SurfaceInput) -> color { ... } }`. A material has zero or more parameters and exactly one `fragment` stage (`MTEK-E4020` if it has none, `MTEK-E2002` for a second one). It has no state, no handlers and no CPU code (`MTEK-E1040`). A `vertex` or `compute` stage is `MTEK-E4901`: the vertex stage is fixed in this version.
 2. **The stage.** `fragment` takes one parameter of type `SurfaceInput`, with any name, and returns a `color` (`MTEK-E4021` otherwise). `SurfaceInput` has the fields `local_position: vec3`, `world_position: vec3`, `world_normal: vec3`, `uv: vec2`. `world_normal` is re-normalised for you; `uv` has its origin at the top left. The compiler notices which fields the stage reads, and only those are passed from the vertex stage; a mesh that lacks an attribute the stage reads is rejected when the program is compiled (`MTEK-E7010`).
-3. **Pixels are opaque.** The alpha you return is ignored and the pixel is written with alpha 1.0; a constant alpha other than 1.0 gives the warning `MTEK-W5101`. There is no blending and no transparency in this version.
-4. **Parameters.** `param name: T = default;`. `T` is `bool`, `i32`, `u32`, `f32`, `vec2`, `vec3`, `vec4`, `mat4`, `quat`, `color`, a `struct` of those, an array of those, `texture` or `sampler` (anything else, such as `string`, is `MTEK-E4030`). The default is a constant (`MTEK-E4031`). Inside the stage a parameter is a read-only value (`MTEK-E3061` on assignment). A `color` parameter is opaque (`MTEK-E5100`). A material has at most 8 texture and sampler parameters together (`MTEK-E6002`).
+3. **Alpha comes from the colour params.** The pixel is written with the alpha you return. It blends with what is behind it only while a `color` param of the instance has an alpha below 1: the draw is then translucent, drawn after the opaque ones and back to front (decision 0138). A constant returned alpha other than 1.0 gives the warning `MTEK-W5101`.
+4. **Parameters.** `param name: T = default;`. `T` is `bool`, `i32`, `u32`, `f32`, `vec2`, `vec3`, `vec4`, `mat4`, `quat`, `color`, a `struct` of those, an array of those, `texture` or `sampler` (anything else, such as `string`, is `MTEK-E4030`). The default is a constant (`MTEK-E4031`). Inside the stage a parameter is a read-only value (`MTEK-E3061` on assignment). A `color` parameter takes any alpha; below 1 the draw is translucent. A material has at most 8 texture and sampler parameters together (`MTEK-E6002`).
 5. **The stage reads nothing else.** It may use the input, the parameters, constants and pure functions. It cannot capture scene state, entity fields, `frame.*`, `self` or a `cpu fn` (`MTEK-E4040`). To use `frame.time` in a material, add a parameter and bind it in the instance: `phase: bind(frame.time)`.
 6. **GPU rules apply to the stage and everything it calls**: constant loop bounds, no strings, no CPU-only intrinsics, no recursion. See [Functions and effects](functions-and-effects.md).
 7. **Parameters are never compiled into the shader.** A value that changes at run time is written to a buffer. Changing a parameter, even every frame, never builds a new shader or pipeline.
@@ -42,7 +42,7 @@ The parameters of the built-in materials:
 - Only the stage function and its pure callees reach the GPU, so you can read a program and know exactly which code runs where. Nothing is moved to the GPU because it looks mathematical.
 - A stage cannot capture state, because capturing would hide how a value gets to the GPU. Passing it through a parameter makes the transport visible in the entity that uses the material, where a `bind` shows which state feeds it.
 - Parameters outside the shader code mean no recompiling and no stalls on the first frame in which a colour changes, which is what makes live tuning cheap.
-- The fixed vertex stage and the single opaque target keep every material interchangeable on every mesh the language can draw.
+- The fixed vertex stage and the single colour target keep every material interchangeable on every mesh the language can draw.
 
 ## Examples
 
@@ -286,7 +286,7 @@ scene Demo {
 }
 ```
 
-This compiles with the warning `MTEK-W5101`: the pixel is drawn opaque. Return `1.0` as alpha to remove the warning.
+This compiles with the warning `MTEK-W5101`: `Ghost` has no colour param, so its draws are never translucent and the pixel looks opaque. Return the alpha of a `color` param, or `1.0`, to remove the warning.
 
 ## See also
 
@@ -315,7 +315,6 @@ This compiles with the warning `MTEK-W5101`: the pixel is drawn opaque. Return `
 | [`MTEK-E5003`](../../spec/diagnostics.md#mtek-e5003) | missing required field \| |
 | [`MTEK-E5070`](../../spec/diagnostics.md#mtek-e5070) | write to bound field |
 | [`MTEK-E5073`](../../spec/diagnostics.md#mtek-e5073) | write to construction-only field \| |
-| [`MTEK-E5100`](../../spec/diagnostics.md#mtek-e5100) | non-opaque color in material parameter \| |
 | [`MTEK-E6002`](../../spec/diagnostics.md#mtek-e6002) | too many material resources |
 | [`MTEK-E7010`](../../spec/diagnostics.md#mtek-e7010) | mesh lacks required attribute |
 | [`MTEK-W5101`](../../spec/diagnostics.md#mtek-w5101) | fragment alpha ignored |

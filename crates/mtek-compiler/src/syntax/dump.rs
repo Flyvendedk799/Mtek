@@ -27,14 +27,10 @@ use std::fmt::Write as _;
 use super::ast::{
     ArmBody, ArrayLength, ArrayLengthKind, Bind, Block, ConstDecl, DescField, ElseBranch,
     EntityDecl, EntityMember, EnumDecl, Expr, ExprKind, FieldInit, FieldValue, FnDecl, ForIter,
-    ForStmt, Handler, HandlerArg, IfStmt, ImportDecl, Item, ItemKind, LifecycleFn, LocalDecl,
-    MatchArm, MaterialDecl, MaterialMember, Module, Param, ParamDecl, Pattern, PatternKind,
-    Persist, PrefabDecl, SceneDecl, SceneMember, SceneObject, StageFn, StateDecl, Stmt, StructDecl,
-    StructField, Type, TypeKind,
     ForStmt, Handler, HandlerArg, IfStmt, ImportDecl, InterpPart, Item, ItemKind, LifecycleFn,
     LocalDecl, MatchArm, MaterialDecl, MaterialMember, Module, Param, ParamDecl, Pattern,
-    PatternKind, PrefabDecl, SceneDecl, SceneMember, SceneObject, StageFn, StateDecl, Stmt,
-    StructDecl, StructField, Type, TypeKind,
+    PatternKind, Persist, PrefabDecl, SceneDecl, SceneMember, SceneObject, StageFn, StateDecl,
+    Stmt, StructDecl, StructField, Type, TypeKind,
 };
 
 /// Lists are kept on one line when they fit in this many columns.

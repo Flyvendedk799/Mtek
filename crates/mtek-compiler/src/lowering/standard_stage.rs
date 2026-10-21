@@ -1022,10 +1022,7 @@ mod tests {
     fn the_wrapper_writes_the_fragment_alpha_and_renormalises_the_world_normal() {
         let shader = build_standard_stage(&material(&SurfaceField::ALL, None)).expect("built");
         let text = print_module(&shader.module).text;
-        assert!(
-            text.contains("    return mtek_color;\n"),
-            "{text}"
-        );
+        assert!(text.contains("    return mtek_color;\n"), "{text}");
         assert!(
             text.contains(
                 "    let mtek_surface = MtekSurfaceInput(mtek_in.local_position, \

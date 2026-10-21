@@ -78,7 +78,8 @@ export function checkFeatures(i: FeatureInputs): Mismatch[] {
       { where: "spec/language.md 2.3 (reserved for future use)", items: words },
     ),
   );
-  const { unsupported } = x9xxCodes(i.catalogue);
+  // A retired x9xx code (E5901 by decision 0141, E5902 by decision 0138) names a feature that is now supported.
+  const unsupported = x9xxCodes(i.catalogue).unsupported.filter((entry) => !/retired by decision/.test(entry.trigger));
   const phrases = splitNotSupported(i.compiler.notSupported, words).phrases;
   if (phrases.length !== unsupported.length) {
     found.push(
