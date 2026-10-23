@@ -1148,7 +1148,7 @@ interface ParticleBatch {
   depth: number;
 }
 
-const PARTICLE_DRAW_CAP = 256;
+const PARTICLE_DRAW_CAP = 4096;
 
 function writeBasis(out: Float32Array, at: number, axes: Float64Array, axis: number, size: number): void {
   out[at] = (axes[axis] ?? 0) * size;

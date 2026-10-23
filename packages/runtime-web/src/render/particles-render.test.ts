@@ -135,12 +135,12 @@ describe("particles in the frame (decision 0173)", () => {
   });
 
   it("warn once when more are alive than are drawn, and draw the cap", async () => {
-    const items: Item[] = Array.from({ length: 5 }, (_, z) => ({ color: OPAQUE, z, emitter: true }));
+    const items: Item[] = Array.from({ length: 65 }, () => ({ color: OPAQUE, z: 0, emitter: true }));
     const { host, debug, app, reported } = await mount(items);
     debug.step(3, 0.016);
     debug.step(3, 0.016);
     expect(reported.map((d) => d.code)).toEqual(["MTEK-W8210"]);
-    expect(lastDraws(host).filter(isParticles).reduce((sum, draw) => sum + draw.instanceCount, 0)).toBe(256);
+    expect(lastDraws(host).filter(isParticles).reduce((sum, draw) => sum + draw.instanceCount, 0)).toBe(4096);
     app.dispose();
   });
 
