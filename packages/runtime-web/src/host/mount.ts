@@ -456,6 +456,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
             })(),
           });
     const services: CpuServices = {
+      aspectRatio: () => surface === undefined ? 1 : surface.size.width / Math.max(1, surface.size.height),
       game,
       random: () => generator.nextF32(),
       isKeyDown: (code) => input.isKeyDown(code),

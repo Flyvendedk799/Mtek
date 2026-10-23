@@ -2080,6 +2080,18 @@
       "doc": "Writes the saved and setting state to storage."
     },
     {
+      "name": "screen_to_world",
+      "signatures": [
+        "(point: vec2, z: f32) -> vec3"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Canvas NDC to the world Z plane `z`; parallel rays return NaN x/y."
+    },
+    {
       "name": "send",
       "signatures": [
         "(target: entity_ref, message: string) -> ()"
@@ -2270,6 +2282,18 @@
       "cpuSemantics": "",
       "since": "M1",
       "doc": "Integer part of `x`, rounding toward zero."
+    },
+    {
+      "name": "world_to_screen",
+      "signatures": [
+        "(point: vec3) -> vec2"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "World position to canvas NDC, using the active camera and viewport."
     }
   ],
   "namespaces": [

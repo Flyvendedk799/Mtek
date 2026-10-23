@@ -2282,6 +2282,8 @@ fn tag_member(function: &str) -> Option<&'static str> {
         "send" => "send",
         "overlap_spheres" => "overlapSpheres",
         "overlap_boxes" => "overlapBoxes",
+        "screen_to_world" => "screenToWorld",
+        "world_to_screen" => "worldToScreen",
         "first_tagged" => "firstTagged",
         "nearest_tagged" => "nearestTagged",
         "has_tag" => "hasTag",

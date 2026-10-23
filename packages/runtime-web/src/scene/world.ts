@@ -13,6 +13,8 @@
  */
 import type { MtekManifest } from "../abi/manifest-types.js";
 import { overlapSpheres, overlapBoxes } from "../math/overlap.js";
+import { screenToWorld, worldToScreen } from "../math/screen.js";
+import type { Vec2 } from "../math/types.js";
 import {
   RUNTIME_DIAGNOSTIC_CATALOGUE,
   makeRuntimeDiagnostic,
@@ -91,6 +93,8 @@ export const CONTEXT_MEMBERS = [
   "send",
   "overlapSpheres",
   "overlapBoxes",
+  "screenToWorld",
+  "worldToScreen",
   "print",
   "goTo",
   "reset",
@@ -180,6 +184,8 @@ export interface ParamSink {
 
 /** The CPU intrinsics generated code reaches through `ctx` (`spec/runtime-abi.md` section 4.2). */
 export interface CpuServices {
+  /** Current render-target aspect ratio, also used by the renderer. Defaults to 1 in isolated worlds. */
+  aspectRatio?(): number;
   /** `random()`: an f32 in `[0, 1)`. */
   random(): number;
   /** `is_key_down`: the delivered key state. `code` is a DOM `KeyboardEvent.code`. */
@@ -584,6 +590,8 @@ export class World {
       refField: (ref: unknown, field: unknown): unknown => this.refField(ref, field),
       overlapSpheres,
       overlapBoxes,
+      screenToWorld: (point: Vec2, z: number): Vec3 => screenToWorld(this.camera, services.aspectRatio?.() ?? 1, point, z),
+      worldToScreen: (point: Vec3): Vec2 => worldToScreen(this.camera, services.aspectRatio?.() ?? 1, point),
       send: (ref: unknown, message: unknown): void => {
         if (typeof message !== "string") throw new RuntimeInternalError("ctx.send expected a string message.");
         if (this.dynamic.alive(ref)) this.messages.push({ target: ref as EntityRef, value: message });

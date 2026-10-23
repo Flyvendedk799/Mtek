@@ -40,6 +40,16 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
     let unit = exact(TypeRef::Unit);
     vec![
         function(
+            "screen_to_world", Domain::Cpu, false, Milestone::M1,
+            "Canvas NDC to the world Z plane `z`; parallel rays return NaN x/y.",
+            vec![sig(&[p("point", exact(TypeRef::Vec2)), p("z", F32)], vec3)],
+        ),
+        function(
+            "world_to_screen", Domain::Cpu, false, Milestone::M1,
+            "World position to canvas NDC, using the active camera and viewport.",
+            vec![sig(&[p("point", vec3)], exact(TypeRef::Vec2))],
+        ),
+        function(
             "overlap_spheres", Domain::Cpu, false, Milestone::M1,
             "World-space sphere intersection, including touching. No physics required.",
             vec![sig(&[p("a", vec3), p("radius_a", F32), p("b", vec3), p("radius_b", F32)], exact(TypeRef::Bool))],

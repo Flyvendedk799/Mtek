@@ -114,10 +114,10 @@ scene Arcade {
         set_volume(volume);
     }
 
-    // The mute button: a click in the top-left corner of the canvas, where the speaker is drawn. Pointer
-    // positions are normalised device coordinates: x right and y up, both from -1 to 1.
+    // Project the click onto the speaker's world plane, so its hit area follows the camera and aspect ratio.
     on pointer_down(event: PointerEvent) {
-        if event.position.x < -0.7 && event.position.y > 0.6 {
+        let at = screen_to_world(event.position, 0.0);
+        if abs(at.x + 5.2) <= 0.4 && abs(at.y - 2.7) <= 0.35 {
             muted = !muted;
             set_muted(muted);
         }

@@ -371,7 +371,7 @@ fn an_empty_project_lists_the_signature_of_every_built_in() {
     ));
     assert!(has("asset.texture(path: string) -> texture"));
     assert!(has(
-        "spawn(prefab: prefab descriptor) -> entity_ref [handlers and lifecycle functions only]"
+        "spawn(prefab: prefab descriptor) -> entity_ref [handler/lifecycle only]"
     ));
     assert!(has("frame.delta: f32"));
 

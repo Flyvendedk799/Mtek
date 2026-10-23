@@ -171,7 +171,7 @@ fn function_line(name: &str, def: &IntrinsicDef, doc: &str) -> String {
     if def.handlers_only {
         // Only the CPU side has handlers: the restriction subsumes `cpu only`.
         tags.clear();
-        tags.push("handlers and lifecycle functions only");
+        tags.push("handler/lifecycle only");
     }
     if !tags.is_empty() {
         let _ = write!(line, " [{}]", tags.join(", "));
