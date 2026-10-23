@@ -1037,6 +1037,17 @@ fail("e7019_skin", (() => {
   return m.glb();
 })());
 
+// A cubic spline stays E7019 (decision 0156): three output values per key.
+fail("e7019_cubic_spline", (() => {
+  const m = tri();
+  const input = m.accessor(f32(0, 1), { componentType: FLOAT, type: "SCALAR", count: 2, min: [0], max: [1] });
+  const output = m.accessor(f32(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0), { componentType: FLOAT, type: "VEC3", count: 6 });
+  m.json.animations = [
+    { channels: [{ sampler: 0, target: { node: 0, path: "translation" } }], samplers: [{ input, output, interpolation: "CUBICSPLINE" }] },
+  ];
+  return m.glb();
+})());
+
 // ----- declarations ----------------------------------------------------------
 
 const declaring = (extra) => `${extra}

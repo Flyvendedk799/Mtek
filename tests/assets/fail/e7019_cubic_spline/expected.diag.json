@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E7019",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The animation 'animation_0' uses cubic-spline interpolation; the v0.1 profile plays LINEAR and STEP only.",
+    "notes": [
+      "the problem is in the file 'models/model.glb'",
+      "help: export the clip with LINEAR or STEP interpolation"
+    ]
+  }
+]
