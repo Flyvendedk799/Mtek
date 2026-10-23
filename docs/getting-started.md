@@ -382,6 +382,8 @@ built 'hello-mtek' (release): 9 files in dist, build <build id>; 0 errors, 0 war
   command fails, never passes (`spec/tooling.md` section 6, [`README.md`](../README.md)).
 * `mtek context --entry src/main.mtek --format json` exports the language and your project as
   JSON for an AI agent; `mtek inspect --ir` shows what the compiler made of your program.
+* [Making a game](making-games.md) shows scenes, saved scores, a HUD, sound and how to put a
+  game on itch.io, starting from `mtek new --template game`.
 * [`examples/`](../examples) has three larger programs: a configurator with a generated chair,
   a physics playground, and `pulse-cube`, which is this project.
 * [`spec/`](../spec/README.md) is the language specification. Every diagnostic code is in

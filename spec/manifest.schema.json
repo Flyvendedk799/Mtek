@@ -590,7 +590,8 @@
             }
           }
         },
-        "storage": { "type": "string", "pattern": "^[A-Za-z0-9_.-]{1,64}$", "description": "The storage name of saved state and settings (decision 0145): the localStorage key is mtek.save.<storage>. Present when a scene of the program has a saved or setting state." }
+        "storage": { "type": "string", "pattern": "^[A-Za-z0-9_.-]{1,64}$", "description": "The storage name of saved state and settings (decision 0145): the localStorage key is mtek.save.<storage>. Present when a scene of the program has a saved or setting state." },
+        "legacyStorage": { "type": "string", "pattern": "^[A-Za-z0-9_.-]{1,64}$", "description": "The storage name earlier builds used (the project name), present when mtek.toml sets a save id and migrate_saves = true (decision 0179): the runtime copies saves found under mtek.save.<legacyStorage> to the new key once." }
       }
     },
     "camera": {

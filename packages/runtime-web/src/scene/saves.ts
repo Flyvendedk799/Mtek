@@ -169,6 +169,8 @@ export class GameSaves {
     private readonly report: (problem: SaveProblem) => void,
     /** Set when the page's storage could not be reached and `storage` is an in-memory stand-in: the first save says so. */
     private readonly unavailable = false,
+    /** `game.legacyStorage`: the pre-0179 name whose saves a program with a save id adopts once (decision 0179). */
+    private readonly legacyNamespace: string | undefined = undefined,
   ) {}
 
   /** Whether the program has persistent state at all. */
@@ -226,7 +228,9 @@ export class GameSaves {
   clear(): void {
     if (this.namespace === undefined) return;
     try {
-      this.storage.removeItem(saveKey(this.namespace));
+      // With a legacy name the key stays, empty, so that the old saves are not adopted again (decision 0179).
+      if (this.legacyNamespace === undefined) this.storage.removeItem(saveKey(this.namespace));
+      else this.storage.setItem(saveKey(this.namespace), JSON.stringify({ format: FORMAT, values: {} }));
     } catch (error) {
       this.report({ code: "W5403", message: `Clearing the saved data failed: ${errorText(error)}.` });
     }
@@ -245,6 +249,11 @@ export class GameSaves {
     let text: string | null;
     try {
       text = this.storage.getItem(saveKey(this.namespace));
+      if (text === null && this.legacyNamespace !== undefined) {
+        // Adopt the saves of the old key once: copy them to the new key, which then wins (decision 0179).
+        text = this.storage.getItem(saveKey(this.legacyNamespace));
+        if (text !== null) this.storage.setItem(saveKey(this.namespace), text);
+      }
     } catch {
       return {};
     }

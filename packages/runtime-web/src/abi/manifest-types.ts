@@ -316,6 +316,8 @@ export interface MtekGame {
   readonly scenes?: readonly MtekGameScene[];
   /** The storage name of saved state and settings (`localStorage` key `mtek.save.<storage>`); present when a scene has any (decision 0145). */
   readonly storage?: string;
+  /** The storage name older builds used (the project name): a program with a save id adopts its saves once (decision 0179). */
+  readonly legacyStorage?: string;
 }
 
 export interface MtekCamera {

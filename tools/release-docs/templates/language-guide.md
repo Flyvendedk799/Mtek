@@ -164,7 +164,7 @@ entity Lamp {
 ```
 
 - The default exposure {{default Camera.exposure}} turns 1 lux into a white diffuse surface. For `E` lux use `exposure: log2(E / 3.77)` ({{exposure-for 500}} for 500 lux, {{exposure-for 100000}} for the sun). Ambient light (`ambient_intensity`, default {{default Scene.ambient_intensity}}) is scaled by the exposure too, and `A` is as bright as `pi * A` lux. Nothing is tone mapped: above 1.0 clips. At most 4 lights, only on named entities (`MTEK-E5111`, `MTEK-E5110`). `Pbr` and `lighting.pbr` are lit; `Unlit` is not.
-- A camera has a `target` or a `rotation` (`MTEK-E5010`). Colour parameters are opaque (`MTEK-E5100`); a returned alpha is ignored.
+- A camera has a `target` or a `rotation` (`MTEK-E5010`). A returned alpha blends only while a colour parameter of the instance has an alpha below 1; otherwise it is ignored (`MTEK-W5101`).
 
 ## 8. Materials, textures, assets
 

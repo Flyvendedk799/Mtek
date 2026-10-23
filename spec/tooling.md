@@ -13,7 +13,7 @@
 | `mtek build [--target web] [--mode release\|dev\|test\|preview] [--loop-budget N] [--release [--itch]] [--out DIR] [--format human\|json] [PATH]` | M1 (`preview`: M6; `--release`: decision 0136) | produce `dist/` (`spec/runtime-abi.md` §2). `--target` accepts only `web` in v0.1 (the default; any other value is a usage error). `--release` packages a game (§2.1) |
 | `mtek dev [--port N] [--open] [PATH]` | M1 (reload: M3) | build, serve, watch, rebuild; candidate-based hot reload from M3 |
 | `mtek inspect --ir\|--bindings\|--shaders\|--assets [--format human\|json] [PATH]` | M1 (`--ir`), M2 (`--shaders`, `--bindings`), M4 (`--assets`) | inspection (`spec/gpu-layout.md` §10; the views are decision 0044; `--assets` is the packaged assets of `spec/assets.md` §4, decision 0058) |
-| `mtek new NAME [--template demo\|game]` | M3 | scaffold a project (`mtek.toml`, `src/main.mtek`, `.gitignore`). `demo` (the default) is the Demo scene; `game` is a title scene, a run, tags and a saved score |
+| `mtek new NAME [--template demo\|game]` | M3 | scaffold a project (`mtek.toml`, `src/main.mtek`, `.gitignore`). `demo` (the default) is the Demo scene; `game` is a title scene, a run, tags and a saved score, and gets a `[project] id` for its saves (decision 0179) |
 | `mtek fmt [--check] [PATHS…]` | M6 | canonical formatter |
 | `mtek test [--allow-not-run] [--format human\|json] [PATH]` | M6 | run a project's declarative test fixtures (§6; decision 0074) |
 | `mtek context --entry FILE [--symbol NAME…] --format json` | M6 | AI context export (`spec/ai-and-benchmarks.md` §2; `--max-bytes N` defaults to 30000; format `spec/context.schema.json`; exit codes, `--entry` and the failure modes are decision 0072) |
@@ -64,6 +64,8 @@ name = "pulse-cube"          # required; [a-z0-9-]+
 language = "0.1"             # required; must equal the compiler's language version (E9001)
 entry = "src/main.mtek"        # default "src/main.mtek"
 scene = "Demo"               # required if the entry module declares more than one scene
+id = "1a2b3c4d"              # optional; 4 to 16 lowercase hex digits, written by `mtek new --template game`: saves are kept under <name>.<id> (decision 0179)
+migrate_saves = false        # optional; with `id`, adopt the saves of the key <name> once (decision 0179)
 
 [build]
 target = "web"               # only "web" in v0.1
