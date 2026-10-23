@@ -66,7 +66,7 @@ test.describe("removal and creation inside collision callbacks on the real engin
           const spawned = app.debug.scene().spawned;
           const marks = [0, 0, 0, 0, 0];
           for (const entity of spawned) {
-            if (entity.prefab === "Mark") marks[entity.state["tag"] ?? 0] = (marks[entity.state["tag"] ?? 0] ?? 0) + 1;
+            if (entity.prefab === "Mark") marks[entity.state["mark_kind"] ?? 0] = (marks[entity.state["mark_kind"] ?? 0] ?? 0) + 1;
           }
           frames.push({
             bodies: counters["physicsBodies"] ?? -1,
