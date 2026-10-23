@@ -225,7 +225,9 @@ pub fn analyze_with(root: &ProjectRoot, fs: &dyn Fs, options: &AnalyzeOptions) -
 fn report_scenes_outside_entry(project: &Project, loaded: &[LoadedModule], sink: &mut Diagnostics) {
     let entry = project.modules.entry().path().to_string();
     for module in project.modules.modules() {
-        let Some(unit) = loaded.get(module.id().index()).filter(|_| module.id().index() > 0)
+        let Some(unit) = loaded
+            .get(module.id().index())
+            .filter(|_| module.id().index() > 0)
         else {
             continue;
         };

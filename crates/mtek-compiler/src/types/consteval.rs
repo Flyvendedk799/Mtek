@@ -800,9 +800,11 @@ impl Checker<'_> {
                 return Folded::Unknown;
             }
         };
-        let selected = arms
-            .iter()
-            .find(|arm| patterns_of(self, arm).iter().any(|p| p.is_none_or(|p| p == index)));
+        let selected = arms.iter().find(|arm| {
+            patterns_of(self, arm)
+                .iter()
+                .any(|p| p.is_none_or(|p| p == index))
+        });
         selected.map_or(Folded::Unknown, |arm| fold_arm(self, arm))
     }
 
