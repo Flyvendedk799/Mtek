@@ -25,7 +25,7 @@ The fields of an entity, a camera and a light, and whether a field can be bound 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
 | `body` | `body` | none | fixed at construction |  | A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; requires `collider`. |
-| `clip` | `string` | none | fixed at construction |  | The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. The clip is the only writer of the position, rotation and scale channels it has. |
+| `clip` | `string` | none | fixed at construction |  | The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. It composes with the entity's own transform (decision 0174). |
 | `collider` | `collider` | none | fixed at construction |  | A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`. |
 | `light` | `light` | none | fixed at construction |  | A light component (`DirectionalLight`, `PointLight`). Its fields are writable and bindable as their schemas say. Named entities only. |
 | `material` | `material` | `Unlit {}` | fixed at construction |  | The material instance used to draw the mesh. The instance is construction-only; its parameters are writable and bindable. Requires `mesh`. |

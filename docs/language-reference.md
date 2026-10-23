@@ -461,7 +461,7 @@ The fields of an entity or prefab body: a named node with a transform and option
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
 | `body` | `body` | none | no | construction only |  | A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; requires `collider`. |
-| `clip` | `string` | none | no | construction only |  | The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. The clip is the only writer of the position, rotation and scale channels it has. |
+| `clip` | `string` | none | no | construction only |  | The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. It composes with the entity's own transform (decision 0174). |
 | `collider` | `collider` | none | no | construction only |  | A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`. |
 | `light` | `light` | none | no | construction only |  | A light component (`DirectionalLight`, `PointLight`). Its fields are writable and bindable as their schemas say. Named entities only. |
 | `material` | `material` | `Unlit {}` | no | construction only |  | The material instance used to draw the mesh. The instance is construction-only; its parameters are writable and bindable. Requires `mesh`. |
