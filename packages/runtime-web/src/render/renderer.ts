@@ -965,7 +965,7 @@ export class Renderer {
         usage: BUFFER_USAGE_VERTEX | BUFFER_USAGE_COPY_DST,
       });
     }
-    registry.writeBuffer(device.queue, this.particleBuffer, 0, mirror.buffer as ArrayBuffer, 0, written * INSTANCE_STRIDE);
+    registry.writeBuffer(device.queue, this.particleBuffer, 0, mirror.buffer, 0, written * INSTANCE_STRIDE);
     const objectGroup = this.objectArena.bindGroupDynamic(plan.object);
     pass.setBindGroup(0, this.frameArena.bindGroupForSlot(this.frameSlot, plan.frame));
     const dynamicOffset = this.dynamicOffset;

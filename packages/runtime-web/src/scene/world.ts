@@ -485,7 +485,7 @@ export class World {
     const game = services.game ?? INERT_GAME;
     const timerOwner = (owner: unknown): TimerOwner => {
       if (owner === null || owner === undefined) return null;
-      if (typeof owner === "object" && "ref" in owner) return owner as TimerOwner;
+      if (typeof owner === "object" && "ref" in owner) return owner;
       throw new RuntimeInternalError(`a timer got the owner ${describeValue(owner)}; expected an entity record or null.`);
     };
     const staticTags = this.structure.entities.map((entity) => this.manifest.scene.entities[entity.index]?.tag);
@@ -1298,7 +1298,7 @@ export function chooseItem(r: number, items: unknown): unknown {
 /** `shuffle(items)`: Fisher-Yates into a new array. `N - 1` draws; none when `N` is below 2. */
 export function shuffled(items: unknown, random: () => number): unknown[] {
   if (!Array.isArray(items)) throw new RuntimeInternalError(`ctx.shuffle got ${describeValue(items)}; expected an array.`);
-  const out = items.slice();
+  const out: unknown[] = items.slice();
   for (let i = out.length - 1; i > 0; i -= 1) {
     let j = Math.floor(random() * (i + 1));
     if (j > i) j = i;
