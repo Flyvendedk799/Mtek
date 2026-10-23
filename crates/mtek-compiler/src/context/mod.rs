@@ -57,7 +57,7 @@ use model::{
 use program::{ModuleCtx, Program};
 
 /// The default of `--max-bytes`.
-pub const DEFAULT_MAX_BYTES: usize = 24_000;
+pub const DEFAULT_MAX_BYTES: usize = 30_000;
 
 /// The `diagnosticsGuide` text. A test checks that every field it names exists in
 /// `spec/diagnostic.schema.json`.

@@ -139,8 +139,28 @@ fn expected_field_line(field: &FieldDef) -> String {
     line
 }
 
+/// Whether `line` gives the signature `needle` (`(a: T, b: T) -> T`): either as written, or as the
+/// first part of overloads that only add trailing arguments, which a line writes once with the
+/// optional arguments in brackets (`(a: T, [b: T]) -> T`, decision 0172).
+fn lists_signature(line: &str, needle: &str) -> bool {
+    if line.contains(needle) {
+        return true;
+    }
+    let Some((params, ret)) = needle.split_once(") -> ") else {
+        return false;
+    };
+    // Without the brackets the folded signature is the longest overload; the shorter ones are
+    // its leading arguments, so `(a: T` is followed by `,` or `)` and the return type is the same.
+    let flat = line.replace(['[', ']'], "");
+    let shorter = params.to_owned();
+    flat.match_indices(&shorter)
+        .any(|(at, found)| matches!(flat[at + found.len()..].chars().next(), Some(',' | ')')))
+        && flat.contains(&format!(") -> {ret}"))
+        && (line.contains(", [") || line.contains("(["))
+}
+
 /// A `builtins` line that starts with `prefix`, has `name` among the `|`-separated alternatives
-/// before the first `(` or `:`, and contains `needle`.
+/// before the first `(` or `:`, and gives the signature `needle`.
 fn builtin_line<'a>(
     lines: &'a [String],
     prefix: &str,
@@ -150,7 +170,7 @@ fn builtin_line<'a>(
     lines.iter().map(String::as_str).find(|line| {
         line.strip_prefix(prefix).is_some_and(|rest| {
             let head = rest.split(['(', ':']).next().unwrap_or("");
-            head.split('|').any(|alternative| alternative == name) && line.contains(needle)
+            head.split('|').any(|alternative| alternative == name) && lists_signature(line, needle)
         })
     })
 }
@@ -651,6 +671,47 @@ fn a_cold_start_names_the_functions_once() {
     let small = run(&project(""), 12_000).unwrap();
     assert!(small.context.reference.builtins.is_empty());
     assert_eq!(functions(&small), functions(&warm));
+}
+
+#[test]
+fn overloads_and_families_share_a_line_without_losing_a_function() {
+    // Decision 0172: the library outgrew the budget, so overloads that only add trailing
+    // arguments are one signature with the optional ones in brackets, and functions with one
+    // signature and one closing sentence in their documentation (`easing.*`) are one line.
+    let lines = ok("").context.reference.builtins;
+    let line = |start: &str| lines.iter().find(|l| l.starts_with(start)).unwrap();
+    assert!(line("hud.text(").starts_with(
+        "hud.text(content: string, at: vec2, [size: f32, tint: color, align: f32, font: font]) -> ()"
+    ));
+    assert!(line("play(").starts_with("play(sound: sound, [volume: f32, pitch: f32]) -> ()"));
+    assert!(line("hud.button(").contains("(label: string, at: vec2, [size: f32]) -> bool"));
+    // Overloads that are not a prefix chain stay as they are.
+    assert!(line("abs(").starts_with("abs(x: T) -> T; abs(x: I) -> I"));
+    let easing = line("easing.");
+    for def in registry().namespace("easing").unwrap().members.iter() {
+        let NamespaceMember::Function(def) = def else {
+            continue;
+        };
+        assert!(easing.contains(def.name), "{}", def.name);
+    }
+    assert!(easing.contains("(t: f32) -> f32 [cpu only] // `t` is clamped to 0..1"));
+    assert_eq!(lines.iter().filter(|l| l.starts_with("easing.")).count(), 1);
+    // No function has two lines, whatever it is grouped with.
+    let mut names: Vec<(String, String)> = Vec::new();
+    for l in &lines {
+        let head = l.split(['(', ':']).next().unwrap();
+        let (prefix, alternatives) = match head.split_once('.') {
+            Some((namespace, rest)) if !head.starts_with("frame") => (namespace, rest),
+            _ => ("", head),
+        };
+        for name in alternatives.split('|') {
+            names.push((prefix.to_owned(), name.to_owned()));
+        }
+    }
+    let mut seen = names.clone();
+    seen.sort();
+    seen.dedup();
+    assert_eq!(seen.len(), names.len(), "a function is listed twice");
 }
 
 #[test]

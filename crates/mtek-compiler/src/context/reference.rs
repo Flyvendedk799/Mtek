@@ -26,7 +26,7 @@ use super::program::Program;
 use crate::resolve::gate::is_implemented;
 use crate::stdlib::{
     BodyKind, Domain, EventForm, EventHost, IntrinsicDef, NamespaceMember, ParamDef, Registry,
-    SchemaDef, TypeClass, TypeKind, TypeRef, ValueDef,
+    SchemaDef, Signature, TypeClass, TypeKind, TypeRef, ValueDef,
 };
 
 /// Whether the project is a cold start: it declares nothing but scenes, scene objects (cameras),
@@ -156,15 +156,9 @@ fn params_text(params: &[ParamDef]) -> String {
         .join(", ")
 }
 
-/// `name(a: T) -> T; name(a: I) -> I [cpu only]`, with the documentation after ` // ` when
-/// `with_doc`.
-fn function_line(name: &str, def: &IntrinsicDef, with_doc: bool) -> String {
-    let mut line = def
-        .signatures
-        .iter()
-        .map(|sig| format!("{name}{}", sig.text()))
-        .collect::<Vec<_>>()
-        .join("; ");
+/// `name(a: T) -> T; name(a: I) -> I [cpu only]`, with `doc` after ` // ` when it is not empty.
+fn function_line(name: &str, def: &IntrinsicDef, doc: &str) -> String {
+    let mut line = overloads_text(name, &def.signatures);
     let mut tags = Vec::new();
     match def.domain {
         Domain::Both => {}
@@ -182,10 +176,36 @@ fn function_line(name: &str, def: &IntrinsicDef, with_doc: bool) -> String {
     if !tags.is_empty() {
         let _ = write!(line, " [{}]", tags.join(", "));
     }
-    if with_doc && !def.doc.is_empty() {
-        let _ = write!(line, " // {}", def.doc);
+    if !doc.is_empty() {
+        let _ = write!(line, " // {doc}");
     }
     line
+}
+
+/// The signatures of one function, `name(a: T) -> T; name(a: I) -> I`. Overloads that only add
+/// trailing arguments to the previous one and return the same type are one signature with the
+/// optional arguments in brackets: `play(sound: sound, [volume: f32, pitch: f32]) -> ()`.
+fn overloads_text(name: &str, signatures: &[Signature]) -> String {
+    if let [first, .., last] = signatures
+        && signatures.windows(2).all(|pair| {
+            pair[1].ret == pair[0].ret
+                && pair[1].params.len() > pair[0].params.len()
+                && pair[1].params.starts_with(&pair[0].params)
+        })
+    {
+        let (required, optional) = last.params.split_at(first.params.len());
+        let mut parts: Vec<String> = required
+            .iter()
+            .map(|p| format!("{}: {}", p.name, p.ty.spelling()))
+            .collect();
+        parts.push(format!("[{}]", params_text(optional)));
+        return format!("{name}({}) -> {}", parts.join(", "), last.ret.spelling());
+    }
+    signatures
+        .iter()
+        .map(|sig| format!("{name}{}", sig.text()))
+        .collect::<Vec<_>>()
+        .join("; ")
 }
 
 fn value_line(namespace: &str, value: &ValueDef) -> String {
@@ -239,21 +259,27 @@ fn builtins(registry: &Registry) -> (Vec<String>, Vec<String>) {
         let mut done: Vec<&'static str> = Vec::new();
         for member in &implemented {
             match member {
+                NamespaceMember::Function(def) if done.contains(&def.name) => {}
                 NamespaceMember::Function(def)
                     if def.signatures.iter().all(|sig| sig.params.is_empty())
                         && preset_names(&implemented, def).len() > 1 =>
                 {
-                    if done.contains(&def.name) {
-                        continue;
-                    }
                     let names = preset_names(&implemented, def);
                     done.extend(names.iter().copied());
                     let name = format!("{}.{}", namespace.name, names.join("|"));
-                    lines.push(function_line(&name, def, false));
+                    lines.push(function_line(&name, def, ""));
                 }
                 NamespaceMember::Function(def) => {
-                    let name = format!("{}.{}", namespace.name, def.name);
-                    lines.push(function_line(&name, def, true));
+                    // A family (`easing.in_quad|out_quad|..`) shares its signature and the end of
+                    // its documentation: one line, with what the documentations have in common.
+                    if let Some((names, doc)) = family_doc(&implemented, def) {
+                        done.extend(names.iter().copied());
+                        let name = format!("{}.{}", namespace.name, names.join("|"));
+                        lines.push(function_line(&name, def, &doc));
+                    } else {
+                        let name = format!("{}.{}", namespace.name, def.name);
+                        lines.push(function_line(&name, def, def.doc));
+                    }
                 }
                 NamespaceMember::Value(value) => lines.push(value_line(namespace.name, value)),
             }
@@ -289,9 +315,9 @@ fn builtins(registry: &Registry) -> (Vec<String>, Vec<String>) {
         };
         if presets.len() > 1 {
             done.extend(presets.iter().copied());
-            lines.push(function_line(&presets.join("|"), def, false));
+            lines.push(function_line(&presets.join("|"), def, ""));
         } else {
-            lines.push(function_line(def.name, def, true));
+            lines.push(function_line(def.name, def, def.doc));
         }
     }
     let mut all = grouped_lines(&math);
@@ -317,9 +343,48 @@ fn grouped_lines(defs: &[&IntrinsicDef]) -> Vec<String> {
                 .map(|def| def.name)
                 .collect::<Vec<_>>()
                 .join("|");
-            members.first().map(|def| function_line(&names, def, false))
+            members.first().map(|def| function_line(&names, def, ""))
         })
         .collect()
+}
+
+/// A family of at least three functions among `members` with the signatures, domain and
+/// restrictions of `def` whose documentation ends in the same sentence: the names and that
+/// sentence. What differs in front of it (`Easing t²;`, `Easing bounces at 1 …;`) is told by the
+/// names.
+fn family_doc(
+    members: &[&NamespaceMember],
+    def: &IntrinsicDef,
+) -> Option<(Vec<&'static str>, String)> {
+    let family: Vec<&IntrinsicDef> = members
+        .iter()
+        .filter_map(|member| match member {
+            NamespaceMember::Function(other)
+                if other.signatures == def.signatures
+                    && other.domain == def.domain
+                    && other.handlers_only == def.handlers_only
+                    && other.const_eligible == def.const_eligible =>
+            {
+                Some(other)
+            }
+            _ => None,
+        })
+        .collect();
+    if family.len() < 3 {
+        return None;
+    }
+    // The longest common ending that starts after a clause break.
+    let first = family.first()?.doc;
+    let common = first
+        .match_indices("; ")
+        .chain(first.match_indices(". "))
+        .map(|(at, separator)| &first[at + separator.len()..])
+        .filter(|ending| family.iter().all(|other| other.doc.ends_with(ending)))
+        .max_by_key(|ending| ending.len())?;
+    Some((
+        family.iter().map(|other| other.name).collect(),
+        common.to_owned(),
+    ))
 }
 
 /// The names of the functions among `members` that have the signatures and domain of `def`.

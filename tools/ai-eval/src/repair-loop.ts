@@ -42,7 +42,7 @@ import { mtekSide, type CandidateValidator, type Side } from "./side.ts";
 import { scrubPaths, type ValidationResult } from "./validator.ts";
 import type { Workspace } from "./workspace.ts";
 
-export const DEFAULT_CONTEXT_MAX_BYTES = 24_000;
+export const DEFAULT_CONTEXT_MAX_BYTES = 30_000;
 
 /** The pauses before the retries of a call that got no response at all: at most three retries, 2 s, 8 s and 30 s (decision 0124). */
 export const TRANSPORT_RETRY_DELAYS_MS: readonly number[] = [2_000, 8_000, 30_000];
