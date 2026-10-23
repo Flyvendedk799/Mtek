@@ -94,3 +94,42 @@ describe("tag queries", () => {
     expect(() => queries.nearestTagged("rock", null)).toThrow(RuntimeInternalError);
   });
 });
+
+describe("tag queries without per-call allocation (decision 0176)", () => {
+  it("looks has_tag up by slot when the world offers it, and checks the generation", () => {
+    const spawns = [spawn(2, "rock", 0), spawn(3, "coin", 0)];
+    let searched = 0;
+    const stand: TagWorld = {
+      staticTags: ["player"],
+      staticRef: (index) => makeRef(index, 0),
+      spawned: () => {
+        searched += 1;
+        return spawns;
+      },
+      spawnedAt: (slot) => spawns.find((s) => s.ref.slot === slot),
+      worldPosition: () => ({ x: 0, y: 0, z: 0 }),
+      alive: (ref) => ref.slot === 0 || spawns.some((s) => s.ref.slot === ref.slot && s.ref.gen === ref.gen && !s.removing),
+      destroy: () => undefined,
+    };
+    const queries = new TagQueries(stand);
+    expect(queries.hasTag(makeRef(2, 1), "rock")).toBe(true);
+    expect(queries.hasTag(makeRef(3, 1), "rock")).toBe(false);
+    expect(queries.hasTag(makeRef(2, 5), "rock")).toBe(false);
+    expect(searched).toBe(0);
+  });
+
+  it("walks the spawned list the world hands over without copying it per query", () => {
+    const spawns = [spawn(2, "rock", 0), spawn(3, "rock", 0)];
+    let handedOut: readonly TaggedSpawn[] | undefined;
+    const queries = new TagQueries({
+      staticTags: [],
+      staticRef: (index) => makeRef(index, 0),
+      spawned: () => (handedOut = spawns),
+      worldPosition: () => ({ x: 0, y: 0, z: 0 }),
+      alive: () => true,
+      destroy: () => undefined,
+    });
+    expect(queries.countTagged("rock")).toBe(2);
+    expect(handedOut).toBe(spawns);
+  });
+});

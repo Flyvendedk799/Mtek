@@ -24,7 +24,7 @@
     "endByte": 89,
     "message": "`spin` is not a lifecycle function.",
     "notes": [
-      "v0.1 lifecycle functions are `update` and `fixed_update`"
+      "v0.1 lifecycle functions are `update`, `fixed_update` and (in a scene) `ui`"
     ]
   }
 ]

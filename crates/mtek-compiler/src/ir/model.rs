@@ -993,6 +993,8 @@ pub struct Behavior {
 pub enum BehaviorKind {
     Update,
     FixedUpdate,
+    /// `ui(dt)`, a scene's lifecycle function that also runs while the game is paused (decision 0175).
+    Ui,
     /// `on event(…)`: a filter (`Key.Space` as its DOM `code`) or a parameter (local 0).
     Event {
         event: String,

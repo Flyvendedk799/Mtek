@@ -312,6 +312,7 @@ impl Lowering<'_> {
         let kind = match decl.name.name.as_str() {
             "update" => BehaviorKind::Update,
             "fixed_update" => BehaviorKind::FixedUpdate,
+            "ui" => BehaviorKind::Ui,
             other => return Err(format!("a lifecycle function named '{other}'")),
         };
         let mut lowering = FnLowering {

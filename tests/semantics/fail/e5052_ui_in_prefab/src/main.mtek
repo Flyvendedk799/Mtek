@@ -1,0 +1,12 @@
+// `ui` belongs to a scene (E5052): a prefab cannot declare it.
+prefab Panel {
+    mesh: Box {};
+    ui(dt: f32) {
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity First: Panel {}
+}
+// covers: [S: lifecycle-signature]

@@ -118,6 +118,9 @@ fn contextual_word(view: &ModuleView<'_>, nodes: &Nodes, info: NodeInfo) -> Opti
         ("lifecycle", "fixed_update") => {
             "```mtek\nfixed_update(dt: f32) { .. }\n```\n\nA lifecycle function: runs once per fixed simulation tick; `dt` is the fixed step (`spec/scenes.md` section 6)."
         }
+        ("lifecycle", "ui") => {
+            "```mtek\nui(dt: f32) { .. }\n```\n\nA scene's lifecycle function: runs once per rendered frame after `update`, and keeps running while the game is paused, for pause menus and overlays (`spec/scenes.md` section 15.5)."
+        }
         ("stage", "fragment") => {
             "```mtek\nfragment(input: SurfaceInput) -> color { .. }\n```\n\nThe fragment stage of a material: computes the colour of a surface point from the interpolated inputs (`spec/materials.md` section 3)."
         }

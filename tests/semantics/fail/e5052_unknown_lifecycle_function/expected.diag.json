@@ -2,11 +2,11 @@
   {
     "code": "MTEK-E5052",
     "file": "src/main.mtek",
-    "startByte": 122,
-    "endByte": 127,
+    "startByte": 141,
+    "endByte": 146,
     "message": "`start` is not a lifecycle function.",
     "notes": [
-      "v0.1 lifecycle functions are `update` and `fixed_update`"
+      "v0.1 lifecycle functions are `update`, `fixed_update` and (in a scene) `ui`"
     ]
   }
 ]

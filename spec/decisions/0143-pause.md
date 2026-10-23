@@ -15,6 +15,8 @@ A pause menu stops the game but not the menu. `pause()` holds the game; input, b
 
 **HUD/UI hook** (for the text and UI work of Phase 1): UI that must stay live while the game is paused is driven by input handlers and bindings, which run; it must not depend on `update` or timers. A UI runtime that needs its own per-frame work reads `scheduler.gamePaused` and runs regardless.
 
+Decision 0175 adds the program's side of this hook: the scene lifecycle function `ui(dt)` runs in every frame, also while the game is paused, so an immediate-mode HUD (decision 0134) can draw a pause menu and hear its buttons.
+
 ## Alternatives considered
 
 - **`frame.time_scale = 0`.** One knob for slow motion and pause, but a zero scale still runs `update` with `dt = 0`, which programs that divide by `dt` or count frames get wrong, and physics would need special handling anyway.

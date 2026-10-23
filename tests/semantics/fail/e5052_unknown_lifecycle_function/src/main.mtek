@@ -1,4 +1,4 @@
-// `start` is not a lifecycle function (E5052): v0.1 has `update` and `fixed_update`.
+// `start` is not a lifecycle function (E5052): v0.1 has `update`, `fixed_update` and (in a scene) `ui`.
 scene Demo {
     camera Main {}
     start(dt: f32) {

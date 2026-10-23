@@ -110,6 +110,7 @@ describe("contextual words", () => {
   it("scopes lifecycle functions, the stage function and `camera`", () => {
     expect(has(scopes("update(dt: f32) {}", "update"), "entity.name.function.lifecycle")).toBe(true);
     expect(has(scopes("fixed_update(dt: f32) {}", "fixed_update"), "entity.name.function.lifecycle")).toBe(true);
+    expect(has(scopes("ui(dt: f32) {}", "ui"), "entity.name.function.lifecycle")).toBe(true);
     expect(has(scopes("fragment(input: SurfaceInput) {}", "fragment"), "entity.name.function.stage")).toBe(true);
     expect(has(scopes("camera Main { }", "camera"), "support.type.scene-object")).toBe(true);
     expect(has(scopes("camera Main { }", "Main"), "entity.name.type.object")).toBe(true);

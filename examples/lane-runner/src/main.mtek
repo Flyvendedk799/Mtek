@@ -4,7 +4,8 @@
 //          stored by itself. Backspace deletes the stored best score and setting (`clear_saved()`)
 //          and restarts the title (`reset()`).
 // Run      ArrowLeft/ArrowRight change lanes, rocks fall in the three lanes, every second survived
-//          is a point. Escape pauses and resumes; R restarts the run (`go_to(Run)` keeps `best`).
+//          is a point. Escape pauses and resumes, and the pause menu (`ui`, decision 0175) offers
+//          Resume, Restart and Title; R restarts the run (`go_to(Run)` keeps `best`).
 //          A rock in the player's lane at the player's height ends the run.
 // GameOver shows the result for three seconds, then returns to the title; Enter starts a new run.
 //
@@ -198,6 +199,25 @@ scene Run {
                 save();
             }
             go_to(GameOver);
+        }
+    }
+
+    // Runs in every frame, also while the game is paused: the pause menu.
+    ui(dt: f32) {
+        hud.text("Score ${score}", vec2(-0.95, 0.9), 24.0, #ffffff, 0.0, hud.pixel_font());
+        if paused() {
+            hud.rect(vec2(0.0, 0.05), vec2(280.0, 240.0), #000000c0, 0.5);
+            hud.text("PAUSED", vec2(0.0, 0.32), 32.0, #ffffff, 0.5, hud.pixel_font());
+            if hud.button("Resume", vec2(0.0, 0.14), 22.0) {
+                resume();
+            }
+            if hud.button("Restart", vec2(0.0, 0.0), 22.0) {
+                score = 0;
+                go_to(Run);
+            }
+            if hud.button("Title", vec2(0.0, -0.14), 22.0) {
+                go_to(Title);
+            }
         }
     }
 

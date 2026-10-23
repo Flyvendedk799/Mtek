@@ -19,7 +19,7 @@ A Mtek program does not own a loop. The runtime calls your code in a fixed order
 
    A binding therefore sees the state that handlers and `update` left behind in this frame, while a handler that reads a bound field sees the value of the previous frame.
 5. **Multiply by `dt`.** Motion per second is `speed * dt` in `update` and in `fixed_update`. Use `fixed_update` for code that talks to the physics engine (forces, velocities, kinematic targets) and `update` for everything else.
-6. **Pausing.** A page that is hidden is paused; time and the fixed clock stop, and the first frame after resuming has `dt` of 0, so the paused interval is never simulated. `pause_when_hidden` in `[runtime]` turns that off. Input that happens while paused is discarded.
+6. **Pausing.** A page that is hidden is paused; time and the fixed clock stop, and the first frame after resuming has `dt` of 0, so the paused interval is never simulated. `pause_when_hidden` in `[runtime]` turns that off. Input that happens while paused is discarded. The program's own `pause()` is different: it holds the game (ticks, physics, timers and `update`) while input handlers, bindings and rendering go on, and a scene's `ui(dt: f32)` function runs in every frame, also while the game is paused, so a pause menu can draw its HUD and hear its buttons.
 7. **Key events.** `on key_down(Key.Space)` runs once when the key goes down, and `on key_up(Key.Space)` once when it is released. The operating system's key repeat is ignored. The key in the parentheses is a *filter*: it must be a constant member of `Key` (`MTEK-E5061` for a string, a number or a state). Several handlers for one key run in declaration order. If a key goes down and up within one frame, both are delivered, in that order.
 8. **Held keys, edges and the pointer.** `is_key_down(Key.W)` tells whether the key was down at the end of input handling. `key_pressed(Key.W)` and `key_released(Key.W)` are true only on the frame of that transition. `pointer_position()` is the pointer in the same coordinates as a pointer event (`(0, 0)` until it moves), and `is_pointer_down(0)` is true while button 0, 1 or 2 is down. These are CPU-only: handlers, lifecycle functions and `cpu fn`s. A `fn` is `MTEK-E4002` and a `bind` is `MTEK-E5005`.
 9. **Key names** are the members of the registry enum `Key`, mapped from the physical key (the DOM `KeyboardEvent.code`, so `Key.W` is the key at the W position of a US keyboard on every layout): {{enum Key}}. There are no lowercase names, no `Key.Up` and no `Key.Shift` (write `Key.ShiftLeft` and `Key.ShiftRight`). A key outside the list is ignored by the runtime.
@@ -206,7 +206,7 @@ start() {
 }
 ```
 
-Only `update` and `fixed_update` exist (`MTEK-E5052`). Initial values belong in the declarations of `state` and of the fields.
+Only `update`, `fixed_update` and, in a scene, `ui` exist (`MTEK-E5052`). Initial values belong in the declarations of `state` and of the fields.
 
 ### A time step of the wrong shape
 

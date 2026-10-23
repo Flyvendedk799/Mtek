@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E5052",
+    "file": "src/main.mtek",
+    "startByte": 146,
+    "endByte": 148,
+    "message": "`ui` belongs to a scene, not to the entity 'Panel'.",
+    "notes": [
+      "`ui(dt)` runs in every frame, also while the game is paused (decision 0175)",
+      "help: declare `ui` in the scene"
+    ]
+  }
+]

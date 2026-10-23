@@ -3,10 +3,12 @@
 //
 //   Space    score a point: the cube pops and the score text updates
 //   R, or the "Reset" button at the bottom   start again
+//   Escape   pause: a menu with "Resume" and "Reset" (the round clock stands still)
 //   After 30 s: a GAME OVER panel with the score and a "Play again" button
 //
-// The HUD is immediate mode: `update` draws the text, the bars and the button again every frame, and
-// `hud.button` returns true in the frame after a click.
+// The HUD is immediate mode: `ui` draws the text, the bars and the buttons again every frame, and
+// `hud.button` returns true in the frame after a click. `update` stops while the game is paused, `ui`
+// (decision 0175) does not, so the pause menu works.
 
 // A round lasts this many seconds; the bar at the top shows the time left.
 const ROUND: f32 = 30.0;
@@ -51,7 +53,10 @@ scene Score {
         if left > 0.0 {
             elapsed += dt;
         }
+    }
 
+    ui(dt: f32) {
+        let left: f32 = max(ROUND - elapsed, 0.0);
         hud.text("Score: ${points}", vec2(-0.95, 0.9), 32.0, #ffffff, 0.0);
         hud.text("Best: ${best}", vec2(0.95, 0.9), 24.0, #ffd040, 1.0);
         // The time bar: a dark track and a fill that shrinks from the right.
@@ -59,7 +64,18 @@ scene Score {
         hud.rect(vec2(-0.95, 0.78), vec2(BAR_WIDTH * left / ROUND, 10.0), #40d070, 0.0);
         hud.text("${left:.1} s", vec2(-0.95, 0.7), 18.0, #a0b0c0, 0.0);
 
-        if left <= 0.0 {
+        if paused() {
+            hud.rect(vec2(0.0, 0.1), vec2(300.0, 200.0), #000000c0, 0.5);
+            hud.text("PAUSED", vec2(0.0, 0.3), 40.0, #ffffff, 0.5);
+            if hud.button("Resume", vec2(0.0, 0.1), 24.0) {
+                resume();
+            }
+            if hud.button("Reset", vec2(0.0, -0.05), 24.0) {
+                points = 0;
+                elapsed = 0.0;
+                resume();
+            }
+        } else if left <= 0.0 {
             // GAME OVER panel: a dark rectangle behind centred text and a "Play again" button.
             hud.rect(vec2(0.0, 0.1), vec2(420.0, 220.0), #000000c0, 0.5);
             hud.text("GAME OVER", vec2(0.0, 0.3), 56.0, #ff5050, 0.5);
@@ -75,7 +91,7 @@ scene Score {
     }
 
     on key_down(Key.Space) {
-        if elapsed < ROUND {
+        if elapsed < ROUND && !paused() {
             points += 1;
             best = max(best, points);
             pulse = PULSE;
@@ -85,5 +101,13 @@ scene Score {
     on key_down(Key.R) {
         points = 0;
         elapsed = 0.0;
+    }
+
+    on key_down(Key.Escape) {
+        if paused() {
+            resume();
+        } else {
+            pause();
+        }
     }
 }

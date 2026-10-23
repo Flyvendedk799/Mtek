@@ -1,6 +1,6 @@
 /**
  * The easing curves of the `easing` namespace (`spec/tweens.md`, decision 0135): `f32 -> f32`, the argument clamped to
- * `[0, 1]` (a non-finite argument counts as 0), computed in binary64 and rounded once to binary32. Every curve is 0 at
+ * `[0, 1]` (NaN counts as 0, so +∞ is 1 and −∞ is 0), computed in binary64 and rounded once to binary32. Every curve is 0 at
  * 0 and 1 at 1; `out_back` and `out_elastic` overshoot 1 in between. The formulas are those of easings.net.
  */
 const BACK_C1 = 1.70158;
@@ -8,7 +8,7 @@ const BACK_C3 = BACK_C1 + 1;
 const ELASTIC_C4 = (2 * Math.PI) / 3;
 
 function clamp01(t: number): number {
-  return Number.isFinite(t) ? Math.min(1, Math.max(0, t)) : 0;
+  return Number.isNaN(t) ? 0 : Math.min(1, Math.max(0, t));
 }
 
 function bounce(x: number): number {

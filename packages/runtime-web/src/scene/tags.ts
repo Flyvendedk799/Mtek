@@ -21,8 +21,10 @@ export interface TagWorld {
   readonly staticTags: readonly (string | undefined)[];
   /** The ref of the named entity with static index `index`. */
   staticRef(index: number): EntityRef;
-  /** The spawned entities that exist, in spawn order (including those pending removal). */
+  /** The spawned entities that exist, in spawn order (including those pending removal). The list is not copied per call. */
   spawned(): readonly TaggedSpawn[];
+  /** The spawned entity in `slot`, if there is one: `has_tag` looks a slot up instead of searching. */
+  spawnedAt?(slot: number): TaggedSpawn | undefined;
   /** The world position of the entity in `slot`, current as of the call. */
   worldPosition(slot: number): Vec3;
   alive(ref: EntityRef): boolean;
@@ -88,8 +90,11 @@ export class TagQueries {
     if (!this.world.alive(target)) return false;
     const { staticTags } = this.world;
     if (target.slot < staticTags.length) return staticTags[target.slot] === name;
-    const entity = this.world.spawned().find((e) => e.ref.slot === target.slot && e.ref.gen === target.gen);
-    return entity !== undefined && entity.tag === name;
+    const entity =
+      this.world.spawnedAt === undefined
+        ? this.world.spawned().find((e) => e.ref.slot === target.slot && e.ref.gen === target.gen)
+        : this.world.spawnedAt(target.slot);
+    return entity !== undefined && entity.ref.gen === target.gen && entity.tag === name;
   }
 
   tagged(tag: unknown): Iterable<EntityRef> {

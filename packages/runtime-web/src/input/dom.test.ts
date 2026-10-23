@@ -97,7 +97,7 @@ describe("pointer listeners", () => {
     document.dispatch("keydown", { code: "KeyA", repeat: false });
     canvas.dispatch("pointerdown", down);
     input.deliver();
-    canvas.dispatch("pointercancel", {});
+    canvas.dispatch("pointercancel", down);
     expect(codes(input.deliver())).toEqual(["pointer_up:0"]);
     expect(input.isKeyDown("KeyA")).toBe(true);
   });
@@ -143,5 +143,72 @@ describe("pointerPosition", () => {
   it("survives a canvas with no size", () => {
     const canvas = { getBoundingClientRect: () => ({ left: 0, top: 0, width: 0, height: 0 }) };
     expect(Number.isFinite(pointerPosition(canvas, 5, 5).x)).toBe(true);
+  });
+});
+
+describe("touch and the page (decision 0176)", () => {
+  const down = { isPrimary: true, pointerId: 1, button: 0, clientX: 100, clientY: 50 };
+
+  it("asks the browser not to pan, zoom or select on the canvas", () => {
+    const { canvas } = setup();
+    expect(canvas.style["touchAction"]).toBe("none");
+    expect(canvas.style["userSelect"]).toBe("none");
+  });
+
+  it("keeps the primary touch when a second finger is cancelled or lifted", () => {
+    const { canvas, input } = setup();
+    canvas.dispatch("pointerdown", { ...down, pointerId: 5 });
+    canvas.dispatch("pointerdown", { ...down, pointerId: 6, isPrimary: false });
+    input.deliver();
+    canvas.dispatch("pointercancel", { ...down, pointerId: 6, isPrimary: false });
+    canvas.dispatch("pointerup", { ...down, pointerId: 6, isPrimary: false });
+    expect(input.pending).toBe(0);
+    expect(input.isPointerDown(0)).toBe(true);
+    canvas.dispatch("pointerup", { ...down, pointerId: 5 });
+    expect(codes(input.deliver())).toEqual(["pointer_up:0"]);
+  });
+
+  it("ignores the release of a primary pointer other than the one that pressed", () => {
+    const { canvas, input } = setup();
+    canvas.dispatch("pointerdown", { ...down, pointerId: 5 });
+    input.deliver();
+    canvas.dispatch("pointerup", { ...down, pointerId: 9 });
+    canvas.dispatch("pointercancel", { ...down, pointerId: 9 });
+    expect(input.pending).toBe(0);
+    expect(input.isPointerDown(0)).toBe(true);
+    canvas.dispatch("pointercancel", { ...down, pointerId: 5 });
+    expect(codes(input.deliver())).toEqual(["pointer_up:0"]);
+  });
+});
+
+describe("polled keys block the browser default (decision 0176)", () => {
+  it("asks the guard at every key event, so a key polled later is covered", () => {
+    const document = new FakeDocument();
+    const canvas = new FakeCanvas(document);
+    const input = new InputState();
+    const registry = new ResourceRegistry(asGpu<RegistryDevice>(new FakeDevice()));
+    attachInputListeners(input, {
+      canvas: asDom<HTMLCanvasElement>(canvas),
+      document: asDom<EventTarget>(document),
+      window: undefined,
+      registry,
+      handledKeys: { has: (code) => code === "Space" || input.isPolled(code) },
+    });
+    expect(document.dispatch("keydown", { code: "ArrowLeft", repeat: false }).defaultPrevented).toBe(false);
+    document.dispatch("keyup", { code: "ArrowLeft" });
+    input.isKeyDown("ArrowLeft");
+    expect(document.dispatch("keydown", { code: "ArrowLeft", repeat: false }).defaultPrevented).toBe(true);
+    expect(document.dispatch("keydown", { code: "KeyQ", repeat: false }).defaultPrevented).toBe(false);
+  });
+
+  it("InputState records key_pressed, key_released and is_key_down, and forgets them for a new scene", () => {
+    const input = new InputState();
+    expect(input.isPolled("ArrowUp")).toBe(false);
+    input.keyPressed("ArrowUp");
+    input.keyReleased("ArrowDown");
+    input.isKeyDown("Space");
+    expect(["ArrowUp", "ArrowDown", "Space", "KeyA"].map((code) => input.isPolled(code))).toEqual([true, true, true, false]);
+    input.clearPolled();
+    expect(input.isPolled("ArrowUp")).toBe(false);
   });
 });

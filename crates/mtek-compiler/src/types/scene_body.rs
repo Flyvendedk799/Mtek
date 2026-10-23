@@ -45,7 +45,7 @@ pub(super) enum Initialiser {
 }
 
 /// The lifecycle functions of v0.1 (`spec/scenes.md` section 6).
-const LIFECYCLE_NAMES: [&str; 2] = ["update", "fixed_update"];
+const LIFECYCLE_NAMES: [&str; 3] = ["update", "fixed_update", "ui"];
 
 impl Checker<'_> {
     // ----- state -----------------------------------------------------------------------------
@@ -252,7 +252,9 @@ impl Checker<'_> {
                     format!("`{name}` is not a lifecycle function."),
                 )
                 .at(function.name.span)
-                .note("v0.1 lifecycle functions are `update` and `fixed_update`"),
+                .note(
+                    "v0.1 lifecycle functions are `update`, `fixed_update` and (in a scene) `ui`",
+                ),
             );
             // Its body is still checked, so that names and types in it are reported once.
             self.body_in_scope(
@@ -265,6 +267,17 @@ impl Checker<'_> {
             );
             return;
         };
+        if known == "ui" && entity.is_some() {
+            self.sink.push(
+                Diagnostic::new(
+                    Code::E5052,
+                    format!("`ui` belongs to a scene, not to the {holder}."),
+                )
+                .at(function.name.span)
+                .note("`ui(dt)` runs in every frame, also while the game is paused (decision 0175)")
+                .help("declare `ui` in the scene"),
+            );
+        }
         if let Some(first) = seen.insert(known, function.name.span) {
             // Keep the first declaration as the one later duplicates refer to.
             seen.insert(known, first);

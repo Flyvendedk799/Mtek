@@ -106,6 +106,8 @@ function sceneShapeProblem(
   for (const name of ["update", "fixedUpdate"] as const) {
     if (!functionOrNull(own(scene, name))) return { field: name, problem: `has a \`${name}\` that is neither a function nor null` };
   }
+  const ui = own(scene, "ui");
+  if (ui !== undefined && !functionOrNull(ui)) return { field: "ui", problem: "has a `ui` that is neither a function nor null" };
   for (const name of ["entityUpdate", "entityFixedUpdate"] as const) {
     const list = own(scene, name);
     if (!Array.isArray(list) || list.length !== entityCount || !list.every(functionOrNull)) {
