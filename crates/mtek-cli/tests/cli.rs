@@ -598,7 +598,7 @@ fn build_writes_the_output_tree_with_the_embedded_runtime() {
         .find(|k| k.starts_with("runtime.") && k.ends_with(".js"))
         .unwrap()
         .clone();
-    assert_eq!(built[&runtime_name], runtime_file("runtime.js"));
+    assert_eq!(built[&runtime_name], runtime_file("runtime.min.js"));
     assert_eq!(built["runtime.d.ts"], runtime_file("runtime.d.ts"));
 
     // The codegen golden was built with the stub runtime: everything else is identical, except

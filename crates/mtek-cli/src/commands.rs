@@ -396,9 +396,9 @@ pub fn compile_and_write(
     let options = CompileOptions {
         profile: TargetProfile::WebGpuCore2026,
         mode,
-        // A game package ships the minified release flavour (decision 0136).
+        // Every release build ships the minified flavour, including ordinary web builds.
         runtime_bundle: context.runtime.map(|runtime| {
-            Arc::from(if game.is_some() {
+            Arc::from(if mode == BuildMode::Release {
                 runtime.min_bundle
             } else {
                 runtime.bundle

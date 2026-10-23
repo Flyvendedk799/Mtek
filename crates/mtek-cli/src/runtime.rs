@@ -7,13 +7,12 @@
 /// The embedded runtime files.
 #[derive(Clone, Copy, Debug)]
 pub struct Runtime {
-    /// `runtime.js`, the release flavour (no development overlay), written as
-    /// `runtime.<h16>.js` by `release` builds.
+    /// `runtime.js`, the unminified flavour without the development overlay, used by previews.
     pub bundle: &'static [u8],
     /// `runtime.dev.js`, the development flavour (overlay, GPU timing), written as
     /// `runtime.<h16>.js` by `dev` and `test` builds (decision 0055).
     pub dev_bundle: &'static [u8],
-    /// `runtime.min.js`, the release flavour minified, used by `mtek build --release` game
+    /// `runtime.min.js`, the minified flavour used by every release build, including game
     /// packages (decision 0136).
     pub min_bundle: &'static [u8],
     /// `runtime.d.ts`.
