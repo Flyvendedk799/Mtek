@@ -188,7 +188,7 @@ Abe, on each GPU machine (NVIDIA, Intel, Apple silicon):
 4. Commit the JSON and update the status table in `evidence/small-games/README.md`.
 5. Optional: register the machine as a self-hosted runner with labels `mtek-gpu` plus `nvidia`, `intel` or `apple`. Then start the CI workflow by hand with `frame_evidence: true`.
 
-On a 120 Hz or 144 Hz display the intervals are about 8.3 or 6.9 ms. The budget still applies, and the refresh rate shows in p50. A headless run on Linux may not be vsync-capped; set `MTEK_HEADLESS=0` to measure a real window.
+On a 120 Hz or 144 Hz display the intervals are about 8.3 or 6.9 ms. The budget still applies, and the refresh rate shows in p50. The recorder opens a real (headed) window, because a headless run may use a software adapter and is not vsync-capped; `MTEK_HEADLESS=1` opts back in, and the checker still refuses a software or unidentified adapter.
 
 ## 9. Not done on this branch (deferred), stated honestly
 

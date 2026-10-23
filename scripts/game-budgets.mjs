@@ -32,20 +32,33 @@ export function sizeProblems(name, measured, budget) {
   return problems;
 }
 
+/** Descriptions of software renderers; a fallback flag alone can be missing or wrong. */
+const SOFTWARE_ADAPTER = /swiftshader|llvmpipe|basic render|software/i;
+
+/** An example directory without a size budget is a problem: a new example must be budgeted when it is added. */
+export function missingBudgets(examples, size = budgets.size) {
+  return examples.filter((name) => size[name] === undefined).map((name) => `${name}: examples/${name} has no entry in budgets/small-games.json`);
+}
+
 /**
  * Problems of one frame-time evidence file (empty: accepted and within budget). Evidence from a fallback
- * (software) adapter, without an adapter description, or with too few frames is not evidence.
+ * (software) adapter, one that does not say whether it is one, without an adapter description, or with too few frames
+ * is not evidence; neither is an example whose `failure` is set (the game did not mount) or missing.
  */
 export function frameProblems(evidence, frame = budgets.frame) {
   const problems = [];
   if (evidence?.format !== "mtek-frame-evidence/1") return ["not an mtek-frame-evidence/1 file"];
   const adapter = evidence.adapter ?? {};
-  if (adapter.isFallbackAdapter !== false) problems.push("the adapter is a software fallback or unknown: not hardware evidence");
+  if (adapter.isFallbackAdapter === true) problems.push("the adapter is a software fallback: not hardware evidence");
+  else if (adapter.isFallbackAdapter !== false) problems.push("the adapter does not say whether it is a software fallback: not hardware evidence");
+  const description = [adapter.vendor, adapter.architecture, adapter.device, adapter.description].filter((part) => typeof part === "string").join(" ");
+  if (SOFTWARE_ADAPTER.test(description)) problems.push(`the adapter looks like a software renderer (${description.trim()}): not hardware evidence`);
   if (![adapter.vendor, adapter.architecture, adapter.description].some((part) => typeof part === "string" && part.length > 0)) {
     problems.push("the adapter is not identified (vendor, architecture or description)");
   }
   for (const [name, run] of Object.entries(evidence.examples ?? {})) {
-    if (!(run.frames >= frame.minFrames)) problems.push(`${name}: ${run.frames} frames < ${frame.minFrames}`);
+    if (run.failure !== null) problems.push(`${name}: the game failed to run (${String(run.failure).slice(0, 120)}): no evidence`);
+    else if (!(run.frames >= frame.minFrames)) problems.push(`${name}: ${run.frames} frames < ${frame.minFrames}`);
     else if (!(run.p95Ms <= frame.maxP95Ms)) problems.push(`${name}: p95 ${run.p95Ms} ms > budget ${frame.maxP95Ms} ms`);
   }
   if (Object.keys(evidence.examples ?? {}).length === 0) problems.push("no example was measured");
@@ -56,7 +69,7 @@ function size(args) {
   const mtek = resolve(args[args.indexOf("--mtek") + 1] && args.includes("--mtek") ? args[args.indexOf("--mtek") + 1] : join(root, "target/debug/mtek"));
   const scratch = mkdtempSync(join(tmpdir(), "mtek-budgets-"));
   const rows = {};
-  const problems = [];
+  const problems = missingBudgets(readdirSync(join(root, "examples"), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name));
   try {
     for (const [name, budget] of Object.entries(budgets.size)) {
       const out = join(scratch, name);

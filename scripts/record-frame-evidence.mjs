@@ -44,7 +44,8 @@ function serve(dir) {
 
 const linux = platform() === "linux";
 const browser = await chromium.launch({
-  headless: process.env.MTEK_HEADLESS !== "0",
+  // Headed by default: a headless Chromium may pick a software adapter. MTEK_HEADLESS=1 opts in.
+  headless: process.env.MTEK_HEADLESS === "1",
   args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist", "--enable-webgpu-developer-features",
     ...(linux ? ["--use-angle=vulkan", "--enable-features=Vulkan", "--disable-vulkan-surface"] : [])],
 });
@@ -69,6 +70,9 @@ try {
     const run = await page.evaluate(async (count) => {
       const adapter = await navigator.gpu?.requestAdapter();
       const info = adapter?.info ?? {};
+      // An adapter that does not say whether it is a fallback stays unknown (null); only a boolean is a statement.
+      const reported = info.isFallbackAdapter ?? adapter?.isFallbackAdapter;
+      const fallback = typeof reported === "boolean" ? reported : null;
       const frame = () => new Promise((done) => requestAnimationFrame(done));
       for (let i = 0; i < 60; i++) await frame();
       const deltas = [];
@@ -81,7 +85,7 @@ try {
       deltas.sort((a, b) => a - b);
       const at = (q) => deltas[Math.min(deltas.length - 1, Math.floor(q * deltas.length))];
       return {
-        adapter: adapter ? { vendor: info.vendor ?? "", architecture: info.architecture ?? "", device: info.device ?? "", description: info.description ?? "", isFallbackAdapter: Boolean(info.isFallbackAdapter ?? adapter.isFallbackAdapter) } : null,
+        adapter: adapter ? { vendor: info.vendor ?? "", architecture: info.architecture ?? "", device: info.device ?? "", description: info.description ?? "", isFallbackAdapter: fallback } : null,
         frames: deltas.length,
         p50Ms: Number(at(0.5).toFixed(3)),
         p95Ms: Number(at(0.95).toFixed(3)),
