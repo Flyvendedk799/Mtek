@@ -177,7 +177,7 @@ export function buildInputs(ctx: Ctx, runtime: RuntimeFacts, options: RunOptions
       linkable: [LIMITATIONS_DOC, REFERENCE_DOC, RELEASE_NOTES, ENVIRONMENTS_DOC, "docs/getting-started.md", "docs/coverage-matrix.md", "docs/preview-hosting.md"].flatMap(textOf),
       catalogue: ctx.catalogue,
       indexPath: DOCS_INDEX,
-      indexedPages: [GUIDE_DOC, TUTORIAL_DOC, "docs/getting-started.md", REFERENCE_DOC, LIMITATIONS_DOC, ...newPages.filter((p) => p.startsWith(`${CONCEPTS_DIR}/`))],
+      indexedPages: [GUIDE_DOC, TUTORIAL_DOC, "docs/getting-started.md", "docs/making-games.md", REFERENCE_DOC, LIMITATIONS_DOC, ...newPages.filter((p) => p.startsWith(`${CONCEPTS_DIR}/`))],
       guidePath: GUIDE_DOC,
       exposure: defaultExposureHolds(ctx.registry),
     },

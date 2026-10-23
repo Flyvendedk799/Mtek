@@ -16,7 +16,7 @@ registry: you build the tool from a checkout. **New here? Start with
 read the error and repair it. A feature counts as supported only when a test that would fail without
 it passes in a recorded environment (`spec/testing.md`).
 
-**The documentation starts at [`docs/README.md`](docs/README.md)**: a learning path, a [tutorial](docs/tutorial.md) and a page for each concept (lighting and units, time and input, state and bindings, entities and references, prefabs, textures and assets, materials, physics, modules), each with the rule, the reason, a worked example and the common mistakes with the diagnostic code each raises. Every Mtek code block in them is compiled by a test.
+**The documentation starts at [`docs/README.md`](docs/README.md)**: a learning path, a [tutorial](docs/tutorial.md), a guide to [making a game](docs/making-games.md) and a page for each concept (lighting and units, time and input, state and bindings, entities and references, prefabs, textures and assets, materials, physics, modules), each with the rule, the reason, a worked example and the common mistakes with the diagnostic code each raises. Every Mtek code block in them is compiled by a test.
 
 What the language is and what it is not: the [language guide](docs/language-guide.md) (the compact page for programs that write Mtek), the
 [language reference](docs/language-reference.md) and the [limitations](docs/limitations.md) (every

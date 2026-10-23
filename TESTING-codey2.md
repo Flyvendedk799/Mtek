@@ -190,24 +190,24 @@ Abe, on each GPU machine (NVIDIA, Intel, Apple silicon):
 
 On a 120 Hz or 144 Hz display the intervals are about 8.3 or 6.9 ms. The budget still applies, and the refresh rate shows in p50. A headless run on Linux may not be vsync-capped; set `MTEK_HEADLESS=0` to measure a real window.
 
-## 9. Not done on this branch (deferred), stated honestly
+## 9. Not done on this branch (deferred), stated honestly, and what was done since
 
-Nothing below has code here. There is nothing to test until it is built.
+This section was written when the branch ended. Items marked **done later** were completed by later commits; the decision number says where. Nothing here was re-verified on hardware by this edit.
 
-- **Phase 1, fonts.** There is no font selection and there are no local font assets: the HUD uses the system UI font only (`spec/hud.md` §6, limitation `hud-scope`). A proper design needs either a font resource type (`asset.font(path)`, validated by content like audio) or a packaging convention. It must also carry the font to the HUD's DOM layer in every build mode. Both cross the type checker, the asset compiler and the runtime, and were not started.
-- **Phase 1, panels and buttons.** These are covered by the existing `hud.rect` and `hud.button` (decision 0134). There is no layout or nine-slice panel component.
-- **Phase 6, still open:**
-  - alpha and fades (`E5902` is still "not supported");
-  - animated GLBs (`E7019` still rejects animations);
-  - 2D sprites and a 2D camera preset;
-  - texture swapping at run time (`E5073` still rejects writes to texture params);
-  - normal maps;
-  - GLB node hierarchies (`E7902`);
-  - particles;
-  - multiple cameras and switching.
-  Each one changes the renderer, the manifest or WGSL generation, and each needs GPU verification that cannot happen on this box. Only 6.2 (tweens via `easing`) is done.
+- **Phase 1, fonts.** **Done later** (decision 0139): `asset.font(path)` declares a `.ttf`, `.otf`, `.woff` or `.woff2` file (validated, `E7105`, `E7106`) and `hud.pixel_font()` is a built-in pixel font; both are the last argument of `hud.text` (`spec/hud.md` §6).
+- **Phase 1, panels and buttons.** Covered by `hud.rect` and `hud.button` (decision 0134). There is still no layout or nine-slice panel component.
+- **Phase 6:**
+  - alpha and fades: **done later** (decision 0138; `E5902` is retired, a colour alpha below 1 makes a draw translucent);
+  - animated GLBs: **partly done later** (decision 0156): LINEAR and STEP translation, rotation and scale clips play; skins, morphs and cubic-spline interpolation are still rejected (`E7019`);
+  - 2D sprites and a 2D camera preset: **done later** (decision 0170, the `Sprite` material and `Orthographic` cameras);
+  - particles: **done later** (decision 0155);
+  - multiple cameras and switching: **done later** (decision 0154, `set_camera`);
+  - texture swapping at run time (`E5073` still rejects writes to texture params): **still open**;
+  - normal maps: **still open**;
+  - GLB node hierarchies (`E7902`): **still open**.
+  Each one changed the renderer, the manifest or WGSL generation and needs GPU verification, which cannot happen on a machine without a GPU. Only 6.2 (tweens via `easing`, decision 0135) was done on this branch itself.
 - **Phase 8.2.** This is decision 0132 and the unsupported-browser screen, committed earlier (ff5fd55d). It is WebGPU-only, with no WebGL2 fallback, by decision. Nothing new was added in this round.
-- **Phase 8.3 CI.** The workflow change is a patch (`ci/small-games-ci.patch`), not applied: the push token lacks the `workflow` scope.
+- **Phase 8.3 CI.** The workflow change was a patch (`ci/small-games-ci.patch`), not applied: the push token lacked the `workflow` scope. The budgets and the CI jobs are decision 0137; check `.github/workflows` for what is applied now.
 - **Hardware frame-time evidence.** There is none for NVIDIA, Intel or Apple. It needs Abe's machines (§8).
 
 ## Pre-existing failures seen while running targeted tests (not caused by this branch)

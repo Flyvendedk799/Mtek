@@ -12,7 +12,7 @@ A small game in three scenes that uses the game-flow features of decisions 0140 
 
 `best` is also `saved state`. When a run beats it, `save()` stores it in the browser's `localStorage`, under `mtek.save.lane-runner`. The next visit starts with it. `difficulty` is a `setting state`, stored as soon as it changes, without a `save()`. `GameOver` does not declare `difficulty`, so it leaves the stored value alone. A stored value is applied after `init`, so `Run` reads the difficulty in its first `update`.
 
-There is no text yet, so the scores are shown as bars: 0.2 m per point.
+The scores are shown as bars, 0.2 m per point, as this example was written before the HUD (decision 0134) existed; `hud.text("Best ${best}", ...)` would draw the numbers, as `examples/small-game` does.
 
 ## Run
 
