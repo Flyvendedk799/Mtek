@@ -40,19 +40,38 @@ export class InputState {
   private pointer = { x: 0, y: 0 };
   private paused = false;
 
+  /**
+   * The keys the program has asked about with `is_key_down`, `key_pressed` or `key_released` since the scene started:
+   * the DOM layer suppresses their default action like that of a key a handler names (`input/dom.ts`).
+   */
+  private readonly polled = new Set<string>();
+
   /** `is_key_down(code)`: the delivered state, as of the end of phase 1 of the current frame. */
   isKeyDown(code: string): boolean {
+    this.polled.add(code);
     return this.deliveredKeys.has(code);
   }
 
   /** `key_pressed`: the key went down in the transitions delivered this frame. */
   keyPressed(code: string): boolean {
+    this.polled.add(code);
     return this.pressed.has(code);
   }
 
   /** `key_released`: the key went up in the transitions delivered this frame. */
   keyReleased(code: string): boolean {
+    this.polled.add(code);
     return this.released.has(code);
+  }
+
+  /** Whether the program polled `code` (`is_key_down`, `key_pressed`, `key_released`) in the running scene. */
+  isPolled(code: string): boolean {
+    return this.polled.has(code);
+  }
+
+  /** A new scene starts: the keys the old one polled no longer count. */
+  clearPolled(): void {
+    this.polled.clear();
   }
 
   /** `pointer_position`: NDC, as of the end of phase 1. A copy, so a caller cannot move the stored point. */

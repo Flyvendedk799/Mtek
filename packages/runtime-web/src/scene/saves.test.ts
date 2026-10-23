@@ -208,3 +208,104 @@ describe("clear and write failures", () => {
     expect(storage.getItem(saveKey("demo"))).toBeNull();
   });
 });
+
+describe("nested integer types of a stored value (decision 0176)", () => {
+  const SCORES: PersistentEntry = { name: "scores", type: "array<i32, 3>", persist: "saved" };
+  const PLAYER: PersistentEntry = { name: "player", type: "{name: string, hp: i32, slots: array<u32, 2>, mode: enum(A|B)}", persist: "saved" };
+  const player = (hp: number, slot: number, mode: number): unknown => ({ name: "x", hp, slots: [slot, 1], mode });
+
+  it("ignores an array whose element is not an i32, with W5402", () => {
+    for (const bad of [[1, 2.5, 3], [1, 2, 2 ** 31], [1, 2, -(2 ** 31) - 1]]) {
+      const { saves: game, problems, storage } = saves();
+      storage.setItem(saveKey("demo"), JSON.stringify({ format: 1, values: { scores: { type: "array<i32, 3>", value: bad } } }));
+      const state: Record<string, unknown> = { scores: [0, 0, 0] };
+      expect(game.restore([SCORES], state)).toBe(false);
+      expect(state["scores"]).toEqual([0, 0, 0]);
+      expect(problems.map((p) => p.code)).toEqual(["W5402"]);
+    }
+  });
+
+  it("takes an array of valid integers", () => {
+    const { saves: game, storage } = saves();
+    storage.setItem(saveKey("demo"), JSON.stringify({ format: 1, values: { scores: { type: "array<i32, 3>", value: [1, -2, 3] } } }));
+    const state: Record<string, unknown> = { scores: [0, 0, 0] };
+    expect(game.restore([SCORES], state)).toBe(true);
+    expect(state["scores"]).toEqual([1, -2, 3]);
+  });
+
+  it("checks struct fields, arrays inside structs and enums inside structs", () => {
+    const template = { name: "", hp: 0, slots: [0, 0], mode: 0 };
+    for (const [bad, why] of [
+      [player(1.5, 1, 0), "fractional i32 field"],
+      [player(1, -1, 0), "negative u32 in an array in a struct"],
+      [player(1, 1, 2), "enum index out of range in a struct"],
+    ] as const) {
+      const { saves: game, problems, storage } = saves();
+      storage.setItem(saveKey("demo"), JSON.stringify({ format: 1, values: { player: { type: PLAYER.type, value: bad } } }));
+      const state: Record<string, unknown> = { player: structuredClone(template) };
+      expect(game.restore([PLAYER], state), why).toBe(false);
+      expect(state["player"], why).toEqual(template);
+      expect(problems.map((p) => p.code), why).toEqual(["W5402"]);
+    }
+    const { saves: game, storage } = saves();
+    storage.setItem(saveKey("demo"), JSON.stringify({ format: 1, values: { player: { type: PLAYER.type, value: player(7, 3, 1) } } }));
+    const state: Record<string, unknown> = { player: structuredClone(template) };
+    expect(game.restore([PLAYER], state)).toBe(true);
+    expect(state["player"]).toEqual(player(7, 3, 1));
+  });
+});
+
+describe("autosave of settings without per-frame work (decision 0176)", () => {
+  it("writes once when a setting changed and not again while it stays the same", () => {
+    const writes: string[] = [];
+    const inner = new MemorySaveStorage();
+    const storage: SaveStorage = {
+      getItem: (key) => inner.getItem(key),
+      setItem: (key, value) => {
+        writes.push(value);
+        inner.setItem(key, value);
+      },
+      removeItem: (key) => {
+        inner.removeItem(key);
+      },
+    };
+    const { saves: game } = saves(storage);
+    const state: Record<string, unknown> = { volume: 0.5, best: 1 };
+    game.restore([VOLUME, BEST], state);
+    for (let frame = 0; frame < 5; frame += 1) game.autosave([VOLUME, BEST], state);
+    expect(writes).toEqual([]);
+    state["volume"] = 0.75;
+    for (let frame = 0; frame < 5; frame += 1) game.autosave([VOLUME, BEST], state);
+    expect(writes).toHaveLength(1);
+    // A saved state alone never triggers an autosave.
+    state["best"] = 2;
+    game.autosave([VOLUME, BEST], state);
+    expect(writes).toHaveLength(1);
+  });
+
+  it("sees a setting changed in place (a struct field or an array element)", () => {
+    const { saves: game, storage } = saves();
+    const SETTINGS: PersistentEntry = { name: "keys", type: "array<i32, 2>", persist: "setting" };
+    const state: Record<string, unknown> = { keys: [1, 2] };
+    game.restore([SETTINGS], state);
+    (state["keys"] as number[])[1] = 9;
+    game.autosave([SETTINGS], state);
+    expect(document(storage)).toEqual({ format: 1, values: { keys: { type: "array<i32, 2>", value: [1, 9] } } });
+  });
+
+  it("does not rewrite a NaN setting every frame", () => {
+    const writes: number[] = [];
+    const storage: SaveStorage = {
+      getItem: () => null,
+      setItem: () => {
+        writes.push(1);
+      },
+      removeItem: () => undefined,
+    };
+    const { saves: game } = saves(storage);
+    const state: Record<string, unknown> = { volume: Number.NaN };
+    game.restore([VOLUME], state);
+    for (let frame = 0; frame < 4; frame += 1) game.autosave([VOLUME], state);
+    expect(writes).toEqual([]);
+  });
+});

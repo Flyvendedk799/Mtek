@@ -14,8 +14,11 @@ export interface InputTargets {
   /** `blur` of the window is a focus loss; `undefined` outside a browser. */
   readonly window: EventTarget | undefined;
   readonly registry: ResourceRegistry;
-  /** The DOM codes some `key_down`/`key_up` handler names: only these have their default action suppressed. */
-  readonly handledKeys: ReadonlySet<string>;
+  /**
+   * The DOM codes whose default action is suppressed: those some `key_down`/`key_up` handler names and those the
+   * program polls. Asked at every key event, so the application can change the answer (a scene switch, a hot reload).
+   */
+  readonly handledKeys: { has(code: string): boolean };
 }
 
 interface KeyboardLike extends Event {
@@ -48,6 +51,15 @@ export function pointerPosition(
 export function attachInputListeners(input: InputState, targets: InputTargets): void {
   const { canvas, registry, handledKeys } = targets;
 
+  // A drag on a touch screen must reach the game instead of panning or zooming the page, and must not start a text
+  // selection (decision 0176). The CSS of a game package says the same; this covers every other page.
+  const style: CSSStyleDeclaration | undefined = (canvas as Partial<HTMLCanvasElement>).style;
+  if (style !== undefined) {
+    style.touchAction = "none";
+    style.userSelect = "none";
+    (style as unknown as Record<string, string>)["webkitUserSelect"] = "none";
+  }
+
   if (targets.document !== undefined) {
     registry.addEventListener(targets.document, "keydown", (event) => {
       const key = event as KeyboardLike;
@@ -72,11 +84,15 @@ export function attachInputListeners(input: InputState, targets: InputTargets): 
     const pointer = event as PointerLike;
     return { ...pointerPosition(canvas, pointer.clientX, pointer.clientY), button: pointer.button };
   };
+  // The pointer that pressed: the events of any other pointer (a second finger) never touch the primary's state.
+  let pressing: number | null = null;
+  const ofPressing = (pointer: PointerLike): boolean => pointer.isPrimary && (pressing === null || pointer.pointerId === pressing);
   registry.addEventListener(canvas, "pointerdown", (event) => {
     const pointer = event as PointerLike;
     if (!pointer.isPrimary) return;
     const where = at(event);
     if (input.pointerDown(where.x, where.y, where.button)) {
+      pressing = pointer.pointerId;
       // Keeps the matching pointerup coming even when the pointer leaves the canvas.
       try {
         (canvas as Partial<HTMLCanvasElement>).setPointerCapture?.(pointer.pointerId);
@@ -86,11 +102,13 @@ export function attachInputListeners(input: InputState, targets: InputTargets): 
     }
   });
   registry.addEventListener(canvas, "pointerup", (event) => {
-    if (!(event as PointerLike).isPrimary) return;
+    if (!ofPressing(event as PointerLike)) return;
     const where = at(event);
     input.pointerUp(where.x, where.y, where.button);
   });
-  registry.addEventListener(canvas, "pointercancel", () => {
+  registry.addEventListener(canvas, "pointercancel", (event) => {
+    if (!ofPressing(event as PointerLike)) return;
+    pressing = null;
     input.pointerCancelled();
   });
   registry.addEventListener(canvas, "pointermove", (event) => {

@@ -492,7 +492,8 @@ export class World {
     const tags = new TagQueries({
       staticTags,
       staticRef: (index) => (this.entities[index] as EntityRecord).ref,
-      spawned: () => this.dynamic.live.map((entity) => ({ ref: entity.ref, removing: entity.removing, tag: entity.prefab.resolved.tag })),
+      spawned: () => this.dynamic.live,
+      spawnedAt: (slot) => this.dynamic.entityAt(slot),
       worldPosition: (slot) => {
         this.propagate();
         const world = this.worldMatrix(slot);

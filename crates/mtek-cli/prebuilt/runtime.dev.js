@@ -172,7 +172,7 @@ var FontRegistry = class {
   /** The family of the font declared at `source`, registering it on first use; `undefined` if there is none. */
   family(source) {
     if (this.families.has(source)) return this.families.get(source);
-    let { manifest, page } = this.options, asset = manifest.assets.find((entry) => entry.kind === "font" && entry.source === source), bytes = asset === void 0 ? void 0 : this.options.bytes(asset.url);
+    let { page } = this.options, manifest = this.options.manifestNow?.() ?? this.options.manifest, asset = manifest.assets.find((entry) => entry.kind === "font" && entry.source === source), bytes = asset === void 0 ? void 0 : this.options.bytes(asset.url);
     if (asset === void 0 || asset.kind !== "font" || bytes === void 0 || page === void 0) {
       this.families.set(source, void 0);
       return;
@@ -182,19 +182,19 @@ var FontRegistry = class {
     try {
       let face = page.createFace(family, bytes);
       page.add(face), face.load().catch(() => {
-        this.unusable(source, asset.span);
+        this.unusable(source, asset.span, manifest);
       });
     } catch {
-      this.unusable(source, asset.span);
+      this.unusable(source, asset.span, manifest);
     }
     return family;
   }
-  unusable(source, span) {
+  unusable(source, span, manifest) {
     this.families.set(source, void 0), this.options.report(
       makeRuntimeDiagnostic("W8204", {
         phase: "runtime:update",
         message: `The browser could not load the font '${source}'; the HUD text uses the default family instead.`,
-        source: resolveSpan(this.options.manifest, span)
+        source: resolveSpan(manifest, span)
       })
     );
   }
@@ -7313,8 +7313,8 @@ function pointerPosition(canvas, clientX, clientY) {
   return { x: clamp3((clientX - rect.left) / width * 2 - 1), y: clamp3(1 - (clientY - rect.top) / height * 2) };
 }
 function attachInputListeners(input, targets) {
-  let { canvas, registry, handledKeys } = targets;
-  targets.document !== void 0 && (registry.addEventListener(targets.document, "keydown", (event) => {
+  let { canvas, registry, handledKeys } = targets, style = canvas.style;
+  style !== void 0 && (style.touchAction = "none", style.userSelect = "none", style.webkitUserSelect = "none"), targets.document !== void 0 && (registry.addEventListener(targets.document, "keydown", (event) => {
     let key = event;
     isMappedKeyCode(key.code) && (handledKeys.has(key.code) && key.preventDefault(), input.keyDown(key.code, key.repeat));
   }), registry.addEventListener(targets.document, "keyup", (event) => {
@@ -7326,22 +7326,24 @@ function attachInputListeners(input, targets) {
   let at3 = (event) => {
     let pointer = event;
     return { ...pointerPosition(canvas, pointer.clientX, pointer.clientY), button: pointer.button };
-  };
+  }, pressing = null, ofPressing = (pointer) => pointer.isPrimary && (pressing === null || pointer.pointerId === pressing);
   registry.addEventListener(canvas, "pointerdown", (event) => {
     let pointer = event;
     if (!pointer.isPrimary) return;
     let where = at3(event);
-    if (input.pointerDown(where.x, where.y, where.button))
+    if (input.pointerDown(where.x, where.y, where.button)) {
+      pressing = pointer.pointerId;
       try {
         canvas.setPointerCapture?.(pointer.pointerId);
       } catch {
       }
+    }
   }), registry.addEventListener(canvas, "pointerup", (event) => {
-    if (!event.isPrimary) return;
+    if (!ofPressing(event)) return;
     let where = at3(event);
     input.pointerUp(where.x, where.y, where.button);
-  }), registry.addEventListener(canvas, "pointercancel", () => {
-    input.pointerCancelled();
+  }), registry.addEventListener(canvas, "pointercancel", (event) => {
+    ofPressing(event) && (pressing = null, input.pointerCancelled());
   }), registry.addEventListener(canvas, "pointermove", (event) => {
     if (!event.isPrimary) return;
     let where = at3(event);
@@ -7843,17 +7845,30 @@ var InputState = class {
   /** The last delivered pointer position. `(0, 0)` until the pointer moves or a button changes. */
   pointer = { x: 0, y: 0 };
   paused = !1;
+  /**
+   * The keys the program has asked about with `is_key_down`, `key_pressed` or `key_released` since the scene started:
+   * the DOM layer suppresses their default action like that of a key a handler names (`input/dom.ts`).
+   */
+  polled = /* @__PURE__ */ new Set();
   /** `is_key_down(code)`: the delivered state, as of the end of phase 1 of the current frame. */
   isKeyDown(code) {
-    return this.deliveredKeys.has(code);
+    return this.polled.add(code), this.deliveredKeys.has(code);
   }
   /** `key_pressed`: the key went down in the transitions delivered this frame. */
   keyPressed(code) {
-    return this.pressed.has(code);
+    return this.polled.add(code), this.pressed.has(code);
   }
   /** `key_released`: the key went up in the transitions delivered this frame. */
   keyReleased(code) {
-    return this.released.has(code);
+    return this.polled.add(code), this.released.has(code);
+  }
+  /** Whether the program polled `code` (`is_key_down`, `key_pressed`, `key_released`) in the running scene. */
+  isPolled(code) {
+    return this.polled.has(code);
+  }
+  /** A new scene starts: the keys the old one polled no longer count. */
+  clearPolled() {
+    this.polled.clear();
   }
   /** `pointer_position`: NDC, as of the end of phase 1. A copy, so a caller cannot move the stored point. */
   pointerPosition() {
@@ -7945,6 +7960,21 @@ var InputState = class {
   }
 };
 
+// src/math/copy.ts
+function copy(value) {
+  if (Array.isArray(value)) {
+    let items = value, out = new Array(items.length);
+    for (let i = 0; i < items.length; i++) out[i] = copy(items[i]);
+    return out;
+  }
+  if (typeof value == "object" && value !== null && !ArrayBuffer.isView(value)) {
+    let out = {};
+    for (let [key, field] of Object.entries(value)) out[key] = copy(field);
+    return out;
+  }
+  return value;
+}
+
 // src/audio/audio.ts
 var VOLUME_RANGE = [0, 4], PITCH_RANGE = [0.0625, 16];
 function browserAudioBackend() {
@@ -7980,8 +8010,8 @@ var AudioSystem = class {
     let pending = [];
     for (let asset of options.manifest.assets) {
       if (asset.kind !== "audio") continue;
-      let sound = { url: asset.url, span: asset.span, buffer: void 0, state: "pending" };
-      this.sounds.set(asset.source, sound), pending.push(this.decodeOne(sound));
+      let sound = { url: asset.url, span: asset.span, manifest: options.manifest, buffer: void 0, state: "pending" };
+      this.sounds.set(asset.source, sound), pending.push(this.decodeOne(sound, "runtime:mount", asset.source));
     }
     this.decoded = Promise.all(pending).then(() => {
     });
@@ -7995,6 +8025,8 @@ var AudioSystem = class {
   music;
   active = /* @__PURE__ */ new Set();
   disposed = !1;
+  /** The host paused: the context stays suspended until it resumes. */
+  hostPaused = !1;
   /** Resolves when every sound is decoded or failed (for tests). */
   decoded;
   /** Whether the program declares any sound. */
@@ -8009,26 +8041,33 @@ var AudioSystem = class {
   get unlocked() {
     return this.context !== void 0;
   }
-  async decodeOne(sound) {
+  /**
+   * Decodes `sound`: ready when done, `W8202` once when the browser cannot (also for a sound a hot reload adds). A
+   * track `play_music` asked for while this ran starts now (decision 0176).
+   */
+  async decodeOne(sound, phase, source, bytes = this.options.bytes) {
     let backend = this.options.backend;
     if (backend === void 0) {
       sound.state = "failed";
       return;
     }
-    let bytes = this.options.bytes(sound.url);
     try {
-      if (bytes === void 0) throw new Error("its bytes were not loaded");
-      sound.buffer = await backend.decode(bytes), sound.state = "ready";
+      let data = bytes(sound.url);
+      if (data === void 0) throw new Error("its bytes were not loaded");
+      sound.buffer = await backend.decode(data), sound.state = "ready";
     } catch (error) {
       sound.state = "failed", this.options.report(
         makeRuntimeDiagnostic("W8202", {
-          phase: "runtime:mount",
+          phase,
           message: `The browser could not decode the sound '${sound.url}': ${error instanceof Error ? error.message : String(error)}. Playing it does nothing.`,
-          source: resolveSpan(this.options.manifest, sound.span),
+          source: resolveSpan(sound.manifest, sound.span),
           notes: ["help: convert the sound to 16-bit PCM WAV, which every browser decodes"]
         })
       );
+      return;
     }
+    let wanted = this.music;
+    wanted !== void 0 && wanted.node === void 0 && wanted.source === source && this.context !== void 0 && this.startMusic(source, wanted.volume);
   }
   /**
    * The first key press, click or touch: creates (or resumes) the playing context, inside the gesture as browsers
@@ -8043,9 +8082,17 @@ var AudioSystem = class {
         let wanted = this.music;
         wanted !== void 0 && wanted.node === void 0 && this.startMusic(wanted.source, wanted.volume);
       }
-      this.context.state === "suspended" && this.context.resume().catch(() => {
+      this.context.state === "suspended" && !this.hostPaused && this.context.resume().catch(() => {
       });
     }
+  }
+  setSuspended(suspended) {
+    if (this.disposed) return;
+    this.hostPaused = suspended;
+    let context = this.context;
+    context !== void 0 && (suspended ? context.suspend?.().catch(() => {
+    }) : context.state === "suspended" && context.resume().catch(() => {
+    }));
   }
   applyMaster() {
     this.master !== void 0 && (this.master.gain.value = this.muted ? 0 : this.volume);
@@ -8059,7 +8106,7 @@ var AudioSystem = class {
       makeRuntimeDiagnostic("W8201", {
         phase: "runtime:update",
         message: `The ${what} ${describe3(value)} is outside ${String(lo)} to ${String(hi)}; ${String(used)} is used.`,
-        source: typeof spanId == "number" ? resolveSpan(this.options.manifest, spanId) : null,
+        source: typeof spanId == "number" ? resolveSpan(this.options.manifestNow?.() ?? this.options.manifest, spanId) : null,
         expected: `${String(lo)} to ${String(hi)}`,
         actual: describe3(value)
       })
@@ -8116,31 +8163,15 @@ var AudioSystem = class {
     return this.muted;
   }
   adopt(manifest, bytes) {
+    let hadSounds = this.sounds.size > 0;
     for (let asset of manifest.assets) {
       if (asset.kind !== "audio") continue;
       let known = this.sounds.get(asset.source);
       if (known !== void 0 && known.url === asset.url) continue;
-      let sound = { url: asset.url, span: asset.span, buffer: void 0, state: "pending" };
-      this.sounds.set(asset.source, sound);
-      let backend = this.options.backend;
-      if (backend === void 0) {
-        sound.state = "failed";
-        continue;
-      }
-      let data = bytes(asset.url);
-      if (data === void 0) {
-        sound.state = "failed";
-        continue;
-      }
-      backend.decode(data).then(
-        (buffer) => {
-          sound.buffer = buffer, sound.state = "ready";
-        },
-        () => {
-          sound.state = "failed";
-        }
-      );
+      let sound = { url: asset.url, span: asset.span, manifest, buffer: void 0, state: "pending" };
+      this.sounds.set(asset.source, sound), this.decodeOne(sound, "runtime:reload", asset.source, bytes);
     }
+    !hadSounds && this.sounds.size > 0 && this.options.onFirstSound?.();
   }
   /** Stops every sound and closes the context (`dispose()`). Idempotent. */
   dispose() {
@@ -8677,6 +8708,13 @@ function pixelTextSvg(content, fill) {
 function svgUrl(svg) {
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
+var IMAGE_MEMO_LIMIT = 256, imageMemo = /* @__PURE__ */ new Map();
+function pixelTextImage(content, fill) {
+  let key = `${fill}\0${content}`, known = imageMemo.get(key);
+  if (known !== void 0) return known;
+  let { svg, width } = pixelTextSvg(content, fill), made = { url: svgUrl(svg), width };
+  return imageMemo.size >= IMAGE_MEMO_LIMIT && imageMemo.clear(), imageMemo.set(key, made), made;
+}
 
 // src/hud/hud.ts
 var TEXT_SIZE_RANGE = [1, 512], RECT_SIZE_RANGE = [0, 8192], MAX_HUD_ITEMS = 512, DEFAULT_SIZE = 24, NO_HUD = Object.freeze({
@@ -8727,6 +8765,9 @@ var HudSystem = class {
   labelCounts = /* @__PURE__ */ new Map();
   warnedSpans = /* @__PURE__ */ new Set();
   disposed = !1;
+  clearClicks() {
+    this.pendingClicks.clear();
+  }
   /** Phase 1: a new frame draws a new list. */
   beginFrame() {
     this.items = [], this.labelCounts.clear();
@@ -8809,7 +8850,7 @@ var HudSystem = class {
           makeRuntimeDiagnostic("W8203", {
             phase: "runtime:update",
             message: `This frame drew more than ${String(MAX_HUD_ITEMS)} HUD items; the rest are not shown.`,
-            source: span >= 0 ? resolveSpan(this.options.manifest, span) : null,
+            source: span >= 0 ? resolveSpan(this.options.manifestNow?.() ?? this.options.manifest, span) : null,
             expected: `at most ${String(MAX_HUD_ITEMS)} items per frame`
           })
         ));
@@ -8857,8 +8898,8 @@ var HudSystem = class {
     switch (write("left", left), write("top", top), item.kind) {
       case "text":
         if (write("transform", `translate(${String(-item.align * 100)}%,-50%)`), item.font === PIXEL_FONT) {
-          let { svg, width } = pixelTextSvg(item.content, item.tint), scale = item.size / CELL_HEIGHT;
-          write("#text", ""), write("#label", item.content), write("backgroundImage", svgUrl(svg)), write("backgroundSize", "100% 100%"), write("width", `${String(width * scale)}px`), write("height", `${String(item.size)}px`);
+          let { url, width } = pixelTextImage(item.content, item.tint), scale = item.size / CELL_HEIGHT;
+          write("#text", ""), write("#label", item.content), write("backgroundImage", url), write("backgroundSize", "100% 100%"), write("width", `${String(width * scale)}px`), write("height", `${String(item.size)}px`);
           break;
         }
         write("#label", ""), write("backgroundImage", "none"), write("width", ""), write("height", ""), write("#text", item.content), write("fontSize", `${String(item.size)}px`), write("color", item.tint), write("fontFamily", item.font === "" ? DEFAULT_FAMILY : item.font);
@@ -9389,7 +9430,7 @@ var DynamicEntities = class {
       instance,
       ...prefab.resolved.particles === void 0 ? {} : { particles: prefab.resolved.particles },
       ...prefab.resolved.clip === void 0 ? {} : { clip: prefab.resolved.clip }
-    }, host = this.options.host, record = host.makeRecord(ref, resolved, prefab, params), entity = { record, resolved, ref, prefab, order: this.nextOrder++, removing: !1, attachments: /* @__PURE__ */ new Map() };
+    }, host = this.options.host, record = host.makeRecord(ref, resolved, prefab, params), entity = { record, resolved, ref, prefab, tag: prefab.resolved.tag, order: this.nextOrder++, removing: !1, attachments: /* @__PURE__ */ new Map() };
     return this.bySlot[slot] = entity, host.register(slot, record, resolved), instance !== null && materials.createInstance(instance), render.addEntity(resolved), prefab.program.init(host.ctx, record, params), this.bind(entity), instance !== null && instance.shareable && materials.shareInstance(instance.index), this.spawnedTotal += 1, entity;
   }
   announce(entity) {
@@ -9562,6 +9603,8 @@ var TimerList = class {
   started = 0;
   running = !1;
   added = [];
+  /** The earliest due time of the waiting timers: a frame before it does not look at the list. */
+  earliest = 1 / 0;
   /** Game time of this scene, in seconds: the sum of the deltas of the frames in which the game was not paused. */
   get gameTime() {
     return this.now;
@@ -9590,7 +9633,7 @@ var TimerList = class {
       spanId: typeof spanId == "number" ? spanId : -1,
       cancelled: !1
     };
-    this.started += 1, this.running ? this.added.push(timer) : this.timers.push(timer);
+    this.started += 1, this.running ? this.added.push(timer) : (this.timers.push(timer), timer.due < this.earliest && (this.earliest = timer.due));
   }
   /**
    * Advances the game clock by `delta` seconds and runs the blocks that fall due. `alive` says whether a timer's
@@ -9599,7 +9642,9 @@ var TimerList = class {
    */
   advance(delta, alive) {
     this.now += Math.max(0, delta);
-    let now = this.now, due = this.timers.filter((timer) => timer.due <= now);
+    let now = this.now;
+    if (now < this.earliest) return;
+    let due = this.timers.filter((timer) => timer.due <= now);
     if (due.length !== 0) {
       due.sort((a, b) => a.due - b.due || a.order - b.order), this.running = !0;
       try {
@@ -9612,14 +9657,15 @@ var TimerList = class {
             timer.repeat ? (timer.due += timer.period, timer.due <= now && (timer.due = now + timer.period)) : timer.cancelled = !0, timer.fn();
           }
       } finally {
-        this.running = !1, this.timers = this.timers.filter((timer) => !timer.cancelled && (timer.owner === null || alive(timer.owner))), this.timers.push(...this.added), this.added.length = 0;
+        this.running = !1, this.timers = this.timers.filter((timer) => !timer.cancelled && (timer.owner === null || alive(timer.owner))), this.timers.push(...this.added), this.added.length = 0, this.earliest = 1 / 0;
+        for (let timer of this.timers) timer.due < this.earliest && (this.earliest = timer.due);
       }
     }
   }
   /** Drops every timer (the scene ends). */
   clear() {
     for (let timer of this.timers) timer.cancelled = !0;
-    this.timers = [], this.added.length = 0;
+    this.timers = [], this.added.length = 0, this.earliest = 1 / 0;
   }
 };
 
@@ -9666,8 +9712,8 @@ var TagQueries = class {
     if (!this.world.alive(target)) return !1;
     let { staticTags } = this.world;
     if (target.slot < staticTags.length) return staticTags[target.slot] === name;
-    let entity = this.world.spawned().find((e) => e.ref.slot === target.slot && e.ref.gen === target.gen);
-    return entity !== void 0 && entity.tag === name;
+    let entity = this.world.spawnedAt === void 0 ? this.world.spawned().find((e) => e.ref.slot === target.slot && e.ref.gen === target.gen) : this.world.spawnedAt(target.slot);
+    return entity !== void 0 && entity.ref.gen === target.gen && entity.tag === name;
   }
   tagged(tag) {
     return this.entities(tagArgument(tag, "tagged"));
@@ -9948,7 +9994,8 @@ var World = class {
     }, staticTags = this.structure.entities.map((entity) => this.manifest.scene.entities[entity.index]?.tag), tags = new TagQueries({
       staticTags,
       staticRef: (index) => this.entities[index].ref,
-      spawned: () => this.dynamic.live.map((entity) => ({ ref: entity.ref, removing: entity.removing, tag: entity.prefab.resolved.tag })),
+      spawned: () => this.dynamic.live,
+      spawnedAt: (slot) => this.dynamic.entityAt(slot),
       worldPosition: (slot) => {
         this.propagate();
         let world = this.worldMatrix(slot);
@@ -12568,7 +12615,7 @@ async function startScene(options) {
         prefabs: buildPrefabRuntimes(structure.prefabs, program.prefabs),
         ...services === void 0 ? {} : { services }
       }), freshBindings = new Bindings(manifest, program.scene.bindings, fresh);
-      fresh.initialise(program.scene.init, () => {
+      options.onWorld?.(fresh), fresh.initialise(program.scene.init, () => {
         freshBindings.evaluate();
       }), world = fresh, bindings = freshBindings;
     } else
@@ -12710,6 +12757,10 @@ var Behaviors = class {
   update(delta) {
     this.run(this.scene.update, this.scene.entityUpdate, delta, !0);
   }
+  /** Phase 3, after `update` and also while the game is paused: the scene's `ui(dt)` (decision 0175). */
+  ui(delta) {
+    this.scene.ui?.(this.world.ctx, Math.fround(delta));
+  }
   run(sceneFunction, entityFunctions, dt, update) {
     let value = Math.fround(dt);
     sceneFunction !== null && sceneFunction(this.world.ctx, value);
@@ -12749,6 +12800,31 @@ function whileLimit(spanId) {
 function budgetExceeded(spanId) {
   throw new ExecutionBudgetExceeded(spanId);
 }
+
+// src/random/xoshiro.ts
+var Xoshiro128 = class {
+  s0;
+  s1;
+  s2;
+  s3;
+  constructor(seed) {
+    let x = seed >>> 0, next = () => {
+      x = x + 2654435769 >>> 0;
+      let z = x;
+      return z = Math.imul(z ^ z >>> 16, 2246822507) >>> 0, z = Math.imul(z ^ z >>> 13, 3266489909) >>> 0, (z ^ z >>> 16) >>> 0;
+    };
+    this.s0 = next(), this.s1 = next(), this.s2 = next(), this.s3 = next();
+  }
+  /** The next 32 random bits. */
+  nextU32() {
+    let rotl = (v, k) => (v << k | v >>> 32 - k) >>> 0, result = Math.imul(rotl(Math.imul(this.s1, 5) >>> 0, 7), 9) >>> 0, t = this.s1 << 9 >>> 0;
+    return this.s2 = (this.s2 ^ this.s0) >>> 0, this.s3 = (this.s3 ^ this.s1) >>> 0, this.s1 = (this.s1 ^ this.s2) >>> 0, this.s0 = (this.s0 ^ this.s3) >>> 0, this.s2 = (this.s2 ^ t) >>> 0, this.s3 = rotl(this.s3, 11), result;
+  }
+  /** `random()`: an f32 in `[0, 1)`; the top 24 bits, so every value is exactly representable. */
+  nextF32() {
+    return (this.nextU32() >>> 8) / 16777216;
+  }
+};
 
 // src/schedule/scheduler.ts
 var Scheduler = class {
@@ -12868,7 +12944,7 @@ var Scheduler = class {
         this.phases.phase2_tick(fixedStep), this.accumulator -= fixedStep, steps += 1;
       this.accumulator >= fixedStep && !this.gameHeld && (this.discarded += Math.floor(this.accumulator / fixedStep), this.accumulator %= fixedStep);
     }
-    this.gameHeld || this.phases.phase3_update(delta), this.phases.phase4_flush(), this.phases.phase5_bindings(), this.phases.phase6_transforms(), this.currentState !== "stopped" && this.phases.phase7_render(), this.frames += 1;
+    this.gameHeld || this.phases.phase3_update(delta), this.phases.phase3_ui?.(delta), this.phases.phase4_flush(), this.phases.phase5_bindings(), this.phases.phase6_transforms(), this.currentState !== "stopped" && this.phases.phase7_render(), this.frames += 1;
   }
   requestNext() {
     this.source === null || this.currentState !== "running" || this.handle !== null || (this.handle = this.source.request((nowMs) => {
@@ -12923,6 +12999,8 @@ function functionOrNull(value) {
 function sceneShapeProblem(scene, entityCount, bindingCount) {
   for (let name of ["update", "fixedUpdate"])
     if (!functionOrNull(own(scene, name))) return { field: name, problem: `has a \`${name}\` that is neither a function nor null` };
+  let ui = own(scene, "ui");
+  if (ui !== void 0 && !functionOrNull(ui)) return { field: "ui", problem: "has a `ui` that is neither a function nor null" };
   for (let name of ["entityUpdate", "entityFixedUpdate"]) {
     let list = own(scene, name);
     if (!Array.isArray(list) || list.length !== entityCount || !list.every(functionOrNull))
@@ -13347,12 +13425,53 @@ function persistentEntries(state) {
     entry.persist !== void 0 && out.push({ name: entry.name, type: entry.storedType ?? entry.type, persist: entry.persist });
   return out;
 }
-function fitsScalar(type, value) {
+function splitTop(text) {
+  let parts = [], depth = 0, start = 0;
+  for (let i = 0; i < text.length; i += 1) {
+    let c = text[i];
+    c === "<" || c === "{" || c === "(" ? depth += 1 : c === ">" || c === "}" || c === ")" ? depth -= 1 : c === "," && depth === 0 && (parts.push(text.slice(start, i).trim()), start = i + 1);
+  }
+  let last = text.slice(start).trim();
+  return last !== "" && parts.push(last), parts;
+}
+function fitsType(type, value) {
+  let array = /^array<(.*)>$/s.exec(type);
+  if (array !== null) {
+    let element = splitTop(array[1] ?? "")[0];
+    return Array.isArray(value) && (element === void 0 || value.every((item) => fitsType(element, item)));
+  }
+  if (type.startsWith("{") && type.endsWith("}")) {
+    if (typeof value != "object" || value === null) return !1;
+    let record = value;
+    return splitTop(type.slice(1, -1)).every((field) => {
+      let colon = field.indexOf(":");
+      return colon < 0 || fitsType(field.slice(colon + 1).trim(), record[field.slice(0, colon).trim()]);
+    });
+  }
   if (typeof value != "number") return !0;
   if (type === "i32") return Number.isInteger(value) && value >= -2147483648 && value <= 2147483647;
   if (type === "u32") return Number.isInteger(value) && value >= 0 && value <= 4294967295;
   let variants = /^enum\((.*)\)$/.exec(type);
-  return variants !== null ? Number.isInteger(value) && value >= 0 && value < variants[1].split("|").length : !0;
+  return variants !== null ? Number.isInteger(value) && value >= 0 && value < (variants[1] ?? "").split("|").length : !0;
+}
+function snapshotOf(value) {
+  return ArrayBuffer.isView(value) ? Array.from(value) : Array.isArray(value) ? value.map(snapshotOf) : typeof value == "object" && value !== null ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, snapshotOf(item)])) : value;
+}
+function sameAsSnapshot(snapshot2, current) {
+  if (snapshot2 === current) return !0;
+  if (typeof snapshot2 == "number" && typeof current == "number") return Number.isNaN(snapshot2) && Number.isNaN(current);
+  if (ArrayBuffer.isView(current)) {
+    let view = current;
+    return Array.isArray(snapshot2) && snapshot2.length === view.length && snapshot2.every((item, i) => sameAsSnapshot(item, view[i]));
+  }
+  if (Array.isArray(current))
+    return Array.isArray(snapshot2) && snapshot2.length === current.length && current.every((item, i) => sameAsSnapshot(snapshot2[i], item));
+  if (typeof current == "object" && current !== null) {
+    if (typeof snapshot2 != "object" || snapshot2 === null || Array.isArray(snapshot2)) return !1;
+    let keys = Object.keys(current), before = snapshot2;
+    return keys.length === Object.keys(before).length && keys.every((key) => sameAsSnapshot(before[key], current[key]));
+  }
+  return !1;
 }
 var MemorySaveStorage = class {
   items = /* @__PURE__ */ new Map();
@@ -13384,8 +13503,8 @@ var GameSaves = class {
   namespace;
   report;
   unavailable;
-  /** The JSON of the settings as last read or written, so autosave writes only on a change. */
-  settingsSnapshot = "";
+  /** The settings as last read or written, so autosave writes only on a change (and costs nothing otherwise). */
+  settingsSnapshot = /* @__PURE__ */ new Map();
   warned = /* @__PURE__ */ new Set();
   /** Whether the program has persistent state at all. */
   get enabled() {
@@ -13406,26 +13525,29 @@ var GameSaves = class {
         continue;
       }
       let value = decodeValue(item.value, state[entry.name]);
-      if (value === void 0 || !fitsScalar(entry.type, value)) {
+      if (value === void 0 || !fitsType(entry.type, value)) {
         this.warnOnce(`shape:${entry.name}`, `The saved value of '${entry.name}' does not fit its type ${entry.type}; the state keeps its value.`);
         continue;
       }
       state[entry.name] = value, applied = !0;
     }
-    return this.settingsSnapshot = this.settingsJson(entries, state), applied;
+    return this.remember(entries, state), applied;
   }
   /** `save()`: writes every persistent state of `entries`. */
   save(entries, state) {
-    entries.length !== 0 && (this.write(entries, state), this.settingsSnapshot = this.settingsJson(entries, state));
+    entries.length !== 0 && (this.write(entries, state), this.remember(entries, state));
   }
   /** Autosave: writes the persistent states when a `setting state` changed since the last read or write. */
   autosave(entries, state) {
-    if (!entries.some((entry) => entry.persist === "setting")) return;
-    let json = this.settingsJson(entries, state);
-    json !== this.settingsSnapshot && (this.settingsSnapshot = json, this.write(
-      entries.filter((entry) => entry.persist === "setting"),
-      state
-    ));
+    let changed = !1;
+    for (let entry of entries)
+      if (entry.persist === "setting" && (!this.settingsSnapshot.has(entry.name) || !sameAsSnapshot(this.settingsSnapshot.get(entry.name), state[entry.name]))) {
+        changed = !0;
+        break;
+      }
+    if (!changed) return;
+    let settings = entries.filter((entry) => entry.persist === "setting");
+    this.write(settings, state), this.remember(entries, state);
   }
   /** `clear_saved()`: removes every stored value of the program. */
   clear() {
@@ -13436,11 +13558,10 @@ var GameSaves = class {
         this.report({ code: "W5403", message: `Clearing the saved data failed: ${errorText5(error)}.` });
       }
   }
-  settingsJson(entries, state) {
-    let settings = {};
+  remember(entries, state) {
+    this.settingsSnapshot.clear();
     for (let entry of entries)
-      entry.persist === "setting" && (settings[entry.name] = encodeValue(state[entry.name]));
-    return JSON.stringify(settings);
+      entry.persist === "setting" && this.settingsSnapshot.set(entry.name, snapshotOf(state[entry.name]));
   }
   read() {
     if (this.namespace === void 0) return {};
@@ -14033,7 +14154,7 @@ function programOfModule(module) {
   return candidate;
 }
 function carryValue(value) {
-  return Array.isArray(value) ? value.map(carryValue) : typeof value == "object" && value !== null && !Object.isFrozen(value) ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, carryValue(item)])) : value;
+  return ArrayBuffer.isView(value) ? copy(value) : Array.isArray(value) ? value.map(carryValue) : typeof value == "object" && value !== null && !Object.isFrozen(value) ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, carryValue(item)])) : value;
 }
 var RecoveryAbandoned = class extends Error {
 };
@@ -14047,7 +14168,7 @@ var MountedApp = class {
   constructor(deps) {
     this.deps = deps;
     let { manifest, environment, registry, test } = deps;
-    this.seed = deps.seed, this.injectedDeviceFailures = test?.recovery?.failDeviceRequests ?? 0, this.recoveryDelaysMs = test?.recovery?.delaysMs ?? DEFAULT_RECOVERY_DELAYS_MS, this.input = deps.input, this.behaviors = new Behaviors(deps.sceneFunctions, deps.scene.world), this.hostInputs = new HostInputs(manifest), this.hostOutputs = new HostOutputs(manifest);
+    this.seed = deps.seed, this.injectedDeviceFailures = test?.recovery?.failDeviceRequests ?? 0, this.recoveryDelaysMs = test?.recovery?.delaysMs ?? DEFAULT_RECOVERY_DELAYS_MS, this.input = deps.input, this.behaviors = new Behaviors(deps.sceneFunctions, deps.scene.world), this.handlerKeys = this.behaviors.handledKeys(), this.liveServices = deps.services, this.hooks = this.gameHooks(), this.hostInputs = new HostInputs(manifest), this.hostOutputs = new HostOutputs(manifest);
     for (let shader of manifest.shaders)
       this.shaderSources.has(shader.hash) || this.shaderSources.set(shader.hash, new URL(shader.url, deps.program.baseUrl).href);
     registry.phase = "runtime:render", test?.disableCulling === !0 && deps.scene.renderer.setFrustumCulling(!1);
@@ -14079,17 +14200,17 @@ var MountedApp = class {
       document: environment.document,
       window: environment.window,
       registry,
-      handledKeys: this.behaviors.handledKeys()
+      handledKeys: this.keyGuard
     }), environment.document !== void 0 && (registry.addEventListener(environment.document, "visibilitychange", () => {
       this.onVisibilityChange();
-    }), deps.pauseWhenHidden && environment.document.visibilityState === "hidden" && (this.current = "paused", this.pausedByVisibility = !0, this.input.pause(), this.scheduler.pause())), test !== void 0 && (this.debug = this.createDebug(manual)), this.saves = new GameSaves(
+    }), deps.pauseWhenHidden && environment.document.visibilityState === "hidden" && (this.current = "paused", this.pausedByVisibility = !0, this.input.pause(), this.scheduler.pause(), deps.services.audio?.setSuspended?.(!0))), test !== void 0 && (this.debug = this.createDebug(manual)), this.saves = new GameSaves(
       deps.saveStorage ?? new MemorySaveStorage(),
       manifest.game?.storage,
       (problem) => {
         this.reportSaveProblem(problem);
       },
       deps.saveStorageUnavailable === !0
-    ), this.saves.restore(persistentEntries(manifest.scene.state), deps.scene.world.sceneState), deps.game !== void 0 && (deps.game.target = this.gameHooks()), this.scheduler.start();
+    ), this.saves.restore(persistentEntries(manifest.scene.state), deps.scene.world.sceneState), deps.game !== void 0 && (deps.game.target = this.hooks), this.scheduler.start();
   }
   deps;
   debug;
@@ -14115,6 +14236,16 @@ var MountedApp = class {
   pendingSwap;
   /** The scene change being prepared or queued: later `go_to`/`reset` calls are ignored until it is applied or fails. */
   sceneRequest;
+  /** The game hooks of the live scene (decisions 0140, 0141, 0143). */
+  hooks;
+  /** The CPU services the live world was started with: the application's, or those of its own `Preparation`. */
+  liveServices;
+  /** The DOM codes some handler of the live scene names (rebuilt at every swap); polled keys are added on top. */
+  handlerKeys;
+  /** What `attachInputListeners` asks: is the default action of this key suppressed? */
+  keyGuard = {
+    has: (code) => this.handlerKeys.has(code) || this.input.isPolled(code)
+  };
   /** Identifies the current device: a `lost` event of an older one is stale (decision 0056). */
   deviceEpoch = 0;
   /** The epoch whose `destroyed` loss was requested by `debug.loseDevice` and is therefore a loss to recover from. */
@@ -14160,6 +14291,34 @@ var MountedApp = class {
       }
     };
   }
+  /**
+   * The hooks of a scene that is being prepared (decision 0176): its `pause()`/`resume()` are remembered and applied
+   * when it becomes the live scene, its `save()`/`load()` read and write its own state, and a scene change it asks for
+   * is ignored, because one is pending already.
+   */
+  preparingHooks(preparation) {
+    let entries = () => persistentEntries(preparation.manifest?.scene.state ?? []);
+    return {
+      goTo: () => {
+      },
+      reset: () => {
+      },
+      pause: () => {
+        preparation.held = !0;
+      },
+      resume: () => {
+        preparation.held = !1;
+      },
+      paused: () => preparation.held === !0,
+      save: () => {
+        preparation.world !== void 0 && this.saves.save(entries(), preparation.world.sceneState);
+      },
+      load: () => preparation.world === void 0 ? !1 : this.saves.restore(entries(), preparation.world.sceneState),
+      clearSaved: () => {
+        this.saves.clear();
+      }
+    };
+  }
   /** `W5402` and `W5403` (decision 0145): warnings, the scene goes on. */
   reportSaveProblem(problem) {
     this.report(makeRuntimeDiagnostic(problem.code, { phase: "runtime:update", message: problem.message }));
@@ -14172,11 +14331,13 @@ var MountedApp = class {
   requestScene(kind, scene, spanId) {
     if (this.sceneRequest !== void 0 || this.current !== "running" && this.current !== "paused") return;
     let request = { kind, scene };
-    this.sceneRequest = request, this.changeScene(request, spanId).catch((error) => {
+    this.sceneRequest = request;
+    let seed = Math.floor(this.liveServices.random() * 4294967296) >>> 0;
+    this.changeScene(request, spanId, seed).catch((error) => {
       this.sceneChangeFailed(request, spanId, [], errorText6(error));
     });
   }
-  async changeScene(request, spanId) {
+  async changeScene(request, spanId, seed) {
     let current = this.deps.manifest, candidate;
     if (request.scene === current.scene.name)
       candidate = this.deps.program;
@@ -14196,7 +14357,7 @@ var MountedApp = class {
       }
     }
     let diagnostics = [];
-    (await this.prepareProgram(candidate, { kind: "fresh", carry: request.kind === "go_to" }, (diagnostic2) => {
+    (await this.prepareProgram(candidate, { kind: "fresh", carry: request.kind === "go_to", seed }, (diagnostic2) => {
       diagnostics.push(diagnostic2);
     })).ok || this.sceneChangeFailed(request, spanId, diagnostics, "the scene could not be prepared");
   }
@@ -14249,7 +14410,12 @@ var MountedApp = class {
    * decisions 0140 and 0141). Every diagnostic goes to `report`; nothing is reported elsewhere.
    */
   async prepareProgram(candidate, mode, report) {
-    let { environment, device, registry, surface, services } = this.deps, epoch = this.deviceEpoch, generation = registry.generation, assertActive = () => {
+    let { environment, device, registry, surface } = this.deps, services = this.liveServices, preparation;
+    if (mode.kind === "fresh") {
+      let generator = new Xoshiro128(mode.seed), link = new GameLink();
+      services = { ...this.deps.services, game: link, random: () => generator.nextF32() }, preparation = { services, link, held: void 0, manifest: void 0, world: void 0 }, link.target = this.preparingHooks(preparation);
+    }
+    let epoch = this.deviceEpoch, generation = registry.generation, assertActive = () => {
       if (this.deviceEpoch !== epoch || registry.generation !== generation || this.current !== "running" && this.current !== "paused")
         throw new Error(`The candidate was discarded because its application or GPU device is no longer current (application ${this.current}).`);
     }, createdModules = [], preparedScene;
@@ -14307,7 +14473,7 @@ var MountedApp = class {
         return { ok: !1, diagnostics };
       }
       let manifest = checkedManifest.manifest;
-      if (mode.kind === "reload" && mode.followScene && manifest.scene.name !== this.deps.manifest.scene.name) {
+      if (preparation !== void 0 && (preparation.manifest = manifest), mode.kind === "reload" && mode.followScene && manifest.scene.name !== this.deps.manifest.scene.name) {
         let running = manifest.game?.scenes?.find((scene) => scene.name === this.deps.manifest.scene.name);
         if (running !== void 0) {
           let module = await environment.importModule(sceneModuleUrl(candidate.baseUrl, running.module, manifest.buildId));
@@ -14410,6 +14576,11 @@ var MountedApp = class {
           },
           pipelineCache: this.deps.scene.pipelines,
           bindingPlan: this.deps.scene.plan,
+          ...preparation === void 0 ? {} : {
+            onWorld: (world) => {
+              preparation.world = world;
+            }
+          },
           assets: { files: loaded.assets, images: loaded.images },
           ...this.deps.test?.textures === void 0 ? {} : { textures: this.deps.test.textures },
           ...this.deps.test?.disableInstancing === !0 ? { instancing: !1 } : {}
@@ -14431,7 +14602,7 @@ var MountedApp = class {
         sceneFunctions: checked.program.scene,
         restart: mode.kind === "reload" ? restart : void 0,
         physicsModule,
-        ...mode.kind === "fresh" ? { fresh: { carry: mode.carry } } : {}
+        ...mode.kind === "fresh" && preparation !== void 0 ? { fresh: { carry: mode.carry, preparation } } : {}
       }, preparedScene = void 0, { ok: !0 };
     } catch (error) {
       if (registry.generation === generation) {
@@ -14450,10 +14621,22 @@ var MountedApp = class {
     }
   }
   pause() {
-    this.current === "running" && (this.current = "paused", this.pausedByVisibility = !1, this.input.pause(), this.scheduler.pause());
+    this.current === "running" && (this.current = "paused", this.pausedByVisibility = !1, this.input.pause(), this.scheduler.pause(), this.deps.services.audio?.setSuspended?.(!0));
   }
   resume() {
-    this.current === "paused" && (this.current = "running", this.pausedByVisibility = !1, this.input.resume(), this.scheduler.resume());
+    this.current === "paused" && (this.current = "running", this.pausedByVisibility = !1, this.input.resume(), this.scheduler.resume(), this.deps.services.audio?.setSuspended?.(!1));
+  }
+  /** The manifest of the scene that runs (it changes at a scene change and a hot reload). */
+  currentManifest() {
+    return this.deps.manifest;
+  }
+  /** The verified asset files of the scene that runs. */
+  currentAssets() {
+    return this.deps.assets;
+  }
+  /** The active camera's pose of the scene that runs: where the listener of positional sound is. */
+  listenerPose() {
+    return this.deps.scene.world.camera;
   }
   /**
    * Synchronous release (`spec/runtime-abi.md` section 9.3): stops the frame loop, removes every listener
@@ -14736,7 +14919,7 @@ var MountedApp = class {
     let document2 = this.deps.environment.document;
     if (document2 !== void 0)
       if (document2.visibilityState === "hidden")
-        this.input.focusLost(), this.current === "running" && this.deps.pauseWhenHidden && (this.current = "paused", this.pausedByVisibility = !0, this.input.pause(), this.scheduler.pause());
+        this.input.focusLost(), this.current === "running" && this.deps.pauseWhenHidden && (this.current = "paused", this.pausedByVisibility = !0, this.input.pause(), this.scheduler.pause(), this.deps.services.audio?.setSuspended?.(!0));
       else if (this.deps.pauseWhenHidden)
         this.pausedByVisibility && this.current === "paused" && this.resume();
       else return;
@@ -14756,6 +14939,9 @@ var MountedApp = class {
       },
       phase3_update: (delta) => {
         this.framePhase = "runtime:update", this.deps.scene.world.advanceClips(delta), this.deps.scene.world.advanceParticles(delta), this.deps.scene.world.advanceTimers(delta), this.behaviors.update(delta);
+      },
+      phase3_ui: (delta) => {
+        this.framePhase = "runtime:update", this.behaviors.ui(delta);
       },
       phase4_flush: () => {
         this.deps.scene.world.dynamic.flush();
@@ -14793,13 +14979,13 @@ var MountedApp = class {
           }
         });
       } catch (error) {
-        pending.scene.materials.dispose(), pending.scene.meshes.dispose(), pending.scene.renderer.dispose(), this.report(
-          makeRuntimeDiagnostic("E8102", {
-            phase: "runtime:reload",
-            message: `The candidate was discarded: creating its physics world failed (${errorText6(error)}).`,
-            notes: [`module: ${pending.physicsModule.url}`]
-          })
-        );
+        pending.scene.materials.dispose(), pending.scene.meshes.dispose(), pending.scene.renderer.dispose();
+        let cause = makeRuntimeDiagnostic("E8102", {
+          phase: "runtime:reload",
+          message: `The candidate was discarded: creating its physics world failed (${errorText6(error)}).`,
+          notes: [`module: ${pending.physicsModule.url}`]
+        }), request = this.sceneRequest;
+        pending.fresh !== void 0 && request !== void 0 ? this.sceneChangeFailed(request, -1, [cause], "creating its physics world failed") : (this.sceneRequest = void 0, this.report(cause));
         return;
       }
       pending.scene.world.bodies = physics;
@@ -14812,14 +14998,14 @@ var MountedApp = class {
           entry.shared !== !0 || old === void 0 || old.type !== entry.type || (pending.scene.world.sceneState[entry.name] = carryValue(previous.world.sceneState[entry.name]));
         }
       }
-      previous.world.timers.clear(), this.scheduler.resumeGame();
+      previous.world.timers.clear(), pending.fresh.preparation.link.target = this.deps.game ?? INERT_GAME, this.liveServices = pending.fresh.preparation.services, pending.fresh.preparation.held === !0 ? this.scheduler.pauseGame() : this.scheduler.resumeGame(), this.deps.services.hud?.clearClicks?.(), this.input.clearPolled();
     } else if (pending.restart === void 0)
       migrateWorld(previous.world, previousManifest, pending.scene.world, pending.manifest);
     else {
       let diagnostic2 = restartDiagnostic(pending.manifest, pending.restart);
       this.deps.sink.report(diagnostic2), this.deps.overlay?.add(diagnostic2), this.deps.devTools?.recordError(diagnostic2);
     }
-    this.deps.test?.disableCulling === !0 && pending.scene.renderer.setFrustumCulling(!1), this.deps.devTools?.setProgram(pending.manifest), physics?.createNamedBodies(), this.deps.physics?.dispose(), this.deps.physics = physics, this.deps.physicsModule = pending.physicsModule, this.deps.scene = pending.scene, this.deps.manifest = pending.manifest, this.deps.program = pending.program, this.deps.modules = pending.modules, this.deps.assets = pending.assets, this.deps.sceneFunctions = pending.sceneFunctions, this.behaviors = new Behaviors(pending.sceneFunctions, pending.scene.world), this.hostInputs = new HostInputs(pending.manifest), this.hostOutputs.replace(pending.manifest), previous.materials.dispose(), previous.renderer.dispose(), previous.meshes.dispose();
+    this.deps.test?.disableCulling === !0 && pending.scene.renderer.setFrustumCulling(!1), this.deps.devTools?.setProgram(pending.manifest), physics?.createNamedBodies(), this.deps.physics?.dispose(), this.deps.physics = physics, this.deps.physicsModule = pending.physicsModule, this.deps.scene = pending.scene, this.deps.manifest = pending.manifest, this.deps.program = pending.program, this.deps.modules = pending.modules, this.deps.assets = pending.assets, this.deps.sceneFunctions = pending.sceneFunctions, this.behaviors = new Behaviors(pending.sceneFunctions, pending.scene.world), this.handlerKeys = this.behaviors.handledKeys(), this.hostInputs = new HostInputs(pending.manifest), this.hostOutputs.replace(pending.manifest), previous.materials.dispose(), previous.renderer.dispose(), previous.meshes.dispose();
   }
   createDebug(manual) {
     return {
@@ -15381,31 +15567,6 @@ var DevTools = class {
   }
 };
 
-// src/random/xoshiro.ts
-var Xoshiro128 = class {
-  s0;
-  s1;
-  s2;
-  s3;
-  constructor(seed) {
-    let x = seed >>> 0, next = () => {
-      x = x + 2654435769 >>> 0;
-      let z = x;
-      return z = Math.imul(z ^ z >>> 16, 2246822507) >>> 0, z = Math.imul(z ^ z >>> 13, 3266489909) >>> 0, (z ^ z >>> 16) >>> 0;
-    };
-    this.s0 = next(), this.s1 = next(), this.s2 = next(), this.s3 = next();
-  }
-  /** The next 32 random bits. */
-  nextU32() {
-    let rotl = (v, k) => (v << k | v >>> 32 - k) >>> 0, result = Math.imul(rotl(Math.imul(this.s1, 5) >>> 0, 7), 9) >>> 0, t = this.s1 << 9 >>> 0;
-    return this.s2 = (this.s2 ^ this.s0) >>> 0, this.s3 = (this.s3 ^ this.s1) >>> 0, this.s1 = (this.s1 ^ this.s2) >>> 0, this.s0 = (this.s0 ^ this.s3) >>> 0, this.s2 = (this.s2 ^ t) >>> 0, this.s3 = rotl(this.s3, 11), result;
-  }
-  /** `random()`: an f32 in `[0, 1)`; the top 24 bits, so every value is exactly representable. */
-  nextF32() {
-    return (this.nextU32() >>> 8) / 16777216;
-  }
-};
-
 // src/host/mount.ts
 function errorText7(error) {
   return error instanceof Error ? error.message === "" ? error.name : error.message : String(error);
@@ -15618,19 +15779,33 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
     images = loadedAssets.images;
     let startupFailures = [...shaders.diagnostics, ...loadedAssets.diagnostics, ...loadedPhysics?.ok === !1 ? loadedPhysics.diagnostics : []];
     if (startupFailures.length > 0) throw mountError(startupFailures);
-    let assets = loadedAssets.assets, seed = options.seed === void 0 ? (Math.floor(environment.now() * 1e3) ^ Date.now()) >>> 0 : Math.trunc(options.seed) >>> 0, generator = new Xoshiro128(seed), input = new InputState(), game = new GameLink(), pageStorage = options.storage === void 0 && options.test === void 0 ? defaultSaveStorage() : null, saveStorage = options.storage ?? pageStorage ?? new MemorySaveStorage(), saveStorageUnavailable = options.storage === void 0 && options.test === void 0 && pageStorage === null, listening = {};
+    let assets = loadedAssets.assets, seed = options.seed === void 0 ? (Math.floor(environment.now() * 1e3) ^ Date.now()) >>> 0 : Math.trunc(options.seed) >>> 0, generator = new Xoshiro128(seed), input = new InputState(), game = new GameLink(), pageStorage = options.storage === void 0 && options.test === void 0 ? defaultSaveStorage() : null, saveStorage = options.storage ?? pageStorage ?? new MemorySaveStorage(), saveStorageUnavailable = options.storage === void 0 && options.test === void 0 && pageStorage === null, listening = {}, manifestNow = () => app?.currentManifest() ?? manifest, unlockInstalled = !1, installUnlock = () => {
+      if (unlockInstalled || audio === void 0 || registry === void 0) return;
+      unlockInstalled = !0;
+      let unlocking = audio, unlock = () => {
+        unlocking.unlock();
+      };
+      for (let type of ["pointerdown", "touchend", "mousedown"])
+        registry.addEventListener(canvas, type, unlock, { capture: !0 }), environment.document !== void 0 && registry.addEventListener(environment.document, type, unlock, { capture: !0 });
+      environment.document !== void 0 && registry.addEventListener(environment.document, "keydown", unlock, { capture: !0 });
+    }, assetsNow = () => app?.currentAssets() ?? assets;
     audio = new AudioSystem({
       manifest,
-      bytes: (url) => assets.has(url) ? assets.bytes(url) : void 0,
+      manifestNow,
+      onFirstSound: () => {
+        installUnlock();
+      },
+      bytes: (url) => assetsNow().has(url) ? assetsNow().bytes(url) : void 0,
       backend: environment.audio === void 0 ? browserAudioBackend() : environment.audio ?? void 0,
       report: (diagnostic2) => {
         app !== void 0 ? app.report(diagnostic2) : earlyReports.push(diagnostic2);
       },
-      listener: () => listening.world?.camera
+      listener: () => app === void 0 ? listening.world?.camera : app.listenerPose()
     }), hud = environment.document === void 0 ? void 0 : new HudSystem({
       canvas,
       document: environment.document,
       manifest,
+      manifestNow,
       report: (diagnostic2) => {
         app !== void 0 ? app.report(diagnostic2) : earlyReports.push(diagnostic2);
       },
@@ -15638,7 +15813,8 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
       fontFamily: (() => {
         let fonts = new FontRegistry({
           manifest,
-          bytes: (url) => assets.has(url) ? assets.bytes(url) : void 0,
+          manifestNow,
+          bytes: (url) => assetsNow().has(url) ? assetsNow().bytes(url) : void 0,
           page: browserFontPage(environment.document),
           report: (diagnostic2) => {
             app !== void 0 ? app.report(diagnostic2) : earlyReports.push(diagnostic2);
@@ -15682,14 +15858,7 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
       throw allocationFailures.length > 0 ? mountError(allocationFailures) : error instanceof ExecutionBudgetExceeded ? mountError([budgetDiagnostic(manifest, error)]) : error;
     }
     if (closeImages(images), !started.ok) throw mountError(started.diagnostics);
-    if (listening.world = started.scene.world, audio.hasSounds) {
-      let unlocking = audio, unlock = () => {
-        unlocking.unlock();
-      };
-      for (let type of ["pointerdown", "touchend", "mousedown"]) registry.addEventListener(canvas, type, unlock, { capture: !0 });
-      environment.document !== void 0 && registry.addEventListener(environment.document, "keydown", unlock, { capture: !0 });
-    }
-    if (loadedPhysics?.ok === !0)
+    if (listening.world = started.scene.world, audio.hasSounds && installUnlock(), loadedPhysics?.ok === !0)
       try {
         physics = new PhysicsSystem({
           backend: loadedPhysics.backend,
@@ -16263,21 +16432,6 @@ function m4transpose(m) {
   return transpose(m);
 }
 
-// src/math/copy.ts
-function copy(value) {
-  if (Array.isArray(value)) {
-    let items = value, out = new Array(items.length);
-    for (let i = 0; i < items.length; i++) out[i] = copy(items[i]);
-    return out;
-  }
-  if (typeof value == "object" && value !== null && !ArrayBuffer.isView(value)) {
-    let out = {};
-    for (let [key, field] of Object.entries(value)) out[key] = copy(field);
-    return out;
-  }
-  return value;
-}
-
 // src/math/entity-ref.ts
 function refEq(a, b) {
   return a.slot === b.slot && a.gen === b.gen;
@@ -16286,7 +16440,7 @@ function refEq(a, b) {
 // src/math/ease.ts
 var ELASTIC_C4 = 2 * Math.PI / 3;
 function clamp01(t) {
-  return Number.isFinite(t) ? Math.min(1, Math.max(0, t)) : 0;
+  return Number.isNaN(t) ? 0 : Math.min(1, Math.max(0, t));
 }
 function bounce(x) {
   return x < 1 / 2.75 ? 7.5625 * x * x : x < 2 / 2.75 ? 7.5625 * (x - 1.5 / 2.75) ** 2 + 0.75 : x < 2.5 / 2.75 ? 7.5625 * (x - 2.25 / 2.75) ** 2 + 0.9375 : 7.5625 * (x - 2.625 / 2.75) ** 2 + 0.984375;

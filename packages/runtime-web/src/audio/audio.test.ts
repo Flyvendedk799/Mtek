@@ -14,6 +14,7 @@ class FakeContext implements AudioContextLike {
   readonly gains: GainNodeLike[] = [];
   readonly sources: (BufferSourceLike & { started: boolean; stopped: boolean })[] = [];
   readonly panners: (PannerLike & { at: number[] })[] = [];
+  suspend?: () => Promise<void>;
   resume(): Promise<void> {
     this.state = "running";
     return Promise.resolve();
@@ -147,6 +148,160 @@ describe("AudioSystem", () => {
     const at = context.panners[0]?.at ?? [];
     expect(at[0]).toBeCloseTo(2);
     expect(at[2]).toBeCloseTo(-5);
+  });
+});
+
+/** A backend whose decodes finish when the test says so. */
+function deferredSystem(): {
+  system: AudioSystem;
+  context: FakeContext;
+  reports: MtekDiagnostic[];
+  settle: (index: number, ok: boolean) => void;
+  firstSounds: number[];
+} {
+  const context = new FakeContext();
+  const settlers: ((ok: boolean) => void)[] = [];
+  const backend: AudioBackend = {
+    createContext: () => context,
+    decode: () =>
+      new Promise((resolve, reject) => {
+        settlers.push((ok) => (ok ? resolve({ length: 4 }) : reject(new Error("bad data"))));
+      }),
+  };
+  const manifest = {
+    assets: [{ url: "assets/0000000000000002.wav", sha256: "0".repeat(64), bytes: 4, kind: "audio", format: "wav", mime: "audio/wav", source: "sounds/music.wav", span: 0 }],
+    spans: [],
+  } as unknown as MtekManifest;
+  const reports: MtekDiagnostic[] = [];
+  const firstSounds: number[] = [];
+  const system = new AudioSystem({
+    manifest,
+    bytes: () => new Uint8Array(4),
+    backend,
+    report: (d) => reports.push(d),
+    onFirstSound: () => firstSounds.push(1),
+  });
+  return { system, context, reports, firstSounds, settle: (index, ok) => settlers[index]?.(ok) };
+}
+
+describe("music and decoding (decision 0176)", () => {
+  it("starts a track asked for while its sound still decodes, when the decode resolves", async () => {
+    const { system, context, settle } = deferredSystem();
+    system.unlock();
+    system.playMusic(0, "sounds/music.wav", 0.5);
+    expect(context.sources).toHaveLength(0);
+    settle(0, true);
+    await system.decoded;
+    expect(context.sources).toHaveLength(1);
+    expect(context.sources[0]?.loop).toBe(true);
+    expect(context.sources[0]?.started).toBe(true);
+  });
+
+  it("starts that track at the unlock when the decode finished first, and not twice", async () => {
+    const { system, context, settle } = deferredSystem();
+    system.playMusic(0, "sounds/music.wav");
+    settle(0, true);
+    await system.decoded;
+    expect(context.sources).toHaveLength(0);
+    system.unlock();
+    system.unlock();
+    expect(context.sources).toHaveLength(1);
+  });
+
+  it("does not start a track that was stopped or replaced before the decode finished", async () => {
+    const { system, context, settle } = deferredSystem();
+    system.unlock();
+    system.playMusic(0, "sounds/music.wav");
+    system.stopMusic();
+    settle(0, true);
+    await system.decoded;
+    expect(context.sources).toHaveLength(0);
+  });
+
+  it("reports W8202 for a sound a hot reload adds and the browser cannot decode", async () => {
+    const { system, reports, settle, firstSounds } = deferredSystem();
+    settle(0, true);
+    await system.decoded;
+    const added = {
+      assets: [{ url: "assets/0000000000000009.wav", sha256: "0".repeat(64), bytes: 4, kind: "audio", format: "wav", mime: "audio/wav", source: "sounds/new.wav", span: 0 }],
+      spans: [],
+    } as unknown as MtekManifest;
+    system.adopt(added, () => new Uint8Array(4));
+    settle(1, false);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(reports.map((r) => r.code)).toEqual(["MTEK-W8202"]);
+    expect(reports[0]?.phase).toBe("runtime:reload");
+    expect(reports[0]?.message).toContain("assets/0000000000000009.wav");
+    // The program already had a sound: no first-sound signal.
+    expect(firstSounds).toEqual([]);
+  });
+
+  it("tells the host when a program without sounds gets its first one", () => {
+    const context = new FakeContext();
+    const firstSounds: number[] = [];
+    const system = new AudioSystem({
+      manifest: { assets: [], spans: [] } as unknown as MtekManifest,
+      bytes: () => new Uint8Array(4),
+      backend: { createContext: () => context, decode: () => Promise.resolve({}) },
+      report: () => undefined,
+      onFirstSound: () => firstSounds.push(1),
+    });
+    expect(system.hasSounds).toBe(false);
+    const added = {
+      assets: [{ url: "assets/0000000000000009.wav", sha256: "0".repeat(64), bytes: 4, kind: "audio", format: "wav", mime: "audio/wav", source: "sounds/new.wav", span: 0 }],
+      spans: [],
+    } as unknown as MtekManifest;
+    system.adopt(added, () => new Uint8Array(4));
+    expect(system.hasSounds).toBe(true);
+    expect(firstSounds).toEqual([1]);
+    // A second reload that adds another sound is not "the first".
+    system.adopt({ assets: [{ ...added.assets[0], url: "assets/000000000000000a.wav", source: "sounds/other.wav" }], spans: [] } as unknown as MtekManifest, () => new Uint8Array(4));
+    expect(firstSounds).toEqual([1]);
+  });
+
+  it("holds the context while the host is paused and resumes it with the host", async () => {
+    const { system, context } = setup();
+    await system.decoded;
+    const suspended: string[] = [];
+    context.suspend = () => {
+      context.state = "suspended";
+      suspended.push("suspend");
+      return Promise.resolve();
+    };
+    system.unlock();
+    expect(context.state).toBe("running");
+    system.setSuspended(true);
+    expect(suspended).toEqual(["suspend"]);
+    expect(context.state).toBe("suspended");
+    // A gesture while the host is paused does not wake the sound.
+    system.unlock();
+    expect(context.state).toBe("suspended");
+    system.setSuspended(false);
+    expect(context.state).toBe("running");
+  });
+
+  it("resolves the span of a W8201 against the manifest of the scene that runs", () => {
+    const context = new FakeContext();
+    const sourced = (path: string): MtekManifest =>
+      ({
+        assets: [],
+        sources: [{ id: "s", path }],
+        spans: [{ file: "s", start: 0, end: 1, startLine: 1, startColumn: 1, endLine: 1, endColumn: 2 }],
+      }) as unknown as MtekManifest;
+    let current = sourced("src/first.mtek");
+    const reports: MtekDiagnostic[] = [];
+    const system = new AudioSystem({
+      manifest: current,
+      manifestNow: () => current,
+      bytes: () => new Uint8Array(4),
+      backend: { createContext: () => context, decode: () => Promise.resolve({}) },
+      report: (d) => reports.push(d),
+    });
+    system.setVolume(0, 99);
+    current = sourced("src/second.mtek");
+    system.setVolume(0, 99);
+    expect(reports.map((r) => r.source?.file)).toEqual(["src/first.mtek", "src/second.mtek"]);
   });
 });
 

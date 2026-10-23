@@ -29,6 +29,7 @@ describe("checkProgram: the scene object beyond init", () => {
       withScene({
         update: () => undefined,
         fixedUpdate: () => undefined,
+        ui: () => undefined,
         entityUpdate: entities,
         entityFixedUpdate: entities,
         events: {
@@ -44,6 +45,7 @@ describe("checkProgram: the scene object beyond init", () => {
   it.each([
     ["update", { update: 3 }, "scenes.Demo.update"],
     ["fixedUpdate", { fixedUpdate: "x" }, "scenes.Demo.fixedUpdate"],
+    ["ui", { ui: "x" }, "scenes.Demo.ui"],
     ["entityUpdate of the wrong length", { entityUpdate: [] }, "scenes.Demo.entityUpdate"],
     ["entityFixedUpdate with a non-function", { entityFixedUpdate: [42] }, "scenes.Demo.entityFixedUpdate"],
     ["events missing", { events: undefined }, "scenes.Demo.events"],

@@ -44,6 +44,8 @@ export interface SceneStartupOptions {
   readonly report: (diagnostic: MtekDiagnostic) => void;
   /** `random`, `is_key_down` and `print` for generated code, including `init`. */
   readonly services?: CpuServices;
+  /** Called with the new world before its `init` runs (the scene of a `go_to` binds its game hooks to it). */
+  readonly onWorld?: (world: World) => void;
   /**
    * When set (hot reload), new materials reuse pipelines already in this cache for unchanged
    * shader hashes so a colour edit creates no pipeline (`spec/runtime-abi.md` section 11.3).
@@ -121,6 +123,7 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
         ...(services === undefined ? {} : { services }),
       });
       const freshBindings = new Bindings(manifest, program.scene.bindings, fresh);
+      options.onWorld?.(fresh);
       fresh.initialise(program.scene.init, () => {
         freshBindings.evaluate();
       });

@@ -17,6 +17,11 @@ export interface FramePhases {
   phase2_tick(fixedStep: number): void;
   /** 3. `update(dt)` handlers, scene first, then entities in instance order. */
   phase3_update(delta: number): void;
+  /**
+   * 3b. `ui(dt)`: runs after phase 3 in every frame, including the frames in which the game is paused
+   * (decision 0175). Optional: a phase set without it has no UI phase.
+   */
+  phase3_ui?(delta: number): void;
   /** 4. Flush spawn/destroy commands. */
   phase4_flush(): void;
   /** 5. Evaluate bindings in topological order. */
@@ -218,6 +223,8 @@ export class Scheduler {
       }
     }
     if (!this.gameHeld) this.phases.phase3_update(delta);
+    // `ui` (decision 0175) is the one program function that runs while the game is held.
+    this.phases.phase3_ui?.(delta);
     this.phases.phase4_flush();
     this.phases.phase5_bindings();
     this.phases.phase6_transforms();

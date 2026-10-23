@@ -44,6 +44,8 @@ export class TimerList {
   private started = 0;
   private running = false;
   private readonly added: Timer[] = [];
+  /** The earliest due time of the waiting timers: a frame before it does not look at the list. */
+  private earliest = Infinity;
 
   /** Game time of this scene, in seconds: the sum of the deltas of the frames in which the game was not paused. */
   get gameTime(): number {
@@ -79,7 +81,10 @@ export class TimerList {
     };
     this.started += 1;
     if (this.running) this.added.push(timer);
-    else this.timers.push(timer);
+    else {
+      this.timers.push(timer);
+      if (timer.due < this.earliest) this.earliest = timer.due;
+    }
   }
 
   /**
@@ -90,6 +95,7 @@ export class TimerList {
   advance(delta: number, alive: (owner: NonNullable<TimerOwner>) => boolean): void {
     this.now += Math.max(0, delta);
     const now = this.now;
+    if (now < this.earliest) return;
     const due = this.timers.filter((timer) => timer.due <= now);
     if (due.length === 0) return;
     due.sort((a, b) => a.due - b.due || a.order - b.order);
@@ -116,6 +122,8 @@ export class TimerList {
       this.timers = this.timers.filter((timer) => !timer.cancelled && (timer.owner === null || alive(timer.owner)));
       this.timers.push(...this.added);
       this.added.length = 0;
+      this.earliest = Infinity;
+      for (const timer of this.timers) if (timer.due < this.earliest) this.earliest = timer.due;
     }
   }
 
@@ -124,5 +132,6 @@ export class TimerList {
     for (const timer of this.timers) timer.cancelled = true;
     this.timers = [];
     this.added.length = 0;
+    this.earliest = Infinity;
   }
 }

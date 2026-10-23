@@ -70,3 +70,17 @@ describe("fonts (decision 0139)", () => {
     expect(PIXEL_FONT).toBe("mtek:pixel-font");
   });
 });
+
+describe("FontRegistry across a scene change (decision 0176)", () => {
+  it("looks a font up in the manifest of the scene that runs", () => {
+    const empty = { ...manifest, assets: [] } as unknown as MtekManifest;
+    let current = empty;
+    const fonts = new FontRegistry({ manifest: empty, manifestNow: () => current, bytes: () => new Uint8Array(4), page: page(), report: () => undefined });
+    expect(fonts.family("fonts/a.ttf")).toBeUndefined();
+    current = manifest;
+    // The first answer stays: `undefined` is remembered per source, like any unusable font.
+    expect(fonts.family("fonts/a.ttf")).toBeUndefined();
+    const second = new FontRegistry({ manifest: empty, manifestNow: () => current, bytes: () => new Uint8Array(4), page: page(), report: () => undefined });
+    expect(second.family("fonts/a.ttf")).toMatch(/^mtek-font-/);
+  });
+});

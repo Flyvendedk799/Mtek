@@ -46,6 +46,8 @@ export interface AudioContextLike {
   readonly state: string;
   readonly destination: AudioNodeLike;
   resume(): Promise<void>;
+  /** Holds the clock and the sound (the host's pause); absent in a stand-in that cannot. */
+  suspend?(): Promise<void>;
   close(): Promise<void>;
   createGain(): GainNodeLike;
   createBufferSource(): BufferSourceLike;
@@ -99,6 +101,8 @@ export interface AudioService {
   dispose?(): void;
   /** A hot reload: sounds of the new manifest that are not known yet are decoded from `bytes`. */
   adopt?(manifest: MtekManifest, bytes: (url: string) => Uint8Array | undefined): void;
+  /** The host paused (`app.pause()`, a hidden page) or resumed: the sound is held with it (decision 0176). */
+  setSuspended?(suspended: boolean): void;
 }
 
 /** A service that plays nothing: for worlds nothing drives and for programs without sounds. */
@@ -114,6 +118,13 @@ export const SILENT_AUDIO: AudioService = Object.freeze({
 
 export interface AudioSystemOptions {
   readonly manifest: MtekManifest;
+  /**
+   * The manifest of the scene that runs, for the spans of diagnostics raised by a call (`W8201`); `manifest` when
+   * absent. It changes at `go_to` (decision 0176).
+   */
+  readonly manifestNow?: () => MtekManifest;
+  /** A hot reload or a scene change gave a program without sounds its first one: the unlock listeners are needed now. */
+  readonly onFirstSound?: () => void;
   /** The verified bytes of an asset by url (the asset loader's files). */
   readonly bytes: (url: string) => Uint8Array | undefined;
   readonly backend: AudioBackend | undefined;
@@ -125,6 +136,8 @@ export interface AudioSystemOptions {
 interface Sound {
   readonly url: string;
   readonly span: number;
+  /** The manifest that declares the sound: its span table resolves `span`. */
+  readonly manifest: MtekManifest;
   buffer: unknown;
   state: "pending" | "ready" | "failed";
 }
@@ -143,6 +156,8 @@ export class AudioSystem implements AudioService {
   private music: { readonly source: string; readonly volume: number; node?: BufferSourceLike; gain?: GainNodeLike } | undefined;
   private readonly active = new Set<BufferSourceLike>();
   private disposed = false;
+  /** The host paused: the context stays suspended until it resumes. */
+  private hostPaused = false;
   /** Resolves when every sound is decoded or failed (for tests). */
   readonly decoded: Promise<void>;
 
@@ -150,9 +165,9 @@ export class AudioSystem implements AudioService {
     const pending: Promise<void>[] = [];
     for (const asset of options.manifest.assets) {
       if (asset.kind !== "audio") continue;
-      const sound: Sound = { url: asset.url, span: asset.span, buffer: undefined, state: "pending" };
+      const sound: Sound = { url: asset.url, span: asset.span, manifest: options.manifest, buffer: undefined, state: "pending" };
       this.sounds.set(asset.source, sound);
-      pending.push(this.decodeOne(sound));
+      pending.push(this.decodeOne(sound, "runtime:mount", asset.source));
     }
     this.decoded = Promise.all(pending).then(() => undefined);
   }
@@ -172,28 +187,40 @@ export class AudioSystem implements AudioService {
     return this.context !== undefined;
   }
 
-  private async decodeOne(sound: Sound): Promise<void> {
+  /**
+   * Decodes `sound`: ready when done, `W8202` once when the browser cannot (also for a sound a hot reload adds). A
+   * track `play_music` asked for while this ran starts now (decision 0176).
+   */
+  private async decodeOne(
+    sound: Sound,
+    phase: "runtime:mount" | "runtime:reload",
+    source: string,
+    bytes: (url: string) => Uint8Array | undefined = this.options.bytes,
+  ): Promise<void> {
     const backend = this.options.backend;
     if (backend === undefined) {
       sound.state = "failed";
       return;
     }
-    const bytes = this.options.bytes(sound.url);
     try {
-      if (bytes === undefined) throw new Error("its bytes were not loaded");
-      sound.buffer = await backend.decode(bytes);
+      const data = bytes(sound.url);
+      if (data === undefined) throw new Error("its bytes were not loaded");
+      sound.buffer = await backend.decode(data);
       sound.state = "ready";
     } catch (error) {
       sound.state = "failed";
       this.options.report(
         makeRuntimeDiagnostic("W8202", {
-          phase: "runtime:mount",
+          phase,
           message: `The browser could not decode the sound '${sound.url}': ${error instanceof Error ? error.message : String(error)}. Playing it does nothing.`,
-          source: resolveSpan(this.options.manifest, sound.span),
+          source: resolveSpan(sound.manifest, sound.span),
           notes: ["help: convert the sound to 16-bit PCM WAV, which every browser decodes"],
         }),
       );
+      return;
     }
+    const wanted = this.music;
+    if (wanted !== undefined && wanted.node === undefined && wanted.source === source && this.context !== undefined) this.startMusic(source, wanted.volume);
   }
 
   /**
@@ -212,7 +239,16 @@ export class AudioSystem implements AudioService {
       const wanted = this.music;
       if (wanted !== undefined && wanted.node === undefined) this.startMusic(wanted.source, wanted.volume);
     }
-    if (this.context.state === "suspended") void this.context.resume().catch(() => undefined);
+    if (this.context.state === "suspended" && !this.hostPaused) void this.context.resume().catch(() => undefined);
+  }
+
+  setSuspended(suspended: boolean): void {
+    if (this.disposed) return;
+    this.hostPaused = suspended;
+    const context = this.context;
+    if (context === undefined) return;
+    if (suspended) void context.suspend?.().catch(() => undefined);
+    else if (context.state === "suspended") void context.resume().catch(() => undefined);
   }
 
   private applyMaster(): void {
@@ -229,7 +265,7 @@ export class AudioSystem implements AudioService {
       makeRuntimeDiagnostic("W8201", {
         phase: "runtime:update",
         message: `The ${what} ${describe(value)} is outside ${String(lo)} to ${String(hi)}; ${String(used)} is used.`,
-        source: typeof spanId === "number" ? resolveSpan(this.options.manifest, spanId) : null,
+        source: typeof spanId === "number" ? resolveSpan(this.options.manifestNow?.() ?? this.options.manifest, spanId) : null,
         expected: `${String(lo)} to ${String(hi)}`,
         actual: describe(value),
       }),
@@ -335,32 +371,17 @@ export class AudioSystem implements AudioService {
   }
 
   adopt(manifest: MtekManifest, bytes: (url: string) => Uint8Array | undefined): void {
+    const hadSounds = this.sounds.size > 0;
     for (const asset of manifest.assets) {
       if (asset.kind !== "audio") continue;
       const known = this.sounds.get(asset.source);
       if (known !== undefined && known.url === asset.url) continue;
-      const sound: Sound = { url: asset.url, span: asset.span, buffer: undefined, state: "pending" };
+      const sound: Sound = { url: asset.url, span: asset.span, manifest, buffer: undefined, state: "pending" };
       this.sounds.set(asset.source, sound);
-      const backend = this.options.backend;
-      if (backend === undefined) {
-        sound.state = "failed";
-        continue;
-      }
-      const data = bytes(asset.url);
-      if (data === undefined) {
-        sound.state = "failed";
-        continue;
-      }
-      backend.decode(data).then(
-        (buffer) => {
-          sound.buffer = buffer;
-          sound.state = "ready";
-        },
-        () => {
-          sound.state = "failed";
-        },
-      );
+      void this.decodeOne(sound, "runtime:reload", asset.source, bytes);
     }
+    // A program that had no sound has one now: the host starts listening for the gesture that unlocks it.
+    if (!hadSounds && this.sounds.size > 0) this.options.onFirstSound?.();
   }
 
   /** Stops every sound and closes the context (`dispose()`). Idempotent. */

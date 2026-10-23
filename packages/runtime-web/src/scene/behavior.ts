@@ -111,6 +111,11 @@ export class Behaviors {
     this.run(this.scene.update, this.scene.entityUpdate, delta, true);
   }
 
+  /** Phase 3, after `update` and also while the game is paused: the scene's `ui(dt)` (decision 0175). */
+  ui(delta: number): void {
+    this.scene.ui?.(this.world.ctx, Math.fround(delta));
+  }
+
   private run(sceneFunction: MtekProgramScene["update"], entityFunctions: MtekProgramScene["entityUpdate"], dt: number, update: boolean): void {
     const value = Math.fround(dt);
     if (sceneFunction !== null) sceneFunction(this.world.ctx, value);
