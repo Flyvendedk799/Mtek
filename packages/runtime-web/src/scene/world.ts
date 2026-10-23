@@ -28,7 +28,7 @@ import { DynamicEntities, type DynamicHost, type PrefabRuntime } from "./dynamic
 import { ParticleSim, type ParticleDraw } from "./particles.js";
 import { RuntimeInternalError } from "./errors.js";
 import { INERT_GAME, type GameHooks } from "./game.js";
-import { TimerList, type TimerOwner } from "./timers.js";
+import { MAX_TIMERS, TimerList, type TimerOwner } from "./timers.js";
 import { makeRef, type EntityRef } from "./slots.js";
 import { TagQueries } from "./tags.js";
 import type { ResolvedEntity, ResolvedInstance, SceneStructure } from "./structure.js";
@@ -372,7 +372,11 @@ export class World {
   /** `ctx.budget` (decision 0075): the iterations of CPU loops left in this frame. Only a preview build checks it. */
   private readonly loopBudget: LoopBudget = { n: 0 };
   /** The scene's `after`/`every` timers (decision 0142). */
-  readonly timers = new TimerList();
+  readonly timers = new TimerList((spanId) => {
+    this.reportTimerCap(spanId);
+  });
+  /** The call sites that already reported `W8205`. */
+  private readonly cappedTimerSpans = new Set<number>();
   /** Living particles (decision 0155). */
   private readonly particles = new ParticleSim();
   /** Playing glTF clips (decision 0156). */
@@ -1150,6 +1154,20 @@ export class World {
       return "far is not greater than near";
     }
     return undefined;
+  }
+
+  /** `W8205`: a timer was not started because the scene already has {@link MAX_TIMERS} (decision 0177). */
+  private reportTimerCap(spanId: number): void {
+    if (this.cappedTimerSpans.has(spanId)) return;
+    this.cappedTimerSpans.add(spanId);
+    this.report(
+      makeRuntimeDiagnostic("W8205", {
+        phase: this.phase,
+        message: `The scene already has ${String(MAX_TIMERS)} timers waiting, so this timer was not started. A timer started in update or fixed_update starts again every time it runs: start it once, behind a state flag or in a handler.`,
+        source: spanId >= 0 ? resolveSpan(this.manifest, spanId) : null,
+        expected: `at most ${String(MAX_TIMERS)} timers at a time`,
+      }),
+    );
   }
 
   private reportCamera(message: string): void {
