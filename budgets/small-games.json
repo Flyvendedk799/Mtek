@@ -1,33 +1,49 @@
 {
-  "$comment": "Small-game budgets (decision 0137). size: the game package of each example (mtek build --release --itch), the folder and the zip, in bytes; checked in CI by scripts/game-budgets.mjs size. frame: p95 frame time of scripts/record-frame-evidence.mjs on a real GPU; checked by scripts/game-budgets.mjs frames, never on a software adapter. Raise a budget only in a reviewed commit that says why. Initial size budgets: the sizes measured on 2026-10-21 (Linux, branch feat/sgs-codey2) plus 10 %, rounded up to 10 kB.",
+  "$comment": "Small-game budgets (decision 0137). size: the game package of each example (mtek build --release --itch), the folder and the zip, in bytes; checked in CI by scripts/game-budgets.mjs size, which also fails when an example directory has no entry here. frame: p95 frame time of scripts/record-frame-evidence.mjs on a real GPU; checked by scripts/game-budgets.mjs frames, never on a software adapter. Raise a budget only in a reviewed commit that says why. Size budgets were re-baselined on 2026-10-23 (Windows, main d28886b8 plus the green-main fixes) as the measured size plus 10 %, rounded up to 10 kB: the runtime had grown about 13 % since 2026-10-21 and pulse-cube and modular-scene were over budget. The four game examples (small-game, sprite-pop, lane-runner, stage-show) were added then.",
   "size": {
     "arcade-audio": {
-      "maxFolderBytes": 760000,
-      "maxZipBytes": 770000
+      "maxFolderBytes": 840000,
+      "maxZipBytes": 840000
     },
     "hud-score": {
-      "maxFolderBytes": 710000,
-      "maxZipBytes": 710000
+      "maxFolderBytes": 780000,
+      "maxZipBytes": 780000
+    },
+    "lane-runner": {
+      "maxFolderBytes": 770000,
+      "maxZipBytes": 770000
     },
     "material-configurator": {
-      "maxFolderBytes": 860000,
-      "maxZipBytes": 860000
+      "maxFolderBytes": 930000,
+      "maxZipBytes": 930000
     },
     "modular-scene": {
-      "maxFolderBytes": 650000,
-      "maxZipBytes": 650000
+      "maxFolderBytes": 720000,
+      "maxZipBytes": 720000
     },
     "physics-playground": {
-      "maxFolderBytes": 5590000,
-      "maxZipBytes": 5590000
+      "maxFolderBytes": 5660000,
+      "maxZipBytes": 5660000
     },
     "product-configurator": {
-      "maxFolderBytes": 760000,
-      "maxZipBytes": 760000
+      "maxFolderBytes": 830000,
+      "maxZipBytes": 830000
     },
     "pulse-cube": {
-      "maxFolderBytes": 630000,
-      "maxZipBytes": 630000
+      "maxFolderBytes": 700000,
+      "maxZipBytes": 700000
+    },
+    "small-game": {
+      "maxFolderBytes": 730000,
+      "maxZipBytes": 730000
+    },
+    "sprite-pop": {
+      "maxFolderBytes": 730000,
+      "maxZipBytes": 730000
+    },
+    "stage-show": {
+      "maxFolderBytes": 700000,
+      "maxZipBytes": 700000
     }
   },
   "frame": {

@@ -47,7 +47,7 @@ describe("M5 browser fixtures", () => {
     for (const fixture of [PHYSICS_CALLBACKS, PHYSICS_COMBOS]) {
       expectLiterals(fixture, ["gravity: vec3(0.0, 0.0, 0.0);", "position: vec3(2.0, 0.0, lane);", "self.body.set_linear_velocity(vec3(5.0, 0.0, 0.0));", "mesh: Box { size: vec3(0.2, 2.0, 8.0); };"]);
     }
-    expectLiterals(PHYSICS_CALLBACKS, ["speed: 4.0; });", "speed: -4.0; });", "x0: 8.0;", "state tag: i32 = kind;"]);
+    expectLiterals(PHYSICS_CALLBACKS, ["speed: 4.0; });", "speed: -4.0; });", "x0: 8.0;", "state mark_kind: i32 = kind;"]);
     expectLiterals(PHYSICS_COMBOS, ["Ball.body.set_linear_velocity(vec3(3.0, 0.0, 0.0));", "Ball.body.set_linear_velocity(vec3(0.0, 0.0, 3.0));", "self.body.set_linear_velocity(vec3(6.0, 0.0, 0.0));", "position: vec3(0.0, 0.0, -20.0);"]);
     // physics-resources.spec.ts: waves of 50 (Space) and 100 (D) crates that live 90 ticks, three tints, a floor of 24 x 1 x 8.
     expectLiterals(PHYSICS_WAVES, ["for i in 0..50 {", "for i in 0..100 {", "life: 90;", "collider: BoxCollider { size: vec3(24.0, 1.0, 8.0); };"]);

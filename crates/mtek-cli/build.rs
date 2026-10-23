@@ -14,6 +14,13 @@
 //! or `prebuilt`). If neither directory has them the binary is built without a runtime and
 //! `mtek build` reports `E9030`. This script never runs npm.
 //!
+//! `MTEK_NO_EMBEDDED_RUNTIME=1` skips the runtime on purpose (physics is unaffected), so the
+//! `#[cfg(not(mtek_runtime_embedded))]` tests, the `E9030` path, can run in a checkout that has
+//! the prebuilt copy (the CI `rust` job does).
+//!
+//! When `dist/` is older than the prebuilt `PROVENANCE.json`, the checkout was updated after the
+//! last `npm run build` and `dist/` is stale: the script warns, because the `dist/` runtime wins.
+//!
 //! The physics bundle `physics.js` (decision 0063) is chosen the same way, on its own, from
 //! `packages/physics-rapier/dist/` and then `crates/mtek-cli/prebuilt/`, with the cfg
 //! `mtek_physics_embedded`: without it only programs that use physics fail to build (`E9030`).
@@ -35,6 +42,7 @@ const PHYSICS_FILE: &str = "physics.js";
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo::rustc-check-cfg=cfg(mtek_runtime_embedded)");
     println!("cargo::rustc-check-cfg=cfg(mtek_physics_embedded)");
+    println!("cargo::rerun-if-env-changed=MTEK_NO_EMBEDDED_RUNTIME");
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR")?);
     let out_dir = PathBuf::from(env::var("OUT_DIR")?);
     let prebuilt = manifest_dir.join("prebuilt");
@@ -53,6 +61,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("cargo::rustc-env=MTEK_PHYSICS_ORIGIN_DIR={}", dir.display());
     }
 
+    if env::var("MTEK_NO_EMBEDDED_RUNTIME").is_ok_and(|value| value == "1") {
+        return Ok(());
+    }
     let runtime_dirs = [
         ("dist", manifest_dir.join("../../packages/runtime-web/dist")),
         ("prebuilt", prebuilt),
@@ -62,6 +73,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     for name in FILES {
         copy(&dir.join(name), &out_dir.join(name))?;
+    }
+    if origin == "dist" {
+        warn_if_dist_is_stale(dir, &manifest_dir.join("prebuilt/PROVENANCE.json"));
     }
     println!("cargo::rustc-cfg=mtek_runtime_embedded");
     println!("cargo::rustc-env=MTEK_RUNTIME_ORIGIN={origin}");
@@ -83,6 +97,23 @@ fn first_with<'a>(
     dirs.iter()
         .find(|(_, dir)| names.iter().all(|name| dir.join(name).is_file()))
         .map(|(origin, dir)| (*origin, dir.as_path()))
+}
+
+/// Warns when the `dist/` runtime is older than the prebuilt provenance record: `dist/` wins over the
+/// prebuilt copy, so a pull that refreshed the prebuilt files leaves `mtek` embedding the old build.
+fn warn_if_dist_is_stale(dist: &Path, provenance: &Path) {
+    let modified = |path: &Path| fs::metadata(path).and_then(|meta| meta.modified()).ok();
+    let (Some(built), Some(recorded)) = (modified(&dist.join("runtime.js")), modified(provenance))
+    else {
+        return;
+    };
+    if built < recorded {
+        println!(
+            "cargo::warning={} is older than {}: the embedded runtime may be stale; run `npm run build`",
+            dist.display(),
+            provenance.display()
+        );
+    }
 }
 
 /// Copies `from` to `to`, naming both on failure.

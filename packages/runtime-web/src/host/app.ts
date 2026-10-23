@@ -74,7 +74,7 @@ function sceneModuleUrl(baseUrl: URL, module: string, buildId: string): string {
 
 /** The program a scene module exports (its default export; a module namespace without one is checked as is). */
 function programOfModule(module: unknown): MtekMountProgram<Record<string, unknown>> {
-  const candidate = typeof module === "object" && module !== null && "default" in module ? (module as { default: unknown }).default : module;
+  const candidate = typeof module === "object" && module !== null && "default" in module ? module.default : module;
   if (typeof candidate !== "object" || candidate === null) throw new Error("the scene module does not export a program");
   return candidate as MtekMountProgram<Record<string, unknown>>;
 }
@@ -658,7 +658,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       this.pendingSwap = {
         scene: started.scene,
         manifest,
-        program: candidate as MtekMountProgram<Record<string, unknown>>,
+        program: candidate,
         modules: new Map(shaders.modules),
         assets: loaded.assets,
         sceneFunctions: checked.program.scene,

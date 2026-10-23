@@ -15,10 +15,10 @@
 //   Breeder (z = 30)           hits the Nursery; its handler spawns a Mark{4} and three Sparks (dynamic bodies, created
 //                              at the next flush, never inside the callback) and destroys itself.
 // Marks are prefab instances without a body: they are the witnesses the browser spec counts in `debug.scene().spawned`
-// (their `tag` state is the kind). `ticks` counts fixed ticks; `pad_tick` records the tick of every Pad delivery.
+// (their `mark_kind` state is the kind). `ticks` counts fixed ticks; `pad_tick` records the tick of every Pad delivery.
 prefab Mark {
     param kind: i32;
-    state tag: i32 = kind;
+    state mark_kind: i32 = kind;
 }
 
 prefab Spark {

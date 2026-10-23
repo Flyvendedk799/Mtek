@@ -52,6 +52,7 @@ Each row is a milestone gate run from a clean clone, with every rendering criter
 - The glTF profile is strict: no extensions, no skinning, morphs or animations, no sparse accessors, no vertex colours, tangents or second UV set, only opaque single-sided materials with a base colour texture ([`spec/decisions/0015-asset-strictness.md`](../spec/decisions/0015-asset-strictness.md), [`spec/assets.md`](../spec/assets.md)).
 - Physics has no continuous collision detection: a body faster than the measured window can pass through a thin moving obstacle ([`spec/physics.md`](../spec/physics.md) section 7.1, [M5 report](../evidence/M5/report.md)).
 - Four narrowings of the blueprint are recorded rather than approximated: collider dimensions and texture parameters are fixed at construction, recursion is refused on the CPU as on the GPU, and key auto-repeat cannot be requested ([`spec/decisions/0016-v0.1-restrictions.md`](../spec/decisions/0016-v0.1-restrictions.md)).
+- **Source-incompatible change**: `tag` is now a reserved entity field name ([`spec/decisions/0150-tags.md`](../spec/decisions/0150-tags.md)). A program with a state, param or field called `tag` is rejected with `E2002`; rename it (the m5 physics fixtures now use `mark_kind`).
 
 ## 5. Known issues
 
