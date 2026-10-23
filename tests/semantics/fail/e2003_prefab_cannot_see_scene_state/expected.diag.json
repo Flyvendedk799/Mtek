@@ -4,7 +4,10 @@
     "file": "src/main.mtek",
     "startByte": 194,
     "endByte": 199,
-    "message": "Unknown name 'speed'."
+    "message": "Unknown name 'speed'.",
+    "notes": [
+      "help: did you mean the built-in 'send'?"
+    ]
   },
   {
     "code": "MTEK-E2003",
@@ -18,14 +21,20 @@
     "file": "src/main.mtek",
     "startByte": 268,
     "endByte": 273,
-    "message": "Unknown name 'speed'."
+    "message": "Unknown name 'speed'.",
+    "notes": [
+      "help: did you mean the built-in 'send'?"
+    ]
   },
   {
     "code": "MTEK-E2003",
     "file": "src/main.mtek",
     "startByte": 276,
     "endByte": 281,
-    "message": "Unknown name 'speed'."
+    "message": "Unknown name 'speed'.",
+    "notes": [
+      "help: did you mean the built-in 'send'?"
+    ]
   },
   {
     "code": "MTEK-E2003",

@@ -48,6 +48,7 @@
       "event:collision_exit",
       "event:key_down",
       "event:key_up",
+      "event:message",
       "event:pointer_down",
       "event:pointer_move",
       "event:pointer_up",
@@ -146,6 +147,7 @@
       "function:sampler.nearest_repeat",
       "function:saturate",
       "function:save",
+      "function:send",
       "function:set_camera",
       "function:set_muted",
       "function:set_volume",
@@ -387,7 +389,7 @@
       "type": "i32",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 53
+      "line": 54
     },
     {
       "name": "Playground.spawned",
@@ -395,7 +397,7 @@
       "type": "i32",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 55
+      "line": 56
     },
     {
       "name": "Playground.Main",
@@ -403,7 +405,7 @@
       "type": "Camera",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 57
+      "line": 58
     },
     {
       "name": "Playground.Sun",
@@ -411,7 +413,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 65
+      "line": 66
     },
     {
       "name": "Playground.Floor",
@@ -419,7 +421,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 71
+      "line": 72
     },
     {
       "name": "Playground.First",
@@ -427,7 +429,7 @@
       "type": "entity: Crate",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 80
+      "line": 81
     },
     {
       "name": "Playground.Zone",
@@ -435,7 +437,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 87
+      "line": 88
     },
     {
       "name": "Playground.ZoneMarker",
@@ -443,7 +445,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 107
+      "line": 108
     },
     {
       "name": "Playground.Meter",
@@ -451,7 +453,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 115
+      "line": 116
     }
   ],
   "schemaGuide": "A field line reads `name: type = default [flags]`; R required, W writable, B bindable, C construction-only.",

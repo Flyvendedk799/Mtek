@@ -1,0 +1,24 @@
+prefab Receiver {
+    state hits: i32 = 0;
+    on message(value: string) {
+        self.hits += 1;
+    }
+}
+
+scene Demo {
+    camera Main {}
+    entity Target {
+        tag: "target";
+        state hits: i32 = 0;
+        on message(value: string) {
+            self.hits += 1;
+        }
+    }
+    on key_down(Key.Space) {
+        send(Target, "hit");
+        for target in tagged("target") {
+            send(target, "hit");
+        }
+        spawn(Receiver {});
+    }
+}

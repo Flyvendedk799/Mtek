@@ -2279,6 +2279,7 @@ pub fn emit_prefab_behaviors(
 fn tag_member(function: &str) -> Option<&'static str> {
     Some(match function {
         "count_tagged" => "countTagged",
+        "send" => "send",
         "first_tagged" => "firstTagged",
         "nearest_tagged" => "nearestTagged",
         "has_tag" => "hasTag",

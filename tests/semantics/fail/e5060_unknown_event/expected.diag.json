@@ -6,7 +6,7 @@
     "endByte": 137,
     "message": "Unknown event 'key_press'.",
     "notes": [
-      "the events of v0.1 are: key_down, key_up, pointer_down, pointer_up, pointer_move, collision_enter, collision_exit"
+      "the events of v0.1 are: message, key_down, key_up, pointer_down, pointer_up, pointer_move, collision_enter, collision_exit"
     ]
   }
 ]

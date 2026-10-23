@@ -87,6 +87,7 @@ export const CONTEXT_MEMBERS = [
   "choose",
   "shuffle",
   "refField",
+  "send",
   "print",
   "goTo",
   "reset",
@@ -578,6 +579,10 @@ export class World {
       choose: (items: unknown): unknown => chooseItem(services.random(), items),
       shuffle: (items: unknown): unknown => shuffled(items, () => services.random()),
       refField: (ref: unknown, field: unknown): unknown => this.refField(ref, field),
+      send: (ref: unknown, message: unknown): void => {
+        if (typeof message !== "string") throw new RuntimeInternalError("ctx.send expected a string message.");
+        if (this.dynamic.alive(ref)) this.messages.push({ target: ref as EntityRef, value: message });
+      },
       isKeyDown: (code: unknown): boolean => {
         if (typeof code !== "string") throw new RuntimeInternalError(`ctx.isKeyDown got ${describeValue(code)}; expected a DOM key code.`);
         return services.isKeyDown(code);
@@ -1298,6 +1303,8 @@ export class World {
    * A reference that is not alive reads as zero: position and scale `(0, 0, 0)`, rotation identity,
    * `visible` false. The live fields are the same objects the named-entity reads return.
    */
+  readonly messages: { target: EntityRef; value: string }[] = [];
+
   refField(ref: unknown, field: unknown): unknown {
     const name = typeof field === "string" ? field : "";
     const zero = (): unknown => {

@@ -857,7 +857,11 @@ fn glb_asset_accessors_follow_the_assets_specification() {
 #[test]
 fn events_follow_section_5_1() {
     let registry = registry();
-    assert_eq!(registry.events.len(), 7);
+    assert_eq!(registry.events.len(), 8);
+    assert_eq!(
+        registry.event("message").unwrap().form,
+        EventForm::Parameter(TypeRef::String)
+    );
     for name in ["key_down", "key_up"] {
         let event = registry.event(name).unwrap();
         assert_eq!(event.form, EventForm::Filter(TypeRef::Enum("Key")));

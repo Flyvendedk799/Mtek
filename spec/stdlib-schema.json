@@ -998,6 +998,18 @@
       "doc": "Delivered when the filtered key is released."
     },
     {
+      "name": "message",
+      "form": "parameter",
+      "argumentType": "string",
+      "allowedIn": [
+        "entity",
+        "prefab"
+      ],
+      "requiresCollider": false,
+      "since": "M1",
+      "doc": "A queued string sent to this entity; delivered before its next unpaused update."
+    },
+    {
       "name": "pointer_down",
       "form": "parameter",
       "argumentType": "PointerEvent",
@@ -2042,6 +2054,18 @@
       "cpuSemantics": "",
       "since": "M1",
       "doc": "Writes the saved and setting state to storage."
+    },
+    {
+      "name": "send",
+      "signatures": [
+        "(target: entity_ref, message: string) -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Queues a message for a live entity's `on message(value: string)` handler (decision 0180)."
     },
     {
       "name": "set_camera",

@@ -6,6 +6,7 @@ import { fromRotationTranslationScale, multiply, normalMatrix } from "../math/ma
 import { minimalManifestJson } from "../test-support/fake-host.js";
 import { CODEGEN_FIXTURES, loadGoldenProgram } from "../test-support/program.js";
 import { checkProgram } from "./program.js";
+import { Behaviors } from "./behavior.js";
 import { resolveStructure } from "./structure.js";
 import { chooseItem, CONTEXT_MEMBERS, RuntimeInternalError, shuffled, World, type CameraRecord, type EntityRecord } from "./world.js";
 
@@ -82,6 +83,34 @@ function makeWorld(manifest: MtekManifest = manifestFrom(minimalManifestJson()))
 }
 
 const IDENTITY = { x: 0, y: 0, z: 0, w: 1 };
+
+it("delivers entity messages in order on the next update and defers replies", () => {
+  const { world } = makeWorld();
+  const send = (world.ctx as { send(ref: unknown, text: string): void }).send;
+  const target = { slot: 0, gen: 0 };
+  const seen: unknown[] = [];
+  const behaviors = new Behaviors({
+    init() {}, update: null, fixedUpdate: null, bindings: [],
+    entityUpdate: [null], entityFixedUpdate: [null],
+    events: { message: [{ owner: 0, fn: (_ctx, self, value) => {
+      seen.push(value);
+      if (value === "hit") {
+        (self as { state: { hits?: number } }).state.hits = 1;
+        send(target, "reply");
+      }
+    } }] },
+  }, world);
+  send({ slot: 0, gen: 1 }, "stale");
+  send({ slot: -1, gen: 0 }, "dead");
+  send(target, "hit");
+  send(target, "second");
+  expect(seen).toEqual([]);
+  behaviors.update(0);
+  expect(seen).toEqual(["hit", "second"]);
+  expect(world.entities[0]?.state["hits"]).toBe(1);
+  behaviors.update(0);
+  expect(seen).toEqual(["hit", "second", "reply"]);
+});
 
 describe("World records before init", () => {
   it("creates one record per entity with the registry defaults and the camera with its defaults", () => {

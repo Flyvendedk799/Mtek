@@ -39,6 +39,11 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
     let sound = exact(TypeRef::Sound);
     let unit = exact(TypeRef::Unit);
     vec![
+        function(
+            "send", Domain::Cpu, false, Milestone::M1,
+            "Queues a message for a live entity's `on message(value: string)` handler (decision 0180).",
+            vec![sig(&[p("target", exact(TypeRef::EntityRef)), p("message", exact(TypeRef::String))], unit)],
+        ).handlers_only(),
         math(
             "abs",
             "Absolute value, component-wise.",

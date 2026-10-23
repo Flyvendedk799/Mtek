@@ -48,6 +48,7 @@
       "event:collision_exit",
       "event:key_down",
       "event:key_up",
+      "event:message",
       "event:pointer_down",
       "event:pointer_move",
       "event:pointer_up",
@@ -457,6 +458,7 @@
       "hud.button(label: string, at: vec2, [size: f32]) -> bool [handlers and lifecycle functions only] // Draws a button centred at `at` (canvas NDC) with the label `label` (`size` in CSS pixels, default 24.0). Returns true in the frame after the button was clicked, once per click; buttons are told apart by their label and their order among buttons with that label.",
       "easing.in_quad|out_quad|in_out_quad|in_cubic|out_cubic|in_out_cubic|in_out_sine|out_back|out_elastic|out_bounce(t: f32) -> f32 [cpu only] // `t` is clamped to 0..1, the result is 0 at 0 and 1 at 1.",
       "lighting.pbr(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32) -> color [gpu only] // The documented PBR subset evaluated for every light in the scene.",
+      "send(target: entity_ref, message: string) -> () [handlers and lifecycle functions only] // Queues a message for a live entity's `on message(value: string)` handler (decision 0180).",
       "sample(t: texture, s: sampler, uv: vec2) -> vec4 [gpu only] // Filtered texel of `t` at `uv`. `texture` and `sampler` parameters may be used only as direct arguments to `sample`.",
       "random() -> f32 [cpu only] // A pseudo-random number in `[0, 1)`.",
       "random_range(lo: f32, hi: f32) -> f32 [cpu only] // A random f32 in `[lo, hi)`.",
@@ -492,6 +494,7 @@
       "destroy_tagged(tag: string) -> () [handlers and lifecycle functions only] // Queues removal of every live spawned entity with the tag; the tag must not be one a named entity has."
     ],
     "events": [
+      "on message(<name>: string) [in entity and prefab] // A queued string sent to this entity; delivered before its next unpaused update.",
       "on key_down(Key.<member>) // Delivered when the filtered key transitions to pressed. Auto-repeat is ignored.",
       "on key_up(Key.<member>) // Delivered when the filtered key is released.",
       "on pointer_down(<name>: PointerEvent) // A pointer button was pressed on the canvas.",

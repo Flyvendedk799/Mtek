@@ -35,6 +35,14 @@ pub(super) fn events() -> Vec<EventDef> {
         doc,
     };
     vec![
+        EventDef {
+            name: "message",
+            form: EventForm::Parameter(TypeRef::String),
+            hosts: WITH_COLLIDER,
+            requires_collider: false,
+            since: Milestone::M1,
+            doc: "A queued string sent to this entity; delivered before its next unpaused update.",
+        },
         key(
             "key_down",
             "Delivered when the filtered key transitions to pressed. Auto-repeat is ignored.",

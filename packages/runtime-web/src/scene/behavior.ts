@@ -39,7 +39,7 @@ export class Behaviors {
       // Array.prototype.sort is stable: handlers of one owner keep their declaration order.
       if (declared !== undefined && declared.length > 0) this.handlers.set(event, [...declared].sort((a, b) => a.owner - b.owner));
     }
-    for (const event of COLLISION_EVENTS) {
+    for (const event of [...COLLISION_EVENTS, "message"] as const) {
       const byOwner = new Map<number, MtekEventHandler[]>();
       for (const handler of scene.events[event] ?? []) {
         const list = byOwner.get(handler.owner);
@@ -108,6 +108,18 @@ export class Behaviors {
 
   /** Phase 3: `update(dt)`, the scene's then the entities', then the spawned entities'. */
   update(delta: number): void {
+    for (const message of this.world.messages.splice(0)) {
+      if (!this.world.dynamic.alive(message.target)) continue;
+      const slot = message.target.slot;
+      if (slot < this.world.entities.length) {
+        const record = this.entity(slot);
+        for (const handler of this.collisionHandlers.get("message")?.get(slot) ?? []) handler.fn(this.world.ctx, record, message.value);
+      } else {
+        const entity = this.world.dynamic.entityAt(slot);
+        if (entity === undefined) continue;
+        for (const handler of entity.prefab.handlers.get("message") ?? []) handler.fn(this.world.ctx, entity.record, message.value);
+      }
+    }
     this.run(this.scene.update, this.scene.entityUpdate, delta, true);
   }
 

@@ -132,7 +132,7 @@ export function buildPrefabRuntimes(prefabs: readonly ResolvedPrefab[], code: Re
         return { binding, compute };
       });
     const handlers = new Map<MtekEventName, readonly MtekPrefabEventHandler[]>();
-    for (const event of [...INPUT_EVENTS, ...COLLISION_EVENTS]) {
+    for (const event of [...INPUT_EVENTS, ...COLLISION_EVENTS, "message"] as const) {
       const declared = program.events[event];
       // Declaration order is kept: several handlers of one event run in the order they were written.
       if (declared !== undefined && declared.length > 0) handlers.set(event, declared);
