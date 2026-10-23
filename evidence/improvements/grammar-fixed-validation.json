@@ -1,0 +1,21 @@
+{
+  "validator": "llama.cpp b11719",
+  "validatorUnexpectedMismatches": 0,
+  "releaseDocs": "pass",
+  "date": "2026-10-24",
+  "exitCode": 0,
+  "rustTestsPassed": 1684,
+  "constrainedGenerationSmoke": "pass",
+  "grammarSha256": "b79ba8d9d8d7c4df73bee0e3489bd6060a69aeff1c53ac9021737e6a022b5de6",
+  "newRegressionInputs": 27,
+  "command": "cargo test --workspace --locked",
+  "validatorInputs": 43181,
+  "repositoryCheck": "pass",
+  "baseCommit": "723ec207",
+  "knownDifferenceCounts": {
+    "nestingLimit": 8,
+    "paramOnlyInPrefab": 1
+  },
+  "build": "pass",
+  "rustTestsIgnored": 1
+}

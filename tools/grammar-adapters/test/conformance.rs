@@ -286,6 +286,110 @@ fn edge_cases() -> Vec<(&'static str, String, Expected)> {
             in_fn("let s = \"a\\\n\";"),
             R,
         ),
+        // The String token also contains parsed interpolation expressions.
+        ("interpolation: empty", s("${}"), R),
+        ("interpolation: unclosed", s("${points"), R),
+        ("interpolation: missing operand", s("${points +}"), R),
+        ("interpolation: scalar", s("${points + 1}"), A),
+        ("interpolation: format", s("${points:.2}"), A),
+        (
+            "interpolation: invalid format is semantic",
+            s("${points:bad}"),
+            A,
+        ),
+        ("interpolation: escaped dollar", s(r"\${}"), A),
+        (
+            "interpolation: dollars before interpolation",
+            s("$$${points}"),
+            A,
+        ),
+        (
+            "interpolation: dollars before unclosed interpolation",
+            s("$$${points"),
+            R,
+        ),
+        ("interpolation: trailing dollar", s("price $$"), A),
+        ("interpolation: dollar before escape", s(r"$\n"), A),
+        (
+            "interpolation: nested expression",
+            s("${f([1, 2], (points + 1))}"),
+            A,
+        ),
+        (
+            "interpolation: descriptor",
+            s("${Box { size: vec3(1.0, 1.0, 1.0) }}"),
+            A,
+        ),
+        (
+            "interpolation: comment",
+            s("${points /* comment */ + 1}"),
+            A,
+        ),
+        (
+            "interpolation: quote in comment",
+            s("${points /* \" */}"),
+            R,
+        ),
+        (
+            "interpolation: newline in comment",
+            s("${points /*\n*/}"),
+            R,
+        ),
+        (
+            "match: expression cannot start statement",
+            in_fn("match phase { Phase.Menu => 1, _ => 0 };"),
+            R,
+        ),
+        (
+            "match: parenthesised expression statement",
+            in_fn("(match phase { Phase.Menu => 1, _ => 0 });"),
+            A,
+        ),
+        (
+            "match: expression after operator",
+            in_fn("x + match phase { Phase.Menu => 1, _ => 0 };"),
+            A,
+        ),
+        (
+            "match: expression after unary",
+            in_fn("-match phase { Phase.Menu => 1, _ => 0 };"),
+            A,
+        ),
+        (
+            "pattern: bare name is semantic",
+            in_fn("match phase { Menu => {} }"),
+            A,
+        ),
+        (
+            "pattern: literal is semantic",
+            in_fn("match phase { 3 => {} }"),
+            A,
+        ),
+        (
+            "pattern: self and material field",
+            in_fn("match phase { self.material => {} }"),
+            A,
+        ),
+        (
+            "pattern: wildcard field",
+            in_fn("match phase { _.material => {} }"),
+            A,
+        ),
+        (
+            "pattern: wildcard call",
+            in_fn("match phase { _() => {} }"),
+            R,
+        ),
+        (
+            "pattern: literal call is semantic",
+            in_fn("match phase { 3() => {} }"),
+            A,
+        ),
+        (
+            "pattern: array is not a pattern",
+            in_fn("match phase { [1] => {} }"),
+            R,
+        ),
         // Comments.
         (
             "comment: line",

@@ -79,8 +79,7 @@ pilots use the bundled Node 24 runtime and a real AMD Radeon RX 7900 XTX adapter
   **377 features, 197 positive fixture programs, 245 diagnostic codes**,
   with zero diagnostic codes missing negative coverage.
 
-`cargo test --workspace --locked` is **not fully green** with this machine's
-optional pinned llama.cpp validator installed: its conformance harness reports
+Initial validation with this machine's optional pinned llama.cpp validator found
 54 mismatches in 43,154 inputs, concerning match patterns and malformed string
 interpolation. All 54 exact failing inputs were rerun against the original
 `f0a9ab68` compiler and grammar in an isolated checkout; **all 54 mismatches recur**.
@@ -89,13 +88,13 @@ This verifies that they predate this implementation. See
 only filtered to these 54 names; its compiler, grammar and fixtures were unchanged.
 The temporary baseline checkout was archived after verification.
 
-All other Rust test suites pass. The suites after the failing harness in workspace
-order were run separately, including the complete grammar-coverage gate (82
-productions, 123 alternatives and 18 rules covered), coverage-use tests and the
-compiler doc tests. The installed constrained-generation smoke also **passes**
-with the current grammar and local pinned Qwen model. The pre-existing conformance
-bugs remain outside this implementation; no validator tests were disabled or
-relaxed to obtain a passing result.
+The follow-up in decision 0188 fixes these mismatches. **The full Rust suite now
+passes** (`cargo test --workspace --locked`), including 43,181 validator inputs with zero
+unexpected mismatches, the installed constrained-generation smoke, grammar
+coverage (82 productions, 123 alternatives and 18 rules), coverage-use tests
+and doc tests. No validator exceptions were added, and the final sweep is
+unfiltered. See [the follow-up report](grammar-fix.md) and
+[validation record](grammar-fixed-validation.json).
 
 The extension clean-clone simulation temporarily removed only its generated
 bundle: the three affected tests report the explicit build instruction, with
