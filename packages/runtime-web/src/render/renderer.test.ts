@@ -579,6 +579,24 @@ describe("debug.setParam (the M2 gate hook, spec/runtime-abi.md section 10.2)", 
     app.dispose();
   });
 
+  it("a static translucent scene is not batched again every frame (decision 0173)", async () => {
+    const { debug, app } = await mountTwoMaterials();
+    debug.setParam("E3", "color", { r: 0, g: 1, b: 0, a: 0.5 });
+    debug.step(1, 0.016);
+    // The blended pipeline of the material is made asynchronously; the draw list is rebuilt when it is ready.
+    for (let i = 0; i < 5; i++) await new Promise((resolve) => setTimeout(resolve, 0));
+    debug.step(3, 0.016);
+    const settled = debug.counters()["rebatchesTotal"] ?? -1;
+    expect(settled).toBeGreaterThan(0);
+    debug.step(10, 0.016);
+    expect(debug.counters()["rebatchesTotal"]).toBe(settled);
+    // A translucent draw moving without crossing another one keeps the grouping too.
+    debug.setParam("E3", "color", { r: 0, g: 1, b: 0, a: 0.25 });
+    debug.step(5, 0.016);
+    expect(debug.counters()["rebatchesTotal"]).toBe(settled);
+    app.dispose();
+  });
+
   it("names what exists when the entity, the param or the value is wrong", async () => {
     const { debug, app } = await mountTwoMaterials();
     const ok = { r: 1, g: 1, b: 1, a: 1 };

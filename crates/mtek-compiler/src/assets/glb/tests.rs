@@ -172,8 +172,17 @@ fn a_linear_translation_is_a_clip_and_a_cubic_spline_is_not() {
     assert_eq!(clip.channels[0].values, [0.0, 0.0, 0.0, 1.0, 0.0, 0.0]);
     assert!(file.clip_for("missing", "Tri").is_none());
 
+    // A cubic spline is not a clip, but it does not fail the file either (decision 0174).
     json["animations"][0]["samplers"][0]["interpolation"] = json!("CUBICSPLINE");
-    assert_eq!(codes(&read(&json, &bin)), ["E7019"]);
+    let file = read(&json, &bin).unwrap();
+    assert!(file.clips.is_empty());
+    assert_eq!(file.unsupported_animations.len(), 1);
+    assert_eq!(file.unsupported_animations[0].name, "Spin");
+    assert!(
+        file.unsupported_animations[0]
+            .reason
+            .contains("cubic-spline")
+    );
     json["animations"][0]
         .as_object_mut()
         .unwrap()
@@ -181,6 +190,90 @@ fn a_linear_translation_is_a_clip_and_a_cubic_spline_is_not() {
     json["animations"][0]["samplers"][0]["interpolation"] = json!("LINEAR");
     let file = read(&json, &bin).unwrap();
     assert_eq!(file.clips[0].name, "animation_0");
+}
+
+/// The base triangle plus one rotation animation `Turn` of two keys whose output is `output` stored as
+/// `component_type` (5120 BYTE, 5122 SHORT, 5126 FLOAT), `normalized` or not.
+fn with_rotation(output: &[u8], component_type: u32, normalized: bool) -> (Value, Vec<u8>) {
+    let (mut json, mut bin) = base();
+    while !bin.len().is_multiple_of(4) {
+        bin.push(0);
+    }
+    let times_offset = bin.len();
+    bin.extend(le(&[0.0, 1.0]));
+    let values_offset = bin.len();
+    bin.extend_from_slice(output);
+    json["buffers"][0]["byteLength"] = json!(bin.len());
+    json["bufferViews"].as_array_mut().unwrap().extend([
+        json!({ "buffer": 0, "byteOffset": times_offset, "byteLength": 8 }),
+        json!({ "buffer": 0, "byteOffset": values_offset, "byteLength": output.len() }),
+    ]);
+    json["accessors"].as_array_mut().unwrap().extend([
+        json!({ "bufferView": 2, "componentType": 5126, "count": 2, "type": "SCALAR" }),
+        json!({ "bufferView": 3, "componentType": component_type, "normalized": normalized, "count": 2, "type": "VEC4" }),
+    ]);
+    json["animations"] = json!([{
+        "name": "Turn",
+        "channels": [{ "sampler": 0, "target": { "node": 0, "path": "rotation" } }],
+        "samplers": [{ "input": 2, "interpolation": "LINEAR", "output": 3 }]
+    }]);
+    (json, bin)
+}
+
+#[test]
+fn normalised_byte_and_short_rotations_are_dequantised() {
+    // SHORT: 32767 is 1.0 and -32768 clamps to -1.0.
+    let shorts: Vec<u8> = [0i16, 0, 0, 32767, 0, 32767, 0, -32768]
+        .iter()
+        .flat_map(|value| value.to_le_bytes())
+        .collect();
+    let (json, bin) = with_rotation(&shorts, 5122, true);
+    let file = read(&json, &bin).unwrap();
+    assert_eq!(
+        file.clips[0].channels[0].values,
+        [0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, -1.0]
+    );
+    // BYTE: 127 is 1.0, -128 clamps to -1.0.
+    let bytes: Vec<u8> = [0i8, 0, 0, 127, 0, 127, 0, -128]
+        .iter()
+        .map(|value| *value as u8)
+        .collect();
+    let (json, bin) = with_rotation(&bytes, 5120, true);
+    let file = read(&json, &bin).unwrap();
+    assert_eq!(
+        file.clips[0].channels[0].values,
+        [0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, -1.0]
+    );
+    // Not normalised: the integers would be taken for radians, so the accessor is refused.
+    let (json, bin) = with_rotation(&shorts, 5122, false);
+    assert_eq!(codes(&read(&json, &bin)), ["E7025"]);
+}
+
+#[test]
+fn only_a_rotation_may_be_stored_as_integers() {
+    let shorts: Vec<u8> = [0i16; 6]
+        .iter()
+        .flat_map(|value| value.to_le_bytes())
+        .collect();
+    let (mut json, bin) = with_rotation(&shorts, 5122, true);
+    json["animations"][0]["channels"][0]["target"]["path"] = json!("translation");
+    json["accessors"][3]["type"] = json!("VEC3");
+    assert_eq!(codes(&read(&json, &bin)), ["E7025"]);
+}
+
+#[test]
+fn a_morph_weight_animation_is_unsupported_not_an_error() {
+    let (mut json, bin) =
+        with_rotation(&le(&[0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0]), 5126, false);
+    json["animations"][0]["channels"][0]["target"]["path"] = json!("weights");
+    let file = read(&json, &bin).unwrap();
+    assert!(file.clips.is_empty());
+    assert_eq!(file.unsupported_animations[0].name, "Turn");
+    assert!(
+        file.unsupported_animations[0]
+            .reason
+            .contains("morph weights")
+    );
 }
 
 #[test]

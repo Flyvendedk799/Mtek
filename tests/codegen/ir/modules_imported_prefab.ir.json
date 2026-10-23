@@ -1137,7 +1137,7 @@
     {
       "path": "std/materials.mtek",
       "file": 2,
-      "span": {"file": 2, "start": 0, "end": 1872},
+      "span": {"file": 2, "start": 0, "end": 2067},
       "items": [
         {
           "kind": "material",
@@ -1600,45 +1600,59 @@
               },
               {
                 "index": 1,
-                "name": "count",
+                "name": "cols",
                 "type": "f32",
                 "kind": "let",
-                "span": {"file": 2, "start": 1460, "end": 1465}
+                "span": {"file": 2, "start": 1577, "end": 1581}
               },
               {
                 "index": 2,
-                "name": "index",
+                "name": "rws",
                 "type": "f32",
                 "kind": "let",
-                "span": {"file": 2, "start": 1506, "end": 1511}
+                "span": {"file": 2, "start": 1630, "end": 1633}
               },
               {
                 "index": 3,
-                "name": "row",
+                "name": "count",
                 "type": "f32",
                 "kind": "let",
-                "span": {"file": 2, "start": 1594, "end": 1597}
+                "span": {"file": 2, "start": 1679, "end": 1684}
               },
               {
                 "index": 4,
-                "name": "column",
+                "name": "index",
                 "type": "f32",
                 "kind": "let",
-                "span": {"file": 2, "start": 1636, "end": 1642}
+                "span": {"file": 2, "start": 1711, "end": 1716}
               },
               {
                 "index": 5,
-                "name": "uv",
-                "type": "vec2",
+                "name": "row",
+                "type": "f32",
                 "kind": "let",
-                "span": {"file": 2, "start": 1680, "end": 1682}
+                "span": {"file": 2, "start": 1799, "end": 1802}
               },
               {
                 "index": 6,
+                "name": "column",
+                "type": "f32",
+                "kind": "let",
+                "span": {"file": 2, "start": 1838, "end": 1844}
+              },
+              {
+                "index": 7,
+                "name": "uv",
+                "type": "vec2",
+                "kind": "let",
+                "span": {"file": 2, "start": 1879, "end": 1881}
+              },
+              {
+                "index": 8,
                 "name": "texel",
                 "type": "vec4",
                 "kind": "let",
-                "span": {"file": 2, "start": 1753, "end": 1758}
+                "span": {"file": 2, "start": 1948, "end": 1953}
               }
             ],
             "body": {
@@ -1648,43 +1662,109 @@
                   "local": 1,
                   "value": {
                     "kind": "builtin",
-                    "function": "max",
+                    "function": "clamp",
                     "args": [
                       {
-                        "kind": "binary",
-                        "op": "*",
-                        "lhs": {
-                          "kind": "param",
-                          "param": 4,
-                          "name": "columns",
-                          "type": "f32",
-                          "span": {"file": 2, "start": 1472, "end": 1479}
-                        },
-                        "rhs": {
-                          "kind": "param",
-                          "param": 5,
-                          "name": "rows",
-                          "type": "f32",
-                          "span": {"file": 2, "start": 1482, "end": 1486}
-                        },
+                        "kind": "builtin",
+                        "function": "floor",
+                        "args": [
+                          {
+                            "kind": "param",
+                            "param": 4,
+                            "name": "columns",
+                            "type": "f32",
+                            "span": {"file": 2, "start": 1596, "end": 1603}
+                          }
+                        ],
                         "type": "f32",
-                        "span": {"file": 2, "start": 1472, "end": 1486}
+                        "span": {"file": 2, "start": 1590, "end": 1604}
                       },
                       {
                         "kind": "const",
                         "value": {"f32": 1.0},
                         "type": "f32",
-                        "span": {"file": 2, "start": 1488, "end": 1491}
+                        "span": {"file": 2, "start": 1606, "end": 1609}
+                      },
+                      {
+                        "kind": "const",
+                        "value": {"f32": 64.0},
+                        "type": "f32",
+                        "span": {"file": 2, "start": 1611, "end": 1615}
                       }
                     ],
                     "type": "f32",
-                    "span": {"file": 2, "start": 1468, "end": 1492}
+                    "span": {"file": 2, "start": 1584, "end": 1616}
                   },
-                  "span": {"file": 2, "start": 1456, "end": 1493}
+                  "span": {"file": 2, "start": 1573, "end": 1617}
                 },
                 {
                   "kind": "let",
                   "local": 2,
+                  "value": {
+                    "kind": "builtin",
+                    "function": "clamp",
+                    "args": [
+                      {
+                        "kind": "builtin",
+                        "function": "floor",
+                        "args": [
+                          {
+                            "kind": "param",
+                            "param": 5,
+                            "name": "rows",
+                            "type": "f32",
+                            "span": {"file": 2, "start": 1648, "end": 1652}
+                          }
+                        ],
+                        "type": "f32",
+                        "span": {"file": 2, "start": 1642, "end": 1653}
+                      },
+                      {
+                        "kind": "const",
+                        "value": {"f32": 1.0},
+                        "type": "f32",
+                        "span": {"file": 2, "start": 1655, "end": 1658}
+                      },
+                      {
+                        "kind": "const",
+                        "value": {"f32": 64.0},
+                        "type": "f32",
+                        "span": {"file": 2, "start": 1660, "end": 1664}
+                      }
+                    ],
+                    "type": "f32",
+                    "span": {"file": 2, "start": 1636, "end": 1665}
+                  },
+                  "span": {"file": 2, "start": 1626, "end": 1666}
+                },
+                {
+                  "kind": "let",
+                  "local": 3,
+                  "value": {
+                    "kind": "binary",
+                    "op": "*",
+                    "lhs": {
+                      "kind": "local",
+                      "local": 1,
+                      "name": "cols",
+                      "type": "f32",
+                      "span": {"file": 2, "start": 1687, "end": 1691}
+                    },
+                    "rhs": {
+                      "kind": "local",
+                      "local": 2,
+                      "name": "rws",
+                      "type": "f32",
+                      "span": {"file": 2, "start": 1694, "end": 1697}
+                    },
+                    "type": "f32",
+                    "span": {"file": 2, "start": 1687, "end": 1697}
+                  },
+                  "span": {"file": 2, "start": 1675, "end": 1698}
+                },
+                {
+                  "kind": "let",
+                  "local": 4,
                   "value": {
                     "kind": "builtin",
                     "function": "clamp",
@@ -1701,17 +1781,17 @@
                               "param": 3,
                               "name": "cell",
                               "type": "f32",
-                              "span": {"file": 2, "start": 1526, "end": 1530}
+                              "span": {"file": 2, "start": 1731, "end": 1735}
                             },
                             "rhs": {
                               "kind": "binary",
                               "op": "*",
                               "lhs": {
                                 "kind": "local",
-                                "local": 1,
+                                "local": 3,
                                 "name": "count",
                                 "type": "f32",
-                                "span": {"file": 2, "start": 1533, "end": 1538}
+                                "span": {"file": 2, "start": 1738, "end": 1743}
                               },
                               "rhs": {
                                 "kind": "builtin",
@@ -1725,66 +1805,66 @@
                                       "param": 3,
                                       "name": "cell",
                                       "type": "f32",
-                                      "span": {"file": 2, "start": 1547, "end": 1551}
+                                      "span": {"file": 2, "start": 1752, "end": 1756}
                                     },
                                     "rhs": {
                                       "kind": "local",
-                                      "local": 1,
+                                      "local": 3,
                                       "name": "count",
                                       "type": "f32",
-                                      "span": {"file": 2, "start": 1554, "end": 1559}
+                                      "span": {"file": 2, "start": 1759, "end": 1764}
                                     },
                                     "type": "f32",
-                                    "span": {"file": 2, "start": 1547, "end": 1559}
+                                    "span": {"file": 2, "start": 1752, "end": 1764}
                                   }
                                 ],
                                 "type": "f32",
-                                "span": {"file": 2, "start": 1541, "end": 1560}
+                                "span": {"file": 2, "start": 1746, "end": 1765}
                               },
                               "type": "f32",
-                              "span": {"file": 2, "start": 1533, "end": 1560}
+                              "span": {"file": 2, "start": 1738, "end": 1765}
                             },
                             "type": "f32",
-                            "span": {"file": 2, "start": 1526, "end": 1560}
+                            "span": {"file": 2, "start": 1731, "end": 1765}
                           }
                         ],
                         "type": "f32",
-                        "span": {"file": 2, "start": 1520, "end": 1561}
+                        "span": {"file": 2, "start": 1725, "end": 1766}
                       },
                       {
                         "kind": "const",
                         "value": {"f32": 0.0},
                         "type": "f32",
-                        "span": {"file": 2, "start": 1563, "end": 1566}
+                        "span": {"file": 2, "start": 1768, "end": 1771}
                       },
                       {
                         "kind": "binary",
                         "op": "-",
                         "lhs": {
                           "kind": "local",
-                          "local": 1,
+                          "local": 3,
                           "name": "count",
                           "type": "f32",
-                          "span": {"file": 2, "start": 1568, "end": 1573}
+                          "span": {"file": 2, "start": 1773, "end": 1778}
                         },
                         "rhs": {
                           "kind": "const",
                           "value": {"f32": 1.0},
                           "type": "f32",
-                          "span": {"file": 2, "start": 1576, "end": 1579}
+                          "span": {"file": 2, "start": 1781, "end": 1784}
                         },
                         "type": "f32",
-                        "span": {"file": 2, "start": 1568, "end": 1579}
+                        "span": {"file": 2, "start": 1773, "end": 1784}
                       }
                     ],
                     "type": "f32",
-                    "span": {"file": 2, "start": 1514, "end": 1580}
+                    "span": {"file": 2, "start": 1719, "end": 1785}
                   },
-                  "span": {"file": 2, "start": 1502, "end": 1581}
+                  "span": {"file": 2, "start": 1707, "end": 1786}
                 },
                 {
                   "kind": "let",
-                  "local": 3,
+                  "local": 5,
                   "value": {
                     "kind": "builtin",
                     "function": "floor",
@@ -1794,68 +1874,68 @@
                         "op": "/",
                         "lhs": {
                           "kind": "local",
-                          "local": 2,
+                          "local": 4,
                           "name": "index",
                           "type": "f32",
-                          "span": {"file": 2, "start": 1606, "end": 1611}
+                          "span": {"file": 2, "start": 1811, "end": 1816}
                         },
                         "rhs": {
-                          "kind": "param",
-                          "param": 4,
-                          "name": "columns",
+                          "kind": "local",
+                          "local": 1,
+                          "name": "cols",
                           "type": "f32",
-                          "span": {"file": 2, "start": 1614, "end": 1621}
+                          "span": {"file": 2, "start": 1819, "end": 1823}
                         },
                         "type": "f32",
-                        "span": {"file": 2, "start": 1606, "end": 1621}
+                        "span": {"file": 2, "start": 1811, "end": 1823}
                       }
                     ],
                     "type": "f32",
-                    "span": {"file": 2, "start": 1600, "end": 1622}
+                    "span": {"file": 2, "start": 1805, "end": 1824}
                   },
-                  "span": {"file": 2, "start": 1590, "end": 1623}
+                  "span": {"file": 2, "start": 1795, "end": 1825}
                 },
                 {
                   "kind": "let",
-                  "local": 4,
+                  "local": 6,
                   "value": {
                     "kind": "binary",
                     "op": "-",
                     "lhs": {
                       "kind": "local",
-                      "local": 2,
+                      "local": 4,
                       "name": "index",
                       "type": "f32",
-                      "span": {"file": 2, "start": 1645, "end": 1650}
+                      "span": {"file": 2, "start": 1847, "end": 1852}
                     },
                     "rhs": {
                       "kind": "binary",
                       "op": "*",
                       "lhs": {
                         "kind": "local",
-                        "local": 3,
+                        "local": 5,
                         "name": "row",
                         "type": "f32",
-                        "span": {"file": 2, "start": 1653, "end": 1656}
+                        "span": {"file": 2, "start": 1855, "end": 1858}
                       },
                       "rhs": {
-                        "kind": "param",
-                        "param": 4,
-                        "name": "columns",
+                        "kind": "local",
+                        "local": 1,
+                        "name": "cols",
                         "type": "f32",
-                        "span": {"file": 2, "start": 1659, "end": 1666}
+                        "span": {"file": 2, "start": 1861, "end": 1865}
                       },
                       "type": "f32",
-                      "span": {"file": 2, "start": 1653, "end": 1666}
+                      "span": {"file": 2, "start": 1855, "end": 1865}
                     },
                     "type": "f32",
-                    "span": {"file": 2, "start": 1645, "end": 1666}
+                    "span": {"file": 2, "start": 1847, "end": 1865}
                   },
-                  "span": {"file": 2, "start": 1632, "end": 1667}
+                  "span": {"file": 2, "start": 1834, "end": 1866}
                 },
                 {
                   "kind": "let",
-                  "local": 5,
+                  "local": 7,
                   "value": {
                     "kind": "binary",
                     "op": "/",
@@ -1869,66 +1949,66 @@
                           "local": 0,
                           "name": "surface",
                           "type": "SurfaceInput",
-                          "span": {"file": 2, "start": 1686, "end": 1693}
+                          "span": {"file": 2, "start": 1885, "end": 1892}
                         },
                         "field": "uv",
                         "index": 3,
                         "type": "vec2",
-                        "span": {"file": 2, "start": 1686, "end": 1696}
+                        "span": {"file": 2, "start": 1885, "end": 1895}
                       },
                       "rhs": {
                         "kind": "construct",
                         "args": [
                           {
                             "kind": "local",
-                            "local": 4,
+                            "local": 6,
                             "name": "column",
                             "type": "f32",
-                            "span": {"file": 2, "start": 1704, "end": 1710}
+                            "span": {"file": 2, "start": 1903, "end": 1909}
                           },
                           {
                             "kind": "local",
-                            "local": 3,
+                            "local": 5,
                             "name": "row",
                             "type": "f32",
-                            "span": {"file": 2, "start": 1712, "end": 1715}
+                            "span": {"file": 2, "start": 1911, "end": 1914}
                           }
                         ],
                         "type": "vec2",
-                        "span": {"file": 2, "start": 1699, "end": 1716}
+                        "span": {"file": 2, "start": 1898, "end": 1915}
                       },
                       "type": "vec2",
-                      "span": {"file": 2, "start": 1686, "end": 1716}
+                      "span": {"file": 2, "start": 1885, "end": 1915}
                     },
                     "rhs": {
                       "kind": "construct",
                       "args": [
                         {
-                          "kind": "param",
-                          "param": 4,
-                          "name": "columns",
+                          "kind": "local",
+                          "local": 1,
+                          "name": "cols",
                           "type": "f32",
-                          "span": {"file": 2, "start": 1725, "end": 1732}
+                          "span": {"file": 2, "start": 1924, "end": 1928}
                         },
                         {
-                          "kind": "param",
-                          "param": 5,
-                          "name": "rows",
+                          "kind": "local",
+                          "local": 2,
+                          "name": "rws",
                           "type": "f32",
-                          "span": {"file": 2, "start": 1734, "end": 1738}
+                          "span": {"file": 2, "start": 1930, "end": 1933}
                         }
                       ],
                       "type": "vec2",
-                      "span": {"file": 2, "start": 1720, "end": 1739}
+                      "span": {"file": 2, "start": 1919, "end": 1934}
                     },
                     "type": "vec2",
-                    "span": {"file": 2, "start": 1685, "end": 1739}
+                    "span": {"file": 2, "start": 1884, "end": 1934}
                   },
-                  "span": {"file": 2, "start": 1676, "end": 1740}
+                  "span": {"file": 2, "start": 1875, "end": 1935}
                 },
                 {
                   "kind": "let",
-                  "local": 6,
+                  "local": 8,
                   "value": {
                     "kind": "builtin",
                     "function": "sample",
@@ -1938,27 +2018,27 @@
                         "param": 0,
                         "name": "sheet",
                         "type": "texture",
-                        "span": {"file": 2, "start": 1768, "end": 1773}
+                        "span": {"file": 2, "start": 1963, "end": 1968}
                       },
                       {
                         "kind": "param",
                         "param": 1,
                         "name": "sheet_sampler",
                         "type": "sampler",
-                        "span": {"file": 2, "start": 1775, "end": 1788}
+                        "span": {"file": 2, "start": 1970, "end": 1983}
                       },
                       {
                         "kind": "local",
-                        "local": 5,
+                        "local": 7,
                         "name": "uv",
                         "type": "vec2",
-                        "span": {"file": 2, "start": 1790, "end": 1792}
+                        "span": {"file": 2, "start": 1985, "end": 1987}
                       }
                     ],
                     "type": "vec4",
-                    "span": {"file": 2, "start": 1761, "end": 1793}
+                    "span": {"file": 2, "start": 1956, "end": 1988}
                   },
-                  "span": {"file": 2, "start": 1749, "end": 1794}
+                  "span": {"file": 2, "start": 1944, "end": 1989}
                 },
                 {
                   "kind": "return",
@@ -1976,27 +2056,27 @@
                             "param": 2,
                             "name": "tint",
                             "type": "color",
-                            "span": {"file": 2, "start": 1823, "end": 1827}
+                            "span": {"file": 2, "start": 2018, "end": 2022}
                           },
                           "components": [0, 1, 2],
                           "type": "vec3",
-                          "span": {"file": 2, "start": 1823, "end": 1831}
+                          "span": {"file": 2, "start": 2018, "end": 2026}
                         },
                         "rhs": {
                           "kind": "components",
                           "base": {
                             "kind": "local",
-                            "local": 6,
+                            "local": 8,
                             "name": "texel",
                             "type": "vec4",
-                            "span": {"file": 2, "start": 1834, "end": 1839}
+                            "span": {"file": 2, "start": 2029, "end": 2034}
                           },
                           "components": [0, 1, 2],
                           "type": "vec3",
-                          "span": {"file": 2, "start": 1834, "end": 1843}
+                          "span": {"file": 2, "start": 2029, "end": 2038}
                         },
                         "type": "vec3",
-                        "span": {"file": 2, "start": 1823, "end": 1843}
+                        "span": {"file": 2, "start": 2018, "end": 2038}
                       },
                       {
                         "kind": "binary",
@@ -2008,40 +2088,40 @@
                             "param": 2,
                             "name": "tint",
                             "type": "color",
-                            "span": {"file": 2, "start": 1845, "end": 1849}
+                            "span": {"file": 2, "start": 2040, "end": 2044}
                           },
                           "components": [3],
                           "type": "f32",
-                          "span": {"file": 2, "start": 1845, "end": 1851}
+                          "span": {"file": 2, "start": 2040, "end": 2046}
                         },
                         "rhs": {
                           "kind": "components",
                           "base": {
                             "kind": "local",
-                            "local": 6,
+                            "local": 8,
                             "name": "texel",
                             "type": "vec4",
-                            "span": {"file": 2, "start": 1854, "end": 1859}
+                            "span": {"file": 2, "start": 2049, "end": 2054}
                           },
                           "components": [3],
                           "type": "f32",
-                          "span": {"file": 2, "start": 1854, "end": 1861}
+                          "span": {"file": 2, "start": 2049, "end": 2056}
                         },
                         "type": "f32",
-                        "span": {"file": 2, "start": 1845, "end": 1861}
+                        "span": {"file": 2, "start": 2040, "end": 2056}
                       }
                     ],
                     "type": "color",
-                    "span": {"file": 2, "start": 1810, "end": 1862}
+                    "span": {"file": 2, "start": 2005, "end": 2057}
                   },
-                  "span": {"file": 2, "start": 1803, "end": 1863}
+                  "span": {"file": 2, "start": 1998, "end": 2058}
                 }
               ],
-              "span": {"file": 2, "start": 1446, "end": 1869}
+              "span": {"file": 2, "start": 1446, "end": 2064}
             },
-            "span": {"file": 2, "start": 1405, "end": 1869}
+            "span": {"file": 2, "start": 1405, "end": 2064}
           },
-          "span": {"file": 2, "start": 1162, "end": 1871}
+          "span": {"file": 2, "start": 1162, "end": 2066}
         }
       ]
     }

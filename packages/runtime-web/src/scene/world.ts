@@ -23,7 +23,7 @@ import { NO_HUD, type HudService } from "../hud/hud.js";
 import { resolveSpan, spanOfSymbol } from "../host/failures.js";
 import { fromRotationTranslationScaleInto, multiplyInto, type Mat4 } from "../math/mat4.js";
 import type { LoopBudget } from "./budget.js";
-import { ClipPlayers, type PlayableChannel } from "./clips.js";
+import { ClipPlayers, sampleChannelInto, type PlayableChannel } from "./clips.js";
 import { DynamicEntities, type DynamicHost, type PrefabRuntime } from "./dynamic.js";
 import { ParticleSim, type ParticleDraw } from "./particles.js";
 import { RuntimeInternalError } from "./errors.js";
@@ -116,6 +116,13 @@ export interface LightRecord {
  * An entity record (`spec/runtime-abi.md` section 4.2). Generated code reads the transform fields and
  * `visible` directly and writes them only through the setters.
  */
+/** What a clip sampled for one entity: the identity for a channel the clip does not have. */
+interface ClipPose {
+  translation: Vec3;
+  rotation: Quat;
+  scale: Vec3;
+}
+
 export interface EntityRecord {
   position: Vec3;
   rotation: Quat;
@@ -381,9 +388,13 @@ export class World {
   private readonly particles = new ParticleSim();
   /** Playing glTF clips (decision 0156). */
   private readonly clips = new ClipPlayers();
+  /** Per entity slot, the pose its clip last sampled; `undefined` for an entity without a clip. The local transform is the entity's own one times this (decision 0174). */
+  private readonly clipPoses: (ClipPose | undefined)[] = [];
+  private readonly clipBase = new Float32Array(16);
+  private readonly clipLocal = new Float32Array(16);
+  private readonly clipSample = new Float64Array(4);
   private readonly cameraByName = new Map<string, CameraRecord>();
   private readonly cameraMeta = new Map<CameraRecord, { name: string; symbol: string; exposure: number; hasTarget: boolean }>();
-  private nextRandom: () => number = Math.random;
   /** `manifest.preview.loopBudget`: what {@link resetBudget} refills the counter with; `undefined` outside a preview. */
   private readonly loopBudgetLimit: number | undefined;
   private readonly materialParamTypes: ReadonlyMap<string, readonly { readonly name: string; readonly type: string }[]>;
@@ -486,7 +497,6 @@ export class World {
 
     this.sceneState = stateObject(this.manifest.scene.state);
     const services = options.services ?? INERT_SERVICES;
-    this.nextRandom = () => services.random();
     for (const entity of this.structure.entities) this.trackMotion(entity.index, entity);
     const game = services.game ?? INERT_GAME;
     const timerOwner = (owner: unknown): TimerOwner => {
@@ -648,7 +658,7 @@ export class World {
   /** Spawns and integrates particles (decision 0155). */
   advanceParticles(delta: number): void {
     this.propagate();
-    this.particles.advance(delta, this.nextRandom, (slot) => {
+    this.particles.advance(delta, (slot) => {
       const matrix = this.worlds[slot];
       if (matrix === undefined) return { x: 0, y: 0, z: 0 };
       return { x: matrix[12] ?? 0, y: matrix[13] ?? 0, z: matrix[14] ?? 0 };
@@ -775,9 +785,9 @@ export class World {
       const world = this.worlds[i] as Mat4;
       const parentWorld = parent === null ? undefined : this.worlds[parent];
       if (parentWorld === undefined) {
-        fromRotationTranslationScaleInto(world, this.rotationScratch, record.rotation, record.position, record.scale);
+        this.localMatrixInto(world, i, record);
       } else {
-        fromRotationTranslationScaleInto(this.localScratch, this.rotationScratch, record.rotation, record.position, record.scale);
+        this.localMatrixInto(this.localScratch, i, record);
         multiplyInto(world, parentWorld, this.localScratch);
       }
       this.transformDirty[i] = 0;
@@ -789,13 +799,28 @@ export class World {
       const i = entity.ref.slot;
       if (this.transformDirty[i] !== 1) continue;
       const record = entity.record;
-      fromRotationTranslationScaleInto(this.worlds[i] as Mat4, this.rotationScratch, record.rotation, record.position, record.scale);
+      this.localMatrixInto(this.worlds[i] as Mat4, i, record);
       this.transformDirty[i] = 0;
       this.markChanged(i);
       count += 1;
     }
     this.transformsPending = false;
     return count;
+  }
+
+  /**
+   * The local matrix of the entity in slot `index` into `out`: `T * R * S` of its own transform, times the same of the
+   * pose its clip sampled when it has one (`base * clip`, decision 0174).
+   */
+  private localMatrixInto(out: Mat4, index: number, record: EntityRecord): void {
+    const pose = this.clipPoses[index];
+    if (pose === undefined) {
+      fromRotationTranslationScaleInto(out, this.rotationScratch, record.rotation, record.position, record.scale);
+      return;
+    }
+    fromRotationTranslationScaleInto(this.clipBase, this.rotationScratch, record.rotation, record.position, record.scale);
+    fromRotationTranslationScaleInto(this.clipLocal, this.rotationScratch, pose.rotation, pose.translation, pose.scale);
+    multiplyInto(out, this.clipBase, this.clipLocal);
   }
 
   /** The world matrix of the entity in slot `index` as of the last `propagate()`. */
@@ -883,7 +908,7 @@ export class World {
     this.transformDirty[slot] = 1;
     this.transformsPending = true;
     this.worldChanged[slot] = 0;
-    this.trackMotion(slot, resolved);
+    this.trackMotion(slot, resolved, true);
   }
 
   private unregisterDynamic(slot: number, record: EntityRecord): void {
@@ -895,6 +920,7 @@ export class World {
     this.worldChanged[slot] = 0;
     this.particles.remove(slot);
     this.clips.remove(slot);
+    this.clipPoses[slot] = undefined;
   }
 
   // ---- the setters of the context ----
@@ -1217,23 +1243,29 @@ export class World {
     }, time);
   }
 
-  private writeChannel(slot: number, channel: PlayableChannel, value: readonly number[]): void {
-    const record = this.records[slot];
-    if (record === undefined) return;
+  /** Stores one sampled channel in the clip pose of `slot`; the entity's own transform is left alone (decision 0174). */
+  private writeChannel(slot: number, channel: PlayableChannel, value: ArrayLike<number>): void {
+    const pose = this.clipPoses[slot];
+    if (pose === undefined) return;
+    const x = value[0] ?? 0;
+    const y = value[1] ?? 0;
+    const z = value[2] ?? 0;
     if (channel.path === "rotation") {
-      this.applyTransform(slot, record, "rotation", {
-        x: value[0] ?? 0,
-        y: value[1] ?? 0,
-        z: value[2] ?? 0,
-        w: value[3] ?? 1,
-      });
-      return;
+      const w = value[3] ?? 1;
+      if (sameQuat(pose.rotation, { x, y, z, w })) return;
+      pose.rotation = { x, y, z, w };
+    } else if (channel.path === "translation") {
+      if (sameVec3(pose.translation, { x, y, z })) return;
+      pose.translation = { x, y, z };
+    } else {
+      if (sameVec3(pose.scale, { x, y, z })) return;
+      pose.scale = { x, y, z };
     }
-    const vec = { x: value[0] ?? 0, y: value[1] ?? 0, z: value[2] ?? 0 };
-    this.applyTransform(slot, record, channel.path === "translation" ? "position" : "scale", vec);
+    this.transformDirty[slot] = 1;
+    this.transformsPending = true;
   }
 
-  private trackMotion(slot: number, resolved: ResolvedEntity): void {
+  private trackMotion(slot: number, resolved: ResolvedEntity, spawned = false): void {
     if (resolved.particles !== undefined) {
       this.particles.add({
         slot,
@@ -1248,7 +1280,15 @@ export class World {
       });
     }
     if (resolved.clip !== undefined) {
+      this.clipPoses[slot] = { translation: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0, w: 1 }, scale: { x: 1, y: 1, z: 1 } };
       this.clips.add({ slot, duration: resolved.clip.duration, channels: resolved.clip.channels });
+      // A named entity is posed at time 0 once `init` has run; a spawned one is posed now, not a frame later.
+      if (spawned) {
+        for (const channel of resolved.clip.channels) {
+          sampleChannelInto(channel, 0, this.clipSample);
+          this.writeChannel(slot, channel, this.clipSample);
+        }
+      }
     }
   }
 

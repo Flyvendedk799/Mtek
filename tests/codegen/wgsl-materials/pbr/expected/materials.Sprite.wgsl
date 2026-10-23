@@ -44,11 +44,13 @@ struct MtekSurfaceInput {
 @group(2) @binding(0) var<uniform> mtek_object: MtekObject;
 
 fn mtek_fragment(u_p_surface: MtekSurfaceInput) -> vec4<f32> {
-    let u_l_count = max(mtek_params.u_columns * mtek_params.u_rows, 1.0);
+    let u_l_cols = clamp(floor(mtek_params.u_columns), 1.0, 64.0);
+    let u_l_rws = clamp(floor(mtek_params.u_rows), 1.0, 64.0);
+    let u_l_count = u_l_cols * u_l_rws;
     let u_l_index = clamp(floor(mtek_params.u_cell - (u_l_count * floor(mtek_params.u_cell / u_l_count))), 0.0, u_l_count - 1.0);
-    let u_l_row = floor(u_l_index / mtek_params.u_columns);
-    let u_l_column = u_l_index - (u_l_row * mtek_params.u_columns);
-    let u_l_uv = (u_p_surface.uv + vec2<f32>(u_l_column, u_l_row)) / vec2<f32>(mtek_params.u_columns, mtek_params.u_rows);
+    let u_l_row = floor(u_l_index / u_l_cols);
+    let u_l_column = u_l_index - (u_l_row * u_l_cols);
+    let u_l_uv = (u_p_surface.uv + vec2<f32>(u_l_column, u_l_row)) / vec2<f32>(u_l_cols, u_l_rws);
     let u_l_texel = textureSampleLevel(mtek_texture_sheet, mtek_sampler_sheet_sampler, u_l_uv, 0.0);
     return vec4<f32>(mtek_params.u_tint.xyz * u_l_texel.xyz, mtek_params.u_tint.w * u_l_texel.w);
 }

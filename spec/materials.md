@@ -68,12 +68,15 @@ Bind groups, struct names and binding numbers are fixed by `spec/gpu-layout.md` 
 
 A draw is translucent while a `color` param of its material instance has an alpha below 1 (§2). Translucent draws:
 - are drawn after every opaque draw;
-- are ordered back to front each frame by the depth of their bounding-sphere centre;
+- are ordered back to front each frame by the **view-space depth** of their bounding-sphere centre (distance along the camera's view direction, so it holds for an orthographic projection too, where clip `w` is the same for every point); draws at equal depth keep draw-list order (decision 0173). There is no explicit layer: put sprites at different `z`;
+- are not re-batched while that order does not change: a static translucent scene costs the same grouping work as an opaque one (decision 0173);
 - blend straight alpha "over" what is behind them (`src·a + dst·(1 − a)`);
 - test depth but do not write it;
 - are never instanced.
 
-Order is per object, not per triangle: intersecting translucent objects, or one concave translucent mesh, can show order artefacts. The blended pipeline of a material is made the first time one of its draws turns translucent; until it exists, for a frame or two, the draw is opaque.
+Order is per object, not per triangle: intersecting translucent objects, or one concave translucent mesh, can show order artefacts. The blended pipeline of a material is made at scene start for every material known to blend then (`Sprite`, an instance whose initial colour alpha is below 1, and the instanced variant for an emitter's material); a material that turns translucent later gets it the first time one of its draws does, and until it exists, for a frame or two, the draw is opaque (decision 0173).
+
+Particles (`particles`, `spec/scenes.md` §4.6) are drawn between the opaque pass and the translucent one. An emitter whose material is translucent (`Sprite`, a colour alpha below 1) draws with the blended instanced pipeline and no depth write; its particles are sorted back to front by view depth, and such emitters come after the opaque ones, back to front by their mean depth. They are not merged into the order of the translucent entities: a blended particle is hidden by a nearer translucent entity only through the blend order of the passes, not per object.
 
 ### 3.3 The fixed vertex and varying interface (normative)
 
@@ -196,13 +199,13 @@ The param named `color` in `Unlit` relies on the rule in `spec/language.md` §4.
 - `sheet_sampler` (default `sampler.nearest_clamp()`, for crisp pixels);
 - `tint` (`color`, default white; multiplies the texel, alpha included);
 - `cell` (`f32`, default `0.0`): floored and wrapped modulo `columns · rows`, so `cell: bind(t * 8.0)` plays the sheet at 8 cells per second and loops;
-- `columns` and `rows` (`f32`, default `1.0`): a constant outside `1..64` is `E5701`.
+- `columns` and `rows` (`f32`, default `1.0`): a constant outside `1..64` is `E5701`. A run-time value is floored and held to `1..64` by the fragment stage, so a write of `0` or a negative number never divides by zero (decision 0170 §4, made true by decision 0173).
 
 A `Sprite` draw is **always translucent** (§3.4), so transparent texels show what is behind them.
 
 A sprite is a `Plane` turned to face `+Z`: `mesh: Plane { size: vec2(w, h) }; rotation: quat.euler(1.5707964, 0.0, 0.0);`. With that rotation the top of the sheet is at `+Y`.
 
-The 2D camera preset is a camera on `+Z` looking down `-Z` with `projection: Orthographic { height: H }`: one world unit is `canvas height / H` pixels, `x` goes right and `y` goes up. Sprites at different `z` are ordered back to front by the translucent pass.
+The 2D camera preset is a camera on `+Z` looking down `-Z` with `projection: Orthographic { height: H }`: one world unit is `canvas height / H` pixels, `x` goes right and `y` goes up. Sprites at different `z` are ordered back to front by the translucent pass by their depth along the view direction (decision 0173), so a sprite nearer the camera is drawn over a farther one whatever order they are declared in.
 
 ## 10. Not in v0.1
 

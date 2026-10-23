@@ -1,0 +1,16 @@
+const MODEL = asset.glb("../models/model.glb");
+
+prefab Mover {
+    param origin: vec3 = vec3(0.0, 0.0, 0.0);
+    position: origin;
+    mesh: MODEL.mesh("Tri");
+    clip: "animation_0";
+}
+
+scene Demo {
+    camera Main {}
+    on key_down(Key.Space) {
+        spawn(Mover { origin: vec3(-4.0, 0.0, 0.0); });
+        spawn(Mover { origin: vec3(4.0, 0.0, 0.0); });
+    }
+}

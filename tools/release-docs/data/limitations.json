@@ -516,8 +516,8 @@
     {
       "id": "gltf-animation",
       "area": "Assets",
-      "restriction": "No skinning, morph targets, cubic-spline interpolation or sparse accessors. A node clip of translation, rotation and scale with LINEAR or STEP interpolation plays (decision 0156).",
-      "reason": "Decision 0015 rejected every animation. Decision 0156 plays TRS clips and keeps the rest of that rejection.",
+      "restriction": "No skinning, morph targets, cubic-spline interpolation or sparse accessors. A node clip of translation, rotation and scale with LINEAR or STEP interpolation plays (decision 0156) on top of the entity's own transform; an animation the profile cannot play is an error only where a `clip` names it (decision 0174).",
+      "reason": "Decision 0015 rejected every animation. Decision 0156 plays TRS clips and keeps the rest of that rejection; decision 0174 composes clips with the entity and narrows the error to the use.",
       "codes": [
         "E7008",
         "E7019",
@@ -525,7 +525,8 @@
       ],
       "decisions": [
         "0015",
-        "0156"
+        "0156",
+        "0174"
       ],
       "source": {
         "file": "spec/decisions/0015-asset-strictness.md",
