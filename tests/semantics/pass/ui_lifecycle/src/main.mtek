@@ -1,0 +1,27 @@
+// `ui(dt)` (decision 0175): runs in every frame, also while the game is paused, so a pause menu can draw its
+// buttons and hear their clicks. `update` is held while paused; `ui` is not.
+scene Menu {
+    state ticks: i32 = 0;
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+    update(dt: f32) {
+        ticks += 1;
+        hud.text("Ticks: ${ticks}", vec2(-0.95, 0.9), 28.0, #ffffff, 0.0);
+    }
+    ui(dt: f32) {
+        if paused() {
+            hud.text("Paused", vec2(0.0, 0.3), 48.0);
+            if hud.button("Resume", vec2(0.0, 0.0)) {
+                resume();
+            }
+            if hud.button("Restart", vec2(0.0, -0.2)) {
+                reset();
+            }
+        }
+    }
+    on key_down(Key.Escape) {
+        if paused() { resume(); } else { pause(); }
+    }
+}

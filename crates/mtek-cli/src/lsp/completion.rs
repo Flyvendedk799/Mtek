@@ -754,7 +754,7 @@ fn declared_fields(
 const STATEMENT_KEYWORDS: &[&str] = &[
     "let", "var", "const", "if", "for", "while", "return", "break", "continue", "match",
 ];
-const LIFECYCLE_KEYWORDS: &[&str] = &["update", "fixed_update"];
+const LIFECYCLE_KEYWORDS: &[&str] = &["update", "fixed_update", "ui"];
 
 fn keywords(words: &[&str]) -> Vec<Candidate> {
     words

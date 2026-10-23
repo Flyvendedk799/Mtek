@@ -107,6 +107,7 @@ export const FORMS: readonly Form[] = [
   ...forms("behaviours", "spec/scenes.md sections 6 and 7", [
     ["behavior/update", "`update` lifecycle function"],
     ["behavior/fixedUpdate", "`fixed_update` lifecycle function"],
+    ["behavior/ui", "`ui` lifecycle function (runs while paused)"],
     ["behavior/event", "`on event` handler"],
     ["behavior/event-filter", "handler with a filter (`on key_down(Key.Space)`)"],
     ["behavior/owner:scene", "behaviour in a scene body"],
@@ -261,6 +262,7 @@ export const IR_VARIANTS: Readonly<Record<string, string>> = {
   "BodyTarget.Ref": "expr/body-target:ref",
   "BehaviorKind.Update": "behavior/update",
   "BehaviorKind.FixedUpdate": "behavior/fixedUpdate",
+  "BehaviorKind.Ui": "behavior/ui",
   "BehaviorKind.Event": "behavior/event",
   "BindingTarget.Transform": "binding/target:transform",
   "BindingTarget.Visible": "binding/target:visible",

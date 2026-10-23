@@ -518,7 +518,7 @@
       }
     },
     "lifecycle": {
-      "match": "(?<![A-Za-z0-9_.])((?:fixed_update|update))\\s*(?=\\()",
+      "match": "(?<![A-Za-z0-9_.])((?:fixed_update|update|ui))\\s*(?=\\()",
       "captures": {
         "1": {
           "name": "entity.name.function.lifecycle.mtek"
