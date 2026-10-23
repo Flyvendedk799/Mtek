@@ -59,7 +59,7 @@ compute  vertex  storage  uniform  workgroup  system  query  component
 
 2.4 **Contextual names.** These are ordinary identifiers that gain meaning only in a specific position. They are not reserved:
 - `camera` — a scene-object kind when it begins a scene member of the form `camera Name { … }` (`spec/scenes.md` §3).
-- `update`, `fixed_update` — lifecycle function names inside a scene, entity or prefab body (`spec/scenes.md` §6).
+- `update`, `fixed_update` — lifecycle function names inside a scene, entity or prefab body; `ui` — a lifecycle function name inside a scene body only (`spec/scenes.md` §6).
 - `fragment` — the stage function name inside a material body (`spec/materials.md` §3).
 - `from` — in an import clause (`import { A } from "…";`).
 - Event names after `on` (`key_down`, `collision_enter`, …), resolved against the registry.
