@@ -26,6 +26,9 @@ scene Pop {
 
     update(dt: f32) {
         t = t + dt;
+    }
+
+    ui(dt: f32) {
         hud.text("SPRITE", vec2(0.0, 0.72), 32.0, #ffffff, 0.5, hud.pixel_font());
         let at = pointer_position();
         hud.rect(at, vec2(14.0, 14.0), #ffd040, 0.5);

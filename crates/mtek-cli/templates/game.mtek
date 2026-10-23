@@ -34,7 +34,7 @@ scene Title {
         target: vec3(0.0, 0.0, 0.0);
     }
 
-    update(dt: f32) {
+    ui(dt: f32) {
         hud.text("SMALL GAME", vec2(0.0, 0.35), 48.0, #ffffff, 0.5, hud.pixel_font());
         hud.text("Best ${best}", vec2(0.0, 0.05), 24.0, #ffd040, 0.5, hud.pixel_font());
         hud.text("Enter to play", vec2(0.0, -0.25), 20.0, #a0b0c0, 0.5, hud.pixel_font());
