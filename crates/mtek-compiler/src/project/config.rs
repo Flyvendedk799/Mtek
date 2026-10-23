@@ -107,6 +107,12 @@ pub struct ProjectSection {
     /// is fine if the entry module declares exactly one scene
     /// ([`select_scene`](super::select_scene)).
     pub scene: Option<String>,
+    /// `id`: 4 to 16 lowercase hexadecimal digits, written by `mtek new`. Saved state is kept under
+    /// `<name>.<id>` instead of `<name>`, so two games of one name on one origin (itch.io) do not
+    /// share their saves (decision 0179).
+    pub id: Option<String>,
+    /// `migrate_saves`: with an `id`, a first run adopts the saves of the key `<name>` once.
+    pub migrate_saves: bool,
 }
 
 /// The `[build]` table.

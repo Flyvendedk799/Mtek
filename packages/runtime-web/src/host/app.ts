@@ -284,6 +284,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         this.reportSaveProblem(problem);
       },
       deps.saveStorageUnavailable === true,
+      manifest.game?.legacyStorage,
     );
     // The scene starts from its saved values (decision 0145): after `init`, before the first frame.
     this.saves.restore(persistentEntries(manifest.scene.state), deps.scene.world.sceneState);

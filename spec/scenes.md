@@ -304,7 +304,7 @@ scene Title {
 
 The value of a persistent state is kept in the browser's storage and outlives the page. Only scene state can be persistent (`E5210` in an entity or a prefab). Only plain data can be stored, the types `shared state` allows (§15.2): `bool`, the numeric, vector and matrix types, `quat`, `color`, `string`, enums, and arrays and structs of these, no `entity_ref`, resource or descriptor (`E5211`). The words `saved` and `setting` are contextual (`spec/language.md` §2.4): `let saved = true;` is an ordinary name.
 
-16.2 **One store for the program.** All scenes of a program share one store (`spec/runtime-abi.md` §5, `game.storage`), keyed by the state's name. A state of one name is the same stored value in every scene that declares it persistent. So two scenes that both declare `best` read and write one high score. They must agree on its type and on whether it is `saved` or `setting` (`E5212`). A scene that does not declare a name leaves its stored value alone.
+16.2 **One store for the program.** All scenes of a program share one store (`spec/runtime-abi.md` §5, `game.storage`: the project name, or `<name>.<id>` with a project `id`, decision 0179), keyed by the state's name. A state of one name is the same stored value in every scene that declares it persistent. So two scenes that both declare `best` read and write one high score. They must agree on its type and on whether it is `saved` or `setting` (`E5212`). A scene that does not declare a name leaves its stored value alone.
 
 16.3 **When values are read and written.**
 

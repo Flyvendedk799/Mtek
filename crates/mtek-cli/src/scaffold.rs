@@ -55,11 +55,25 @@ pub fn title_for(name: &str) -> String {
 
 /// Contents of `mtek.toml` for a project named `name` (the Demo template).
 pub fn mtek_toml(name: &str) -> String {
-    mtek_toml_for(name, ProjectTemplate::Demo)
+    mtek_toml_for(name, ProjectTemplate::Demo, None)
 }
 
-/// Contents of `mtek.toml` for `template`.
-pub fn mtek_toml_for(name: &str, template: ProjectTemplate) -> String {
+/// A fresh save id for `mtek new --template game` (decision 0179): 8 lowercase hexadecimal digits
+/// from the clock and the randomly seeded hasher of the standard library. It only has to differ
+/// between two projects of one name.
+pub fn new_save_id() -> String {
+    use std::hash::{BuildHasher, Hasher};
+    let mut hasher = std::collections::hash_map::RandomState::new().build_hasher();
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |elapsed| elapsed.as_nanos());
+    hasher.write_u128(nanos);
+    hasher.write_u32(std::process::id());
+    format!("{:08x}", hasher.finish() & 0xffff_ffff)
+}
+
+/// Contents of `mtek.toml` for `template`; `id` is the save id of a game (decision 0179).
+pub fn mtek_toml_for(name: &str, template: ProjectTemplate, id: Option<&str>) -> String {
     let title = title_for(name);
     let scene = match template {
         ProjectTemplate::Demo => "Demo",
@@ -69,6 +83,7 @@ pub fn mtek_toml_for(name: &str, template: ProjectTemplate) -> String {
         ProjectTemplate::Demo => "\n[host.inputs]\ntint = \"Demo.tint\"\n",
         ProjectTemplate::Game => "\n",
     };
+    let id = id.map_or_else(String::new, |id| format!("id = \"{id}\"\n"));
     format!(
         "\
 [project]
@@ -76,7 +91,7 @@ name = \"{name}\"
 language = \"0.1\"
 entry = \"src/main.mtek\"
 scene = \"{scene}\"
-
+{id}
 [build]
 target = \"web\"
 title = \"{title}\"
@@ -85,14 +100,18 @@ title = \"{title}\"
 }
 
 /// The three files a scaffold writes, as `(relative path, contents)`.
-pub fn template_files(name: &str, template: ProjectTemplate) -> [(&'static str, String); 3] {
+pub fn template_files(
+    name: &str,
+    template: ProjectTemplate,
+    id: Option<&str>,
+) -> [(&'static str, String); 3] {
     let main = match template {
         ProjectTemplate::Demo => MAIN_MTEK,
         ProjectTemplate::Game => GAME_MTEK,
     };
     let toml = match template {
         ProjectTemplate::Demo => mtek_toml(name),
-        ProjectTemplate::Game => mtek_toml_for(name, template),
+        ProjectTemplate::Game => mtek_toml_for(name, template, id),
     };
     [
         ("mtek.toml", toml),
@@ -130,7 +149,8 @@ pub fn create(cwd: &Path, name: &str, template: ProjectTemplate) -> Outcome {
             code: EXIT_INTERNAL,
         };
     }
-    for (rel, contents) in template_files(name, template) {
+    let id = (template == ProjectTemplate::Game).then(new_save_id);
+    for (rel, contents) in template_files(name, template, id.as_deref()) {
         let path = dir.join(rel);
         if let Err(error) = fs::write(&path, contents) {
             let _ = fs::remove_dir_all(&dir);
@@ -164,6 +184,27 @@ mod tests {
         assert!(!valid_name("pulse_cube"));
         assert!(!valid_name("pulse cube"));
         assert!(!valid_name("../evil"));
+    }
+
+    #[test]
+    fn a_game_gets_a_save_id_and_a_demo_does_not() {
+        let id = new_save_id();
+        assert_eq!(id.len(), 8);
+        assert!(
+            id.bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+        );
+        assert_ne!(
+            id,
+            new_save_id(),
+            "two scaffolds of one name must not share an id"
+        );
+        let game = mtek_toml_for("my-game", ProjectTemplate::Game, Some(&id));
+        assert!(
+            game.contains(&format!("scene = \"Title\"\nid = \"{id}\"\n")),
+            "{game}"
+        );
+        assert!(!mtek_toml("my-game").contains("id ="));
     }
 
     #[test]

@@ -176,5 +176,6 @@ recorded here before code depends on it (blueprint §15).
 | 0155 | Particles: `particles: Emitter { … }` (at most 64, upper hemisphere, gravity), drawn as camera-facing copies of the entity's mesh, and `particle_count()` |
 | 0156 | Animated GLB clips: LINEAR and STEP translation, rotation and scale play (`clip: "Name"`); skins, morphs and cubic spline stay `E7019`; a clip that cannot play is `E5016` |
 | 0170 | Sprites (small-game plan phase 6.4): a built-in `Sprite` material (sheet, `cell` animated by a binding, `columns`×`rows` 1..64 `E5701`, tint), always translucent; a sprite is a `Plane` turned to face +Z and the 2D camera is `Orthographic` looking down -Z |
+| 0179 | Save id: `[project] id` (written by `mtek new --template game`) makes the save key `mtek.save.<name>.<id>` so two games of one name on one origin (itch.io) do not share saves; `migrate_saves = true` adopts the old key once (`game.legacyStorage`). |
 
 Numbers 0157-0169 are unused: the sprites record is 0170 and no record has been written in between. (Earlier versions of this index listed ghost rows 0160-0162 for what are records 0130-0132; they were removed.)

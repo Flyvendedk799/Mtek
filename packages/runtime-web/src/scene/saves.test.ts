@@ -208,3 +208,48 @@ describe("clear and write failures", () => {
     expect(storage.getItem(saveKey("demo"))).toBeNull();
   });
 });
+
+describe("a save id adopts the saves of the old key once (decision 0179)", () => {
+  const OLD = JSON.stringify({ format: 1, values: { best: { type: "i32", value: 9 } } });
+  const adopting = (storage: SaveStorage): GameSaves => new GameSaves(storage, "demo.1a2b3c4d", () => undefined, false, "demo");
+
+  it("reads the old key when the new one is empty, copies it, and leaves the old key alone", () => {
+    const storage = new MemorySaveStorage();
+    storage.setItem(saveKey("demo"), OLD);
+    const state: Record<string, unknown> = { best: 0 };
+    expect(adopting(storage).restore([BEST], state)).toBe(true);
+    expect(state["best"]).toBe(9);
+    expect(storage.getItem(saveKey("demo.1a2b3c4d"))).toBe(OLD);
+    expect(storage.getItem(saveKey("demo"))).toBe(OLD);
+  });
+
+  it("prefers the new key once it exists", () => {
+    const storage = new MemorySaveStorage();
+    storage.setItem(saveKey("demo"), OLD);
+    adopting(storage).save([BEST], { best: 12 });
+    const state: Record<string, unknown> = { best: 0 };
+    expect(adopting(storage).restore([BEST], state)).toBe(true);
+    expect(state["best"]).toBe(12);
+  });
+
+  it("keeps two games of one name apart: a game with an id and no migration never reads the old key", () => {
+    const storage = new MemorySaveStorage();
+    storage.setItem(saveKey("demo"), OLD);
+    const other = new GameSaves(storage, "demo.9f8e7d6c", () => undefined);
+    const state: Record<string, unknown> = { best: 0 };
+    expect(other.restore([BEST], state)).toBe(false);
+    other.save([BEST], { best: 5 });
+    expect(storage.getItem(saveKey("demo"))).toBe(OLD);
+  });
+
+  it("clear_saved keeps the saves cleared: the old key is not adopted again", () => {
+    const storage = new MemorySaveStorage();
+    storage.setItem(saveKey("demo"), OLD);
+    const game = adopting(storage);
+    game.restore([BEST], { best: 0 });
+    game.clear();
+    const state: Record<string, unknown> = { best: 0 };
+    expect(adopting(storage).restore([BEST], state)).toBe(false);
+    expect(state["best"]).toBe(0);
+  });
+});
