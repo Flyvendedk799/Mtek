@@ -114,7 +114,7 @@ function b_0_update(ctx, a_dt) {
   ctx.s.ticks = f_e2cab98b_bump(ctx, ctx.s.ticks);
   ctx.setTransform(ctx.e[0], "position", rt.v3with(ctx.e[0].position, "y", 0.5));
   ctx.setParam(ctx.e[0], "phase", ctx.s.angle);
-  ctx.setCamera("position", rt.v3(0.0, fr(ctx.e[0].state.hits), 6.0));
+  ctx.setCameraOn("Main", "position", rt.v3(0.0, fr(ctx.e[0].state.hits), 6.0));
 }
 
 // fixed_update (src/main.mtek::Demo.fixed_update)

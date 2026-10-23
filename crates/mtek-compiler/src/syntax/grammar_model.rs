@@ -496,7 +496,7 @@ const SECTION_1: &str = "\
 const CONTEXTUAL_WORDS: &str = "\
 /* Contextual words (ordinary identifiers, meaningful only in position):
    'camera'                  scene-object kind      (SceneObject)
-   'update', 'fixed_update'  lifecycle functions    (LifecycleFn)
+   'update', 'fixed_update', 'ui'  lifecycle functions  (LifecycleFn)
    'fragment'                material stage         (StageFn)
    'from'                    import clause          (Import)
    'shared'                  scene state carry-over (StateDecl)
@@ -1033,7 +1033,7 @@ pub fn grammar() -> GrammarModel {
                 seq([vec![r("Ident")], parens_params(), vec![r("Block")]].concat()),
             ),
             &[
-                "                    /* [S: lifecycle-signature: 'update' | 'fixed_update' with exactly (name: f32),",
+                "                    /* [S: lifecycle-signature: 'update' | 'fixed_update' | 'ui' (a scene only) with exactly (name: f32),",
                 "                        at most one of each per body (E5050-E5052)] */",
             ],
         ),

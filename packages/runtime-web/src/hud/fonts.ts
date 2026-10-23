@@ -16,6 +16,8 @@ export interface FontPage {
 
 export interface FontRegistryOptions {
   readonly manifest: MtekManifest;
+  /** The manifest of the scene that runs: where a font is looked up and its `W8204` span resolved (decision 0176). */
+  readonly manifestNow?: () => MtekManifest;
   readonly bytes: (url: string) => Uint8Array | undefined;
   readonly page: FontPage | undefined;
   readonly report: (diagnostic: MtekDiagnostic) => void;
@@ -40,7 +42,8 @@ export class FontRegistry {
   /** The family of the font declared at `source`, registering it on first use; `undefined` if there is none. */
   family(source: string): string | undefined {
     if (this.families.has(source)) return this.families.get(source);
-    const { manifest, page } = this.options;
+    const { page } = this.options;
+    const manifest = this.options.manifestNow?.() ?? this.options.manifest;
     const asset = manifest.assets.find((entry) => entry.kind === "font" && entry.source === source);
     const bytes = asset === undefined ? undefined : this.options.bytes(asset.url);
     if (asset === undefined || asset.kind !== "font" || bytes === undefined || page === undefined) {
@@ -53,21 +56,21 @@ export class FontRegistry {
       const face = page.createFace(family, bytes);
       page.add(face);
       face.load().catch(() => {
-        this.unusable(source, asset.span);
+        this.unusable(source, asset.span, manifest);
       });
     } catch {
-      this.unusable(source, asset.span);
+      this.unusable(source, asset.span, manifest);
     }
     return family;
   }
 
-  private unusable(source: string, span: number): void {
+  private unusable(source: string, span: number, manifest: MtekManifest): void {
     this.families.set(source, undefined);
     this.options.report(
       makeRuntimeDiagnostic("W8204", {
         phase: "runtime:update",
         message: `The browser could not load the font '${source}'; the HUD text uses the default family instead.`,
-        source: resolveSpan(this.options.manifest, span),
+        source: resolveSpan(manifest, span),
       }),
     );
   }

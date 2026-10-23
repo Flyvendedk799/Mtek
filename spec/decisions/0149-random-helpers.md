@@ -5,7 +5,7 @@
 
 ## Contract
 
-Games keep writing the same three lines around `random()`. They are now intrinsics, CPU only, usable wherever `random()` is: functions, `cpu fn`s, state initialisers, lifecycle functions and handlers. They are not usable in a `bind` (`E5005`) or on the GPU.
+Games keep writing the same three lines around `random()`. They are now intrinsics, CPU only, usable wherever `random()` is: `cpu fn`s, state initialisers, lifecycle functions and handlers. A pure `fn` cannot call them (`E4002`), exactly as it cannot call `random()`; the first version of this text said "functions" and meant `cpu fn`s (corrected in decision 0177: the checker is right, because a draw changes the generator's state). They are not usable in a `bind` (`E5005`) or on the GPU.
 
 | Function | Result |
 |---|---|

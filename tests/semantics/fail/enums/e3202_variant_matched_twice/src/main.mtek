@@ -1,0 +1,15 @@
+// A variant matched by an earlier arm cannot be matched again.
+// covers: [S: match-patterns]
+enum Phase { Menu, Playing, GameOver }
+
+fn level(phase: Phase) -> i32 {
+    return match phase {
+        Phase.Menu | Phase.Playing => 0,
+        Phase.Menu => 1,
+        Phase.GameOver => 2,
+    };
+}
+
+scene Demo {
+    camera Main {}
+}

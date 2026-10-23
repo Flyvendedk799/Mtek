@@ -8,8 +8,9 @@ Mtek is a typed language for describing a 3D scene: its entities, its state, the
 
 1. **[Getting started](getting-started.md).** Install the toolchain from source, run a program, break it on purpose, read the error and repair it.
 2. **[Tutorial: catch the crates](tutorial.md).** Build one program in seven steps: a lit room, a cart, falling crates with physics, a score, a material of your own and a second file.
-3. **The concept pages**, below, in any order. Each one has the same parts: the rules, why they exist, worked examples, the common mistakes with the diagnostic code each one raises, and links.
-4. **[Language reference](language-reference.md)** when you need the exact rule or a signature, and **[Limitations](limitations.md)** when something you expected is not there.
+3. **[Making a game](making-games.md).** Scenes, saved scores, timers, a HUD, sound, sprites and an itch.io upload, starting from `mtek new --template game`.
+4. **The concept pages**, below, in any order. Each one has the same parts: the rules, why they exist, worked examples, the common mistakes with the diagnostic code each one raises, and links.
+5. **[Language reference](language-reference.md)** when you need the exact rule or a signature, and **[Limitations](limitations.md)** when something you expected is not there.
 
 A language model that writes Mtek should be given the **[language guide](language-guide.md)**: one page with each rule and one correct pattern for it, small enough to read in one go, with the concept pages as the place to look for depth.
 

@@ -1,0 +1,10 @@
+// `ui` belongs to a scene (E5052): an entity cannot declare it.
+scene Demo {
+    camera Main {}
+    entity Panel {
+        mesh: Box {};
+        ui(dt: f32) {
+        }
+    }
+}
+// covers: [S: lifecycle-signature]

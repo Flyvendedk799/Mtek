@@ -30,3 +30,13 @@ describe("easing curves (decision 0135)", () => {
     for (const [, curve] of curves) expect(Math.fround(curve(0.3))).toBe(curve(0.3));
   });
 });
+
+describe("easing of infinite arguments (spec/tweens.md section 3)", () => {
+  it("clamps +infinity to the end and -infinity to the start; only NaN counts as 0", () => {
+    for (const [name, curve] of curves) {
+      expect(curve(Infinity), name).toBe(curve(1));
+      expect(curve(-Infinity), name).toBe(curve(0));
+    }
+    expect(ease.easeOutQuad(Infinity)).toBe(1);
+  });
+});

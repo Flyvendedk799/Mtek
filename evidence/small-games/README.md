@@ -2,7 +2,7 @@
 
 | Evidence | How it is produced | Status |
 |---|---|---|
-| Bundle size of every example's game package | `node scripts/game-budgets.mjs size` (CI job `game-budgets`, Linux, no GPU, in `ci/small-games-ci.patch` until applied) | checked locally with `npm run check:budgets`; in CI once the patch is applied; budgets in `budgets/small-games.json` |
+| Bundle size of every example's game package | `node scripts/game-budgets.mjs size` (CI job `game-budgets`, Linux, no GPU) | checked locally with `npm run check:budgets` and in CI; budgets in `budgets/small-games.json` |
 | Frame time, NVIDIA | `node scripts/record-frame-evidence.mjs frame-evidence-nvidia.json` on an NVIDIA machine, then `node scripts/game-budgets.mjs frames frame-evidence-nvidia.json` | **not recorded: needs Abe's hardware** |
 | Frame time, Intel | the same on an Intel GPU | **not recorded: needs Abe's hardware** |
 | Frame time, Apple | the same on an Apple-silicon Mac | **not recorded: needs Abe's hardware** |

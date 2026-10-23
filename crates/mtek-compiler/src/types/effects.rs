@@ -1134,6 +1134,7 @@ impl<'a> Graph<'a> {
                     format!("The pure function '{}' reads `{}`, which is ambient CPU state.", n.name, read.name),
                 )
                 .at(span)
+                .related(n.span, format!("'{}' is declared `fn` here", n.name))
                 .note("a pure function computes only on its parameters, locals and constants")
                 .help("pass the value as a parameter; use `cpu fn` only when the helper needs to read CPU state"));
             }
@@ -1150,6 +1151,7 @@ impl<'a> Graph<'a> {
                     "The pure function '{}' calls `{name}`, which is CPU-only.",
                     n.name
                 );
+                related.push((n.span, format!("'{}' is declared `fn` here", n.name)));
                 notes.push(format!("`{name}` is a CPU-only built-in function"));
             }
             Reached::PureFn(target) => {

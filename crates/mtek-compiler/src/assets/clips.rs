@@ -1,6 +1,6 @@
 //! `E5016`: a `clip` that cannot play (decision 0156).
 //!
-//! A clip is the single writer of the channels it has. The mesh must be a mesh of the same
+//! A clip composes with the entity's own transform (decision 0174). The mesh must be a mesh of the same
 //! GLB, and the named animation must move that mesh. A scale keyframe of 0 or less is rejected
 //! here, not when the file is loaded, because a file may still be used by an entity that does
 //! not play that channel.
@@ -74,6 +74,26 @@ fn check_one(
         return;
     };
     let Some(played) = declared.file.clip_for(clip, mesh) else {
+        // An animation the profile cannot play fails where it is used, not where the file is declared (decision 0174).
+        if let Some(unsupported) = declared
+            .file
+            .unsupported_animations
+            .iter()
+            .find(|item| item.name == *clip)
+        {
+            sink.push(
+                Diagnostic::new(
+                    Code::E7019,
+                    format!(
+                        "The clip '{clip}' of '{name}' names an animation of '{file}' that cannot play. {}",
+                        unsupported.reason
+                    ),
+                )
+                .at(span)
+                .help("export the animation with LINEAR or STEP translation, rotation and scale channels"),
+            );
+            return;
+        }
         let known = clip_names(&declared.file);
         let help = if known.is_empty() {
             format!("'{file}' has no animation a clip can play")
@@ -88,18 +108,9 @@ fn check_one(
         );
         return;
     };
+    // The clip composes with the entity's own transform (`base * clip`, decision 0174), so the entity may
+    // write or bind `position`, `rotation` and `scale` too; only a scale the clip drives to 0 or below is wrong.
     for channel in &played.channels {
-        let field_name = channel.path.entity_field();
-        if let Some(field) = fields.iter().find(|field| field.name == field_name)
-            && writes(field)
-        {
-            report(
-                format!(
-                    "The clip '{clip}' of '{name}' writes {field_name}, which the entity also writes."
-                ),
-                "remove that field, or remove the channel from the animation. A clip is the only writer of the channels it has.".to_owned(),
-            );
-        }
         if channel.path == GlbChannelPath::Scale
             && let Some(value) = channel.values.iter().copied().find(|value| *value <= 0.0)
         {
@@ -111,10 +122,6 @@ fn check_one(
             );
         }
     }
-}
-
-fn writes(field: &CheckedField) -> bool {
-    field.dynamic || matches!(field.origin, FieldOrigin::Written { .. })
 }
 
 fn clip_names(file: &GlbFile) -> String {

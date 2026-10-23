@@ -1,0 +1,9 @@
+// `go_to` changes the running game, so it is allowed only in lifecycle functions and
+// handlers, not in a function (decision 0177).
+fn leave() {
+    go_to(Demo);
+}
+
+scene Demo {
+    camera Main {}
+}

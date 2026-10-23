@@ -72,6 +72,8 @@ export interface MtekProgramScene {
   readonly init: (ctx: MtekContext) => void;
   readonly update: MtekSceneUpdate;
   readonly fixedUpdate: MtekSceneUpdate;
+  /** `ui(dt)` (decision 0175): runs every frame after `update`, also while the game is paused. Absent when the scene has none. */
+  readonly ui?: MtekSceneUpdate;
   /** Indexed by static entity index. */
   readonly entityUpdate: readonly MtekEntityUpdate[];
   readonly entityFixedUpdate: readonly MtekEntityUpdate[];

@@ -455,6 +455,8 @@ pub fn compile_and_write(
         zip: None,
     };
     if written.report.summary.errors > 0 {
+        // A zip of an earlier build must not outlive a build that fails (it would ship old code).
+        remove_stale_zip(game, written.target.as_deref());
         return written;
     }
     let (Some(build_id), Some((target, shown))) = (result.build_id, place) else {
@@ -468,6 +470,7 @@ pub fn compile_and_write(
         written.refused = Some(problem);
         return written;
     }
+    remove_stale_zip(game, Some(&target));
     if game.is_some() {
         match game_package::favicon(project.dir) {
             Ok(favicon) => {
@@ -489,7 +492,7 @@ pub fn compile_and_write(
     }
     if game.is_some_and(|game| game.itch) {
         let zip = itch_zip_path(&target);
-        let shown_zip = itch_zip_path(Path::new(&shown)).display().to_string();
+        let shown_zip = shown_itch_zip(&shown, &zip);
         match game_package::itch_zip(&result.files) {
             Ok(bytes) => match std::fs::write(&zip, bytes) {
                 Ok(()) => written.zip = Some(shown_zip),
@@ -510,6 +513,27 @@ fn itch_zip_path(out: &Path) -> PathBuf {
         .file_name()
         .map_or_else(|| "dist".into(), |name| name.to_string_lossy().into_owned());
     out.with_file_name(format!("{name}-itch.zip"))
+}
+
+/// The zip as the user typed the output directory: `<shown>-itch.zip`, or the absolute path of `zip`
+/// when `shown` names no directory by itself (`.`, `..`, a path ending in `..`).
+fn shown_itch_zip(shown: &str, zip: &Path) -> String {
+    let shown = Path::new(shown);
+    if shown.file_name().is_some() {
+        itch_zip_path(shown).display().to_string()
+    } else {
+        zip.display().to_string()
+    }
+}
+
+/// Delete the `--itch` zip beside `target`, if any: a build with `--itch` writes a fresh one at the
+/// end, so one that is still there afterwards belongs to an earlier build.
+fn remove_stale_zip(game: Option<Game>, target: Option<&Path>) {
+    if let (Some(game), Some(target)) = (game, target)
+        && game.itch
+    {
+        let _ = std::fs::remove_file(itch_zip_path(target));
+    }
 }
 
 /// The outcome of a build that was stopped before it had a result: its diagnostic alone, no project
@@ -671,6 +695,19 @@ fn inspect_view(
 mod tests {
     use super::*;
     use std::ffi::OsStr;
+
+    #[test]
+    fn the_itch_zip_is_named_after_the_output_directory() {
+        let zip = Path::new("/work/app-itch.zip");
+        assert_eq!(itch_zip_path(Path::new("/work/app")), zip);
+        assert_eq!(
+            shown_itch_zip("out", Path::new("/work/out-itch.zip")),
+            "out-itch.zip"
+        );
+        // A shown path that names no directory by itself must not put the zip inside it.
+        assert_eq!(shown_itch_zip("sub/..", zip), zip.display().to_string());
+        assert_eq!(shown_itch_zip("..", zip), zip.display().to_string());
+    }
 
     #[test]
     fn colour_needs_a_terminal_and_no_no_color() {

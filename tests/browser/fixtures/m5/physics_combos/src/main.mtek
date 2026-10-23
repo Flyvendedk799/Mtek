@@ -14,7 +14,7 @@
 // records the tick of the last one. `ticks` counts fixed ticks.
 prefab Mark {
     param kind: i32;
-    state tag: i32 = kind;
+    state mark_kind: i32 = kind;
 }
 
 prefab Block {

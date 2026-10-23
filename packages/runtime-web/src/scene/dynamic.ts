@@ -59,6 +59,8 @@ export interface DynamicEntity {
   readonly resolved: ResolvedEntity;
   readonly ref: EntityRef;
   readonly prefab: PrefabRuntime;
+  /** The prefab's `tag` (decision 0150), kept here so tag queries read it without a lookup. */
+  readonly tag: string | undefined;
   /** The spawn sequence number: the order among the spawned entities (the named ones come first). */
   readonly order: number;
   /** Pending removal: `alive` is false, handlers and bindings skip it, the next flush removes it. */
@@ -452,7 +454,7 @@ export class DynamicEntities {
     };
     const host = this.options.host;
     const record = host.makeRecord(ref, resolved, prefab, params);
-    const entity: DynamicEntity = { record, resolved, ref, prefab, order: this.nextOrder++, removing: false, attachments: new Map() };
+    const entity: DynamicEntity = { record, resolved, ref, prefab, tag: prefab.resolved.tag, order: this.nextOrder++, removing: false, attachments: new Map() };
     this.bySlot[slot] = entity;
     host.register(slot, record, resolved);
     if (instance !== null) materials.createInstance(instance);

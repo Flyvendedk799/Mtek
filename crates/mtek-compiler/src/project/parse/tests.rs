@@ -70,6 +70,30 @@ fn a_minimal_file_takes_every_default() {
 }
 
 #[test]
+fn the_save_id_is_a_few_hexadecimal_digits_and_migration_is_off_by_default() {
+    let config = valid(MINIMAL);
+    assert_eq!(
+        (config.project.id, config.project.migrate_saves),
+        (None, false)
+    );
+    let config = valid(&format!(
+        "{MINIMAL}id = \"1a2b3c4d\"\nmigrate_saves = true\n"
+    ));
+    assert_eq!(config.project.id.as_deref(), Some("1a2b3c4d"));
+    assert!(config.project.migrate_saves);
+    for bad in [
+        "\"abc\"",
+        "\"1A2B3C4D\"",
+        "\"xyz123\"",
+        "\"00112233445566778\"",
+        "7",
+    ] {
+        let (message, _) = invalid(&format!("{MINIMAL}id = {bad}\n"));
+        assert!(message.contains("project.id"), "{bad}: {message}");
+    }
+}
+
+#[test]
 fn the_default_constants_match_the_specification() {
     assert_eq!(DEFAULT_ENTRY, "src/main.mtek");
     assert_eq!(DEFAULT_OUT_DIR, "dist");

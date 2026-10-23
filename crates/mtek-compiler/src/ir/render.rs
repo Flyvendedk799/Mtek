@@ -582,6 +582,7 @@ impl Tree<'_> {
         let what = match &behavior.kind {
             BehaviorKind::Update => "update".to_owned(),
             BehaviorKind::FixedUpdate => "fixed_update".to_owned(),
+            BehaviorKind::Ui => "ui".to_owned(),
             BehaviorKind::Event { event, filter } => match filter {
                 Some(code) => format!("on {event}({code})"),
                 None => format!("on {event}"),

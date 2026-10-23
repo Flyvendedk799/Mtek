@@ -1,0 +1,11 @@
+// `Key` is an enum of the language, not one the program declares: it cannot be matched.
+// covers: [S: match-patterns]
+fn label() -> i32 {
+    return match Key.ArrowLeft {
+        _ => 0,
+    };
+}
+
+scene Demo {
+    camera Main {}
+}

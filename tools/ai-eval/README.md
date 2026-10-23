@@ -55,7 +55,7 @@ It never overwrites an existing run. Options:
 | `--stop S`, `--seed N` | stop sequences, seed; a seed is refused by a client that cannot apply it |
 | `--max-repairs N` | repair rounds after the first generation (default: the task's `max_repairs`) |
 | `--max-total-tokens N` | input plus output tokens over a trial (default: none) |
-| `--max-bytes N` | the `mtek context` budget (default 24000) |
+| `--max-bytes N` | the `mtek context` budget (default 30000) |
 | `--test-feedback messages\|status-only` | whether the model sees the failure messages of the task's tests (default `messages`, what `mtek test` prints) |
 | `--trial-kind unconstrained\|constrained` | see below |
 | `--side mtek\|baseline\|mtek-guide` | which project of the task is worked on (see [Sides](#sides)) |

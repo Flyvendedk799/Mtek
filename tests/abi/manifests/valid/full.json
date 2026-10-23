@@ -41,7 +41,8 @@
         "manifest": "program.Menu.manifest.json"
       }
     ],
-    "storage": "full-fixture"
+    "storage": "full-fixture.1a2b3c4d",
+    "legacyStorage": "full-fixture"
   },
   "preview": {
     "loopBudget": 10000000

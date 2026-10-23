@@ -174,7 +174,7 @@ pub fn game_html(title: &str, favicon: &str) -> String {
          <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n\
          <title>{title}</title>\n\
          <link rel=\"icon\" href=\"./{favicon}\">\n\
-         <style>html,body{{margin:0;height:100%;background:#0b0f17}}canvas{{display:block;width:100%;height:100%}}\
+         <style>html,body{{margin:0;height:100%;background:#0b0f17}}canvas{{display:block;width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none}}\
          #mtek-loading{{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;\
          background:#0b0f17;color:#e8edf5;font:600 22px/1.3 system-ui,sans-serif;z-index:2147483000;transition:opacity .3s}}\
          #mtek-loading.done{{opacity:0;pointer-events:none}}#mtek-loading small{{font-weight:400;font-size:14px;opacity:.7}}\
@@ -239,6 +239,14 @@ mod tests {
         assert!(page.contains("import program, { mountMtek } from \"./app.js\";"));
         assert!(!page.contains("EventSource") && !page.contains("__mtekMount"));
         assert!(DEFAULT_FAVICON_SVG.starts_with("<svg"));
+    }
+
+    #[test]
+    fn the_game_canvas_does_not_pan_zoom_or_select_on_touch() {
+        // A drag must reach the game, not scroll the page around an itch.io frame (decision 0176).
+        let page = game_html("t", "favicon.svg");
+        assert!(page.contains("touch-action:none"), "{page}");
+        assert!(page.contains("user-select:none"), "{page}");
     }
 
     #[test]

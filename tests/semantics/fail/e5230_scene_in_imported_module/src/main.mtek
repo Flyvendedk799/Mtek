@@ -1,0 +1,15 @@
+// Scenes belong in the entry module (decision 0178): this `Level` would share its name with the
+// entry module's `Level`, and the saved state `score` would disagree with the other one.
+import { Helper } from "./other.mtek";
+
+scene Level {
+    camera Main {}
+    state score: i32 = 0;
+}
+
+scene Demo {
+    camera Main {}
+    on key_down(Key.Space) {
+        go_to(Level);
+    }
+}

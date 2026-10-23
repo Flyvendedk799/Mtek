@@ -31,7 +31,9 @@ var RUNTIME_DIAGNOSTIC_CATALOGUE = {
   W8201: "audio value clamped",
   W8202: "sound could not be decoded",
   W8203: "too many HUD items",
-  W8204: "font could not be loaded"
+  W8204: "font could not be loaded",
+  W8205: "too many timers",
+  W8210: "too many particles"
 }, RUNTIME_ASSET_DIAGNOSTICS = {
   E7030: "asset fetch or integrity failure",
   E7031: "image decode failure"
@@ -172,7 +174,7 @@ var FontRegistry = class {
   /** The family of the font declared at `source`, registering it on first use; `undefined` if there is none. */
   family(source) {
     if (this.families.has(source)) return this.families.get(source);
-    let { manifest, page } = this.options, asset = manifest.assets.find((entry) => entry.kind === "font" && entry.source === source), bytes = asset === void 0 ? void 0 : this.options.bytes(asset.url);
+    let { page } = this.options, manifest = this.options.manifestNow?.() ?? this.options.manifest, asset = manifest.assets.find((entry) => entry.kind === "font" && entry.source === source), bytes = asset === void 0 ? void 0 : this.options.bytes(asset.url);
     if (asset === void 0 || asset.kind !== "font" || bytes === void 0 || page === void 0) {
       this.families.set(source, void 0);
       return;
@@ -182,19 +184,19 @@ var FontRegistry = class {
     try {
       let face = page.createFace(family, bytes);
       page.add(face), face.load().catch(() => {
-        this.unusable(source, asset.span);
+        this.unusable(source, asset.span, manifest);
       });
     } catch {
-      this.unusable(source, asset.span);
+      this.unusable(source, asset.span, manifest);
     }
     return family;
   }
-  unusable(source, span) {
+  unusable(source, span, manifest) {
     this.families.set(source, void 0), this.options.report(
       makeRuntimeDiagnostic("W8204", {
         phase: "runtime:update",
         message: `The browser could not load the font '${source}'; the HUD text uses the default family instead.`,
-        source: resolveSpan(this.options.manifest, span)
+        source: resolveSpan(manifest, span)
       })
     );
   }
@@ -263,7 +265,7 @@ function checkDeviceCapabilities(required, device) {
 }
 
 // src/abi/generated/validate-manifest.js
-var validate_manifest_default = validate20, schema31 = { $schema: "https://json-schema.org/draft/2020-12/schema", $id: "urn:mtek:schema:program-manifest:1", title: "Mtek program manifest (schema version 1, runtime ABI 1)", description: "Machine-checked definition of program.manifest.json (spec/runtime-abi.md section 5). Written by the compiler, validated by the runtime. manifestSchema and runtimeAbi are plain integers and languageVersion a plain string (never const) so that the compatibility check of section 5.1 can run before full validation. Objects are closed (additionalProperties false) except the open map requiredCapabilities.limits, whose keys are constrained by a name pattern and whose values by type.", type: "object", additionalProperties: !1, required: ["manifestSchema", "runtimeAbi", "languageVersion", "compilerVersion", "buildId", "targetProfile", "requiredCapabilities", "subsystems", "runtimeConfig", "entryScene", "sources", "spans", "symbols", "layouts", "shaders", "materials", "meshes", "assets", "scene"], properties: { manifestSchema: { type: "integer", description: "Schema version; this schema describes version 1." }, runtimeAbi: { type: "integer", description: "Runtime ABI version; this schema describes ABI 1." }, languageVersion: { type: "string", description: 'Mtek language version the program was compiled for ("0.1").' }, compilerVersion: { type: "string", minLength: 1 }, buildId: { $ref: "#/$defs/sha256", description: "sha256 of the build identity (section 5.3)." }, targetProfile: { type: "string", enum: ["webgpu-core-2026"] }, requiredCapabilities: { $ref: "#/$defs/requiredCapabilities" }, subsystems: { type: "object", additionalProperties: !1, required: ["physics"], properties: { physics: { type: "boolean" }, physicsModule: { type: "string", pattern: "^physics/[0-9a-f]{16}\\.js$", description: "The content-addressed physics bundle, relative to the program (decision 0066); present exactly when physics is true." } }, if: { properties: { physics: { const: !0 }, physicsModule: {} }, required: ["physics"], additionalProperties: !1 }, then: { properties: { physics: {}, physicsModule: {} }, required: ["physicsModule"], additionalProperties: !1 }, else: { properties: { physics: {}, physicsModule: !1 }, additionalProperties: !1 } }, runtimeConfig: { $ref: "#/$defs/runtimeConfig" }, game: { $ref: "#/$defs/game" }, preview: { type: "object", description: "Present exactly in the manifest of a `--mode preview` build (decision 0075): the runtime enforces the loop budget the program was instrumented with and refuses any request outside baseUrl.", additionalProperties: !1, required: ["loopBudget"], properties: { loopBudget: { type: "integer", minimum: 1, maximum: 4294967295, description: "Iterations of CPU loops allowed per frame (and during init)." } } }, entryScene: { type: "string", minLength: 1 }, sources: { type: "array", items: { $ref: "#/$defs/source" } }, spans: { type: "array", items: { $ref: "#/$defs/span" } }, symbols: { type: "array", items: { $ref: "#/$defs/symbol" } }, layouts: { type: "array", items: { $ref: "#/$defs/layout" } }, shaders: { type: "array", items: { $ref: "#/$defs/shader" } }, materials: { type: "array", items: { $ref: "#/$defs/material" } }, meshes: { type: "array", items: { $ref: "#/$defs/mesh" } }, assets: { type: "array", items: { $ref: "#/$defs/asset" } }, prefabs: { type: "array", description: "The prefabs the program spawns, sorted by symbol (decision 0064). Absent when it spawns none.", items: { $ref: "#/$defs/prefab" } }, scene: { $ref: "#/$defs/scene" } }, $defs: { sha256: { type: "string", pattern: "^[0-9a-f]{64}$", description: "Full SHA-256, 64 lowercase hex digits." }, index: { type: "integer", minimum: 0 }, spanId: { type: "integer", minimum: 0, description: "Index into the manifest spans table." }, name: { type: "string", minLength: 1 }, wgslIdentifier: { type: "string", pattern: "^[A-Za-z_][A-Za-z0-9_]*$" }, mtekTypeName: { type: "string", minLength: 1, description: "An Mtek type as written in source (f32, vec3, color, array<f32, 3>, a struct name, ...)." }, symbolId: { type: "string", minLength: 1, description: "normalised module path :: qualified declaration name" }, vec2: { type: "array", items: { type: "number" }, minItems: 2, maxItems: 2 }, vec3: { type: "array", items: { type: "number" }, minItems: 3, maxItems: 3 }, vec4: { type: "array", items: { type: "number" }, minItems: 4, maxItems: 4 }, webgpuFeatureNames: { type: "array", description: "GPUFeatureName strings (kebab-case, e.g. timestamp-query).", items: { type: "string", pattern: "^[a-z0-9][a-z0-9-]*$" }, uniqueItems: !0 }, wgslLanguageFeatureNames: { type: "array", description: "WGSL language extension names (snake_case, e.g. readonly_and_readwrite_storage_textures).", items: { type: "string", pattern: "^[a-z0-9][a-z0-9_]*$" }, uniqueItems: !0 }, requiredCapabilities: { type: "object", additionalProperties: !1, required: ["features", "limits", "wgslLanguageFeatures"], properties: { features: { $ref: "#/$defs/webgpuFeatureNames", description: "Optional WebGPU features the program needs (none in v0.1)." }, limits: { type: "object", description: "Only limits above the WebGPU defaults, name -> required value ({} in profile webgpu-core-2026).", propertyNames: { pattern: "^(max|min)[A-Z][A-Za-z0-9]*$" }, additionalProperties: { type: "integer", minimum: 0 } }, wgslLanguageFeatures: { $ref: "#/$defs/wgslLanguageFeatureNames" } } }, runtimeConfig: { type: "object", additionalProperties: !1, required: ["fixedStep", "maxCatchUpSteps", "maxFrameDelta", "maxEntities", "pauseWhenHidden"], properties: { fixedStep: { type: "number", exclusiveMinimum: 0 }, maxCatchUpSteps: { type: "integer", minimum: 1 }, maxFrameDelta: { type: "number", exclusiveMinimum: 0 }, maxEntities: { type: "integer", minimum: 1 }, pauseWhenHidden: { type: "boolean" } } }, source: { type: "object", additionalProperties: !1, required: ["id", "path", "sha256"], properties: { id: { $ref: "#/$defs/index" }, path: { $ref: "#/$defs/name" }, sha256: { $ref: "#/$defs/sha256" } } }, span: { type: "object", additionalProperties: !1, description: "A source range: half-open byte offsets into the file as stored on disk, and the 1-based line and column of both ends (columns count Unicode scalar values), computed by the compiler (decision 0019).", required: ["file", "start", "end", "startLine", "startColumn", "endLine", "endColumn"], properties: { file: { $ref: "#/$defs/index", description: "Source id." }, start: { $ref: "#/$defs/index", description: "Byte offset, inclusive." }, end: { $ref: "#/$defs/index", description: "Byte offset, exclusive." }, startLine: { type: "integer", minimum: 1, description: "Line of start, 1-based." }, startColumn: { type: "integer", minimum: 1, description: "Column of start, 1-based, in Unicode scalar values." }, endLine: { type: "integer", minimum: 1, description: "Line of end, 1-based." }, endColumn: { type: "integer", minimum: 1, description: "Column of end, 1-based, in Unicode scalar values." } } }, symbol: { type: "object", additionalProperties: !1, required: ["id", "kind", "span"], properties: { id: { $ref: "#/$defs/symbolId" }, kind: { type: "string", enum: ["scene", "camera", "entity", "state", "material", "param", "prefab", "function"] }, span: { $ref: "#/$defs/spanId" } } }, layout: { type: "object", description: "Layout record of spec/gpu-layout.md section 5.", additionalProperties: !1, required: ["id", "wgslStruct", "size", "align", "root"], properties: { id: { type: "string", pattern: "^(builtin:[a-z]+|material:.+::.+|fixture:.+)$" }, wgslStruct: { $ref: "#/$defs/wgslIdentifier" }, size: { $ref: "#/$defs/index" }, align: { $ref: "#/$defs/index" }, root: { $ref: "#/$defs/layoutStructNode" } } }, layoutNode: { type: "object", oneOf: [{ $ref: "#/$defs/layoutScalarNode" }, { $ref: "#/$defs/layoutVectorNode" }, { $ref: "#/$defs/layoutMatrixNode" }, { $ref: "#/$defs/layoutStructNode" }, { $ref: "#/$defs/layoutArrayNode" }], discriminator: { propertyName: "kind" } }, layoutScalarNode: { type: "object", additionalProperties: !1, required: ["kind", "offset", "size", "align", "scalar"], properties: { kind: { const: "scalar" }, offset: { $ref: "#/$defs/index" }, size: { $ref: "#/$defs/index" }, align: { $ref: "#/$defs/index" }, scalar: { type: "string", enum: ["f32", "i32", "u32", "bool32"] } } }, layoutVectorNode: { type: "object", additionalProperties: !1, required: ["kind", "offset", "size", "align", "scalar", "components"], properties: { kind: { const: "vector" }, offset: { $ref: "#/$defs/index" }, size: { $ref: "#/$defs/index" }, align: { $ref: "#/$defs/index" }, scalar: { type: "string", enum: ["f32"] }, components: { type: "integer", minimum: 2, maximum: 4 } } }, layoutMatrixNode: { type: "object", additionalProperties: !1, required: ["kind", "offset", "size", "align", "columns", "rows", "columnStride"], properties: { kind: { const: "matrix" }, offset: { $ref: "#/$defs/index" }, size: { $ref: "#/$defs/index" }, align: { $ref: "#/$defs/index" }, columns: { type: "integer", enum: [4] }, rows: { type: "integer", enum: [4] }, columnStride: { type: "integer", enum: [16] } } }, layoutStructNode: { type: "object", description: "name is omitted on the root of a block and present on nested struct nodes. Member offsets are absolute within the block.", additionalProperties: !1, required: ["kind", "offset", "size", "align", "members"], properties: { kind: { const: "struct" }, name: { $ref: "#/$defs/name" }, offset: { $ref: "#/$defs/index" }, size: { $ref: "#/$defs/index" }, align: { $ref: "#/$defs/index" }, members: { type: "array", items: { $ref: "#/$defs/layoutMember" } } } }, layoutArrayNode: { type: "object", description: "element is a node whose offsets are relative to the element start.", additionalProperties: !1, required: ["kind", "offset", "size", "align", "length", "stride", "padded", "element"], properties: { kind: { const: "array" }, offset: { $ref: "#/$defs/index" }, size: { $ref: "#/$defs/index" }, align: { $ref: "#/$defs/index" }, length: { type: "integer", minimum: 1 }, stride: { type: "integer", minimum: 1 }, padded: { type: "boolean" }, element: { $ref: "#/$defs/layoutNode" } } }, layoutMember: { type: "object", additionalProperties: !1, required: ["name", "mtekType", "node"], properties: { name: { $ref: "#/$defs/name" }, mtekType: { $ref: "#/$defs/mtekTypeName" }, node: { $ref: "#/$defs/layoutNode" } } }, shader: { type: "object", additionalProperties: !1, required: ["hash", "url", "map", "material", "vertexEntry", "fragmentEntry", "vertexAttributes", "surfaceInputs"], properties: { hash: { $ref: "#/$defs/sha256" }, url: { type: "string", pattern: "^shaders/[0-9a-f]{16}\\.wgsl$" }, map: { type: "string", pattern: "^shaders/[0-9a-f]{16}\\.mtek-map\\.json$" }, material: { $ref: "#/$defs/symbolId", description: "Id of the material this shader was generated for." }, vertexEntry: { $ref: "#/$defs/wgslIdentifier" }, instancedVertexEntry: { $ref: "#/$defs/wgslIdentifier", description: "The vertex entry that reads the model and normal matrices from a per-instance vertex buffer (spec/runtime-abi.md section 8.4, decision 0059). Absent: the runtime draws every entity individually." }, fragmentEntry: { $ref: "#/$defs/wgslIdentifier" }, vertexAttributes: { type: "array", description: "Present vertex attributes in vertex-buffer slot order (spec/materials.md section 3.3).", items: { type: "string", enum: ["position", "normal", "uv"] }, uniqueItems: !0 }, surfaceInputs: { type: "array", description: "SurfaceInput fields the fragment stage reads.", items: { type: "string", enum: ["local_position", "world_position", "world_normal", "uv"] }, uniqueItems: !0 } } }, material: { type: "object", additionalProperties: !1, required: ["id", "layout", "shader", "resources", "params"], properties: { id: { $ref: "#/$defs/symbolId" }, layout: { type: ["string", "null"], minLength: 1, description: "Layout id of the parameter block; null when the material has no value params (bind group 1 binding 0 is then absent)." }, shader: { $ref: "#/$defs/sha256", description: "Hash of the material's shader." }, resources: { type: "array", items: { $ref: "#/$defs/materialResource" } }, params: { type: "array", items: { $ref: "#/$defs/materialParam" } } } }, materialResource: { type: "object", description: "One texture or sampler binding in bind group 1, in param declaration order.", additionalProperties: !1, required: ["name", "kind", "binding"], properties: { name: { $ref: "#/$defs/name" }, kind: { type: "string", enum: ["texture", "sampler"] }, binding: { type: "integer", minimum: 1 } } }, materialParam: { type: "object", additionalProperties: !1, required: ["name", "type", "span"], properties: { name: { $ref: "#/$defs/name" }, type: { $ref: "#/$defs/mtekTypeName" }, span: { $ref: "#/$defs/spanId" } } }, mesh: { type: "object", oneOf: [{ $ref: "#/$defs/boxMesh" }, { $ref: "#/$defs/sphereMesh" }, { $ref: "#/$defs/planeMesh" }, { $ref: "#/$defs/assetMesh" }], discriminator: { propertyName: "kind" } }, meshId: { type: "string", pattern: "^mesh:[0-9]+$" }, boxMesh: { type: "object", additionalProperties: !1, required: ["id", "kind", "size"], properties: { id: { $ref: "#/$defs/meshId" }, kind: { const: "box" }, size: { type: "array", items: { type: "number", exclusiveMinimum: 0 }, minItems: 3, maxItems: 3 } } }, sphereMesh: { type: "object", additionalProperties: !1, required: ["id", "kind", "radius", "segments", "rings"], properties: { id: { $ref: "#/$defs/meshId" }, kind: { const: "sphere" }, radius: { type: "number", exclusiveMinimum: 0 }, segments: { type: "integer", minimum: 3, maximum: 256 }, rings: { type: "integer", minimum: 2, maximum: 256 } } }, planeMesh: { type: "object", additionalProperties: !1, required: ["id", "kind", "size"], properties: { id: { $ref: "#/$defs/meshId" }, kind: { const: "plane" }, size: { type: "array", items: { type: "number", exclusiveMinimum: 0 }, minItems: 2, maxItems: 2 } } }, assetMesh: { type: "object", additionalProperties: !1, required: ["id", "kind", "asset", "primitive"], properties: { id: { $ref: "#/$defs/meshId" }, kind: { const: "asset" }, asset: { $ref: "#/$defs/assetUrl", description: "Url of a mesh-data entry of the assets table." }, primitive: { $ref: "#/$defs/index", description: "Index into that entry's primitives." } } }, assetUrl: { type: "string", pattern: "^assets/[0-9a-f]{16}\\.[a-z0-9]+$" }, asset: { type: "object", oneOf: [{ $ref: "#/$defs/meshDataAsset" }, { $ref: "#/$defs/imageAsset" }, { $ref: "#/$defs/audioAsset" }, { $ref: "#/$defs/fontAsset" }], discriminator: { propertyName: "kind" } }, meshDataAsset: { type: "object", additionalProperties: !1, required: ["url", "sha256", "bytes", "kind", "primitives", "preprocessing", "span"], properties: { url: { $ref: "#/$defs/assetUrl" }, sha256: { $ref: "#/$defs/sha256" }, bytes: { $ref: "#/$defs/index", description: "Byte length of the file." }, kind: { const: "mesh-data" }, primitives: { type: "array", items: { $ref: "#/$defs/meshPrimitive" } }, preprocessing: { $ref: "#/$defs/preprocessing" }, span: { $ref: "#/$defs/spanId", description: "Declaring span, used to map load failures (E7030) to source." } } }, imageAsset: { type: "object", additionalProperties: !1, required: ["url", "sha256", "bytes", "kind", "colorSpace", "preprocessing", "span"], properties: { url: { $ref: "#/$defs/assetUrl" }, sha256: { $ref: "#/$defs/sha256" }, bytes: { $ref: "#/$defs/index" }, kind: { const: "image" }, colorSpace: { type: "string", enum: ["srgb", "linear"] }, preprocessing: { $ref: "#/$defs/preprocessing" }, span: { $ref: "#/$defs/spanId" }, source: { type: "string", minLength: 1, description: `The author's file (decision 0082): the project path of a standalone image, or "<glb path>#images[N]" for an image embedded in a GLB. Optional; shown by the runtime when the image fails.` } } }, fontAsset: { type: "object", description: "A font file declared with asset.font(..), copied byte for byte (spec/hud.md section 6, decision 0139).", additionalProperties: !1, required: ["url", "sha256", "bytes", "kind", "format", "mime", "source", "span"], properties: { url: { $ref: "#/$defs/assetUrl" }, sha256: { $ref: "#/$defs/sha256" }, bytes: { $ref: "#/$defs/index" }, kind: { const: "font" }, format: { type: "string", enum: ["ttf", "otf", "woff", "woff2"] }, mime: { type: "string", enum: ["font/ttf", "font/otf", "font/woff", "font/woff2"] }, source: { type: "string", minLength: 1, description: "The project path of the declaring asset.font(..); generated code names the font by it." }, span: { $ref: "#/$defs/spanId" } } }, audioAsset: { type: "object", description: "A sound file declared with asset.sound(..), copied byte for byte (spec/audio.md section 4, decision 0130).", additionalProperties: !1, required: ["url", "sha256", "bytes", "kind", "format", "mime", "source", "span"], properties: { url: { $ref: "#/$defs/assetUrl" }, sha256: { $ref: "#/$defs/sha256" }, bytes: { $ref: "#/$defs/index" }, kind: { const: "audio" }, format: { type: "string", enum: ["wav", "ogg", "mp3"] }, mime: { type: "string", enum: ["audio/wav", "audio/ogg", "audio/mpeg"] }, source: { type: "string", minLength: 1, description: "The project path of the declaring asset.sound(..); generated code names the sound by it." }, span: { $ref: "#/$defs/spanId" } } }, preprocessing: { type: "array", description: 'Recorded preprocessing decisions, e.g. "u8 indices widened to u16".', items: { type: "string", minLength: 1 } }, meshPrimitive: { type: "object", description: "One primitive inside a packaged .bin (spec/assets.md section 4). Offsets are byte offsets into the file.", additionalProperties: !1, required: ["source", "vertexCount", "indexCount", "indexFormat", "attributes", "offsets", "boundingSphere"], properties: { source: { type: "object", additionalProperties: !1, required: ["file", "mesh", "primitive"], properties: { file: { $ref: "#/$defs/name" }, mesh: { $ref: "#/$defs/name" }, primitive: { $ref: "#/$defs/index" } } }, vertexCount: { type: "integer", minimum: 1 }, indexCount: { type: "integer", minimum: 1 }, indexFormat: { type: "string", enum: ["uint16", "uint32"] }, attributes: { type: "array", items: { type: "string", enum: ["position", "normal", "uv"] }, uniqueItems: !0 }, offsets: { type: "object", additionalProperties: !1, required: ["position", "indices"], properties: { position: { $ref: "#/$defs/index" }, normal: { $ref: "#/$defs/index" }, uv: { $ref: "#/$defs/index" }, indices: { $ref: "#/$defs/index" } } }, boundingSphere: { type: "object", additionalProperties: !1, required: ["center", "radius"], properties: { center: { $ref: "#/$defs/vec3" }, radius: { type: "number", minimum: 0 } } } } }, scene: { type: "object", description: "Scene structure (spec/runtime-abi.md section 5.2).", additionalProperties: !1, required: ["name", "symbol", "fields", "state", "cameras", "entities", "materialInstances", "bindings", "hostInputs", "lights"], properties: { name: { $ref: "#/$defs/name" }, symbol: { $ref: "#/$defs/symbolId" }, fields: { type: "object", description: "Constant scene field values; linear colours as [r, g, b, a].", additionalProperties: !1, required: ["clearColor", "ambientColor", "ambientIntensity", "gravity"], properties: { clearColor: { $ref: "#/$defs/vec4" }, ambientColor: { $ref: "#/$defs/vec4" }, ambientIntensity: { type: "number", minimum: 0 }, gravity: { $ref: "#/$defs/vec3" } } }, state: { type: "array", items: { $ref: "#/$defs/sceneStateEntry" } }, cameras: { type: "array", items: { $ref: "#/$defs/camera" } }, entities: { type: "array", items: { $ref: "#/$defs/entity" } }, materialInstances: { type: "array", items: { $ref: "#/$defs/materialInstance" } }, bindings: { type: "array", items: { $ref: "#/$defs/binding" } }, hostInputs: { type: "array", items: { $ref: "#/$defs/hostInput" } }, hostOutputs: { type: "array", items: { $ref: "#/$defs/hostOutput" } }, lights: { type: "array", items: { $ref: "#/$defs/light" } } } }, stateEntry: { type: "object", additionalProperties: !1, required: ["name", "type", "symbol"], properties: { name: { $ref: "#/$defs/name" }, type: { $ref: "#/$defs/mtekTypeName" }, symbol: { $ref: "#/$defs/symbolId" } } }, sceneStateEntry: { type: "object", description: "A state of the scene: a stateEntry that can be shared.", additionalProperties: !1, required: ["name", "type", "symbol"], properties: { name: { $ref: "#/$defs/name" }, type: { $ref: "#/$defs/mtekTypeName" }, symbol: { $ref: "#/$defs/symbolId" }, shared: { type: "boolean", const: !0, description: "`shared state` (decision 0141): its value carries over when go_to switches to a scene with a shared state of the same name and type. Absent for ordinary state." }, persist: { enum: ["saved", "setting"], description: "`saved state` or `setting state` (decisions 0145, 0146): the value is kept in the browser's storage under game.storage, restored when the scene starts, written by save() (and, for a setting, whenever it changes). Absent for other state." }, storedType: { type: "string", minLength: 1, maxLength: 4096, description: "With persist: the structural description of the state's type that a stored value must have (decision 0145): a struct is spelled out as {field: T, ...} in field order, a user enum as enum(A|B) in variant order, otherwise the type name. A stored value recorded with another description is ignored (W5402). Absent for other state." } } }, game: { type: "object", description: "Game-level data (decisions 0141, 0145): present when the program has several scenes or persistent state. Every scene manifest of one build carries the same object.", additionalProperties: !1, minProperties: 1, properties: { scenes: { type: "array", minItems: 1, description: "Every scene of the program, sorted by name: the program module and the manifest that go_to loads for it, relative to the program's baseUrl.", items: { type: "object", additionalProperties: !1, required: ["name", "module", "manifest"], properties: { name: { $ref: "#/$defs/name" }, module: { type: "string", pattern: "^app(\\.[A-Za-z_][A-Za-z0-9_]*)?\\.js$" }, manifest: { type: "string", pattern: "^program(\\.[A-Za-z_][A-Za-z0-9_]*)?\\.manifest\\.json$" } } } }, storage: { type: "string", pattern: "^[A-Za-z0-9_.-]{1,64}$", description: "The storage name of saved state and settings (decision 0145): the localStorage key is mtek.save.<storage>. Present when a scene of the program has a saved or setting state." } } }, camera: { type: "object", additionalProperties: !1, required: ["name", "symbol", "projection", "hasTarget", "active", "exposure"], properties: { name: { $ref: "#/$defs/name" }, symbol: { $ref: "#/$defs/symbolId" }, projection: { type: "string", enum: ["perspective", "orthographic"] }, hasTarget: { type: "boolean" }, active: { type: "boolean" }, exposure: { type: "number", description: "EV100 of the camera (decision 0081); lit materials are scaled by 1 / (1.2 * 2^exposure)." } } }, entity: { type: "object", additionalProperties: !1, required: ["index", "name", "symbol", "parent", "mesh", "material", "light", "body", "collider", "state", "update", "fixedUpdate"], properties: { index: { $ref: "#/$defs/index", description: "Static entity index in stable instance order (depth-first pre-order)." }, name: { $ref: "#/$defs/name" }, symbol: { $ref: "#/$defs/symbolId" }, parent: { type: ["integer", "null"], minimum: 0, description: "Index of the parent entity, or null for a root." }, mesh: { type: ["string", "null"], pattern: "^mesh:[0-9]+$", description: "Id of an entry of the meshes table, or null." }, material: { type: ["object", "null"], additionalProperties: !1, required: ["id", "instance"], properties: { id: { $ref: "#/$defs/symbolId" }, instance: { $ref: "#/$defs/index", description: "Index into scene.materialInstances." } } }, light: { type: ["integer", "null"], minimum: 0, description: "Index into scene.lights, or null." }, body: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/body" } }, collider: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/collider" } }, state: { type: "array", items: { $ref: "#/$defs/stateEntry" } }, update: { type: "boolean", description: "The entity declares update(dt)." }, fixedUpdate: { type: "boolean", description: "The entity declares fixed_update(dt)." }, tag: { $ref: "#/$defs/tag", description: '`tag: "name";` (decision 0150). Absent when the entity has none.' }, particles: { $ref: "#/$defs/emitter", description: "`particles: Emitter { .. }` (decision 0155). Absent when the entity emits none." }, clip: { $ref: "#/$defs/clip", description: "A glTF clip that moves this entity (decision 0156). Absent when it plays none." } } }, body: { type: "object", oneOf: [{ $ref: "#/$defs/staticBody" }, { $ref: "#/$defs/dynamicBody" }, { $ref: "#/$defs/kinematicBody" }], discriminator: { propertyName: "kind" } }, staticBody: { type: "object", additionalProperties: !1, required: ["kind"], properties: { kind: { const: "static" } } }, kinematicBody: { type: "object", additionalProperties: !1, required: ["kind"], properties: { kind: { const: "kinematic" } } }, dynamicBody: { type: "object", additionalProperties: !1, required: ["kind", "mass", "linearDamping", "angularDamping"], properties: { kind: { const: "dynamic" }, mass: { type: "number", exclusiveMinimum: 0 }, linearDamping: { type: "number", minimum: 0 }, angularDamping: { type: "number", minimum: 0 } } }, collider: { type: "object", oneOf: [{ $ref: "#/$defs/boxCollider" }, { $ref: "#/$defs/sphereCollider" }], discriminator: { propertyName: "kind" } }, boxCollider: { type: "object", additionalProperties: !1, required: ["kind", "size", "sensor", "friction", "restitution"], properties: { kind: { const: "box" }, size: { type: "array", items: { type: "number", exclusiveMinimum: 0 }, minItems: 3, maxItems: 3 }, sensor: { type: "boolean" }, friction: { type: "number", minimum: 0 }, restitution: { type: "number", minimum: 0, maximum: 1 } } }, sphereCollider: { type: "object", additionalProperties: !1, required: ["kind", "radius", "sensor", "friction", "restitution"], properties: { kind: { const: "sphere" }, radius: { type: "number", exclusiveMinimum: 0 }, sensor: { type: "boolean" }, friction: { type: "number", minimum: 0 }, restitution: { type: "number", minimum: 0, maximum: 1 } } }, light: { type: "object", oneOf: [{ $ref: "#/$defs/directionalLight" }, { $ref: "#/$defs/pointLight" }], discriminator: { propertyName: "kind" } }, directionalLight: { type: "object", additionalProperties: !1, required: ["index", "entity", "kind", "classes"], properties: { index: { $ref: "#/$defs/index" }, entity: { $ref: "#/$defs/index" }, kind: { const: "directional" }, classes: { $ref: "#/$defs/lightClasses" } } }, pointLight: { type: "object", additionalProperties: !1, required: ["index", "entity", "kind", "range", "classes"], properties: { index: { $ref: "#/$defs/index" }, entity: { $ref: "#/$defs/index" }, kind: { const: "point" }, range: { type: "number", minimum: 0, description: "0 = unlimited." }, classes: { $ref: "#/$defs/lightClasses" } } }, lightClasses: { type: "object", description: "The update class of each light field that can change at run time (decision 0067): `initial` = a constant the source's literal sets (a reload applies the new literal), `imperative` = written by a handler (a reload keeps the value it holds), `bound` = the value of a binding (evaluated every frame).", additionalProperties: !1, required: ["color", "intensity"], properties: { color: { type: "string", enum: ["initial", "imperative", "bound"] }, intensity: { type: "string", enum: ["initial", "imperative", "bound"] } } }, prefab: { type: "object", description: "A prefab the program spawns (spec/runtime-abi.md section 5.6, decision 0064). In its bindings entity 0 is the instance and material instance 0 is its material.", additionalProperties: !1, required: ["symbol", "name", "params", "mesh", "material", "body", "collider", "state", "update", "fixedUpdate", "bindings", "span"], properties: { symbol: { $ref: "#/$defs/symbolId", description: "The key of the prefabs table of app.js." }, name: { $ref: "#/$defs/name" }, params: { type: "array", description: "The params in declaration order: the keys of the params object that spawn passes.", items: { type: "object", additionalProperties: !1, required: ["name", "type"], properties: { name: { $ref: "#/$defs/name" }, type: { $ref: "#/$defs/mtekTypeName" } } } }, mesh: { type: ["string", "null"], pattern: "^mesh:[0-9]+$", description: "Id of an entry of the meshes table, or null." }, material: { type: ["object", "null"], description: "The material instance every instance of the prefab starts with.", additionalProperties: !1, required: ["id", "params", "shareable"], properties: { id: { $ref: "#/$defs/symbolId" }, params: { type: "array", items: { $ref: "#/$defs/instanceParam" } }, shareable: { type: "boolean", description: "Every param is initial or a resource: instances with identical bytes may share one parameter block." } } }, body: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/body" } }, collider: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/collider" } }, state: { type: "array", items: { $ref: "#/$defs/stateEntry" } }, update: { type: "boolean", description: "The prefab declares update(dt)." }, fixedUpdate: { type: "boolean", description: "The prefab declares fixed_update(dt)." }, bindings: { type: "array", items: { $ref: "#/$defs/binding" } }, span: { $ref: "#/$defs/spanId", description: "The declaration." }, tag: { $ref: "#/$defs/tag", description: "The tag every instance carries (decision 0150). Absent when the prefab has none." }, particles: { $ref: "#/$defs/emitter", description: "The emitter every instance starts with (decision 0155). Absent when the prefab has none." }, clip: { $ref: "#/$defs/clip", description: "The clip every instance plays (decision 0156). Absent when the prefab plays none." } } }, tag: { type: "string", pattern: "^[a-z][a-z0-9_]{0,31}$", description: "An entity's group name for the tag queries (decision 0150): 1 to 32 lowercase letters, digits and `_`, starting with a letter." }, emitter: { type: "object", additionalProperties: !1, description: "A particle emitter (decision 0155). The runtime keeps at most 64 particles.", required: ["rate", "lifetime", "speed", "size", "gravity"], properties: { rate: { type: "number", minimum: 0 }, lifetime: { type: "number", exclusiveMinimum: 0 }, speed: { type: "number", minimum: 0 }, size: { type: "number", exclusiveMinimum: 0 }, gravity: { type: "number" } } }, clip: { type: "object", additionalProperties: !1, description: "A sampled TRS clip (decision 0156).", required: ["name", "duration", "channels"], properties: { name: { $ref: "#/$defs/name" }, duration: { type: "number", minimum: 0 }, channels: { type: "array", items: { $ref: "#/$defs/clipChannel" } } } }, clipChannel: { type: "object", additionalProperties: !1, required: ["path", "interpolation", "times", "values"], properties: { path: { type: "string", enum: ["translation", "rotation", "scale"] }, interpolation: { type: "string", enum: ["linear", "step"] }, times: { type: "array", items: { type: "number" } }, values: { type: "array", items: { type: "number" } } } }, materialInstance: { type: "object", additionalProperties: !1, required: ["index", "material", "entity", "params", "shareable"], properties: { index: { $ref: "#/$defs/index" }, material: { $ref: "#/$defs/symbolId" }, entity: { $ref: "#/$defs/index" }, params: { type: "array", items: { $ref: "#/$defs/instanceParam" } }, shareable: { type: "boolean" } } }, instanceParam: { type: "object", oneOf: [{ $ref: "#/$defs/initialParam" }, { $ref: "#/$defs/imperativeParam" }, { $ref: "#/$defs/boundParam" }, { $ref: "#/$defs/resourceParam" }], discriminator: { propertyName: "class" } }, initialParam: { type: "object", additionalProperties: !1, required: ["name", "class"], properties: { name: { $ref: "#/$defs/name" }, class: { const: "initial" } } }, imperativeParam: { type: "object", additionalProperties: !1, required: ["name", "class"], properties: { name: { $ref: "#/$defs/name" }, class: { const: "imperative" } } }, boundParam: { type: "object", additionalProperties: !1, required: ["name", "class", "binding"], properties: { name: { $ref: "#/$defs/name" }, class: { const: "bound" }, binding: { $ref: "#/$defs/index", description: "Id of the binding that writes this param." } } }, resourceParam: { type: "object", additionalProperties: !1, required: ["name", "class", "value"], properties: { name: { $ref: "#/$defs/name" }, class: { const: "resource" }, value: { $ref: "#/$defs/resourceValue" } } }, resourceValue: { type: "object", oneOf: [{ $ref: "#/$defs/builtinResourceValue" }, { $ref: "#/$defs/assetResourceValue" }], discriminator: { propertyName: "kind" } }, builtinResourceValue: { type: "object", additionalProperties: !1, required: ["kind", "name"], properties: { kind: { const: "builtin" }, name: { type: "string", enum: ["texture.white", "texture.black", "sampler.linear_repeat", "sampler.linear_clamp", "sampler.nearest_repeat", "sampler.nearest_clamp"] } } }, assetResourceValue: { type: "object", additionalProperties: !1, required: ["kind", "asset"], properties: { kind: { const: "asset" }, asset: { $ref: "#/$defs/assetUrl", description: "Url of an image entry of the assets table." } } }, binding: { type: "object", additionalProperties: !1, required: ["id", "target", "deps", "order", "span"], properties: { id: { $ref: "#/$defs/index" }, target: { $ref: "#/$defs/bindingTarget" }, deps: { type: "array", items: { $ref: "#/$defs/bindingDep" } }, order: { $ref: "#/$defs/index", description: "Position in the topological evaluation order." }, span: { $ref: "#/$defs/spanId" } } }, bindingTarget: { type: "object", oneOf: [{ $ref: "#/$defs/transformTarget" }, { $ref: "#/$defs/visibleTarget" }, { $ref: "#/$defs/paramTarget" }, { $ref: "#/$defs/cameraTarget" }, { $ref: "#/$defs/lightTarget" }], discriminator: { propertyName: "kind" } }, transformTarget: { type: "object", additionalProperties: !1, required: ["kind", "entity", "field"], properties: { kind: { const: "transform" }, entity: { $ref: "#/$defs/index" }, field: { type: "string", enum: ["position", "rotation", "scale"] } } }, visibleTarget: { type: "object", additionalProperties: !1, required: ["kind", "entity"], properties: { kind: { const: "visible" }, entity: { $ref: "#/$defs/index" } } }, paramTarget: { type: "object", additionalProperties: !1, required: ["kind", "instance", "name"], properties: { kind: { const: "param" }, instance: { $ref: "#/$defs/index" }, name: { $ref: "#/$defs/name" } } }, cameraTarget: { type: "object", additionalProperties: !1, required: ["kind", "field"], properties: { kind: { const: "camera" }, field: { type: "string", enum: ["position", "target", "rotation", "projection.fov_y", "projection.height", "projection.near", "projection.far"] }, camera: { $ref: "#/$defs/name", description: "The camera the binding writes (decision 0154). Absent on manifests that bound the one active camera." } } }, lightTarget: { type: "object", additionalProperties: !1, required: ["kind", "entity", "field"], properties: { kind: { const: "light" }, entity: { $ref: "#/$defs/index" }, field: { type: "string", enum: ["color", "intensity"] } } }, bindingDep: { type: "object", oneOf: [{ $ref: "#/$defs/stateDep" }, { $ref: "#/$defs/frameDep" }, { $ref: "#/$defs/entityFieldDep" }, { $ref: "#/$defs/entityStateDep" }, { $ref: "#/$defs/paramDep" }, { $ref: "#/$defs/lightDep" }], discriminator: { propertyName: "kind" } }, stateDep: { type: "object", additionalProperties: !1, required: ["kind", "name"], properties: { kind: { const: "state" }, name: { $ref: "#/$defs/name" } } }, frameDep: { type: "object", additionalProperties: !1, required: ["kind", "name"], properties: { kind: { const: "frame" }, name: { type: "string", enum: ["time", "delta", "index"] } } }, entityFieldDep: { type: "object", additionalProperties: !1, required: ["kind", "entity", "field"], properties: { kind: { const: "entityField" }, entity: { $ref: "#/$defs/index" }, field: { type: "string", enum: ["position", "rotation", "scale", "visible"] } } }, entityStateDep: { type: "object", additionalProperties: !1, required: ["kind", "entity", "name"], properties: { kind: { const: "entityState" }, entity: { $ref: "#/$defs/index" }, name: { $ref: "#/$defs/name" } } }, paramDep: { type: "object", additionalProperties: !1, required: ["kind", "instance", "name"], properties: { kind: { const: "param" }, instance: { $ref: "#/$defs/index" }, name: { $ref: "#/$defs/name" } } }, lightDep: { type: "object", description: "A read of the colour or intensity of the light of an entity (decision 0067); `range` is fixed at construction and is not a dependency.", additionalProperties: !1, required: ["kind", "entity", "field"], properties: { kind: { const: "light" }, entity: { $ref: "#/$defs/index" }, field: { type: "string", enum: ["color", "intensity"] } } }, hostOutput: { type: "object", additionalProperties: !1, required: ["name", "source", "type"], properties: { name: { $ref: "#/$defs/name" }, source: { type: "object", additionalProperties: !1, required: ["kind", "name"], properties: { kind: { const: "state" }, name: { $ref: "#/$defs/name" } } }, type: { type: "string", enum: ["f32", "i32", "u32", "bool", "vec2", "vec3", "vec4", "color", "string"] } } }, hostInput: { type: "object", additionalProperties: !1, required: ["name", "target", "type", "codec"], properties: { name: { $ref: "#/$defs/name" }, target: { type: "object", description: "Only scene state can be exposed as a host input.", additionalProperties: !1, required: ["kind", "name"], properties: { kind: { const: "state" }, name: { $ref: "#/$defs/name" } } }, type: { type: "string", enum: ["f32", "i32", "u32", "bool", "vec2", "vec3", "vec4", "color", "string"] }, codec: { type: "string", enum: ["f32", "i32", "u32", "bool", "vec2", "vec3", "vec4", "color-hex", "color-hex-opaque", "string"] } } } } };
+var validate_manifest_default = validate20, schema31 = { $schema: "https://json-schema.org/draft/2020-12/schema", $id: "urn:mtek:schema:program-manifest:1", title: "Mtek program manifest (schema version 1, runtime ABI 1)", description: "Machine-checked definition of program.manifest.json (spec/runtime-abi.md section 5). Written by the compiler, validated by the runtime. manifestSchema and runtimeAbi are plain integers and languageVersion a plain string (never const) so that the compatibility check of section 5.1 can run before full validation. Objects are closed (additionalProperties false) except the open map requiredCapabilities.limits, whose keys are constrained by a name pattern and whose values by type.", type: "object", additionalProperties: !1, required: ["manifestSchema", "runtimeAbi", "languageVersion", "compilerVersion", "buildId", "targetProfile", "requiredCapabilities", "subsystems", "runtimeConfig", "entryScene", "sources", "spans", "symbols", "layouts", "shaders", "materials", "meshes", "assets", "scene"], properties: { manifestSchema: { type: "integer", description: "Schema version; this schema describes version 1." }, runtimeAbi: { type: "integer", description: "Runtime ABI version; this schema describes ABI 1." }, languageVersion: { type: "string", description: 'Mtek language version the program was compiled for ("0.1").' }, compilerVersion: { type: "string", minLength: 1 }, buildId: { $ref: "#/$defs/sha256", description: "sha256 of the build identity (section 5.3)." }, targetProfile: { type: "string", enum: ["webgpu-core-2026"] }, requiredCapabilities: { $ref: "#/$defs/requiredCapabilities" }, subsystems: { type: "object", additionalProperties: !1, required: ["physics"], properties: { physics: { type: "boolean" }, physicsModule: { type: "string", pattern: "^physics/[0-9a-f]{16}\\.js$", description: "The content-addressed physics bundle, relative to the program (decision 0066); present exactly when physics is true." } }, if: { properties: { physics: { const: !0 }, physicsModule: {} }, required: ["physics"], additionalProperties: !1 }, then: { properties: { physics: {}, physicsModule: {} }, required: ["physicsModule"], additionalProperties: !1 }, else: { properties: { physics: {}, physicsModule: !1 }, additionalProperties: !1 } }, runtimeConfig: { $ref: "#/$defs/runtimeConfig" }, game: { $ref: "#/$defs/game" }, preview: { type: "object", description: "Present exactly in the manifest of a `--mode preview` build (decision 0075): the runtime enforces the loop budget the program was instrumented with and refuses any request outside baseUrl.", additionalProperties: !1, required: ["loopBudget"], properties: { loopBudget: { type: "integer", minimum: 1, maximum: 4294967295, description: "Iterations of CPU loops allowed per frame (and during init)." } } }, entryScene: { type: "string", minLength: 1 }, sources: { type: "array", items: { $ref: "#/$defs/source" } }, spans: { type: "array", items: { $ref: "#/$defs/span" } }, symbols: { type: "array", items: { $ref: "#/$defs/symbol" } }, layouts: { type: "array", items: { $ref: "#/$defs/layout" } }, shaders: { type: "array", items: { $ref: "#/$defs/shader" } }, materials: { type: "array", items: { $ref: "#/$defs/material" } }, meshes: { type: "array", items: { $ref: "#/$defs/mesh" } }, assets: { type: "array", items: { $ref: "#/$defs/asset" } }, prefabs: { type: "array", description: "The prefabs the program spawns, sorted by symbol (decision 0064). Absent when it spawns none.", items: { $ref: "#/$defs/prefab" } }, scene: { $ref: "#/$defs/scene" } }, $defs: { sha256: { type: "string", pattern: "^[0-9a-f]{64}$", description: "Full SHA-256, 64 lowercase hex digits." }, index: { type: "integer", minimum: 0 }, spanId: { type: "integer", minimum: 0, description: "Index into the manifest spans table." }, name: { type: "string", minLength: 1 }, wgslIdentifier: { type: "string", pattern: "^[A-Za-z_][A-Za-z0-9_]*$" }, mtekTypeName: { type: "string", minLength: 1, description: "An Mtek type as written in source (f32, vec3, color, array<f32, 3>, a struct name, ...)." }, symbolId: { type: "string", minLength: 1, description: "normalised module path :: qualified declaration name" }, vec2: { type: "array", items: { type: "number" }, minItems: 2, maxItems: 2 }, vec3: { type: "array", items: { type: "number" }, minItems: 3, maxItems: 3 }, vec4: { type: "array", items: { type: "number" }, minItems: 4, maxItems: 4 }, webgpuFeatureNames: { type: "array", description: "GPUFeatureName strings (kebab-case, e.g. timestamp-query).", items: { type: "string", pattern: "^[a-z0-9][a-z0-9-]*$" }, uniqueItems: !0 }, wgslLanguageFeatureNames: { type: "array", description: "WGSL language extension names (snake_case, e.g. readonly_and_readwrite_storage_textures).", items: { type: "string", pattern: "^[a-z0-9][a-z0-9_]*$" }, uniqueItems: !0 }, requiredCapabilities: { type: "object", additionalProperties: !1, required: ["features", "limits", "wgslLanguageFeatures"], properties: { features: { $ref: "#/$defs/webgpuFeatureNames", description: "Optional WebGPU features the program needs (none in v0.1)." }, limits: { type: "object", description: "Only limits above the WebGPU defaults, name -> required value ({} in profile webgpu-core-2026).", propertyNames: { pattern: "^(max|min)[A-Z][A-Za-z0-9]*$" }, additionalProperties: { type: "integer", minimum: 0 } }, wgslLanguageFeatures: { $ref: "#/$defs/wgslLanguageFeatureNames" } } }, runtimeConfig: { type: "object", additionalProperties: !1, required: ["fixedStep", "maxCatchUpSteps", "maxFrameDelta", "maxEntities", "pauseWhenHidden"], properties: { fixedStep: { type: "number", exclusiveMinimum: 0 }, maxCatchUpSteps: { type: "integer", minimum: 1 }, maxFrameDelta: { type: "number", exclusiveMinimum: 0 }, maxEntities: { type: "integer", minimum: 1 }, pauseWhenHidden: { type: "boolean" } } }, source: { type: "object", additionalProperties: !1, required: ["id", "path", "sha256"], properties: { id: { $ref: "#/$defs/index" }, path: { $ref: "#/$defs/name" }, sha256: { $ref: "#/$defs/sha256" } } }, span: { type: "object", additionalProperties: !1, description: "A source range: half-open byte offsets into the file as stored on disk, and the 1-based line and column of both ends (columns count Unicode scalar values), computed by the compiler (decision 0019).", required: ["file", "start", "end", "startLine", "startColumn", "endLine", "endColumn"], properties: { file: { $ref: "#/$defs/index", description: "Source id." }, start: { $ref: "#/$defs/index", description: "Byte offset, inclusive." }, end: { $ref: "#/$defs/index", description: "Byte offset, exclusive." }, startLine: { type: "integer", minimum: 1, description: "Line of start, 1-based." }, startColumn: { type: "integer", minimum: 1, description: "Column of start, 1-based, in Unicode scalar values." }, endLine: { type: "integer", minimum: 1, description: "Line of end, 1-based." }, endColumn: { type: "integer", minimum: 1, description: "Column of end, 1-based, in Unicode scalar values." } } }, symbol: { type: "object", additionalProperties: !1, required: ["id", "kind", "span"], properties: { id: { $ref: "#/$defs/symbolId" }, kind: { type: "string", enum: ["scene", "camera", "entity", "state", "material", "param", "prefab", "function"] }, span: { $ref: "#/$defs/spanId" } } }, layout: { type: "object", description: "Layout record of spec/gpu-layout.md section 5.", additionalProperties: !1, required: ["id", "wgslStruct", "size", "align", "root"], properties: { id: { type: "string", pattern: "^(builtin:[a-z]+|material:.+::.+|fixture:.+)$" }, wgslStruct: { $ref: "#/$defs/wgslIdentifier" }, size: { $ref: "#/$defs/index" }, align: { $ref: "#/$defs/index" }, root: { $ref: "#/$defs/layoutStructNode" } } }, layoutNode: { type: "object", oneOf: [{ $ref: "#/$defs/layoutScalarNode" }, { $ref: "#/$defs/layoutVectorNode" }, { $ref: "#/$defs/layoutMatrixNode" }, { $ref: "#/$defs/layoutStructNode" }, { $ref: "#/$defs/layoutArrayNode" }], discriminator: { propertyName: "kind" } }, layoutScalarNode: { type: "object", additionalProperties: !1, required: ["kind", "offset", "size", "align", "scalar"], properties: { kind: { const: "scalar" }, offset: { $ref: "#/$defs/index" }, size: { $ref: "#/$defs/index" }, align: { $ref: "#/$defs/index" }, scalar: { type: "string", enum: ["f32", "i32", "u32", "bool32"] } } }, layoutVectorNode: { type: "object", additionalProperties: !1, required: ["kind", "offset", "size", "align", "scalar", "components"], properties: { kind: { const: "vector" }, offset: { $ref: "#/$defs/index" }, size: { $ref: "#/$defs/index" }, align: { $ref: "#/$defs/index" }, scalar: { type: "string", enum: ["f32"] }, components: { type: "integer", minimum: 2, maximum: 4 } } }, layoutMatrixNode: { type: "object", additionalProperties: !1, required: ["kind", "offset", "size", "align", "columns", "rows", "columnStride"], properties: { kind: { const: "matrix" }, offset: { $ref: "#/$defs/index" }, size: { $ref: "#/$defs/index" }, align: { $ref: "#/$defs/index" }, columns: { type: "integer", enum: [4] }, rows: { type: "integer", enum: [4] }, columnStride: { type: "integer", enum: [16] } } }, layoutStructNode: { type: "object", description: "name is omitted on the root of a block and present on nested struct nodes. Member offsets are absolute within the block.", additionalProperties: !1, required: ["kind", "offset", "size", "align", "members"], properties: { kind: { const: "struct" }, name: { $ref: "#/$defs/name" }, offset: { $ref: "#/$defs/index" }, size: { $ref: "#/$defs/index" }, align: { $ref: "#/$defs/index" }, members: { type: "array", items: { $ref: "#/$defs/layoutMember" } } } }, layoutArrayNode: { type: "object", description: "element is a node whose offsets are relative to the element start.", additionalProperties: !1, required: ["kind", "offset", "size", "align", "length", "stride", "padded", "element"], properties: { kind: { const: "array" }, offset: { $ref: "#/$defs/index" }, size: { $ref: "#/$defs/index" }, align: { $ref: "#/$defs/index" }, length: { type: "integer", minimum: 1 }, stride: { type: "integer", minimum: 1 }, padded: { type: "boolean" }, element: { $ref: "#/$defs/layoutNode" } } }, layoutMember: { type: "object", additionalProperties: !1, required: ["name", "mtekType", "node"], properties: { name: { $ref: "#/$defs/name" }, mtekType: { $ref: "#/$defs/mtekTypeName" }, node: { $ref: "#/$defs/layoutNode" } } }, shader: { type: "object", additionalProperties: !1, required: ["hash", "url", "map", "material", "vertexEntry", "fragmentEntry", "vertexAttributes", "surfaceInputs"], properties: { hash: { $ref: "#/$defs/sha256" }, url: { type: "string", pattern: "^shaders/[0-9a-f]{16}\\.wgsl$" }, map: { type: "string", pattern: "^shaders/[0-9a-f]{16}\\.mtek-map\\.json$" }, material: { $ref: "#/$defs/symbolId", description: "Id of the material this shader was generated for." }, vertexEntry: { $ref: "#/$defs/wgslIdentifier" }, instancedVertexEntry: { $ref: "#/$defs/wgslIdentifier", description: "The vertex entry that reads the model and normal matrices from a per-instance vertex buffer (spec/runtime-abi.md section 8.4, decision 0059). Absent: the runtime draws every entity individually." }, fragmentEntry: { $ref: "#/$defs/wgslIdentifier" }, vertexAttributes: { type: "array", description: "Present vertex attributes in vertex-buffer slot order (spec/materials.md section 3.3).", items: { type: "string", enum: ["position", "normal", "uv"] }, uniqueItems: !0 }, surfaceInputs: { type: "array", description: "SurfaceInput fields the fragment stage reads.", items: { type: "string", enum: ["local_position", "world_position", "world_normal", "uv"] }, uniqueItems: !0 } } }, material: { type: "object", additionalProperties: !1, required: ["id", "layout", "shader", "resources", "params"], properties: { id: { $ref: "#/$defs/symbolId" }, layout: { type: ["string", "null"], minLength: 1, description: "Layout id of the parameter block; null when the material has no value params (bind group 1 binding 0 is then absent)." }, shader: { $ref: "#/$defs/sha256", description: "Hash of the material's shader." }, resources: { type: "array", items: { $ref: "#/$defs/materialResource" } }, params: { type: "array", items: { $ref: "#/$defs/materialParam" } } } }, materialResource: { type: "object", description: "One texture or sampler binding in bind group 1, in param declaration order.", additionalProperties: !1, required: ["name", "kind", "binding"], properties: { name: { $ref: "#/$defs/name" }, kind: { type: "string", enum: ["texture", "sampler"] }, binding: { type: "integer", minimum: 1 } } }, materialParam: { type: "object", additionalProperties: !1, required: ["name", "type", "span"], properties: { name: { $ref: "#/$defs/name" }, type: { $ref: "#/$defs/mtekTypeName" }, span: { $ref: "#/$defs/spanId" } } }, mesh: { type: "object", oneOf: [{ $ref: "#/$defs/boxMesh" }, { $ref: "#/$defs/sphereMesh" }, { $ref: "#/$defs/planeMesh" }, { $ref: "#/$defs/assetMesh" }], discriminator: { propertyName: "kind" } }, meshId: { type: "string", pattern: "^mesh:[0-9]+$" }, boxMesh: { type: "object", additionalProperties: !1, required: ["id", "kind", "size"], properties: { id: { $ref: "#/$defs/meshId" }, kind: { const: "box" }, size: { type: "array", items: { type: "number", exclusiveMinimum: 0 }, minItems: 3, maxItems: 3 } } }, sphereMesh: { type: "object", additionalProperties: !1, required: ["id", "kind", "radius", "segments", "rings"], properties: { id: { $ref: "#/$defs/meshId" }, kind: { const: "sphere" }, radius: { type: "number", exclusiveMinimum: 0 }, segments: { type: "integer", minimum: 3, maximum: 256 }, rings: { type: "integer", minimum: 2, maximum: 256 } } }, planeMesh: { type: "object", additionalProperties: !1, required: ["id", "kind", "size"], properties: { id: { $ref: "#/$defs/meshId" }, kind: { const: "plane" }, size: { type: "array", items: { type: "number", exclusiveMinimum: 0 }, minItems: 2, maxItems: 2 } } }, assetMesh: { type: "object", additionalProperties: !1, required: ["id", "kind", "asset", "primitive"], properties: { id: { $ref: "#/$defs/meshId" }, kind: { const: "asset" }, asset: { $ref: "#/$defs/assetUrl", description: "Url of a mesh-data entry of the assets table." }, primitive: { $ref: "#/$defs/index", description: "Index into that entry's primitives." } } }, assetUrl: { type: "string", pattern: "^assets/[0-9a-f]{16}\\.[a-z0-9]+$" }, asset: { type: "object", oneOf: [{ $ref: "#/$defs/meshDataAsset" }, { $ref: "#/$defs/imageAsset" }, { $ref: "#/$defs/audioAsset" }, { $ref: "#/$defs/fontAsset" }], discriminator: { propertyName: "kind" } }, meshDataAsset: { type: "object", additionalProperties: !1, required: ["url", "sha256", "bytes", "kind", "primitives", "preprocessing", "span"], properties: { url: { $ref: "#/$defs/assetUrl" }, sha256: { $ref: "#/$defs/sha256" }, bytes: { $ref: "#/$defs/index", description: "Byte length of the file." }, kind: { const: "mesh-data" }, primitives: { type: "array", items: { $ref: "#/$defs/meshPrimitive" } }, preprocessing: { $ref: "#/$defs/preprocessing" }, span: { $ref: "#/$defs/spanId", description: "Declaring span, used to map load failures (E7030) to source." } } }, imageAsset: { type: "object", additionalProperties: !1, required: ["url", "sha256", "bytes", "kind", "colorSpace", "preprocessing", "span"], properties: { url: { $ref: "#/$defs/assetUrl" }, sha256: { $ref: "#/$defs/sha256" }, bytes: { $ref: "#/$defs/index" }, kind: { const: "image" }, colorSpace: { type: "string", enum: ["srgb", "linear"] }, preprocessing: { $ref: "#/$defs/preprocessing" }, span: { $ref: "#/$defs/spanId" }, source: { type: "string", minLength: 1, description: `The author's file (decision 0082): the project path of a standalone image, or "<glb path>#images[N]" for an image embedded in a GLB. Optional; shown by the runtime when the image fails.` } } }, fontAsset: { type: "object", description: "A font file declared with asset.font(..), copied byte for byte (spec/hud.md section 6, decision 0139).", additionalProperties: !1, required: ["url", "sha256", "bytes", "kind", "format", "mime", "source", "span"], properties: { url: { $ref: "#/$defs/assetUrl" }, sha256: { $ref: "#/$defs/sha256" }, bytes: { $ref: "#/$defs/index" }, kind: { const: "font" }, format: { type: "string", enum: ["ttf", "otf", "woff", "woff2"] }, mime: { type: "string", enum: ["font/ttf", "font/otf", "font/woff", "font/woff2"] }, source: { type: "string", minLength: 1, description: "The project path of the declaring asset.font(..); generated code names the font by it." }, span: { $ref: "#/$defs/spanId" } } }, audioAsset: { type: "object", description: "A sound file declared with asset.sound(..), copied byte for byte (spec/audio.md section 4, decision 0130).", additionalProperties: !1, required: ["url", "sha256", "bytes", "kind", "format", "mime", "source", "span"], properties: { url: { $ref: "#/$defs/assetUrl" }, sha256: { $ref: "#/$defs/sha256" }, bytes: { $ref: "#/$defs/index" }, kind: { const: "audio" }, format: { type: "string", enum: ["wav", "ogg", "mp3"] }, mime: { type: "string", enum: ["audio/wav", "audio/ogg", "audio/mpeg"] }, source: { type: "string", minLength: 1, description: "The project path of the declaring asset.sound(..); generated code names the sound by it." }, span: { $ref: "#/$defs/spanId" } } }, preprocessing: { type: "array", description: 'Recorded preprocessing decisions, e.g. "u8 indices widened to u16".', items: { type: "string", minLength: 1 } }, meshPrimitive: { type: "object", description: "One primitive inside a packaged .bin (spec/assets.md section 4). Offsets are byte offsets into the file.", additionalProperties: !1, required: ["source", "vertexCount", "indexCount", "indexFormat", "attributes", "offsets", "boundingSphere"], properties: { source: { type: "object", additionalProperties: !1, required: ["file", "mesh", "primitive"], properties: { file: { $ref: "#/$defs/name" }, mesh: { $ref: "#/$defs/name" }, primitive: { $ref: "#/$defs/index" } } }, vertexCount: { type: "integer", minimum: 1 }, indexCount: { type: "integer", minimum: 1 }, indexFormat: { type: "string", enum: ["uint16", "uint32"] }, attributes: { type: "array", items: { type: "string", enum: ["position", "normal", "uv"] }, uniqueItems: !0 }, offsets: { type: "object", additionalProperties: !1, required: ["position", "indices"], properties: { position: { $ref: "#/$defs/index" }, normal: { $ref: "#/$defs/index" }, uv: { $ref: "#/$defs/index" }, indices: { $ref: "#/$defs/index" } } }, boundingSphere: { type: "object", additionalProperties: !1, required: ["center", "radius"], properties: { center: { $ref: "#/$defs/vec3" }, radius: { type: "number", minimum: 0 } } } } }, scene: { type: "object", description: "Scene structure (spec/runtime-abi.md section 5.2).", additionalProperties: !1, required: ["name", "symbol", "fields", "state", "cameras", "entities", "materialInstances", "bindings", "hostInputs", "lights"], properties: { name: { $ref: "#/$defs/name" }, symbol: { $ref: "#/$defs/symbolId" }, fields: { type: "object", description: "Constant scene field values; linear colours as [r, g, b, a].", additionalProperties: !1, required: ["clearColor", "ambientColor", "ambientIntensity", "gravity"], properties: { clearColor: { $ref: "#/$defs/vec4" }, ambientColor: { $ref: "#/$defs/vec4" }, ambientIntensity: { type: "number", minimum: 0 }, gravity: { $ref: "#/$defs/vec3" } } }, state: { type: "array", items: { $ref: "#/$defs/sceneStateEntry" } }, cameras: { type: "array", items: { $ref: "#/$defs/camera" } }, entities: { type: "array", items: { $ref: "#/$defs/entity" } }, materialInstances: { type: "array", items: { $ref: "#/$defs/materialInstance" } }, bindings: { type: "array", items: { $ref: "#/$defs/binding" } }, hostInputs: { type: "array", items: { $ref: "#/$defs/hostInput" } }, hostOutputs: { type: "array", items: { $ref: "#/$defs/hostOutput" } }, lights: { type: "array", items: { $ref: "#/$defs/light" } } } }, stateEntry: { type: "object", additionalProperties: !1, required: ["name", "type", "symbol"], properties: { name: { $ref: "#/$defs/name" }, type: { $ref: "#/$defs/mtekTypeName" }, symbol: { $ref: "#/$defs/symbolId" } } }, sceneStateEntry: { type: "object", description: "A state of the scene: a stateEntry that can be shared.", additionalProperties: !1, required: ["name", "type", "symbol"], properties: { name: { $ref: "#/$defs/name" }, type: { $ref: "#/$defs/mtekTypeName" }, symbol: { $ref: "#/$defs/symbolId" }, shared: { type: "boolean", const: !0, description: "`shared state` (decision 0141): its value carries over when go_to switches to a scene with a shared state of the same name and type. Absent for ordinary state." }, persist: { enum: ["saved", "setting"], description: "`saved state` or `setting state` (decisions 0145, 0146): the value is kept in the browser's storage under game.storage, restored when the scene starts, written by save() (and, for a setting, whenever it changes). Absent for other state." }, storedType: { type: "string", minLength: 1, maxLength: 4096, description: "The structural description of the state's type (decisions 0145, 0177): a struct is spelled out as {field: T, ...} in field order, a user enum as enum(A|B) in variant order, otherwise the type name. With persist, a stored value recorded with another description is ignored (W5402). Without persist it is present only when the description differs from type, and a hot reload or a go_to carries the value only when the description is unchanged. Absent for other state." } } }, game: { type: "object", description: "Game-level data (decisions 0141, 0145): present when the program has several scenes or persistent state. Every scene manifest of one build carries the same object.", additionalProperties: !1, minProperties: 1, properties: { scenes: { type: "array", minItems: 1, description: "Every scene of the program, sorted by name: the program module and the manifest that go_to loads for it, relative to the program's baseUrl.", items: { type: "object", additionalProperties: !1, required: ["name", "module", "manifest"], properties: { name: { $ref: "#/$defs/name" }, module: { type: "string", pattern: "^app(\\.[A-Za-z_][A-Za-z0-9_]*)?\\.js$" }, manifest: { type: "string", pattern: "^program(\\.[A-Za-z_][A-Za-z0-9_]*)?\\.manifest\\.json$" } } } }, storage: { type: "string", pattern: "^[A-Za-z0-9_.-]{1,64}$", description: "The storage name of saved state and settings (decision 0145): the localStorage key is mtek.save.<storage>. Present when a scene of the program has a saved or setting state." }, legacyStorage: { type: "string", pattern: "^[A-Za-z0-9_.-]{1,64}$", description: "The storage name earlier builds used (the project name), present when mtek.toml sets a save id and migrate_saves = true (decision 0179): the runtime copies saves found under mtek.save.<legacyStorage> to the new key once." } } }, camera: { type: "object", additionalProperties: !1, required: ["name", "symbol", "projection", "hasTarget", "active", "exposure"], properties: { name: { $ref: "#/$defs/name" }, symbol: { $ref: "#/$defs/symbolId" }, projection: { type: "string", enum: ["perspective", "orthographic"] }, hasTarget: { type: "boolean" }, active: { type: "boolean" }, exposure: { type: "number", description: "EV100 of the camera (decision 0081); lit materials are scaled by 1 / (1.2 * 2^exposure)." } } }, entity: { type: "object", additionalProperties: !1, required: ["index", "name", "symbol", "parent", "mesh", "material", "light", "body", "collider", "state", "update", "fixedUpdate"], properties: { index: { $ref: "#/$defs/index", description: "Static entity index in stable instance order (depth-first pre-order)." }, name: { $ref: "#/$defs/name" }, symbol: { $ref: "#/$defs/symbolId" }, parent: { type: ["integer", "null"], minimum: 0, description: "Index of the parent entity, or null for a root." }, mesh: { type: ["string", "null"], pattern: "^mesh:[0-9]+$", description: "Id of an entry of the meshes table, or null." }, material: { type: ["object", "null"], additionalProperties: !1, required: ["id", "instance"], properties: { id: { $ref: "#/$defs/symbolId" }, instance: { $ref: "#/$defs/index", description: "Index into scene.materialInstances." } } }, light: { type: ["integer", "null"], minimum: 0, description: "Index into scene.lights, or null." }, body: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/body" } }, collider: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/collider" } }, state: { type: "array", items: { $ref: "#/$defs/stateEntry" } }, update: { type: "boolean", description: "The entity declares update(dt)." }, fixedUpdate: { type: "boolean", description: "The entity declares fixed_update(dt)." }, tag: { $ref: "#/$defs/tag", description: '`tag: "name";` (decision 0150). Absent when the entity has none.' }, particles: { $ref: "#/$defs/emitter", description: "`particles: Emitter { .. }` (decision 0155). Absent when the entity emits none." }, clip: { $ref: "#/$defs/clip", description: "A glTF clip that moves this entity (decision 0156). Absent when it plays none." } } }, body: { type: "object", oneOf: [{ $ref: "#/$defs/staticBody" }, { $ref: "#/$defs/dynamicBody" }, { $ref: "#/$defs/kinematicBody" }], discriminator: { propertyName: "kind" } }, staticBody: { type: "object", additionalProperties: !1, required: ["kind"], properties: { kind: { const: "static" } } }, kinematicBody: { type: "object", additionalProperties: !1, required: ["kind"], properties: { kind: { const: "kinematic" } } }, dynamicBody: { type: "object", additionalProperties: !1, required: ["kind", "mass", "linearDamping", "angularDamping"], properties: { kind: { const: "dynamic" }, mass: { type: "number", exclusiveMinimum: 0 }, linearDamping: { type: "number", minimum: 0 }, angularDamping: { type: "number", minimum: 0 } } }, collider: { type: "object", oneOf: [{ $ref: "#/$defs/boxCollider" }, { $ref: "#/$defs/sphereCollider" }], discriminator: { propertyName: "kind" } }, boxCollider: { type: "object", additionalProperties: !1, required: ["kind", "size", "sensor", "friction", "restitution"], properties: { kind: { const: "box" }, size: { type: "array", items: { type: "number", exclusiveMinimum: 0 }, minItems: 3, maxItems: 3 }, sensor: { type: "boolean" }, friction: { type: "number", minimum: 0 }, restitution: { type: "number", minimum: 0, maximum: 1 } } }, sphereCollider: { type: "object", additionalProperties: !1, required: ["kind", "radius", "sensor", "friction", "restitution"], properties: { kind: { const: "sphere" }, radius: { type: "number", exclusiveMinimum: 0 }, sensor: { type: "boolean" }, friction: { type: "number", minimum: 0 }, restitution: { type: "number", minimum: 0, maximum: 1 } } }, light: { type: "object", oneOf: [{ $ref: "#/$defs/directionalLight" }, { $ref: "#/$defs/pointLight" }], discriminator: { propertyName: "kind" } }, directionalLight: { type: "object", additionalProperties: !1, required: ["index", "entity", "kind", "classes"], properties: { index: { $ref: "#/$defs/index" }, entity: { $ref: "#/$defs/index" }, kind: { const: "directional" }, classes: { $ref: "#/$defs/lightClasses" } } }, pointLight: { type: "object", additionalProperties: !1, required: ["index", "entity", "kind", "range", "classes"], properties: { index: { $ref: "#/$defs/index" }, entity: { $ref: "#/$defs/index" }, kind: { const: "point" }, range: { type: "number", minimum: 0, description: "0 = unlimited." }, classes: { $ref: "#/$defs/lightClasses" } } }, lightClasses: { type: "object", description: "The update class of each light field that can change at run time (decision 0067): `initial` = a constant the source's literal sets (a reload applies the new literal), `imperative` = written by a handler (a reload keeps the value it holds), `bound` = the value of a binding (evaluated every frame).", additionalProperties: !1, required: ["color", "intensity"], properties: { color: { type: "string", enum: ["initial", "imperative", "bound"] }, intensity: { type: "string", enum: ["initial", "imperative", "bound"] } } }, prefab: { type: "object", description: "A prefab the program spawns (spec/runtime-abi.md section 5.6, decision 0064). In its bindings entity 0 is the instance and material instance 0 is its material.", additionalProperties: !1, required: ["symbol", "name", "params", "mesh", "material", "body", "collider", "state", "update", "fixedUpdate", "bindings", "span"], properties: { symbol: { $ref: "#/$defs/symbolId", description: "The key of the prefabs table of app.js." }, name: { $ref: "#/$defs/name" }, params: { type: "array", description: "The params in declaration order: the keys of the params object that spawn passes.", items: { type: "object", additionalProperties: !1, required: ["name", "type"], properties: { name: { $ref: "#/$defs/name" }, type: { $ref: "#/$defs/mtekTypeName" } } } }, mesh: { type: ["string", "null"], pattern: "^mesh:[0-9]+$", description: "Id of an entry of the meshes table, or null." }, material: { type: ["object", "null"], description: "The material instance every instance of the prefab starts with.", additionalProperties: !1, required: ["id", "params", "shareable"], properties: { id: { $ref: "#/$defs/symbolId" }, params: { type: "array", items: { $ref: "#/$defs/instanceParam" } }, shareable: { type: "boolean", description: "Every param is initial or a resource: instances with identical bytes may share one parameter block." } } }, body: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/body" } }, collider: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/collider" } }, state: { type: "array", items: { $ref: "#/$defs/stateEntry" } }, update: { type: "boolean", description: "The prefab declares update(dt)." }, fixedUpdate: { type: "boolean", description: "The prefab declares fixed_update(dt)." }, bindings: { type: "array", items: { $ref: "#/$defs/binding" } }, span: { $ref: "#/$defs/spanId", description: "The declaration." }, tag: { $ref: "#/$defs/tag", description: "The tag every instance carries (decision 0150). Absent when the prefab has none." }, particles: { $ref: "#/$defs/emitter", description: "The emitter every instance starts with (decision 0155). Absent when the prefab has none." }, clip: { $ref: "#/$defs/clip", description: "The clip every instance plays (decision 0156). Absent when the prefab plays none." } } }, tag: { type: "string", pattern: "^[a-z][a-z0-9_]{0,31}$", description: "An entity's group name for the tag queries (decision 0150): 1 to 32 lowercase letters, digits and `_`, starting with a letter." }, emitter: { type: "object", additionalProperties: !1, description: "A particle emitter (decision 0155). The runtime keeps at most 64 particles.", required: ["rate", "lifetime", "speed", "size", "gravity"], properties: { rate: { type: "number", minimum: 0 }, lifetime: { type: "number", exclusiveMinimum: 0 }, speed: { type: "number", minimum: 0 }, size: { type: "number", exclusiveMinimum: 0 }, gravity: { type: "number" } } }, clip: { type: "object", additionalProperties: !1, description: "A sampled TRS clip (decision 0156).", required: ["name", "duration", "channels"], properties: { name: { $ref: "#/$defs/name" }, duration: { type: "number", minimum: 0 }, channels: { type: "array", items: { $ref: "#/$defs/clipChannel" } } } }, clipChannel: { type: "object", additionalProperties: !1, required: ["path", "interpolation", "times", "values"], properties: { path: { type: "string", enum: ["translation", "rotation", "scale"] }, interpolation: { type: "string", enum: ["linear", "step"] }, times: { type: "array", items: { type: "number" } }, values: { type: "array", items: { type: "number" } } } }, materialInstance: { type: "object", additionalProperties: !1, required: ["index", "material", "entity", "params", "shareable"], properties: { index: { $ref: "#/$defs/index" }, material: { $ref: "#/$defs/symbolId" }, entity: { $ref: "#/$defs/index" }, params: { type: "array", items: { $ref: "#/$defs/instanceParam" } }, shareable: { type: "boolean" } } }, instanceParam: { type: "object", oneOf: [{ $ref: "#/$defs/initialParam" }, { $ref: "#/$defs/imperativeParam" }, { $ref: "#/$defs/boundParam" }, { $ref: "#/$defs/resourceParam" }], discriminator: { propertyName: "class" } }, initialParam: { type: "object", additionalProperties: !1, required: ["name", "class"], properties: { name: { $ref: "#/$defs/name" }, class: { const: "initial" } } }, imperativeParam: { type: "object", additionalProperties: !1, required: ["name", "class"], properties: { name: { $ref: "#/$defs/name" }, class: { const: "imperative" } } }, boundParam: { type: "object", additionalProperties: !1, required: ["name", "class", "binding"], properties: { name: { $ref: "#/$defs/name" }, class: { const: "bound" }, binding: { $ref: "#/$defs/index", description: "Id of the binding that writes this param." } } }, resourceParam: { type: "object", additionalProperties: !1, required: ["name", "class", "value"], properties: { name: { $ref: "#/$defs/name" }, class: { const: "resource" }, value: { $ref: "#/$defs/resourceValue" } } }, resourceValue: { type: "object", oneOf: [{ $ref: "#/$defs/builtinResourceValue" }, { $ref: "#/$defs/assetResourceValue" }], discriminator: { propertyName: "kind" } }, builtinResourceValue: { type: "object", additionalProperties: !1, required: ["kind", "name"], properties: { kind: { const: "builtin" }, name: { type: "string", enum: ["texture.white", "texture.black", "sampler.linear_repeat", "sampler.linear_clamp", "sampler.nearest_repeat", "sampler.nearest_clamp"] } } }, assetResourceValue: { type: "object", additionalProperties: !1, required: ["kind", "asset"], properties: { kind: { const: "asset" }, asset: { $ref: "#/$defs/assetUrl", description: "Url of an image entry of the assets table." } } }, binding: { type: "object", additionalProperties: !1, required: ["id", "target", "deps", "order", "span"], properties: { id: { $ref: "#/$defs/index" }, target: { $ref: "#/$defs/bindingTarget" }, deps: { type: "array", items: { $ref: "#/$defs/bindingDep" } }, order: { $ref: "#/$defs/index", description: "Position in the topological evaluation order." }, span: { $ref: "#/$defs/spanId" } } }, bindingTarget: { type: "object", oneOf: [{ $ref: "#/$defs/transformTarget" }, { $ref: "#/$defs/visibleTarget" }, { $ref: "#/$defs/paramTarget" }, { $ref: "#/$defs/cameraTarget" }, { $ref: "#/$defs/lightTarget" }], discriminator: { propertyName: "kind" } }, transformTarget: { type: "object", additionalProperties: !1, required: ["kind", "entity", "field"], properties: { kind: { const: "transform" }, entity: { $ref: "#/$defs/index" }, field: { type: "string", enum: ["position", "rotation", "scale"] } } }, visibleTarget: { type: "object", additionalProperties: !1, required: ["kind", "entity"], properties: { kind: { const: "visible" }, entity: { $ref: "#/$defs/index" } } }, paramTarget: { type: "object", additionalProperties: !1, required: ["kind", "instance", "name"], properties: { kind: { const: "param" }, instance: { $ref: "#/$defs/index" }, name: { $ref: "#/$defs/name" } } }, cameraTarget: { type: "object", additionalProperties: !1, required: ["kind", "field"], properties: { kind: { const: "camera" }, field: { type: "string", enum: ["position", "target", "rotation", "projection.fov_y", "projection.height", "projection.near", "projection.far"] }, camera: { $ref: "#/$defs/name", description: "The camera the binding writes (decision 0154). Absent on manifests that bound the one active camera." } } }, lightTarget: { type: "object", additionalProperties: !1, required: ["kind", "entity", "field"], properties: { kind: { const: "light" }, entity: { $ref: "#/$defs/index" }, field: { type: "string", enum: ["color", "intensity"] } } }, bindingDep: { type: "object", oneOf: [{ $ref: "#/$defs/stateDep" }, { $ref: "#/$defs/frameDep" }, { $ref: "#/$defs/entityFieldDep" }, { $ref: "#/$defs/entityStateDep" }, { $ref: "#/$defs/paramDep" }, { $ref: "#/$defs/lightDep" }], discriminator: { propertyName: "kind" } }, stateDep: { type: "object", additionalProperties: !1, required: ["kind", "name"], properties: { kind: { const: "state" }, name: { $ref: "#/$defs/name" } } }, frameDep: { type: "object", additionalProperties: !1, required: ["kind", "name"], properties: { kind: { const: "frame" }, name: { type: "string", enum: ["time", "delta", "index"] } } }, entityFieldDep: { type: "object", additionalProperties: !1, required: ["kind", "entity", "field"], properties: { kind: { const: "entityField" }, entity: { $ref: "#/$defs/index" }, field: { type: "string", enum: ["position", "rotation", "scale", "visible"] } } }, entityStateDep: { type: "object", additionalProperties: !1, required: ["kind", "entity", "name"], properties: { kind: { const: "entityState" }, entity: { $ref: "#/$defs/index" }, name: { $ref: "#/$defs/name" } } }, paramDep: { type: "object", additionalProperties: !1, required: ["kind", "instance", "name"], properties: { kind: { const: "param" }, instance: { $ref: "#/$defs/index" }, name: { $ref: "#/$defs/name" } } }, lightDep: { type: "object", description: "A read of the colour or intensity of the light of an entity (decision 0067); `range` is fixed at construction and is not a dependency.", additionalProperties: !1, required: ["kind", "entity", "field"], properties: { kind: { const: "light" }, entity: { $ref: "#/$defs/index" }, field: { type: "string", enum: ["color", "intensity"] } } }, hostOutput: { type: "object", additionalProperties: !1, required: ["name", "source", "type"], properties: { name: { $ref: "#/$defs/name" }, source: { type: "object", additionalProperties: !1, required: ["kind", "name"], properties: { kind: { const: "state" }, name: { $ref: "#/$defs/name" } } }, type: { type: "string", enum: ["f32", "i32", "u32", "bool", "vec2", "vec3", "vec4", "color", "string"] } } }, hostInput: { type: "object", additionalProperties: !1, required: ["name", "target", "type", "codec"], properties: { name: { $ref: "#/$defs/name" }, target: { type: "object", description: "Only scene state can be exposed as a host input.", additionalProperties: !1, required: ["kind", "name"], properties: { kind: { const: "state" }, name: { $ref: "#/$defs/name" } } }, type: { type: "string", enum: ["f32", "i32", "u32", "bool", "vec2", "vec3", "vec4", "color", "string"] }, codec: { type: "string", enum: ["f32", "i32", "u32", "bool", "vec2", "vec3", "vec4", "color-hex", "color-hex-opaque", "string"] } } } } };
 var func1 = Object.prototype.hasOwnProperty, pattern4 = new RegExp("^[0-9a-f]{64}$", "u"), pattern8 = new RegExp("^physics/[0-9a-f]{16}\\.js$", "u");
 var pattern5 = new RegExp("^[a-z0-9][a-z0-9-]*$", "u"), pattern6 = new RegExp("^(max|min)[A-Z][A-Za-z0-9]*$", "u"), pattern7 = new RegExp("^[a-z0-9][a-z0-9_]*$", "u");
 function validate21(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
@@ -407,7 +409,7 @@ function validate23(data, { instancePath = "", parentData, parentDataProperty, r
       vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
     }
     for (let key0 in data)
-      if (!(key0 === "scenes" || key0 === "storage")) {
+      if (!(key0 === "scenes" || key0 === "storage" || key0 === "legacyStorage")) {
         let err1 = { instancePath, schemaPath: "#/additionalProperties", keyword: "additionalProperties", params: { additionalProperty: key0 }, message: "must NOT have additional properties" };
         vErrors === null ? vErrors = [err1] : vErrors.push(err1), errors++;
       }
@@ -497,9 +499,21 @@ function validate23(data, { instancePath = "", parentData, parentDataProperty, r
         vErrors === null ? vErrors = [err16] : vErrors.push(err16), errors++;
       }
     }
+    if (data.legacyStorage !== void 0) {
+      let data6 = data.legacyStorage;
+      if (typeof data6 == "string") {
+        if (!pattern11.test(data6)) {
+          let err17 = { instancePath: instancePath + "/legacyStorage", schemaPath: "#/properties/legacyStorage/pattern", keyword: "pattern", params: { pattern: "^[A-Za-z0-9_.-]{1,64}$" }, message: 'must match pattern "^[A-Za-z0-9_.-]{1,64}$"' };
+          vErrors === null ? vErrors = [err17] : vErrors.push(err17), errors++;
+        }
+      } else {
+        let err18 = { instancePath: instancePath + "/legacyStorage", schemaPath: "#/properties/legacyStorage/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+        vErrors === null ? vErrors = [err18] : vErrors.push(err18), errors++;
+      }
+    }
   } else {
-    let err17 = { instancePath, schemaPath: "#/type", keyword: "type", params: { type: "object" }, message: "must be object" };
-    vErrors === null ? vErrors = [err17] : vErrors.push(err17), errors++;
+    let err19 = { instancePath, schemaPath: "#/type", keyword: "type", params: { type: "object" }, message: "must be object" };
+    vErrors === null ? vErrors = [err19] : vErrors.push(err19), errors++;
   }
   return validate23.errors = vErrors, errors === 0;
 }
@@ -748,7 +762,7 @@ function validate29(data, { instancePath = "", parentData, parentDataProperty, r
   return validate29.errors = vErrors, errors === 0;
 }
 validate29.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var pattern13 = new RegExp("^(builtin:[a-z]+|material:.+::.+|fixture:.+)$", "u"), pattern14 = new RegExp("^[A-Za-z_][A-Za-z0-9_]*$", "u");
+var pattern14 = new RegExp("^(builtin:[a-z]+|material:.+::.+|fixture:.+)$", "u"), pattern15 = new RegExp("^[A-Za-z_][A-Za-z0-9_]*$", "u");
 var schema63 = { type: "object", additionalProperties: !1, required: ["kind", "offset", "size", "align", "scalar"], properties: { kind: { const: "scalar" }, offset: { $ref: "#/$defs/index" }, size: { $ref: "#/$defs/index" }, align: { $ref: "#/$defs/index" }, scalar: { type: "string", enum: ["f32", "i32", "u32", "bool32"] } } };
 function validate35(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null, errors = 0, evaluated0 = validate35.evaluated;
@@ -1378,7 +1392,7 @@ function validate31(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.id !== void 0) {
       let data0 = data.id;
       if (typeof data0 == "string") {
-        if (!pattern13.test(data0)) {
+        if (!pattern14.test(data0)) {
           let err6 = { instancePath: instancePath + "/id", schemaPath: "#/properties/id/pattern", keyword: "pattern", params: { pattern: "^(builtin:[a-z]+|material:.+::.+|fixture:.+)$" }, message: 'must match pattern "^(builtin:[a-z]+|material:.+::.+|fixture:.+)$"' };
           vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
         }
@@ -1390,7 +1404,7 @@ function validate31(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.wgslStruct !== void 0) {
       let data1 = data.wgslStruct;
       if (typeof data1 == "string") {
-        if (!pattern14.test(data1)) {
+        if (!pattern15.test(data1)) {
           let err8 = { instancePath: instancePath + "/wgslStruct", schemaPath: "#/$defs/wgslIdentifier/pattern", keyword: "pattern", params: { pattern: "^[A-Za-z_][A-Za-z0-9_]*$" }, message: 'must match pattern "^[A-Za-z_][A-Za-z0-9_]*$"' };
           vErrors === null ? vErrors = [err8] : vErrors.push(err8), errors++;
         }
@@ -1429,7 +1443,7 @@ function validate31(data, { instancePath = "", parentData, parentDataProperty, r
   return validate31.errors = vErrors, errors === 0;
 }
 validate31.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var schema79 = { type: "object", additionalProperties: !1, required: ["hash", "url", "map", "material", "vertexEntry", "fragmentEntry", "vertexAttributes", "surfaceInputs"], properties: { hash: { $ref: "#/$defs/sha256" }, url: { type: "string", pattern: "^shaders/[0-9a-f]{16}\\.wgsl$" }, map: { type: "string", pattern: "^shaders/[0-9a-f]{16}\\.mtek-map\\.json$" }, material: { $ref: "#/$defs/symbolId", description: "Id of the material this shader was generated for." }, vertexEntry: { $ref: "#/$defs/wgslIdentifier" }, instancedVertexEntry: { $ref: "#/$defs/wgslIdentifier", description: "The vertex entry that reads the model and normal matrices from a per-instance vertex buffer (spec/runtime-abi.md section 8.4, decision 0059). Absent: the runtime draws every entity individually." }, fragmentEntry: { $ref: "#/$defs/wgslIdentifier" }, vertexAttributes: { type: "array", description: "Present vertex attributes in vertex-buffer slot order (spec/materials.md section 3.3).", items: { type: "string", enum: ["position", "normal", "uv"] }, uniqueItems: !0 }, surfaceInputs: { type: "array", description: "SurfaceInput fields the fragment stage reads.", items: { type: "string", enum: ["local_position", "world_position", "world_normal", "uv"] }, uniqueItems: !0 } } }, pattern16 = new RegExp("^shaders/[0-9a-f]{16}\\.wgsl$", "u"), pattern17 = new RegExp("^shaders/[0-9a-f]{16}\\.mtek-map\\.json$", "u");
+var schema79 = { type: "object", additionalProperties: !1, required: ["hash", "url", "map", "material", "vertexEntry", "fragmentEntry", "vertexAttributes", "surfaceInputs"], properties: { hash: { $ref: "#/$defs/sha256" }, url: { type: "string", pattern: "^shaders/[0-9a-f]{16}\\.wgsl$" }, map: { type: "string", pattern: "^shaders/[0-9a-f]{16}\\.mtek-map\\.json$" }, material: { $ref: "#/$defs/symbolId", description: "Id of the material this shader was generated for." }, vertexEntry: { $ref: "#/$defs/wgslIdentifier" }, instancedVertexEntry: { $ref: "#/$defs/wgslIdentifier", description: "The vertex entry that reads the model and normal matrices from a per-instance vertex buffer (spec/runtime-abi.md section 8.4, decision 0059). Absent: the runtime draws every entity individually." }, fragmentEntry: { $ref: "#/$defs/wgslIdentifier" }, vertexAttributes: { type: "array", description: "Present vertex attributes in vertex-buffer slot order (spec/materials.md section 3.3).", items: { type: "string", enum: ["position", "normal", "uv"] }, uniqueItems: !0 }, surfaceInputs: { type: "array", description: "SurfaceInput fields the fragment stage reads.", items: { type: "string", enum: ["local_position", "world_position", "world_normal", "uv"] }, uniqueItems: !0 } } }, pattern17 = new RegExp("^shaders/[0-9a-f]{16}\\.wgsl$", "u"), pattern18 = new RegExp("^shaders/[0-9a-f]{16}\\.mtek-map\\.json$", "u");
 function validate47(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null, errors = 0, evaluated0 = validate47.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
@@ -1485,7 +1499,7 @@ function validate47(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.url !== void 0) {
       let data1 = data.url;
       if (typeof data1 == "string") {
-        if (!pattern16.test(data1)) {
+        if (!pattern17.test(data1)) {
           let err11 = { instancePath: instancePath + "/url", schemaPath: "#/properties/url/pattern", keyword: "pattern", params: { pattern: "^shaders/[0-9a-f]{16}\\.wgsl$" }, message: 'must match pattern "^shaders/[0-9a-f]{16}\\.wgsl$"' };
           vErrors === null ? vErrors = [err11] : vErrors.push(err11), errors++;
         }
@@ -1497,7 +1511,7 @@ function validate47(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.map !== void 0) {
       let data2 = data.map;
       if (typeof data2 == "string") {
-        if (!pattern17.test(data2)) {
+        if (!pattern18.test(data2)) {
           let err13 = { instancePath: instancePath + "/map", schemaPath: "#/properties/map/pattern", keyword: "pattern", params: { pattern: "^shaders/[0-9a-f]{16}\\.mtek-map\\.json$" }, message: 'must match pattern "^shaders/[0-9a-f]{16}\\.mtek-map\\.json$"' };
           vErrors === null ? vErrors = [err13] : vErrors.push(err13), errors++;
         }
@@ -1521,7 +1535,7 @@ function validate47(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.vertexEntry !== void 0) {
       let data4 = data.vertexEntry;
       if (typeof data4 == "string") {
-        if (!pattern14.test(data4)) {
+        if (!pattern15.test(data4)) {
           let err17 = { instancePath: instancePath + "/vertexEntry", schemaPath: "#/$defs/wgslIdentifier/pattern", keyword: "pattern", params: { pattern: "^[A-Za-z_][A-Za-z0-9_]*$" }, message: 'must match pattern "^[A-Za-z_][A-Za-z0-9_]*$"' };
           vErrors === null ? vErrors = [err17] : vErrors.push(err17), errors++;
         }
@@ -1533,7 +1547,7 @@ function validate47(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.instancedVertexEntry !== void 0) {
       let data5 = data.instancedVertexEntry;
       if (typeof data5 == "string") {
-        if (!pattern14.test(data5)) {
+        if (!pattern15.test(data5)) {
           let err19 = { instancePath: instancePath + "/instancedVertexEntry", schemaPath: "#/$defs/wgslIdentifier/pattern", keyword: "pattern", params: { pattern: "^[A-Za-z_][A-Za-z0-9_]*$" }, message: 'must match pattern "^[A-Za-z_][A-Za-z0-9_]*$"' };
           vErrors === null ? vErrors = [err19] : vErrors.push(err19), errors++;
         }
@@ -1545,7 +1559,7 @@ function validate47(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.fragmentEntry !== void 0) {
       let data6 = data.fragmentEntry;
       if (typeof data6 == "string") {
-        if (!pattern14.test(data6)) {
+        if (!pattern15.test(data6)) {
           let err21 = { instancePath: instancePath + "/fragmentEntry", schemaPath: "#/$defs/wgslIdentifier/pattern", keyword: "pattern", params: { pattern: "^[A-Za-z_][A-Za-z0-9_]*$" }, message: 'must match pattern "^[A-Za-z_][A-Za-z0-9_]*$"' };
           vErrors === null ? vErrors = [err21] : vErrors.push(err21), errors++;
         }
@@ -1849,7 +1863,7 @@ function validate49(data, { instancePath = "", parentData, parentDataProperty, r
   return validate49.errors = vErrors, errors === 0;
 }
 validate49.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var pattern22 = new RegExp("^mesh:[0-9]+$", "u");
+var pattern23 = new RegExp("^mesh:[0-9]+$", "u");
 function validate56(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null, errors = 0, evaluated0 = validate56.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
@@ -1873,7 +1887,7 @@ function validate56(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.id !== void 0) {
       let data0 = data.id;
       if (typeof data0 == "string") {
-        if (!pattern22.test(data0)) {
+        if (!pattern23.test(data0)) {
           let err4 = { instancePath: instancePath + "/id", schemaPath: "#/$defs/meshId/pattern", keyword: "pattern", params: { pattern: "^mesh:[0-9]+$" }, message: 'must match pattern "^mesh:[0-9]+$"' };
           vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
         }
@@ -1953,7 +1967,7 @@ function validate57(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.id !== void 0) {
       let data0 = data.id;
       if (typeof data0 == "string") {
-        if (!pattern22.test(data0)) {
+        if (!pattern23.test(data0)) {
           let err6 = { instancePath: instancePath + "/id", schemaPath: "#/$defs/meshId/pattern", keyword: "pattern", params: { pattern: "^mesh:[0-9]+$" }, message: 'must match pattern "^mesh:[0-9]+$"' };
           vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
         }
@@ -2042,7 +2056,7 @@ function validate58(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.id !== void 0) {
       let data0 = data.id;
       if (typeof data0 == "string") {
-        if (!pattern22.test(data0)) {
+        if (!pattern23.test(data0)) {
           let err4 = { instancePath: instancePath + "/id", schemaPath: "#/$defs/meshId/pattern", keyword: "pattern", params: { pattern: "^mesh:[0-9]+$" }, message: 'must match pattern "^mesh:[0-9]+$"' };
           vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
         }
@@ -2091,7 +2105,7 @@ function validate58(data, { instancePath = "", parentData, parentDataProperty, r
   return validate58.errors = vErrors, errors === 0;
 }
 validate58.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var pattern26 = new RegExp("^assets/[0-9a-f]{16}\\.[a-z0-9]+$", "u");
+var pattern27 = new RegExp("^assets/[0-9a-f]{16}\\.[a-z0-9]+$", "u");
 function validate59(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null, errors = 0, evaluated0 = validate59.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
@@ -2119,7 +2133,7 @@ function validate59(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.id !== void 0) {
       let data0 = data.id;
       if (typeof data0 == "string") {
-        if (!pattern22.test(data0)) {
+        if (!pattern23.test(data0)) {
           let err5 = { instancePath: instancePath + "/id", schemaPath: "#/$defs/meshId/pattern", keyword: "pattern", params: { pattern: "^mesh:[0-9]+$" }, message: 'must match pattern "^mesh:[0-9]+$"' };
           vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
         }
@@ -2135,7 +2149,7 @@ function validate59(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.asset !== void 0) {
       let data2 = data.asset;
       if (typeof data2 == "string") {
-        if (!pattern26.test(data2)) {
+        if (!pattern27.test(data2)) {
           let err8 = { instancePath: instancePath + "/asset", schemaPath: "#/$defs/assetUrl/pattern", keyword: "pattern", params: { pattern: "^assets/[0-9a-f]{16}\\.[a-z0-9]+$" }, message: 'must match pattern "^assets/[0-9a-f]{16}\\.[a-z0-9]+$"' };
           vErrors === null ? vErrors = [err8] : vErrors.push(err8), errors++;
         }
@@ -2525,7 +2539,7 @@ function validate66(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.url !== void 0) {
       let data0 = data.url;
       if (typeof data0 == "string") {
-        if (!pattern26.test(data0)) {
+        if (!pattern27.test(data0)) {
           let err8 = { instancePath: instancePath + "/url", schemaPath: "#/$defs/assetUrl/pattern", keyword: "pattern", params: { pattern: "^assets/[0-9a-f]{16}\\.[a-z0-9]+$" }, message: 'must match pattern "^assets/[0-9a-f]{16}\\.[a-z0-9]+$"' };
           vErrors === null ? vErrors = [err8] : vErrors.push(err8), errors++;
         }
@@ -2651,7 +2665,7 @@ function validate69(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.url !== void 0) {
       let data0 = data.url;
       if (typeof data0 == "string") {
-        if (!pattern26.test(data0)) {
+        if (!pattern27.test(data0)) {
           let err8 = { instancePath: instancePath + "/url", schemaPath: "#/$defs/assetUrl/pattern", keyword: "pattern", params: { pattern: "^assets/[0-9a-f]{16}\\.[a-z0-9]+$" }, message: 'must match pattern "^assets/[0-9a-f]{16}\\.[a-z0-9]+$"' };
           vErrors === null ? vErrors = [err8] : vErrors.push(err8), errors++;
         }
@@ -2793,7 +2807,7 @@ function validate70(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.url !== void 0) {
       let data0 = data.url;
       if (typeof data0 == "string") {
-        if (!pattern26.test(data0)) {
+        if (!pattern27.test(data0)) {
           let err9 = { instancePath: instancePath + "/url", schemaPath: "#/$defs/assetUrl/pattern", keyword: "pattern", params: { pattern: "^assets/[0-9a-f]{16}\\.[a-z0-9]+$" }, message: 'must match pattern "^assets/[0-9a-f]{16}\\.[a-z0-9]+$"' };
           vErrors === null ? vErrors = [err9] : vErrors.push(err9), errors++;
         }
@@ -2925,7 +2939,7 @@ function validate71(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.url !== void 0) {
       let data0 = data.url;
       if (typeof data0 == "string") {
-        if (!pattern26.test(data0)) {
+        if (!pattern27.test(data0)) {
           let err9 = { instancePath: instancePath + "/url", schemaPath: "#/$defs/assetUrl/pattern", keyword: "pattern", params: { pattern: "^assets/[0-9a-f]{16}\\.[a-z0-9]+$" }, message: 'must match pattern "^assets/[0-9a-f]{16}\\.[a-z0-9]+$"' };
           vErrors === null ? vErrors = [err9] : vErrors.push(err9), errors++;
         }
@@ -3043,7 +3057,7 @@ function validate65(data, { instancePath = "", parentData, parentDataProperty, r
 }
 validate65.evaluated = { dynamicProps: !0, dynamicItems: !1 };
 var schema137 = { type: "object", description: "A prefab the program spawns (spec/runtime-abi.md section 5.6, decision 0064). In its bindings entity 0 is the instance and material instance 0 is its material.", additionalProperties: !1, required: ["symbol", "name", "params", "mesh", "material", "body", "collider", "state", "update", "fixedUpdate", "bindings", "span"], properties: { symbol: { $ref: "#/$defs/symbolId", description: "The key of the prefabs table of app.js." }, name: { $ref: "#/$defs/name" }, params: { type: "array", description: "The params in declaration order: the keys of the params object that spawn passes.", items: { type: "object", additionalProperties: !1, required: ["name", "type"], properties: { name: { $ref: "#/$defs/name" }, type: { $ref: "#/$defs/mtekTypeName" } } } }, mesh: { type: ["string", "null"], pattern: "^mesh:[0-9]+$", description: "Id of an entry of the meshes table, or null." }, material: { type: ["object", "null"], description: "The material instance every instance of the prefab starts with.", additionalProperties: !1, required: ["id", "params", "shareable"], properties: { id: { $ref: "#/$defs/symbolId" }, params: { type: "array", items: { $ref: "#/$defs/instanceParam" } }, shareable: { type: "boolean", description: "Every param is initial or a resource: instances with identical bytes may share one parameter block." } } }, body: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/body" } }, collider: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/collider" } }, state: { type: "array", items: { $ref: "#/$defs/stateEntry" } }, update: { type: "boolean", description: "The prefab declares update(dt)." }, fixedUpdate: { type: "boolean", description: "The prefab declares fixed_update(dt)." }, bindings: { type: "array", items: { $ref: "#/$defs/binding" } }, span: { $ref: "#/$defs/spanId", description: "The declaration." }, tag: { $ref: "#/$defs/tag", description: "The tag every instance carries (decision 0150). Absent when the prefab has none." }, particles: { $ref: "#/$defs/emitter", description: "The emitter every instance starts with (decision 0155). Absent when the prefab has none." }, clip: { $ref: "#/$defs/clip", description: "The clip every instance plays (decision 0156). Absent when the prefab plays none." } } };
-var pattern37 = new RegExp("^[a-z][a-z0-9_]{0,31}$", "u");
+var pattern38 = new RegExp("^[a-z][a-z0-9_]{0,31}$", "u");
 function validate79(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null, errors = 0, evaluated0 = validate79.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
@@ -3200,7 +3214,7 @@ function validate84(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.asset !== void 0) {
       let data1 = data.asset;
       if (typeof data1 == "string") {
-        if (!pattern26.test(data1)) {
+        if (!pattern27.test(data1)) {
           let err4 = { instancePath: instancePath + "/asset", schemaPath: "#/$defs/assetUrl/pattern", keyword: "pattern", params: { pattern: "^assets/[0-9a-f]{16}\\.[a-z0-9]+$" }, message: 'must match pattern "^assets/[0-9a-f]{16}\\.[a-z0-9]+$"' };
           vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
         }
@@ -4701,7 +4715,7 @@ function validate77(data, { instancePath = "", parentData, parentDataProperty, r
         let err26 = { instancePath: instancePath + "/mesh", schemaPath: "#/properties/mesh/type", keyword: "type", params: { type: schema137.properties.mesh.type }, message: "must be string,null" };
         vErrors === null ? vErrors = [err26] : vErrors.push(err26), errors++;
       }
-      if (typeof data6 == "string" && !pattern22.test(data6)) {
+      if (typeof data6 == "string" && !pattern23.test(data6)) {
         let err27 = { instancePath: instancePath + "/mesh", schemaPath: "#/properties/mesh/pattern", keyword: "pattern", params: { pattern: "^mesh:[0-9]+$" }, message: 'must match pattern "^mesh:[0-9]+$"' };
         vErrors === null ? vErrors = [err27] : vErrors.push(err27), errors++;
       }
@@ -4849,7 +4863,7 @@ function validate77(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.tag !== void 0) {
       let data21 = data.tag;
       if (typeof data21 == "string") {
-        if (!pattern37.test(data21)) {
+        if (!pattern38.test(data21)) {
           let err49 = { instancePath: instancePath + "/tag", schemaPath: "#/$defs/tag/pattern", keyword: "pattern", params: { pattern: "^[a-z][a-z0-9_]{0,31}$" }, message: 'must match pattern "^[a-z][a-z0-9_]{0,31}$"' };
           vErrors === null ? vErrors = [err49] : vErrors.push(err49), errors++;
         }
@@ -4955,7 +4969,7 @@ function validate77(data, { instancePath = "", parentData, parentDataProperty, r
 }
 validate77.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 var schema204 = { type: "object", description: "Scene structure (spec/runtime-abi.md section 5.2).", additionalProperties: !1, required: ["name", "symbol", "fields", "state", "cameras", "entities", "materialInstances", "bindings", "hostInputs", "lights"], properties: { name: { $ref: "#/$defs/name" }, symbol: { $ref: "#/$defs/symbolId" }, fields: { type: "object", description: "Constant scene field values; linear colours as [r, g, b, a].", additionalProperties: !1, required: ["clearColor", "ambientColor", "ambientIntensity", "gravity"], properties: { clearColor: { $ref: "#/$defs/vec4" }, ambientColor: { $ref: "#/$defs/vec4" }, ambientIntensity: { type: "number", minimum: 0 }, gravity: { $ref: "#/$defs/vec3" } } }, state: { type: "array", items: { $ref: "#/$defs/sceneStateEntry" } }, cameras: { type: "array", items: { $ref: "#/$defs/camera" } }, entities: { type: "array", items: { $ref: "#/$defs/entity" } }, materialInstances: { type: "array", items: { $ref: "#/$defs/materialInstance" } }, bindings: { type: "array", items: { $ref: "#/$defs/binding" } }, hostInputs: { type: "array", items: { $ref: "#/$defs/hostInput" } }, hostOutputs: { type: "array", items: { $ref: "#/$defs/hostOutput" } }, lights: { type: "array", items: { $ref: "#/$defs/light" } } } };
-var schema210 = { type: "object", description: "A state of the scene: a stateEntry that can be shared.", additionalProperties: !1, required: ["name", "type", "symbol"], properties: { name: { $ref: "#/$defs/name" }, type: { $ref: "#/$defs/mtekTypeName" }, symbol: { $ref: "#/$defs/symbolId" }, shared: { type: "boolean", const: !0, description: "`shared state` (decision 0141): its value carries over when go_to switches to a scene with a shared state of the same name and type. Absent for ordinary state." }, persist: { enum: ["saved", "setting"], description: "`saved state` or `setting state` (decisions 0145, 0146): the value is kept in the browser's storage under game.storage, restored when the scene starts, written by save() (and, for a setting, whenever it changes). Absent for other state." }, storedType: { type: "string", minLength: 1, maxLength: 4096, description: "With persist: the structural description of the state's type that a stored value must have (decision 0145): a struct is spelled out as {field: T, ...} in field order, a user enum as enum(A|B) in variant order, otherwise the type name. A stored value recorded with another description is ignored (W5402). Absent for other state." } } };
+var schema210 = { type: "object", description: "A state of the scene: a stateEntry that can be shared.", additionalProperties: !1, required: ["name", "type", "symbol"], properties: { name: { $ref: "#/$defs/name" }, type: { $ref: "#/$defs/mtekTypeName" }, symbol: { $ref: "#/$defs/symbolId" }, shared: { type: "boolean", const: !0, description: "`shared state` (decision 0141): its value carries over when go_to switches to a scene with a shared state of the same name and type. Absent for ordinary state." }, persist: { enum: ["saved", "setting"], description: "`saved state` or `setting state` (decisions 0145, 0146): the value is kept in the browser's storage under game.storage, restored when the scene starts, written by save() (and, for a setting, whenever it changes). Absent for other state." }, storedType: { type: "string", minLength: 1, maxLength: 4096, description: "The structural description of the state's type (decisions 0145, 0177): a struct is spelled out as {field: T, ...} in field order, a user enum as enum(A|B) in variant order, otherwise the type name. With persist, a stored value recorded with another description is ignored (W5402). Without persist it is present only when the description differs from type, and a hot reload or a go_to carries the value only when the description is unchanged. Absent for other state." } } };
 function validate128(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null, errors = 0, evaluated0 = validate128.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
@@ -5252,7 +5266,7 @@ function validate132(data, { instancePath = "", parentData, parentDataProperty, 
         let err21 = { instancePath: instancePath + "/mesh", schemaPath: "#/properties/mesh/type", keyword: "type", params: { type: schema217.properties.mesh.type }, message: "must be string,null" };
         vErrors === null ? vErrors = [err21] : vErrors.push(err21), errors++;
       }
-      if (typeof data4 == "string" && !pattern22.test(data4)) {
+      if (typeof data4 == "string" && !pattern23.test(data4)) {
         let err22 = { instancePath: instancePath + "/mesh", schemaPath: "#/properties/mesh/pattern", keyword: "pattern", params: { pattern: "^mesh:[0-9]+$" }, message: 'must match pattern "^mesh:[0-9]+$"' };
         vErrors === null ? vErrors = [err22] : vErrors.push(err22), errors++;
       }
@@ -5381,7 +5395,7 @@ function validate132(data, { instancePath = "", parentData, parentDataProperty, 
     if (data.tag !== void 0) {
       let data15 = data.tag;
       if (typeof data15 == "string") {
-        if (!pattern37.test(data15)) {
+        if (!pattern38.test(data15)) {
           let err42 = { instancePath: instancePath + "/tag", schemaPath: "#/$defs/tag/pattern", keyword: "pattern", params: { pattern: "^[a-z][a-z0-9_]{0,31}$" }, message: 'must match pattern "^[a-z][a-z0-9_]{0,31}$"' };
           vErrors === null ? vErrors = [err42] : vErrors.push(err42), errors++;
         }
@@ -7313,8 +7327,8 @@ function pointerPosition(canvas, clientX, clientY) {
   return { x: clamp3((clientX - rect.left) / width * 2 - 1), y: clamp3(1 - (clientY - rect.top) / height * 2) };
 }
 function attachInputListeners(input, targets) {
-  let { canvas, registry, handledKeys } = targets;
-  targets.document !== void 0 && (registry.addEventListener(targets.document, "keydown", (event) => {
+  let { canvas, registry, handledKeys } = targets, style = canvas.style;
+  style !== void 0 && (style.touchAction = "none", style.userSelect = "none", style.webkitUserSelect = "none"), targets.document !== void 0 && (registry.addEventListener(targets.document, "keydown", (event) => {
     let key = event;
     isMappedKeyCode(key.code) && (handledKeys.has(key.code) && key.preventDefault(), input.keyDown(key.code, key.repeat));
   }), registry.addEventListener(targets.document, "keyup", (event) => {
@@ -7326,22 +7340,24 @@ function attachInputListeners(input, targets) {
   let at3 = (event) => {
     let pointer = event;
     return { ...pointerPosition(canvas, pointer.clientX, pointer.clientY), button: pointer.button };
-  };
+  }, pressing = null, ofPressing = (pointer) => pointer.isPrimary && (pressing === null || pointer.pointerId === pressing);
   registry.addEventListener(canvas, "pointerdown", (event) => {
     let pointer = event;
     if (!pointer.isPrimary) return;
     let where = at3(event);
-    if (input.pointerDown(where.x, where.y, where.button))
+    if (input.pointerDown(where.x, where.y, where.button)) {
+      pressing = pointer.pointerId;
       try {
         canvas.setPointerCapture?.(pointer.pointerId);
       } catch {
       }
+    }
   }), registry.addEventListener(canvas, "pointerup", (event) => {
-    if (!event.isPrimary) return;
+    if (!ofPressing(event)) return;
     let where = at3(event);
     input.pointerUp(where.x, where.y, where.button);
-  }), registry.addEventListener(canvas, "pointercancel", () => {
-    input.pointerCancelled();
+  }), registry.addEventListener(canvas, "pointercancel", (event) => {
+    ofPressing(event) && (pressing = null, input.pointerCancelled());
   }), registry.addEventListener(canvas, "pointermove", (event) => {
     if (!event.isPrimary) return;
     let where = at3(event);
@@ -7843,17 +7859,30 @@ var InputState = class {
   /** The last delivered pointer position. `(0, 0)` until the pointer moves or a button changes. */
   pointer = { x: 0, y: 0 };
   paused = !1;
+  /**
+   * The keys the program has asked about with `is_key_down`, `key_pressed` or `key_released` since the scene started:
+   * the DOM layer suppresses their default action like that of a key a handler names (`input/dom.ts`).
+   */
+  polled = /* @__PURE__ */ new Set();
   /** `is_key_down(code)`: the delivered state, as of the end of phase 1 of the current frame. */
   isKeyDown(code) {
-    return this.deliveredKeys.has(code);
+    return this.polled.add(code), this.deliveredKeys.has(code);
   }
   /** `key_pressed`: the key went down in the transitions delivered this frame. */
   keyPressed(code) {
-    return this.pressed.has(code);
+    return this.polled.add(code), this.pressed.has(code);
   }
   /** `key_released`: the key went up in the transitions delivered this frame. */
   keyReleased(code) {
-    return this.released.has(code);
+    return this.polled.add(code), this.released.has(code);
+  }
+  /** Whether the program polled `code` (`is_key_down`, `key_pressed`, `key_released`) in the running scene. */
+  isPolled(code) {
+    return this.polled.has(code);
+  }
+  /** A new scene starts: the keys the old one polled no longer count. */
+  clearPolled() {
+    this.polled.clear();
   }
   /** `pointer_position`: NDC, as of the end of phase 1. A copy, so a caller cannot move the stored point. */
   pointerPosition() {
@@ -7945,6 +7974,21 @@ var InputState = class {
   }
 };
 
+// src/math/copy.ts
+function copy(value) {
+  if (Array.isArray(value)) {
+    let items = value, out = new Array(items.length);
+    for (let i = 0; i < items.length; i++) out[i] = copy(items[i]);
+    return out;
+  }
+  if (typeof value == "object" && value !== null && !ArrayBuffer.isView(value)) {
+    let out = {};
+    for (let [key, field] of Object.entries(value)) out[key] = copy(field);
+    return out;
+  }
+  return value;
+}
+
 // src/audio/audio.ts
 var VOLUME_RANGE = [0, 4], PITCH_RANGE = [0.0625, 16];
 function browserAudioBackend() {
@@ -7980,8 +8024,8 @@ var AudioSystem = class {
     let pending = [];
     for (let asset of options.manifest.assets) {
       if (asset.kind !== "audio") continue;
-      let sound = { url: asset.url, span: asset.span, buffer: void 0, state: "pending" };
-      this.sounds.set(asset.source, sound), pending.push(this.decodeOne(sound));
+      let sound = { url: asset.url, span: asset.span, manifest: options.manifest, buffer: void 0, state: "pending" };
+      this.sounds.set(asset.source, sound), pending.push(this.decodeOne(sound, "runtime:mount", asset.source));
     }
     this.decoded = Promise.all(pending).then(() => {
     });
@@ -7995,6 +8039,8 @@ var AudioSystem = class {
   music;
   active = /* @__PURE__ */ new Set();
   disposed = !1;
+  /** The host paused: the context stays suspended until it resumes. */
+  hostPaused = !1;
   /** Resolves when every sound is decoded or failed (for tests). */
   decoded;
   /** Whether the program declares any sound. */
@@ -8009,26 +8055,33 @@ var AudioSystem = class {
   get unlocked() {
     return this.context !== void 0;
   }
-  async decodeOne(sound) {
+  /**
+   * Decodes `sound`: ready when done, `W8202` once when the browser cannot (also for a sound a hot reload adds). A
+   * track `play_music` asked for while this ran starts now (decision 0176).
+   */
+  async decodeOne(sound, phase, source, bytes = this.options.bytes) {
     let backend = this.options.backend;
     if (backend === void 0) {
       sound.state = "failed";
       return;
     }
-    let bytes = this.options.bytes(sound.url);
     try {
-      if (bytes === void 0) throw new Error("its bytes were not loaded");
-      sound.buffer = await backend.decode(bytes), sound.state = "ready";
+      let data = bytes(sound.url);
+      if (data === void 0) throw new Error("its bytes were not loaded");
+      sound.buffer = await backend.decode(data), sound.state = "ready";
     } catch (error) {
       sound.state = "failed", this.options.report(
         makeRuntimeDiagnostic("W8202", {
-          phase: "runtime:mount",
+          phase,
           message: `The browser could not decode the sound '${sound.url}': ${error instanceof Error ? error.message : String(error)}. Playing it does nothing.`,
-          source: resolveSpan(this.options.manifest, sound.span),
+          source: resolveSpan(sound.manifest, sound.span),
           notes: ["help: convert the sound to 16-bit PCM WAV, which every browser decodes"]
         })
       );
+      return;
     }
+    let wanted = this.music;
+    wanted !== void 0 && wanted.node === void 0 && wanted.source === source && this.context !== void 0 && this.startMusic(source, wanted.volume);
   }
   /**
    * The first key press, click or touch: creates (or resumes) the playing context, inside the gesture as browsers
@@ -8043,9 +8096,17 @@ var AudioSystem = class {
         let wanted = this.music;
         wanted !== void 0 && wanted.node === void 0 && this.startMusic(wanted.source, wanted.volume);
       }
-      this.context.state === "suspended" && this.context.resume().catch(() => {
+      this.context.state === "suspended" && !this.hostPaused && this.context.resume().catch(() => {
       });
     }
+  }
+  setSuspended(suspended) {
+    if (this.disposed) return;
+    this.hostPaused = suspended;
+    let context = this.context;
+    context !== void 0 && (suspended ? context.suspend?.().catch(() => {
+    }) : context.state === "suspended" && context.resume().catch(() => {
+    }));
   }
   applyMaster() {
     this.master !== void 0 && (this.master.gain.value = this.muted ? 0 : this.volume);
@@ -8059,7 +8120,7 @@ var AudioSystem = class {
       makeRuntimeDiagnostic("W8201", {
         phase: "runtime:update",
         message: `The ${what} ${describe3(value)} is outside ${String(lo)} to ${String(hi)}; ${String(used)} is used.`,
-        source: typeof spanId == "number" ? resolveSpan(this.options.manifest, spanId) : null,
+        source: typeof spanId == "number" ? resolveSpan(this.options.manifestNow?.() ?? this.options.manifest, spanId) : null,
         expected: `${String(lo)} to ${String(hi)}`,
         actual: describe3(value)
       })
@@ -8116,31 +8177,15 @@ var AudioSystem = class {
     return this.muted;
   }
   adopt(manifest, bytes) {
+    let hadSounds = this.sounds.size > 0;
     for (let asset of manifest.assets) {
       if (asset.kind !== "audio") continue;
       let known = this.sounds.get(asset.source);
       if (known !== void 0 && known.url === asset.url) continue;
-      let sound = { url: asset.url, span: asset.span, buffer: void 0, state: "pending" };
-      this.sounds.set(asset.source, sound);
-      let backend = this.options.backend;
-      if (backend === void 0) {
-        sound.state = "failed";
-        continue;
-      }
-      let data = bytes(asset.url);
-      if (data === void 0) {
-        sound.state = "failed";
-        continue;
-      }
-      backend.decode(data).then(
-        (buffer) => {
-          sound.buffer = buffer, sound.state = "ready";
-        },
-        () => {
-          sound.state = "failed";
-        }
-      );
+      let sound = { url: asset.url, span: asset.span, manifest, buffer: void 0, state: "pending" };
+      this.sounds.set(asset.source, sound), this.decodeOne(sound, "runtime:reload", asset.source, bytes);
     }
+    !hadSounds && this.sounds.size > 0 && this.options.onFirstSound?.();
   }
   /** Stops every sound and closes the context (`dispose()`). Idempotent. */
   dispose() {
@@ -8677,6 +8722,13 @@ function pixelTextSvg(content, fill) {
 function svgUrl(svg) {
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
+var IMAGE_MEMO_LIMIT = 256, imageMemo = /* @__PURE__ */ new Map();
+function pixelTextImage(content, fill) {
+  let key = `${fill}\0${content}`, known = imageMemo.get(key);
+  if (known !== void 0) return known;
+  let { svg, width } = pixelTextSvg(content, fill), made = { url: svgUrl(svg), width };
+  return imageMemo.size >= IMAGE_MEMO_LIMIT && imageMemo.clear(), imageMemo.set(key, made), made;
+}
 
 // src/hud/hud.ts
 var TEXT_SIZE_RANGE = [1, 512], RECT_SIZE_RANGE = [0, 8192], MAX_HUD_ITEMS = 512, DEFAULT_SIZE = 24, NO_HUD = Object.freeze({
@@ -8727,6 +8779,9 @@ var HudSystem = class {
   labelCounts = /* @__PURE__ */ new Map();
   warnedSpans = /* @__PURE__ */ new Set();
   disposed = !1;
+  clearClicks() {
+    this.pendingClicks.clear();
+  }
   /** Phase 1: a new frame draws a new list. */
   beginFrame() {
     this.items = [], this.labelCounts.clear();
@@ -8809,7 +8864,7 @@ var HudSystem = class {
           makeRuntimeDiagnostic("W8203", {
             phase: "runtime:update",
             message: `This frame drew more than ${String(MAX_HUD_ITEMS)} HUD items; the rest are not shown.`,
-            source: span >= 0 ? resolveSpan(this.options.manifest, span) : null,
+            source: span >= 0 ? resolveSpan(this.options.manifestNow?.() ?? this.options.manifest, span) : null,
             expected: `at most ${String(MAX_HUD_ITEMS)} items per frame`
           })
         ));
@@ -8857,8 +8912,8 @@ var HudSystem = class {
     switch (write("left", left), write("top", top), item.kind) {
       case "text":
         if (write("transform", `translate(${String(-item.align * 100)}%,-50%)`), item.font === PIXEL_FONT) {
-          let { svg, width } = pixelTextSvg(item.content, item.tint), scale = item.size / CELL_HEIGHT;
-          write("#text", ""), write("#label", item.content), write("backgroundImage", svgUrl(svg)), write("backgroundSize", "100% 100%"), write("width", `${String(width * scale)}px`), write("height", `${String(item.size)}px`);
+          let { url, width } = pixelTextImage(item.content, item.tint), scale = item.size / CELL_HEIGHT;
+          write("#text", ""), write("#label", item.content), write("backgroundImage", url), write("backgroundSize", "100% 100%"), write("width", `${String(width * scale)}px`), write("height", `${String(item.size)}px`);
           break;
         }
         write("#label", ""), write("backgroundImage", "none"), write("width", ""), write("height", ""), write("#text", item.content), write("fontSize", `${String(item.size)}px`), write("color", item.tint), write("fontFamily", item.font === "" ? DEFAULT_FAMILY : item.font);
@@ -8957,37 +9012,59 @@ function normalMatrixInto(out, offset, model) {
 }
 
 // src/scene/clips.ts
-var IDENTITY = [0, 0, 0, 1];
-function sampleChannel(channel, time) {
-  let comps = channel.path === "rotation" ? 4 : 3, times = channel.times, count = times.length, at3 = (index) => {
-    let start = index * comps, out = [];
-    for (let i = 0; i < comps; i += 1) out.push(channel.values[start + i] ?? 0);
-    return out;
+function sampleChannelInto(channel, time, out) {
+  let comps = channelWidth(channel), times = channel.times, count = times.length, values = channel.values, identity2 = () => {
+    out[0] = 0, out[1] = 0, out[2] = 0, comps === 4 && (out[3] = 1);
   };
-  if (count === 0) return channel.path === "rotation" ? IDENTITY : [0, 0, 0];
+  if (count === 0) {
+    identity2();
+    return;
+  }
   let first = times[0] ?? 0;
-  if (time <= first) return at3(0);
+  if (time <= first) {
+    for (let i = 0; i < comps; i += 1) out[i] = values[i] ?? 0;
+    comps === 4 && normalizeInto(out);
+    return;
+  }
   let hi = 1;
   for (; hi < count && (times[hi] ?? 0) <= time; ) hi += 1;
-  let lo = hi - 1;
-  if (channel.interpolation === "step" || hi >= count)
-    return channel.path === "rotation" ? normalize2(at3(lo)) : at3(lo);
-  let t0 = times[lo] ?? 0, span = (times[hi] ?? t0) - t0, t = span === 0 ? 0 : (time - t0) / span, a = at3(lo), b = at3(hi);
-  return channel.path === "rotation" ? nlerp(a, b, t) : a.map((value, index) => value + ((b[index] ?? value) - value) * t);
+  let lo = hi - 1, from = lo * comps;
+  if (channel.interpolation === "step" || hi >= count) {
+    for (let i = 0; i < comps; i += 1) out[i] = values[from + i] ?? 0;
+    comps === 4 && normalizeInto(out);
+    return;
+  }
+  let t0 = times[lo] ?? 0, span = (times[hi] ?? t0) - t0, t = span === 0 ? 0 : (time - t0) / span, to = hi * comps;
+  if (comps === 4) {
+    let dot = 0;
+    for (let i = 0; i < 4; i += 1) dot += (values[from + i] ?? 0) * (values[to + i] ?? 0);
+    let sign2 = dot < 0 ? -1 : 1;
+    for (let i = 0; i < 4; i += 1) {
+      let a = values[from + i] ?? 0;
+      out[i] = a + (sign2 * (values[to + i] ?? 0) - a) * t;
+    }
+    normalizeInto(out);
+    return;
+  }
+  for (let i = 0; i < 3; i += 1) {
+    let a = values[from + i] ?? 0;
+    out[i] = a + ((values[to + i] ?? a) - a) * t;
+  }
 }
-function nlerp(a, b, t) {
-  let dot = 0;
-  for (let i = 0; i < 4; i += 1) dot += (a[i] ?? 0) * (b[i] ?? 0);
-  let sign2 = dot < 0 ? -1 : 1, out = [0, 0, 0, 0];
-  for (let i = 0; i < 4; i += 1) out[i] = (a[i] ?? 0) + (sign2 * (b[i] ?? 0) - (a[i] ?? 0)) * t;
-  return normalize2(out);
+function channelWidth(channel) {
+  return channel.path === "rotation" ? 4 : 3;
 }
-function normalize2(value) {
+function normalizeInto(value) {
   let length2 = Math.hypot(value[0] ?? 0, value[1] ?? 0, value[2] ?? 0, value[3] ?? 0);
-  return length2 > 0 ? value.map((component3) => component3 / length2) : IDENTITY;
+  if (!(length2 > 0)) {
+    value[0] = 0, value[1] = 0, value[2] = 0, value[3] = 1;
+    return;
+  }
+  for (let i = 0; i < 4; i += 1) value[i] = (value[i] ?? 0) / length2;
 }
 var ClipPlayers = class {
   players = [];
+  scratch = new Float64Array(4);
   add(clip) {
     this.remove(clip.slot), this.players.push({ clip, time: 0 });
   }
@@ -8999,7 +9076,7 @@ var ClipPlayers = class {
   pose(apply, time) {
     for (let player of this.players) {
       let at3 = time ?? player.time;
-      for (let channel of player.clip.channels) apply(player.clip.slot, channel, sampleChannel(channel, at3));
+      for (let channel of player.clip.channels) this.write(apply, player.clip.slot, channel, at3);
     }
   }
   /** Advances by `dt` seconds, wrapping after the duration, then writes the new pose. */
@@ -9007,8 +9084,11 @@ var ClipPlayers = class {
     for (let player of this.players) {
       let next = player.time + dt, { duration } = player.clip;
       duration > 0 && next > duration && (next %= duration), player.time = next;
-      for (let channel of player.clip.channels) apply(player.clip.slot, channel, sampleChannel(channel, next));
+      for (let channel of player.clip.channels) this.write(apply, player.clip.slot, channel, next);
     }
+  }
+  write(apply, slot, channel, time) {
+    sampleChannelInto(channel, time, this.scratch), apply(slot, channel, this.scratch);
   }
 };
 
@@ -9389,7 +9469,7 @@ var DynamicEntities = class {
       instance,
       ...prefab.resolved.particles === void 0 ? {} : { particles: prefab.resolved.particles },
       ...prefab.resolved.clip === void 0 ? {} : { clip: prefab.resolved.clip }
-    }, host = this.options.host, record = host.makeRecord(ref, resolved, prefab, params), entity = { record, resolved, ref, prefab, order: this.nextOrder++, removing: !1, attachments: /* @__PURE__ */ new Map() };
+    }, host = this.options.host, record = host.makeRecord(ref, resolved, prefab, params), entity = { record, resolved, ref, prefab, tag: prefab.resolved.tag, order: this.nextOrder++, removing: !1, attachments: /* @__PURE__ */ new Map() };
     return this.bySlot[slot] = entity, host.register(slot, record, resolved), instance !== null && materials.createInstance(instance), render.addEntity(resolved), prefab.program.init(host.ctx, record, params), this.bind(entity), instance !== null && instance.shareable && materials.shareInstance(instance.index), this.spawnedTotal += 1, entity;
   }
   announce(entity) {
@@ -9447,10 +9527,20 @@ var DynamicEntities = class {
 };
 
 // src/scene/particles.ts
+function particleStream(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = a + 1831565813 >>> 0;
+    let t = a;
+    return t = Math.imul(t ^ t >>> 15, t | 1), t ^= t + Math.imul(t ^ t >>> 7, t | 61), ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
 var ParticleSim = class {
   emitters = [];
+  stream = particleStream(1889696798);
+  drawn = [];
   add(spec) {
-    this.remove(spec.slot), this.emitters.push({ spec, acc: 0, sparks: [] });
+    this.remove(spec.slot), this.emitters.push({ spec, acc: 0, sparks: [], draw: void 0 });
   }
   remove(slot) {
     let index = this.emitters.findIndex((emitter) => emitter.spec.slot === slot);
@@ -9465,7 +9555,7 @@ var ParticleSim = class {
    * Ages the living particles, then spawns. `origin` is the entity's world position. A fraction of
    * a particle carries in the accumulator, so `rate * dt` of 1.5 spawns 1, then 2, then 1.
    */
-  advance(dt, random, origin) {
+  advance(dt, origin, random = this.stream) {
     for (let emitter of this.emitters) {
       let { spec, sparks } = emitter;
       for (let i = sparks.length - 1; i >= 0; i -= 1) {
@@ -9493,16 +9583,13 @@ var ParticleSim = class {
       }
     }
   }
+  /** The emitters with living particles that can be drawn. The array and its records are reused: valid until the next call. */
   draws() {
-    let out = [];
+    let out = this.drawn;
+    out.length = 0;
     for (let emitter of this.emitters) {
       let { spec, sparks } = emitter;
-      spec.meshId === null || spec.materialId === null || spec.instanceIndex === null || sparks.length === 0 || out.push({
-        meshId: spec.meshId,
-        materialId: spec.materialId,
-        instanceIndex: spec.instanceIndex,
-        points: sparks.map((spark) => ({ x: spark.x, y: spark.y, z: spark.z, size: spark.size }))
-      });
+      spec.meshId === null || spec.materialId === null || spec.instanceIndex === null || sparks.length === 0 || (emitter.draw ??= { meshId: spec.meshId, materialId: spec.materialId, instanceIndex: spec.instanceIndex, points: sparks }, out.push(emitter.draw));
     }
     return out;
   }
@@ -9557,11 +9644,19 @@ function delayOf(seconds) {
   return typeof seconds == "number" && Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
 }
 var TimerList = class {
+  /** `onFull(spanId)` is called for a timer that is not started because {@link MAX_TIMERS} are waiting. */
+  constructor(onFull = () => {
+  }) {
+    this.onFull = onFull;
+  }
+  onFull;
   timers = [];
   now = 0;
   started = 0;
   running = !1;
   added = [];
+  /** The earliest due time of the waiting timers: a frame before it does not look at the list. */
+  earliest = 1 / 0;
   /** Game time of this scene, in seconds: the sum of the deltas of the frames in which the game was not paused. */
   get gameTime() {
     return this.now;
@@ -9580,6 +9675,10 @@ var TimerList = class {
   }
   add(delay, repeat, fn, owner, spanId) {
     if (typeof fn != "function") throw new TypeError("a timer needs a function");
+    if (this.size >= 4096) {
+      this.onFull(typeof spanId == "number" ? spanId : -1);
+      return;
+    }
     let timer = {
       due: this.now + delay,
       period: repeat ? delay : 0,
@@ -9590,7 +9689,7 @@ var TimerList = class {
       spanId: typeof spanId == "number" ? spanId : -1,
       cancelled: !1
     };
-    this.started += 1, this.running ? this.added.push(timer) : this.timers.push(timer);
+    this.started += 1, this.running ? this.added.push(timer) : (this.timers.push(timer), timer.due < this.earliest && (this.earliest = timer.due));
   }
   /**
    * Advances the game clock by `delta` seconds and runs the blocks that fall due. `alive` says whether a timer's
@@ -9599,7 +9698,9 @@ var TimerList = class {
    */
   advance(delta, alive) {
     this.now += Math.max(0, delta);
-    let now = this.now, due = this.timers.filter((timer) => timer.due <= now);
+    let now = this.now;
+    if (now < this.earliest) return;
+    let due = this.timers.filter((timer) => timer.due <= now);
     if (due.length !== 0) {
       due.sort((a, b) => a.due - b.due || a.order - b.order), this.running = !0;
       try {
@@ -9612,14 +9713,15 @@ var TimerList = class {
             timer.repeat ? (timer.due += timer.period, timer.due <= now && (timer.due = now + timer.period)) : timer.cancelled = !0, timer.fn();
           }
       } finally {
-        this.running = !1, this.timers = this.timers.filter((timer) => !timer.cancelled && (timer.owner === null || alive(timer.owner))), this.timers.push(...this.added), this.added.length = 0;
+        this.running = !1, this.timers = this.timers.filter((timer) => !timer.cancelled && (timer.owner === null || alive(timer.owner))), this.timers.push(...this.added), this.added.length = 0, this.earliest = 1 / 0;
+        for (let timer of this.timers) timer.due < this.earliest && (this.earliest = timer.due);
       }
     }
   }
   /** Drops every timer (the scene ends). */
   clear() {
     for (let timer of this.timers) timer.cancelled = !0;
-    this.timers = [], this.added.length = 0;
+    this.timers = [], this.added.length = 0, this.earliest = 1 / 0;
   }
 };
 
@@ -9666,8 +9768,8 @@ var TagQueries = class {
     if (!this.world.alive(target)) return !1;
     let { staticTags } = this.world;
     if (target.slot < staticTags.length) return staticTags[target.slot] === name;
-    let entity = this.world.spawned().find((e) => e.ref.slot === target.slot && e.ref.gen === target.gen);
-    return entity !== void 0 && entity.tag === name;
+    let entity = this.world.spawnedAt === void 0 ? this.world.spawned().find((e) => e.ref.slot === target.slot && e.ref.gen === target.gen) : this.world.spawnedAt(target.slot);
+    return entity !== void 0 && entity.ref.gen === target.gen && entity.tag === name;
   }
   tagged(tag) {
     return this.entities(tagArgument(tag, "tagged"));
@@ -9689,6 +9791,8 @@ var CONTEXT_MEMBERS = [
   "setVisible",
   "setParam",
   "setCamera",
+  "setCameraOn",
+  "cameraOn",
   "selectCamera",
   "particleCount",
   "setLight",
@@ -9746,7 +9850,7 @@ var CONTEXT_MEMBERS = [
   "projection.height",
   "projection.near",
   "projection.far"
-], TRANSFORM_FIELDS = ["position", "rotation", "scale"], f322 = Math.fround, ORIGIN = Object.freeze({ x: 0, y: 0, z: 0 }), UNIT_SCALE = Object.freeze({ x: 1, y: 1, z: 1 }), IDENTITY2 = Object.freeze({ x: 0, y: 0, z: 0, w: 1 }), CAMERA_POSITION = Object.freeze({ x: 0, y: 0, z: 5 }), DEFAULT_FOV_Y = f322(0.9), DEFAULT_HEIGHT = 10, DEFAULT_NEAR = f322(0.1), DEFAULT_FAR = 1e3, WHITE = Object.freeze({ r: 1, g: 1, b: 1, a: 1 }), LIGHT_FIELDS = ["color", "intensity"];
+], TRANSFORM_FIELDS = ["position", "rotation", "scale"], f322 = Math.fround, ORIGIN = Object.freeze({ x: 0, y: 0, z: 0 }), UNIT_SCALE = Object.freeze({ x: 1, y: 1, z: 1 }), IDENTITY = Object.freeze({ x: 0, y: 0, z: 0, w: 1 }), CAMERA_POSITION = Object.freeze({ x: 0, y: 0, z: 5 }), DEFAULT_FOV_Y = f322(0.9), DEFAULT_HEIGHT = 10, DEFAULT_NEAR = f322(0.1), DEFAULT_FAR = 1e3, WHITE = Object.freeze({ r: 1, g: 1, b: 1, a: 1 }), LIGHT_FIELDS = ["color", "intensity"];
 function zeroValue(type) {
   switch (type) {
     case "f32":
@@ -9764,7 +9868,7 @@ function zeroValue(type) {
     case "vec4":
       return Object.freeze({ x: 0, y: 0, z: 0, w: 0 });
     case "quat":
-      return IDENTITY2;
+      return IDENTITY;
     case "color":
       return Object.freeze({ r: 0, g: 0, b: 0, a: 0 });
     case "mat4":
@@ -9817,7 +9921,7 @@ var World = class {
   activeCamera = {
     position: CAMERA_POSITION,
     target: null,
-    rotation: IDENTITY2,
+    rotation: IDENTITY,
     projection: { kind: "perspective", fov_y: DEFAULT_FOV_Y, near: DEFAULT_NEAR, far: DEFAULT_FAR }
   };
   /** The scene state (`ctx.s`). */
@@ -9856,14 +9960,22 @@ var World = class {
   /** `ctx.budget` (decision 0075): the iterations of CPU loops left in this frame. Only a preview build checks it. */
   loopBudget = { n: 0 };
   /** The scene's `after`/`every` timers (decision 0142). */
-  timers = new TimerList();
+  timers = new TimerList((spanId) => {
+    this.reportTimerCap(spanId);
+  });
+  /** The call sites that already reported `W8205`. */
+  cappedTimerSpans = /* @__PURE__ */ new Set();
   /** Living particles (decision 0155). */
   particles = new ParticleSim();
   /** Playing glTF clips (decision 0156). */
   clips = new ClipPlayers();
+  /** Per entity slot, the pose its clip last sampled; `undefined` for an entity without a clip. The local transform is the entity's own one times this (decision 0174). */
+  clipPoses = [];
+  clipBase = new Float32Array(16);
+  clipLocal = new Float32Array(16);
+  clipSample = new Float64Array(4);
   cameraByName = /* @__PURE__ */ new Map();
   cameraMeta = /* @__PURE__ */ new Map();
-  nextRandom = Math.random;
   /** `manifest.preview.loopBudget`: what {@link resetBudget} refills the counter with; `undefined` outside a preview. */
   loopBudgetLimit;
   materialParamTypes;
@@ -9876,7 +9988,7 @@ var World = class {
       this.structure.entities.map((entity) => {
         let params = entity.instance === null ? void 0 : materialParams.get(entity.instance.material.id), light = lightOf.get(entity.index), record = {
           position: ORIGIN,
-          rotation: IDENTITY2,
+          rotation: IDENTITY,
           scale: UNIT_SCALE,
           visible: !0,
           state: stateObject(this.manifest.scene.entities[entity.index]?.state ?? []),
@@ -9939,7 +10051,6 @@ var World = class {
       hasTarget: this.structure.camera.hasTarget
     })), this.sceneState = stateObject(this.manifest.scene.state);
     let services = options.services ?? INERT_SERVICES;
-    this.nextRandom = () => services.random();
     for (let entity of this.structure.entities) this.trackMotion(entity.index, entity);
     let game = services.game ?? INERT_GAME, timerOwner = (owner) => {
       if (owner == null) return null;
@@ -9948,7 +10059,8 @@ var World = class {
     }, staticTags = this.structure.entities.map((entity) => this.manifest.scene.entities[entity.index]?.tag), tags = new TagQueries({
       staticTags,
       staticRef: (index) => this.entities[index].ref,
-      spawned: () => this.dynamic.live.map((entity) => ({ ref: entity.ref, removing: entity.removing, tag: entity.prefab.resolved.tag })),
+      spawned: () => this.dynamic.live,
+      spawnedAt: (slot) => this.dynamic.entityAt(slot),
       worldPosition: (slot) => {
         this.propagate();
         let world = this.worldMatrix(slot);
@@ -9973,6 +10085,10 @@ var World = class {
       setCamera: (field, value) => {
         this.setCamera(field, value);
       },
+      setCameraOn: (name, field, value) => {
+        this.setCameraOn(name, field, value);
+      },
+      cameraOn: (name) => this.cameraNamed("ctx.cameraOn", name),
       selectCamera: (name) => {
         this.selectCamera(name);
       },
@@ -10084,7 +10200,7 @@ var World = class {
   }
   /** Spawns and integrates particles (decision 0155). */
   advanceParticles(delta) {
-    this.propagate(), this.particles.advance(delta, this.nextRandom, (slot) => {
+    this.propagate(), this.particles.advance(delta, (slot) => {
       let matrix = this.worlds[slot];
       return matrix === void 0 ? { x: 0, y: 0, z: 0 } : { x: matrix[12] ?? 0, y: matrix[13] ?? 0, z: matrix[14] ?? 0 };
     });
@@ -10178,15 +10294,27 @@ var World = class {
       let record = this.entities[i];
       if (record === void 0) continue;
       let world = this.worlds[i], parentWorld = parent === null ? void 0 : this.worlds[parent];
-      parentWorld === void 0 ? fromRotationTranslationScaleInto(world, this.rotationScratch, record.rotation, record.position, record.scale) : (fromRotationTranslationScaleInto(this.localScratch, this.rotationScratch, record.rotation, record.position, record.scale), multiplyInto(world, parentWorld, this.localScratch)), this.transformDirty[i] = 0, this.markChanged(i), recomputed[i] = 1, count += 1;
+      parentWorld === void 0 ? this.localMatrixInto(world, i, record) : (this.localMatrixInto(this.localScratch, i, record), multiplyInto(world, parentWorld, this.localScratch)), this.transformDirty[i] = 0, this.markChanged(i), recomputed[i] = 1, count += 1;
     }
     for (let entity of this.dynamic.live) {
       let i = entity.ref.slot;
       if (this.transformDirty[i] !== 1) continue;
       let record = entity.record;
-      fromRotationTranslationScaleInto(this.worlds[i], this.rotationScratch, record.rotation, record.position, record.scale), this.transformDirty[i] = 0, this.markChanged(i), count += 1;
+      this.localMatrixInto(this.worlds[i], i, record), this.transformDirty[i] = 0, this.markChanged(i), count += 1;
     }
     return this.transformsPending = !1, count;
+  }
+  /**
+   * The local matrix of the entity in slot `index` into `out`: `T * R * S` of its own transform, times the same of the
+   * pose its clip sampled when it has one (`base * clip`, decision 0174).
+   */
+  localMatrixInto(out, index, record) {
+    let pose = this.clipPoses[index];
+    if (pose === void 0) {
+      fromRotationTranslationScaleInto(out, this.rotationScratch, record.rotation, record.position, record.scale);
+      return;
+    }
+    fromRotationTranslationScaleInto(this.clipBase, this.rotationScratch, record.rotation, record.position, record.scale), fromRotationTranslationScaleInto(this.clipLocal, this.rotationScratch, pose.rotation, pose.translation, pose.scale), multiplyInto(out, this.clipBase, this.clipLocal);
   }
   /** The world matrix of the entity in slot `index` as of the last `propagate()`. */
   worldMatrix(index) {
@@ -10220,7 +10348,7 @@ var World = class {
     let material = resolved.instance === null ? void 0 : this.materialParamTypes.get(resolved.instance.material.id);
     return {
       position: ORIGIN,
-      rotation: IDENTITY2,
+      rotation: IDENTITY,
       scale: UNIT_SCALE,
       visible: !0,
       state: stateObject(prefab.resolved.state),
@@ -10239,10 +10367,10 @@ var World = class {
     changed.set(this.worldChanged), this.transformDirty = dirty, this.worldChanged = changed;
   }
   registerDynamic(slot, record, resolved) {
-    this.ensureSlots(slot + 1), this.records[slot] = record, this.resolvedBySlot[slot] = resolved, this.indexByRecord.set(record, slot), this.worlds[slot] = new Float32Array(16), this.transformDirty[slot] = 1, this.transformsPending = !0, this.worldChanged[slot] = 0, this.trackMotion(slot, resolved);
+    this.ensureSlots(slot + 1), this.records[slot] = record, this.resolvedBySlot[slot] = resolved, this.indexByRecord.set(record, slot), this.worlds[slot] = new Float32Array(16), this.transformDirty[slot] = 1, this.transformsPending = !0, this.worldChanged[slot] = 0, this.trackMotion(slot, resolved, !0);
   }
   unregisterDynamic(slot, record) {
-    this.indexByRecord.delete(record), this.records[slot] = void 0, this.resolvedBySlot[slot] = void 0, this.worlds[slot] = void 0, this.transformDirty[slot] = 0, this.worldChanged[slot] = 0, this.particles.remove(slot), this.clips.remove(slot);
+    this.indexByRecord.delete(record), this.records[slot] = void 0, this.resolvedBySlot[slot] = void 0, this.worlds[slot] = void 0, this.transformDirty[slot] = 0, this.worldChanged[slot] = 0, this.particles.remove(slot), this.clips.remove(slot), this.clipPoses[slot] = void 0;
   }
   // ---- the setters of the context ----
   indexOf(entity, setter) {
@@ -10440,6 +10568,17 @@ var World = class {
     if (relations && (check("projection.near") || check("projection.far")) && !(projection.far > projection.near))
       return "far is not greater than near";
   }
+  /** `W8205`: a timer was not started because the scene already has {@link MAX_TIMERS} (decision 0177). */
+  reportTimerCap(spanId) {
+    this.cappedTimerSpans.has(spanId) || (this.cappedTimerSpans.add(spanId), this.report(
+      makeRuntimeDiagnostic("W8205", {
+        phase: this.phase,
+        message: `The scene already has ${String(4096)} timers waiting, so this timer was not started. A timer started in update or fixed_update starts again every time it runs: start it once, behind a state flag or in a handler.`,
+        source: spanId >= 0 ? resolveSpan(this.manifest, spanId) : null,
+        expected: `at most ${String(4096)} timers at a time`
+      })
+    ));
+  }
   reportCamera(message) {
     let info = this.cameraInfo(), span = spanOfSymbol(this.manifest, info.symbol);
     this.report(
@@ -10450,23 +10589,22 @@ var World = class {
       })
     );
   }
-  /** `ctx.selectCamera(name)` (decision 0154). */
-  selectCamera(name) {
+  /** The record of the camera `name`; an unknown name is a defect of the emitted code (decision 0154). */
+  cameraNamed(call, name) {
     if (typeof name != "string")
-      throw new RuntimeInternalError(`ctx.selectCamera got ${describeValue(name)}; expected a camera name.`);
+      throw new RuntimeInternalError(`${call} got ${describeValue(name)}; expected a camera name.`);
     let record = this.cameraByName.get(name);
     if (record === void 0)
-      throw new RuntimeInternalError(`ctx.selectCamera(${JSON.stringify(name)}) names a camera this scene does not have.`);
-    this.activeCamera = record;
+      throw new RuntimeInternalError(`${call}(${JSON.stringify(name)}) names a camera this scene does not have.`);
+    return record;
   }
-  /** Writes `field` of the named camera without changing which camera is active. */
+  /** `ctx.selectCamera(name)` (decision 0154). */
+  selectCamera(name) {
+    this.activeCamera = this.cameraNamed("ctx.selectCamera", name);
+  }
+  /** Writes `field` of the named camera without changing which camera is active (decision 0177). */
   setCameraOn(name, field, value) {
-    let record = this.cameraByName.get(name);
-    if (record === void 0) {
-      this.setCamera(field, value);
-      return;
-    }
-    let previous = this.activeCamera;
+    let record = this.cameraNamed("ctx.setCameraOn", name), previous = this.activeCamera;
     this.activeCamera = record;
     try {
       this.setCamera(field, value);
@@ -10479,23 +10617,26 @@ var World = class {
       this.writeChannel(slot, channel, value);
     }, time);
   }
+  /** Stores one sampled channel in the clip pose of `slot`; the entity's own transform is left alone (decision 0174). */
   writeChannel(slot, channel, value) {
-    let record = this.records[slot];
-    if (record === void 0) return;
+    let pose = this.clipPoses[slot];
+    if (pose === void 0) return;
+    let x = value[0] ?? 0, y = value[1] ?? 0, z = value[2] ?? 0;
     if (channel.path === "rotation") {
-      this.applyTransform(slot, record, "rotation", {
-        x: value[0] ?? 0,
-        y: value[1] ?? 0,
-        z: value[2] ?? 0,
-        w: value[3] ?? 1
-      });
-      return;
+      let w = value[3] ?? 1;
+      if (sameQuat(pose.rotation, { x, y, z, w })) return;
+      pose.rotation = { x, y, z, w };
+    } else if (channel.path === "translation") {
+      if (sameVec3(pose.translation, { x, y, z })) return;
+      pose.translation = { x, y, z };
+    } else {
+      if (sameVec3(pose.scale, { x, y, z })) return;
+      pose.scale = { x, y, z };
     }
-    let vec = { x: value[0] ?? 0, y: value[1] ?? 0, z: value[2] ?? 0 };
-    this.applyTransform(slot, record, channel.path === "translation" ? "position" : "scale", vec);
+    this.transformDirty[slot] = 1, this.transformsPending = !0;
   }
-  trackMotion(slot, resolved) {
-    resolved.particles !== void 0 && this.particles.add({
+  trackMotion(slot, resolved, spawned = !1) {
+    if (resolved.particles !== void 0 && this.particles.add({
       slot,
       rate: resolved.particles.rate,
       lifetime: resolved.particles.lifetime,
@@ -10505,7 +10646,9 @@ var World = class {
       meshId: resolved.mesh?.id ?? null,
       materialId: resolved.instance?.material.id ?? null,
       instanceIndex: resolved.instance?.index ?? null
-    }), resolved.clip !== void 0 && this.clips.add({ slot, duration: resolved.clip.duration, channels: resolved.clip.channels });
+    }), resolved.clip !== void 0 && (this.clipPoses[slot] = { translation: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0, w: 1 }, scale: { x: 1, y: 1, z: 1 } }, this.clips.add({ slot, duration: resolved.clip.duration, channels: resolved.clip.channels }), spawned))
+      for (let channel of resolved.clip.channels)
+        sampleChannelInto(channel, 0, this.clipSample), this.writeChannel(slot, channel, this.clipSample);
   }
   /**
    * `r.position` and the other transform reads through an `entity_ref` (decision 0151).
@@ -12006,14 +12149,50 @@ var TRANSLUCENT_KEY_PREFIX = "\uFFFF";
 function compareDraws(a, b) {
   return a.pipelineKey !== b.pipelineKey ? a.pipelineKey < b.pipelineKey ? -1 : 1 : a.instance - b.instance || a.mesh - b.mesh || a.order - b.order;
 }
-function orderTranslucent(draws, viewProj, centres) {
-  let first = draws.findIndex((draw) => draw.translucent === !0);
-  if (first < 0) return draws;
-  let depth = (draw) => {
-    let e = draw.entity * 3;
-    return (viewProj[3] ?? 0) * (centres[e] ?? 0) + (viewProj[7] ?? 0) * (centres[e + 1] ?? 0) + (viewProj[11] ?? 0) * (centres[e + 2] ?? 0) + (viewProj[15] ?? 0);
-  }, translucent = draws.slice(first).map((draw, index) => ({ draw, index, w: depth(draw) })).sort((a, b) => b.w - a.w || a.index - b.index).map((entry) => entry.draw);
-  return [...draws.slice(0, first), ...translucent];
+var TranslucentOrder = class {
+  sorted = [];
+  depth = new Float64Array(0);
+  rank = [];
+  byDepth = (a, b) => this.depth[a] - this.depth[b] || a - b;
+  /** Whether the list returned by the last `order` holds the draws the call before returned, in the same order. */
+  unchanged = !1;
+  /**
+   * `draws` with the translucent ones (the tail: they sort after every opaque one) reordered. `view` is the
+   * column-major world-to-view matrix, `centres` the world-space bounding-sphere centres by entity slot. Returns
+   * `draws` itself when nothing is translucent.
+   */
+  order(draws, view, centres) {
+    let first = -1;
+    for (let i = 0; i < draws.length; i++)
+      if (draws[i].translucent === !0) {
+        first = i;
+        break;
+      }
+    if (first < 0)
+      return this.unchanged = !1, draws;
+    let count = draws.length - first;
+    this.depth.length < count && (this.depth = new Float64Array(Math.max(count, this.depth.length * 2)));
+    let { depth, rank, sorted } = this, z0 = view[2] ?? 0, z1 = view[6] ?? 0, z2 = view[10] ?? 0, z3 = view[14] ?? 0;
+    rank.length = count;
+    for (let k = 0; k < count; k++) {
+      let e = draws[first + k].entity * 3;
+      depth[k] = z0 * (centres[e] ?? 0) + z1 * (centres[e + 1] ?? 0) + z2 * (centres[e + 2] ?? 0) + z3, rank[k] = k;
+    }
+    rank.sort(this.byDepth);
+    let same = sorted.length === draws.length;
+    for (let i = 0; i < first; i++) {
+      let draw = draws[i];
+      sorted[i] !== draw && (same = !1, sorted[i] = draw);
+    }
+    for (let k = 0; k < count; k++) {
+      let draw = draws[first + rank[k]];
+      sorted[first + k] !== draw && (same = !1, sorted[first + k] = draw);
+    }
+    return sorted.length = draws.length, this.unchanged = same, sorted;
+  }
+};
+function blendedKey(materialId, instanced) {
+  return instanced ? `${materialId}#instanced` : materialId;
 }
 var BUFFER_USAGE_COPY_DST2 = 8, BUFFER_USAGE_VERTEX2 = 32, VIEW_KEY_LENGTH = 13;
 function fieldWriter(writers, name, layoutId) {
@@ -12053,14 +12232,16 @@ var Renderer = class {
   /** The blended pipelines made so far, by material id, and the requests in flight (decision 0138). */
   blended = /* @__PURE__ */ new Map();
   blendedVersion = 0;
+  materialsById = /* @__PURE__ */ new Map();
   drawsBlendedVersion = -1;
   /** The blended pipeline of `material`, or `undefined` while it is being made (it is asked for once). */
-  blendedPipeline(material) {
-    if (this.blended.has(material.id)) return this.blended.get(material.id);
-    this.blended.set(material.id, void 0);
+  blendedPipeline(material, instanced = !1) {
+    let id = blendedKey(material.id, instanced);
+    if (this.blended.has(id)) return this.blended.get(id);
+    this.blended.set(id, void 0);
     let make = this.options.blend;
-    make !== void 0 && make(material).then((made) => {
-      made !== void 0 && (this.blended.set(material.id, made), this.blendedVersion += 1);
+    make !== void 0 && make(material, instanced).then((made) => {
+      made !== void 0 && (this.blended.set(id, made), this.blendedVersion += 1);
     });
   }
   drawCallsLastFrame = 0;
@@ -12069,6 +12250,7 @@ var Renderer = class {
   drawCallsTotal = 0;
   instancedTotal = 0;
   culledTotal = 0;
+  rebatchesTotal = 0;
   /** The draws that survived culling this frame (reused between frames). */
   drawn = [];
   planes = new Float64Array(24);
@@ -12081,9 +12263,18 @@ var Renderer = class {
   cullingEnabled = !0;
   /** The instance vertex buffer (`INSTANCE_STRIDE` bytes per record); absent when no draw can ever be instanced. */
   instanceBuffer;
-  /** Billboard matrices for particles (decision 0155). Created on the first frame that draws one. */
+  /** Billboard matrices for particles (decision 0155): one buffer of `PARTICLE_DRAW_CAP` records, made on the first frame that draws one (decision 0173). */
   particleBuffer;
-  particleMirror = new Float32Array(0);
+  particleMirror;
+  /** The particle draw calls of this frame, in draw order (reused records; the first `particleBatchCount` are live). */
+  particleBatches = [];
+  particleBatchCount = 0;
+  particleDepth = new Float64Array(0);
+  particleRank = [];
+  byParticleDepth = (a, b) => this.particleDepth[a] - this.particleDepth[b] || a - b;
+  particleNormal = new Float32Array(16);
+  particleAxes = new Float64Array(9);
+  particleCapReported = !1;
   /** How many instance records `instanceBuffer` holds. */
   instanceRecords = 0;
   /** Whether draws can be instanced at all: instancing is on and some entity or prefab has a material with an instanced entry point. */
@@ -12117,6 +12308,7 @@ var Renderer = class {
   cullDirty = !0;
   /** Whether the last `cull` produced the same draws as the frame before. */
   drawnUnchanged = !1;
+  translucentOrder = new TranslucentOrder();
   /** The one dynamic offset of every `setBindGroup(2, …)` of `encode` (the browser reads it during the call). */
   dynamicOffset = [0];
   modelScratch = new Float32Array(16);
@@ -12125,7 +12317,10 @@ var Renderer = class {
   failedMaterials = /* @__PURE__ */ new Set();
   constructor(options) {
     this.options = options;
-    let { device, registry, structure, writers, manifest } = options, frameWriters = writers.get(structure.frameLayout.id), objectWriters = writers.get(structure.objectLayout.id);
+    let { device, registry, structure, writers, manifest } = options;
+    if (options.blendedSeed !== void 0) for (let [id, made] of options.blendedSeed) this.blended.set(id, made);
+    for (let material of structure.materials) this.materialsById.set(material.id, material);
+    let frameWriters = writers.get(structure.frameLayout.id), objectWriters = writers.get(structure.objectLayout.id);
     if (frameWriters === void 0 || objectWriters === void 0) throw new Error("internal error: no writers for the built-in blocks");
     this.writeViewProj = fieldWriter(frameWriters, "view_proj", structure.frameLayout.id), this.writeCameraPosition = fieldWriter(frameWriters, "camera_position", structure.frameLayout.id), this.writeLightCount = fieldWriter(frameWriters, "light_count", structure.frameLayout.id), this.writeAmbient = fieldWriter(frameWriters, "ambient", structure.frameLayout.id), this.writeExposure = fieldWriter(frameWriters, "exposure", structure.frameLayout.id), this.writeLights = fieldWriter(frameWriters, "lights", structure.frameLayout.id), this.packedLights = emptyPackedLights(structure.lightCapacity), this.lightSource = {
       light: (entity) => {
@@ -12227,6 +12422,10 @@ var Renderer = class {
   get culledObjectsCumulative() {
     return this.culledTotal;
   }
+  /** Times the draw calls were split into batches again since the scene started (a static scene settles at one, decision 0173). */
+  get rebatchesCumulative() {
+    return this.rebatchesTotal;
+  }
   /** Turns frustum culling on (the default) or off. Off exists for tests that compare culled and unculled frames. */
   setFrustumCulling(enabled) {
     enabled !== this.cullingEnabled && (this.cullDirty = !0), this.cullingEnabled = enabled;
@@ -12293,12 +12492,12 @@ var Renderer = class {
       return this.drawCallsLastFrame = 0, this.instancedLastFrame = 0, this.culledLastFrame = 0, surface.render(clearColor);
     let viewProj = this.writeFrameBlock();
     this.applyWorldChanges(), this.frameArena.flush(device.queue), materials.flush(device.queue);
-    let listed = this.drawList(), culled = this.cull(listed, viewProj), draws = orderTranslucent(culled, viewProj, this.sphereCentres);
-    draws !== culled && (this.drawnUnchanged = !1);
+    let listed = this.drawList(), culled = this.cull(listed, viewProj), draws = this.translucentOrder.order(culled, this.lastView, this.sphereCentres);
+    draws !== culled && (this.drawnUnchanged = this.translucentOrder.unchanged);
     let instanced = this.groupDraws(draws);
-    this.writeIndividualObjectBlocks(draws), this.objectArena.flush(device.queue);
+    this.writeIndividualObjectBlocks(draws), this.objectArena.flush(device.queue), this.prepareParticles();
     let rendered = surface.render(clearColor, (pass) => {
-      this.encode(pass, draws), this.encodeParticles(pass);
+      this.encode(pass, draws);
     });
     return this.drawCallsLastFrame = rendered ? this.batches.length : 0, this.instancedLastFrame = rendered ? instanced : 0, this.culledLastFrame = rendered ? listed.length - draws.length : 0, this.drawCallsTotal += this.drawCallsLastFrame, this.instancedTotal += this.instancedLastFrame, this.culledTotal += this.culledLastFrame, rendered;
   }
@@ -12343,6 +12542,7 @@ var Renderer = class {
       }
       return this.uploadInstances(instanceBuffer2), this.instancedBatches;
     }
+    this.rebatchesTotal += 1;
     let instanced = batchDraws(draws, (draw) => possible && draw.instancedPipeline !== void 0, this.batches);
     this.instancedBatches = instanced, this.recordOf.fill(-1);
     let records = 0;
@@ -12470,13 +12670,15 @@ var Renderer = class {
     }), this.objectStale[entity] = 0;
   }
   encode(pass, draws) {
-    if (draws.length === 0) return;
+    let particles = this.particleBatchCount > 0;
+    if (draws.length === 0 && !particles) return;
     let { plan, materials } = this.options;
     pass.setBindGroup(0, this.frameArena.bindGroupForSlot(this.frameSlot, plan.frame));
-    let objectGroup = this.objectArena.bindGroupDynamic(plan.object), dynamicOffset = this.dynamicOffset, objectBound = !1, pipeline, instance = -1, mesh;
+    let objectGroup = this.objectArena.bindGroupDynamic(plan.object), dynamicOffset = this.dynamicOffset, objectBound = !1, pipeline, instance = -1, mesh, particlesDrawn = !particles;
     for (let batch of this.batches) {
       let draw = draws[batch.start];
       if (draw === void 0) continue;
+      !particlesDrawn && draw.translucent === !0 && (this.drawParticles(pass), particlesDrawn = !0, pipeline = void 0, instance = -1, mesh = void 0, objectBound = !0);
       let instanced = batch.firstInstance >= 0, wanted = instanced ? draw.instancedPipeline : draw.pipeline;
       if (wanted === void 0) throw new Error("internal error: an instanced draw without an instanced pipeline");
       if (wanted !== pipeline && (pass.setPipeline(wanted), pipeline = wanted, mesh = void 0, instanced && this.instanceBuffer !== void 0 && pass.setVertexBuffer(draw.attributes.length, this.instanceBuffer)), draw.instance !== instance && (pass.setBindGroup(1, materials.bindGroup(draw.instance)), instance = draw.instance), draw.gpuMesh !== mesh) {
@@ -12486,22 +12688,37 @@ var Renderer = class {
       }
       instanced ? (objectBound || (dynamicOffset[0] = 0, pass.setBindGroup(2, objectGroup, dynamicOffset), objectBound = !0), pass.drawIndexed(draw.gpuMesh.indexCount, batch.count, 0, 0, batch.firstInstance)) : (dynamicOffset[0] = this.objectArena.slotOffset(draw.objectSlot), pass.setBindGroup(2, objectGroup, dynamicOffset), objectBound = !0, pass.drawIndexed(draw.gpuMesh.indexCount));
     }
+    particlesDrawn || this.drawParticles(pass);
   }
   /**
-   * Camera-facing billboards for living particles (decision 0155). Each particle is one record of the
-   * instanced pipeline, because a shared object slot would show only the last write after submit.
-   * Opaque materials only: a translucent pipeline may still be compiling on the first frame.
+   * Camera-facing billboards for living particles (decisions 0155, 0173). Each particle is one record of the
+   * instanced pipeline, because a shared object slot would show only the last write after submit. The records are
+   * written here, before the pass, into `particleMirror`; `drawParticles` encodes the calls. An emitter whose material
+   * blends (a Sprite, a colour alpha below 1) uses the blended instanced pipeline: no depth write, its particles
+   * back to front, and its emitters after the opaque ones, back to front by their mean depth.
    */
-  encodeParticles(pass) {
+  prepareParticles() {
+    this.particleBatchCount = 0;
     let draws = this.options.world.particleDraws();
     if (draws.length === 0) return;
-    let { device, pipelines, meshes, materials, plan, registry } = this.options, view = this.lastView, right = [view[0] ?? 1, view[4] ?? 0, view[8] ?? 0], up = [view[1] ?? 0, view[5] ?? 1, view[9] ?? 0], toward = [view[2] ?? 0, view[6] ?? 0, view[10] ?? 1], count = 0;
-    for (let draw of draws) count += draw.points.length;
-    if (count = Math.min(count, PARTICLE_DRAW_CAP), count === 0) return;
-    this.particleMirror.length < count * INSTANCE_FLOATS && (this.particleMirror = new Float32Array(count * INSTANCE_FLOATS));
-    let mirror = this.particleMirror, normal = new Float32Array(16), written = 0, batches = [];
+    let { device, meshes, materials, registry } = this.options, view = this.lastView, { particleAxes: axes, particleNormal: normal, particleBatches: batches } = this;
+    axes[0] = view[0] ?? 1, axes[1] = view[4] ?? 0, axes[2] = view[8] ?? 0, axes[3] = view[1] ?? 0, axes[4] = view[5] ?? 1, axes[5] = view[9] ?? 0, axes[6] = view[2] ?? 0, axes[7] = view[6] ?? 0, axes[8] = view[10] ?? 1;
+    let total = 0;
+    for (let draw of draws) total += draw.points.length;
+    if (total === 0) return;
+    total > PARTICLE_DRAW_CAP && !this.particleCapReported && (this.particleCapReported = !0, this.options.report(
+      makeRuntimeDiagnostic("W8210", {
+        phase: "runtime:render",
+        message: `${String(total)} particles are alive; only the first ${String(PARTICLE_DRAW_CAP)} are drawn.`,
+        expected: `at most ${String(PARTICLE_DRAW_CAP)} particles drawn per frame`
+      })
+    ));
+    let count = 0;
     for (let draw of draws) {
-      let pipeline = pipelines.get(draw.materialId)?.instanced;
+      if (draw.points.length === 0) continue;
+      let material = this.materialsById.get(draw.materialId);
+      if (material === void 0) continue;
+      let blended = materials.isTranslucent(draw.instanceIndex) || alwaysBlends(material) ? this.blendedPipeline(material, !0) : void 0, pipeline = blended?.pipeline ?? this.options.pipelines.get(draw.materialId)?.instanced;
       if (pipeline === void 0) continue;
       let mesh;
       try {
@@ -12509,35 +12726,63 @@ var Renderer = class {
       } catch {
         continue;
       }
-      let attributes = this.options.structure.materials.find((item) => item.id === draw.materialId)?.shader.vertexAttributes ?? ["position"], start = written;
-      for (let point2 of draw.points) {
-        if (written >= count) break;
-        let base = written * INSTANCE_FLOATS, size = point2.size;
-        writeBasis(mirror, base, right, size), writeBasis(mirror, base + 4, toward, size), writeBasis(mirror, base + 8, up, -size), mirror[base + 12] = point2.x, mirror[base + 13] = point2.y, mirror[base + 14] = point2.z, mirror[base + 15] = 1, normalMatrixInto(normal, 0, mirror.subarray(base, base + 16)), mirror.set(normal, base + 16), written += 1;
+      let batch = batches[count] ??= { draw, pipeline, mesh, attributes: [], instance: 0, start: 0, count: 0, blended: !1, depth: 0 };
+      batch.draw = draw, batch.pipeline = pipeline, batch.mesh = mesh, batch.attributes = material.shader.vertexAttributes, batch.instance = draw.instanceIndex, batch.blended = blended !== void 0;
+      let depth = 0;
+      if (batch.blended) {
+        for (let point2 of draw.points) depth += (view[2] ?? 0) * point2.x + (view[6] ?? 0) * point2.y + (view[10] ?? 0) * point2.z + (view[14] ?? 0);
+        depth /= draw.points.length;
       }
-      let batchCount = written - start;
-      batchCount > 0 && batches.push({ pipeline, mesh, attributes, instance: draw.instanceIndex, start, count: batchCount });
+      batch.depth = depth, count += 1;
     }
-    if (written === 0) return;
-    (this.particleBuffer === void 0 || this.particleMirror.length > (this.particleBuffer.size ?? 0) / 4) && (this.particleBuffer !== void 0 && registry.release(this.particleBuffer), this.particleBuffer = registry.createBuffer({
+    if (count === 0) return;
+    let order = batches.slice(0, count).sort((a, b) => Number(a.blended) - Number(b.blended) || (a.blended ? a.depth - b.depth : 0));
+    for (let i = 0; i < count; i++) batches[i] = order[i];
+    this.particleMirror ??= new Float32Array(PARTICLE_DRAW_CAP * INSTANCE_FLOATS);
+    let mirror = this.particleMirror, written = 0, live = 0;
+    for (let b = 0; b < count && written < PARTICLE_DRAW_CAP; b++) {
+      let batch = batches[b], points = batch.draw.points, n = Math.min(points.length, PARTICLE_DRAW_CAP - written), rank = this.particleRank;
+      rank.length = n;
+      for (let k = 0; k < n; k++) rank[k] = k;
+      if (batch.blended) {
+        this.particleDepth.length < n && (this.particleDepth = new Float64Array(Math.max(n, this.particleDepth.length * 2)));
+        for (let k = 0; k < n; k++) {
+          let point2 = points[k];
+          this.particleDepth[k] = (view[2] ?? 0) * point2.x + (view[6] ?? 0) * point2.y + (view[10] ?? 0) * point2.z + (view[14] ?? 0);
+        }
+        rank.sort(this.byParticleDepth);
+      }
+      batch.start = written;
+      for (let k = 0; k < n; k++) {
+        let point2 = points[rank[k]], base = written * INSTANCE_FLOATS, size = point2.size;
+        writeBasis(mirror, base, axes, 0, size), writeBasis(mirror, base + 4, axes, 6, size), writeBasis(mirror, base + 8, axes, 3, -size), mirror[base + 12] = point2.x, mirror[base + 13] = point2.y, mirror[base + 14] = point2.z, mirror[base + 15] = 1, normalMatrixInto(normal, 0, mirror.subarray(base, base + 16)), mirror.set(normal, base + 16), written += 1;
+      }
+      batch.count = n, live += 1;
+    }
+    this.particleBatchCount = live, written !== 0 && (this.particleBuffer ??= registry.createBuffer({
       label: "mtek particle billboards",
-      size: this.particleMirror.length * 4,
+      size: PARTICLE_DRAW_CAP * INSTANCE_STRIDE,
       usage: BUFFER_USAGE_VERTEX2 | BUFFER_USAGE_COPY_DST2
-    })), registry.writeBuffer(device.queue, this.particleBuffer, 0, mirror.buffer, 0, written * INSTANCE_STRIDE);
-    let objectGroup = this.objectArena.bindGroupDynamic(plan.object);
+    }), registry.writeBuffer(device.queue, this.particleBuffer, 0, mirror.buffer, 0, written * INSTANCE_STRIDE));
+  }
+  /** Encodes the calls `prepareParticles` made ready. Binds groups 0 and 2 itself: the caller forgets its pipeline, group 1 and mesh. */
+  drawParticles(pass) {
+    let { plan, materials } = this.options, buffer = this.particleBuffer;
+    if (buffer === void 0) return;
     pass.setBindGroup(0, this.frameArena.bindGroupForSlot(this.frameSlot, plan.frame));
     let dynamicOffset = this.dynamicOffset;
-    dynamicOffset[0] = 0, pass.setBindGroup(2, objectGroup, dynamicOffset);
-    for (let batch of batches) {
+    dynamicOffset[0] = 0, pass.setBindGroup(2, this.objectArena.bindGroupDynamic(plan.object), dynamicOffset);
+    for (let b = 0; b < this.particleBatchCount; b++) {
+      let batch = this.particleBatches[b];
       pass.setPipeline(batch.pipeline), pass.setBindGroup(1, materials.bindGroup(batch.instance));
       for (let slot = 0; slot < batch.attributes.length; slot += 1)
         pass.setVertexBuffer(slot, vertexBufferOf(batch.mesh, batch.attributes[slot]));
-      pass.setVertexBuffer(batch.attributes.length, this.particleBuffer), pass.setIndexBuffer(batch.mesh.indexBuffer, batch.mesh.indexFormat), pass.drawIndexed(batch.mesh.indexCount, batch.count, 0, 0, batch.start);
+      pass.setVertexBuffer(batch.attributes.length, buffer), pass.setIndexBuffer(batch.mesh.indexBuffer, batch.mesh.indexFormat), pass.drawIndexed(batch.mesh.indexCount, batch.count, 0, 0, batch.start);
     }
   }
 }, PARTICLE_DRAW_CAP = 256;
-function writeBasis(out, at3, axis, size) {
-  out[at3] = (axis[0] ?? 0) * size, out[at3 + 1] = (axis[1] ?? 0) * size, out[at3 + 2] = (axis[2] ?? 0) * size, out[at3 + 3] = 0;
+function writeBasis(out, at3, axes, axis, size) {
+  out[at3] = (axes[axis] ?? 0) * size, out[at3 + 1] = (axes[axis + 1] ?? 0) * size, out[at3 + 2] = (axes[axis + 2] ?? 0) * size, out[at3 + 3] = 0;
 }
 function exposureScale(ev100) {
   return 1 / (1.2 * 2 ** ev100);
@@ -12568,17 +12813,25 @@ async function startScene(options) {
         prefabs: buildPrefabRuntimes(structure.prefabs, program.prefabs),
         ...services === void 0 ? {} : { services }
       }), freshBindings = new Bindings(manifest, program.scene.bindings, fresh);
-      fresh.initialise(program.scene.init, () => {
+      options.onWorld?.(fresh), fresh.initialise(program.scene.init, () => {
         freshBindings.evaluate();
       }), world = fresh, bindings = freshBindings;
     } else
       ({ world, bindings } = recover), world.rebindParams(materials);
     options.assertActive?.(), materials.shareIdentical(), meshes = new MeshStore(registry, device.queue, void 0, device.limits.maxBufferSize), meshes.upload(structure.meshes, options.assets?.files);
-    let pipelines = options.pipelineCache ?? new PipelineCache(device, registry, plan, manifest), phase = recover === void 0 ? void 0 : "runtime:device", instanced = options.instancing === !1 ? /* @__PURE__ */ new Set() : instancingCandidates(
-      structure,
-      (instance) => materials.blockOf(instance),
-      (material) => materialPipelineKey(material, surface.colorFormat)
-    ).materials, results = await Promise.all(
+    let pipelines = options.pipelineCache ?? new PipelineCache(device, registry, plan, manifest), phase = recover === void 0 ? void 0 : "runtime:device", instanced = new Set(
+      options.instancing === !1 ? [] : instancingCandidates(
+        structure,
+        (instance) => materials.blockOf(instance),
+        (material) => materialPipelineKey(material, surface.colorFormat)
+      ).materials
+    ), emitterMaterials = /* @__PURE__ */ new Map();
+    for (let entity of structure.entities)
+      entity.particles !== void 0 && entity.instance !== null && emitterMaterials.set(entity.instance.material.id, entity.instance.material);
+    for (let prefab of structure.prefabs)
+      prefab.particles !== void 0 && prefab.material !== null && emitterMaterials.set(prefab.material.material.id, prefab.material.material);
+    for (let [id, material] of emitterMaterials) material.shader.instancedVertexEntry !== void 0 && instanced.add(id);
+    let results = await Promise.all(
       structure.materials.map(async (material) => {
         let module = modules.get(material.shader.hash);
         if (module === void 0) {
@@ -12606,7 +12859,26 @@ async function startScene(options) {
       }) : recover === void 0 ? diagnostics.push(result.diagnostic) : failed.push({ id: material.id, diagnostic: result.diagnostic }));
     }), diagnostics.length > 0)
       return { ok: !1, diagnostics };
-    world.phase = "runtime:update", renderer = new Renderer({
+    let blendedSeed = /* @__PURE__ */ new Map(), wanted = /* @__PURE__ */ new Map(), want = (material, instancedVariant) => {
+      !canBlend(material) || modules.get(material.shader.hash) === void 0 || !byMaterial.has(material.id) || instancedVariant && material.shader.instancedVertexEntry === void 0 || wanted.set(blendedKey(material.id, instancedVariant), { material, instanced: instancedVariant });
+    };
+    for (let entity of structure.entities) {
+      if (entity.mesh === null || entity.instance === null) continue;
+      let { material } = entity.instance;
+      !alwaysBlends(material) && !materials.isTranslucent(entity.instance.index) || (want(material, !1), entity.particles !== void 0 && want(material, !0));
+    }
+    for (let prefab of structure.prefabs) {
+      let material = prefab.material?.material;
+      prefab.mesh === null || material === void 0 || !alwaysBlends(material) || (want(material, !1), prefab.particles !== void 0 && want(material, !0));
+    }
+    await Promise.all(
+      [...wanted].map(async ([id, { material, instanced: instancedVariant }]) => {
+        let module = modules.get(material.shader.hash);
+        if (module === void 0) return;
+        let made = await pipelines.obtain({ material, module, colorFormat: surface.colorFormat, blended: !0, ...instancedVariant ? { instanced: !0 } : {} });
+        made.ok && blendedSeed.set(id, { key: made.key, pipeline: made.pipeline });
+      })
+    ), options.assertActive?.(), world.phase = "runtime:update", renderer = new Renderer({
       device,
       registry,
       surface,
@@ -12618,11 +12890,12 @@ async function startScene(options) {
       materials,
       meshes,
       pipelines: byMaterial,
-      // The translucent variant (decision 0138) is made the first time a draw of the material needs it.
-      blend: async (material) => {
+      blendedSeed,
+      // The translucent variant (decision 0138) of a material not known to blend at startup is made the first time a draw needs it.
+      blend: async (material, instancedVariant) => {
         let module = modules.get(material.shader.hash);
-        if (module === void 0 || !canBlend(material)) return;
-        let made = await pipelines.obtain({ material, module, colorFormat: surface.colorFormat, blended: !0 });
+        if (module === void 0 || !canBlend(material) || instancedVariant && material.shader.instancedVertexEntry === void 0) return;
+        let made = await pipelines.obtain({ material, module, colorFormat: surface.colorFormat, blended: !0, ...instancedVariant ? { instanced: !0 } : {} });
         if (made.ok) return { key: made.key, pipeline: made.pipeline };
         report(made.diagnostic);
       },
@@ -12710,6 +12983,10 @@ var Behaviors = class {
   update(delta) {
     this.run(this.scene.update, this.scene.entityUpdate, delta, !0);
   }
+  /** Phase 3, after `update` and also while the game is paused: the scene's `ui(dt)` (decision 0175). */
+  ui(delta) {
+    this.scene.ui?.(this.world.ctx, Math.fround(delta));
+  }
   run(sceneFunction, entityFunctions, dt, update) {
     let value = Math.fround(dt);
     sceneFunction !== null && sceneFunction(this.world.ctx, value);
@@ -12749,6 +13026,31 @@ function whileLimit(spanId) {
 function budgetExceeded(spanId) {
   throw new ExecutionBudgetExceeded(spanId);
 }
+
+// src/random/xoshiro.ts
+var Xoshiro128 = class {
+  s0;
+  s1;
+  s2;
+  s3;
+  constructor(seed) {
+    let x = seed >>> 0, next = () => {
+      x = x + 2654435769 >>> 0;
+      let z = x;
+      return z = Math.imul(z ^ z >>> 16, 2246822507) >>> 0, z = Math.imul(z ^ z >>> 13, 3266489909) >>> 0, (z ^ z >>> 16) >>> 0;
+    };
+    this.s0 = next(), this.s1 = next(), this.s2 = next(), this.s3 = next();
+  }
+  /** The next 32 random bits. */
+  nextU32() {
+    let rotl = (v, k) => (v << k | v >>> 32 - k) >>> 0, result = Math.imul(rotl(Math.imul(this.s1, 5) >>> 0, 7), 9) >>> 0, t = this.s1 << 9 >>> 0;
+    return this.s2 = (this.s2 ^ this.s0) >>> 0, this.s3 = (this.s3 ^ this.s1) >>> 0, this.s1 = (this.s1 ^ this.s2) >>> 0, this.s0 = (this.s0 ^ this.s3) >>> 0, this.s2 = (this.s2 ^ t) >>> 0, this.s3 = rotl(this.s3, 11), result;
+  }
+  /** `random()`: an f32 in `[0, 1)`; the top 24 bits, so every value is exactly representable. */
+  nextF32() {
+    return (this.nextU32() >>> 8) / 16777216;
+  }
+};
 
 // src/schedule/scheduler.ts
 var Scheduler = class {
@@ -12868,7 +13170,7 @@ var Scheduler = class {
         this.phases.phase2_tick(fixedStep), this.accumulator -= fixedStep, steps += 1;
       this.accumulator >= fixedStep && !this.gameHeld && (this.discarded += Math.floor(this.accumulator / fixedStep), this.accumulator %= fixedStep);
     }
-    this.gameHeld || this.phases.phase3_update(delta), this.phases.phase4_flush(), this.phases.phase5_bindings(), this.phases.phase6_transforms(), this.currentState !== "stopped" && this.phases.phase7_render(), this.frames += 1;
+    this.gameHeld || this.phases.phase3_update(delta), this.phases.phase3_ui?.(delta), this.phases.phase4_flush(), this.phases.phase5_bindings(), this.phases.phase6_transforms(), this.currentState !== "stopped" && this.phases.phase7_render(), this.frames += 1;
   }
   requestNext() {
     this.source === null || this.currentState !== "running" || this.handle !== null || (this.handle = this.source.request((nowMs) => {
@@ -12923,6 +13225,8 @@ function functionOrNull(value) {
 function sceneShapeProblem(scene, entityCount, bindingCount) {
   for (let name of ["update", "fixedUpdate"])
     if (!functionOrNull(own(scene, name))) return { field: name, problem: `has a \`${name}\` that is neither a function nor null` };
+  let ui = own(scene, "ui");
+  if (ui !== void 0 && !functionOrNull(ui)) return { field: "ui", problem: "has a `ui` that is neither a function nor null" };
   for (let name of ["entityUpdate", "entityFixedUpdate"]) {
     let list = own(scene, name);
     if (!Array.isArray(list) || list.length !== entityCount || !list.every(functionOrNull))
@@ -13347,12 +13651,53 @@ function persistentEntries(state) {
     entry.persist !== void 0 && out.push({ name: entry.name, type: entry.storedType ?? entry.type, persist: entry.persist });
   return out;
 }
-function fitsScalar(type, value) {
+function splitTop(text) {
+  let parts = [], depth = 0, start = 0;
+  for (let i = 0; i < text.length; i += 1) {
+    let c = text[i];
+    c === "<" || c === "{" || c === "(" ? depth += 1 : c === ">" || c === "}" || c === ")" ? depth -= 1 : c === "," && depth === 0 && (parts.push(text.slice(start, i).trim()), start = i + 1);
+  }
+  let last = text.slice(start).trim();
+  return last !== "" && parts.push(last), parts;
+}
+function fitsType(type, value) {
+  let array = /^array<(.*)>$/s.exec(type);
+  if (array !== null) {
+    let element = splitTop(array[1] ?? "")[0];
+    return Array.isArray(value) && (element === void 0 || value.every((item) => fitsType(element, item)));
+  }
+  if (type.startsWith("{") && type.endsWith("}")) {
+    if (typeof value != "object" || value === null) return !1;
+    let record = value;
+    return splitTop(type.slice(1, -1)).every((field) => {
+      let colon = field.indexOf(":");
+      return colon < 0 || fitsType(field.slice(colon + 1).trim(), record[field.slice(0, colon).trim()]);
+    });
+  }
   if (typeof value != "number") return !0;
   if (type === "i32") return Number.isInteger(value) && value >= -2147483648 && value <= 2147483647;
   if (type === "u32") return Number.isInteger(value) && value >= 0 && value <= 4294967295;
   let variants = /^enum\((.*)\)$/.exec(type);
-  return variants !== null ? Number.isInteger(value) && value >= 0 && value < variants[1].split("|").length : !0;
+  return variants !== null ? Number.isInteger(value) && value >= 0 && value < (variants[1] ?? "").split("|").length : !0;
+}
+function snapshotOf(value) {
+  return ArrayBuffer.isView(value) ? Array.from(value) : Array.isArray(value) ? value.map(snapshotOf) : typeof value == "object" && value !== null ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, snapshotOf(item)])) : value;
+}
+function sameAsSnapshot(snapshot2, current) {
+  if (snapshot2 === current) return !0;
+  if (typeof snapshot2 == "number" && typeof current == "number") return Number.isNaN(snapshot2) && Number.isNaN(current);
+  if (ArrayBuffer.isView(current)) {
+    let view = current;
+    return Array.isArray(snapshot2) && snapshot2.length === view.length && snapshot2.every((item, i) => sameAsSnapshot(item, view[i]));
+  }
+  if (Array.isArray(current))
+    return Array.isArray(snapshot2) && snapshot2.length === current.length && current.every((item, i) => sameAsSnapshot(snapshot2[i], item));
+  if (typeof current == "object" && current !== null) {
+    if (typeof snapshot2 != "object" || snapshot2 === null || Array.isArray(snapshot2)) return !1;
+    let keys = Object.keys(current), before = snapshot2;
+    return keys.length === Object.keys(before).length && keys.every((key) => sameAsSnapshot(before[key], current[key]));
+  }
+  return !1;
 }
 var MemorySaveStorage = class {
   items = /* @__PURE__ */ new Map();
@@ -13374,18 +13719,20 @@ function defaultSaveStorage() {
   }
 }
 var GameSaves = class {
-  constructor(storage, namespace, report, unavailable = !1) {
+  constructor(storage, namespace, report, unavailable = !1, legacyNamespace = void 0) {
     this.storage = storage;
     this.namespace = namespace;
     this.report = report;
     this.unavailable = unavailable;
+    this.legacyNamespace = legacyNamespace;
   }
   storage;
   namespace;
   report;
   unavailable;
-  /** The JSON of the settings as last read or written, so autosave writes only on a change. */
-  settingsSnapshot = "";
+  legacyNamespace;
+  /** The settings as last read or written, so autosave writes only on a change (and costs nothing otherwise). */
+  settingsSnapshot = /* @__PURE__ */ new Map();
   warned = /* @__PURE__ */ new Set();
   /** Whether the program has persistent state at all. */
   get enabled() {
@@ -13406,47 +13753,49 @@ var GameSaves = class {
         continue;
       }
       let value = decodeValue(item.value, state[entry.name]);
-      if (value === void 0 || !fitsScalar(entry.type, value)) {
+      if (value === void 0 || !fitsType(entry.type, value)) {
         this.warnOnce(`shape:${entry.name}`, `The saved value of '${entry.name}' does not fit its type ${entry.type}; the state keeps its value.`);
         continue;
       }
       state[entry.name] = value, applied = !0;
     }
-    return this.settingsSnapshot = this.settingsJson(entries, state), applied;
+    return this.remember(entries, state), applied;
   }
   /** `save()`: writes every persistent state of `entries`. */
   save(entries, state) {
-    entries.length !== 0 && (this.write(entries, state), this.settingsSnapshot = this.settingsJson(entries, state));
+    entries.length !== 0 && (this.write(entries, state), this.remember(entries, state));
   }
   /** Autosave: writes the persistent states when a `setting state` changed since the last read or write. */
   autosave(entries, state) {
-    if (!entries.some((entry) => entry.persist === "setting")) return;
-    let json = this.settingsJson(entries, state);
-    json !== this.settingsSnapshot && (this.settingsSnapshot = json, this.write(
-      entries.filter((entry) => entry.persist === "setting"),
-      state
-    ));
+    let changed = !1;
+    for (let entry of entries)
+      if (entry.persist === "setting" && (!this.settingsSnapshot.has(entry.name) || !sameAsSnapshot(this.settingsSnapshot.get(entry.name), state[entry.name]))) {
+        changed = !0;
+        break;
+      }
+    if (!changed) return;
+    let settings = entries.filter((entry) => entry.persist === "setting");
+    this.write(settings, state), this.remember(entries, state);
   }
   /** `clear_saved()`: removes every stored value of the program. */
   clear() {
     if (this.namespace !== void 0)
       try {
-        this.storage.removeItem(saveKey(this.namespace));
+        this.legacyNamespace === void 0 ? this.storage.removeItem(saveKey(this.namespace)) : this.storage.setItem(saveKey(this.namespace), JSON.stringify({ format: 1, values: {} }));
       } catch (error) {
         this.report({ code: "W5403", message: `Clearing the saved data failed: ${errorText5(error)}.` });
       }
   }
-  settingsJson(entries, state) {
-    let settings = {};
+  remember(entries, state) {
+    this.settingsSnapshot.clear();
     for (let entry of entries)
-      entry.persist === "setting" && (settings[entry.name] = encodeValue(state[entry.name]));
-    return JSON.stringify(settings);
+      entry.persist === "setting" && this.settingsSnapshot.set(entry.name, snapshotOf(state[entry.name]));
   }
   read() {
     if (this.namespace === void 0) return {};
     let text;
     try {
-      text = this.storage.getItem(saveKey(this.namespace));
+      text = this.storage.getItem(saveKey(this.namespace)), text === null && this.legacyNamespace !== void 0 && (text = this.storage.getItem(saveKey(this.legacyNamespace)), text !== null && this.storage.setItem(saveKey(this.namespace), text));
     } catch {
       return {};
     }
@@ -13761,19 +14110,22 @@ function copyValue(value) {
   }
   return value;
 }
+function stateIdentity(entry) {
+  return entry.storedType ?? entry.type;
+}
 function stateTypeMap(entries) {
-  return new Map(entries.map((entry) => [entry.symbol, entry.type]));
+  return new Map(entries.map((entry) => [entry.symbol, stateIdentity(entry)]));
 }
 function stateBySymbol(entries, values) {
   let out = /* @__PURE__ */ new Map();
   for (let entry of entries)
-    Object.hasOwn(values, entry.name) && out.set(entry.symbol, { type: entry.type, value: values[entry.name] });
+    Object.hasOwn(values, entry.name) && out.set(entry.symbol, { type: stateIdentity(entry), value: values[entry.name] });
   return out;
 }
 function carryEntity(before, beforeState, after, afterState, kept, setParam) {
   after.position = copyValue(before.position), after.rotation = copyValue(before.rotation), after.scale = copyValue(before.scale), after.visible = before.visible;
   for (let entry of afterState)
-    beforeState.get(entry.symbol) === entry.type && Object.hasOwn(before.state, entry.name) && (after.state[entry.name] = copyValue(before.state[entry.name]));
+    beforeState.get(entry.symbol) === stateIdentity(entry) && Object.hasOwn(before.state, entry.name) && (after.state[entry.name] = copyValue(before.state[entry.name]));
   if (after.mat !== null && before.mat !== null)
     for (let name of kept)
       Object.hasOwn(before.mat.p, name) && setParam(after, name, copyValue(before.mat.p[name]));
@@ -13803,7 +14155,7 @@ function migrateWorld(previous, previousManifest, next, nextManifest) {
   let previousSceneState = stateBySymbol(previousManifest.scene.state, previous.sceneState);
   for (let entry of nextManifest.scene.state) {
     let before = previousSceneState.get(entry.symbol);
-    before !== void 0 && before.type === entry.type && (next.sceneState[entry.name] = copyValue(before.value));
+    before !== void 0 && before.type === stateIdentity(entry) && (next.sceneState[entry.name] = copyValue(before.value));
   }
   let previousEntities = /* @__PURE__ */ new Map();
   previousManifest.scene.entities.forEach((entity, index) => {
@@ -13828,7 +14180,7 @@ function migrateWorld(previous, previousManifest, next, nextManifest) {
   }), next.dynamic.restoreFrom(previous.dynamic, (before, after) => {
     carryEntity(
       before.record,
-      new Map(before.prefab.resolved.state.map((entry) => [entry.symbol, entry.type])),
+      new Map(before.prefab.resolved.state.map((entry) => [entry.symbol, stateIdentity(entry)])),
       after.record,
       after.prefab.resolved.state,
       keptParams(prefabInstanceClasses(before.prefab.resolved.material), prefabInstanceClasses(after.prefab.resolved.material)),
@@ -14033,7 +14385,7 @@ function programOfModule(module) {
   return candidate;
 }
 function carryValue(value) {
-  return Array.isArray(value) ? value.map(carryValue) : typeof value == "object" && value !== null && !Object.isFrozen(value) ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, carryValue(item)])) : value;
+  return ArrayBuffer.isView(value) ? copy(value) : Array.isArray(value) ? value.map(carryValue) : typeof value == "object" && value !== null && !Object.isFrozen(value) ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, carryValue(item)])) : value;
 }
 var RecoveryAbandoned = class extends Error {
 };
@@ -14047,7 +14399,7 @@ var MountedApp = class {
   constructor(deps) {
     this.deps = deps;
     let { manifest, environment, registry, test } = deps;
-    this.seed = deps.seed, this.injectedDeviceFailures = test?.recovery?.failDeviceRequests ?? 0, this.recoveryDelaysMs = test?.recovery?.delaysMs ?? DEFAULT_RECOVERY_DELAYS_MS, this.input = deps.input, this.behaviors = new Behaviors(deps.sceneFunctions, deps.scene.world), this.hostInputs = new HostInputs(manifest), this.hostOutputs = new HostOutputs(manifest);
+    this.seed = deps.seed, this.injectedDeviceFailures = test?.recovery?.failDeviceRequests ?? 0, this.recoveryDelaysMs = test?.recovery?.delaysMs ?? DEFAULT_RECOVERY_DELAYS_MS, this.input = deps.input, this.behaviors = new Behaviors(deps.sceneFunctions, deps.scene.world), this.handlerKeys = this.behaviors.handledKeys(), this.liveServices = deps.services, this.hooks = this.gameHooks(), this.hostInputs = new HostInputs(manifest), this.hostOutputs = new HostOutputs(manifest);
     for (let shader of manifest.shaders)
       this.shaderSources.has(shader.hash) || this.shaderSources.set(shader.hash, new URL(shader.url, deps.program.baseUrl).href);
     registry.phase = "runtime:render", test?.disableCulling === !0 && deps.scene.renderer.setFrustumCulling(!1);
@@ -14079,17 +14431,18 @@ var MountedApp = class {
       document: environment.document,
       window: environment.window,
       registry,
-      handledKeys: this.behaviors.handledKeys()
+      handledKeys: this.keyGuard
     }), environment.document !== void 0 && (registry.addEventListener(environment.document, "visibilitychange", () => {
       this.onVisibilityChange();
-    }), deps.pauseWhenHidden && environment.document.visibilityState === "hidden" && (this.current = "paused", this.pausedByVisibility = !0, this.input.pause(), this.scheduler.pause())), test !== void 0 && (this.debug = this.createDebug(manual)), this.saves = new GameSaves(
+    }), deps.pauseWhenHidden && environment.document.visibilityState === "hidden" && (this.current = "paused", this.pausedByVisibility = !0, this.input.pause(), this.scheduler.pause(), deps.services.audio?.setSuspended?.(!0))), test !== void 0 && (this.debug = this.createDebug(manual)), this.saves = new GameSaves(
       deps.saveStorage ?? new MemorySaveStorage(),
       manifest.game?.storage,
       (problem) => {
         this.reportSaveProblem(problem);
       },
-      deps.saveStorageUnavailable === !0
-    ), this.saves.restore(persistentEntries(manifest.scene.state), deps.scene.world.sceneState), deps.game !== void 0 && (deps.game.target = this.gameHooks()), this.scheduler.start();
+      deps.saveStorageUnavailable === !0,
+      manifest.game?.legacyStorage
+    ), this.saves.restore(persistentEntries(manifest.scene.state), deps.scene.world.sceneState), deps.game !== void 0 && (deps.game.target = this.hooks), this.scheduler.start();
   }
   deps;
   debug;
@@ -14115,6 +14468,16 @@ var MountedApp = class {
   pendingSwap;
   /** The scene change being prepared or queued: later `go_to`/`reset` calls are ignored until it is applied or fails. */
   sceneRequest;
+  /** The game hooks of the live scene (decisions 0140, 0141, 0143). */
+  hooks;
+  /** The CPU services the live world was started with: the application's, or those of its own `Preparation`. */
+  liveServices;
+  /** The DOM codes some handler of the live scene names (rebuilt at every swap); polled keys are added on top. */
+  handlerKeys;
+  /** What `attachInputListeners` asks: is the default action of this key suppressed? */
+  keyGuard = {
+    has: (code) => this.handlerKeys.has(code) || this.input.isPolled(code)
+  };
   /** Identifies the current device: a `lost` event of an older one is stale (decision 0056). */
   deviceEpoch = 0;
   /** The epoch whose `destroyed` loss was requested by `debug.loseDevice` and is therefore a loss to recover from. */
@@ -14160,6 +14523,34 @@ var MountedApp = class {
       }
     };
   }
+  /**
+   * The hooks of a scene that is being prepared (decision 0176): its `pause()`/`resume()` are remembered and applied
+   * when it becomes the live scene, its `save()`/`load()` read and write its own state, and a scene change it asks for
+   * is ignored, because one is pending already.
+   */
+  preparingHooks(preparation) {
+    let entries = () => persistentEntries(preparation.manifest?.scene.state ?? []);
+    return {
+      goTo: () => {
+      },
+      reset: () => {
+      },
+      pause: () => {
+        preparation.held = !0;
+      },
+      resume: () => {
+        preparation.held = !1;
+      },
+      paused: () => preparation.held === !0,
+      save: () => {
+        preparation.world !== void 0 && this.saves.save(entries(), preparation.world.sceneState);
+      },
+      load: () => preparation.world === void 0 ? !1 : this.saves.restore(entries(), preparation.world.sceneState),
+      clearSaved: () => {
+        this.saves.clear();
+      }
+    };
+  }
   /** `W5402` and `W5403` (decision 0145): warnings, the scene goes on. */
   reportSaveProblem(problem) {
     this.report(makeRuntimeDiagnostic(problem.code, { phase: "runtime:update", message: problem.message }));
@@ -14172,11 +14563,13 @@ var MountedApp = class {
   requestScene(kind, scene, spanId) {
     if (this.sceneRequest !== void 0 || this.current !== "running" && this.current !== "paused") return;
     let request = { kind, scene };
-    this.sceneRequest = request, this.changeScene(request, spanId).catch((error) => {
+    this.sceneRequest = request;
+    let seed = Math.floor(this.liveServices.random() * 4294967296) >>> 0;
+    this.changeScene(request, spanId, seed).catch((error) => {
       this.sceneChangeFailed(request, spanId, [], errorText6(error));
     });
   }
-  async changeScene(request, spanId) {
+  async changeScene(request, spanId, seed) {
     let current = this.deps.manifest, candidate;
     if (request.scene === current.scene.name)
       candidate = this.deps.program;
@@ -14196,7 +14589,7 @@ var MountedApp = class {
       }
     }
     let diagnostics = [];
-    (await this.prepareProgram(candidate, { kind: "fresh", carry: request.kind === "go_to" }, (diagnostic2) => {
+    (await this.prepareProgram(candidate, { kind: "fresh", carry: request.kind === "go_to", seed }, (diagnostic2) => {
       diagnostics.push(diagnostic2);
     })).ok || this.sceneChangeFailed(request, spanId, diagnostics, "the scene could not be prepared");
   }
@@ -14249,7 +14642,12 @@ var MountedApp = class {
    * decisions 0140 and 0141). Every diagnostic goes to `report`; nothing is reported elsewhere.
    */
   async prepareProgram(candidate, mode, report) {
-    let { environment, device, registry, surface, services } = this.deps, epoch = this.deviceEpoch, generation = registry.generation, assertActive = () => {
+    let { environment, device, registry, surface } = this.deps, services = this.liveServices, preparation;
+    if (mode.kind === "fresh") {
+      let generator = new Xoshiro128(mode.seed), link = new GameLink();
+      services = { ...this.deps.services, game: link, random: () => generator.nextF32() }, preparation = { services, link, held: void 0, manifest: void 0, world: void 0 }, link.target = this.preparingHooks(preparation);
+    }
+    let epoch = this.deviceEpoch, generation = registry.generation, assertActive = () => {
       if (this.deviceEpoch !== epoch || registry.generation !== generation || this.current !== "running" && this.current !== "paused")
         throw new Error(`The candidate was discarded because its application or GPU device is no longer current (application ${this.current}).`);
     }, createdModules = [], preparedScene;
@@ -14307,7 +14705,7 @@ var MountedApp = class {
         return { ok: !1, diagnostics };
       }
       let manifest = checkedManifest.manifest;
-      if (mode.kind === "reload" && mode.followScene && manifest.scene.name !== this.deps.manifest.scene.name) {
+      if (preparation !== void 0 && (preparation.manifest = manifest), mode.kind === "reload" && mode.followScene && manifest.scene.name !== this.deps.manifest.scene.name) {
         let running = manifest.game?.scenes?.find((scene) => scene.name === this.deps.manifest.scene.name);
         if (running !== void 0) {
           let module = await environment.importModule(sceneModuleUrl(candidate.baseUrl, running.module, manifest.buildId));
@@ -14410,6 +14808,11 @@ var MountedApp = class {
           },
           pipelineCache: this.deps.scene.pipelines,
           bindingPlan: this.deps.scene.plan,
+          ...preparation === void 0 ? {} : {
+            onWorld: (world) => {
+              preparation.world = world;
+            }
+          },
           assets: { files: loaded.assets, images: loaded.images },
           ...this.deps.test?.textures === void 0 ? {} : { textures: this.deps.test.textures },
           ...this.deps.test?.disableInstancing === !0 ? { instancing: !1 } : {}
@@ -14431,7 +14834,7 @@ var MountedApp = class {
         sceneFunctions: checked.program.scene,
         restart: mode.kind === "reload" ? restart : void 0,
         physicsModule,
-        ...mode.kind === "fresh" ? { fresh: { carry: mode.carry } } : {}
+        ...mode.kind === "fresh" && preparation !== void 0 ? { fresh: { carry: mode.carry, preparation } } : {}
       }, preparedScene = void 0, { ok: !0 };
     } catch (error) {
       if (registry.generation === generation) {
@@ -14450,10 +14853,22 @@ var MountedApp = class {
     }
   }
   pause() {
-    this.current === "running" && (this.current = "paused", this.pausedByVisibility = !1, this.input.pause(), this.scheduler.pause());
+    this.current === "running" && (this.current = "paused", this.pausedByVisibility = !1, this.input.pause(), this.scheduler.pause(), this.deps.services.audio?.setSuspended?.(!0));
   }
   resume() {
-    this.current === "paused" && (this.current = "running", this.pausedByVisibility = !1, this.input.resume(), this.scheduler.resume());
+    this.current === "paused" && (this.current = "running", this.pausedByVisibility = !1, this.input.resume(), this.scheduler.resume(), this.deps.services.audio?.setSuspended?.(!1));
+  }
+  /** The manifest of the scene that runs (it changes at a scene change and a hot reload). */
+  currentManifest() {
+    return this.deps.manifest;
+  }
+  /** The verified asset files of the scene that runs. */
+  currentAssets() {
+    return this.deps.assets;
+  }
+  /** The active camera's pose of the scene that runs: where the listener of positional sound is. */
+  listenerPose() {
+    return this.deps.scene.world.camera;
   }
   /**
    * Synchronous release (`spec/runtime-abi.md` section 9.3): stops the frame loop, removes every listener
@@ -14736,7 +15151,7 @@ var MountedApp = class {
     let document2 = this.deps.environment.document;
     if (document2 !== void 0)
       if (document2.visibilityState === "hidden")
-        this.input.focusLost(), this.current === "running" && this.deps.pauseWhenHidden && (this.current = "paused", this.pausedByVisibility = !0, this.input.pause(), this.scheduler.pause());
+        this.input.focusLost(), this.current === "running" && this.deps.pauseWhenHidden && (this.current = "paused", this.pausedByVisibility = !0, this.input.pause(), this.scheduler.pause(), this.deps.services.audio?.setSuspended?.(!0));
       else if (this.deps.pauseWhenHidden)
         this.pausedByVisibility && this.current === "paused" && this.resume();
       else return;
@@ -14756,6 +15171,9 @@ var MountedApp = class {
       },
       phase3_update: (delta) => {
         this.framePhase = "runtime:update", this.deps.scene.world.advanceClips(delta), this.deps.scene.world.advanceParticles(delta), this.deps.scene.world.advanceTimers(delta), this.behaviors.update(delta);
+      },
+      phase3_ui: (delta) => {
+        this.framePhase = "runtime:update", this.behaviors.ui(delta);
       },
       phase4_flush: () => {
         this.deps.scene.world.dynamic.flush();
@@ -14793,13 +15211,13 @@ var MountedApp = class {
           }
         });
       } catch (error) {
-        pending.scene.materials.dispose(), pending.scene.meshes.dispose(), pending.scene.renderer.dispose(), this.report(
-          makeRuntimeDiagnostic("E8102", {
-            phase: "runtime:reload",
-            message: `The candidate was discarded: creating its physics world failed (${errorText6(error)}).`,
-            notes: [`module: ${pending.physicsModule.url}`]
-          })
-        );
+        pending.scene.materials.dispose(), pending.scene.meshes.dispose(), pending.scene.renderer.dispose();
+        let cause = makeRuntimeDiagnostic("E8102", {
+          phase: "runtime:reload",
+          message: `The candidate was discarded: creating its physics world failed (${errorText6(error)}).`,
+          notes: [`module: ${pending.physicsModule.url}`]
+        }), request = this.sceneRequest;
+        pending.fresh !== void 0 && request !== void 0 ? this.sceneChangeFailed(request, -1, [cause], "creating its physics world failed") : (this.sceneRequest = void 0, this.report(cause));
         return;
       }
       pending.scene.world.bodies = physics;
@@ -14809,17 +15227,17 @@ var MountedApp = class {
         let before = new Map(previousManifest.scene.state.filter((entry) => entry.shared === !0).map((entry) => [entry.name, entry]));
         for (let entry of pending.manifest.scene.state) {
           let old = before.get(entry.name);
-          entry.shared !== !0 || old === void 0 || old.type !== entry.type || (pending.scene.world.sceneState[entry.name] = carryValue(previous.world.sceneState[entry.name]));
+          entry.shared !== !0 || old === void 0 || stateIdentity(old) !== stateIdentity(entry) || (pending.scene.world.sceneState[entry.name] = carryValue(previous.world.sceneState[entry.name]));
         }
       }
-      previous.world.timers.clear(), this.scheduler.resumeGame();
+      previous.world.timers.clear(), pending.fresh.preparation.link.target = this.deps.game ?? INERT_GAME, this.liveServices = pending.fresh.preparation.services, pending.fresh.preparation.held === !0 ? this.scheduler.pauseGame() : this.scheduler.resumeGame(), this.deps.services.hud?.clearClicks?.(), this.input.clearPolled();
     } else if (pending.restart === void 0)
       migrateWorld(previous.world, previousManifest, pending.scene.world, pending.manifest);
     else {
       let diagnostic2 = restartDiagnostic(pending.manifest, pending.restart);
       this.deps.sink.report(diagnostic2), this.deps.overlay?.add(diagnostic2);
     }
-    this.deps.test?.disableCulling === !0 && pending.scene.renderer.setFrustumCulling(!1), physics?.createNamedBodies(), this.deps.physics?.dispose(), this.deps.physics = physics, this.deps.physicsModule = pending.physicsModule, this.deps.scene = pending.scene, this.deps.manifest = pending.manifest, this.deps.program = pending.program, this.deps.modules = pending.modules, this.deps.assets = pending.assets, this.deps.sceneFunctions = pending.sceneFunctions, this.behaviors = new Behaviors(pending.sceneFunctions, pending.scene.world), this.hostInputs = new HostInputs(pending.manifest), this.hostOutputs.replace(pending.manifest), previous.materials.dispose(), previous.renderer.dispose(), previous.meshes.dispose();
+    this.deps.test?.disableCulling === !0 && pending.scene.renderer.setFrustumCulling(!1), physics?.createNamedBodies(), this.deps.physics?.dispose(), this.deps.physics = physics, this.deps.physicsModule = pending.physicsModule, this.deps.scene = pending.scene, this.deps.manifest = pending.manifest, this.deps.program = pending.program, this.deps.modules = pending.modules, this.deps.assets = pending.assets, this.deps.sceneFunctions = pending.sceneFunctions, this.behaviors = new Behaviors(pending.sceneFunctions, pending.scene.world), this.handlerKeys = this.behaviors.handledKeys(), this.hostInputs = new HostInputs(pending.manifest), this.hostOutputs.replace(pending.manifest), previous.materials.dispose(), previous.renderer.dispose(), previous.meshes.dispose();
   }
   createDebug(manual) {
     return {
@@ -14897,6 +15315,7 @@ var MountedApp = class {
       instancedDrawsTotal: renderer.instancedDrawsCumulative,
       culledObjects: renderer.culledObjects,
       culledObjectsTotal: renderer.culledObjectsCumulative,
+      rebatchesTotal: renderer.rebatchesCumulative,
       sharedParamBlocks: materials.sharedParamBlocks,
       ownedParamBlocks: materials.ownedParamBlocks,
       discardedSteps: this.scheduler.discardedSteps,
@@ -15131,31 +15550,6 @@ var FailureOverlay = class _FailureOverlay {
   }
 };
 
-// src/random/xoshiro.ts
-var Xoshiro128 = class {
-  s0;
-  s1;
-  s2;
-  s3;
-  constructor(seed) {
-    let x = seed >>> 0, next = () => {
-      x = x + 2654435769 >>> 0;
-      let z = x;
-      return z = Math.imul(z ^ z >>> 16, 2246822507) >>> 0, z = Math.imul(z ^ z >>> 13, 3266489909) >>> 0, (z ^ z >>> 16) >>> 0;
-    };
-    this.s0 = next(), this.s1 = next(), this.s2 = next(), this.s3 = next();
-  }
-  /** The next 32 random bits. */
-  nextU32() {
-    let rotl = (v, k) => (v << k | v >>> 32 - k) >>> 0, result = Math.imul(rotl(Math.imul(this.s1, 5) >>> 0, 7), 9) >>> 0, t = this.s1 << 9 >>> 0;
-    return this.s2 = (this.s2 ^ this.s0) >>> 0, this.s3 = (this.s3 ^ this.s1) >>> 0, this.s1 = (this.s1 ^ this.s2) >>> 0, this.s0 = (this.s0 ^ this.s3) >>> 0, this.s2 = (this.s2 ^ t) >>> 0, this.s3 = rotl(this.s3, 11), result;
-  }
-  /** `random()`: an f32 in `[0, 1)`; the top 24 bits, so every value is exactly representable. */
-  nextF32() {
-    return (this.nextU32() >>> 8) / 16777216;
-  }
-};
-
 // src/host/mount.ts
 function errorText7(error) {
   return error instanceof Error ? error.message === "" ? error.name : error.message : String(error);
@@ -15367,19 +15761,33 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
     images = loadedAssets.images;
     let startupFailures = [...shaders.diagnostics, ...loadedAssets.diagnostics, ...loadedPhysics?.ok === !1 ? loadedPhysics.diagnostics : []];
     if (startupFailures.length > 0) throw mountError(startupFailures);
-    let assets = loadedAssets.assets, seed = options.seed === void 0 ? (Math.floor(environment.now() * 1e3) ^ Date.now()) >>> 0 : Math.trunc(options.seed) >>> 0, generator = new Xoshiro128(seed), input = new InputState(), game = new GameLink(), pageStorage = options.storage === void 0 && options.test === void 0 ? defaultSaveStorage() : null, saveStorage = options.storage ?? pageStorage ?? new MemorySaveStorage(), saveStorageUnavailable = options.storage === void 0 && options.test === void 0 && pageStorage === null, listening = {};
+    let assets = loadedAssets.assets, seed = options.seed === void 0 ? (Math.floor(environment.now() * 1e3) ^ Date.now()) >>> 0 : Math.trunc(options.seed) >>> 0, generator = new Xoshiro128(seed), input = new InputState(), game = new GameLink(), pageStorage = options.storage === void 0 && options.test === void 0 ? defaultSaveStorage() : null, saveStorage = options.storage ?? pageStorage ?? new MemorySaveStorage(), saveStorageUnavailable = options.storage === void 0 && options.test === void 0 && pageStorage === null, listening = {}, manifestNow = () => app?.currentManifest() ?? manifest, unlockInstalled = !1, installUnlock = () => {
+      if (unlockInstalled || audio === void 0 || registry === void 0) return;
+      unlockInstalled = !0;
+      let unlocking = audio, unlock = () => {
+        unlocking.unlock();
+      };
+      for (let type of ["pointerdown", "touchend", "mousedown"])
+        registry.addEventListener(canvas, type, unlock, { capture: !0 }), environment.document !== void 0 && registry.addEventListener(environment.document, type, unlock, { capture: !0 });
+      environment.document !== void 0 && registry.addEventListener(environment.document, "keydown", unlock, { capture: !0 });
+    }, assetsNow = () => app?.currentAssets() ?? assets;
     audio = new AudioSystem({
       manifest,
-      bytes: (url) => assets.has(url) ? assets.bytes(url) : void 0,
+      manifestNow,
+      onFirstSound: () => {
+        installUnlock();
+      },
+      bytes: (url) => assetsNow().has(url) ? assetsNow().bytes(url) : void 0,
       backend: environment.audio === void 0 ? browserAudioBackend() : environment.audio ?? void 0,
       report: (diagnostic2) => {
         app !== void 0 ? app.report(diagnostic2) : earlyReports.push(diagnostic2);
       },
-      listener: () => listening.world?.camera
+      listener: () => app === void 0 ? listening.world?.camera : app.listenerPose()
     }), hud = environment.document === void 0 ? void 0 : new HudSystem({
       canvas,
       document: environment.document,
       manifest,
+      manifestNow,
       report: (diagnostic2) => {
         app !== void 0 ? app.report(diagnostic2) : earlyReports.push(diagnostic2);
       },
@@ -15387,7 +15795,8 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
       fontFamily: (() => {
         let fonts = new FontRegistry({
           manifest,
-          bytes: (url) => assets.has(url) ? assets.bytes(url) : void 0,
+          manifestNow,
+          bytes: (url) => assetsNow().has(url) ? assetsNow().bytes(url) : void 0,
           page: browserFontPage(environment.document),
           report: (diagnostic2) => {
             app !== void 0 ? app.report(diagnostic2) : earlyReports.push(diagnostic2);
@@ -15431,14 +15840,7 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
       throw allocationFailures.length > 0 ? mountError(allocationFailures) : error instanceof ExecutionBudgetExceeded ? mountError([budgetDiagnostic(manifest, error)]) : error;
     }
     if (closeImages(images), !started.ok) throw mountError(started.diagnostics);
-    if (listening.world = started.scene.world, audio.hasSounds) {
-      let unlocking = audio, unlock = () => {
-        unlocking.unlock();
-      };
-      for (let type of ["pointerdown", "touchend", "mousedown"]) registry.addEventListener(canvas, type, unlock, { capture: !0 });
-      environment.document !== void 0 && registry.addEventListener(environment.document, "keydown", unlock, { capture: !0 });
-    }
-    if (loadedPhysics?.ok === !0)
+    if (listening.world = started.scene.world, audio.hasSounds && installUnlock(), loadedPhysics?.ok === !0)
       try {
         physics = new PhysicsSystem({
           backend: loadedPhysics.backend,
@@ -16004,21 +16406,6 @@ function m4transpose(m) {
   return transpose(m);
 }
 
-// src/math/copy.ts
-function copy(value) {
-  if (Array.isArray(value)) {
-    let items = value, out = new Array(items.length);
-    for (let i = 0; i < items.length; i++) out[i] = copy(items[i]);
-    return out;
-  }
-  if (typeof value == "object" && value !== null && !ArrayBuffer.isView(value)) {
-    let out = {};
-    for (let [key, field] of Object.entries(value)) out[key] = copy(field);
-    return out;
-  }
-  return value;
-}
-
 // src/math/entity-ref.ts
 function refEq(a, b) {
   return a.slot === b.slot && a.gen === b.gen;
@@ -16027,7 +16414,7 @@ function refEq(a, b) {
 // src/math/ease.ts
 var ELASTIC_C4 = 2 * Math.PI / 3;
 function clamp01(t) {
-  return Number.isFinite(t) ? Math.min(1, Math.max(0, t)) : 0;
+  return Number.isNaN(t) ? 0 : Math.min(1, Math.max(0, t));
 }
 function bounce(x) {
   return x < 1 / 2.75 ? 7.5625 * x * x : x < 2 / 2.75 ? 7.5625 * (x - 1.5 / 2.75) ** 2 + 0.75 : x < 2.5 / 2.75 ? 7.5625 * (x - 2.25 / 2.75) ** 2 + 0.9375 : 7.5625 * (x - 2.625 / 2.75) ** 2 + 0.984375;

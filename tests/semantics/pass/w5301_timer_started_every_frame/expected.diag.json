@@ -1,0 +1,24 @@
+[
+  {
+    "code": "MTEK-W5301",
+    "file": "src/main.mtek",
+    "startByte": 294,
+    "endByte": 299,
+    "message": "`every` in `update` starts a new timer every time `update` runs.",
+    "notes": [
+      "`update` runs again and again, and a timer cannot be cancelled: they pile up (the runtime stops starting new ones at 4096 and reports W8205)",
+      "help: start the timer once: guard it with a `started` state flag, or start it in an `on` handler"
+    ]
+  },
+  {
+    "code": "MTEK-W5301",
+    "file": "src/main.mtek",
+    "startByte": 384,
+    "endByte": 389,
+    "message": "`after` in `fixed_update` starts a new timer every time `fixed_update` runs.",
+    "notes": [
+      "`fixed_update` runs again and again, and a timer cannot be cancelled: they pile up (the runtime stops starting new ones at 4096 and reports W8205)",
+      "help: start the timer once: guard it with a `started` state flag, or start it in an `on` handler"
+    ]
+  }
+]

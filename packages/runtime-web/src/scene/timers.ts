@@ -14,9 +14,14 @@
  *   entity is destroyed. A scene's timers live as long as the scene. `reset()` and `go_to` start the scene afresh,
  *   with no timers.
  * - A timer started while timers run waits for the next frame, so a block that starts its own timer cannot loop.
+ * - At most {@link MAX_TIMERS} timers are live. A timer started beyond that is not started and the call site is
+ *   reported once (`W8205`, decision 0177): a timer started every frame would otherwise grow without bound.
  * - A negative or non-finite delay counts as 0 (the block runs in the next frame); a period that is not greater
  *   than 0 runs the block once per frame. The compiler rejects such constants (`E3211`).
  */
+
+/** The most timers a scene can have waiting (decision 0177). */
+export const MAX_TIMERS = 4096;
 
 /** The record that owns a timer: an entity record (static or spawned), or `null` for the scene. */
 export type TimerOwner = { readonly ref: unknown } | null;
@@ -44,6 +49,11 @@ export class TimerList {
   private started = 0;
   private running = false;
   private readonly added: Timer[] = [];
+  /** The earliest due time of the waiting timers: a frame before it does not look at the list. */
+  private earliest = Infinity;
+
+  /** `onFull(spanId)` is called for a timer that is not started because {@link MAX_TIMERS} are waiting. */
+  constructor(private readonly onFull: (spanId: number) => void = () => undefined) {}
 
   /** Game time of this scene, in seconds: the sum of the deltas of the frames in which the game was not paused. */
   get gameTime(): number {
@@ -67,6 +77,10 @@ export class TimerList {
 
   private add(delay: number, repeat: boolean, fn: unknown, owner: TimerOwner, spanId: unknown): void {
     if (typeof fn !== "function") throw new TypeError("a timer needs a function");
+    if (this.size >= MAX_TIMERS) {
+      this.onFull(typeof spanId === "number" ? spanId : -1);
+      return;
+    }
     const timer: Timer = {
       due: this.now + delay,
       period: repeat ? delay : 0,
@@ -79,7 +93,10 @@ export class TimerList {
     };
     this.started += 1;
     if (this.running) this.added.push(timer);
-    else this.timers.push(timer);
+    else {
+      this.timers.push(timer);
+      if (timer.due < this.earliest) this.earliest = timer.due;
+    }
   }
 
   /**
@@ -90,6 +107,7 @@ export class TimerList {
   advance(delta: number, alive: (owner: NonNullable<TimerOwner>) => boolean): void {
     this.now += Math.max(0, delta);
     const now = this.now;
+    if (now < this.earliest) return;
     const due = this.timers.filter((timer) => timer.due <= now);
     if (due.length === 0) return;
     due.sort((a, b) => a.due - b.due || a.order - b.order);
@@ -116,6 +134,8 @@ export class TimerList {
       this.timers = this.timers.filter((timer) => !timer.cancelled && (timer.owner === null || alive(timer.owner)));
       this.timers.push(...this.added);
       this.added.length = 0;
+      this.earliest = Infinity;
+      for (const timer of this.timers) if (timer.due < this.earliest) this.earliest = timer.due;
     }
   }
 
@@ -124,5 +144,6 @@ export class TimerList {
     for (const timer of this.timers) timer.cancelled = true;
     this.timers = [];
     this.added.length = 0;
+    this.earliest = Infinity;
   }
 }

@@ -1,10 +1,11 @@
-// A small game (decisions 0140, 0145, 0150, 0151, 0152, 0153).
+// A small game (decisions 0140, 0145, 0150, 0151, 0152, 0153, 0175).
 //
 // Title   Enter starts a run. The best score is saved.
 // Play    ArrowLeft and ArrowRight change lane (one step per press). Gems fall;
-//         touching the player scores. Escape pauses the game (`pause()`, spec/scenes.md
-//         §15.4): update stops, so the HUD goes away and a white mark stays up through
-//         a binding. Escape resumes. The Title button returns while the game is running.
+//         touching the player scores. Escape or the Pause button pauses the game
+//         (`pause()`, spec/scenes.md §15.4): `update` stops, but `ui` (decision 0175) runs in
+//         every frame, so the pause menu (Resume, Restart, Title) is drawn and its buttons
+//         work. Escape resumes.
 
 const LANES: array<f32, 3> = [-1.6, 0.0, 1.6];
 
@@ -50,18 +51,10 @@ scene Play {
     shared state score: i32 = 0;
     shared saved state best: i32 = 0;
     state lane: i32 = 1;
-    state holding: bool = false;
 
     camera Main {
         position: vec3(0.0, 0.0, 8.0);
         target: vec3(0.0, 0.0, 0.0);
-    }
-
-    entity PauseMark {
-        mesh: Box { size: vec3(0.28, 1.15, 0.15) };
-        material: Unlit { color: #ffffff };
-        position: vec3(0.0, 0.15, 0.0);
-        visible: bind(holding);
     }
 
     entity Player {
@@ -92,19 +85,34 @@ scene Play {
                 destroy(gem);
             }
         }
+    }
+
+    // Runs in every frame, also while the game is paused: the score, the Pause button and the pause menu.
+    ui(dt: f32) {
         hud.text("Score ${score}", vec2(-0.95, 0.88), 24.0, #ffffff, 0.0, hud.pixel_font());
         hud.text("Best ${best}", vec2(0.95, 0.88), 24.0, #ffd040, 1.0, hud.pixel_font());
-        if hud.button("Title", vec2(0.95, -0.88), 18.0) {
-            go_to(Title);
+        if paused() {
+            hud.rect(vec2(0.0, 0.05), vec2(300.0, 260.0), #000000c0, 0.5);
+            hud.text("PAUSED", vec2(0.0, 0.35), 36.0, #ffffff, 0.5, hud.pixel_font());
+            if hud.button("Resume", vec2(0.0, 0.15), 24.0) {
+                resume();
+            }
+            if hud.button("Restart", vec2(0.0, 0.0), 24.0) {
+                score = 0;
+                go_to(Play);
+            }
+            if hud.button("Title", vec2(0.0, -0.15), 24.0) {
+                go_to(Title);
+            }
+        } else if hud.button("Pause", vec2(0.95, -0.88), 18.0) {
+            pause();
         }
     }
 
     on key_down(Key.Escape) {
         if paused() {
-            holding = false;
             resume();
         } else {
-            holding = true;
             pause();
         }
     }

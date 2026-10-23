@@ -1,0 +1,17 @@
+// An enum state is a variant index; the `u32` codec would let the host write an index no variant has
+// (decision 0177), so an enum is not a host input.
+enum Level { Easy, Hard }
+
+scene Demo {
+    clear_color: #101418;
+    state level: Level = Level.Easy;
+    camera Main {
+        position: vec3(0.0, 1.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+    entity Cube {
+        position: vec3(0.0, 0.5, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Unlit { color: #6b5cff };
+    }
+}

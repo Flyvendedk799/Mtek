@@ -390,18 +390,42 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
     const pageStorage = options.storage === undefined && options.test === undefined ? defaultSaveStorage() : null;
     const saveStorage = options.storage ?? pageStorage ?? new MemorySaveStorage();
     const saveStorageUnavailable = options.storage === undefined && options.test === undefined && pageStorage === null;
-    // Audio (decision 0160): decoded now, played after the first user gesture unlocks it.
     // Audio (decision 0130): decoded now, played after the first user gesture unlocks it.
+    // The listener is the camera of the scene that runs: the first world only until the application exists.
     const listening: { world?: { readonly camera: ListenerPose } } = {};
+    // What diagnostics resolve against and where bytes come from follows the scene that runs (`go_to` changes both).
+    const manifestNow = (): MtekManifest => app?.currentManifest() ?? manifest;
+    // The first key press, click or touch unlocks audio (browser autoplay policy, spec/audio.md section 5). The
+    // listeners capture on the document, so they run inside the gesture even when the canvas or a HUD button handles
+    // the event and stops it (decision 0176). A program without sounds has none; a reload can add the first sound.
+    let unlockInstalled = false;
+    const installUnlock = (): void => {
+      if (unlockInstalled || audio === undefined || registry === undefined) return;
+      unlockInstalled = true;
+      const unlocking = audio;
+      const unlock = (): void => {
+        unlocking.unlock();
+      };
+      for (const type of ["pointerdown", "touchend", "mousedown"]) {
+        registry.addEventListener(canvas, type, unlock, { capture: true });
+        if (environment.document !== undefined) registry.addEventListener(environment.document, type, unlock, { capture: true });
+      }
+      if (environment.document !== undefined) registry.addEventListener(environment.document, "keydown", unlock, { capture: true });
+    };
+    const assetsNow = (): LoadedAssets => app?.currentAssets() ?? assets;
     audio = new AudioSystem({
       manifest,
-      bytes: (url) => (assets.has(url) ? assets.bytes(url) : undefined),
+      manifestNow,
+      onFirstSound: () => {
+        installUnlock();
+      },
+      bytes: (url) => (assetsNow().has(url) ? assetsNow().bytes(url) : undefined),
       backend: environment.audio === undefined ? browserAudioBackend() : (environment.audio ?? undefined),
       report: (diagnostic) => {
         if (app !== undefined) app.report(diagnostic);
         else earlyReports.push(diagnostic);
       },
-      listener: () => listening.world?.camera,
+      listener: () => (app === undefined ? listening.world?.camera : app.listenerPose()),
     });
     // The HUD (decision 0134): a DOM layer over the canvas, when there is a document.
     hud =
@@ -411,6 +435,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
             canvas: canvas as unknown as HudCanvas,
             document: environment.document as unknown as HudDocument,
             manifest,
+            manifestNow,
             report: (diagnostic) => {
               if (app !== undefined) app.report(diagnostic);
               else earlyReports.push(diagnostic);
@@ -419,7 +444,8 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
             fontFamily: (() => {
               const fonts = new FontRegistry({
                 manifest,
-                bytes: (url) => (assets.has(url) ? assets.bytes(url) : undefined),
+                manifestNow,
+                bytes: (url) => (assetsNow().has(url) ? assetsNow().bytes(url) : undefined),
                 page: browserFontPage(environment.document),
                 report: (diagnostic) => {
                   if (app !== undefined) app.report(diagnostic);
@@ -476,16 +502,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
     closeImages(images);
     if (!started.ok) throw mountError(started.diagnostics);
     listening.world = started.scene.world;
-    // The first key press, click or touch unlocks audio (browser autoplay policy, spec/audio.md section 5). The
-    // listeners capture, so they run inside the gesture even when the canvas handles the event.
-    if (audio.hasSounds) {
-      const unlocking = audio;
-      const unlock = (): void => {
-        unlocking.unlock();
-      };
-      for (const type of ["pointerdown", "touchend", "mousedown"]) registry.addEventListener(canvas, type, unlock, { capture: true });
-      if (environment.document !== undefined) registry.addEventListener(environment.document, "keydown", unlock, { capture: true });
-    }
+    if (audio.hasSounds) installUnlock();
 
     // The bodies of the scene, now that `init`, the bindings and the transforms have given every entity its pose
     // (`spec/scenes.md` section 11, step 5). Collision events reach the application's handlers once it exists.

@@ -18,15 +18,17 @@ import { PhysicsSystem, type CollisionEventName } from "../physics/system.js";
 import type { PhysicsBackend } from "../physics/types.js";
 import { InputState } from "../input/input.js";
 import { isMappedKeyCode } from "../input/keys.js";
+import { copy } from "../math/copy.js";
 import { startScene, type Scene } from "../render/startup.js";
 import { Behaviors } from "../scene/behavior.js";
 import { ExecutionBudgetExceeded, WHILE_ITERATION_CAP } from "../scene/budget.js";
-import { INERT_GAME, type GameHooks, type GameLink } from "../scene/game.js";
+import { INERT_GAME, GameLink, type GameHooks } from "../scene/game.js";
+import { Xoshiro128 } from "../random/xoshiro.js";
 import type { EntityRef } from "../scene/slots.js";
 import { Scheduler, type FramePhases } from "../schedule/scheduler.js";
 import { checkProgram } from "../scene/program.js";
 import { resolveStructure } from "../scene/structure.js";
-import type { CpuServices } from "../scene/world.js";
+import type { CpuServices, World } from "../scene/world.js";
 import type { FetchResponseLike, HostEnvironment, ResizeObserverLike } from "./environment.js";
 import { resolveSpan, type DiagnosticSink } from "./failures.js";
 import { GameSaves, MemorySaveStorage, persistentEntries, type SaveProblem, type SaveStorage } from "../scene/saves.js";
@@ -38,6 +40,7 @@ import {
   migrateWorld,
   prefabNames,
   restartDiagnostic,
+  stateIdentity,
   type StructuralChange,
 } from "./reload.js";
 import { loadCandidateShaders, loadStartupShaders } from "./shaders.js";
@@ -63,7 +66,25 @@ export interface DeviceHandlers {
  * (`followScene`: a build whose entry is not the running scene reloads the running scene instead), or the scene of
  * `go_to`/`reset` started afresh (`carry`: the shared state carries over, decision 0141).
  */
-type PrepareMode = { readonly kind: "reload"; readonly followScene: boolean } | { readonly kind: "fresh"; readonly carry: boolean };
+type PrepareMode =
+  | { readonly kind: "reload"; readonly followScene: boolean }
+  | { readonly kind: "fresh"; readonly carry: boolean; readonly seed: number };
+
+/**
+ * What the scene of a `go_to`/`reset` owns while it is prepared in the background (decision 0176): its own game
+ * hooks and its own random generator, so its `init` neither pauses, saves or loads the scene that still runs nor
+ * draws from that scene's random stream. At the swap the hooks connect to the application.
+ */
+interface Preparation {
+  /** The CPU services of the new world: the application's, with its own `game` and `random`. */
+  readonly services: CpuServices;
+  readonly link: GameLink;
+  /** `pause()`/`resume()` called by the new scene's `init`: applied at the swap (`undefined`: not called). */
+  held: boolean | undefined;
+  /** Known once the manifest is read and the world exists. */
+  manifest: MtekManifest | undefined;
+  world: World | undefined;
+}
 
 /** The URL of a scene module of a multi-scene build, with the build id so a hot reload never imports a stale copy. */
 function sceneModuleUrl(baseUrl: URL, module: string, buildId: string): string {
@@ -74,13 +95,14 @@ function sceneModuleUrl(baseUrl: URL, module: string, buildId: string): string {
 
 /** The program a scene module exports (its default export; a module namespace without one is checked as is). */
 function programOfModule(module: unknown): MtekMountProgram<Record<string, unknown>> {
-  const candidate = typeof module === "object" && module !== null && "default" in module ? (module as { default: unknown }).default : module;
+  const candidate = typeof module === "object" && module !== null && "default" in module ? module.default : module;
   if (typeof candidate !== "object" || candidate === null) throw new Error("the scene module does not export a program");
   return candidate as MtekMountProgram<Record<string, unknown>>;
 }
 
-/** A copy of a state value for another world: records and arrays are copied, vectors and colours are frozen. */
+/** A copy of a state value for another world: records and arrays are copied, vectors and colours are frozen, a `mat4` stays a matrix. */
 function carryValue(value: unknown): unknown {
+  if (ArrayBuffer.isView(value)) return copy(value);
   if (Array.isArray(value)) return value.map(carryValue);
   if (typeof value === "object" && value !== null && !Object.isFrozen(value)) {
     return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, carryValue(item)]));
@@ -190,11 +212,21 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         /** The physics module the candidate needs (loaded by `replaceProgram`), if it has bodies. */
         readonly physicsModule: { readonly url: string; readonly backend: PhysicsBackend } | undefined;
         /** A scene of `go_to`/`reset`: no migration; `carry` copies the shared state (decision 0141). */
-        readonly fresh?: { readonly carry: boolean };
+        readonly fresh?: { readonly carry: boolean; readonly preparation: Preparation };
       }
     | undefined;
   /** The scene change being prepared or queued: later `go_to`/`reset` calls are ignored until it is applied or fails. */
   private sceneRequest: { readonly kind: "go_to" | "reset"; readonly scene: string } | undefined;
+  /** The game hooks of the live scene (decisions 0140, 0141, 0143). */
+  private readonly hooks: GameHooks;
+  /** The CPU services the live world was started with: the application's, or those of its own `Preparation`. */
+  private liveServices: CpuServices;
+  /** The DOM codes some handler of the live scene names (rebuilt at every swap); polled keys are added on top. */
+  private handlerKeys: ReadonlySet<string>;
+  /** What `attachInputListeners` asks: is the default action of this key suppressed? */
+  private readonly keyGuard = {
+    has: (code: string): boolean => this.handlerKeys.has(code) || this.input.isPolled(code),
+  };
 
   /** Identifies the current device: a `lost` event of an older one is stale (decision 0056). */
   private deviceEpoch = 0;
@@ -220,6 +252,9 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
     this.recoveryDelaysMs = test?.recovery?.delaysMs ?? DEFAULT_RECOVERY_DELAYS_MS;
     this.input = deps.input;
     this.behaviors = new Behaviors(deps.sceneFunctions, deps.scene.world);
+    this.handlerKeys = this.behaviors.handledKeys();
+    this.liveServices = deps.services;
+    this.hooks = this.gameHooks();
     this.hostInputs = new HostInputs(manifest);
     this.hostOutputs = new HostOutputs(manifest);
     for (const shader of manifest.shaders) {
@@ -261,7 +296,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       document: environment.document,
       window: environment.window,
       registry,
-      handledKeys: this.behaviors.handledKeys(),
+      handledKeys: this.keyGuard,
     });
 
     if (environment.document !== undefined) {
@@ -273,6 +308,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         this.pausedByVisibility = true;
         this.input.pause();
         this.scheduler.pause();
+        deps.services.audio?.setSuspended?.(true);
       }
     }
 
@@ -284,10 +320,11 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         this.reportSaveProblem(problem);
       },
       deps.saveStorageUnavailable === true,
+      manifest.game?.legacyStorage,
     );
     // The scene starts from its saved values (decision 0145): after `init`, before the first frame.
     this.saves.restore(persistentEntries(manifest.scene.state), deps.scene.world.sceneState);
-    if (deps.game !== undefined) deps.game.target = this.gameHooks();
+    if (deps.game !== undefined) deps.game.target = this.hooks;
     this.scheduler.start();
   }
 
@@ -321,6 +358,33 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
     };
   }
 
+  /**
+   * The hooks of a scene that is being prepared (decision 0176): its `pause()`/`resume()` are remembered and applied
+   * when it becomes the live scene, its `save()`/`load()` read and write its own state, and a scene change it asks for
+   * is ignored, because one is pending already.
+   */
+  private preparingHooks(preparation: Preparation): GameHooks {
+    const entries = (): ReturnType<typeof persistentEntries> => persistentEntries(preparation.manifest?.scene.state ?? []);
+    return {
+      goTo: () => undefined,
+      reset: () => undefined,
+      pause: () => {
+        preparation.held = true;
+      },
+      resume: () => {
+        preparation.held = false;
+      },
+      paused: () => preparation.held === true,
+      save: () => {
+        if (preparation.world !== undefined) this.saves.save(entries(), preparation.world.sceneState);
+      },
+      load: () => (preparation.world === undefined ? false : this.saves.restore(entries(), preparation.world.sceneState)),
+      clearSaved: () => {
+        this.saves.clear();
+      },
+    };
+  }
+
   /** `W5402` and `W5403` (decision 0145): warnings, the scene goes on. */
   private reportSaveProblem(problem: SaveProblem): void {
     this.report(makeRuntimeDiagnostic(problem.code, { phase: "runtime:update", message: problem.message }));
@@ -335,12 +399,15 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
     if (this.sceneRequest !== undefined || (this.current !== "running" && this.current !== "paused")) return;
     const request = { kind, scene };
     this.sceneRequest = request;
-    void this.changeScene(request, spanId).catch((error: unknown) => {
+    // The new scene draws from a generator of its own, seeded by one draw of the live scene's stream at the call: the
+    // draws do not depend on how long the preparation takes (decision 0176).
+    const seed = Math.floor(this.liveServices.random() * 4294967296) >>> 0;
+    void this.changeScene(request, spanId, seed).catch((error: unknown) => {
       this.sceneChangeFailed(request, spanId, [], errorText(error));
     });
   }
 
-  private async changeScene(request: { readonly kind: "go_to" | "reset"; readonly scene: string }, spanId: number): Promise<void> {
+  private async changeScene(request: { readonly kind: "go_to" | "reset"; readonly scene: string }, spanId: number, seed: number): Promise<void> {
     const current = this.deps.manifest;
     let candidate: MtekMountProgram<Record<string, unknown>>;
     if (request.scene === current.scene.name) {
@@ -361,7 +428,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       }
     }
     const diagnostics: MtekDiagnostic[] = [];
-    const prepared = await this.prepareProgram(candidate, { kind: "fresh", carry: request.kind === "go_to" }, (diagnostic) => {
+    const prepared = await this.prepareProgram(candidate, { kind: "fresh", carry: request.kind === "go_to", seed }, (diagnostic) => {
       diagnostics.push(diagnostic);
     });
     if (!prepared.ok) this.sceneChangeFailed(request, spanId, diagnostics, "the scene could not be prepared");
@@ -436,7 +503,16 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
     mode: PrepareMode,
     report: (diagnostic: MtekDiagnostic) => void,
   ): Promise<{ ok: true } | { ok: false; diagnostics: readonly MtekDiagnostic[] }> {
-    const { environment, device, registry, surface, services } = this.deps;
+    const { environment, device, registry, surface } = this.deps;
+    let services = this.liveServices;
+    let preparation: Preparation | undefined;
+    if (mode.kind === "fresh") {
+      const generator = new Xoshiro128(mode.seed);
+      const link = new GameLink();
+      services = { ...this.deps.services, game: link, random: () => generator.nextF32() };
+      preparation = { services, link, held: undefined, manifest: undefined, world: undefined };
+      link.target = this.preparingHooks(preparation);
+    }
     const epoch = this.deviceEpoch;
     const generation = registry.generation;
     const assertActive = (): void => {
@@ -507,6 +583,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         return { ok: false, diagnostics };
       }
       const manifest = checkedManifest.manifest;
+      if (preparation !== undefined) preparation.manifest = manifest;
 
       // Hot reload while another scene than the entry runs (decision 0141): the new build of that scene replaces it.
       if (mode.kind === "reload" && mode.followScene && manifest.scene.name !== this.deps.manifest.scene.name) {
@@ -630,6 +707,13 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
           },
           pipelineCache: this.deps.scene.pipelines,
           bindingPlan: this.deps.scene.plan,
+          ...(preparation === undefined
+            ? {}
+            : {
+                onWorld: (world: World) => {
+                  preparation.world = world;
+                },
+              }),
           assets: { files: loaded.assets, images: loaded.images },
           ...(this.deps.test?.textures === undefined ? {} : { textures: this.deps.test.textures }),
           ...(this.deps.test?.disableInstancing === true ? { instancing: false } : {}),
@@ -658,13 +742,13 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       this.pendingSwap = {
         scene: started.scene,
         manifest,
-        program: candidate as MtekMountProgram<Record<string, unknown>>,
+        program: candidate,
         modules: new Map(shaders.modules),
         assets: loaded.assets,
         sceneFunctions: checked.program.scene,
         restart: mode.kind === "reload" ? restart : undefined,
         physicsModule,
-        ...(mode.kind === "fresh" ? { fresh: { carry: mode.carry } } : {}),
+        ...(mode.kind === "fresh" && preparation !== undefined ? { fresh: { carry: mode.carry, preparation } } : {}),
       };
       preparedScene = undefined;
       return { ok: true };
@@ -696,6 +780,8 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
     this.pausedByVisibility = false;
     this.input.pause();
     this.scheduler.pause();
+    // The host's pause stops the sound too (decision 0176); the program's `pause()` leaves it to the program.
+    this.deps.services.audio?.setSuspended?.(true);
   }
 
   resume(): void {
@@ -704,6 +790,22 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
     this.pausedByVisibility = false;
     this.input.resume();
     this.scheduler.resume();
+    this.deps.services.audio?.setSuspended?.(false);
+  }
+
+  /** The manifest of the scene that runs (it changes at a scene change and a hot reload). */
+  currentManifest(): MtekManifest {
+    return this.deps.manifest;
+  }
+
+  /** The verified asset files of the scene that runs. */
+  currentAssets(): LoadedAssets {
+    return this.deps.assets;
+  }
+
+  /** The active camera's pose of the scene that runs: where the listener of positional sound is. */
+  listenerPose(): World["camera"] {
+    return this.deps.scene.world.camera;
   }
 
   /**
@@ -1117,6 +1219,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         this.pausedByVisibility = true;
         this.input.pause();
         this.scheduler.pause();
+        this.deps.services.audio?.setSuspended?.(true);
       }
     } else if (!this.deps.pauseWhenHidden) {
       return;
@@ -1161,6 +1264,10 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         this.deps.scene.world.advanceParticles(delta);
         this.deps.scene.world.advanceTimers(delta);
         this.behaviors.update(delta);
+      },
+      phase3_ui: (delta) => {
+        this.framePhase = "runtime:update";
+        this.behaviors.ui(delta);
       },
       phase4_flush: () => {
         this.deps.scene.world.dynamic.flush();
@@ -1220,13 +1327,19 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         pending.scene.materials.dispose();
         pending.scene.meshes.dispose();
         pending.scene.renderer.dispose();
-        this.report(
-          makeRuntimeDiagnostic("E8102", {
-            phase: "runtime:reload",
-            message: `The candidate was discarded: creating its physics world failed (${errorText(error)}).`,
-            notes: [`module: ${pending.physicsModule.url}`],
-          }),
-        );
+        const cause = makeRuntimeDiagnostic("E8102", {
+          phase: "runtime:reload",
+          message: `The candidate was discarded: creating its physics world failed (${errorText(error)}).`,
+          notes: [`module: ${pending.physicsModule.url}`],
+        });
+        const request = this.sceneRequest;
+        if (pending.fresh !== undefined && request !== undefined) {
+          // A scene change must never leave the request behind: it would ignore every later `go_to` and `reset()`.
+          this.sceneChangeFailed(request, -1, [cause], "creating its physics world failed");
+        } else {
+          this.sceneRequest = undefined;
+          this.report(cause);
+        }
         return;
       }
       pending.scene.world.bodies = physics;
@@ -1242,12 +1355,19 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         const before = new Map(previousManifest.scene.state.filter((entry) => entry.shared === true).map((entry) => [entry.name, entry]));
         for (const entry of pending.manifest.scene.state) {
           const old = before.get(entry.name);
-          if (entry.shared !== true || old === undefined || old.type !== entry.type) continue;
+          if (entry.shared !== true || old === undefined || stateIdentity(old) !== stateIdentity(entry)) continue;
           pending.scene.world.sceneState[entry.name] = carryValue(previous.world.sceneState[entry.name]);
         }
       }
       previous.world.timers.clear();
-      this.scheduler.resumeGame();
+      // A new scene starts with the game running, unless its own `init` paused it (decision 0176).
+      pending.fresh.preparation.link.target = this.deps.game ?? INERT_GAME;
+      this.liveServices = pending.fresh.preparation.services;
+      if (pending.fresh.preparation.held === true) this.scheduler.pauseGame();
+      else this.scheduler.resumeGame();
+      // A click on a button of the old scene must not be claimed by a button of the new one.
+      this.deps.services.hud?.clearClicks?.();
+      this.input.clearPolled();
     } else if (pending.restart === undefined) {
       migrateWorld(previous.world, previousManifest, pending.scene.world, pending.manifest);
     } else {
@@ -1270,6 +1390,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
     this.deps.assets = pending.assets;
     this.deps.sceneFunctions = pending.sceneFunctions;
     this.behaviors = new Behaviors(pending.sceneFunctions, pending.scene.world);
+    this.handlerKeys = this.behaviors.handledKeys();
     this.hostInputs = new HostInputs(pending.manifest);
     this.hostOutputs.replace(pending.manifest);
 
@@ -1368,6 +1489,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       instancedDrawsTotal: renderer.instancedDrawsCumulative,
       culledObjects: renderer.culledObjects,
       culledObjectsTotal: renderer.culledObjectsCumulative,
+      rebatchesTotal: renderer.rebatchesCumulative,
       sharedParamBlocks: materials.sharedParamBlocks,
       ownedParamBlocks: materials.ownedParamBlocks,
       discardedSteps: this.scheduler.discardedSteps,

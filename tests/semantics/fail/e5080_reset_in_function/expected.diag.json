@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5080",
+    "file": "src/main.mtek",
+    "startByte": 151,
+    "endByte": 158,
+    "message": "`reset` may be called only in lifecycle functions and event handlers, not in the function 'leave'.",
+    "notes": [
+      "changing or restarting the scene is a lifecycle operation of the scene"
+    ]
+  }
+]

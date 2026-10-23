@@ -118,14 +118,79 @@ export function persistentEntries(
   return out;
 }
 
-/** Whether a decoded top-level value fits the integer types the template cannot tell from `f32`. */
-function fitsScalar(type: string, value: unknown): boolean {
+/** `text` cut at the commas outside any `<>`, `{}` or `()`. */
+function splitTop(text: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < text.length; i += 1) {
+    const c = text[i];
+    if (c === "<" || c === "{" || c === "(") depth += 1;
+    else if (c === ">" || c === "}" || c === ")") depth -= 1;
+    else if (c === "," && depth === 0) {
+      parts.push(text.slice(start, i).trim());
+      start = i + 1;
+    }
+  }
+  const last = text.slice(start).trim();
+  if (last !== "") parts.push(last);
+  return parts;
+}
+
+/**
+ * Whether a decoded `value` fits the integer types and enums the template cannot tell from `f32`, at every depth of
+ * the stored type (`array<i32, 3>`, `{score: i32, flags: array<enum(A|B), 2>}`, ...).
+ */
+function fitsType(type: string, value: unknown): boolean {
+  const array = /^array<(.*)>$/s.exec(type);
+  if (array !== null) {
+    const element = splitTop(array[1] ?? "")[0];
+    return Array.isArray(value) && (element === undefined || value.every((item: unknown) => fitsType(element, item)));
+  }
+  if (type.startsWith("{") && type.endsWith("}")) {
+    if (typeof value !== "object" || value === null) return false;
+    const record = value as Readonly<Record<string, unknown>>;
+    return splitTop(type.slice(1, -1)).every((field) => {
+      const colon = field.indexOf(":");
+      return colon < 0 || fitsType(field.slice(colon + 1).trim(), record[field.slice(0, colon).trim()]);
+    });
+  }
   if (typeof value !== "number") return true;
   if (type === "i32") return Number.isInteger(value) && value >= -0x80000000 && value <= 0x7fffffff;
   if (type === "u32") return Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
   const variants = /^enum\((.*)\)$/.exec(type);
-  if (variants !== null) return Number.isInteger(value) && value >= 0 && value < variants[1]!.split("|").length;
+  if (variants !== null) return Number.isInteger(value) && value >= 0 && value < (variants[1] ?? "").split("|").length;
   return true;
+}
+
+/** A copy of a state value that later in-place writes of the program cannot reach. */
+function snapshotOf(value: unknown): unknown {
+  if (ArrayBuffer.isView(value)) return Array.from(value as unknown as ArrayLike<number>);
+  if (Array.isArray(value)) return value.map(snapshotOf);
+  if (typeof value === "object" && value !== null) {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, snapshotOf(item)]));
+  }
+  return value;
+}
+
+/** Whether `current` still holds what `snapshot` (from {@link snapshotOf}) recorded; NaN equals NaN. */
+function sameAsSnapshot(snapshot: unknown, current: unknown): boolean {
+  if (snapshot === current) return true;
+  if (typeof snapshot === "number" && typeof current === "number") return Number.isNaN(snapshot) && Number.isNaN(current);
+  if (ArrayBuffer.isView(current)) {
+    const view = current as unknown as ArrayLike<number>;
+    return Array.isArray(snapshot) && snapshot.length === view.length && snapshot.every((item: unknown, i) => sameAsSnapshot(item, view[i]));
+  }
+  if (Array.isArray(current)) {
+    return Array.isArray(snapshot) && snapshot.length === current.length && current.every((item: unknown, i) => sameAsSnapshot(snapshot[i], item));
+  }
+  if (typeof current === "object" && current !== null) {
+    if (typeof snapshot !== "object" || snapshot === null || Array.isArray(snapshot)) return false;
+    const keys = Object.keys(current);
+    const before = snapshot as Readonly<Record<string, unknown>>;
+    return keys.length === Object.keys(before).length && keys.every((key) => sameAsSnapshot(before[key], (current as Readonly<Record<string, unknown>>)[key]));
+  }
+  return false;
 }
 
 /** An in-memory storage: the default under test options, and what `storage: null` amounts to. */
@@ -158,8 +223,8 @@ export function defaultSaveStorage(): SaveStorage | null {
 
 /** The saves of one program. */
 export class GameSaves {
-  /** The JSON of the settings as last read or written, so autosave writes only on a change. */
-  private settingsSnapshot = "";
+  /** The settings as last read or written, so autosave writes only on a change (and costs nothing otherwise). */
+  private settingsSnapshot = new Map<string, unknown>();
   private readonly warned = new Set<string>();
 
   constructor(
@@ -169,6 +234,8 @@ export class GameSaves {
     private readonly report: (problem: SaveProblem) => void,
     /** Set when the page's storage could not be reached and `storage` is an in-memory stand-in: the first save says so. */
     private readonly unavailable = false,
+    /** `game.legacyStorage`: the pre-0179 name whose saves a program with a save id adopts once (decision 0179). */
+    private readonly legacyNamespace: string | undefined = undefined,
   ) {}
 
   /** Whether the program has persistent state at all. */
@@ -192,14 +259,14 @@ export class GameSaves {
         continue;
       }
       const value = decodeValue(item.value, state[entry.name]);
-      if (value === undefined || !fitsScalar(entry.type, value)) {
+      if (value === undefined || !fitsType(entry.type, value)) {
         this.warnOnce(`shape:${entry.name}`, `The saved value of '${entry.name}' does not fit its type ${entry.type}; the state keeps its value.`);
         continue;
       }
       state[entry.name] = value;
       applied = true;
     }
-    this.settingsSnapshot = this.settingsJson(entries, state);
+    this.remember(entries, state);
     return applied;
   }
 
@@ -207,37 +274,42 @@ export class GameSaves {
   save(entries: readonly PersistentEntry[], state: Readonly<Record<string, unknown>>): void {
     if (entries.length === 0) return;
     this.write(entries, state);
-    this.settingsSnapshot = this.settingsJson(entries, state);
+    this.remember(entries, state);
   }
 
   /** Autosave: writes the persistent states when a `setting state` changed since the last read or write. */
   autosave(entries: readonly PersistentEntry[], state: Readonly<Record<string, unknown>>): void {
-    if (!entries.some((entry) => entry.persist === "setting")) return;
-    const json = this.settingsJson(entries, state);
-    if (json === this.settingsSnapshot) return;
-    this.settingsSnapshot = json;
-    this.write(
-      entries.filter((entry) => entry.persist === "setting"),
-      state,
-    );
+    let changed = false;
+    for (const entry of entries) {
+      if (entry.persist !== "setting") continue;
+      if (!this.settingsSnapshot.has(entry.name) || !sameAsSnapshot(this.settingsSnapshot.get(entry.name), state[entry.name])) {
+        changed = true;
+        break;
+      }
+    }
+    if (!changed) return;
+    const settings = entries.filter((entry) => entry.persist === "setting");
+    this.write(settings, state);
+    this.remember(entries, state);
   }
 
   /** `clear_saved()`: removes every stored value of the program. */
   clear(): void {
     if (this.namespace === undefined) return;
     try {
-      this.storage.removeItem(saveKey(this.namespace));
+      // With a legacy name the key stays, empty, so that the old saves are not adopted again (decision 0179).
+      if (this.legacyNamespace === undefined) this.storage.removeItem(saveKey(this.namespace));
+      else this.storage.setItem(saveKey(this.namespace), JSON.stringify({ format: FORMAT, values: {} }));
     } catch (error) {
       this.report({ code: "W5403", message: `Clearing the saved data failed: ${errorText(error)}.` });
     }
   }
 
-  private settingsJson(entries: readonly PersistentEntry[], state: Readonly<Record<string, unknown>>): string {
-    const settings: Record<string, unknown> = {};
+  private remember(entries: readonly PersistentEntry[], state: Readonly<Record<string, unknown>>): void {
+    this.settingsSnapshot.clear();
     for (const entry of entries) {
-      if (entry.persist === "setting") settings[entry.name] = encodeValue(state[entry.name]);
+      if (entry.persist === "setting") this.settingsSnapshot.set(entry.name, snapshotOf(state[entry.name]));
     }
-    return JSON.stringify(settings);
   }
 
   private read(): Record<string, StoredValue> {
@@ -245,6 +317,11 @@ export class GameSaves {
     let text: string | null;
     try {
       text = this.storage.getItem(saveKey(this.namespace));
+      if (text === null && this.legacyNamespace !== undefined) {
+        // Adopt the saves of the old key once: copy them to the new key, which then wins (decision 0179).
+        text = this.storage.getItem(saveKey(this.legacyNamespace));
+        if (text !== null) this.storage.setItem(saveKey(this.namespace), text);
+      }
     } catch {
       return {};
     }

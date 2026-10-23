@@ -18,7 +18,7 @@ import {
   type MtekDiagnostic,
 } from "../diagnostics/types.js";
 import { resolveSpan } from "../host/failures.js";
-import { CELL_HEIGHT, PIXEL_FONT, pixelTextSvg, svgUrl } from "./pixel-font.js";
+import { CELL_HEIGHT, PIXEL_FONT, pixelTextImage } from "./pixel-font.js";
 
 /** The ranges of `spec/hud.md` section 3; the compiler checks constants against the same numbers (E5601). */
 export const TEXT_SIZE_RANGE = [1, 512] as const;
@@ -50,6 +50,8 @@ export interface HudService {
   button(spanId: unknown, label: unknown, at: unknown, size?: unknown): boolean;
   /** Phase 1 of a frame (the host calls it). */
   beginFrame?(): void;
+  /** A scene change: clicks nobody claimed yet belong to the old scene's buttons and are dropped. */
+  clearClicks?(): void;
   /** After the frame's updates (the host calls it). */
   present?(): void;
   /** When the application is disposed. */
@@ -99,6 +101,8 @@ export interface HudOptions {
   readonly canvas: HudCanvas;
   readonly document: HudDocument;
   readonly manifest: MtekManifest;
+  /** The manifest of the scene that runs, for the spans of `W8203`; `manifest` when absent (decision 0176). */
+  readonly manifestNow?: () => MtekManifest;
   readonly report: (diagnostic: MtekDiagnostic) => void;
   /**
    * The CSS family of the font file an `asset.font(..)` names by its project path (decision 0139), registered
@@ -202,6 +206,10 @@ export class HudSystem implements HudService {
   private disposed = false;
 
   constructor(private readonly options: HudOptions) {}
+
+  clearClicks(): void {
+    this.pendingClicks.clear();
+  }
 
   /** Phase 1: a new frame draws a new list. */
   beginFrame(): void {
@@ -328,7 +336,7 @@ export class HudSystem implements HudService {
           makeRuntimeDiagnostic("W8203", {
             phase: "runtime:update",
             message: `This frame drew more than ${String(MAX_HUD_ITEMS)} HUD items; the rest are not shown.`,
-            source: span >= 0 ? resolveSpan(this.options.manifest, span) : null,
+            source: span >= 0 ? resolveSpan(this.options.manifestNow?.() ?? this.options.manifest, span) : null,
             expected: `at most ${String(MAX_HUD_ITEMS)} items per frame`,
           }),
         );
@@ -422,11 +430,11 @@ export class HudSystem implements HudService {
         write("transform", `translate(${String(-item.align * 100)}%,-50%)`);
         if (item.font === PIXEL_FONT) {
           // The built-in font: the text as an SVG background, `size` px tall (decision 0139).
-          const { svg, width } = pixelTextSvg(item.content, item.tint);
+          const { url, width } = pixelTextImage(item.content, item.tint);
           const scale = item.size / CELL_HEIGHT;
           write("#text", "");
           write("#label", item.content);
-          write("backgroundImage", svgUrl(svg));
+          write("backgroundImage", url);
           write("backgroundSize", "100% 100%");
           write("width", `${String(width * scale)}px`);
           write("height", `${String(item.size)}px`);

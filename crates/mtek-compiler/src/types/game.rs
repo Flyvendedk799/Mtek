@@ -25,61 +25,42 @@ use crate::syntax::ast::{
     StateDecl,
 };
 
+/// What differs between the name arguments of `go_to` and `set_camera`.
+struct NameArgument {
+    /// The built-in's name, for the message.
+    call: &'static str,
+    /// What the built-in takes: "the name of a scene".
+    takes: &'static str,
+    /// The kind of thing named, singular: "scene", "camera".
+    noun: &'static str,
+    code: Code,
+    note: &'static str,
+    /// The help when the module declares no such thing.
+    declare: &'static str,
+    /// Whether a declaration of this kind is a valid argument.
+    is_target: fn(DefKind) -> bool,
+    /// The set that records the accepted argument nodes.
+    recorded: for<'a> fn(&'a mut Checker<'_>) -> &'a mut BTreeSet<NodeId>,
+}
+
 impl Checker<'_> {
     /// The argument of a `go_to` call: one name of a scene. Records it so that the name types as
     /// a scene name and answers `true`; otherwise reports `E5201` and answers `false`. A call with
     /// another number of arguments is left to the arity check (`E3002`).
     pub(super) fn go_to_argument(&mut self, args: &[Expr]) -> bool {
-        let [arg] = args else {
-            return true;
-        };
-        let target = strip_parens(arg);
-        if let ExprKind::Name(_) = &target.kind
-            && let Some(Res::Def(id)) = self.res.res(target.id)
-            && self.res.def(id).is_some_and(|d| d.kind == DefKind::Scene)
-        {
-            self.scene_arguments.insert(target.id);
-            if target.id != arg.id {
-                self.scene_arguments.insert(arg.id);
-            }
-            return true;
-        }
-        let scenes: Vec<String> = self
-            .res
-            .defs()
-            .iter()
-            .filter(|d| d.kind == DefKind::Scene)
-            .map(|d| format!("'{}'", d.name))
-            .collect();
-        let found = match &target.kind {
-            ExprKind::Name(_) => match self.res.res(target.id) {
-                Some(Res::Def(id)) => self.res.def(id).map_or_else(
-                    || "a name".to_owned(),
-                    |d| format!("the {} '{}'", d.kind.noun(), d.name),
-                ),
-                _ => "a name that is not a scene".to_owned(),
+        self.name_argument(
+            args,
+            &NameArgument {
+                call: "go_to",
+                takes: "the name of a scene",
+                noun: "scene",
+                code: Code::E5201,
+                note: "the scene to switch to is fixed where `go_to` is written: every scene of the program is built ahead of time",
+                declare: "declare the scene with `scene Name { ... }` and write `go_to(Name);`",
+                is_target: |kind| kind == DefKind::Scene,
+                recorded: |checker| &mut checker.scene_arguments,
             },
-            ExprKind::Str { .. } => "a string".to_owned(),
-            _ => "an expression".to_owned(),
-        };
-        let mut diagnostic = Diagnostic::new(
-            Code::E5201,
-            format!("`go_to` takes the name of a scene, but its argument is {found}."),
         )
-        .at(arg.span)
-        .expected("the name of a scene")
-        .actual(found)
-        .note("the scene to switch to is fixed where `go_to` is written: every scene of the program is built ahead of time");
-        diagnostic = if scenes.is_empty() {
-            diagnostic.help("declare the scene with `scene Name { ... }` and write `go_to(Name);`")
-        } else {
-            diagnostic.help(format!(
-                "the scenes of this module are {}",
-                scenes.join(", ")
-            ))
-        };
-        self.report(diagnostic);
-        false
     }
 
     /// Whether `kind` is the camera scene-object and `id` is a `set_camera` argument.
@@ -94,39 +75,51 @@ impl Checker<'_> {
     /// `E5015` and answers `false`. A call with another number of arguments is left to the
     /// arity check (`E3002`).
     pub(super) fn set_camera_argument(&mut self, args: &[Expr]) -> bool {
+        self.name_argument(
+            args,
+            &NameArgument {
+                call: "set_camera",
+                takes: "the name of a camera of this scene",
+                noun: "camera",
+                code: Code::E5015,
+                note: "the camera to switch to is fixed where `set_camera` is written",
+                declare: "declare a camera with `camera Name { ... }` and write `set_camera(Name);`",
+                is_target: |kind| {
+                    matches!(
+                        kind,
+                        DefKind::SceneObject {
+                            kind: Some("camera")
+                        }
+                    )
+                },
+                recorded: |checker| &mut checker.camera_arguments,
+            },
+        )
+    }
+
+    /// The one-name argument of `go_to` and `set_camera`: a name that `rule.is_target` accepts is
+    /// recorded in `rule.recorded` and answers `true`; anything else is reported with `rule.code`
+    /// and answers `false`. A call with another number of arguments is left to the arity check.
+    fn name_argument(&mut self, args: &[Expr], rule: &NameArgument) -> bool {
         let [arg] = args else {
             return true;
         };
         let target = strip_parens(arg);
         if let ExprKind::Name(_) = &target.kind
             && let Some(Res::Def(id)) = self.res.res(target.id)
-            && self.res.def(id).is_some_and(|d| {
-                matches!(
-                    d.kind,
-                    DefKind::SceneObject {
-                        kind: Some("camera")
-                    }
-                )
-            })
+            && self.res.def(id).is_some_and(|d| (rule.is_target)(d.kind))
         {
-            self.camera_arguments.insert(target.id);
+            (rule.recorded)(self).insert(target.id);
             if target.id != arg.id {
-                self.camera_arguments.insert(arg.id);
+                (rule.recorded)(self).insert(arg.id);
             }
             return true;
         }
-        let cameras: Vec<String> = self
+        let candidates: Vec<String> = self
             .res
             .defs()
             .iter()
-            .filter(|d| {
-                matches!(
-                    d.kind,
-                    DefKind::SceneObject {
-                        kind: Some("camera")
-                    }
-                )
-            })
+            .filter(|d| (rule.is_target)(d.kind))
             .map(|d| format!("'{}'", d.name))
             .collect();
         let found = match &target.kind {
@@ -135,26 +128,29 @@ impl Checker<'_> {
                     || "a name".to_owned(),
                     |d| format!("the {} '{}'", d.kind.noun(), d.name),
                 ),
-                _ => "a name that is not a camera".to_owned(),
+                _ => format!("a name that is not a {}", rule.noun),
             },
             ExprKind::Str { .. } => "a string".to_owned(),
             _ => "an expression".to_owned(),
         };
         let mut diagnostic = Diagnostic::new(
-            Code::E5015,
-            format!("`set_camera` takes the name of a camera of this scene, but its argument is {found}."),
+            rule.code,
+            format!(
+                "`{}` takes {}, but its argument is {found}.",
+                rule.call, rule.takes
+            ),
         )
         .at(arg.span)
-        .expected("the name of a camera")
+        .expected(format!("the name of a {}", rule.noun))
         .actual(found)
-        .note("the camera to switch to is fixed where `set_camera` is written");
-        diagnostic = if cameras.is_empty() {
-            diagnostic
-                .help("declare a camera with `camera Name { ... }` and write `set_camera(Name);`")
+        .note(rule.note);
+        diagnostic = if candidates.is_empty() {
+            diagnostic.help(rule.declare)
         } else {
             diagnostic.help(format!(
-                "the cameras of this module are {}",
-                cameras.join(", ")
+                "the {}s of this module are {}",
+                rule.noun,
+                candidates.join(", ")
             ))
         };
         self.report(diagnostic);

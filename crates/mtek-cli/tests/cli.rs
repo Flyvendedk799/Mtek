@@ -1304,3 +1304,110 @@ fn the_deepest_legal_nesting_builds_as_a_preview() {
     let out = run_in(&project, &["build", "--mode", "preview", "--out", "out"]);
     assert_eq!(out.status.code(), Some(0), "{}", stderr(&out));
 }
+
+// ---------------------------------------------------------------------------------------------
+// The game template and the itch.io zip (decision 0136)
+// ---------------------------------------------------------------------------------------------
+
+#[test]
+fn the_game_template_is_the_small_game_example_byte_for_byte() {
+    let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let template = fs::read(manifest.join("templates/game.mtek")).unwrap();
+    let example = fs::read(manifest.join("../../examples/small-game/src/main.mtek")).unwrap();
+    assert_eq!(
+        template, example,
+        "templates/game.mtek drifted from examples/small-game"
+    );
+}
+
+#[cfg(mtek_runtime_embedded)]
+#[test]
+fn a_scaffolded_game_builds_as_a_release_package_with_an_itch_zip() {
+    let scratch = Scratch::new("new-game-build");
+    let made = run_in(&scratch.0, &["new", "my-game", "--template", "game"]);
+    assert_eq!(made.status.code(), Some(0), "{}", stderr(&made));
+    let project = scratch.path("my-game");
+    let ignore = fs::read_to_string(project.join(".gitignore")).unwrap();
+    assert!(
+        ignore.lines().any(|line| line == "/dist-itch.zip"),
+        "{ignore}"
+    );
+    let out = run_in(&project, &["build", "--release", "--itch"]);
+    assert_eq!(out.status.code(), Some(0), "{}", stderr(&out));
+    assert!(project.join("dist/index.html").is_file());
+    assert!(project.join("dist-itch.zip").is_file());
+}
+
+/// `game` of the manifest a build wrote.
+#[cfg(mtek_runtime_embedded)]
+fn built_game(project: &Path) -> Value {
+    let manifest: Value =
+        serde_json::from_slice(&fs::read(project.join("dist/program.manifest.json")).unwrap())
+            .unwrap();
+    manifest["game"].clone()
+}
+
+#[cfg(mtek_runtime_embedded)]
+#[test]
+fn two_scaffolded_games_of_one_name_save_under_different_keys() {
+    let scratch = Scratch::new("save-ids");
+    let mut storages = Vec::new();
+    for dir in ["a", "b"] {
+        let made = run_in(&scratch.path(""), &["new", "my-game", "--template", "game"]);
+        assert_eq!(made.status.code(), Some(0), "{}", stderr(&made));
+        fs::rename(scratch.path("my-game"), scratch.path(dir)).unwrap();
+        let project = scratch.path(dir);
+        let toml = fs::read_to_string(project.join("mtek.toml")).unwrap();
+        let id = toml
+            .lines()
+            .find_map(|line| line.strip_prefix("id = \""))
+            .map(|rest| rest.trim_end_matches('"').to_owned())
+            .expect("mtek new writes a save id");
+        let out = run_in(&project, &["build"]);
+        assert_eq!(out.status.code(), Some(0), "{}", stderr(&out));
+        let game = built_game(&project);
+        assert_eq!(game["storage"], format!("my-game.{id}"));
+        assert!(game.get("legacyStorage").is_none(), "{game}");
+        storages.push(id);
+    }
+    assert_ne!(storages[0], storages[1]);
+}
+
+#[cfg(mtek_runtime_embedded)]
+#[test]
+fn a_project_without_an_id_keeps_its_old_key_and_migrate_saves_names_it() {
+    let scratch = Scratch::new("save-migrate");
+    let project = copy_fixture(&scratch, "semantics/pass", "saved_state");
+    let out = run_in(&project, &["build"]);
+    assert_eq!(out.status.code(), Some(0), "{}", stderr(&out));
+    assert_eq!(built_game(&project)["storage"], "fixture");
+    assert!(built_game(&project).get("legacyStorage").is_none());
+    let toml = fs::read_to_string(project.join("mtek.toml")).unwrap();
+    fs::write(
+        project.join("mtek.toml"),
+        format!("{toml}id = \"1a2b3c4d\"\nmigrate_saves = true\n"),
+    )
+    .unwrap();
+    let out = run_in(&project, &["build"]);
+    assert_eq!(out.status.code(), Some(0), "{}", stderr(&out));
+    let game = built_game(&project);
+    assert_eq!(game["storage"], "fixture.1a2b3c4d");
+    assert_eq!(game["legacyStorage"], "fixture");
+}
+
+#[cfg(mtek_runtime_embedded)]
+#[test]
+fn a_failing_itch_build_removes_the_zip_of_the_build_before() {
+    let scratch = Scratch::new("itch-stale");
+    let project = scratch.project("app", VALID);
+    let first = run_in(&project, &["build", "--release", "--itch"]);
+    assert_eq!(first.status.code(), Some(0), "{}", stderr(&first));
+    assert!(project.join("dist-itch.zip").is_file());
+    fs::write(project.join("src/main.mtek"), INVALID).unwrap();
+    let second = run_in(&project, &["build", "--release", "--itch"]);
+    assert_eq!(second.status.code(), Some(1), "{}", stderr(&second));
+    assert!(
+        !project.join("dist-itch.zip").exists(),
+        "a stale zip survived a failing build"
+    );
+}

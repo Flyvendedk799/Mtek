@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E9020",
+    "file": null,
+    "startByte": null,
+    "endByte": null,
+    "message": "Host input target 'Demo.level' is not exposable: type 'Level' cannot be a host input.",
+    "notes": [
+      "host.inputs.level",
+      "exposable types: f32, i32, u32, bool, vec2, vec3, vec4, color, string"
+    ]
+  }
+]

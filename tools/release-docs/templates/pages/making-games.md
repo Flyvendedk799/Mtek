@@ -1,0 +1,548 @@
+# Making a game
+
+{{generated}}
+
+This page takes you from an empty folder to a small game that you can put on itch.io. It does not teach the whole language: [Getting started](getting-started.md) installs the toolchain and the [tutorial](tutorial.md) builds a first scene. Here you meet the parts a game needs and nothing else: scenes you switch between, a score that is kept, timers, a pause, keyboard and mouse input, groups of entities, collisions, text on the screen, sound, sprites, particles, more than one camera, easing, tests, and a folder to upload.
+
+Every Mtek block on this page is compiled by the test suite of the documentation, so each program is a program that checks. The tests cannot look at the picture or listen to the sound; the descriptions of what you see are what the program is specified to do.
+
+## Start from the game template
+
+```console
+$ mtek new my-game --template game
+$ cd my-game
+$ mtek dev
+```
+
+`--template game` writes a two-scene game: a title that shows the best score and a run in which gems fall into three lanes. It has the files every project has (`mtek.toml`, `src/main.mtek`, `.gitignore`). The `mtek.toml` of a game also has an `id`, a few random hexadecimal digits that keep the saved score of your game apart from the saved score of any other game on the same web page address (see [Saved and setting state](#shared-saved-and-setting-state)). Keep the line when you commit the project.
+
+The program of the template is the one in `examples/small-game`; the rest of this page explains its parts one by one. `mtek dev` rebuilds when you save and reloads the browser.
+
+## Scenes and go_to
+
+A game has more than one screen. Each screen is a `scene`. The first one that runs is named by `scene` in `mtek.toml` (`MTEK-E9006` if there are several and none is named). `go_to(Name)` switches to another scene at the start of a later frame:
+
+```mtek
+scene Title {
+    clear_color: #10141c;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 8.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    update(dt: f32) {
+        hud.text("MY GAME", vec2(0.0, 0.3), 48.0, #ffffff, 0.5);
+        hud.text("Press Enter", vec2(0.0, -0.2), 20.0, #a0b0c0, 0.5);
+    }
+
+    on key_down(Key.Enter) {
+        go_to(Play);
+    }
+}
+
+scene Play {
+    clear_color: #0b0e14;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 8.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Player {
+        mesh: Box { size: vec3(0.7, 0.7, 0.7) };
+        material: Unlit { color: #4fa3ff };
+        position: vec3(0.0, -2.0, 0.0);
+    }
+
+    on key_down(Key.Escape) {
+        go_to(Title);
+    }
+}
+```
+
+The scene you leave ends: its entities, timers and bodies are gone, and the new scene starts from its initial values. `reset()` starts the running scene over in the same way. `mtek build` writes one file per scene (`app.js` for the first, `app.Play.js` for `Play`, and so on); the runtime loads the next one in the background, so the switch does not stall the picture. If the next scene cannot be loaded, the current one keeps running and the runtime reports `MTEK-E5401`.
+
+## Shared, saved and setting state
+
+Plain `state` belongs to its scene. Two prefixes make it last longer:
+
+| Declaration | Lives |
+|---|---|
+| `state x: T = v;` | until the scene ends |
+| `shared state x: T = v;` | across `go_to`: a scene that declares a `shared` state of the same name gets the value of the scene it came from |
+| `saved state x: T = v;` | across visits: written to the browser by `save()`, read again when a scene starts |
+| `setting state x: T = v;` | across visits, and written by itself at the end of any frame in which it changed (volume, difficulty) |
+
+`shared` goes first and can be combined: `shared saved state best: i32 = 0;`. A score that must reach the next scene and the next visit is exactly that.
+
+```mtek
+scene Title {
+    shared state score: i32 = 0;
+    shared saved state best: i32 = 0;
+    setting state volume: f32 = 1.0;
+
+    camera Main {}
+
+    update(dt: f32) {
+        hud.text("Best ${best}", vec2(0.0, 0.1), 32.0, #ffd040, 0.5);
+    }
+
+    on key_down(Key.Enter) {
+        score = 0;
+        go_to(Play);
+    }
+
+    on key_down(Key.Backspace) {
+        clear_saved();
+        reset();
+    }
+}
+
+scene Play {
+    shared state score: i32 = 0;
+    shared saved state best: i32 = 0;
+    setting state volume: f32 = 1.0;
+
+    camera Main {}
+
+    on key_down(Key.Space) {
+        score += 1;
+        if score > best {
+            best = score;
+            save();
+        }
+    }
+
+    on key_down(Key.Escape) {
+        go_to(Title);
+    }
+}
+```
+
+What to know:
+
+- `save()` writes every saved and setting state of the running scene at once; call it at a moment the game chooses (a new best score, a checkpoint). `load()` reads them back, and `clear_saved()` deletes everything the program stored. After `clear_saved()` the running scene keeps its values; `reset()` starts it over.
+- A stored value is applied when a scene starts, after the initialisers. A saved value is never an error: one that no longer fits its type (you changed the program) is ignored with the warning `MTEK-W5402`, and a browser that refuses the write gives `MTEK-W5403`.
+- Only scene state can be saved (`MTEK-E5210`), and only plain data: numbers, vectors, colours, strings, enums, and arrays and structs of these (`MTEK-E5211`).
+- The values are kept in the browser's `localStorage`, in one entry for the whole program under the key `mtek.save.<name>.<id>`, where `<name>` is the project name and `<id>` is the `id` in `mtek.toml`. A project without an `id` uses `mtek.save.<name>`; itch.io serves every game from one address, so two games called `my-game` without an id share their saves. Moving an older game to the new key without losing a player's save is `migrate_saves = true` next to `id` (decision 0179).
+
+## Timers: after and every
+
+`after(seconds) { ... }` runs a block once and `every(seconds) { ... }` runs it again and again. They count the game clock, which stands still while the game is paused. A timer that an entity's handler starts is dropped when that entity is destroyed, and the timers of a scene end with the scene.
+
+```mtek
+scene Play {
+    state started: bool = false;
+    state seconds: i32 = 0;
+    state fast: bool = false;
+
+    camera Main {}
+
+    update(dt: f32) {
+        if !started {
+            started = true;
+            every(1.0) {
+                seconds += 1;
+            }
+            after(20.0) {
+                fast = true;
+            }
+        }
+        hud.text("${seconds} s", vec2(-0.95, 0.9), 24.0, #ffffff, 0.0);
+    }
+}
+```
+
+The `started` flag is the usual way to start timers once, in the first frame of a scene.
+
+## Pause
+
+`pause()` stops the game: no fixed ticks, no physics, no timers and no `update`. Input handlers keep running, and so does the scene's `ui(dt)` (decision 0175): it runs in every frame after `update`, also while the game is paused, so it is where the HUD and the pause menu go. `paused()` says which it is.
+
+```mtek
+scene Play {
+    state score: i32 = 0;
+
+    camera Main {}
+
+    ui(dt: f32) {
+        hud.text("Score ${score}", vec2(-0.95, 0.88), 24.0, #ffffff, 0.0);
+        if paused() {
+            hud.text("PAUSED", vec2(0.0, 0.3), 36.0, #ffffff, 0.5);
+            if hud.button("Resume", vec2(0.0, 0.0), 24.0) {
+                resume();
+            }
+        } else if hud.button("Pause", vec2(0.95, -0.88), 18.0) {
+            pause();
+        }
+    }
+
+    on key_down(Key.Escape) {
+        if paused() {
+            resume();
+        } else {
+            pause();
+        }
+    }
+}
+```
+
+Only a scene declares `ui`; an entity or a prefab that does is `MTEK-E5052`. Keep game logic in `update`: `ui` is for what the player sees and clicks.
+
+## Input: events and polling
+
+There are two ways to read the keyboard and the pointer. Handlers run when something happens:
+
+```mtek
+scene Play {
+    state clicks: i32 = 0;
+
+    camera Main {}
+
+    on key_down(Key.Space) {
+        clicks += 1;
+    }
+
+    on pointer_down(event: PointerEvent) {
+        if event.position.x < 0.0 {
+            clicks += 1;
+        }
+    }
+}
+```
+
+Polling asks in `update` every frame. `is_key_down` is true while the key is held, `key_pressed` and `key_released` are true in the one frame in which it changed, and the pointer is read with `pointer_position()` (canvas coordinates from -1 to 1, y up) and `is_pointer_down(0)`:
+
+```mtek
+scene Play {
+    state lane: i32 = 1;
+    state x: f32 = 0.0;
+
+    camera Main {}
+
+    update(dt: f32) {
+        if key_pressed(Key.ArrowLeft) && lane > 0 {
+            lane -= 1;
+        }
+        if key_pressed(Key.ArrowRight) && lane < 2 {
+            lane += 1;
+        }
+        if is_key_down(Key.D) {
+            x += 3.0 * dt;
+        }
+        let at = pointer_position();
+        if is_pointer_down(0) {
+            hud.rect(at, vec2(14.0, 14.0), #ffd040, 0.5);
+        }
+    }
+}
+```
+
+Use events for one-off actions and polling for movement. [Time and input](concepts/time-and-input.md) has the key names and the details.
+
+## Tags and queries
+
+A game has many of the same thing. Give an entity or a prefab a `tag` and find the group by name. `spawn` makes a new one and `destroy` removes it:
+
+```mtek
+prefab Gem {
+    param lane: i32 = 1;
+    tag: "gem";
+    mesh: Sphere { radius: 0.35 };
+    material: Unlit { color: #3ec46d };
+    position: vec3(f32(lane) * 1.6 - 1.6, 3.2, 0.0);
+
+    update(dt: f32) {
+        self.position.y -= 2.4 * dt;
+        if self.position.y < -3.4 {
+            destroy(self);
+        }
+    }
+}
+
+scene Play {
+    state score: i32 = 0;
+
+    camera Main {}
+
+    entity Player {
+        tag: "player";
+        mesh: Box { size: vec3(0.7, 0.7, 0.7) };
+        material: Unlit { color: #4fa3ff };
+        position: vec3(0.0, -2.0, 0.0);
+    }
+
+    update(dt: f32) {
+        if count_tagged("gem") < 1 {
+            spawn(Gem { lane: random_int(0, 3) });
+        }
+        for gem in tagged("gem") {
+            if distance(gem.position, Player.position) < 0.8 {
+                score += 1;
+                destroy(gem);
+            }
+        }
+    }
+}
+```
+
+The queries are `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged` (a loop over the group), `has_tag` and `destroy_tagged`. A tag is 1 to 32 lowercase letters, digits and `_`, starting with a letter (`MTEK-E5220`). Random numbers come from `random()`, `random_range(lo, hi)`, `random_int(lo, hi)` (the top is excluded), `choose(items)` and `shuffle(items)`.
+
+## Collisions
+
+For a game where things touch, you can compare distances as above, or let the physics engine tell you. An entity with a collider receives `collision_enter` and `collision_exit`. A `sensor` collider detects an overlap without pushing:
+
+```mtek
+scene Play {
+    state coins: i32 = 0;
+
+    camera Main {
+        position: vec3(0.0, 2.0, 8.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+
+    entity Floor {
+        position: vec3(0.0, -0.5, 0.0);
+        mesh: Box { size: vec3(10.0, 1.0, 10.0) };
+        body: Static {};
+        collider: BoxCollider { size: vec3(10.0, 1.0, 10.0) };
+    }
+
+    entity Coin {
+        position: vec3(2.0, 0.5, 0.0);
+        mesh: Sphere { radius: 0.3 };
+        body: Static {};
+        collider: SphereCollider { radius: 0.4; sensor: true };
+
+        on collision_enter(other: entity_ref) {
+            if other == Ball && self.visible {
+                coins += 1;
+                self.visible = false;
+            }
+        }
+    }
+
+    entity Ball {
+        position: vec3(0.0, 0.5, 0.0);
+        mesh: Sphere { radius: 0.5 };
+        body: Dynamic { mass: 1.0 };
+        collider: SphereCollider { radius: 0.5 };
+    }
+
+    on key_down(Key.ArrowRight) {
+        Ball.body.apply_impulse(vec3(3.0, 0.0, 0.0));
+    }
+}
+```
+
+[Physics](concepts/physics.md) lists the body kinds, the commands and the limits.
+
+## The HUD: text, rectangles, buttons and fonts
+
+The HUD is drawn again every frame from `ui`, `update` or a handler; draw it from `ui` when it must stay on screen while the game is paused. `hud.text(content, at, size, tint, align, font)` draws a line, `hud.rect(at, size, tint, align)` a filled box for panels and bars, and `hud.button(label, at, size)` draws a button and returns `true` in the frame after a click. Positions are canvas coordinates from -1 to 1 with y up, sizes are in pixels, and `align` is 0 for the left edge, 0.5 for the centre and 1 for the right edge. A text can contain `${expression}`, with `${value:.1}` for one decimal.
+
+```mtek
+scene Play {
+    state points: i32 = 0;
+    state left: f32 = 30.0;
+
+    camera Main {}
+
+    update(dt: f32) {
+        left = max(left - dt, 0.0);
+        hud.text("Score: ${points}", vec2(-0.95, 0.9), 32.0, #ffffff, 0.0);
+        hud.rect(vec2(-0.95, 0.78), vec2(300.0, 10.0), #202838, 0.0);
+        hud.rect(vec2(-0.95, 0.78), vec2(10.0 * left, 10.0), #40d070, 0.0);
+        hud.text("${left:.1} s", vec2(-0.95, 0.7), 18.0, #a0b0c0, 0.0);
+        if hud.button("Add a point", vec2(0.0, -0.85)) {
+            points += 1;
+        }
+    }
+}
+```
+
+The HUD calls belong to `update` and handlers; in a `fn` they are `MTEK-E5080`.
+
+The default font is the page's own. `hud.pixel_font()` is a small pixel font that looks the same in every browser, and a font file of your own is declared like any asset and passed as the last argument:
+
+```mtek from=tests/assets/pass/hud_fonts/src/main.mtek
+const TITLE = asset.font("../fonts/RussoOne-Regular.ttf");
+```
+
+```mtek from=tests/assets/pass/hud_fonts/src/main.mtek
+        hud.text("SCORE ${score}", vec2(0.0, 0.8), 32.0, #ffffff, 0.5, TITLE);
+        hud.text("PRESS SPACE", vec2(0.0, -0.8), 16.0, #ffd060, 0.5, hud.pixel_font());
+```
+
+A font is a `.ttf`, `.otf`, `.woff` or `.woff2` file in the project; a file that is not one is `MTEK-E7105` or `MTEK-E7106`.
+
+## Audio
+
+Sounds are files (`.wav`, `.ogg` or `.mp3`) declared as constants and played from handlers. Browsers keep sound silent until the player has pressed a key or clicked, and the runtime starts it on that first gesture.
+
+```mtek from=examples/arcade-audio/src/main.mtek
+const HIT = asset.sound("../sounds/hit.wav");
+
+const SCORE = asset.sound("../sounds/score.wav");
+
+const MUSIC = asset.sound("../sounds/music.wav");
+```
+
+```mtek from=examples/arcade-audio/src/main.mtek
+    on key_down(Key.Space) {
+        play_at(HIT, Ball.position, 0.9);
+        flash = 0.4;
+    }
+```
+
+`play(sound)`, `play(sound, volume, pitch)` and `play_at(sound, position, volume)` play once; the last one fades with distance and pans left or right from the active camera. `play_music(sound)` loops one track and `stop_music()` stops it. `set_volume(v)` and `set_muted(m)` act on everything. [The audio specification](../spec/audio.md) has the ranges.
+
+## Sprites and the 2D camera
+
+A 2D game uses the `Sprite` material on flat planes seen by an orthographic camera. The material shows one cell of a sheet: a texture of `columns` by `rows` equal cells, numbered from 0, left to right and top to bottom. Bind `cell` to a value that counts up to animate. Without a `texture` it uses the built-in white texture, which is enough to try the idea.
+
+```mtek
+scene Pop {
+    clear_color: #101418;
+    state t: f32 = 0.0;
+
+    camera Cam2D {
+        position: vec3(0.0, 0.0, 10.0);
+        projection: Orthographic { height: 8.0 };
+    }
+
+    entity Hero {
+        mesh: Plane { size: vec2(2.2, 2.2) };
+        rotation: quat.euler(1.5707964, 0.0, 0.0);
+        material: Sprite {
+            columns: 4.0;
+            rows: 2.0;
+            cell: bind(t * 8.0);
+            tint: bind(
+                color.linear(vec3(0.35, 0.7, 1.0), 0.35 + 0.65 * easing.out_cubic(fract(t)))
+            );
+        };
+    }
+
+    update(dt: f32) {
+        t = t + dt;
+    }
+}
+```
+
+With `Orthographic { height: 8.0 }` the canvas shows eight world units from top to bottom, `x` goes right and `y` goes up. A sprite is always drawn translucent, so its clear texels show what is behind it.
+
+Overlapping sprites are drawn back to front by their distance from the camera, so under an orthographic camera a sprite's `z` is its layer: the one with the larger `z` (nearer the camera looking down -Z) is drawn on top (decision 0173).
+
+## Particles
+
+An entity with `particles: Emitter { ... }` throws small camera-facing copies of its mesh: `rate` a second, each living `lifetime` seconds, leaving at `speed` with `gravity` pulling down. At most 64 are alive at once, and `particle_count()` says how many are.
+
+```mtek
+scene Stage {
+    state sparks: i32 = 0;
+
+    camera Main {
+        position: vec3(0.0, 1.6, 4.5);
+    }
+
+    entity Fountain {
+        position: vec3(1.2, 0.0, 0.0);
+        mesh: Plane { size: vec2(1.0, 1.0) };
+        material: Unlit { color: #ffcc33 };
+        particles: Emitter { rate: 24.0; lifetime: 0.8; speed: 1.6; size: 0.12; gravity: 3.0 };
+    }
+
+    update(dt: f32) {
+        sparks = particle_count();
+    }
+}
+```
+
+## More than one camera
+
+A scene can declare several cameras. Exactly one is `active: true` at the start, and `set_camera(Name)` makes another the one that draws:
+
+```mtek
+scene Stage {
+    camera Main {
+        position: vec3(0.0, 1.6, 4.5);
+        active: true;
+    }
+
+    camera Wide {
+        position: vec3(0.0, 3.2, 8.0);
+    }
+
+    on key_down(Key.Digit1) {
+        set_camera(Main);
+    }
+
+    on key_down(Key.Digit2) {
+        set_camera(Wide);
+    }
+}
+```
+
+Reading or writing a camera by name always means that camera, also when another one is active: `Wide.position = vec3(0.0, 20.0, 0.0);` moves `Wide` and leaves the active camera alone (decision 0177).
+
+The cameras keep their own values while another draws. A name that is not a camera of the scene is `MTEK-E5015`.
+
+## Tweens and easing
+
+A tween is a value that moves from one number to another over time along a curve. Mtek has ten curves in the `easing` namespace, each taking a time from 0 to 1 and returning a number that is 0 at 0 and 1 at 1. They are plain functions, so you keep the time yourself:
+
+```mtek
+scene Score {
+    state pulse: f32 = 0.0;
+
+    camera Main {}
+
+    entity Cube {
+        scale: bind(vec3(1.0, 1.0, 1.0) * (1.4 - 0.4 * easing.out_back(1.0 - pulse / 0.3)));
+        mesh: Box {};
+        material: Unlit { color: #4fa3ff };
+    }
+
+    update(dt: f32) {
+        pulse = max(pulse - dt, 0.0);
+    }
+
+    on key_down(Key.Space) {
+        pulse = 0.3;
+    }
+}
+```
+
+Each press sets `pulse` to 0.3 seconds, `update` counts it down, and the cube scales up to 1.4 and settles back with a small overshoot. The curves are `in_quad`, `out_quad`, `in_out_quad`, `in_cubic`, `out_cubic`, `in_out_cubic`, `in_out_sine`, `out_back`, `out_elastic` and `out_bounce`. They are not allowed in a `const` or in a plain `fn` (`MTEK-E4002`).
+
+## Testing the game
+
+`mtek test` runs the fixtures in the `tests` folder of a project: a list of steps that advance the game by a given time, press and release keys, and check state. A fixture for the score game of the examples:
+
+```toml from=examples/hud-score/tests/space-scores-r-resets.test.toml
+name = "Space scores and R resets; the round clock runs"
+steps = [
+  { step = 2, dt = 0.016666668 },
+  { expect_state = { points = 0, best = 0 } },
+```
+
+Each `{ press = "Space" }` is applied at the start of the next `step`. The HUD is not visible to a fixture (it is page text over the canvas), but `expect_state` checks the state that drives it, and `expect_pixel` and `expect_counter` check the picture. `mtek test` needs a browser with WebGPU (Playwright); without one it reports the fixtures as not run. [Testing](../spec/testing.md) and section 6 of [the tool specification](../spec/tooling.md) have the whole format.
+
+## Build the game and upload it
+
+```console
+$ mtek build --release
+$ mtek build --release --itch
+```
+
+`--release` writes a game package into `dist`: the minified runtime, a page with a title, a favicon (put your own at `assets/favicon.svg`, `assets/favicon.png` or `assets/favicon.ico` in the project, or the built-in one is used) and one folder of files with relative paths, so any static host serves it. `--itch` also writes `dist-itch.zip` beside the folder, in the shape itch.io wants for an HTML5 game: `index.html` at the root, and under the limits of itch.io (`MTEK-E7104` when a limit is broken). Upload that zip, and mark the itch.io project "This file will be played in the browser". Add `/dist-itch.zip` to `.gitignore`; `mtek new` does this for you.
+
+Players need a browser with WebGPU; [Supported environments](supported-environments.md) says which.
+
+## See also
+
+- The examples: `examples/small-game` (the template), `examples/lane-runner` (three scenes, saved score, difficulty setting), `examples/hud-score` (HUD, timer bar, easing), `examples/arcade-audio`, `examples/sprite-pop` and `examples/stage-show` (cameras, particles, a GLB clip).
+- [Time and input](concepts/time-and-input.md), [Physics](concepts/physics.md) and [State and bindings](concepts/state-and-bindings.md).
+- [Limitations](limitations.md): what is not there yet.

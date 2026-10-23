@@ -282,14 +282,20 @@ impl Lowering<'_> {
             params: ctx.params.clone(),
             scene: Some(ctx),
         };
+        let ty = self.type_name(info.ty);
+        // A persistent state always has its structural description; any other state has one when
+        // its type is more than its name says (an enum's variants, a struct's fields), so that a
+        // reload can tell a changed enum from the old one (decision 0177).
+        let stored = stored_type(self.types, info.ty);
+        let stored_type = (decl.persist.is_some() || stored != ty).then_some(stored);
         Ok(State {
             name: name.clone(),
             symbol: scope.child(&name),
-            ty: self.type_name(info.ty),
+            ty,
             owner,
             shared: decl.shared.is_some(),
             persist: decl.persist.map(|(persist, _)| persist.word().to_owned()),
-            stored_type: decl.persist.map(|_| stored_type(self.types, info.ty)),
+            stored_type,
             init: lowering.expr(&decl.value)?,
             span: decl.span,
         })
@@ -306,6 +312,7 @@ impl Lowering<'_> {
         let kind = match decl.name.name.as_str() {
             "update" => BehaviorKind::Update,
             "fixed_update" => BehaviorKind::FixedUpdate,
+            "ui" => BehaviorKind::Ui,
             other => return Err(format!("a lifecycle function named '{other}'")),
         };
         let mut lowering = FnLowering {

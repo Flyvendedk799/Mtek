@@ -277,3 +277,25 @@ describe("animation-frame loop", () => {
     }).toThrow("unhandled");
   });
 });
+
+describe("phase 3b: ui (decision 0175)", () => {
+  it("runs after phase 3 in a running frame and alone in a frame the game is held", () => {
+    const log: string[] = [];
+    const phases: FramePhases = { ...recordingPhases(log), phase3_ui: (delta) => log.push(`ui(${delta.toFixed(3)})`) };
+    const scheduler = new Scheduler(CONFIG, phases, null);
+    scheduler.stepManual(1, 0.02);
+    expect(log).toEqual(["1", "2(0.01)", "2(0.01)", "3(0.020)", "ui(0.020)", "4", "5", "6", "7"]);
+    log.length = 0;
+    scheduler.pauseGame();
+    scheduler.stepManual(1, 0.02);
+    expect(log).toEqual(["1", "ui(0.020)", "4", "5", "6", "7"]);
+  });
+
+  it("is optional: a phase set without it runs as before", () => {
+    const log: string[] = [];
+    const scheduler = new Scheduler(CONFIG, recordingPhases(log), null);
+    scheduler.pauseGame();
+    scheduler.stepManual(1, 0.02);
+    expect(log).toEqual(["1", "4", "5", "6", "7"]);
+  });
+});

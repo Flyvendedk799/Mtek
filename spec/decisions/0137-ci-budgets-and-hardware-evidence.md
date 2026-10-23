@@ -28,6 +28,12 @@ The repository's CI already builds, lints and unit-tests on Linux and Windows, a
 - The recorder has not been run, because this machine has no GPU and no Chromium. The checker was exercised here against a software-adapter file (refused) and against no file (refused).
 - The workflow change is in `ci/small-games-ci.patch`, not in `.github/workflows/ci.yml`. The branch push token has no `workflow` scope, and GitHub refused the push. Abe applies the patch (`ci/README.md`). The YAML was edited by hand and was not parsed here (no YAML parser on the box).
 
+## Update, 2026-10-23
+
+- The patch is applied in `.github/workflows/ci.yml` and `ci/small-games-ci.patch` is gone.
+- The size budgets were re-baselined (measured plus 10 %) and the four game examples were added. `scripts/game-budgets.mjs size` now also fails when a directory under `examples/` has no budget entry.
+- `game-budgets.mjs frames` also refuses an adapter that does not say whether it is a fallback, a SwiftShader, llvmpipe or Basic Render description, and an example whose `failure` is set. The recorder keeps an unknown `isFallbackAdapter` as `null` and opens a headed window by default.
+
 ## Verification
 
 - `node scripts/game-budgets.mjs size` (run here: all seven examples within budget).

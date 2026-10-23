@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5005",
+    "file": "src/main.mtek",
+    "startByte": 287,
+    "endByte": 302,
+    "message": "The binding of the field 'scale' of entity 'Gauge' reads the field `.position` of an entity_ref, which a binding cannot depend on.",
+    "notes": [
+      "a binding may read constants, state, `frame`, the fields and state of named entities and the colour and intensity of their lights"
+    ]
+  }
+]

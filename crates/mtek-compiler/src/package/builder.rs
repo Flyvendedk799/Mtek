@@ -161,6 +161,22 @@ fn storage_name(project: &str) -> String {
     }
 }
 
+/// The storage name and the old one to adopt (decision 0179): with a project `id`, the name is
+/// `<name>.<id>` within the 64 characters the schema allows; the old name is the plain project
+/// name, given only when `migrate_saves` asks for it.
+fn storage_names(section: &crate::project::ProjectSection) -> (String, Option<String>) {
+    let plain = storage_name(&section.name);
+    match &section.id {
+        None => (plain, None),
+        Some(id) => {
+            let room = 64 - id.len() - 1;
+            let name: String = plain.chars().take(room).collect();
+            let old = section.migrate_saves.then_some(plain);
+            (format!("{name}.{id}"), old)
+        }
+    }
+}
+
 /// Packages the checked `program` of `project`. The project's source map holds the prelude
 /// modules the program uses (the front end added them, decision 0044).
 ///
@@ -189,14 +205,19 @@ pub fn package(
         .map(|scene| (scene.name.clone(), scene.symbol.clone()))
         .collect();
     // Saved state and settings (decision 0145) are stored under the project's name.
-    let storage = program
+    let names = program
         .scenes()
         .any(|scene| scene.state.iter().any(|state| state.persist.is_some()))
-        .then(|| storage_name(&project.config.project.name));
+        .then(|| storage_names(&project.config.project));
+    let (storage, legacy_storage) = match names {
+        Some((storage, legacy)) => (Some(storage), legacy),
+        None => (None, None),
+    };
     if scenes.len() <= 1 {
         let game = storage.map(|storage| Game {
             scenes: Vec::new(),
             storage: Some(storage),
+            legacy_storage: legacy_storage.clone(),
         });
         return package_scene(
             project,
@@ -221,6 +242,7 @@ pub fn package(
             })
             .collect(),
         storage,
+        legacy_storage,
     };
     let mut packaged = package_scene(
         project,
@@ -1138,7 +1160,7 @@ fn manifest_prefabs(
                     symbol: state.symbol.to_string(),
                     shared: false,
                     persist: None,
-                    stored_type: None,
+                    stored_type: state.stored_type.clone(),
                 })
                 .collect(),
             update: has(&BehaviorKind::Update),

@@ -1,0 +1,8 @@
+[project]
+name = "host-enum"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Demo"
+
+[host.inputs]
+level = "Demo.level"

@@ -3,10 +3,21 @@
 *.jpg binary
 *.glb binary
 *.bin binary
+# Audio, fonts and archives a game ships (decisions 0130, 0139): never normalise line endings.
+*.wav binary
+*.ogg binary
+*.mp3 binary
+*.flac binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.webp binary
+*.zip binary
 
 # Benchmark holdout tree hash (decision 0021): bytes are hashed as stored, so LF everywhere.
 benchmarks/holdout/** text eol=lf
 
-# The prebuilt runtime (decision 0161): generated bundles, no text diffs.
+# The prebuilt runtime (decision 0131): generated bundles, no text diffs.
 crates/mtek-cli/prebuilt/*.js -diff linguist-generated
 crates/mtek-cli/prebuilt/*.d.ts linguist-generated

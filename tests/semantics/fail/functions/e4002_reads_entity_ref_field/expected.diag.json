@@ -1,0 +1,21 @@
+[
+  {
+    "code": "MTEK-E4002",
+    "file": "src/main.mtek",
+    "startByte": 196,
+    "endByte": 206,
+    "message": "The pure function 'height_of' reads `entity_ref.position`, which is ambient CPU state.",
+    "related": [
+      {
+        "message": "'height_of' is declared `fn` here",
+        "file": "src/main.mtek",
+        "startByte": 151,
+        "endByte": 160
+      }
+    ],
+    "notes": [
+      "a pure function computes only on its parameters, locals and constants",
+      "help: pass the value as a parameter; use `cpu fn` only when the helper needs to read CPU state"
+    ]
+  }
+]

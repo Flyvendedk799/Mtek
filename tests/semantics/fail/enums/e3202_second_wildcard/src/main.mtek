@@ -1,0 +1,15 @@
+// A second `_` matches nothing the first did not.
+// covers: [S: match-patterns]
+enum Phase { Menu, Playing, GameOver }
+
+fn level(phase: Phase) -> i32 {
+    return match phase {
+        Phase.Menu => 0,
+        _ => 1,
+        _ => 2,
+    };
+}
+
+scene Demo {
+    camera Main {}
+}

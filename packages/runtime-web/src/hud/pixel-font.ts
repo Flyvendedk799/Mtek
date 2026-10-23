@@ -75,3 +75,22 @@ export function pixelTextSvg(content: string, fill: string): { svg: string; widt
 export function svgUrl(svg: string): string {
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
+
+/** Most distinct texts remembered by {@link pixelTextImage}; the memo starts over when it is full. */
+const IMAGE_MEMO_LIMIT = 256;
+const imageMemo = new Map<string, { readonly url: string; readonly width: number }>();
+
+/**
+ * The CSS `url(...)` and the width in cells of `content` in `fill`, built once per distinct text and colour: a HUD
+ * draws the same lines every frame, and building and encoding the SVG each time is the cost of the pixel font.
+ */
+export function pixelTextImage(content: string, fill: string): { readonly url: string; readonly width: number } {
+  const key = `${fill}\u0000${content}`;
+  const known = imageMemo.get(key);
+  if (known !== undefined) return known;
+  const { svg, width } = pixelTextSvg(content, fill);
+  const made = { url: svgUrl(svg), width };
+  if (imageMemo.size >= IMAGE_MEMO_LIMIT) imageMemo.clear();
+  imageMemo.set(key, made);
+  return made;
+}

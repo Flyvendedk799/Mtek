@@ -3,7 +3,7 @@
   "runtimeAbi": 1,
   "languageVersion": "0.1",
   "compilerVersion": "0.1.0-dev",
-  "buildId": "77943802dd954fadf6a3d88ea6062e8138190b80fddf57fe049e0034bc7bfc10",
+  "buildId": "f68d378b9aff4d6e7a69e77a13b21a07fb12bb9df384f9f76f1adfb1b234335a",
   "targetProfile": "webgpu-core-2026",
   "requiredCapabilities": {
     "features": [],
@@ -30,7 +30,7 @@
     {
       "id": 1,
       "path": "std/materials.mtek",
-      "sha256": "406d18b3645df7b61b0f2571da99be5ac4e099f519d3c216087899389fb5c6c6"
+      "sha256": "ea88df2c66d8939fbe9e6b73136b82affba8e6a90d1299baa8a5726234158239"
     }
   ],
   "spans": [

@@ -1,0 +1,23 @@
+// The usual way to start a timer from `update`: guard it with a state flag, or start it from a
+// handler. Neither is flagged by W5301 (decision 0177).
+scene Demo {
+    state started: bool = false;
+    state ticks: i32 = 0;
+    state shots: i32 = 0;
+    camera Main {}
+
+    update(dt: f32) {
+        if !started {
+            started = true;
+            every(0.5) {
+                ticks += 1;
+            }
+        }
+    }
+
+    on key_down(Key.Space) {
+        after(1.0) {
+            shots += 1;
+        }
+    }
+}

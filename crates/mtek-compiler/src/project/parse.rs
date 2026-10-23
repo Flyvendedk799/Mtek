@@ -29,7 +29,10 @@ use crate::source::{LineIndex, ProjectPath};
 /// Tables of `mtek.toml` and the keys each accepts. The single source for
 /// unknown-key detection and the "valid keys" help.
 const SCHEMA: [(&str, &[&str]); 6] = [
-    ("project", &["name", "language", "entry", "scene"]),
+    (
+        "project",
+        &["name", "language", "entry", "scene", "id", "migrate_saves"],
+    ),
     ("build", &["target", "out_dir", "title"]),
     ("host", &["inputs", "outputs"]),
     (
@@ -446,12 +449,41 @@ impl Validator {
             || None,
             |s, path, value| s.scene_name(path, value).map(Some),
         );
+        let id = self.field(
+            table,
+            "project",
+            "id",
+            || None,
+            |s, path, value| s.save_id(path, value).map(Some),
+        );
+        let migrate_saves = self.field(table, "project", "migrate_saves", || false, Self::boolean);
         Some(ProjectSection {
             name: name?,
             language: language?,
             entry: entry?,
             scene: scene?,
+            id: id?,
+            migrate_saves: migrate_saves?,
         })
+    }
+
+    /// `project.id`: 4 to 16 lowercase hexadecimal digits (decision 0179).
+    fn save_id(&mut self, path: &str, value: Item<'_>) -> Option<String> {
+        let id = self.string(path, value)?;
+        let valid = (4..=16).contains(&id.len())
+            && id
+                .bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b));
+        if !valid {
+            self.out_of_range(
+                path,
+                value,
+                "4 to 16 lowercase hexadecimal digits",
+                &format!("{id:?}"),
+            );
+            return None;
+        }
+        Some(id.to_owned())
     }
 
     fn project_name(&mut self, path: &str, value: Item<'_>) -> Option<String> {

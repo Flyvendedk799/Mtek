@@ -6,7 +6,7 @@
     "endByte": null,
     "message": "Invalid project configuration: unknown key 'project.colour' in mtek.toml.",
     "notes": [
-      "help: valid keys: name, language, entry, scene",
+      "help: valid keys: name, language, entry, scene, id, migrate_saves",
       "at mtek.toml:4:1"
     ]
   }

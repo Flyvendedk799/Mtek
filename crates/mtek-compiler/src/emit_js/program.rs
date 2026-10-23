@@ -182,39 +182,43 @@ pub fn emit_program(
     };
     let entity_functions =
         |names: &[Option<String>]| Expr::Array(names.iter().map(function_or_null).collect());
+    // `ui` (decision 0175) is listed only by a scene that declares it.
+    let mut scene_fields = vec![
+        ("init".to_owned(), Expr::Ident(init)),
+        ("update".to_owned(), function_or_null(&behaviors.update)),
+        (
+            "fixedUpdate".to_owned(),
+            function_or_null(&behaviors.fixed_update),
+        ),
+    ];
+    if behaviors.ui.is_some() {
+        scene_fields.push(("ui".to_owned(), function_or_null(&behaviors.ui)));
+    }
+    scene_fields.extend([
+        (
+            "entityUpdate".to_owned(),
+            entity_functions(&behaviors.entity_update),
+        ),
+        (
+            "entityFixedUpdate".to_owned(),
+            entity_functions(&behaviors.entity_fixed_update),
+        ),
+        ("events".to_owned(), events_table(&behaviors)),
+        (
+            "bindings".to_owned(),
+            Expr::Array(
+                behaviors
+                    .bindings
+                    .iter()
+                    .map(|name| Expr::Ident(name.clone()))
+                    .collect(),
+            ),
+        ),
+    ]);
     items.push(Item::Stmt(Stmt::Blank));
     items.push(Item::ExportConst {
         name: "scenes".to_owned(),
-        value: Expr::object_lines(vec![(
-            scene.name.clone(),
-            Expr::object_lines(vec![
-                ("init".to_owned(), Expr::Ident(init)),
-                ("update".to_owned(), function_or_null(&behaviors.update)),
-                (
-                    "fixedUpdate".to_owned(),
-                    function_or_null(&behaviors.fixed_update),
-                ),
-                (
-                    "entityUpdate".to_owned(),
-                    entity_functions(&behaviors.entity_update),
-                ),
-                (
-                    "entityFixedUpdate".to_owned(),
-                    entity_functions(&behaviors.entity_fixed_update),
-                ),
-                ("events".to_owned(), events_table(&behaviors)),
-                (
-                    "bindings".to_owned(),
-                    Expr::Array(
-                        behaviors
-                            .bindings
-                            .iter()
-                            .map(|name| Expr::Ident(name.clone()))
-                            .collect(),
-                    ),
-                ),
-            ]),
-        )]),
+        value: Expr::object_lines(vec![(scene.name.clone(), Expr::object_lines(scene_fields))]),
     });
     items.push(Item::Stmt(Stmt::Blank));
     items.push(Item::ExportConst {

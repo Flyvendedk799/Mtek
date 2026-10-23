@@ -44,6 +44,14 @@ use super::printer::identifier_part;
 use super::program::value_expr;
 use super::rt_ops;
 
+/// `ctx.cameraOn("Name")`: the record of the named camera, whichever camera is active
+/// (decision 0177).
+fn camera_record(camera: &str) -> Expr {
+    Expr::ident("ctx")
+        .member("cameraOn")
+        .call(vec![Expr::string(camera)])
+}
+
 /// What the build mode changes in the CPU code (`spec/tooling.md` section 2).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct CpuFlags {
@@ -795,9 +803,7 @@ impl FnLowering<'_, '_> {
         Ok(match root {
             ir::PlaceRoot::State { owner, name, .. } => self.state_path(*owner, name),
             ir::PlaceRoot::EntityField { entity, field, .. } => self.entity(*entity).member(field),
-            ir::PlaceRoot::CameraField { field, .. } => {
-                Expr::ident("ctx").member("cam").member(field)
-            }
+            ir::PlaceRoot::CameraField { camera, field, .. } => camera_record(camera).member(field),
             ir::PlaceRoot::InstanceParam { entity, param, .. } => {
                 self.entity(*entity).member("mat").member("p").member(param)
             }
@@ -808,7 +814,7 @@ impl FnLowering<'_, '_> {
         })
     }
 
-    /// `ctx.setTransform(e, "position", v)`, `ctx.setVisible(e, v)`, `ctx.setCamera("position", v)`
+    /// `ctx.setTransform(e, "position", v)`, `ctx.setVisible(e, v)`, `ctx.setCameraOn("Main", "position", v)`
     /// `ctx.setParam(e, "name", v)` or `ctx.setLight(e, "intensity", v)`: the context validates the
     /// value (`E8090`, `E8100`).
     fn setter(&self, root: &ir::PlaceRoot, value: Expr, span: Span) -> Result<Stmt, String> {
@@ -822,9 +828,9 @@ impl FnLowering<'_, '_> {
                     .call(vec![self.entity(*entity), value]),
                 other => return Err(format!("a write to the entity field '{other}'")),
             },
-            ir::PlaceRoot::CameraField { field, .. } => Expr::ident("ctx")
-                .member("setCamera")
-                .call(vec![Expr::string(field), value]),
+            ir::PlaceRoot::CameraField { camera, field, .. } => Expr::ident("ctx")
+                .member("setCameraOn")
+                .call(vec![Expr::string(camera), Expr::string(field), value]),
             ir::PlaceRoot::InstanceParam { entity, param, .. } => Expr::ident("ctx")
                 .member("setParam")
                 .call(vec![self.entity(*entity), Expr::string(param), value]),
@@ -1211,9 +1217,7 @@ impl FnLowering<'_, '_> {
                     .member("refField")
                     .call(vec![value, Expr::string(field)])
             }
-            ir::ExprKind::CameraField { field, .. } => {
-                Expr::ident("ctx").member("cam").member(field)
-            }
+            ir::ExprKind::CameraField { camera, field } => camera_record(camera).member(field),
             ir::ExprKind::InstanceParam { entity, param } => {
                 self.entity(*entity).member("mat").member("p").member(param)
             }
@@ -2007,6 +2011,7 @@ fn behavior_function(
     let label = match &behavior.kind {
         ir::BehaviorKind::Update => "update".to_owned(),
         ir::BehaviorKind::FixedUpdate => "fixed_update".to_owned(),
+        ir::BehaviorKind::Ui => "ui".to_owned(),
         ir::BehaviorKind::Event { event, .. } => format!("on {event}"),
     };
     let mut lowering = FnLowering {
@@ -2053,6 +2058,7 @@ fn behavior_base(behavior: &ir::Behavior) -> String {
     match &behavior.kind {
         ir::BehaviorKind::Update => "update".to_owned(),
         ir::BehaviorKind::FixedUpdate => "fixed_update".to_owned(),
+        ir::BehaviorKind::Ui => "ui".to_owned(),
         ir::BehaviorKind::Event { event, .. } => format!("on_{event}"),
     }
 }
@@ -2112,6 +2118,8 @@ pub struct EmittedBehaviors {
     pub update: Option<String>,
     /// The scene's `fixed_update`.
     pub fixed_update: Option<String>,
+    /// The scene's `ui`: `(ctx, dt)`; it also runs while the game is paused (decision 0175).
+    pub ui: Option<String>,
     /// By static entity index: `(ctx, self, dt)`.
     pub entity_update: Vec<Option<String>>,
     pub entity_fixed_update: Vec<Option<String>>,
@@ -2161,6 +2169,10 @@ pub fn emit_behaviors(
         match (&behavior.kind, owner_index) {
             (ir::BehaviorKind::Update, None) => emitted.update = Some(name),
             (ir::BehaviorKind::FixedUpdate, None) => emitted.fixed_update = Some(name),
+            (ir::BehaviorKind::Ui, None) => emitted.ui = Some(name),
+            (ir::BehaviorKind::Ui, Some(_)) => {
+                return Err("an entity has a `ui` lifecycle function".to_owned());
+            }
             (ir::BehaviorKind::Update, Some(index)) => {
                 if let Some(slot) = emitted.entity_update.get_mut(index as usize) {
                     *slot = Some(name);
@@ -2237,6 +2249,7 @@ pub fn emit_prefab_behaviors(
         match &behavior.kind {
             ir::BehaviorKind::Update => emitted.update = Some(name),
             ir::BehaviorKind::FixedUpdate => emitted.fixed_update = Some(name),
+            ir::BehaviorKind::Ui => return Err("a prefab has a `ui` lifecycle function".to_owned()),
             ir::BehaviorKind::Event { event, filter } => emitted.events.push(EmittedEvent {
                 event: event.clone(),
                 key: filter.clone(),

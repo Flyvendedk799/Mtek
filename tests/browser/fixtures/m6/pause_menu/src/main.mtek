@@ -1,0 +1,41 @@
+// Decision 0175: `ui(dt)` runs in every frame, also while the game is paused, so a pause menu can draw its HUD and hear the
+// click on its "Resume" button. `update` counts frames (`ticks`) and stands still while the game is paused; `ui` counts the
+// frames it ran (`ui_frames`), which never stops. Escape pauses, the button resumes, and "Restart" starts the scene again.
+scene Menu {
+    clear_color: #000000;
+
+    state ticks: i32 = 0;
+    state ui_frames: i32 = 0;
+    state resumed: i32 = 0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 3.5);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Cube {
+        mesh: Box { size: vec3(0.5, 0.5, 0.5) };
+        material: Unlit { color: #4fa3ff };
+    }
+
+    update(dt: f32) {
+        ticks += 1;
+    }
+
+    ui(dt: f32) {
+        ui_frames += 1;
+        hud.text("ticks ${ticks}", vec2(-0.95, 0.9), 20.0, #ffffff, 0.0);
+        if paused() {
+            hud.rect(vec2(0.0, 0.1), vec2(260.0, 160.0), #000000c0, 0.5);
+            hud.text("Paused", vec2(0.0, 0.3), 32.0, #ffffff, 0.5);
+            if hud.button("Resume", vec2(0.0, 0.1), 24.0) {
+                resumed += 1;
+                resume();
+            }
+        }
+    }
+
+    on key_down(Key.Escape) {
+        pause();
+    }
+}

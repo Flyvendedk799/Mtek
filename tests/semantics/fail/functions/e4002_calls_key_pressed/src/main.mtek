@@ -1,0 +1,8 @@
+// `key_pressed` reads the input of this frame, so a pure `fn` cannot call it.
+fn left() -> bool {
+    return key_pressed(Key.ArrowLeft);
+}
+
+scene Demo {
+    camera Main {}
+}

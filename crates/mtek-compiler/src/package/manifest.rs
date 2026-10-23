@@ -114,6 +114,10 @@ pub struct Game {
     /// `mtek.save.<storage>`. Present when a scene has a `saved` or `setting` state.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub storage: Option<String>,
+    /// The storage name earlier builds used (decision 0179): present with a project `id` and
+    /// `migrate_saves = true`; the runtime copies the saves under it to the new key once.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub legacy_storage: Option<String>,
 }
 
 /// One scene `go_to` can load: its program module and manifest, relative to the program.

@@ -121,15 +121,24 @@ export function copyValue(value: unknown): unknown {
   return value;
 }
 
+/**
+ * What must be equal for a state value to carry over: the structural description when the manifest has one (a user
+ * enum's variants, a struct's fields; decision 0177), else the type name. An enum whose variant list changed is a new
+ * type: its old index could name another variant or none.
+ */
+export function stateIdentity(entry: Pick<MtekStateEntry, "type" | "storedType">): string {
+  return entry.storedType ?? entry.type;
+}
+
 function stateTypeMap(entries: readonly MtekStateEntry[]): Map<string, string> {
-  return new Map(entries.map((entry) => [entry.symbol, entry.type]));
+  return new Map(entries.map((entry) => [entry.symbol, stateIdentity(entry)]));
 }
 
 function stateBySymbol(entries: readonly MtekStateEntry[], values: Record<string, unknown>): Map<string, { type: string; value: unknown }> {
   const out = new Map<string, { type: string; value: unknown }>();
   for (const entry of entries) {
     if (Object.hasOwn(values, entry.name)) {
-      out.set(entry.symbol, { type: entry.type, value: values[entry.name] });
+      out.set(entry.symbol, { type: stateIdentity(entry), value: values[entry.name] });
     }
   }
   return out;
@@ -155,7 +164,7 @@ function carryEntity(
   after.visible = before.visible;
 
   for (const entry of afterState) {
-    if (beforeState.get(entry.symbol) === entry.type && Object.hasOwn(before.state, entry.name)) {
+    if (beforeState.get(entry.symbol) === stateIdentity(entry) && Object.hasOwn(before.state, entry.name)) {
       after.state[entry.name] = copyValue(before.state[entry.name]);
     }
   }
@@ -237,7 +246,7 @@ export function migrateWorld(previous: World, previousManifest: MtekManifest, ne
   const previousSceneState = stateBySymbol(previousManifest.scene.state, previous.sceneState);
   for (const entry of nextManifest.scene.state) {
     const before = previousSceneState.get(entry.symbol);
-    if (before !== undefined && before.type === entry.type) {
+    if (before !== undefined && before.type === stateIdentity(entry)) {
       next.sceneState[entry.name] = copyValue(before.value);
     }
   }
@@ -280,7 +289,7 @@ export function migrateWorld(previous: World, previousManifest: MtekManifest, ne
   next.dynamic.restoreFrom(previous.dynamic, (before, after) => {
     carryEntity(
       before.record,
-      new Map(before.prefab.resolved.state.map((entry) => [entry.symbol, entry.type])),
+      new Map(before.prefab.resolved.state.map((entry) => [entry.symbol, stateIdentity(entry)])),
       after.record,
       after.prefab.resolved.state,
       keptParams(prefabInstanceClasses(before.prefab.resolved.material), prefabInstanceClasses(after.prefab.resolved.material)),

@@ -47,7 +47,7 @@ compute  vertex  storage  uniform  workgroup  system  query  component
 
 2.4 **Contextual names.** These are ordinary identifiers that gain meaning only in a specific position. They are not reserved:
 - `camera` — a scene-object kind when it begins a scene member of the form `camera Name { … }` (`spec/scenes.md` §3).
-- `update`, `fixed_update` — lifecycle function names inside a scene, entity or prefab body (`spec/scenes.md` §6).
+- `update`, `fixed_update` — lifecycle function names inside a scene, entity or prefab body; `ui` — a lifecycle function name inside a scene body only (`spec/scenes.md` §6).
 - `fragment` — the stage function name inside a material body (`spec/materials.md` §3).
 - `from` — in an import clause (`import { A } from "…";`).
 - Event names after `on` (`key_down`, `collision_enter`, …), resolved against the registry.
@@ -312,7 +312,7 @@ Reading `frame.*`, or reading a body property through an `entity_ref` parameter,
 
 9.1 **Imports.** `import { A, B } from "./relative/path.mtek";`. The specifier is a string literal that must start with `./` or `../`, use `/` separators, and end in `.mtek` (`E2030`). It is resolved relative to the importing file, normalised (`.` and `..` segments removed), and must remain inside the project root (`E2031`, path traversal). Case must match the file system entry exactly, even on case-insensitive file systems (`E2032`) — this keeps projects portable. Importing a name that the target does not `export` is `E2033`; importing the same name twice is `E2002`. There are no wildcard imports, no aliases (`as` is reserved), and no package imports in v0.1 (bare specifiers like `"physics"` are `E2034`).
 
-9.2 **Exports.** `export` makes an item importable. Only items can be exported. The project entry module may declare its entry scene without `export` (blueprint §4.5).
+9.2 **Exports.** `export` makes an item importable. Only items can be exported. The project entry module may declare its entry scene without `export` (blueprint §4.5). Scenes are declared in the entry module only: a `scene` in any other module is `E5230` (decision 0178).
 
 9.3 **Cycles.** An import cycle is error `E2035`, reported once, at the import that closes the cycle, with every module of the cycle listed in order as related spans.
 

@@ -8,8 +8,9 @@
 
 ## 1. Model
 
-The HUD is **immediate mode**. A frame draws it by calling `hud.text`, `hud.rect` and `hud.button`. What a frame draws is shown over the canvas until the next frame. The list is cleared at the start of every frame (phase 1, `spec/scenes.md` §10) and shown after rendering (phase 7). Draw the HUD from `update`:
+The HUD is **immediate mode**. A frame draws it by calling `hud.text`, `hud.rect` and `hud.button`. What a frame draws is shown over the canvas until the next frame. The list is cleared at the start of every frame (phase 1, `spec/scenes.md` §10) and shown after rendering (phase 7). Draw the HUD from `update`, and the screens that must stay up while the game is paused (a pause menu, a game-over overlay) from `ui` (decision 0175):
 
+- `update` does not run while the game is paused (`pause()`); `ui(dt)` runs in every frame, after `update`, and is where a pause menu draws its buttons and hears their clicks.
 - What a handler draws is shown for that frame only.
 - What `fixed_update` draws is drawn once per tick.
 
@@ -54,7 +55,7 @@ Sizes are CSS pixels:
 ## 4. Buttons
 
 - A click is queued and claimed by the first `hud.button` call of a later frame with the same `label` at the same position among this frame's buttons with that label. Two buttons with different labels never share clicks; two "OK" buttons are told apart by their order.
-- A click that no call claims in the next frame is dropped. When the button is not drawn that frame, nothing reports it.
+- A click that no call claims in the next frame is dropped. When the button is not drawn that frame, nothing reports it. A scene change also drops the clicks nobody claimed yet.
 - A click on a button does not reach the canvas (no `pointer_down` for it). The rest of the HUD lets pointer events through to the canvas.
 - Pressing a button does not focus it, so `Space` and `Enter` keep reaching the program's key handlers.
 
