@@ -24,7 +24,7 @@ scene Score {
     ambient_intensity: 0.4;
 
     state points: i32 = 0;
-    state best: i32 = 0;
+    saved state best: i32 = 0;
     state elapsed: f32 = 0.0;
     // How long the cube still pops after a point, in seconds (PULSE down to 0).
     state pulse: f32 = 0.0;
@@ -93,7 +93,10 @@ scene Score {
     on key_down(Key.Space) {
         if elapsed < ROUND && !paused() {
             points += 1;
-            best = max(best, points);
+            if points > best {
+                best = points;
+                save();
+            }
             pulse = PULSE;
         }
     }

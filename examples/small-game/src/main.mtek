@@ -6,6 +6,7 @@
 //         (`pause()`, spec/scenes.md §15.4): `update` stops, but `ui` (decision 0175) runs in
 //         every frame, so the pause menu (Resume, Restart, Title) is drawn and its buttons
 //         work. Escape resumes.
+//         Miss three gems to lose. Enter on the result screen starts another run.
 
 const LANES: array<f32, 3> = [-1.6, 0.0, 1.6];
 
@@ -18,9 +19,6 @@ prefab Gem {
 
     update(dt: f32) {
         self.position.y -= 2.4 * dt;
-        if self.position.y < -3.4 {
-            destroy(self);
-        }
     }
 }
 
@@ -51,6 +49,9 @@ scene Play {
     shared state score: i32 = 0;
     shared saved state best: i32 = 0;
     state lane: i32 = 1;
+    state missed: i32 = 0;
+    state game_over: bool = false;
+    state spawn_in: f32 = 0.0;
 
     camera Main {
         position: vec3(0.0, 0.0, 8.0);
@@ -65,6 +66,9 @@ scene Play {
     }
 
     update(dt: f32) {
+        if game_over {
+            return;
+        }
         if key_pressed(Key.ArrowLeft) && lane > 0 {
             lane -= 1;
         }
@@ -72,8 +76,10 @@ scene Play {
             lane += 1;
         }
         Player.position = vec3(LANES[lane], -2.0, 0.0);
-        if count_tagged("gem") < 1 {
+        spawn_in -= dt;
+        if spawn_in <= 0.0 {
             spawn(Gem { lane: choose([0, 1, 2]) });
+            spawn_in = 0.8;
         }
         for gem in tagged("gem") {
             if distance(gem.position, Player.position) < 0.8 {
@@ -83,6 +89,12 @@ scene Play {
                     save();
                 }
                 destroy(gem);
+            } else if gem.position.y < -3.4 {
+                missed += 1;
+                destroy(gem);
+                if missed >= 3 {
+                    game_over = true;
+                }
             }
         }
     }
@@ -91,7 +103,11 @@ scene Play {
     ui(dt: f32) {
         hud.text("Score ${score}", vec2(-0.95, 0.88), 24.0, #ffffff, 0.0, hud.pixel_font());
         hud.text("Best ${best}", vec2(0.95, 0.88), 24.0, #ffd040, 1.0, hud.pixel_font());
-        if paused() {
+        hud.text("Missed ${missed}/3", vec2(0.0, 0.75), 18.0, #ff8060, 0.5, hud.pixel_font());
+        if game_over {
+            hud.text("GAME OVER", vec2(0.0, 0.2), 36.0, #ff8060, 0.5, hud.pixel_font());
+            hud.text("Enter to play again", vec2(0.0, -0.1), 20.0, #ffffff, 0.5, hud.pixel_font());
+        } else if paused() {
             hud.rect(vec2(0.0, 0.05), vec2(300.0, 260.0), #000000c0, 0.5);
             hud.text("PAUSED", vec2(0.0, 0.35), 36.0, #ffffff, 0.5, hud.pixel_font());
             if hud.button("Resume", vec2(0.0, 0.15), 24.0) {
@@ -110,10 +126,20 @@ scene Play {
     }
 
     on key_down(Key.Escape) {
+        if game_over {
+            return;
+        }
         if paused() {
             resume();
         } else {
             pause();
+        }
+    }
+
+    on key_down(Key.Enter) {
+        if game_over {
+            score = 0;
+            go_to(Play);
         }
     }
 }

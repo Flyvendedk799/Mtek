@@ -50,8 +50,9 @@ scene Playground {
 
     // How many crates have entered the sensor zone, and how many are inside it now.
     state entered: i32 = 0;
+    // Test probe: fixtures check balanced sensor enter/exit events.
     state inside: i32 = 0;
-    // How many crates the C key has spawned.
+    // Test probe: how many crates the C key has spawned.
     state spawned: i32 = 0;
 
     camera Main {

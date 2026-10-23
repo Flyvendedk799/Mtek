@@ -3,6 +3,7 @@ const PROP = asset.glb("../models/prop.glb");
 
 scene Stage {
     clear_color: #101418;
+    // Test probes: fixtures observe camera switching, particle emission and clip playback.
     state view: i32 = 1;
     state sparks: i32 = 0;
     state spin: f32 = 0.0;
