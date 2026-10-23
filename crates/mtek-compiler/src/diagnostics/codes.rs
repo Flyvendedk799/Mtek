@@ -295,6 +295,7 @@ catalogue! {
     W8202 Warning "sound could not be decoded",
     W8203 Warning "too many HUD items",
     W8204 Warning "font could not be loaded",
+    W8210 Warning "too many particles",
     // 5.9 Project and internal (`9xxx`)
     E9001 Error "invalid project configuration",
     E9002 Error "too many modules",

@@ -1368,6 +1368,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       instancedDrawsTotal: renderer.instancedDrawsCumulative,
       culledObjects: renderer.culledObjects,
       culledObjectsTotal: renderer.culledObjectsCumulative,
+      rebatchesTotal: renderer.rebatchesCumulative,
       sharedParamBlocks: materials.sharedParamBlocks,
       ownedParamBlocks: materials.ownedParamBlocks,
       discardedSteps: this.scheduler.discardedSteps,

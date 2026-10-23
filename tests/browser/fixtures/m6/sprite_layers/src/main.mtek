@@ -1,0 +1,21 @@
+// Two overlapping translucent sprites under a 2D camera (decisions 0170 and 0173). The nearer one (z = 1) is declared first and the
+// farther one (z = 0) second, so the order of the draw list is the opposite of the order the pass must draw them in.
+scene Layers {
+    clear_color: #000000;
+    camera Cam2D {
+        position: vec3(0.0, 0.0, 10.0);
+        projection: Orthographic { height: 4.0 };
+    }
+    entity Near {
+        position: vec3(-0.5, 0.0, 1.0);
+        mesh: Plane { size: vec2(2.0, 2.0) };
+        rotation: quat.euler(1.5707964, 0.0, 0.0);
+        material: Sprite { tint: #ff000080 };
+    }
+    entity Far {
+        position: vec3(0.5, 0.0, 0.0);
+        mesh: Plane { size: vec2(2.0, 2.0) };
+        rotation: quat.euler(1.5707964, 0.0, 0.0);
+        material: Sprite { tint: #0000ff80 };
+    }
+}

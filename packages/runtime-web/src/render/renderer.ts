@@ -49,6 +49,7 @@ import { batchDraws, instancingCandidates, type Batch } from "./instancing.js";
 import type { MaterialStore } from "./materials.js";
 import { vertexBufferOf, type GpuMesh, type MeshStore } from "./meshes.js";
 import { INSTANCE_FLOATS, INSTANCE_STRIDE, type BindingPlan, alwaysBlends } from "./pipelines.js";
+import type { ParticleDraw } from "../scene/particles.js";
 
 /** What the renderer needs of the drawing surface (`host/surface.ts`). */
 export interface RenderSurface {
@@ -100,23 +101,77 @@ export interface DrawItem extends DrawSortKey {
 }
 
 /**
- * The draws of a frame with the translucent ones (which sort after every opaque one) reordered back to front by the
- * clip-space w of their bounding-sphere centre under `viewProj` (column-major); ties keep draw-list order. Returns
- * `draws` itself when nothing is translucent (decision 0138).
+ * Orders the translucent draws of a frame back to front (decision 0138, amended by 0173): by the view-space depth of
+ * their bounding-sphere centre, so it holds for a perspective and for an orthographic projection alike (the clip-space
+ * `w` of the latter is 1 for every point). Ties keep draw-list order.
+ *
+ * The sorted list lives in a buffer of the orderer and is compared with the previous frame's: while nothing moved
+ * across another draw the same array comes back with `unchanged` set, so the renderer keeps its batches (decision 0173).
  */
-export function orderTranslucent(draws: readonly DrawItem[], viewProj: ArrayLike<number>, centres: ArrayLike<number>): readonly DrawItem[] {
-  const first = draws.findIndex((draw) => draw.translucent === true);
-  if (first < 0) return draws;
-  const depth = (draw: DrawItem): number => {
-    const e = draw.entity * 3;
-    return (viewProj[3] ?? 0) * (centres[e] ?? 0) + (viewProj[7] ?? 0) * (centres[e + 1] ?? 0) + (viewProj[11] ?? 0) * (centres[e + 2] ?? 0) + (viewProj[15] ?? 0);
-  };
-  const translucent = draws
-    .slice(first)
-    .map((draw, index) => ({ draw, index, w: depth(draw) }))
-    .sort((a, b) => b.w - a.w || a.index - b.index)
-    .map((entry) => entry.draw);
-  return [...draws.slice(0, first), ...translucent];
+export class TranslucentOrder {
+  private readonly sorted: DrawItem[] = [];
+  private depth = new Float64Array(0);
+  private readonly rank: number[] = [];
+  private readonly byDepth = (a: number, b: number): number => (this.depth[a] as number) - (this.depth[b] as number) || a - b;
+  /** Whether the list returned by the last `order` holds the draws the call before returned, in the same order. */
+  unchanged = false;
+
+  /**
+   * `draws` with the translucent ones (the tail: they sort after every opaque one) reordered. `view` is the
+   * column-major world-to-view matrix, `centres` the world-space bounding-sphere centres by entity slot. Returns
+   * `draws` itself when nothing is translucent.
+   */
+  order(draws: readonly DrawItem[], view: ArrayLike<number>, centres: ArrayLike<number>): readonly DrawItem[] {
+    let first = -1;
+    for (let i = 0; i < draws.length; i++) {
+      if ((draws[i] as DrawItem).translucent === true) {
+        first = i;
+        break;
+      }
+    }
+    if (first < 0) {
+      this.unchanged = false;
+      return draws;
+    }
+    const count = draws.length - first;
+    if (this.depth.length < count) this.depth = new Float64Array(Math.max(count, this.depth.length * 2));
+    const { depth, rank, sorted } = this;
+    const z0 = view[2] ?? 0;
+    const z1 = view[6] ?? 0;
+    const z2 = view[10] ?? 0;
+    const z3 = view[14] ?? 0;
+    rank.length = count;
+    for (let k = 0; k < count; k++) {
+      const e = (draws[first + k] as DrawItem).entity * 3;
+      // View space looks down -Z: the farthest draw has the smallest z.
+      depth[k] = z0 * (centres[e] ?? 0) + z1 * (centres[e + 1] ?? 0) + z2 * (centres[e + 2] ?? 0) + z3;
+      rank[k] = k;
+    }
+    rank.sort(this.byDepth);
+    let same = sorted.length === draws.length;
+    for (let i = 0; i < first; i++) {
+      const draw = draws[i] as DrawItem;
+      if (sorted[i] !== draw) {
+        same = false;
+        sorted[i] = draw;
+      }
+    }
+    for (let k = 0; k < count; k++) {
+      const draw = draws[first + (rank[k] as number)] as DrawItem;
+      if (sorted[first + k] !== draw) {
+        same = false;
+        sorted[first + k] = draw;
+      }
+    }
+    sorted.length = draws.length;
+    this.unchanged = same;
+    return sorted;
+  }
+}
+
+/** The key of the blended pipeline of a material in `RendererOptions.blendedSeed` (the instanced variant draws particles). */
+export function blendedKey(materialId: string, instanced: boolean): string {
+  return instanced ? `${materialId}#instanced` : materialId;
 }
 
 export interface RendererOptions {
@@ -133,7 +188,9 @@ export interface RendererOptions {
   /** By material id. */
   readonly pipelines: ReadonlyMap<string, MaterialPipeline>;
   /** Makes the alpha-blended pipeline of a material (decision 0138); without it translucent draws stay opaque. */
-  readonly blend?: (material: ResolvedMaterial) => Promise<{ readonly key: string; readonly pipeline: GPURenderPipeline } | undefined>;
+  readonly blend?: (material: ResolvedMaterial, instanced: boolean) => Promise<{ readonly key: string; readonly pipeline: GPURenderPipeline } | undefined>;
+  /** Blended pipelines made before the first frame (`blendedKey`): the materials known to blend at `startScene` (decision 0173). */
+  readonly blendedSeed?: ReadonlyMap<string, { readonly key: string; readonly pipeline: GPURenderPipeline }>;
   readonly report: (diagnostic: MtekDiagnostic) => void;
   /** Group compatible draws into instanced draws (decision 0059). Default true; `test.disableInstancing` turns it off. */
   readonly instancing?: boolean;
@@ -184,17 +241,19 @@ export class Renderer {
   /** The blended pipelines made so far, by material id, and the requests in flight (decision 0138). */
   private readonly blended = new Map<string, { readonly key: string; readonly pipeline: GPURenderPipeline } | undefined>();
   private blendedVersion = 0;
+  private readonly materialsById = new Map<string, ResolvedMaterial>();
   private drawsBlendedVersion = -1;
 
   /** The blended pipeline of `material`, or `undefined` while it is being made (it is asked for once). */
-  private blendedPipeline(material: ResolvedMaterial): { readonly key: string; readonly pipeline: GPURenderPipeline } | undefined {
-    if (this.blended.has(material.id)) return this.blended.get(material.id);
-    this.blended.set(material.id, undefined);
+  private blendedPipeline(material: ResolvedMaterial, instanced = false): { readonly key: string; readonly pipeline: GPURenderPipeline } | undefined {
+    const id = blendedKey(material.id, instanced);
+    if (this.blended.has(id)) return this.blended.get(id);
+    this.blended.set(id, undefined);
     const make = this.options.blend;
     if (make !== undefined) {
-      void make(material).then((made) => {
+      void make(material, instanced).then((made) => {
         if (made === undefined) return;
-        this.blended.set(material.id, made);
+        this.blended.set(id, made);
         this.blendedVersion += 1;
       });
     }
@@ -206,6 +265,7 @@ export class Renderer {
   private drawCallsTotal = 0;
   private instancedTotal = 0;
   private culledTotal = 0;
+  private rebatchesTotal = 0;
   /** The draws that survived culling this frame (reused between frames). */
   private readonly drawn: DrawItem[] = [];
   private readonly planes = new Float64Array(24);
@@ -218,9 +278,18 @@ export class Renderer {
   private cullingEnabled = true;
   /** The instance vertex buffer (`INSTANCE_STRIDE` bytes per record); absent when no draw can ever be instanced. */
   private instanceBuffer: GPUBuffer | undefined;
-  /** Billboard matrices for particles (decision 0155). Created on the first frame that draws one. */
+  /** Billboard matrices for particles (decision 0155): one buffer of `PARTICLE_DRAW_CAP` records, made on the first frame that draws one (decision 0173). */
   private particleBuffer: GPUBuffer | undefined;
-  private particleMirror = new Float32Array(0);
+  private particleMirror: Float32Array | undefined;
+  /** The particle draw calls of this frame, in draw order (reused records; the first `particleBatchCount` are live). */
+  private readonly particleBatches: ParticleBatch[] = [];
+  private particleBatchCount = 0;
+  private particleDepth = new Float64Array(0);
+  private readonly particleRank: number[] = [];
+  private readonly byParticleDepth = (a: number, b: number): number => (this.particleDepth[a] as number) - (this.particleDepth[b] as number) || a - b;
+  private readonly particleNormal = new Float32Array(16);
+  private readonly particleAxes = new Float64Array(9);
+  private particleCapReported = false;
   /** How many instance records `instanceBuffer` holds. */
   private instanceRecords = 0;
   /** Whether draws can be instanced at all: instancing is on and some entity or prefab has a material with an instanced entry point. */
@@ -254,6 +323,7 @@ export class Renderer {
   private cullDirty = true;
   /** Whether the last `cull` produced the same draws as the frame before. */
   private drawnUnchanged = false;
+  private readonly translucentOrder = new TranslucentOrder();
   /** The one dynamic offset of every `setBindGroup(2, …)` of `encode` (the browser reads it during the call). */
   private readonly dynamicOffset: number[] = [0];
   private readonly modelScratch = new Float32Array(16);
@@ -264,6 +334,8 @@ export class Renderer {
   constructor(options: RendererOptions) {
     this.options = options;
     const { device, registry, structure, writers, manifest } = options;
+    if (options.blendedSeed !== undefined) for (const [id, made] of options.blendedSeed) this.blended.set(id, made);
+    for (const material of structure.materials) this.materialsById.set(material.id, material);
     const frameWriters = writers.get(structure.frameLayout.id);
     const objectWriters = writers.get(structure.objectLayout.id);
     if (frameWriters === undefined || objectWriters === undefined) throw new Error("internal error: no writers for the built-in blocks");
@@ -436,6 +508,11 @@ export class Renderer {
     return this.culledTotal;
   }
 
+  /** Times the draw calls were split into batches again since the scene started (a static scene settles at one, decision 0173). */
+  get rebatchesCumulative(): number {
+    return this.rebatchesTotal;
+  }
+
   /** Turns frustum culling on (the default) or off. Off exists for tests that compare culled and unculled frames. */
   setFrustumCulling(enabled: boolean): void {
     if (enabled !== this.cullingEnabled) this.cullDirty = true;
@@ -550,14 +627,14 @@ export class Renderer {
 
     const listed = this.drawList();
     const culled = this.cull(listed, viewProj);
-    const draws = orderTranslucent(culled, viewProj, this.sphereCentres);
-    if (draws !== culled) this.drawnUnchanged = false;
+    const draws = this.translucentOrder.order(culled, this.lastView, this.sphereCentres);
+    if (draws !== culled) this.drawnUnchanged = this.translucentOrder.unchanged;
     const instanced = this.groupDraws(draws);
     this.writeIndividualObjectBlocks(draws);
     this.objectArena.flush(device.queue);
+    this.prepareParticles();
     const rendered = surface.render(clearColor, (pass) => {
       this.encode(pass, draws);
-      this.encodeParticles(pass);
     });
     this.drawCallsLastFrame = rendered ? this.batches.length : 0;
     this.instancedLastFrame = rendered ? instanced : 0;
@@ -637,6 +714,7 @@ export class Renderer {
       this.uploadInstances(instanceBuffer);
       return this.instancedBatches;
     }
+    this.rebatchesTotal += 1;
     const instanced = batchDraws(draws, (draw) => possible && draw.instancedPipeline !== undefined, this.batches);
     this.instancedBatches = instanced;
     this.recordOf.fill(-1);
@@ -849,7 +927,8 @@ export class Renderer {
   }
 
   private encode(pass: GPURenderPassEncoder, draws: readonly DrawItem[]): void {
-    if (draws.length === 0) return;
+    const particles = this.particleBatchCount > 0;
+    if (draws.length === 0 && !particles) return;
     const { plan, materials } = this.options;
     pass.setBindGroup(0, this.frameArena.bindGroupForSlot(this.frameSlot, plan.frame));
     const objectGroup = this.objectArena.bindGroupDynamic(plan.object);
@@ -858,9 +937,19 @@ export class Renderer {
     let pipeline: GPURenderPipeline | undefined;
     let instance = -1;
     let mesh: GpuMesh | undefined;
+    // Particles go between the opaque draws and the translucent ones (decision 0173).
+    let particlesDrawn = !particles;
     for (const batch of this.batches) {
       const draw = draws[batch.start];
       if (draw === undefined) continue;
+      if (!particlesDrawn && draw.translucent === true) {
+        this.drawParticles(pass);
+        particlesDrawn = true;
+        pipeline = undefined;
+        instance = -1;
+        mesh = undefined;
+        objectBound = true;
+      }
       const instanced = batch.firstInstance >= 0;
       const wanted = instanced ? draw.instancedPipeline : draw.pipeline;
       if (wanted === undefined) throw new Error("internal error: an instanced draw without an instanced pipeline");
@@ -897,34 +986,54 @@ export class Renderer {
         pass.drawIndexed(draw.gpuMesh.indexCount);
       }
     }
+    if (!particlesDrawn) this.drawParticles(pass);
   }
 
   /**
-   * Camera-facing billboards for living particles (decision 0155). Each particle is one record of the
-   * instanced pipeline, because a shared object slot would show only the last write after submit.
-   * Opaque materials only: a translucent pipeline may still be compiling on the first frame.
+   * Camera-facing billboards for living particles (decisions 0155, 0173). Each particle is one record of the
+   * instanced pipeline, because a shared object slot would show only the last write after submit. The records are
+   * written here, before the pass, into `particleMirror`; `drawParticles` encodes the calls. An emitter whose material
+   * blends (a Sprite, a colour alpha below 1) uses the blended instanced pipeline: no depth write, its particles
+   * back to front, and its emitters after the opaque ones, back to front by their mean depth.
    */
-  private encodeParticles(pass: GPURenderPassEncoder): void {
+  private prepareParticles(): void {
+    this.particleBatchCount = 0;
     const draws = this.options.world.particleDraws();
     if (draws.length === 0) return;
-    const { device, pipelines, meshes, materials, plan, registry } = this.options;
+    const { device, meshes, materials, registry } = this.options;
     const view = this.lastView;
-    const right = [view[0] ?? 1, view[4] ?? 0, view[8] ?? 0];
-    const up = [view[1] ?? 0, view[5] ?? 1, view[9] ?? 0];
-    const toward = [view[2] ?? 0, view[6] ?? 0, view[10] ?? 1];
-    let count = 0;
-    for (const draw of draws) count += draw.points.length;
-    count = Math.min(count, PARTICLE_DRAW_CAP);
-    if (count === 0) return;
-    if (this.particleMirror.length < count * INSTANCE_FLOATS) {
-      this.particleMirror = new Float32Array(count * INSTANCE_FLOATS);
+    const { particleAxes: axes, particleNormal: normal, particleBatches: batches } = this;
+    axes[0] = view[0] ?? 1;
+    axes[1] = view[4] ?? 0;
+    axes[2] = view[8] ?? 0;
+    axes[3] = view[1] ?? 0;
+    axes[4] = view[5] ?? 1;
+    axes[5] = view[9] ?? 0;
+    axes[6] = view[2] ?? 0;
+    axes[7] = view[6] ?? 0;
+    axes[8] = view[10] ?? 1;
+    let total = 0;
+    for (const draw of draws) total += draw.points.length;
+    if (total === 0) return;
+    if (total > PARTICLE_DRAW_CAP && !this.particleCapReported) {
+      this.particleCapReported = true;
+      this.options.report(
+        makeRuntimeDiagnostic("W8210", {
+          phase: "runtime:render",
+          message: `${String(total)} particles are alive; only the first ${String(PARTICLE_DRAW_CAP)} are drawn.`,
+          expected: `at most ${String(PARTICLE_DRAW_CAP)} particles drawn per frame`,
+        }),
+      );
     }
-    const mirror = this.particleMirror;
-    const normal = new Float32Array(16);
-    let written = 0;
-    const batches: { pipeline: GPURenderPipeline; mesh: GpuMesh; attributes: readonly MtekVertexAttribute[]; instance: number; start: number; count: number }[] = [];
+    // The emitters that can be drawn this frame: opaque ones first, then the blended ones far to near.
+    let count = 0;
     for (const draw of draws) {
-      const pipeline = pipelines.get(draw.materialId)?.instanced;
+      if (draw.points.length === 0) continue;
+      const material = this.materialsById.get(draw.materialId);
+      if (material === undefined) continue;
+      const wanted = materials.isTranslucent(draw.instanceIndex) || alwaysBlends(material);
+      const blended = wanted ? this.blendedPipeline(material, true) : undefined;
+      const pipeline = blended?.pipeline ?? this.options.pipelines.get(draw.materialId)?.instanced;
       if (pipeline === undefined) continue;
       let mesh: GpuMesh;
       try {
@@ -932,19 +1041,55 @@ export class Renderer {
       } catch {
         continue;
       }
-      const material = this.options.structure.materials.find((item) => item.id === draw.materialId);
-      const attributes = material?.shader.vertexAttributes ?? (["position"] as const);
-      const start = written;
-      for (const point of draw.points) {
-        if (written >= count) break;
+      const batch = (batches[count] ??= { draw, pipeline, mesh, attributes: [], instance: 0, start: 0, count: 0, blended: false, depth: 0 });
+      batch.draw = draw;
+      batch.pipeline = pipeline;
+      batch.mesh = mesh;
+      batch.attributes = material.shader.vertexAttributes;
+      batch.instance = draw.instanceIndex;
+      batch.blended = blended !== undefined;
+      let depth = 0;
+      if (batch.blended) {
+        for (const point of draw.points) depth += (view[2] ?? 0) * point.x + (view[6] ?? 0) * point.y + (view[10] ?? 0) * point.z + (view[14] ?? 0);
+        depth /= draw.points.length;
+      }
+      batch.depth = depth;
+      count += 1;
+    }
+    if (count === 0) return;
+    // Stable: the opaque emitters keep their order, the blended ones go far (most negative view z) to near.
+    const order = batches.slice(0, count).sort((a, b) => Number(a.blended) - Number(b.blended) || (a.blended ? a.depth - b.depth : 0));
+    for (let i = 0; i < count; i++) batches[i] = order[i] as ParticleBatch;
+    this.particleMirror ??= new Float32Array(PARTICLE_DRAW_CAP * INSTANCE_FLOATS);
+    const mirror = this.particleMirror;
+    let written = 0;
+    let live = 0;
+    for (let b = 0; b < count && written < PARTICLE_DRAW_CAP; b++) {
+      const batch = batches[b] as ParticleBatch;
+      const points = batch.draw.points;
+      const n = Math.min(points.length, PARTICLE_DRAW_CAP - written);
+      const rank = this.particleRank;
+      rank.length = n;
+      for (let k = 0; k < n; k++) rank[k] = k;
+      if (batch.blended) {
+        if (this.particleDepth.length < n) this.particleDepth = new Float64Array(Math.max(n, this.particleDepth.length * 2));
+        for (let k = 0; k < n; k++) {
+          const point = points[k] as ParticleDraw["points"][number];
+          this.particleDepth[k] = (view[2] ?? 0) * point.x + (view[6] ?? 0) * point.y + (view[10] ?? 0) * point.z + (view[14] ?? 0);
+        }
+        rank.sort(this.byParticleDepth);
+      }
+      batch.start = written;
+      for (let k = 0; k < n; k++) {
+        const point = points[rank[k] as number] as ParticleDraw["points"][number];
         const base = written * INSTANCE_FLOATS;
         const size = point.size;
         // A plane lies in local XZ and faces local +Y. local +Y points at the camera. local +Z is
         // -up so the basis stays right-handed: a positive determinant keeps the front face toward
         // the camera (back-face culling would drop the other orientation).
-        writeBasis(mirror, base, right, size);
-        writeBasis(mirror, base + 4, toward, size);
-        writeBasis(mirror, base + 8, up, -size);
+        writeBasis(mirror, base, axes, 0, size);
+        writeBasis(mirror, base + 4, axes, 6, size);
+        writeBasis(mirror, base + 8, axes, 3, -size);
         mirror[base + 12] = point.x;
         mirror[base + 13] = point.y;
         mirror[base + 14] = point.z;
@@ -953,43 +1098,62 @@ export class Renderer {
         mirror.set(normal, base + 16);
         written += 1;
       }
-      const batchCount = written - start;
-      if (batchCount > 0) batches.push({ pipeline, mesh, attributes, instance: draw.instanceIndex, start, count: batchCount });
+      batch.count = n;
+      live += 1;
     }
+    this.particleBatchCount = live;
     if (written === 0) return;
-    if (this.particleBuffer === undefined || this.particleMirror.length > (this.particleBuffer.size ?? 0) / 4) {
-      if (this.particleBuffer !== undefined) registry.release(this.particleBuffer);
-      this.particleBuffer = registry.createBuffer({
-        label: "mtek particle billboards",
-        size: this.particleMirror.length * 4,
-        usage: BUFFER_USAGE_VERTEX | BUFFER_USAGE_COPY_DST,
-      });
-    }
+    this.particleBuffer ??= registry.createBuffer({
+      label: "mtek particle billboards",
+      size: PARTICLE_DRAW_CAP * INSTANCE_STRIDE,
+      usage: BUFFER_USAGE_VERTEX | BUFFER_USAGE_COPY_DST,
+    });
     registry.writeBuffer(device.queue, this.particleBuffer, 0, mirror.buffer as ArrayBuffer, 0, written * INSTANCE_STRIDE);
-    const objectGroup = this.objectArena.bindGroupDynamic(plan.object);
+  }
+
+  /** Encodes the calls `prepareParticles` made ready. Binds groups 0 and 2 itself: the caller forgets its pipeline, group 1 and mesh. */
+  private drawParticles(pass: GPURenderPassEncoder): void {
+    const { plan, materials } = this.options;
+    const buffer = this.particleBuffer;
+    if (buffer === undefined) return;
     pass.setBindGroup(0, this.frameArena.bindGroupForSlot(this.frameSlot, plan.frame));
     const dynamicOffset = this.dynamicOffset;
     dynamicOffset[0] = 0;
-    pass.setBindGroup(2, objectGroup, dynamicOffset);
-    for (const batch of batches) {
+    pass.setBindGroup(2, this.objectArena.bindGroupDynamic(plan.object), dynamicOffset);
+    for (let b = 0; b < this.particleBatchCount; b++) {
+      const batch = this.particleBatches[b] as ParticleBatch;
       pass.setPipeline(batch.pipeline);
       pass.setBindGroup(1, materials.bindGroup(batch.instance));
       for (let slot = 0; slot < batch.attributes.length; slot += 1) {
         pass.setVertexBuffer(slot, vertexBufferOf(batch.mesh, batch.attributes[slot] as MtekVertexAttribute));
       }
-      pass.setVertexBuffer(batch.attributes.length, this.particleBuffer);
+      pass.setVertexBuffer(batch.attributes.length, buffer);
       pass.setIndexBuffer(batch.mesh.indexBuffer, batch.mesh.indexFormat);
       pass.drawIndexed(batch.mesh.indexCount, batch.count, 0, 0, batch.start);
     }
   }
 }
 
+/** One draw call of the particles of a frame (a reused record). */
+interface ParticleBatch {
+  draw: ParticleDraw;
+  pipeline: GPURenderPipeline;
+  mesh: GpuMesh;
+  attributes: readonly MtekVertexAttribute[];
+  instance: number;
+  start: number;
+  count: number;
+  blended: boolean;
+  /** Mean view-space z of the particles: the farthest are the most negative. */
+  depth: number;
+}
+
 const PARTICLE_DRAW_CAP = 256;
 
-function writeBasis(out: Float32Array, at: number, axis: readonly number[], size: number): void {
-  out[at] = (axis[0] ?? 0) * size;
-  out[at + 1] = (axis[1] ?? 0) * size;
-  out[at + 2] = (axis[2] ?? 0) * size;
+function writeBasis(out: Float32Array, at: number, axes: Float64Array, axis: number, size: number): void {
+  out[at] = (axes[axis] ?? 0) * size;
+  out[at + 1] = (axes[axis + 1] ?? 0) * size;
+  out[at + 2] = (axes[axis + 2] ?? 0) * size;
   out[at + 3] = 0;
 }
 

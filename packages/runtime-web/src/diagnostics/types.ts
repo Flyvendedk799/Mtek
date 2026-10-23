@@ -106,6 +106,7 @@ export const RUNTIME_DIAGNOSTIC_CATALOGUE = {
   W8202: "sound could not be decoded",
   W8203: "too many HUD items",
   W8204: "font could not be loaded",
+  W8210: "too many particles",
 } as const;
 
 /**

@@ -11,7 +11,9 @@
  *  4. Every startup pipeline (one per material, for the surface's colour format, and the instanced
  *     variant of each material that has entities to instance) is created; a failure is `E8051` and
  *     fails the mount.
- *  5. The renderer allocates the frame and object blocks.
+ *  5. The blended variant of every material known to blend (a Sprite, an instance whose initial colour alpha is
+ *     below 1) is created too, so its first frame is already translucent (decision 0173); any other is made lazily.
+ *  6. The renderer allocates the frame and object blocks.
  */
 import type { MtekManifest } from "../abi/manifest-types.js";
 import type { DecodedImages, LoadedAssets } from "../assets/loader.js";
@@ -25,9 +27,9 @@ import { World, type CpuServices } from "../scene/world.js";
 import { MaterialStore } from "./materials.js";
 import { MeshStore } from "./meshes.js";
 import { instancingCandidates } from "./instancing.js";
-import { BindingPlan, PipelineCache, canBlend, materialPipelineKey, type PipelineResult } from "./pipelines.js";
+import { BindingPlan, PipelineCache, alwaysBlends, canBlend, materialPipelineKey, type PipelineResult } from "./pipelines.js";
 import type { TextureOverrides } from "./resources.js";
-import { Renderer, type MaterialPipeline, type RenderSurface } from "./renderer.js";
+import { Renderer, blendedKey, type MaterialPipeline, type RenderSurface } from "./renderer.js";
 
 export interface SceneStartupOptions {
   /** Reject stale asynchronous candidate work before allocating or publishing scene resources. */
@@ -140,14 +142,24 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
     const pipelines = options.pipelineCache ?? new PipelineCache(device, registry, plan, manifest);
     const phase: MtekRuntimePhase | undefined = recover === undefined ? undefined : "runtime:device";
     // The materials with entities that can share an instanced draw also get the instanced variant of their pipeline.
-    const instanced =
+    const instanced = new Set<string>(
       options.instancing === false
-        ? new Set<string>()
+        ? []
         : instancingCandidates(
             structure,
             (instance) => materials.blockOf(instance),
             (material) => materialPipelineKey(material, surface.colorFormat),
-          ).materials;
+          ).materials,
+    );
+    // Particles are always drawn as instances (decision 0155), also when batching is off: their materials keep the variant.
+    const emitterMaterials = new Map<string, ResolvedMaterial>();
+    for (const entity of structure.entities) {
+      if (entity.particles !== undefined && entity.instance !== null) emitterMaterials.set(entity.instance.material.id, entity.instance.material);
+    }
+    for (const prefab of structure.prefabs) {
+      if (prefab.particles !== undefined && prefab.material !== null) emitterMaterials.set(prefab.material.material.id, prefab.material.material);
+    }
+    for (const [id, material] of emitterMaterials) if (material.shader.instancedVertexEntry !== undefined) instanced.add(id);
     const results = await Promise.all(
       structure.materials.map(async (material): Promise<PipelineResult & { readonly instancedPipeline?: GPURenderPipeline }> => {
         const module = modules.get(material.shader.hash);
@@ -189,6 +201,39 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
       return { ok: false, diagnostics };
     }
 
+    // The blended pipelines of the materials known to blend now (decision 0173): a plain one for each, and the
+    // instanced one for those an emitter draws. The rest is made the first time a draw needs it.
+    const blendedSeed = new Map<string, { readonly key: string; readonly pipeline: GPURenderPipeline }>();
+    const wanted = new Map<string, { readonly material: ResolvedMaterial; readonly instanced: boolean }>();
+    const want = (material: ResolvedMaterial, instancedVariant: boolean): void => {
+      if (!canBlend(material) || modules.get(material.shader.hash) === undefined || !byMaterial.has(material.id)) return;
+      if (instancedVariant && material.shader.instancedVertexEntry === undefined) return;
+      wanted.set(blendedKey(material.id, instancedVariant), { material, instanced: instancedVariant });
+    };
+    for (const entity of structure.entities) {
+      if (entity.mesh === null || entity.instance === null) continue;
+      const { material } = entity.instance;
+      if (!alwaysBlends(material) && !materials.isTranslucent(entity.instance.index)) continue;
+      want(material, false);
+      if (entity.particles !== undefined) want(material, true);
+    }
+    for (const prefab of structure.prefabs) {
+      const material = prefab.material?.material;
+      if (prefab.mesh === null || material === undefined || !alwaysBlends(material)) continue;
+      want(material, false);
+      if (prefab.particles !== undefined) want(material, true);
+    }
+    await Promise.all(
+      [...wanted].map(async ([id, { material, instanced: instancedVariant }]) => {
+        const module = modules.get(material.shader.hash);
+        if (module === undefined) return;
+        const made = await pipelines.obtain({ material, module, colorFormat: surface.colorFormat, blended: true, ...(instancedVariant ? { instanced: true } : {}) });
+        if (made.ok) blendedSeed.set(id, { key: made.key, pipeline: made.pipeline });
+        // A failure here is reported when a draw asks for the pipeline, as for a lazily made one.
+      }),
+    );
+    options.assertActive?.();
+
     world.phase = "runtime:update";
     renderer = new Renderer({
       device,
@@ -202,11 +247,13 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
       materials,
       meshes,
       pipelines: byMaterial,
-      // The translucent variant (decision 0138) is made the first time a draw of the material needs it.
-      blend: async (material) => {
+      blendedSeed,
+      // The translucent variant (decision 0138) of a material not known to blend at startup is made the first time a draw needs it.
+      blend: async (material, instancedVariant) => {
         const module = modules.get(material.shader.hash);
         if (module === undefined || !canBlend(material)) return undefined;
-        const made = await pipelines.obtain({ material, module, colorFormat: surface.colorFormat, blended: true });
+        if (instancedVariant && material.shader.instancedVertexEntry === undefined) return undefined;
+        const made = await pipelines.obtain({ material, module, colorFormat: surface.colorFormat, blended: true, ...(instancedVariant ? { instanced: true } : {}) });
         if (made.ok) return { key: made.key, pipeline: made.pipeline };
         report(made.diagnostic);
         return undefined;
