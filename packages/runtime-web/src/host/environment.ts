@@ -33,6 +33,7 @@ export type MediaQueryListLike = EventTarget;
 export type DocumentLike = EventTarget & { readonly visibilityState: DocumentVisibilityState };
 
 export interface HostEnvironment {
+  getGamepads?(): readonly (import("../input/gamepad.js").GamepadSnapshot | null)[];
   /** The `GPU` entry point; `null` simulates a browser without WebGPU. */
   readonly gpu: GPU | null;
   /** Platform endianness override for tests; default: detected. */
@@ -104,6 +105,8 @@ export function browserDecodeImage(bytes: Uint8Array): Promise<ImageBitmap> {
 export function defaultEnvironment(): HostEnvironment {
   const holder: Partial<Pick<Navigator, "gpu">> | undefined = typeof navigator === "undefined" ? undefined : navigator;
   return {
+    getGamepads: () => typeof navigator === "undefined" || typeof navigator.getGamepads !== "function" ||
+      (typeof document !== "undefined" && document.visibilityState === "hidden") ? [] : navigator.getGamepads(),
     gpu: holder?.gpu ?? null,
     fetch: (url) => fetch(url),
     fetchBytes: (url) => fetch(url),

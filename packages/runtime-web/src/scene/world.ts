@@ -95,6 +95,9 @@ export const CONTEXT_MEMBERS = [
   "overlapBoxes",
   "screenToWorld",
   "worldToScreen",
+  "gamepadAxis",
+  "gamepadButton",
+  "gamepadConnected",
   "print",
   "goTo",
   "reset",
@@ -184,6 +187,7 @@ export interface ParamSink {
 
 /** The CPU intrinsics generated code reaches through `ctx` (`spec/runtime-abi.md` section 4.2). */
 export interface CpuServices {
+  readonly gamepads?: import("../input/gamepad.js").GamepadInput;
   /** Current render-target aspect ratio, also used by the renderer. Defaults to 1 in isolated worlds. */
   aspectRatio?(): number;
   /** `random()`: an f32 in `[0, 1)`. */
@@ -590,6 +594,9 @@ export class World {
       refField: (ref: unknown, field: unknown): unknown => this.refField(ref, field),
       overlapSpheres,
       overlapBoxes,
+      gamepadAxis: (pad: number, axis: number): number => services.gamepads?.axis(pad, axis) ?? 0,
+      gamepadButton: (pad: number, button: number): number => services.gamepads?.button(pad, button) ?? 0,
+      gamepadConnected: (pad: number): boolean => services.gamepads?.connected(pad) ?? false,
       screenToWorld: (point: Vec2, z: number): Vec3 => screenToWorld(this.camera, services.aspectRatio?.() ?? 1, point, z),
       worldToScreen: (point: Vec3): Vec2 => worldToScreen(this.camera, services.aspectRatio?.() ?? 1, point),
       send: (ref: unknown, message: unknown): void => {

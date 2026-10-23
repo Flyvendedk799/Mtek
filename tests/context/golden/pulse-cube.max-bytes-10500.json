@@ -93,6 +93,9 @@
       "function:first_tagged",
       "function:floor",
       "function:fract",
+      "function:gamepad.axis",
+      "function:gamepad.button",
+      "function:gamepad.connected",
       "function:go_to",
       "function:has_tag",
       "function:hud.button",
@@ -183,6 +186,7 @@
       "namespace:color",
       "namespace:easing",
       "namespace:frame",
+      "namespace:gamepad",
       "namespace:hud",
       "namespace:lighting",
       "namespace:mat4",
@@ -346,22 +350,6 @@
       "doc": "",
       "file": "src/main.mtek",
       "line": 6
-    },
-    {
-      "name": "Pulse.phase",
-      "kind": "param",
-      "type": "f32",
-      "doc": "",
-      "file": "src/main.mtek",
-      "line": 7
-    },
-    {
-      "name": "Demo.Cube",
-      "kind": "entity",
-      "type": "entity",
-      "doc": "",
-      "file": "src/main.mtek",
-      "line": 23
     }
   ],
   "schemaGuide": "A field line reads `name: type = default [flags]`; R required, W writable, B bindable, C construction-only.",
@@ -391,6 +379,13 @@
       "names": [
         "Entity",
         "Box"
+      ]
+    },
+    "symbols": {
+      "count": 2,
+      "names": [
+        "Demo.Cube",
+        "Pulse.phase"
       ]
     }
   }

@@ -2571,6 +2571,52 @@
       ]
     },
     {
+      "name": "gamepad",
+      "since": "M1",
+      "doc": "Polled gamepads; raw browser indices, sampled once per input phase.",
+      "members": [
+        {
+          "name": "axis",
+          "kind": "function",
+          "signatures": [
+            "(pad: i32, axis: i32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Axis in [-1,1]; missing/disconnected is zero."
+        },
+        {
+          "name": "button",
+          "kind": "function",
+          "signatures": [
+            "(pad: i32, button: i32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Button pressure in [0,1]; missing/disconnected is zero."
+        },
+        {
+          "name": "connected",
+          "kind": "function",
+          "signatures": [
+            "(pad: i32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Whether the pad is connected."
+        }
+      ]
+    },
+    {
       "name": "hud",
       "since": "M1",
       "doc": "The heads-up display: text, rectangles and buttons drawn over the canvas. Immediate mode: what a frame draws is shown until the next frame, so draw from `update`.",
