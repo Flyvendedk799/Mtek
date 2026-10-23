@@ -14,7 +14,8 @@ Replacing an instance records writes to all its parameters, so it conflicts with
 any bound parameter through the existing single-writer checks. Generated code
 uses `ctx.setMaterial(record, params)`, which validates every parameter before
 writing through the normal parameter store, preserving shared-block copy-on-write
-and alpha tracking. Material reads return the current parameter record.
+and alpha tracking. Material reads copy the current parameter values, so a local
+saved before replacement can restore the old value without aliasing the instance.
 
 Arcade Audio now has one Speaker entity and switches its material value between
 green and red, removing duplicate geometry and visibility bindings.

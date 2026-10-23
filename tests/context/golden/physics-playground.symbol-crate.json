@@ -439,12 +439,12 @@
   ],
   "examples": [
     {
-      "title": "Prefabs and prefab instances",
-      "source": "// A prefab is a reusable entity with params; `entity Name: Prefab { param: value; }` makes one.\nprefab Crate {\n    param origin: vec3 = vec3(0.0, 0.5, 0.0);\n    param tint: color = #5b8def;\n\n    position: origin;\n    mesh: Box {};\n    material: Pbr { base_color: tint; };\n}\n\nscene Demo {\n    camera Main {\n        position: vec3(0.0, 3.0, 8.0);\n        target: vec3(0.0, 0.5, 0.0);\n    }\n\n    entity Left: Crate {\n        origin: vec3(-1.5, 0.5, 0.0);\n    }\n\n    entity Right: Crate {\n        origin: vec3(1.5, 0.5, 0.0);\n        tint: #ff8a3d;\n    }\n}\n"
+      "title": "Timers, tagged sprites, spawn and destroy",
+      "source": "// Spawn tagged sprites, expire them, and start timers once in init.\nprefab Spark {\n    tag: \"spark\";\n    mesh: Plane {};\n    material: Sprite { columns: 1.0; rows: 1.0 };\n    state age: f32 = 0.0;\n    update(dt: f32) {\n        age += dt;\n        if age > 1.0 {\n            destroy(self);\n        }\n    }\n}\n\nscene Demo {\n    camera Main {\n        position: vec3(0.0, 0.0, 6.0);\n    }\n    init() {\n        every(0.5) {\n            spawn(Spark {});\n        }\n        after(10.0) {\n            for spark in tagged(\"spark\") {\n                destroy(spark);\n            }\n        }\n    }\n}\n"
     },
     {
-      "title": "Timers, tagged sprites, spawn and destroy",
-      "source": "// Spawn tagged sprites, expire them, and run timers once from the first update.\nprefab Spark {\n    tag: \"spark\";\n    mesh: Plane {};\n    material: Sprite { columns: 1.0; rows: 1.0 };\n    state age: f32 = 0.0;\n    update(dt: f32) {\n        age += dt;\n        if age > 1.0 {\n            destroy(self);\n        }\n    }\n}\n\nscene Demo {\n    state started: bool = false;\n    camera Main {\n        position: vec3(0.0, 0.0, 6.0);\n    }\n    update(dt: f32) {\n        if !started {\n            started = true;\n            every(0.5) {\n                spawn(Spark {});\n            }\n            after(10.0) {\n                for spark in tagged(\"spark\") {\n                    destroy(spark);\n                }\n            }\n        }\n    }\n}\n"
+      "title": "Prefabs and prefab instances",
+      "source": "// A prefab is a reusable entity with params; `entity Name: Prefab { param: value; }` makes one.\nprefab Crate {\n    param origin: vec3 = vec3(0.0, 0.5, 0.0);\n    param tint: color = #5b8def;\n\n    position: origin;\n    mesh: Box {};\n    material: Pbr { base_color: tint; };\n}\n\nscene Demo {\n    camera Main {\n        position: vec3(0.0, 3.0, 8.0);\n        target: vec3(0.0, 0.5, 0.0);\n    }\n\n    entity Left: Crate {\n        origin: vec3(-1.5, 0.5, 0.0);\n    }\n\n    entity Right: Crate {\n        origin: vec3(1.5, 0.5, 0.0);\n        tint: #ff8a3d;\n    }\n}\n"
     },
     {
       "title": "Physics bodies and collision events",

@@ -1,11 +1,12 @@
 # Digit2 is delivered on the next frame. Eight frames of 0.0625 s are 0.5 s:
-# the Spin clip is halfway from identity to a half turn about Y, and the
-# fountain (rate 24) has spawned 12 sparks, none of which have died (lifetime 0.8).
-name = "the wide camera, twelve sparks and a half turn"
+# the fountain (rate 24) has spawned 12 sparks, none of which have died (lifetime 0.8).
+# Clips compose with the base transform (decision 0174), so Prop.rotation stays
+# identity even while its rendered pose turns. Clip composition has runtime unit tests.
+name = "the wide camera, twelve sparks and an unchanged base rotation"
 steps = [
   { press = "Digit2" },
   { step = 1, dt = 0.0625 },
   { release = "Digit2" },
   { step = 7, dt = 0.0625 },
-  { expect_state = { view = 2, sparks = 12, spin = { value = 0.70710677, tolerance = 1e-4 }, "Prop.rotation" = { value = [0.0, 0.70710677, 0.0, 0.70710677], tolerance = 1e-4 } } },
+  { expect_state = { view = 2, sparks = 12, "Prop.rotation" = { value = [0.0, 0.0, 0.0, 1.0], tolerance = 1e-4 } } },
 ]

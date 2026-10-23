@@ -1,0 +1,5 @@
+scene Demo {
+    camera Main {}
+    state value: i32 = seed();
+    cpu fn seed() -> i32 { return 1; }
+}

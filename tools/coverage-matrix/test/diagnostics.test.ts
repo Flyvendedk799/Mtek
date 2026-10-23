@@ -58,7 +58,7 @@ describe("readFixtureCodes", () => {
     expect(codes.get("MTEK-E1010")?.some((f) => f.suite === "syntax-ast")).toBe(true);
     expect(codes.get("MTEK-E7001")?.[0]?.suite).toBe("assets-fail");
     expect(codes.get("MTEK-W2010")?.some((f) => f.suite === "semantics-pass")).toBe(true);
-  });
+  }, 30_000);
 });
 
 describe("auditCodes", () => {

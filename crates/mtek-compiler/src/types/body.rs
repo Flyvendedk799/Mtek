@@ -204,7 +204,7 @@ impl<'a> Checker<'a> {
             .and_then(|parent| self.res.def(parent))
             .is_some_and(|parent| parent.kind == DefKind::Scene)
         {
-            self.record_ambient_read(decl.span, "scene scope".to_owned(), false);
+            self.record_ambient_read(decl.span, "scene scope".to_owned(), true);
         }
         if let Some(body) = &mut self.body {
             body.ret_span = decl.ret.as_ref().map(|ret| ret.span);

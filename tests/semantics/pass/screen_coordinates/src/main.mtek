@@ -1,0 +1,10 @@
+scene Demo {
+    camera Main {
+        position: vec3(0.0, 0.0, 8.0);
+    }
+    state x: f32 = 0.0;
+    update(dt: f32) {
+        let world = screen_to_world(vec2(0.25, 0.0), 0.0);
+        x = world_to_screen(world).x;
+    }
+}

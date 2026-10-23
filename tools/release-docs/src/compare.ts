@@ -366,7 +366,7 @@ export function checkRuntimeCapabilities(i: RuntimeInputs): Mismatch[] {
       "runtime/events",
       "event",
       { where: "spec/stdlib-schema.json (events)", items: registryEvents },
-      { where: "packages/runtime-web/src/scene/dynamic.ts (INPUT_EVENTS, COLLISION_EVENTS)", items: [...i.runtime.inputEvents, ...i.runtime.collisionEvents] },
+      { where: "packages/runtime-web/src/scene/dynamic.ts (INPUT_EVENTS, COLLISION_EVENTS, ENTITY_EVENTS)", items: [...i.runtime.inputEvents, ...i.runtime.collisionEvents, ...i.runtime.entityEvents] },
     ),
   );
   found.push(

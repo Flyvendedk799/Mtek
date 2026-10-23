@@ -24,6 +24,7 @@ export interface RuntimeFacts {
   implementedCodecs: string[];
   inputEvents: string[];
   collisionEvents: string[];
+  entityEvents: string[];
   /** Public members of the body handle, in the snake_case of the registry (`apply_impulse`, `linear_velocity`). */
   bodyHandleMembers: string[];
 }
@@ -89,6 +90,7 @@ export async function readRuntimeFacts(root: string, codecIds: readonly string[]
     implementedCodecs: implementedCodecs(codecs.decodeHostInput, codecIds),
     inputEvents: stringList(dynamic, "INPUT_EVENTS", "packages/runtime-web/src/scene/dynamic.ts"),
     collisionEvents: stringList(dynamic, "COLLISION_EVENTS", "packages/runtime-web/src/scene/dynamic.ts"),
+    entityEvents: stringList(dynamic, "ENTITY_EVENTS", "packages/runtime-web/src/scene/dynamic.ts"),
     bodyHandleMembers: bodyHandleMembers(readText(root, "packages/runtime-web/src/physics/system.ts")),
   };
 }

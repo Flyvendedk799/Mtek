@@ -1,16 +1,13 @@
 # The title scene by itself: the prompt blinks on a timer of the game clock, and the logo turns.
 #
 # A frame delta above `max_frame_delta` (0.1 s) is clamped, so these frames are 0.0625 s, which is
-# exact in binary floating point and under the clamp. `update` of the first frame starts
-# `every(0.5) { prompt = !prompt; }` after the timers of that frame ran, at game time 0.0625, so it is
-# first due at 0.5625: in frame 9. It is then due every 0.5 s (8 frames): frames 17, 25, ...
+# exact in binary floating point and under the clamp. `init` starts the timer at game time zero,
+# before input and timer advancement, so it first fires at 0.5 s (frame 8), then frame 16, 24, ...
 # The logo turns by 0.8 * dt per frame on Normal: 0.4 rad after 8 frames (0.5 s).
 name = "the title prompt blinks every half second of game time"
 steps = [
   { step = 8, dt = 0.0625 },
-  { expect_state = { prompt = true, spin = { value = 0.4, tolerance = 1e-5 } } },
-  { step = 1, dt = 0.0625 },
-  { expect_state = { prompt = false } },
+  { expect_state = { prompt = false, spin = { value = 0.4, tolerance = 1e-5 } } },
   { step = 7, dt = 0.0625 },
   { expect_state = { prompt = false } },
   { step = 1, dt = 0.0625 },

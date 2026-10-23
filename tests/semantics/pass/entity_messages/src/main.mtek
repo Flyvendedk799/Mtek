@@ -6,6 +6,7 @@ prefab Receiver {
 }
 
 scene Demo {
+    state observed: i32 = 0;
     camera Main {}
     entity Target {
         tag: "target";
@@ -20,5 +21,8 @@ scene Demo {
             send(target, "hit");
         }
         spawn(Receiver {});
+    }
+    update(dt: f32) {
+        observed = Target.hits;
     }
 }

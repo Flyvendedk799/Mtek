@@ -1,0 +1,6 @@
+{
+  "extends": "../../../../../benchmarks/baselines/support/tsconfig.base.json",
+  "include": [
+    "src"
+  ]
+}

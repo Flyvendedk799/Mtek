@@ -314,7 +314,9 @@ impl Parser<'_> {
         self.bump();
         let mut members = Vec::new();
         while !matches!(self.kind(), TokenKind::RBrace | TokenKind::Eof)
-            && !self.at_unindented_item()
+            && (!self.at_unindented_item()
+                || (place == Place::Scene
+                    && matches!(self.kind(), TokenKind::KwFn | TokenKind::KwCpu)))
         {
             let before = self.pos;
             members.push(self.member(place));

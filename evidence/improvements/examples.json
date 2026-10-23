@@ -1,0 +1,123 @@
+[
+  {
+    "build": "pass",
+    "project": "arcade-audio",
+    "check": "pass",
+    "tests": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "notRun": 0
+    }
+  },
+  {
+    "build": "pass",
+    "project": "hud-score",
+    "check": "pass",
+    "tests": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "notRun": 0
+    }
+  },
+  {
+    "build": "pass",
+    "project": "lane-runner",
+    "check": "pass",
+    "tests": {
+      "total": 2,
+      "passed": 2,
+      "failed": 0,
+      "notRun": 0
+    }
+  },
+  {
+    "build": "pass",
+    "project": "material-configurator",
+    "check": "pass",
+    "tests": {
+      "total": 2,
+      "passed": 2,
+      "failed": 0,
+      "notRun": 0
+    }
+  },
+  {
+    "build": "pass",
+    "project": "modular-scene",
+    "check": "pass",
+    "tests": {
+      "total": 4,
+      "passed": 4,
+      "failed": 0,
+      "notRun": 0
+    }
+  },
+  {
+    "build": "pass",
+    "project": "physics-playground",
+    "check": "pass",
+    "tests": {
+      "total": 2,
+      "passed": 2,
+      "failed": 0,
+      "notRun": 0
+    }
+  },
+  {
+    "build": "pass",
+    "project": "product-configurator",
+    "check": "pass",
+    "tests": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "notRun": 0
+    }
+  },
+  {
+    "build": "pass",
+    "project": "pulse-cube",
+    "check": "pass",
+    "tests": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0
+    }
+  },
+  {
+    "build": "pass",
+    "project": "small-game",
+    "check": "pass",
+    "tests": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "notRun": 0
+    }
+  },
+  {
+    "build": "pass",
+    "project": "sprite-pop",
+    "check": "pass",
+    "tests": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "notRun": 0
+    }
+  },
+  {
+    "build": "pass",
+    "project": "stage-show",
+    "check": "pass",
+    "tests": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "notRun": 0
+    }
+  }
+]

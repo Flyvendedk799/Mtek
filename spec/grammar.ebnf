@@ -42,7 +42,7 @@ Reserved        ::= 'as' | 'async' | 'await' | 'extern' | 'impl' | 'loop'
 
 /* Contextual words (ordinary identifiers, meaningful only in position):
    'camera'                  scene-object kind      (SceneObject)
-   'update', 'fixed_update', 'ui'  lifecycle functions  (LifecycleFn)
+   'init', 'update', 'fixed_update', 'ui'  lifecycle functions  (LifecycleFn)
    'fragment'                material stage         (StageFn)
    'from'                    import clause          (Import)
    'shared'                  scene state carry-over (StateDecl)
@@ -138,7 +138,7 @@ FieldValue      ::= 'bind' '(' Expr ')' | Expr
                     /* [S: bind-bindable-field: bind only on bindable fields (E5004)] */
 
 LifecycleFn     ::= Ident '(' ParamList? ')' Block
-                    /* [S: lifecycle-signature: 'update' | 'fixed_update' | 'ui' (a scene only) with exactly (name: f32),
+                    /* [S: lifecycle-signature: 'init' takes no parameters; 'update' | 'fixed_update' | 'ui' (scene only) take exactly (name: f32),
                         at most one of each per body (E5050-E5052)] */
 
 Handler         ::= 'on' Ident '(' HandlerArgs? ')' Block

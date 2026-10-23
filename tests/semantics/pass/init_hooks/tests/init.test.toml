@@ -1,5 +1,5 @@
 name = "init hooks run once before update and start a timer once"
 steps = [
   { step = 5, dt = 0.0625 },
-  { expect_state = { scene_inits = 1, entity_inits = 1, ticks = 15 } },
+  { expect_state = { scene_inits = 1, entity_inits = 1, ticks = 15, child_hidden = true } },
 ]

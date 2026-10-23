@@ -651,7 +651,7 @@ fn a_release_build_has_no_overlay_code_and_dev_and_test_builds_do() {
     let scratch = Scratch::new("build-flavours");
     let project = scratch.project("app", VALID);
     for (mode, flavour) in [
-        ("release", "runtime.js"),
+        ("release", "runtime.min.js"),
         ("dev", "runtime.dev.js"),
         ("test", "runtime.dev.js"),
     ] {

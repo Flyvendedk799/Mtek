@@ -362,12 +362,12 @@
           "default": "Unlit {}",
           "defaultWhenSet": "mesh",
           "required": false,
-          "writable": false,
+          "writable": true,
           "bindable": false,
-          "constructionOnly": true,
+          "constructionOnly": false,
           "range": null,
           "since": "M1",
-          "doc": "The material instance used to draw the mesh. The instance is construction-only; its parameters are writable and bindable. Requires `mesh`."
+          "doc": "Material instance. Value-only instances can be replaced by the same material type; parameters are writable and bindable. Requires `mesh`."
         },
         {
           "name": "mesh",

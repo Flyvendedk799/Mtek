@@ -803,7 +803,7 @@ impl FnLowering<'_, '_> {
         Ok(match root {
             ir::PlaceRoot::State { owner, name, .. } => self.state_path(*owner, name),
             ir::PlaceRoot::EntityField { entity, field, .. } if field == "material" => {
-                self.entity(*entity).member("mat").member("p")
+                rt("copy", vec![self.entity(*entity).member("mat").member("p")])
             }
             ir::PlaceRoot::EntityField { entity, field, .. } => self.entity(*entity).member(field),
             ir::PlaceRoot::CameraField { camera, field, .. } => camera_record(camera).member(field),
@@ -1217,7 +1217,7 @@ impl FnLowering<'_, '_> {
                 ));
             }
             ir::ExprKind::EntityField { entity, field } if field == "material" => {
-                self.entity(*entity).member("mat").member("p")
+                rt("copy", vec![self.entity(*entity).member("mat").member("p")])
             }
             ir::ExprKind::EntityField { entity, field } => self.entity(*entity).member(field),
             ir::ExprKind::RefField { target, field } => {

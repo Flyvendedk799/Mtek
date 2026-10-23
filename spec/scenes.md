@@ -123,11 +123,14 @@ prefab Crate {
 
 | Name | Signature | Where | When |
 |---|---|---|---|
+| `init` | `init() { … }` | scene, entity, prefab | once after saved/shared state restoration, before the first input/update; spawned prefabs run it at their creation flush (decision 0183) |
 | `update` | `update(dt: f32) { … }` | scene, entity, prefab | once per rendered frame, after fixed ticks (§10) |
 | `fixed_update` | `fixed_update(dt: f32) { … }` | scene, entity, prefab | once per fixed simulation tick; `dt` is the fixed step |
 | `ui` | `ui(dt: f32) { … }` | scene only | once per rendered frame, after `update`, **also while the game is paused** (§15.4); `dt` is the frame delta (decision 0175) |
 
-The parameter name is free; its type must be `f32`, and there must be exactly one parameter (`E5050`). At most one of each per body (`E5051`). Any other `name(…) { … }` member is `E5052` ("`start` is not a lifecycle function; v0.1 lifecycle functions are `update`, `fixed_update` and (in a scene) `ui`"); so is `ui` in an entity or a prefab. Lifecycle functions have effect level `cpu`, return unit, and may read and write as described in §8.
+`init` takes no parameters. The other lifecycle functions take exactly one `f32` parameter (`E5050`), whose name is free. At most one of each per body is allowed (`E5051`). Other `name(…) { … }` members are `E5052`; so is `ui` in an entity or prefab. Lifecycle functions have effect level `cpu`, return unit, and may read and write as described in §8.
+
+Scenes may also declare `cpu fn` helpers with ordinary parameters and return types (decision 0184). They capture the current scene scope and remain private to it; top-level functions keep their existing rules. Helpers may not run from state or field initializers, where scene setup has not completed.
 
 ## 7. Events, input and frame values
 

@@ -108,6 +108,7 @@ describe("contextual words", () => {
   });
 
   it("scopes lifecycle functions, the stage function and `camera`", () => {
+    expect(has(scopes("init() {}", "init"), "entity.name.function.lifecycle")).toBe(true);
     expect(has(scopes("update(dt: f32) {}", "update"), "entity.name.function.lifecycle")).toBe(true);
     expect(has(scopes("fixed_update(dt: f32) {}", "fixed_update"), "entity.name.function.lifecycle")).toBe(true);
     expect(has(scopes("ui(dt: f32) {}", "ui"), "entity.name.function.lifecycle")).toBe(true);

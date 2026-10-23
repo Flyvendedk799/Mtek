@@ -85,7 +85,7 @@ describe("readers of the specification", () => {
   });
 
   it("reads the events, the keys and the intrinsics of stdlib.md", () => {
-    expect(stdlibEvents(stdlibMd)).toEqual(["key_down", "key_up", "pointer_down", "pointer_up", "pointer_move", "collision_enter", "collision_exit"]);
+    expect(stdlibEvents(stdlibMd)).toEqual(["key_down", "key_up", "pointer_down", "pointer_up", "pointer_move", "collision_enter", "collision_exit", "message"]);
     const keys = stdlibKeyCodes(stdlibMd);
     expect(keys).toContain("KeyA");
     expect(keys).toContain("KeyZ");

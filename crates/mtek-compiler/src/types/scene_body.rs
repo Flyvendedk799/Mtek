@@ -48,6 +48,21 @@ pub(super) enum Initialiser {
 const LIFECYCLE_NAMES: [&str; 4] = ["init", "update", "fixed_update", "ui"];
 
 impl Checker<'_> {
+    pub(super) fn object_field_type(
+        &mut self,
+        owner: DefId,
+        field: &crate::stdlib::FieldDef,
+    ) -> TyId {
+        if field.name == "material" && field.ty == crate::stdlib::TypeRef::Material {
+            self.out
+                .entity_materials
+                .get(&owner)
+                .copied()
+                .unwrap_or(TyId::MATERIAL)
+        } else {
+            self.out.interner.from_type_ref(field.ty)
+        }
+    }
     // ----- state -----------------------------------------------------------------------------
 
     /// Give every `state` of `decl` and of its entities its type.

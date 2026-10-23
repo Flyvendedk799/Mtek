@@ -171,7 +171,6 @@
       "schema:Sprite",
       "self",
       "state",
-      "type:bool",
       "type:f32",
       "type:vec3"
     ]

@@ -1,4 +1,4 @@
-// Spawn tagged sprites, expire them, and run timers once from the first update.
+// Spawn tagged sprites, expire them, and start timers once in init.
 prefab Spark {
     tag: "spark";
     mesh: Plane {};
@@ -13,20 +13,16 @@ prefab Spark {
 }
 
 scene Demo {
-    state started: bool = false;
     camera Main {
         position: vec3(0.0, 0.0, 6.0);
     }
-    update(dt: f32) {
-        if !started {
-            started = true;
-            every(0.5) {
-                spawn(Spark {});
-            }
-            after(10.0) {
-                for spark in tagged("spark") {
-                    destroy(spark);
-                }
+    init() {
+        every(0.5) {
+            spawn(Spark {});
+        }
+        after(10.0) {
+            for spark in tagged("spark") {
+                destroy(spark);
             }
         }
     }
