@@ -111,7 +111,7 @@ describe("the documented GLB profile and its failing fixtures (spec/assets.md se
   });
 
   it("has fixtures for the specific features the guardrail is about: normal texture, extension, skin, cubic-spline animation, sparse accessor, wrong mode", () => {
-    for (const name of ["e7016_normal_texture", "e7004_required_extension", "e7019_skin", "e7019_cubic_spline", "e7011_sparse_accessor", "e7006_mode_lines"]) {
+    for (const name of ["e7016_normal_texture", "e7004_required_extension", "e7019_skin", "e7019_cubic_clip", "e7011_sparse_accessor", "e7006_mode_lines"]) {
       expect(existsSync(join(FAIL_DIR, name, "expected.diag.json")), name).toBe(true);
     }
   });

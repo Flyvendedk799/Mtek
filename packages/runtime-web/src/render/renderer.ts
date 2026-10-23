@@ -280,7 +280,7 @@ export class Renderer {
   private instanceBuffer: GPUBuffer | undefined;
   /** Billboard matrices for particles (decision 0155): one buffer of `PARTICLE_DRAW_CAP` records, made on the first frame that draws one (decision 0173). */
   private particleBuffer: GPUBuffer | undefined;
-  private particleMirror: Float32Array | undefined;
+  private particleMirror: Float32Array<ArrayBuffer> | undefined;
   /** The particle draw calls of this frame, in draw order (reused records; the first `particleBatchCount` are live). */
   private readonly particleBatches: ParticleBatch[] = [];
   private particleBatchCount = 0;
