@@ -40,8 +40,18 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
     let unit = exact(TypeRef::Unit);
     vec![
         function(
+            "overlap_spheres", Domain::Cpu, false, Milestone::M1,
+            "World-space sphere intersection, including touching. No physics required.",
+            vec![sig(&[p("a", vec3), p("radius_a", F32), p("b", vec3), p("radius_b", F32)], exact(TypeRef::Bool))],
+        ),
+        function(
+            "overlap_boxes", Domain::Cpu, false, Milestone::M1,
+            "Oriented box intersection; world centers, full sizes and rotations. No physics required.",
+            vec![sig(&[p("a", vec3), p("size_a", vec3), p("rotation_a", exact(TypeRef::Quat)), p("b", vec3), p("size_b", vec3), p("rotation_b", exact(TypeRef::Quat))], exact(TypeRef::Bool))],
+        ),
+        function(
             "send", Domain::Cpu, false, Milestone::M1,
-            "Queues a message for a live entity's `on message(value: string)` handler (decision 0180).",
+            "Queues a string for a live entity's `on message(value: string)` handler.",
             vec![sig(&[p("target", exact(TypeRef::EntityRef)), p("message", exact(TypeRef::String))], unit)],
         ).handlers_only(),
         math(

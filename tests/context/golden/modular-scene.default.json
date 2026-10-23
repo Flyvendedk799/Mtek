@@ -120,6 +120,8 @@
       "function:mix",
       "function:nearest_tagged",
       "function:normalize",
+      "function:overlap_boxes",
+      "function:overlap_spheres",
       "function:particle_count",
       "function:pause",
       "function:paused",

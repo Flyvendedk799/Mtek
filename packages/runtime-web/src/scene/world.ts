@@ -12,6 +12,7 @@
  * compiler gates them by milestone), so reaching one is a bug.
  */
 import type { MtekManifest } from "../abi/manifest-types.js";
+import { overlapSpheres, overlapBoxes } from "../math/overlap.js";
 import {
   RUNTIME_DIAGNOSTIC_CATALOGUE,
   makeRuntimeDiagnostic,
@@ -88,6 +89,8 @@ export const CONTEXT_MEMBERS = [
   "shuffle",
   "refField",
   "send",
+  "overlapSpheres",
+  "overlapBoxes",
   "print",
   "goTo",
   "reset",
@@ -579,6 +582,8 @@ export class World {
       choose: (items: unknown): unknown => chooseItem(services.random(), items),
       shuffle: (items: unknown): unknown => shuffled(items, () => services.random()),
       refField: (ref: unknown, field: unknown): unknown => this.refField(ref, field),
+      overlapSpheres,
+      overlapBoxes,
       send: (ref: unknown, message: unknown): void => {
         if (typeof message !== "string") throw new RuntimeInternalError("ctx.send expected a string message.");
         if (this.dynamic.alive(ref)) this.messages.push({ target: ref as EntityRef, value: message });

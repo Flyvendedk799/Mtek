@@ -25,7 +25,7 @@ prefab Rock {
     update(dt: f32) {
         self.position.y -= speed * dt;
         for player in tagged("player") {
-            if distance(self.position, player.position) < 1.0 {
+            if overlap_spheres(self.position, 0.5, player.position, 0.5) {
                 send(player, "hit");
                 destroy(self);
             }

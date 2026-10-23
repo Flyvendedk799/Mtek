@@ -1812,6 +1812,30 @@
       "doc": "The vector scaled to length 1."
     },
     {
+      "name": "overlap_boxes",
+      "signatures": [
+        "(a: vec3, size_a: vec3, rotation_a: quat, b: vec3, size_b: vec3, rotation_b: quat) -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Oriented box intersection; world centers, full sizes and rotations. No physics required."
+    },
+    {
+      "name": "overlap_spheres",
+      "signatures": [
+        "(a: vec3, radius_a: f32, b: vec3, radius_b: f32) -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "World-space sphere intersection, including touching. No physics required."
+    },
+    {
       "name": "particle_count",
       "signatures": [
         "() -> i32"
@@ -2065,7 +2089,7 @@
       "handlersOnly": true,
       "cpuSemantics": "",
       "since": "M1",
-      "doc": "Queues a message for a live entity's `on message(value: string)` handler (decision 0180)."
+      "doc": "Queues a string for a live entity's `on message(value: string)` handler."
     },
     {
       "name": "set_camera",

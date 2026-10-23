@@ -120,6 +120,8 @@
       "function:mix",
       "function:nearest_tagged",
       "function:normalize",
+      "function:overlap_boxes",
+      "function:overlap_spheres",
       "function:particle_count",
       "function:pause",
       "function:paused",
@@ -326,7 +328,40 @@
       "src/main.mtek"
     ]
   },
-  "symbols": [],
+  "symbols": [
+    {
+      "name": "Pulse",
+      "kind": "material",
+      "type": "material",
+      "doc": "",
+      "file": "src/main.mtek",
+      "line": 5
+    },
+    {
+      "name": "Pulse.tint",
+      "kind": "param",
+      "type": "color",
+      "doc": "",
+      "file": "src/main.mtek",
+      "line": 6
+    },
+    {
+      "name": "Pulse.phase",
+      "kind": "param",
+      "type": "f32",
+      "doc": "",
+      "file": "src/main.mtek",
+      "line": 7
+    },
+    {
+      "name": "Demo.Cube",
+      "kind": "entity",
+      "type": "entity",
+      "doc": "",
+      "file": "src/main.mtek",
+      "line": 23
+    }
+  ],
   "schemaGuide": "A field line reads `name: type = default [flags]`; R required, W writable, B bindable, C construction-only.",
   "schemas": [],
   "examples": [],
@@ -354,15 +389,6 @@
       "names": [
         "Entity",
         "Box"
-      ]
-    },
-    "symbols": {
-      "count": 4,
-      "names": [
-        "Demo.Cube",
-        "Pulse.phase",
-        "Pulse.tint",
-        "Pulse"
       ]
     }
   }

@@ -2280,6 +2280,8 @@ fn tag_member(function: &str) -> Option<&'static str> {
     Some(match function {
         "count_tagged" => "countTagged",
         "send" => "send",
+        "overlap_spheres" => "overlapSpheres",
+        "overlap_boxes" => "overlapBoxes",
         "first_tagged" => "firstTagged",
         "nearest_tagged" => "nearestTagged",
         "has_tag" => "hasTag",
