@@ -461,7 +461,7 @@ The fields of an entity or prefab body: a named node with a transform and option
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
 | `body` | `body` | none | no | construction only |  | A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; requires `collider`. |
-| `clip` | `string` | none | no | construction only |  | The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. The clip is the only writer of the position, rotation and scale channels it has. |
+| `clip` | `string` | none | no | construction only |  | The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. It composes with the entity's own transform (decision 0174). |
 | `collider` | `collider` | none | no | construction only |  | A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`. |
 | `light` | `light` | none | no | construction only |  | A light component (`DirectionalLight`, `PointLight`). Its fields are writable and bindable as their schemas say. Named entities only. |
 | `material` | `material` | `Unlit {}` | no | construction only |  | The material instance used to draw the mesh. The instance is construction-only; its parameters are writable and bindable. Requires `mesh`. |
@@ -941,7 +941,7 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 What the build does **not** support is on [limitations.md](limitations.md); `supported.notSupported` of `mtek context` has the same list.
 
-## Part D. Diagnostics (244 codes)
+## Part D. Diagnostics (245 codes)
 
 Every diagnostic has a stable code: `E` for an error, `W` for a warning, then four digits; the first digit is the area. The full catalogue, the JSON form (`mtek check --format json`), the human rendering and the suggested edits are in [spec/diagnostics.md](../spec/diagnostics.md).
 
@@ -955,7 +955,7 @@ Every diagnostic has a stable code: `E` for an error, `W` for a warning, then fo
 | `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 65 |
 | `6xxx` | GPU layout, target profile, generated-shader validation | 4 |
 | `7xxx` | assets | 36 |
-| `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 33 |
+| `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 34 |
 | `9xxx` | project, configuration, tooling, internal | 13 |
 
 Within each range the `x9xx` codes mean "specified as not supported in v0.1"; all of them are listed, with their reasons, on [limitations.md](limitations.md).

@@ -304,7 +304,7 @@
         "collider: collider [C] // A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`.",
         "tag: string [C] // A group name (`\"rock\"`) that `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag` and `destroy_tagged` look the entity up by (decision 0150). A string literal of lowercase letters, digits and `_`.",
         "particles: emitter [C] // A particle emitter (decision 0155). Up to 64 particles live at once. They are drawn with this entity's mesh as camera-facing billboards, in the colour of its material. Without a mesh the particles are still counted.",
-        "clip: string [C] // The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. The clip is the only writer of the position, rotation and scale channels it has."
+        "clip: string [C] // The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. It composes with the entity's own transform (decision 0174)."
       ]
     },
     {

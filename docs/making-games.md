@@ -158,35 +158,37 @@ The `started` flag is the usual way to start timers once, in the first frame of 
 
 ## Pause
 
-`pause()` stops the game: no fixed ticks, no physics, no timers and no `update`. Input handlers keep running, so the same key can resume. `paused()` says which it is.
+`pause()` stops the game: no fixed ticks, no physics, no timers and no `update`. Input handlers keep running, and so does the scene's `ui(dt)` (decision 0175): it runs in every frame after `update`, also while the game is paused, so it is where the HUD and the pause menu go. `paused()` says which it is.
 
 ```mtek
 scene Play {
-    state holding: bool = false;
+    state score: i32 = 0;
 
     camera Main {}
 
-    entity PauseMark {
-        mesh: Box { size: vec3(0.3, 1.0, 0.1) };
-        material: Unlit { color: #ffffff };
-        visible: bind(holding);
+    ui(dt: f32) {
+        hud.text("Score ${score}", vec2(-0.95, 0.88), 24.0, #ffffff, 0.0);
+        if paused() {
+            hud.text("PAUSED", vec2(0.0, 0.3), 36.0, #ffffff, 0.5);
+            if hud.button("Resume", vec2(0.0, 0.0), 24.0) {
+                resume();
+            }
+        } else if hud.button("Pause", vec2(0.95, -0.88), 18.0) {
+            pause();
+        }
     }
 
     on key_down(Key.Escape) {
         if paused() {
-            holding = false;
             resume();
         } else {
-            holding = true;
             pause();
         }
     }
 }
 ```
 
-<!-- revisit after game-hardening merge: the HUD is drawn from `update`, which does not run while paused, so a pause screen is a bound entity as above. If a way to draw the HUD while paused was added, show it here instead. -->
-
-The HUD is drawn by `update`, and `update` does not run while the game is paused, so text vanishes when you pause. Show a pause mark with a bound entity, as above.
+Only a scene declares `ui`; an entity or a prefab that does is `MTEK-E5052`. Keep game logic in `update`: `ui` is for what the player sees and clicks.
 
 ## Input: events and polling
 
@@ -338,7 +340,7 @@ scene Play {
 
 ## The HUD: text, rectangles, buttons and fonts
 
-The HUD is drawn again every frame from `update` or a handler. `hud.text(content, at, size, tint, align, font)` draws a line, `hud.rect(at, size, tint, align)` a filled box for panels and bars, and `hud.button(label, at, size)` draws a button and returns `true` in the frame after a click. Positions are canvas coordinates from -1 to 1 with y up, sizes are in pixels, and `align` is 0 for the left edge, 0.5 for the centre and 1 for the right edge. A text can contain `${expression}`, with `${value:.1}` for one decimal.
+The HUD is drawn again every frame from `ui`, `update` or a handler; draw it from `ui` when it must stay on screen while the game is paused. `hud.text(content, at, size, tint, align, font)` draws a line, `hud.rect(at, size, tint, align)` a filled box for panels and bars, and `hud.button(label, at, size)` draws a button and returns `true` in the frame after a click. Positions are canvas coordinates from -1 to 1 with y up, sizes are in pixels, and `align` is 0 for the left edge, 0.5 for the centre and 1 for the right edge. A text can contain `${expression}`, with `${value:.1}` for one decimal.
 
 ```mtek
 scene Play {
@@ -431,7 +433,7 @@ scene Pop {
 
 With `Orthographic { height: 8.0 }` the canvas shows eight world units from top to bottom, `x` goes right and `y` goes up. A sprite is always drawn translucent, so its clear texels show what is behind it.
 
-<!-- revisit after game-hardening merge: the order in which overlapping sprites at different z are drawn was being fixed; check spec/materials.md section 9.1 before describing it. -->
+Overlapping sprites are drawn back to front by their distance from the camera, so under an orthographic camera a sprite's `z` is its layer: the one with the larger `z` (nearer the camera looking down -Z) is drawn on top (decision 0173).
 
 ## Particles
 
@@ -483,7 +485,7 @@ scene Stage {
 }
 ```
 
-<!-- revisit after game-hardening merge: bindings that write a camera field name that camera; the handling of named cameras was being fixed. Re-read spec/scenes.md section 3 before adding detail. -->
+Reading or writing a camera by name always means that camera, also when another one is active: `Wide.position = vec3(0.0, 20.0, 0.0);` moves `Wide` and leaves the active camera alone (decision 0177).
 
 The cameras keep their own values while another draws. A name that is not a camera of the scene is `MTEK-E5015`.
 
