@@ -478,6 +478,7 @@ fn scene_sexp(decl: &SceneDecl) -> Sexp {
         .atom(decl.name.name.as_str())
         .children(decl.members.iter().map(|member| match member {
             SceneMember::Field(field) => init_sexp(field),
+            SceneMember::Function(function) => fn_sexp(function),
             SceneMember::Const(decl) => const_sexp(decl),
             SceneMember::State(state) => state_sexp(state),
             SceneMember::Object(object) => object_sexp(object),

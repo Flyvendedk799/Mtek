@@ -371,6 +371,22 @@ impl Collector<'_, '_> {
         });
         for member in &decl.members {
             match member {
+                SceneMember::Function(function) => {
+                    self.push(Spec {
+                        parent: Some(index),
+                        name: &function.name,
+                        node: function.id,
+                        kind: if function.cpu { "cpu_fn" } else { "fn" },
+                        ty: self.signature(&function.params, function.ret.as_ref()),
+                        start: function.span.start,
+                        extent: function.span,
+                        features: vec![feature_name(if function.cpu {
+                            Construct::CpuFn
+                        } else {
+                            Construct::Fn
+                        })],
+                    });
+                }
                 SceneMember::Const(constant) => self.constant(
                     Some(index),
                     constant,

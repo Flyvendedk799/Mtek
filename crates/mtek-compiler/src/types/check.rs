@@ -484,6 +484,9 @@ impl<'a> Checker<'a> {
                     for member in &scene.members {
                         match member {
                             SceneMember::Const(decl) => self.collect_constant(decl),
+                            SceneMember::Function(function) => {
+                                self.collect_block_constants(&function.body)
+                            }
                             SceneMember::Entity(entity) => self.collect_entity_constants(entity),
                             SceneMember::Lifecycle(function) => {
                                 self.collect_block_constants(&function.body);
@@ -531,6 +534,11 @@ impl<'a> Checker<'a> {
     }
 
     fn scene(&mut self, decl: &SceneDecl) {
+        for member in &decl.members {
+            if let SceneMember::Function(function) = member {
+                self.function_signature(function);
+            }
+        }
         if construct_implemented(Construct::State) {
             self.declare_scene_states(decl);
         }
@@ -554,6 +562,15 @@ impl<'a> Checker<'a> {
             }
         }
         self.scene_binds(decl);
+        for member in &decl.members {
+            if let SceneMember::Function(function) = member {
+                let previous = self
+                    .scope
+                    .replace(super::scene_body::ScopeCtx { initialiser: None });
+                self.function_body(function);
+                self.scope = previous;
+            }
+        }
         self.scene_bodies(decl);
         self.binding_conflicts(self.res.def_of(decl.id));
     }

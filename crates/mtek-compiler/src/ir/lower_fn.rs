@@ -66,13 +66,34 @@ impl Lowering<'_> {
                 def,
             })
             .ok_or_else(|| format!("function '{name}' has no effects"))?;
+        let mut scene_ctx = None;
+        if let Some(scene) = self
+            .resolution
+            .def(def)
+            .and_then(|function| function.parent)
+            .and_then(|parent| self.types.scene(parent))
+        {
+            let mut ctx = SceneCtx::default();
+            for (index, entity) in scene.entities_in_order().iter().enumerate() {
+                if let Some(def) = entity.def {
+                    ctx.entities
+                        .insert(def, u32::try_from(index).map_err(|_| "too many entities")?);
+                }
+            }
+            for object in &scene.objects {
+                if let Some(def) = object.def {
+                    ctx.cameras.insert(def, object.name.clone());
+                }
+            }
+            scene_ctx = Some(ctx);
+        }
         let mut lowering = FnLowering {
             lowering: self,
             name: name.clone(),
             locals: Vec::new(),
             index: BTreeMap::new(),
             params: BTreeMap::new(),
-            scene: None,
+            scene: scene_ctx.as_ref(),
         };
         if info.sig.params.len() != decl.params.len() {
             return Err(format!("function '{name}' has parameters with errors"));
@@ -1387,7 +1408,17 @@ impl Lowering<'_> {
             .def(def)
             .ok_or("a call of an unknown declaration")?;
         match decl.kind {
-            DefKind::Fn => Ok(Symbol::item(self.path, &decl.name)),
+            DefKind::Fn => {
+                let name = decl
+                    .parent
+                    .and_then(|parent| self.resolution.def(parent))
+                    .filter(|parent| parent.kind == DefKind::Scene)
+                    .map_or_else(
+                        || decl.name.clone(),
+                        |parent| format!("{}.{}", parent.name, decl.name),
+                    );
+                Ok(Symbol::item(self.path, &name))
+            }
             DefKind::Import => {
                 let target = self
                     .resolution

@@ -303,6 +303,13 @@ fn lower_module(
                     .scene(def)
                     .ok_or_else(|| format!("scene '{}' was not checked", decl.name.name))?;
                 let (scene, scene_marks) = lowering.scene(decl, checked)?;
+                for member in &decl.members {
+                    if let SceneMember::Function(function) = member {
+                        items.push(Item::Function(
+                            lowering.function(function, scene.symbol.child(&function.name.name))?,
+                        ));
+                    }
+                }
                 if entry && resolution.entry_scene() == Some(def) {
                     entry_scene = Some(scene.symbol.clone());
                 }

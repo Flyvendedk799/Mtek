@@ -145,6 +145,7 @@ fn declaration_where_instead(kind: TokenKind, next: &str, place: Place) -> Optio
 
 /// A member of a body, before it is known which body it is in.
 pub(super) enum Member {
+    Function(Box<crate::syntax::ast::FnDecl>),
     Field(FieldInit),
     // The big declarations are boxed: a member is a temporary in every
     // function of the recursion path of nested bodies, and a debug build keeps
@@ -163,6 +164,7 @@ pub(super) enum Member {
 impl Member {
     fn id(&self) -> NodeId {
         match self {
+            Member::Function(node) => node.id,
             Member::Field(node) => node.id,
             Member::Const(node) => node.id,
             Member::State(node) => node.id,
@@ -178,6 +180,7 @@ impl Member {
 
     fn span(&self) -> Span {
         match self {
+            Member::Function(node) => node.span,
             Member::Field(node) => node.span(),
             Member::Const(node) => node.span(),
             Member::State(node) => node.span(),
@@ -202,6 +205,7 @@ impl Member {
     /// What the member is, in the plural, for `E1040`.
     fn plural(&self) -> &'static str {
         match self {
+            Member::Function(_) => "helper functions",
             Member::Field(_) => "fields",
             Member::Const(_) => "`const` declarations",
             Member::State(_) => "`state` declarations",
@@ -241,6 +245,7 @@ impl Member {
         matches!(
             (self, place),
             (Member::Error(_), _)
+                | (Member::Function(_), Place::Scene)
                 | (Member::Param(_), Place::Prefab | Place::Material)
                 | (Member::Stage(_), Place::Material)
                 | (Member::Object(_), Place::Scene)
@@ -258,6 +263,7 @@ impl Member {
 
     pub(super) fn into_scene(self) -> SceneMember {
         match self {
+            Member::Function(node) => SceneMember::Function(node),
             Member::Field(node) => SceneMember::Field(node),
             Member::Const(node) => SceneMember::Const(*node),
             Member::State(node) => SceneMember::State(*node),
@@ -368,6 +374,11 @@ impl Parser<'_> {
 
     fn member_of_kind(&mut self, place: Place) -> Member {
         match self.kind() {
+            TokenKind::KwFn | TokenKind::KwCpu if place == Place::Scene => {
+                let start = self.span().start;
+                let function = self.fn_decl().map(Box::new);
+                self.member_from(start, function, Member::Function)
+            }
             TokenKind::KwConst => self.const_member(),
             TokenKind::KwState => self.state_member(),
             // `shared state name: T = v;` (decision 0141), `saved state` and `setting state`

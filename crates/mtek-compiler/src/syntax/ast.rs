@@ -298,6 +298,7 @@ pub struct SceneDecl {
 /// The members of a scene body.
 #[derive(Clone, PartialEq, Debug)]
 pub enum SceneMember {
+    Function(Box<FnDecl>),
     Field(FieldInit),
     Const(ConstDecl),
     State(StateDecl),
@@ -968,6 +969,7 @@ impl_node_for_enum!(MaterialMember {
     Error
 });
 impl_node_for_enum!(SceneMember {
+    Function,
     Field,
     Const,
     State,

@@ -113,7 +113,7 @@ StageFn         ::= Ident '(' ParamList? ')' ( '->' Type )? Block
 
 SceneDecl       ::= 'scene' Ident '{' SceneMember* '}'
 SceneMember     ::= FieldInit | ConstDecl | StateDecl | SceneObject | EntityDecl
-                  | LifecycleFn | Handler
+                  | LifecycleFn | Handler | FnDecl
 
 PrefabDecl      ::= 'prefab' Ident '{' EntityMember* '}'
                     /* [S: prefab-static-assembly-limits: spawning a prefab with children or nesting a prefab instance inside a prefab is E5040] */

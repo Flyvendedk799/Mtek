@@ -1,0 +1,27 @@
+scene Main {
+    camera Cam {}
+    state count: i32 = 0;
+    cpu fn add(amount: i32) {
+        count += amount;
+    }
+    cpu fn reset_count() {
+        count = 0;
+    }
+    init() {
+        add(4);
+    }
+    on key_down(Key.Space) {
+        reset_count();
+    }
+}
+
+scene Other {
+    camera Cam {}
+    state count: i32 = 0;
+    cpu fn add(amount: i32) {
+        count += amount;
+    }
+    init() {
+        add(10);
+    }
+}
