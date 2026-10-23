@@ -1,0 +1,12 @@
+// A tag query reads the live entities, so a pure `fn` cannot call it.
+fn gems() -> i32 {
+    return count_tagged("gem");
+}
+
+scene Demo {
+    camera Main {}
+    entity Gem {
+        mesh: Box {};
+        tag: "gem";
+    }
+}

@@ -38,6 +38,7 @@ import {
   migrateWorld,
   prefabNames,
   restartDiagnostic,
+  stateIdentity,
   type StructuralChange,
 } from "./reload.js";
 import { loadCandidateShaders, loadStartupShaders } from "./shaders.js";
@@ -1242,7 +1243,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         const before = new Map(previousManifest.scene.state.filter((entry) => entry.shared === true).map((entry) => [entry.name, entry]));
         for (const entry of pending.manifest.scene.state) {
           const old = before.get(entry.name);
-          if (entry.shared !== true || old === undefined || old.type !== entry.type) continue;
+          if (entry.shared !== true || old === undefined || stateIdentity(old) !== stateIdentity(entry)) continue;
           pending.scene.world.sceneState[entry.name] = carryValue(previous.world.sceneState[entry.name]);
         }
       }

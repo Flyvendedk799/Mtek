@@ -1,0 +1,15 @@
+[
+  {
+    "code": "MTEK-E3203",
+    "file": "src/main.mtek",
+    "startByte": 157,
+    "endByte": 170,
+    "message": "A `match` needs a user enum, but this value has type Key, an enum built into the language.",
+    "expected": "a user enum",
+    "actual": "Key",
+    "notes": [
+      "`match` compares a value against the variants of its enum; use `if` for other values",
+      "help: use `if`, or declare your own `enum` for the choices the program matches on"
+    ]
+  }
+]

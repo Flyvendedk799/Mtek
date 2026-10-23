@@ -212,6 +212,8 @@ catalogue! {
     E5222 Error "unknown tag",
     E5223 Error "destroying a tag of a named entity",
     E5224 Error "tagged entities outside a for loop",
+    E5230 Error "scene outside the entry module",
+    W5301 Warning "timer started every frame",
     E5401 Error "scene change failed",
     W5402 Warning "saved data ignored",
     W5403 Warning "saving failed",
@@ -295,6 +297,7 @@ catalogue! {
     W8202 Warning "sound could not be decoded",
     W8203 Warning "too many HUD items",
     W8204 Warning "font could not be loaded",
+    W8205 Warning "too many timers",
     // 5.9 Project and internal (`9xxx`)
     E9001 Error "invalid project configuration",
     E9002 Error "too many modules",

@@ -17,7 +17,7 @@
 use std::collections::BTreeMap;
 
 use super::check::{Checker, FieldKind};
-use super::ty::{EnumKey, TyId};
+use super::ty::{EnumKey, Ty, TyId};
 use crate::diagnostics::{Code, Diagnostic};
 use crate::project::edit_distance;
 use crate::resolve::{DefId, DefKind, Res};
@@ -160,16 +160,27 @@ impl<'a> Checker<'a> {
             Some(def)
         } else {
             let name = self.display(scrutinee_ty);
-            self.report(
-                Diagnostic::new(
-                    Code::E3203,
-                    format!("A `match` needs a value of an enum type, but this value has type {name}."),
+            // A registry enum such as `Key` is a type of its own: only an `enum` the program
+            // declares can be matched (decision 0177).
+            let registry = matches!(self.out.interner.get(scrutinee_ty), Ty::Enum(_));
+            let message = if registry {
+                format!(
+                    "A `match` needs a user enum, but this value has type {name}, an enum built into the language."
                 )
+            } else {
+                format!("A `match` needs a value of an enum type, but this value has type {name}.")
+            };
+            let mut diagnostic = Diagnostic::new(Code::E3203, message)
                 .at(scrutinee.span)
-                .expected("an enum")
+                .expected(if registry { "a user enum" } else { "an enum" })
                 .actual(name)
-                .note("`match` compares a value against the variants of its enum; use `if` for other values"),
-            );
+                .note("`match` compares a value against the variants of its enum; use `if` for other values");
+            if registry {
+                diagnostic = diagnostic.help(
+                    "use `if`, or declare your own `enum` for the choices the program matches on",
+                );
+            }
+            self.report(diagnostic);
             None
         };
         // What is covered so far: the variant indices with the span of the

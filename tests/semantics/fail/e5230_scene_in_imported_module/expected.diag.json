@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E5230",
+    "file": "src/other.mtek",
+    "startByte": 37,
+    "endByte": 42,
+    "message": "The scene 'Level' is declared in 'src/other.mtek', but scenes belong in the entry module 'src/main.mtek'.",
+    "notes": [
+      "the scenes of a program share one set of names, `go_to` targets, shared state and saved state, which is checked over the entry module",
+      "help: move the scene into the entry module; prefabs, materials, structs, enums, functions and constants can stay in imported modules"
+    ]
+  }
+]

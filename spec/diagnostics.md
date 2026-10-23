@@ -192,7 +192,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e3102"></a>E3102 | field or parameter type mismatch | schema/material field |
 | <a id="mtek-e3201"></a>E3201 | non-exhaustive match | a `match` without `_` misses variants of its enum; the message lists them (decision 0129) |
 | <a id="mtek-e3202"></a>E3202 | unreachable match arm | a variant matched twice, a pattern after `_`, or a `_` after every variant; a related span at the earlier pattern |
-| <a id="mtek-e3203"></a>E3203 | match on a value that is not an enum | the scrutinee of `match` has another type |
+| <a id="mtek-e3203"></a>E3203 | match on a value that is not an enum | the scrutinee of `match` has another type; for a registry enum such as `Key` the message says a user enum is needed (decision 0177) |
 | <a id="mtek-e3204"></a>E3204 | invalid match pattern | a pattern that is not `Enum.Variant` of the scrutinee's enum, or `_` |
 | <a id="mtek-e3205"></a>E3205 | unknown enum variant | `Enum.Name` where the enum declares no `Name`; the nearest variant (help) and every variant (note) |
 | <a id="mtek-e3206"></a>E3206 | match arms of different types | the arm values of a `match` expression; a related span at the first arm |
@@ -278,6 +278,8 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5222"></a>E5222 | unknown tag | no entity or prefab of the program declares the tag a tag built-in names; the help suggests the closest declared tag (decision 0150) |
 | <a id="mtek-e5223"></a>E5223 | destroying a tag of a named entity | `destroy_tagged` names a tag that a named entity has, its own or its prefab's; a related span at the entity (decision 0150) |
 | <a id="mtek-e5224"></a>E5224 | tagged entities outside a for loop | `tagged(tag)` is used other than as the iterable of a `for` loop (decision 0150) |
+| <a id="mtek-e5230"></a>E5230 | scene outside the entry module | a `scene` declared in a module other than the entry module; the scenes of a program are checked and packaged as one set (decision 0178) |
+| <a id="mtek-w5301"></a>W5301 | timer started every frame | an `after` or `every` that stands directly in an `update` or `fixed_update` body, not under an `if`, `match` or loop, so it starts one more timer each time the function runs; guard it with a state flag or start it in a handler (decision 0177) |
 | <a id="mtek-e5401"></a>E5401 | scene change failed | run time: the scene of `go_to` or `reset()` could not be loaded or started (its module or manifest is missing or invalid); the current scene keeps running, the notes carry the underlying diagnostics (decision 0141) |
 | <a id="mtek-w5402"></a>W5402 | saved data ignored | run time: a stored value is unreadable, of another type than the state now has, or of another shape; the state keeps its value, reported once per state (decision 0145) |
 | <a id="mtek-w5403"></a>W5403 | saving failed | run time: the browser's storage refused the write (full or disabled), or the page has no usable `localStorage` and the values last only until it closes (decision 0145) |
@@ -371,6 +373,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-w8202"></a>W8202 | sound could not be decoded | runtime: the browser could not decode a sound file; playing it does nothing and the program keeps running (`spec/audio.md` §5) |
 | <a id="mtek-w8203"></a>W8203 | too many HUD items | runtime: a frame drew more than 512 `hud` items; the rest of that frame is not shown (reported once per call site, decision 0134) |
 | <a id="mtek-w8204"></a>W8204 | font could not be loaded | the browser rejected an `asset.font` file when the HUD first used it; the text uses the default family (decision 0139) |
+| <a id="mtek-w8205"></a>W8205 | too many timers | runtime: a scene already has 4096 live timers, and the timer a call site tried to start is not started; reported once per call site (decision 0177) |
 | (E8105–E8199) | further physics runtime codes | reserved; added with the feature that needs them |
 
 ### 5.9 Project and internal (`9xxx`)

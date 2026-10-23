@@ -137,7 +137,7 @@ fn instantiate_scene(
                 owner: sub.owner(state.owner),
                 shared: false,
                 persist: None,
-                stored_type: None,
+                stored_type: state.stored_type.clone(),
                 init: sub.expr(&state.init)?,
                 span: state.span,
             });

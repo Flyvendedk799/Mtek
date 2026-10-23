@@ -26,7 +26,7 @@ use crate::source::Span;
 use crate::stdlib::{EventForm, SchemaCategory};
 use crate::syntax::ast::{
     EntityDecl, EntityMember, Expr, ExprKind, FieldInit, FieldValue, Handler, HandlerArg, Ident,
-    LifecycleFn, SceneDecl, SceneMember, StateDecl,
+    LifecycleFn, SceneDecl, SceneMember, StateDecl, Stmt,
 };
 
 /// What the checker is inside while it checks a scene body or a state initialiser.
@@ -314,6 +314,7 @@ impl Checker<'_> {
             }
         };
         let _ = ok;
+        self.warn_timers_every_frame(known, &function.body.stmts);
         let body_label = format!("`{known}` of {holder}");
         self.body_in_scope(
             function.span,
@@ -323,6 +324,35 @@ impl Checker<'_> {
             entity,
             Some((CpuBodyKind::Lifecycle, function.id, body_label)),
         );
+    }
+
+    /// `W5301` at every `after` / `every` that `update` or `fixed_update` starts unconditionally
+    /// (directly in the body or in a plain block, not under an `if`, `match` or loop): it starts
+    /// one more timer every frame (decision 0177). The usual shape guards the start with a state
+    /// flag, which is not flagged.
+    fn warn_timers_every_frame(&mut self, lifecycle: &str, stmts: &[Stmt]) {
+        for stmt in stmts {
+            match stmt {
+                Stmt::Timer(timer) => {
+                    let word = timer.kind.word();
+                    self.sink.push(
+                        Diagnostic::new(
+                            Code::W5301,
+                            format!(
+                                "`{word}` in `{lifecycle}` starts a new timer every time `{lifecycle}` runs."
+                            ),
+                        )
+                        .at(timer.word)
+                        .note(format!(
+                            "`{lifecycle}` runs again and again, and a timer cannot be cancelled: they pile up (the runtime stops starting new ones at 4096 and reports W8205)"
+                        ))
+                        .help("start the timer once: guard it with a `started` state flag, or start it in an `on` handler"),
+                    );
+                }
+                Stmt::Block(block) => self.warn_timers_every_frame(lifecycle, &block.stmts),
+                _ => {}
+            }
+        }
     }
 
     pub(super) fn handler_body(

@@ -1,0 +1,19 @@
+// `update` and `fixed_update` run every frame: a timer started in them without a guard starts
+// one more timer every frame (decision 0177). The warning does not stop the build.
+scene Demo {
+    state ticks: i32 = 0;
+    state shots: i32 = 0;
+    camera Main {}
+
+    update(dt: f32) {
+        every(0.5) {
+            ticks += 1;
+        }
+    }
+
+    fixed_update(dt: f32) {
+        after(1.0) {
+            shots += 1;
+        }
+    }
+}

@@ -1,0 +1,9 @@
+// `pause` changes the running game, so it is allowed only in lifecycle functions and
+// handlers, not in a function (decision 0177).
+fn leave() {
+    pause();
+}
+
+scene Demo {
+    camera Main {}
+}

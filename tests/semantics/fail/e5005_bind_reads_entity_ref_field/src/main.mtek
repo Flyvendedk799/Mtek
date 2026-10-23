@@ -1,0 +1,12 @@
+// A binding depends on named entities, not on whichever entity an entity_ref names at run time.
+scene Demo {
+    camera Main {}
+    state target: entity_ref = Floor;
+    entity Floor {
+        mesh: Plane {};
+    }
+    entity Gauge {
+        mesh: Box {};
+        scale: bind(vec3(0.1, target.position.y, 0.1));
+    }
+}
