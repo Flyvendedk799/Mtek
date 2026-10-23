@@ -1,5 +1,13 @@
 # AI/token benchmark results
 
+**Frozen historical evidence, not a source-code example library.** These runs preserve
+both successful and rejected model outputs against the compiler version used at the
+time. Some candidates no longer pass the current compiler. Do not repair, copy as
+current syntax, or include these files in `.mtek` code counts or language metrics.
+The repository `.ignore` and VS Code search settings exclude this archive from normal
+searches; evidence tools may still read it explicitly. New runs belong in a new run
+directory and must never overwrite recorded evidence.
+
 Results of the AI/token benchmark of `spec/ai-and-benchmarks.md` section 6.4 (task M7-05; decisions 0108 and 0109).
 Every directory below is one run written by `tools/ai-eval/src/benchmark-run.ts`; every `report.md` is computed from the
 stored `records.jsonl` only by `tools/ai-eval/src/report-cli.ts`.
