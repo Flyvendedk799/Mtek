@@ -1,2 +1,4 @@
 # Mtek build output
 /dist/
+# The itch.io upload of `mtek build --release --itch`
+/dist-itch.zip
