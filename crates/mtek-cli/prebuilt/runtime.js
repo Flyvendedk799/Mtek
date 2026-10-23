@@ -31,7 +31,8 @@ var RUNTIME_DIAGNOSTIC_CATALOGUE = {
   W8201: "audio value clamped",
   W8202: "sound could not be decoded",
   W8203: "too many HUD items",
-  W8204: "font could not be loaded"
+  W8204: "font could not be loaded",
+  W8210: "too many particles"
 }, RUNTIME_ASSET_DIAGNOSTICS = {
   E7030: "asset fetch or integrity failure",
   E7031: "image decode failure"
@@ -8957,37 +8958,59 @@ function normalMatrixInto(out, offset, model) {
 }
 
 // src/scene/clips.ts
-var IDENTITY = [0, 0, 0, 1];
-function sampleChannel(channel, time) {
-  let comps = channel.path === "rotation" ? 4 : 3, times = channel.times, count = times.length, at3 = (index) => {
-    let start = index * comps, out = [];
-    for (let i = 0; i < comps; i += 1) out.push(channel.values[start + i] ?? 0);
-    return out;
+function sampleChannelInto(channel, time, out) {
+  let comps = channelWidth(channel), times = channel.times, count = times.length, values = channel.values, identity2 = () => {
+    out[0] = 0, out[1] = 0, out[2] = 0, comps === 4 && (out[3] = 1);
   };
-  if (count === 0) return channel.path === "rotation" ? IDENTITY : [0, 0, 0];
+  if (count === 0) {
+    identity2();
+    return;
+  }
   let first = times[0] ?? 0;
-  if (time <= first) return at3(0);
+  if (time <= first) {
+    for (let i = 0; i < comps; i += 1) out[i] = values[i] ?? 0;
+    comps === 4 && normalizeInto(out);
+    return;
+  }
   let hi = 1;
   for (; hi < count && (times[hi] ?? 0) <= time; ) hi += 1;
-  let lo = hi - 1;
-  if (channel.interpolation === "step" || hi >= count)
-    return channel.path === "rotation" ? normalize2(at3(lo)) : at3(lo);
-  let t0 = times[lo] ?? 0, span = (times[hi] ?? t0) - t0, t = span === 0 ? 0 : (time - t0) / span, a = at3(lo), b = at3(hi);
-  return channel.path === "rotation" ? nlerp(a, b, t) : a.map((value, index) => value + ((b[index] ?? value) - value) * t);
+  let lo = hi - 1, from = lo * comps;
+  if (channel.interpolation === "step" || hi >= count) {
+    for (let i = 0; i < comps; i += 1) out[i] = values[from + i] ?? 0;
+    comps === 4 && normalizeInto(out);
+    return;
+  }
+  let t0 = times[lo] ?? 0, span = (times[hi] ?? t0) - t0, t = span === 0 ? 0 : (time - t0) / span, to = hi * comps;
+  if (comps === 4) {
+    let dot = 0;
+    for (let i = 0; i < 4; i += 1) dot += (values[from + i] ?? 0) * (values[to + i] ?? 0);
+    let sign2 = dot < 0 ? -1 : 1;
+    for (let i = 0; i < 4; i += 1) {
+      let a = values[from + i] ?? 0;
+      out[i] = a + (sign2 * (values[to + i] ?? 0) - a) * t;
+    }
+    normalizeInto(out);
+    return;
+  }
+  for (let i = 0; i < 3; i += 1) {
+    let a = values[from + i] ?? 0;
+    out[i] = a + ((values[to + i] ?? a) - a) * t;
+  }
 }
-function nlerp(a, b, t) {
-  let dot = 0;
-  for (let i = 0; i < 4; i += 1) dot += (a[i] ?? 0) * (b[i] ?? 0);
-  let sign2 = dot < 0 ? -1 : 1, out = [0, 0, 0, 0];
-  for (let i = 0; i < 4; i += 1) out[i] = (a[i] ?? 0) + (sign2 * (b[i] ?? 0) - (a[i] ?? 0)) * t;
-  return normalize2(out);
+function channelWidth(channel) {
+  return channel.path === "rotation" ? 4 : 3;
 }
-function normalize2(value) {
+function normalizeInto(value) {
   let length2 = Math.hypot(value[0] ?? 0, value[1] ?? 0, value[2] ?? 0, value[3] ?? 0);
-  return length2 > 0 ? value.map((component3) => component3 / length2) : IDENTITY;
+  if (!(length2 > 0)) {
+    value[0] = 0, value[1] = 0, value[2] = 0, value[3] = 1;
+    return;
+  }
+  for (let i = 0; i < 4; i += 1) value[i] = (value[i] ?? 0) / length2;
 }
 var ClipPlayers = class {
   players = [];
+  scratch = new Float64Array(4);
   add(clip) {
     this.remove(clip.slot), this.players.push({ clip, time: 0 });
   }
@@ -8999,7 +9022,7 @@ var ClipPlayers = class {
   pose(apply, time) {
     for (let player of this.players) {
       let at3 = time ?? player.time;
-      for (let channel of player.clip.channels) apply(player.clip.slot, channel, sampleChannel(channel, at3));
+      for (let channel of player.clip.channels) this.write(apply, player.clip.slot, channel, at3);
     }
   }
   /** Advances by `dt` seconds, wrapping after the duration, then writes the new pose. */
@@ -9007,8 +9030,11 @@ var ClipPlayers = class {
     for (let player of this.players) {
       let next = player.time + dt, { duration } = player.clip;
       duration > 0 && next > duration && (next %= duration), player.time = next;
-      for (let channel of player.clip.channels) apply(player.clip.slot, channel, sampleChannel(channel, next));
+      for (let channel of player.clip.channels) this.write(apply, player.clip.slot, channel, next);
     }
+  }
+  write(apply, slot, channel, time) {
+    sampleChannelInto(channel, time, this.scratch), apply(slot, channel, this.scratch);
   }
 };
 
@@ -9447,10 +9473,20 @@ var DynamicEntities = class {
 };
 
 // src/scene/particles.ts
+function particleStream(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = a + 1831565813 >>> 0;
+    let t = a;
+    return t = Math.imul(t ^ t >>> 15, t | 1), t ^= t + Math.imul(t ^ t >>> 7, t | 61), ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
 var ParticleSim = class {
   emitters = [];
+  stream = particleStream(1889696798);
+  drawn = [];
   add(spec) {
-    this.remove(spec.slot), this.emitters.push({ spec, acc: 0, sparks: [] });
+    this.remove(spec.slot), this.emitters.push({ spec, acc: 0, sparks: [], draw: void 0 });
   }
   remove(slot) {
     let index = this.emitters.findIndex((emitter) => emitter.spec.slot === slot);
@@ -9465,7 +9501,7 @@ var ParticleSim = class {
    * Ages the living particles, then spawns. `origin` is the entity's world position. A fraction of
    * a particle carries in the accumulator, so `rate * dt` of 1.5 spawns 1, then 2, then 1.
    */
-  advance(dt, random, origin) {
+  advance(dt, origin, random = this.stream) {
     for (let emitter of this.emitters) {
       let { spec, sparks } = emitter;
       for (let i = sparks.length - 1; i >= 0; i -= 1) {
@@ -9493,16 +9529,13 @@ var ParticleSim = class {
       }
     }
   }
+  /** The emitters with living particles that can be drawn. The array and its records are reused: valid until the next call. */
   draws() {
-    let out = [];
+    let out = this.drawn;
+    out.length = 0;
     for (let emitter of this.emitters) {
       let { spec, sparks } = emitter;
-      spec.meshId === null || spec.materialId === null || spec.instanceIndex === null || sparks.length === 0 || out.push({
-        meshId: spec.meshId,
-        materialId: spec.materialId,
-        instanceIndex: spec.instanceIndex,
-        points: sparks.map((spark) => ({ x: spark.x, y: spark.y, z: spark.z, size: spark.size }))
-      });
+      spec.meshId === null || spec.materialId === null || spec.instanceIndex === null || sparks.length === 0 || (emitter.draw ??= { meshId: spec.meshId, materialId: spec.materialId, instanceIndex: spec.instanceIndex, points: sparks }, out.push(emitter.draw));
     }
     return out;
   }
@@ -9746,7 +9779,7 @@ var CONTEXT_MEMBERS = [
   "projection.height",
   "projection.near",
   "projection.far"
-], TRANSFORM_FIELDS = ["position", "rotation", "scale"], f322 = Math.fround, ORIGIN = Object.freeze({ x: 0, y: 0, z: 0 }), UNIT_SCALE = Object.freeze({ x: 1, y: 1, z: 1 }), IDENTITY2 = Object.freeze({ x: 0, y: 0, z: 0, w: 1 }), CAMERA_POSITION = Object.freeze({ x: 0, y: 0, z: 5 }), DEFAULT_FOV_Y = f322(0.9), DEFAULT_HEIGHT = 10, DEFAULT_NEAR = f322(0.1), DEFAULT_FAR = 1e3, WHITE = Object.freeze({ r: 1, g: 1, b: 1, a: 1 }), LIGHT_FIELDS = ["color", "intensity"];
+], TRANSFORM_FIELDS = ["position", "rotation", "scale"], f322 = Math.fround, ORIGIN = Object.freeze({ x: 0, y: 0, z: 0 }), UNIT_SCALE = Object.freeze({ x: 1, y: 1, z: 1 }), IDENTITY = Object.freeze({ x: 0, y: 0, z: 0, w: 1 }), CAMERA_POSITION = Object.freeze({ x: 0, y: 0, z: 5 }), DEFAULT_FOV_Y = f322(0.9), DEFAULT_HEIGHT = 10, DEFAULT_NEAR = f322(0.1), DEFAULT_FAR = 1e3, WHITE = Object.freeze({ r: 1, g: 1, b: 1, a: 1 }), LIGHT_FIELDS = ["color", "intensity"];
 function zeroValue(type) {
   switch (type) {
     case "f32":
@@ -9764,7 +9797,7 @@ function zeroValue(type) {
     case "vec4":
       return Object.freeze({ x: 0, y: 0, z: 0, w: 0 });
     case "quat":
-      return IDENTITY2;
+      return IDENTITY;
     case "color":
       return Object.freeze({ r: 0, g: 0, b: 0, a: 0 });
     case "mat4":
@@ -9817,7 +9850,7 @@ var World = class {
   activeCamera = {
     position: CAMERA_POSITION,
     target: null,
-    rotation: IDENTITY2,
+    rotation: IDENTITY,
     projection: { kind: "perspective", fov_y: DEFAULT_FOV_Y, near: DEFAULT_NEAR, far: DEFAULT_FAR }
   };
   /** The scene state (`ctx.s`). */
@@ -9861,9 +9894,13 @@ var World = class {
   particles = new ParticleSim();
   /** Playing glTF clips (decision 0156). */
   clips = new ClipPlayers();
+  /** Per entity slot, the pose its clip last sampled; `undefined` for an entity without a clip. The local transform is the entity's own one times this (decision 0174). */
+  clipPoses = [];
+  clipBase = new Float32Array(16);
+  clipLocal = new Float32Array(16);
+  clipSample = new Float64Array(4);
   cameraByName = /* @__PURE__ */ new Map();
   cameraMeta = /* @__PURE__ */ new Map();
-  nextRandom = Math.random;
   /** `manifest.preview.loopBudget`: what {@link resetBudget} refills the counter with; `undefined` outside a preview. */
   loopBudgetLimit;
   materialParamTypes;
@@ -9876,7 +9913,7 @@ var World = class {
       this.structure.entities.map((entity) => {
         let params = entity.instance === null ? void 0 : materialParams.get(entity.instance.material.id), light = lightOf.get(entity.index), record = {
           position: ORIGIN,
-          rotation: IDENTITY2,
+          rotation: IDENTITY,
           scale: UNIT_SCALE,
           visible: !0,
           state: stateObject(this.manifest.scene.entities[entity.index]?.state ?? []),
@@ -9939,7 +9976,6 @@ var World = class {
       hasTarget: this.structure.camera.hasTarget
     })), this.sceneState = stateObject(this.manifest.scene.state);
     let services = options.services ?? INERT_SERVICES;
-    this.nextRandom = () => services.random();
     for (let entity of this.structure.entities) this.trackMotion(entity.index, entity);
     let game = services.game ?? INERT_GAME, timerOwner = (owner) => {
       if (owner == null) return null;
@@ -10084,7 +10120,7 @@ var World = class {
   }
   /** Spawns and integrates particles (decision 0155). */
   advanceParticles(delta) {
-    this.propagate(), this.particles.advance(delta, this.nextRandom, (slot) => {
+    this.propagate(), this.particles.advance(delta, (slot) => {
       let matrix = this.worlds[slot];
       return matrix === void 0 ? { x: 0, y: 0, z: 0 } : { x: matrix[12] ?? 0, y: matrix[13] ?? 0, z: matrix[14] ?? 0 };
     });
@@ -10178,15 +10214,27 @@ var World = class {
       let record = this.entities[i];
       if (record === void 0) continue;
       let world = this.worlds[i], parentWorld = parent === null ? void 0 : this.worlds[parent];
-      parentWorld === void 0 ? fromRotationTranslationScaleInto(world, this.rotationScratch, record.rotation, record.position, record.scale) : (fromRotationTranslationScaleInto(this.localScratch, this.rotationScratch, record.rotation, record.position, record.scale), multiplyInto(world, parentWorld, this.localScratch)), this.transformDirty[i] = 0, this.markChanged(i), recomputed[i] = 1, count += 1;
+      parentWorld === void 0 ? this.localMatrixInto(world, i, record) : (this.localMatrixInto(this.localScratch, i, record), multiplyInto(world, parentWorld, this.localScratch)), this.transformDirty[i] = 0, this.markChanged(i), recomputed[i] = 1, count += 1;
     }
     for (let entity of this.dynamic.live) {
       let i = entity.ref.slot;
       if (this.transformDirty[i] !== 1) continue;
       let record = entity.record;
-      fromRotationTranslationScaleInto(this.worlds[i], this.rotationScratch, record.rotation, record.position, record.scale), this.transformDirty[i] = 0, this.markChanged(i), count += 1;
+      this.localMatrixInto(this.worlds[i], i, record), this.transformDirty[i] = 0, this.markChanged(i), count += 1;
     }
     return this.transformsPending = !1, count;
+  }
+  /**
+   * The local matrix of the entity in slot `index` into `out`: `T * R * S` of its own transform, times the same of the
+   * pose its clip sampled when it has one (`base * clip`, decision 0174).
+   */
+  localMatrixInto(out, index, record) {
+    let pose = this.clipPoses[index];
+    if (pose === void 0) {
+      fromRotationTranslationScaleInto(out, this.rotationScratch, record.rotation, record.position, record.scale);
+      return;
+    }
+    fromRotationTranslationScaleInto(this.clipBase, this.rotationScratch, record.rotation, record.position, record.scale), fromRotationTranslationScaleInto(this.clipLocal, this.rotationScratch, pose.rotation, pose.translation, pose.scale), multiplyInto(out, this.clipBase, this.clipLocal);
   }
   /** The world matrix of the entity in slot `index` as of the last `propagate()`. */
   worldMatrix(index) {
@@ -10220,7 +10268,7 @@ var World = class {
     let material = resolved.instance === null ? void 0 : this.materialParamTypes.get(resolved.instance.material.id);
     return {
       position: ORIGIN,
-      rotation: IDENTITY2,
+      rotation: IDENTITY,
       scale: UNIT_SCALE,
       visible: !0,
       state: stateObject(prefab.resolved.state),
@@ -10239,10 +10287,10 @@ var World = class {
     changed.set(this.worldChanged), this.transformDirty = dirty, this.worldChanged = changed;
   }
   registerDynamic(slot, record, resolved) {
-    this.ensureSlots(slot + 1), this.records[slot] = record, this.resolvedBySlot[slot] = resolved, this.indexByRecord.set(record, slot), this.worlds[slot] = new Float32Array(16), this.transformDirty[slot] = 1, this.transformsPending = !0, this.worldChanged[slot] = 0, this.trackMotion(slot, resolved);
+    this.ensureSlots(slot + 1), this.records[slot] = record, this.resolvedBySlot[slot] = resolved, this.indexByRecord.set(record, slot), this.worlds[slot] = new Float32Array(16), this.transformDirty[slot] = 1, this.transformsPending = !0, this.worldChanged[slot] = 0, this.trackMotion(slot, resolved, !0);
   }
   unregisterDynamic(slot, record) {
-    this.indexByRecord.delete(record), this.records[slot] = void 0, this.resolvedBySlot[slot] = void 0, this.worlds[slot] = void 0, this.transformDirty[slot] = 0, this.worldChanged[slot] = 0, this.particles.remove(slot), this.clips.remove(slot);
+    this.indexByRecord.delete(record), this.records[slot] = void 0, this.resolvedBySlot[slot] = void 0, this.worlds[slot] = void 0, this.transformDirty[slot] = 0, this.worldChanged[slot] = 0, this.particles.remove(slot), this.clips.remove(slot), this.clipPoses[slot] = void 0;
   }
   // ---- the setters of the context ----
   indexOf(entity, setter) {
@@ -10479,23 +10527,26 @@ var World = class {
       this.writeChannel(slot, channel, value);
     }, time);
   }
+  /** Stores one sampled channel in the clip pose of `slot`; the entity's own transform is left alone (decision 0174). */
   writeChannel(slot, channel, value) {
-    let record = this.records[slot];
-    if (record === void 0) return;
+    let pose = this.clipPoses[slot];
+    if (pose === void 0) return;
+    let x = value[0] ?? 0, y = value[1] ?? 0, z = value[2] ?? 0;
     if (channel.path === "rotation") {
-      this.applyTransform(slot, record, "rotation", {
-        x: value[0] ?? 0,
-        y: value[1] ?? 0,
-        z: value[2] ?? 0,
-        w: value[3] ?? 1
-      });
-      return;
+      let w = value[3] ?? 1;
+      if (sameQuat(pose.rotation, { x, y, z, w })) return;
+      pose.rotation = { x, y, z, w };
+    } else if (channel.path === "translation") {
+      if (sameVec3(pose.translation, { x, y, z })) return;
+      pose.translation = { x, y, z };
+    } else {
+      if (sameVec3(pose.scale, { x, y, z })) return;
+      pose.scale = { x, y, z };
     }
-    let vec = { x: value[0] ?? 0, y: value[1] ?? 0, z: value[2] ?? 0 };
-    this.applyTransform(slot, record, channel.path === "translation" ? "position" : "scale", vec);
+    this.transformDirty[slot] = 1, this.transformsPending = !0;
   }
-  trackMotion(slot, resolved) {
-    resolved.particles !== void 0 && this.particles.add({
+  trackMotion(slot, resolved, spawned = !1) {
+    if (resolved.particles !== void 0 && this.particles.add({
       slot,
       rate: resolved.particles.rate,
       lifetime: resolved.particles.lifetime,
@@ -10505,7 +10556,9 @@ var World = class {
       meshId: resolved.mesh?.id ?? null,
       materialId: resolved.instance?.material.id ?? null,
       instanceIndex: resolved.instance?.index ?? null
-    }), resolved.clip !== void 0 && this.clips.add({ slot, duration: resolved.clip.duration, channels: resolved.clip.channels });
+    }), resolved.clip !== void 0 && (this.clipPoses[slot] = { translation: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0, w: 1 }, scale: { x: 1, y: 1, z: 1 } }, this.clips.add({ slot, duration: resolved.clip.duration, channels: resolved.clip.channels }), spawned))
+      for (let channel of resolved.clip.channels)
+        sampleChannelInto(channel, 0, this.clipSample), this.writeChannel(slot, channel, this.clipSample);
   }
   /**
    * `r.position` and the other transform reads through an `entity_ref` (decision 0151).
@@ -12006,14 +12059,50 @@ var TRANSLUCENT_KEY_PREFIX = "\uFFFF";
 function compareDraws(a, b) {
   return a.pipelineKey !== b.pipelineKey ? a.pipelineKey < b.pipelineKey ? -1 : 1 : a.instance - b.instance || a.mesh - b.mesh || a.order - b.order;
 }
-function orderTranslucent(draws, viewProj, centres) {
-  let first = draws.findIndex((draw) => draw.translucent === !0);
-  if (first < 0) return draws;
-  let depth = (draw) => {
-    let e = draw.entity * 3;
-    return (viewProj[3] ?? 0) * (centres[e] ?? 0) + (viewProj[7] ?? 0) * (centres[e + 1] ?? 0) + (viewProj[11] ?? 0) * (centres[e + 2] ?? 0) + (viewProj[15] ?? 0);
-  }, translucent = draws.slice(first).map((draw, index) => ({ draw, index, w: depth(draw) })).sort((a, b) => b.w - a.w || a.index - b.index).map((entry) => entry.draw);
-  return [...draws.slice(0, first), ...translucent];
+var TranslucentOrder = class {
+  sorted = [];
+  depth = new Float64Array(0);
+  rank = [];
+  byDepth = (a, b) => this.depth[a] - this.depth[b] || a - b;
+  /** Whether the list returned by the last `order` holds the draws the call before returned, in the same order. */
+  unchanged = !1;
+  /**
+   * `draws` with the translucent ones (the tail: they sort after every opaque one) reordered. `view` is the
+   * column-major world-to-view matrix, `centres` the world-space bounding-sphere centres by entity slot. Returns
+   * `draws` itself when nothing is translucent.
+   */
+  order(draws, view, centres) {
+    let first = -1;
+    for (let i = 0; i < draws.length; i++)
+      if (draws[i].translucent === !0) {
+        first = i;
+        break;
+      }
+    if (first < 0)
+      return this.unchanged = !1, draws;
+    let count = draws.length - first;
+    this.depth.length < count && (this.depth = new Float64Array(Math.max(count, this.depth.length * 2)));
+    let { depth, rank, sorted } = this, z0 = view[2] ?? 0, z1 = view[6] ?? 0, z2 = view[10] ?? 0, z3 = view[14] ?? 0;
+    rank.length = count;
+    for (let k = 0; k < count; k++) {
+      let e = draws[first + k].entity * 3;
+      depth[k] = z0 * (centres[e] ?? 0) + z1 * (centres[e + 1] ?? 0) + z2 * (centres[e + 2] ?? 0) + z3, rank[k] = k;
+    }
+    rank.sort(this.byDepth);
+    let same = sorted.length === draws.length;
+    for (let i = 0; i < first; i++) {
+      let draw = draws[i];
+      sorted[i] !== draw && (same = !1, sorted[i] = draw);
+    }
+    for (let k = 0; k < count; k++) {
+      let draw = draws[first + rank[k]];
+      sorted[first + k] !== draw && (same = !1, sorted[first + k] = draw);
+    }
+    return sorted.length = draws.length, this.unchanged = same, sorted;
+  }
+};
+function blendedKey(materialId, instanced) {
+  return instanced ? `${materialId}#instanced` : materialId;
 }
 var BUFFER_USAGE_COPY_DST2 = 8, BUFFER_USAGE_VERTEX2 = 32, VIEW_KEY_LENGTH = 13;
 function fieldWriter(writers, name, layoutId) {
@@ -12053,14 +12142,16 @@ var Renderer = class {
   /** The blended pipelines made so far, by material id, and the requests in flight (decision 0138). */
   blended = /* @__PURE__ */ new Map();
   blendedVersion = 0;
+  materialsById = /* @__PURE__ */ new Map();
   drawsBlendedVersion = -1;
   /** The blended pipeline of `material`, or `undefined` while it is being made (it is asked for once). */
-  blendedPipeline(material) {
-    if (this.blended.has(material.id)) return this.blended.get(material.id);
-    this.blended.set(material.id, void 0);
+  blendedPipeline(material, instanced = !1) {
+    let id = blendedKey(material.id, instanced);
+    if (this.blended.has(id)) return this.blended.get(id);
+    this.blended.set(id, void 0);
     let make = this.options.blend;
-    make !== void 0 && make(material).then((made) => {
-      made !== void 0 && (this.blended.set(material.id, made), this.blendedVersion += 1);
+    make !== void 0 && make(material, instanced).then((made) => {
+      made !== void 0 && (this.blended.set(id, made), this.blendedVersion += 1);
     });
   }
   drawCallsLastFrame = 0;
@@ -12069,6 +12160,7 @@ var Renderer = class {
   drawCallsTotal = 0;
   instancedTotal = 0;
   culledTotal = 0;
+  rebatchesTotal = 0;
   /** The draws that survived culling this frame (reused between frames). */
   drawn = [];
   planes = new Float64Array(24);
@@ -12081,9 +12173,18 @@ var Renderer = class {
   cullingEnabled = !0;
   /** The instance vertex buffer (`INSTANCE_STRIDE` bytes per record); absent when no draw can ever be instanced. */
   instanceBuffer;
-  /** Billboard matrices for particles (decision 0155). Created on the first frame that draws one. */
+  /** Billboard matrices for particles (decision 0155): one buffer of `PARTICLE_DRAW_CAP` records, made on the first frame that draws one (decision 0173). */
   particleBuffer;
-  particleMirror = new Float32Array(0);
+  particleMirror;
+  /** The particle draw calls of this frame, in draw order (reused records; the first `particleBatchCount` are live). */
+  particleBatches = [];
+  particleBatchCount = 0;
+  particleDepth = new Float64Array(0);
+  particleRank = [];
+  byParticleDepth = (a, b) => this.particleDepth[a] - this.particleDepth[b] || a - b;
+  particleNormal = new Float32Array(16);
+  particleAxes = new Float64Array(9);
+  particleCapReported = !1;
   /** How many instance records `instanceBuffer` holds. */
   instanceRecords = 0;
   /** Whether draws can be instanced at all: instancing is on and some entity or prefab has a material with an instanced entry point. */
@@ -12117,6 +12218,7 @@ var Renderer = class {
   cullDirty = !0;
   /** Whether the last `cull` produced the same draws as the frame before. */
   drawnUnchanged = !1;
+  translucentOrder = new TranslucentOrder();
   /** The one dynamic offset of every `setBindGroup(2, …)` of `encode` (the browser reads it during the call). */
   dynamicOffset = [0];
   modelScratch = new Float32Array(16);
@@ -12125,7 +12227,10 @@ var Renderer = class {
   failedMaterials = /* @__PURE__ */ new Set();
   constructor(options) {
     this.options = options;
-    let { device, registry, structure, writers, manifest } = options, frameWriters = writers.get(structure.frameLayout.id), objectWriters = writers.get(structure.objectLayout.id);
+    let { device, registry, structure, writers, manifest } = options;
+    if (options.blendedSeed !== void 0) for (let [id, made] of options.blendedSeed) this.blended.set(id, made);
+    for (let material of structure.materials) this.materialsById.set(material.id, material);
+    let frameWriters = writers.get(structure.frameLayout.id), objectWriters = writers.get(structure.objectLayout.id);
     if (frameWriters === void 0 || objectWriters === void 0) throw new Error("internal error: no writers for the built-in blocks");
     this.writeViewProj = fieldWriter(frameWriters, "view_proj", structure.frameLayout.id), this.writeCameraPosition = fieldWriter(frameWriters, "camera_position", structure.frameLayout.id), this.writeLightCount = fieldWriter(frameWriters, "light_count", structure.frameLayout.id), this.writeAmbient = fieldWriter(frameWriters, "ambient", structure.frameLayout.id), this.writeExposure = fieldWriter(frameWriters, "exposure", structure.frameLayout.id), this.writeLights = fieldWriter(frameWriters, "lights", structure.frameLayout.id), this.packedLights = emptyPackedLights(structure.lightCapacity), this.lightSource = {
       light: (entity) => {
@@ -12227,6 +12332,10 @@ var Renderer = class {
   get culledObjectsCumulative() {
     return this.culledTotal;
   }
+  /** Times the draw calls were split into batches again since the scene started (a static scene settles at one, decision 0173). */
+  get rebatchesCumulative() {
+    return this.rebatchesTotal;
+  }
   /** Turns frustum culling on (the default) or off. Off exists for tests that compare culled and unculled frames. */
   setFrustumCulling(enabled) {
     enabled !== this.cullingEnabled && (this.cullDirty = !0), this.cullingEnabled = enabled;
@@ -12293,12 +12402,12 @@ var Renderer = class {
       return this.drawCallsLastFrame = 0, this.instancedLastFrame = 0, this.culledLastFrame = 0, surface.render(clearColor);
     let viewProj = this.writeFrameBlock();
     this.applyWorldChanges(), this.frameArena.flush(device.queue), materials.flush(device.queue);
-    let listed = this.drawList(), culled = this.cull(listed, viewProj), draws = orderTranslucent(culled, viewProj, this.sphereCentres);
-    draws !== culled && (this.drawnUnchanged = !1);
+    let listed = this.drawList(), culled = this.cull(listed, viewProj), draws = this.translucentOrder.order(culled, this.lastView, this.sphereCentres);
+    draws !== culled && (this.drawnUnchanged = this.translucentOrder.unchanged);
     let instanced = this.groupDraws(draws);
-    this.writeIndividualObjectBlocks(draws), this.objectArena.flush(device.queue);
+    this.writeIndividualObjectBlocks(draws), this.objectArena.flush(device.queue), this.prepareParticles();
     let rendered = surface.render(clearColor, (pass) => {
-      this.encode(pass, draws), this.encodeParticles(pass);
+      this.encode(pass, draws);
     });
     return this.drawCallsLastFrame = rendered ? this.batches.length : 0, this.instancedLastFrame = rendered ? instanced : 0, this.culledLastFrame = rendered ? listed.length - draws.length : 0, this.drawCallsTotal += this.drawCallsLastFrame, this.instancedTotal += this.instancedLastFrame, this.culledTotal += this.culledLastFrame, rendered;
   }
@@ -12343,6 +12452,7 @@ var Renderer = class {
       }
       return this.uploadInstances(instanceBuffer2), this.instancedBatches;
     }
+    this.rebatchesTotal += 1;
     let instanced = batchDraws(draws, (draw) => possible && draw.instancedPipeline !== void 0, this.batches);
     this.instancedBatches = instanced, this.recordOf.fill(-1);
     let records = 0;
@@ -12470,13 +12580,15 @@ var Renderer = class {
     }), this.objectStale[entity] = 0;
   }
   encode(pass, draws) {
-    if (draws.length === 0) return;
+    let particles = this.particleBatchCount > 0;
+    if (draws.length === 0 && !particles) return;
     let { plan, materials } = this.options;
     pass.setBindGroup(0, this.frameArena.bindGroupForSlot(this.frameSlot, plan.frame));
-    let objectGroup = this.objectArena.bindGroupDynamic(plan.object), dynamicOffset = this.dynamicOffset, objectBound = !1, pipeline, instance = -1, mesh;
+    let objectGroup = this.objectArena.bindGroupDynamic(plan.object), dynamicOffset = this.dynamicOffset, objectBound = !1, pipeline, instance = -1, mesh, particlesDrawn = !particles;
     for (let batch of this.batches) {
       let draw = draws[batch.start];
       if (draw === void 0) continue;
+      !particlesDrawn && draw.translucent === !0 && (this.drawParticles(pass), particlesDrawn = !0, pipeline = void 0, instance = -1, mesh = void 0, objectBound = !0);
       let instanced = batch.firstInstance >= 0, wanted = instanced ? draw.instancedPipeline : draw.pipeline;
       if (wanted === void 0) throw new Error("internal error: an instanced draw without an instanced pipeline");
       if (wanted !== pipeline && (pass.setPipeline(wanted), pipeline = wanted, mesh = void 0, instanced && this.instanceBuffer !== void 0 && pass.setVertexBuffer(draw.attributes.length, this.instanceBuffer)), draw.instance !== instance && (pass.setBindGroup(1, materials.bindGroup(draw.instance)), instance = draw.instance), draw.gpuMesh !== mesh) {
@@ -12486,22 +12598,37 @@ var Renderer = class {
       }
       instanced ? (objectBound || (dynamicOffset[0] = 0, pass.setBindGroup(2, objectGroup, dynamicOffset), objectBound = !0), pass.drawIndexed(draw.gpuMesh.indexCount, batch.count, 0, 0, batch.firstInstance)) : (dynamicOffset[0] = this.objectArena.slotOffset(draw.objectSlot), pass.setBindGroup(2, objectGroup, dynamicOffset), objectBound = !0, pass.drawIndexed(draw.gpuMesh.indexCount));
     }
+    particlesDrawn || this.drawParticles(pass);
   }
   /**
-   * Camera-facing billboards for living particles (decision 0155). Each particle is one record of the
-   * instanced pipeline, because a shared object slot would show only the last write after submit.
-   * Opaque materials only: a translucent pipeline may still be compiling on the first frame.
+   * Camera-facing billboards for living particles (decisions 0155, 0173). Each particle is one record of the
+   * instanced pipeline, because a shared object slot would show only the last write after submit. The records are
+   * written here, before the pass, into `particleMirror`; `drawParticles` encodes the calls. An emitter whose material
+   * blends (a Sprite, a colour alpha below 1) uses the blended instanced pipeline: no depth write, its particles
+   * back to front, and its emitters after the opaque ones, back to front by their mean depth.
    */
-  encodeParticles(pass) {
+  prepareParticles() {
+    this.particleBatchCount = 0;
     let draws = this.options.world.particleDraws();
     if (draws.length === 0) return;
-    let { device, pipelines, meshes, materials, plan, registry } = this.options, view = this.lastView, right = [view[0] ?? 1, view[4] ?? 0, view[8] ?? 0], up = [view[1] ?? 0, view[5] ?? 1, view[9] ?? 0], toward = [view[2] ?? 0, view[6] ?? 0, view[10] ?? 1], count = 0;
-    for (let draw of draws) count += draw.points.length;
-    if (count = Math.min(count, PARTICLE_DRAW_CAP), count === 0) return;
-    this.particleMirror.length < count * INSTANCE_FLOATS && (this.particleMirror = new Float32Array(count * INSTANCE_FLOATS));
-    let mirror = this.particleMirror, normal = new Float32Array(16), written = 0, batches = [];
+    let { device, meshes, materials, registry } = this.options, view = this.lastView, { particleAxes: axes, particleNormal: normal, particleBatches: batches } = this;
+    axes[0] = view[0] ?? 1, axes[1] = view[4] ?? 0, axes[2] = view[8] ?? 0, axes[3] = view[1] ?? 0, axes[4] = view[5] ?? 1, axes[5] = view[9] ?? 0, axes[6] = view[2] ?? 0, axes[7] = view[6] ?? 0, axes[8] = view[10] ?? 1;
+    let total = 0;
+    for (let draw of draws) total += draw.points.length;
+    if (total === 0) return;
+    total > PARTICLE_DRAW_CAP && !this.particleCapReported && (this.particleCapReported = !0, this.options.report(
+      makeRuntimeDiagnostic("W8210", {
+        phase: "runtime:render",
+        message: `${String(total)} particles are alive; only the first ${String(PARTICLE_DRAW_CAP)} are drawn.`,
+        expected: `at most ${String(PARTICLE_DRAW_CAP)} particles drawn per frame`
+      })
+    ));
+    let count = 0;
     for (let draw of draws) {
-      let pipeline = pipelines.get(draw.materialId)?.instanced;
+      if (draw.points.length === 0) continue;
+      let material = this.materialsById.get(draw.materialId);
+      if (material === void 0) continue;
+      let blended = materials.isTranslucent(draw.instanceIndex) || alwaysBlends(material) ? this.blendedPipeline(material, !0) : void 0, pipeline = blended?.pipeline ?? this.options.pipelines.get(draw.materialId)?.instanced;
       if (pipeline === void 0) continue;
       let mesh;
       try {
@@ -12509,35 +12636,63 @@ var Renderer = class {
       } catch {
         continue;
       }
-      let attributes = this.options.structure.materials.find((item) => item.id === draw.materialId)?.shader.vertexAttributes ?? ["position"], start = written;
-      for (let point2 of draw.points) {
-        if (written >= count) break;
-        let base = written * INSTANCE_FLOATS, size = point2.size;
-        writeBasis(mirror, base, right, size), writeBasis(mirror, base + 4, toward, size), writeBasis(mirror, base + 8, up, -size), mirror[base + 12] = point2.x, mirror[base + 13] = point2.y, mirror[base + 14] = point2.z, mirror[base + 15] = 1, normalMatrixInto(normal, 0, mirror.subarray(base, base + 16)), mirror.set(normal, base + 16), written += 1;
+      let batch = batches[count] ??= { draw, pipeline, mesh, attributes: [], instance: 0, start: 0, count: 0, blended: !1, depth: 0 };
+      batch.draw = draw, batch.pipeline = pipeline, batch.mesh = mesh, batch.attributes = material.shader.vertexAttributes, batch.instance = draw.instanceIndex, batch.blended = blended !== void 0;
+      let depth = 0;
+      if (batch.blended) {
+        for (let point2 of draw.points) depth += (view[2] ?? 0) * point2.x + (view[6] ?? 0) * point2.y + (view[10] ?? 0) * point2.z + (view[14] ?? 0);
+        depth /= draw.points.length;
       }
-      let batchCount = written - start;
-      batchCount > 0 && batches.push({ pipeline, mesh, attributes, instance: draw.instanceIndex, start, count: batchCount });
+      batch.depth = depth, count += 1;
     }
-    if (written === 0) return;
-    (this.particleBuffer === void 0 || this.particleMirror.length > (this.particleBuffer.size ?? 0) / 4) && (this.particleBuffer !== void 0 && registry.release(this.particleBuffer), this.particleBuffer = registry.createBuffer({
+    if (count === 0) return;
+    let order = batches.slice(0, count).sort((a, b) => Number(a.blended) - Number(b.blended) || (a.blended ? a.depth - b.depth : 0));
+    for (let i = 0; i < count; i++) batches[i] = order[i];
+    this.particleMirror ??= new Float32Array(PARTICLE_DRAW_CAP * INSTANCE_FLOATS);
+    let mirror = this.particleMirror, written = 0, live = 0;
+    for (let b = 0; b < count && written < PARTICLE_DRAW_CAP; b++) {
+      let batch = batches[b], points = batch.draw.points, n = Math.min(points.length, PARTICLE_DRAW_CAP - written), rank = this.particleRank;
+      rank.length = n;
+      for (let k = 0; k < n; k++) rank[k] = k;
+      if (batch.blended) {
+        this.particleDepth.length < n && (this.particleDepth = new Float64Array(Math.max(n, this.particleDepth.length * 2)));
+        for (let k = 0; k < n; k++) {
+          let point2 = points[k];
+          this.particleDepth[k] = (view[2] ?? 0) * point2.x + (view[6] ?? 0) * point2.y + (view[10] ?? 0) * point2.z + (view[14] ?? 0);
+        }
+        rank.sort(this.byParticleDepth);
+      }
+      batch.start = written;
+      for (let k = 0; k < n; k++) {
+        let point2 = points[rank[k]], base = written * INSTANCE_FLOATS, size = point2.size;
+        writeBasis(mirror, base, axes, 0, size), writeBasis(mirror, base + 4, axes, 6, size), writeBasis(mirror, base + 8, axes, 3, -size), mirror[base + 12] = point2.x, mirror[base + 13] = point2.y, mirror[base + 14] = point2.z, mirror[base + 15] = 1, normalMatrixInto(normal, 0, mirror.subarray(base, base + 16)), mirror.set(normal, base + 16), written += 1;
+      }
+      batch.count = n, live += 1;
+    }
+    this.particleBatchCount = live, written !== 0 && (this.particleBuffer ??= registry.createBuffer({
       label: "mtek particle billboards",
-      size: this.particleMirror.length * 4,
+      size: PARTICLE_DRAW_CAP * INSTANCE_STRIDE,
       usage: BUFFER_USAGE_VERTEX2 | BUFFER_USAGE_COPY_DST2
-    })), registry.writeBuffer(device.queue, this.particleBuffer, 0, mirror.buffer, 0, written * INSTANCE_STRIDE);
-    let objectGroup = this.objectArena.bindGroupDynamic(plan.object);
+    }), registry.writeBuffer(device.queue, this.particleBuffer, 0, mirror.buffer, 0, written * INSTANCE_STRIDE));
+  }
+  /** Encodes the calls `prepareParticles` made ready. Binds groups 0 and 2 itself: the caller forgets its pipeline, group 1 and mesh. */
+  drawParticles(pass) {
+    let { plan, materials } = this.options, buffer = this.particleBuffer;
+    if (buffer === void 0) return;
     pass.setBindGroup(0, this.frameArena.bindGroupForSlot(this.frameSlot, plan.frame));
     let dynamicOffset = this.dynamicOffset;
-    dynamicOffset[0] = 0, pass.setBindGroup(2, objectGroup, dynamicOffset);
-    for (let batch of batches) {
+    dynamicOffset[0] = 0, pass.setBindGroup(2, this.objectArena.bindGroupDynamic(plan.object), dynamicOffset);
+    for (let b = 0; b < this.particleBatchCount; b++) {
+      let batch = this.particleBatches[b];
       pass.setPipeline(batch.pipeline), pass.setBindGroup(1, materials.bindGroup(batch.instance));
       for (let slot = 0; slot < batch.attributes.length; slot += 1)
         pass.setVertexBuffer(slot, vertexBufferOf(batch.mesh, batch.attributes[slot]));
-      pass.setVertexBuffer(batch.attributes.length, this.particleBuffer), pass.setIndexBuffer(batch.mesh.indexBuffer, batch.mesh.indexFormat), pass.drawIndexed(batch.mesh.indexCount, batch.count, 0, 0, batch.start);
+      pass.setVertexBuffer(batch.attributes.length, buffer), pass.setIndexBuffer(batch.mesh.indexBuffer, batch.mesh.indexFormat), pass.drawIndexed(batch.mesh.indexCount, batch.count, 0, 0, batch.start);
     }
   }
 }, PARTICLE_DRAW_CAP = 256;
-function writeBasis(out, at3, axis, size) {
-  out[at3] = (axis[0] ?? 0) * size, out[at3 + 1] = (axis[1] ?? 0) * size, out[at3 + 2] = (axis[2] ?? 0) * size, out[at3 + 3] = 0;
+function writeBasis(out, at3, axes, axis, size) {
+  out[at3] = (axes[axis] ?? 0) * size, out[at3 + 1] = (axes[axis + 1] ?? 0) * size, out[at3 + 2] = (axes[axis + 2] ?? 0) * size, out[at3 + 3] = 0;
 }
 function exposureScale(ev100) {
   return 1 / (1.2 * 2 ** ev100);
@@ -12574,11 +12729,19 @@ async function startScene(options) {
     } else
       ({ world, bindings } = recover), world.rebindParams(materials);
     options.assertActive?.(), materials.shareIdentical(), meshes = new MeshStore(registry, device.queue, void 0, device.limits.maxBufferSize), meshes.upload(structure.meshes, options.assets?.files);
-    let pipelines = options.pipelineCache ?? new PipelineCache(device, registry, plan, manifest), phase = recover === void 0 ? void 0 : "runtime:device", instanced = options.instancing === !1 ? /* @__PURE__ */ new Set() : instancingCandidates(
-      structure,
-      (instance) => materials.blockOf(instance),
-      (material) => materialPipelineKey(material, surface.colorFormat)
-    ).materials, results = await Promise.all(
+    let pipelines = options.pipelineCache ?? new PipelineCache(device, registry, plan, manifest), phase = recover === void 0 ? void 0 : "runtime:device", instanced = new Set(
+      options.instancing === !1 ? [] : instancingCandidates(
+        structure,
+        (instance) => materials.blockOf(instance),
+        (material) => materialPipelineKey(material, surface.colorFormat)
+      ).materials
+    ), emitterMaterials = /* @__PURE__ */ new Map();
+    for (let entity of structure.entities)
+      entity.particles !== void 0 && entity.instance !== null && emitterMaterials.set(entity.instance.material.id, entity.instance.material);
+    for (let prefab of structure.prefabs)
+      prefab.particles !== void 0 && prefab.material !== null && emitterMaterials.set(prefab.material.material.id, prefab.material.material);
+    for (let [id, material] of emitterMaterials) material.shader.instancedVertexEntry !== void 0 && instanced.add(id);
+    let results = await Promise.all(
       structure.materials.map(async (material) => {
         let module = modules.get(material.shader.hash);
         if (module === void 0) {
@@ -12606,7 +12769,26 @@ async function startScene(options) {
       }) : recover === void 0 ? diagnostics.push(result.diagnostic) : failed.push({ id: material.id, diagnostic: result.diagnostic }));
     }), diagnostics.length > 0)
       return { ok: !1, diagnostics };
-    world.phase = "runtime:update", renderer = new Renderer({
+    let blendedSeed = /* @__PURE__ */ new Map(), wanted = /* @__PURE__ */ new Map(), want = (material, instancedVariant) => {
+      !canBlend(material) || modules.get(material.shader.hash) === void 0 || !byMaterial.has(material.id) || instancedVariant && material.shader.instancedVertexEntry === void 0 || wanted.set(blendedKey(material.id, instancedVariant), { material, instanced: instancedVariant });
+    };
+    for (let entity of structure.entities) {
+      if (entity.mesh === null || entity.instance === null) continue;
+      let { material } = entity.instance;
+      !alwaysBlends(material) && !materials.isTranslucent(entity.instance.index) || (want(material, !1), entity.particles !== void 0 && want(material, !0));
+    }
+    for (let prefab of structure.prefabs) {
+      let material = prefab.material?.material;
+      prefab.mesh === null || material === void 0 || !alwaysBlends(material) || (want(material, !1), prefab.particles !== void 0 && want(material, !0));
+    }
+    await Promise.all(
+      [...wanted].map(async ([id, { material, instanced: instancedVariant }]) => {
+        let module = modules.get(material.shader.hash);
+        if (module === void 0) return;
+        let made = await pipelines.obtain({ material, module, colorFormat: surface.colorFormat, blended: !0, ...instancedVariant ? { instanced: !0 } : {} });
+        made.ok && blendedSeed.set(id, { key: made.key, pipeline: made.pipeline });
+      })
+    ), options.assertActive?.(), world.phase = "runtime:update", renderer = new Renderer({
       device,
       registry,
       surface,
@@ -12618,11 +12800,12 @@ async function startScene(options) {
       materials,
       meshes,
       pipelines: byMaterial,
-      // The translucent variant (decision 0138) is made the first time a draw of the material needs it.
-      blend: async (material) => {
+      blendedSeed,
+      // The translucent variant (decision 0138) of a material not known to blend at startup is made the first time a draw needs it.
+      blend: async (material, instancedVariant) => {
         let module = modules.get(material.shader.hash);
-        if (module === void 0 || !canBlend(material)) return;
-        let made = await pipelines.obtain({ material, module, colorFormat: surface.colorFormat, blended: !0 });
+        if (module === void 0 || !canBlend(material) || instancedVariant && material.shader.instancedVertexEntry === void 0) return;
+        let made = await pipelines.obtain({ material, module, colorFormat: surface.colorFormat, blended: !0, ...instancedVariant ? { instanced: !0 } : {} });
         if (made.ok) return { key: made.key, pipeline: made.pipeline };
         report(made.diagnostic);
       },
@@ -14897,6 +15080,7 @@ var MountedApp = class {
       instancedDrawsTotal: renderer.instancedDrawsCumulative,
       culledObjects: renderer.culledObjects,
       culledObjectsTotal: renderer.culledObjectsCumulative,
+      rebatchesTotal: renderer.rebatchesCumulative,
       sharedParamBlocks: materials.sharedParamBlocks,
       ownedParamBlocks: materials.ownedParamBlocks,
       discardedSteps: this.scheduler.discardedSteps,

@@ -235,7 +235,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5013"></a>E5013 | ambiguous active camera | |
 | <a id="mtek-e5014"></a>E5014 | unknown scene object kind | `lamp Main { … }`; v0.1 kinds: `camera` |
 | <a id="mtek-e5015"></a>E5015 | set_camera target is not a camera | `set_camera` argument is not the name of a camera of this scene (decision 0154) |
-| <a id="mtek-e5016"></a>E5016 | clip cannot play | `clip` names no playable channel of the entity's GLB mesh, the entity also writes a channel the clip writes, or a scale keyframe is not positive (decision 0156) |
+| <a id="mtek-e5016"></a>E5016 | clip cannot play | `clip` names no playable channel of the entity's GLB mesh, or a scale keyframe is not positive (decision 0156; the entity may write the channels the clip has since decision 0174, which composes them) |
 | <a id="mtek-e5020"></a>E5020 | material without mesh | |
 | <a id="mtek-e5030"></a>E5030 | named entity cannot be destroyed | `destroy(Cube)`, or `self` of a named entity (decision 0064) |
 | <a id="mtek-e5040"></a>E5040 | unsupported prefab assembly operation | spawning a prefab with children, or a prefab instance nested inside another prefab (decision 0128) |
@@ -316,7 +316,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e7016"></a>E7016 | unsupported material feature | normal, occlusion, emissive or metallic-roughness texture, non-zero emissive factor, `doubleSided` |
 | <a id="mtek-e7017"></a>E7017 | unsupported or oversized image | image is not PNG/JPEG, has no embedded bytes, is unreadable, exceeds `max_texture_dimension`, or is a JPEG with an EXIF orientation other than 1 (decision 0082) |
 | <a id="mtek-e7018"></a>E7018 | unsupported sampler mode | MIRRORED_REPEAT, or wrap or filter modes that no sampler preset can express |
-| <a id="mtek-e7019"></a>E7019 | animation present | a skin, a morph-weight channel, cubic-spline or any other interpolation, a path other than translation, rotation or scale, a duplicate animation name, or a channel with no keyframes or more than 4096 (decision 0156). LINEAR and STEP translation, rotation and scale are clips |
+| <a id="mtek-e7019"></a>E7019 | animation present | a skin or a duplicate animation name in a declared file; or a `clip` that names an animation with a morph-weight channel, cubic-spline or any other interpolation, a path other than translation, rotation or scale, or a channel with no keyframes or more than 4096 (decisions 0156 and 0174). LINEAR and STEP translation, rotation and scale are clips; an unplayable animation nobody names is ignored |
 | <a id="mtek-e7020"></a>E7020 | asset file not found | the file named by an `asset.*` call does not exist or cannot be read (decision 0058) |
 | <a id="mtek-e7021"></a>E7021 | asset path outside project | the path escapes the project root, is absolute or malformed |
 | <a id="mtek-e7022"></a>E7022 | invalid use of asset value | a `glb_asset` outside a `const` and its accessors, or a path that is not a string literal |
@@ -371,6 +371,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-w8202"></a>W8202 | sound could not be decoded | runtime: the browser could not decode a sound file; playing it does nothing and the program keeps running (`spec/audio.md` §5) |
 | <a id="mtek-w8203"></a>W8203 | too many HUD items | runtime: a frame drew more than 512 `hud` items; the rest of that frame is not shown (reported once per call site, decision 0134) |
 | <a id="mtek-w8204"></a>W8204 | font could not be loaded | the browser rejected an `asset.font` file when the HUD first used it; the text uses the default family (decision 0139) |
+| <a id="mtek-w8210"></a>W8210 | too many particles | runtime: more than 256 particles are alive in a frame; only the first 256 are drawn (reported once per scene run, decision 0173) |
 | (E8105–E8199) | further physics runtime codes | reserved; added with the feature that needs them |
 
 ### 5.9 Project and internal (`9xxx`)

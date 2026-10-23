@@ -1027,6 +1027,54 @@ project("pass/animated_clip", animatedTri(), { main: CLIP_MAIN });
 fail("e5016_unknown_clip", animatedTri(), {
   main: CLIP_MAIN.replace('clip: "animation_0"', 'clip: "Nope"'),
 });
+
+// A prefab with a translation clip is placed by whoever spawns it; the clip plays around that place (decision 0174).
+project("pass/animated_clip_prefab", animatedTri(), {
+  main: `const MODEL = asset.glb("../models/model.glb");
+
+prefab Mover {
+    param origin: vec3 = vec3(0.0, 0.0, 0.0);
+    position: origin;
+    mesh: MODEL.mesh("Tri");
+    clip: "animation_0";
+}
+
+scene Demo {
+    camera Main {}
+    on key_down(Key.Space) {
+        spawn(Mover { origin: vec3(-4.0, 0.0, 0.0); });
+        spawn(Mover { origin: vec3(4.0, 0.0, 0.0); });
+    }
+}
+`,
+});
+
+// Animations the profile cannot play do not fail a file whose program never names them (decision 0174).
+function unplayableTri(interpolation) {
+  const m = tri();
+  const input = m.accessor(f32(0, 1), { componentType: FLOAT, type: "SCALAR", count: 2, min: [0], max: [1] });
+  // CUBICSPLINE output holds in-tangent, value and out-tangent per key.
+  const output = m.accessor(f32(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0), { componentType: FLOAT, type: "VEC3", count: 6 });
+  m.json.animations = [
+    { name: "Wobble", channels: [{ sampler: 0, target: { node: 0, path: "translation" } }], samplers: [{ input, output, interpolation }] },
+  ];
+  return m.glb();
+}
+project("pass/animation_unused_cubic", unplayableTri("CUBICSPLINE"));
+fail("e7019_cubic_clip", unplayableTri("CUBICSPLINE"), {
+  main: CLIP_MAIN.replace('clip: "animation_0"', 'clip: "Wobble"'),
+});
+
+// A rotation stored as normalised SHORT plays like a FLOAT one (glTF 2.0 allows it).
+project("pass/animated_clip_quantised", (() => {
+  const m = tri();
+  const input = m.accessor(f32(0, 1), { componentType: FLOAT, type: "SCALAR", count: 2, min: [0], max: [1] });
+  const output = m.accessor(i16(0, 0, 0, 32767, 0, 32767, 0, 0), { componentType: SHORT, type: "VEC4", count: 2, normalized: true });
+  m.json.animations = [
+    { channels: [{ sampler: 0, target: { node: 0, path: "rotation" } }], samplers: [{ input, output }] },
+  ];
+  return m.glb();
+})(), { main: CLIP_MAIN });
 fail("e7019_skin", (() => {
   const m = tri();
   const ibm = m.accessor(f32(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1), {

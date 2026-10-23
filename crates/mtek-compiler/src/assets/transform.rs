@@ -289,6 +289,7 @@ mod tests {
             scenes: vec![vec![0]],
             default_scene: Some(0),
             clips: Vec::new(),
+            unsupported_animations: Vec::new(),
         }
     }
 

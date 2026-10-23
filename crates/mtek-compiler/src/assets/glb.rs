@@ -213,9 +213,20 @@ pub struct GlbFile {
     /// The default scene: `scene`, or the first scene when the file names none.
     pub default_scene: Option<usize>,
     /// Node TRS clips (decision 0156). Empty when the file has no LINEAR or STEP
-    /// translation, rotation or scale channels. Skins, morph weights and cubic splines
-    /// are rejected (`E7019`) and never appear here.
+    /// translation, rotation or scale channels. Skins are rejected (`E7019`); an animation with
+    /// a morph-weight channel, a cubic spline or another interpolation is not a clip but is
+    /// listed in [`Self::unsupported_animations`] (decision 0174).
     pub clips: Vec<GlbClip>,
+    /// Animations the profile cannot play. They do not fail the file: a program that never
+    /// names one in a `clip` does not notice them (`E7019` at the `clip` that does).
+    pub unsupported_animations: Vec<UnsupportedAnimation>,
+}
+
+/// A glTF animation the profile cannot play, and why (decision 0174).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct UnsupportedAnimation {
+    pub name: String,
+    pub reason: String,
 }
 
 /// One glTF animation the profile can play (decision 0156).
@@ -725,6 +736,7 @@ pub fn read_glb(path: &str, bytes: &[u8], limits: &AssetLimits) -> Result<GlbFil
         materials,
         images,
         clips,
+        unsupported_animations,
         ..
     } = validator;
     if !issues.is_empty() {
@@ -744,6 +756,7 @@ pub fn read_glb(path: &str, bytes: &[u8], limits: &AssetLimits) -> Result<GlbFil
         scenes,
         default_scene,
         clips,
+        unsupported_animations,
     })
 }
 
@@ -911,6 +924,8 @@ struct Validator<'a> {
     samplers: Vec<Option<SamplerChoice>>,
     /// The result of the image pass, by image index.
     image_ok: Vec<bool>,
+    /// Animations that are not clips, found by [`Self::check_animations`].
+    unsupported_animations: Vec<UnsupportedAnimation>,
     /// TRS clips extracted by [`Self::check_animations`].
     clips: Vec<GlbClip>,
 }
@@ -986,6 +1001,7 @@ impl<'a> Validator<'a> {
             samplers: Vec::new(),
             image_ok: Vec::new(),
             clips: Vec::new(),
+            unsupported_animations: Vec::new(),
         }
     }
 
@@ -1825,8 +1841,10 @@ impl<'a> Validator<'a> {
         sampler.map(|sampler| GlbTexture { image, sampler })
     }
 
-    /// Skins, morph-weight channels and cubic splines stay `E7019` (decision 0156). LINEAR and
-    /// STEP translation, rotation and scale channels are packaged as [`GlbClip`]s.
+    /// Skins stay `E7019` (decision 0156). LINEAR and STEP translation, rotation and scale
+    /// channels are packaged as [`GlbClip`]s. An animation with a morph-weight channel, a cubic
+    /// spline, another interpolation or a keyframe count outside 1 to 4096 is listed as
+    /// unsupported instead (decision 0174): it fails only where a `clip` names it.
     fn check_animations(&mut self) {
         let skins = self.root.skins.len();
         if skins > 0 {
@@ -1864,12 +1882,20 @@ impl<'a> Validator<'a> {
             names.push(name.clone());
             let mut channels = Vec::new();
             let mut rejected = false;
+            let mut unsupported: Option<String> = None;
             for channel in &animation.channels {
                 match self.clip_channel(&name, animation, channel) {
                     ClipChannel::Ready(channel) => channels.push(channel),
-                    ClipChannel::Rejected => rejected = true,
+                    ClipChannel::Unsupported(reason) => {
+                        unsupported.get_or_insert(reason);
+                    }
                     ClipChannel::Broken => rejected = true,
                 }
+            }
+            if let Some(reason) = unsupported {
+                self.unsupported_animations
+                    .push(UnsupportedAnimation { name, reason });
+                continue;
             }
             if rejected {
                 continue;
@@ -1900,28 +1926,14 @@ impl<'a> Validator<'a> {
             Checked::Valid(Property::Rotation) => GlbChannelPath::Rotation,
             Checked::Valid(Property::Scale) => GlbChannelPath::Scale,
             Checked::Valid(Property::MorphTargetWeights) => {
-                self.report(
-                    12,
-                    Issue::new(
-                        Code::E7019,
-                        format!(
-                            "The animation '{clip}' animates morph weights; the v0.1 profile plays translation, rotation and scale only."
-                        ),
-                    )
-                    .help("export the clip without morph targets"),
-                );
-                return ClipChannel::Rejected;
+                return ClipChannel::Unsupported(format!(
+                    "The animation '{clip}' animates morph weights; the v0.1 profile plays translation, rotation and scale only."
+                ));
             }
             Checked::Invalid => {
-                self.report(
-                    12,
-                    Issue::new(
-                        Code::E7019,
-                        format!("The animation '{clip}' has a channel whose path is not translation, rotation or scale."),
-                    )
-                    .help("export the clip with LINEAR or STEP translation, rotation or scale"),
-                );
-                return ClipChannel::Rejected;
+                return ClipChannel::Unsupported(format!(
+                    "The animation '{clip}' has a channel whose path is not translation, rotation or scale."
+                ));
             }
         };
         let interpolation = match &animation
@@ -1932,30 +1944,14 @@ impl<'a> Validator<'a> {
             Some(Checked::Valid(Interpolation::Linear)) => GlbInterpolation::Linear,
             Some(Checked::Valid(Interpolation::Step)) => GlbInterpolation::Step,
             Some(Checked::Valid(Interpolation::CubicSpline)) => {
-                self.report(
-                    12,
-                    Issue::new(
-                        Code::E7019,
-                        format!(
-                            "The animation '{clip}' uses cubic-spline interpolation; the v0.1 profile plays LINEAR and STEP only."
-                        ),
-                    )
-                    .help("export the clip with LINEAR or STEP interpolation"),
-                );
-                return ClipChannel::Rejected;
+                return ClipChannel::Unsupported(format!(
+                    "The animation '{clip}' uses cubic-spline interpolation; the v0.1 profile plays LINEAR and STEP only."
+                ));
             }
             Some(Checked::Invalid) => {
-                self.report(
-                    12,
-                    Issue::new(
-                        Code::E7019,
-                        format!(
-                            "The animation '{clip}' uses an interpolation other than LINEAR or STEP."
-                        ),
-                    )
-                    .help("export the clip with LINEAR or STEP interpolation"),
-                );
-                return ClipChannel::Rejected;
+                return ClipChannel::Unsupported(format!(
+                    "The animation '{clip}' uses an interpolation other than LINEAR or STEP."
+                ));
             }
             None => {
                 self.report(
@@ -1983,23 +1979,15 @@ impl<'a> Validator<'a> {
             return ClipChannel::Broken;
         };
         let what = format!("animation '{clip}'");
-        let times = match self.clip_floats(&what, sampler.input.value(), 1, Type::Scalar) {
+        let times = match self.clip_floats(&what, sampler.input.value(), 1, Type::Scalar, false) {
             Some(times) => times,
             None => return ClipChannel::Broken,
         };
         if times.is_empty() || times.len() > MAX_CLIP_KEYS {
-            self.report(
-                12,
-                Issue::new(
-                    Code::E7019,
-                    format!(
-                        "The animation '{clip}' has {} keyframes; a clip has between 1 and {MAX_CLIP_KEYS}.",
-                        times.len()
-                    ),
-                )
-                .help("bake fewer keyframes"),
-            );
-            return ClipChannel::Rejected;
+            return ClipChannel::Unsupported(format!(
+                "The animation '{clip}' has {} keyframes; a clip has between 1 and {MAX_CLIP_KEYS}.",
+                times.len()
+            ));
         }
         if times.iter().any(|time| !time.is_finite())
             || times.windows(2).any(|pair| pair[1] <= pair[0])
@@ -2023,6 +2011,7 @@ impl<'a> Validator<'a> {
                 GlbChannelPath::Rotation => Type::Vec4,
                 GlbChannelPath::Translation | GlbChannelPath::Scale => Type::Vec3,
             },
+            path == GlbChannelPath::Rotation,
         ) {
             Some(values) => values,
             None => return ClipChannel::Broken,
@@ -2067,6 +2056,7 @@ impl<'a> Validator<'a> {
         index: usize,
         components: usize,
         kind: Type,
+        quantised: bool,
     ) -> Option<Vec<f32>> {
         let Some(accessor) = self.root.accessors.get(index) else {
             self.report(
@@ -2078,25 +2068,54 @@ impl<'a> Validator<'a> {
             );
             return None;
         };
-        let component_ok = matches!(
-            &accessor.component_type,
-            Checked::Valid(GenericComponentType(ComponentType::F32))
-        );
+        // Rotations may be stored as normalised integers (glTF 2.0, animation sampler outputs).
+        let stored = match &accessor.component_type {
+            Checked::Valid(GenericComponentType(ComponentType::F32)) if !accessor.normalized => {
+                Some(ClipComponent::F32)
+            }
+            Checked::Valid(GenericComponentType(ComponentType::I8))
+                if quantised && accessor.normalized =>
+            {
+                Some(ClipComponent::I8)
+            }
+            Checked::Valid(GenericComponentType(ComponentType::U8))
+                if quantised && accessor.normalized =>
+            {
+                Some(ClipComponent::U8)
+            }
+            Checked::Valid(GenericComponentType(ComponentType::I16))
+                if quantised && accessor.normalized =>
+            {
+                Some(ClipComponent::I16)
+            }
+            Checked::Valid(GenericComponentType(ComponentType::U16))
+                if quantised && accessor.normalized =>
+            {
+                Some(ClipComponent::U16)
+            }
+            _ => None,
+        };
         let type_ok = matches!(&accessor.type_, Checked::Valid(found) if *found == kind);
-        if !component_ok || !type_ok {
+        let (true, Some(stored)) = (type_ok, stored) else {
+            let allowed = if quantised {
+                "FLOAT, or normalised BYTE or SHORT,"
+            } else {
+                "FLOAT"
+            };
             self.report(
                 7,
                 Issue::new(
                     Code::E7025,
                     format!(
-                        "{what}: accessors[{index}] must be FLOAT {} with {components} components.",
+                        "{what}: accessors[{index}] must be {allowed} {} with {components} components.",
                         type_name(kind)
                     ),
                 ),
             );
             return None;
-        }
-        let resolved = match self.resolve(index, components * 4, false) {
+        };
+        let size = stored.size();
+        let resolved = match self.resolve(index, components * size, false) {
             Ok(resolved) => resolved,
             Err(problem) => {
                 self.report_problem(&format!("{what}, accessors[{index}]"), problem);
@@ -2106,8 +2125,8 @@ impl<'a> Validator<'a> {
         let mut values = Vec::with_capacity(resolved.count.saturating_mul(components));
         for element in 0..resolved.count {
             for component in 0..components {
-                let at = resolved.offset + element * resolved.stride + component * 4;
-                let Some(value) = le_f32(self.bin, at) else {
+                let at = resolved.offset + element * resolved.stride + component * size;
+                let Some(value) = stored.read(self.bin, at) else {
                     self.report(
                         7,
                         Issue::new(
@@ -2139,8 +2158,50 @@ const MAX_CLIP_KEYS: usize = 4096;
 
 enum ClipChannel {
     Ready(GlbChannel),
-    Rejected,
+    /// A channel the profile cannot play, with the reason (decision 0174).
+    Unsupported(String),
+    /// A data error, already reported (`E7025` or `E7011`).
     Broken,
+}
+
+/// How the output of a clip accessor is stored (glTF 2.0: rotations may be normalised integers).
+#[derive(Clone, Copy)]
+enum ClipComponent {
+    F32,
+    I8,
+    U8,
+    I16,
+    U16,
+}
+
+impl ClipComponent {
+    fn size(self) -> usize {
+        match self {
+            ClipComponent::F32 => 4,
+            ClipComponent::I8 | ClipComponent::U8 => 1,
+            ClipComponent::I16 | ClipComponent::U16 => 2,
+        }
+    }
+
+    /// The value at byte `at` as a float; integers are dequantised as glTF specifies
+    /// (signed `max(c / max, -1)`, unsigned `c / max`).
+    fn read(self, bytes: &[u8], at: usize) -> Option<f32> {
+        match self {
+            ClipComponent::F32 => le_f32(bytes, at),
+            ClipComponent::I8 => bytes
+                .get(at)
+                .map(|byte| (f32::from(*byte as i8) / 127.0).max(-1.0)),
+            ClipComponent::U8 => bytes.get(at).map(|byte| f32::from(*byte) / 255.0),
+            ClipComponent::I16 => {
+                let pair = bytes.get(at..at + 2)?;
+                Some((f32::from(i16::from_le_bytes([pair[0], pair[1]])) / 32767.0).max(-1.0))
+            }
+            ClipComponent::U16 => {
+                let pair = bytes.get(at..at + 2)?;
+                Some(f32::from(u16::from_le_bytes([pair[0], pair[1]])) / 65535.0)
+            }
+        }
+    }
 }
 
 fn plural(count: usize) -> &'static str {

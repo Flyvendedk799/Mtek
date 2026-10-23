@@ -223,7 +223,7 @@ fn objects() -> Vec<SchemaDef> {
                 "clip",
                 TypeRef::String,
                 C,
-                "The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. The clip is the only writer of the position, rotation and scale channels it has.",
+                "The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. It composes with the entity's own transform (decision 0174).",
             ),
         ],
     )
