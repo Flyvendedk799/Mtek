@@ -352,7 +352,7 @@ live("the ABI: constants and capabilities (abi/*, runtime/*)", () => {
 
 live("the claims of the README and the other hand-written pages (readme/*)", () => {
   it("a README that miscounts the examples fails readme/example-count", () => {
-    const readme = replaceOnce(base.readme.readme, /the web runtime, ten\s+examples/, "the web runtime, three\nexamples");
+    const readme = replaceOnce(base.readme.readme, /the web runtime, eleven\s+examples/, "the web runtime, three\nexamples");
     const found = checkInputs({ ...base, readme: { ...base.readme, readme } });
     expectNamesBoth(found, "readme/example-count", "the examples/ directory", "README.md (Status)");
   });
