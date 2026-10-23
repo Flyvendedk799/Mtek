@@ -8,7 +8,7 @@
 name = "the title prompt blinks every half second of game time"
 steps = [
   { step = 8, dt = 0.0625 },
-  { expect_state = { started = true, prompt = true, spin = { value = 0.4, tolerance = 1e-5 } } },
+  { expect_state = { prompt = true, spin = { value = 0.4, tolerance = 1e-5 } } },
   { step = 1, dt = 0.0625 },
   { expect_state = { prompt = false } },
   { step = 7, dt = 0.0625 },

@@ -132,7 +132,7 @@ export function buildPrefabRuntimes(prefabs: readonly ResolvedPrefab[], code: Re
         return { binding, compute };
       });
     const handlers = new Map<MtekEventName, readonly MtekPrefabEventHandler[]>();
-    for (const event of [...INPUT_EVENTS, ...COLLISION_EVENTS, "message"] as const) {
+    for (const event of [...INPUT_EVENTS, ...COLLISION_EVENTS, "message", "init"] as const) {
       const declared = program.events[event];
       // Declaration order is kept: several handlers of one event run in the order they were written.
       if (declared !== undefined && declared.length > 0) handlers.set(event, declared);
@@ -461,6 +461,7 @@ export class DynamicEntities {
     render.addEntity(resolved);
     prefab.program.init(host.ctx, record, params);
     this.bind(entity);
+    for (const handler of prefab.program.events.init ?? []) handler.fn(host.ctx, record, undefined);
     if (instance !== null && instance.shareable) materials.shareInstance(instance.index);
     this.spawnedTotal += 1;
     return entity;

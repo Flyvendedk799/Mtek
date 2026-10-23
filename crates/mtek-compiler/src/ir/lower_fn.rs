@@ -310,6 +310,7 @@ impl Lowering<'_> {
         ctx: &SceneCtx,
     ) -> Result<Behavior, Defect> {
         let kind = match decl.name.name.as_str() {
+            "init" => BehaviorKind::Init,
             "update" => BehaviorKind::Update,
             "fixed_update" => BehaviorKind::FixedUpdate,
             "ui" => BehaviorKind::Ui,

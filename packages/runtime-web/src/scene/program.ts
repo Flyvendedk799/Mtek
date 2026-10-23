@@ -88,7 +88,7 @@ function checkWriters(layout: MtekLayoutRecord, entry: unknown, diagnostics: Mte
   return { all: asBlockWriter(all as (...args: never[]) => unknown), fields: byName };
 }
 
-const EVENT_NAMES = ["key_down", "key_up", "pointer_down", "pointer_up", "pointer_move", "collision_enter", "collision_exit", "message"] as const;
+const EVENT_NAMES = ["key_down", "key_up", "pointer_down", "pointer_up", "pointer_move", "collision_enter", "collision_exit", "message", "init"] as const;
 
 function functionOrNull(value: unknown): boolean {
   return value === null || typeof value === "function";

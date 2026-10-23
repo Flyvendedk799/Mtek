@@ -2009,6 +2009,7 @@ fn behavior_function(
     span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
 ) -> Result<Vec<Stmt>, String> {
     let label = match &behavior.kind {
+        ir::BehaviorKind::Init => "init".to_owned(),
         ir::BehaviorKind::Update => "update".to_owned(),
         ir::BehaviorKind::FixedUpdate => "fixed_update".to_owned(),
         ir::BehaviorKind::Ui => "ui".to_owned(),
@@ -2056,6 +2057,7 @@ fn behavior_function(
 /// The base of the name of the function that implements `behavior` (`update`, `on_key_down`).
 fn behavior_base(behavior: &ir::Behavior) -> String {
     match &behavior.kind {
+        ir::BehaviorKind::Init => "init".to_owned(),
         ir::BehaviorKind::Update => "update".to_owned(),
         ir::BehaviorKind::FixedUpdate => "fixed_update".to_owned(),
         ir::BehaviorKind::Ui => "ui".to_owned(),
@@ -2167,6 +2169,12 @@ pub fn emit_behaviors(
             ir::Owner::Entity { index } => Some(index),
         };
         match (&behavior.kind, owner_index) {
+            (ir::BehaviorKind::Init, owner) => emitted.events.push(EmittedEvent {
+                event: "init".to_owned(),
+                key: None,
+                owner,
+                function: name,
+            }),
             (ir::BehaviorKind::Update, None) => emitted.update = Some(name),
             (ir::BehaviorKind::FixedUpdate, None) => emitted.fixed_update = Some(name),
             (ir::BehaviorKind::Ui, None) => emitted.ui = Some(name),
@@ -2247,6 +2255,12 @@ pub fn emit_prefab_behaviors(
             &mut *span_id,
         )?);
         match &behavior.kind {
+            ir::BehaviorKind::Init => emitted.events.push(EmittedEvent {
+                event: "init".to_owned(),
+                key: None,
+                owner: None,
+                function: name,
+            }),
             ir::BehaviorKind::Update => emitted.update = Some(name),
             ir::BehaviorKind::FixedUpdate => emitted.fixed_update = Some(name),
             ir::BehaviorKind::Ui => return Err("a prefab has a `ui` lifecycle function".to_owned()),

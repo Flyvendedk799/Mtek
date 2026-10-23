@@ -6,7 +6,7 @@
     "endByte": 146,
     "message": "`start` is not a lifecycle function.",
     "notes": [
-      "v0.1 lifecycle functions are `update`, `fixed_update` and (in a scene) `ui`"
+      "v0.1 lifecycle functions are `init`, `update`, `fixed_update` and (in a scene) `ui`"
     ]
   }
 ]

@@ -991,6 +991,7 @@ pub struct Behavior {
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum BehaviorKind {
+    Init,
     Update,
     FixedUpdate,
     /// `ui(dt)`, a scene's lifecycle function that also runs while the game is paused (decision 0175).

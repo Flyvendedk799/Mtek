@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5050",
+    "file": "src/main.mtek",
+    "startByte": 36,
+    "endByte": 40,
+    "message": "`init` takes no parameters.",
+    "notes": [
+      "help: write `init() { … }`"
+    ]
+  }
+]

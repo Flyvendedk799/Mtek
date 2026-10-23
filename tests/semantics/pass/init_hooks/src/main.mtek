@@ -1,0 +1,19 @@
+prefab Child {
+    state initialized: bool = false;
+    init() { self.initialized = true; }
+}
+scene Demo {
+    camera Main {}
+    state scene_inits: i32 = 0;
+    state entity_inits: i32 = 0;
+    state ticks: i32 = 0;
+    init() {
+        scene_inits += 1;
+        spawn(Child {});
+        after(0.2) { ticks += 10; }
+    }
+    entity Receiver {
+        init() { entity_inits += 1; }
+    }
+    update(dt: f32) { ticks += 1; }
+}

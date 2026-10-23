@@ -45,7 +45,7 @@ pub(super) enum Initialiser {
 }
 
 /// The lifecycle functions of v0.1 (`spec/scenes.md` section 6).
-const LIFECYCLE_NAMES: [&str; 3] = ["update", "fixed_update", "ui"];
+const LIFECYCLE_NAMES: [&str; 4] = ["init", "update", "fixed_update", "ui"];
 
 impl Checker<'_> {
     // ----- state -----------------------------------------------------------------------------
@@ -253,7 +253,7 @@ impl Checker<'_> {
                 )
                 .at(function.name.span)
                 .note(
-                    "v0.1 lifecycle functions are `update`, `fixed_update` and (in a scene) `ui`",
+                    "v0.1 lifecycle functions are `init`, `update`, `fixed_update` and (in a scene) `ui`",
                 ),
             );
             // Its body is still checked, so that names and types in it are reported once.
@@ -291,28 +291,38 @@ impl Checker<'_> {
                 .help("remove one of the two"),
             );
         }
-        let ok = match function.params.as_slice() {
-            [param] => {
-                let ty = self.annotation(&param.ty);
-                if ty != TyId::F32 && !self.out.interner.is_error(ty) {
-                    self.sink.push(
-                        Diagnostic::new(
-                            Code::E5050,
-                            format!(
-                                "The parameter of `{known}` must be an f32, but '{}' is {}.",
-                                param.name.name,
-                                self.display(ty)
-                            ),
-                        )
-                        .at(param.ty.span)
-                        .expected("f32")
-                        .actual(self.display(ty)),
-                    );
-                }
-                true
-            }
-            _ => {
+        let ok = if known == "init" {
+            if !function.params.is_empty() {
                 self.sink.push(
+                    Diagnostic::new(Code::E5050, "`init` takes no parameters.")
+                        .at(function.name.span)
+                        .help("write `init() { … }`"),
+                );
+            }
+            function.params.is_empty()
+        } else {
+            match function.params.as_slice() {
+                [param] => {
+                    let ty = self.annotation(&param.ty);
+                    if ty != TyId::F32 && !self.out.interner.is_error(ty) {
+                        self.sink.push(
+                            Diagnostic::new(
+                                Code::E5050,
+                                format!(
+                                    "The parameter of `{known}` must be an f32, but '{}' is {}.",
+                                    param.name.name,
+                                    self.display(ty)
+                                ),
+                            )
+                            .at(param.ty.span)
+                            .expected("f32")
+                            .actual(self.display(ty)),
+                        );
+                    }
+                    true
+                }
+                _ => {
+                    self.sink.push(
                     Diagnostic::new(
                         Code::E5050,
                         format!(
@@ -323,11 +333,14 @@ impl Checker<'_> {
                     .at(function.name.span)
                     .help(format!("write `{known}(dt: f32) {{ … }}`")),
                 );
-                false
+                    false
+                }
             }
         };
         let _ = ok;
-        self.warn_timers_every_frame(known, &function.body.stmts);
+        if known != "init" {
+            self.warn_timers_every_frame(known, &function.body.stmts);
+        }
         let body_label = format!("`{known}` of {holder}");
         self.body_in_scope(
             function.span,

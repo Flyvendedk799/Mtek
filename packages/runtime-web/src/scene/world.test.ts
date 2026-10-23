@@ -84,6 +84,29 @@ function makeWorld(manifest: MtekManifest = manifestFrom(minimalManifestJson()))
 
 const IDENTITY = { x: 0, y: 0, z: 0, w: 1 };
 
+it("runs user init hooks once, scene before entities, before the first input", () => {
+  const { world } = makeWorld();
+  const seen: string[] = [];
+  world.sceneState["saved"] = 7;
+  const behaviors = new Behaviors({
+    init() {}, update: () => { seen.push("update"); }, fixedUpdate: null, bindings: [],
+    entityUpdate: [null], entityFixedUpdate: [null],
+    events: {
+      init: [
+        { owner: 0, fn: () => { seen.push("entity"); } },
+        { owner: -1, fn: () => { seen.push(`scene ${String(world.sceneState["saved"])}`); } },
+      ],
+      key_down: [{ owner: -1, key: "Space", fn: () => { seen.push("key"); } }],
+    },
+  }, world);
+  behaviors.dispatchInput([{ kind: "key_down", code: "Space" }]);
+  behaviors.fixedUpdate(0);
+  behaviors.update(0);
+  behaviors.ui(0);
+  behaviors.update(0);
+  expect(seen).toEqual(["scene 7", "entity", "key", "update", "update"]);
+});
+
 it("delivers entity messages in order on the next update and defers replies", () => {
   const { world } = makeWorld();
   const send = (world.ctx as { send(ref: unknown, text: string): void }).send;
