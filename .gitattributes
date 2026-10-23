@@ -3,6 +3,17 @@
 *.jpg binary
 *.glb binary
 *.bin binary
+# Audio, fonts and archives a game ships (decisions 0130, 0139): never normalise line endings.
+*.wav binary
+*.ogg binary
+*.mp3 binary
+*.flac binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.webp binary
+*.zip binary
 
 # Benchmark holdout tree hash (decision 0021): bytes are hashed as stored, so LF everywhere.
 benchmarks/holdout/** text eol=lf

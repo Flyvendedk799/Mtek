@@ -1,6 +1,8 @@
 /target
 node_modules/
 dist/
+# The itch.io upload of `mtek build --release --itch`
+*-itch.zip
 packages/*/dist/
 tests/browser/.out/
 tests/browser/results/
