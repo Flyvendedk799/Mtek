@@ -47,15 +47,23 @@
     ]
   },
   {
-    "title": "React to a key press",
+    "title": "A HUD, pause menu, saved score and scene change",
     "features": [
       "descriptors",
       "entities",
       "enum:Key",
       "event:key_down",
+      "function:go_to",
+      "function:hud.button",
+      "function:hud.text",
+      "function:pause",
+      "function:paused",
       "function:quat.axis_angle",
+      "function:resume",
+      "function:save",
       "handlers",
       "lifecycle-functions",
+      "namespace:hud",
       "namespace:quat",
       "scene-object:camera",
       "scene-objects",
@@ -64,6 +72,8 @@
       "self",
       "state",
       "type:f32",
+      "type:i32",
+      "type:vec2",
       "type:vec3"
     ]
   },
@@ -146,25 +156,22 @@
     ]
   },
   {
-    "title": "Spawn and destroy entities",
+    "title": "Timers, tagged sprites, spawn and destroy",
     "features": [
       "descriptors",
-      "entities",
-      "enum:Key",
-      "event:key_down",
       "function:destroy",
       "function:spawn",
-      "handlers",
+      "function:tagged",
       "lifecycle-functions",
       "prefabs",
       "scene-object:camera",
       "scene-objects",
       "scenes",
-      "schema:Box",
-      "schema:BoxCollider",
-      "schema:Dynamic",
-      "schema:Static",
+      "schema:Plane",
+      "schema:Sprite",
       "self",
+      "state",
+      "type:bool",
       "type:f32",
       "type:vec3"
     ]

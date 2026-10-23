@@ -43,7 +43,7 @@ pub const LIBRARY: [Example; 11] = [
         source: include_str!("examples/03-update-lifecycle.mtek"),
     },
     Example {
-        title: "React to a key press",
+        title: "A HUD, pause menu, saved score and scene change",
         source: include_str!("examples/04-key-handler.mtek"),
     },
     Example {
@@ -63,7 +63,7 @@ pub const LIBRARY: [Example; 11] = [
         source: include_str!("examples/08-prefab-instances.mtek"),
     },
     Example {
-        title: "Spawn and destroy entities",
+        title: "Timers, tagged sprites, spawn and destroy",
         source: include_str!("examples/09-spawn-destroy.mtek"),
     },
     Example {

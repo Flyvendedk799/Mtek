@@ -586,20 +586,20 @@
   ],
   "examples": [
     {
-      "title": "Spawn and destroy entities",
-      "source": "// `spawn(Prefab { params })` creates an entity from a handler or update; `destroy(self)` removes one.\nprefab Crate {\n    param origin: vec3 = vec3(0.0, 4.0, 0.0);\n\n    position: origin;\n    mesh: Box {};\n    body: Dynamic { mass: 1.0; };\n    collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };\n\n    fixed_update(dt: f32) {\n        if self.position.y < -10.0 {\n            destroy(self);\n        }\n    }\n}\n\nscene Demo {\n    camera Main {\n        position: vec3(0.0, 4.0, 12.0);\n        target: vec3(0.0, 1.0, 0.0);\n    }\n\n    entity Floor {\n        position: vec3(0.0, -0.5, 0.0);\n        mesh: Box { size: vec3(10.0, 1.0, 10.0); };\n        body: Static {};\n        collider: BoxCollider { size: vec3(10.0, 1.0, 10.0); };\n    }\n\n    on key_down(Key.C) {\n        spawn(Crate { origin: vec3(0.0, 6.0, 0.0); });\n    }\n}\n"
-    },
-    {
-      "title": "React to a key press",
-      "source": "// `on key_down(Key.Space)` runs when the key goes down; handlers may assign scene state.\nscene Demo {\n    state speed: f32 = 0.7;\n\n    camera Main {\n        position: vec3(0.0, 2.0, 5.0);\n        target: vec3(0.0, 0.5, 0.0);\n    }\n\n    entity Cube {\n        mesh: Box {};\n\n        update(dt: f32) {\n            self.rotation *= quat.axis_angle(vec3(0.0, 1.0, 0.0), speed * dt);\n        }\n    }\n\n    on key_down(Key.Space) {\n        speed = -speed;\n    }\n}\n"
-    },
-    {
       "title": "Prefabs and prefab instances",
       "source": "// A prefab is a reusable entity with params; `entity Name: Prefab { param: value; }` makes one.\nprefab Crate {\n    param origin: vec3 = vec3(0.0, 0.5, 0.0);\n    param tint: color = #5b8def;\n\n    position: origin;\n    mesh: Box {};\n    material: Pbr { base_color: tint; };\n}\n\nscene Demo {\n    camera Main {\n        position: vec3(0.0, 3.0, 8.0);\n        target: vec3(0.0, 0.5, 0.0);\n    }\n\n    entity Left: Crate {\n        origin: vec3(-1.5, 0.5, 0.0);\n    }\n\n    entity Right: Crate {\n        origin: vec3(1.5, 0.5, 0.0);\n        tint: #ff8a3d;\n    }\n}\n"
     },
     {
+      "title": "A HUD, pause menu, saved score and scene change",
+      "source": "// `on key_down(Key.Space)` runs when the key goes down; handlers may assign scene state.\nscene Demo {\n    state speed: f32 = 0.7;\n    shared saved state best: i32 = 0;\n\n    camera Main {\n        position: vec3(0.0, 2.0, 5.0);\n        target: vec3(0.0, 0.5, 0.0);\n    }\n\n    entity Cube {\n        mesh: Box {};\n\n        update(dt: f32) {\n            self.rotation *= quat.axis_angle(vec3(0.0, 1.0, 0.0), speed * dt);\n        }\n    }\n\n    on key_down(Key.Space) {\n        speed = -speed;\n        best += 1;\n        save();\n    }\n\n    ui(dt: f32) {\n        hud.text(\"Best ${best}\", vec2(0.0, 0.8), 24.0, #ffffff, 0.5);\n        if paused() {\n            if hud.button(\"Resume\", vec2(0.0, 0.0), 24.0) {\n                resume();\n            }\n        } else if hud.button(\"Pause\", vec2(0.0, 0.0), 24.0) {\n            pause();\n        }\n    }\n\n    on key_down(Key.Enter) {\n        go_to(Demo);\n    }\n}\n"
+    },
+    {
       "title": "Bind a material parameter to scene state",
       "source": "// A material declares params with defaults; `bind(name)` keeps a param equal to scene state.\nmaterial Tinted {\n    param tint: color = #6b5cff;\n\n    fragment(input: SurfaceInput) -> color {\n        return tint;\n    }\n}\n\nscene Demo {\n    state tint: color = #ff8a3d;\n\n    camera Main {\n        position: vec3(0.0, 2.0, 5.0);\n        target: vec3(0.0, 0.5, 0.0);\n    }\n\n    entity Cube {\n        mesh: Box {};\n        material: Tinted { tint: bind(tint); };\n    }\n}\n"
+    },
+    {
+      "title": "Pointer events and arrays",
+      "source": "// `on pointer_down(event: PointerEvent)` receives a click; arrays have a fixed length and index with `[i]`.\nconst PALETTE: array<color, 3> = [#ff5a5f, #ffd166, #06d6a0];\n\nscene Demo {\n    state index: i32 = 0;\n    state tint: color = #ff5a5f;\n\n    camera Main {\n        position: vec3(0.0, 2.0, 5.0);\n        target: vec3(0.0, 0.5, 0.0);\n    }\n\n    entity Cube {\n        mesh: Box {};\n        material: Unlit { color: bind(tint); };\n    }\n\n    on pointer_down(event: PointerEvent) {\n        index = (index + 1) % 3;\n        tint = PALETTE[index];\n    }\n}\n"
     }
   ],
   "diagnosticsGuide": "`mtek check --format json` prints one JSON report; each diagnostic has code, severity, title, message, source (file, startByte, endByte, startLine, startColumn, endLine, endColumn), expected and actual (when relevant), related, notes, suggestedEdits and phase. Fix errors in report order, apply a suggestedEdit only when it is present (they are validated), and never delete the feature a diagnostic is about."
