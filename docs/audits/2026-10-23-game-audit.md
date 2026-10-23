@@ -118,5 +118,5 @@ Ranked by how many genres each blocks. "Exists" means it was checked to exist: k
    - G2–G7 scene/audio/input correctness.
    - R2–R6 particle/sprite pipeline correctness and per-frame cost.
    - C2–C5 checker holes.
-3. **Close the core gaps** 3 (overlap), 5 (screen/world), 4 (entity communication), 6–7 (touch, gamepad), then 8–12.
+3. **Close the core gaps** (the goal of the next PR, see `docs/audits/2026-10-23-game-next-pr.md`) 3 (overlap), 5 (screen/world), 4 (entity communication), 6–7 (touch, gamepad), then 8–12.
 4. **Ship one real game per genre** (2D arcade shooter, platformer, puzzle) with full fixtures, as the acceptance test for each gap, plus a "make a game" guide.
