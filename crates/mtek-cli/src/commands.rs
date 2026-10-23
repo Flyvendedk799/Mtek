@@ -529,10 +529,10 @@ fn shown_itch_zip(shown: &str, zip: &Path) -> String {
 /// Delete the `--itch` zip beside `target`, if any: a build with `--itch` writes a fresh one at the
 /// end, so one that is still there afterwards belongs to an earlier build.
 fn remove_stale_zip(game: Option<Game>, target: Option<&Path>) {
-    if let (Some(game), Some(target)) = (game, target) {
-        if game.itch {
-            let _ = std::fs::remove_file(itch_zip_path(target));
-        }
+    if let (Some(game), Some(target)) = (game, target)
+        && game.itch
+    {
+        let _ = std::fs::remove_file(itch_zip_path(target));
     }
 }
 
