@@ -563,15 +563,16 @@ fn a_failed_build_leaves_the_previous_output_untouched() {
     );
 }
 
-/// The runtime files as `npm run build` left them.
+/// The runtime files selected by `build.rs`, including its fresh-clone prebuilt fallback.
 #[cfg(mtek_runtime_embedded)]
 fn runtime_file(name: &str) -> Vec<u8> {
-    fs::read(
-        Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../packages/runtime-web/dist")
-            .join(name),
-    )
-    .unwrap()
+    let path = Path::new(env!("MTEK_RUNTIME_ORIGIN_DIR")).join(name);
+    fs::read(&path).unwrap_or_else(|error| {
+        panic!(
+            "cannot read embedded runtime source {}: {error}; run `npm run build` first",
+            path.display()
+        )
+    })
 }
 
 #[cfg(mtek_runtime_embedded)]
