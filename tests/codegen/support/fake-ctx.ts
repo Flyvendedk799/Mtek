@@ -9,6 +9,8 @@ export interface SetterCall {
   readonly entity: number;
   readonly field: string;
   readonly value: unknown;
+  /** For `setCameraOn`: the camera written (decision 0177). */
+  readonly camera?: string;
 }
 
 /** One recorded `ctx.warn(code, spanId)` (index clamping reports `W8030`, decision 0037). */
@@ -60,6 +62,7 @@ export interface FakeContext {
   readonly s: Record<string, unknown>;
   readonly e: readonly FakeEntityRecord[];
   setCamera(field: string, value: unknown): void;
+  setCameraOn(camera: string, field: string, value: unknown): void;
   setTransform(entity: FakeEntityRecord, field: string, value: unknown): void;
   setVisible(entity: FakeEntityRecord, value: unknown): void;
   setParam(entity: FakeEntityRecord, name: string, value: unknown): void;
@@ -110,6 +113,9 @@ export function createFakeContext(
     e: Object.freeze(e),
     setCamera(field: string, value: unknown): void {
       calls.push({ method: "setCamera", entity: -1, field, value });
+    },
+    setCameraOn(camera: string, field: string, value: unknown): void {
+      calls.push({ method: "setCamera", entity: -1, field, value, camera });
     },
     setTransform(entity: FakeEntityRecord, field: string, value: unknown): void {
       calls.push({ method: "setTransform", entity: indexOf(entity), field, value });

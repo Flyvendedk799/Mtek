@@ -717,6 +717,10 @@ impl<'a> Checker<'a> {
             _ => None,
         };
         if let Some(ty) = ty {
+            // The value depends on which entity the reference names at run time, so the read is
+            // an effect like `frame.time`: a pure `fn` cannot hide it (`E4002`), nor a binding
+            // that calls one (`E5005`), which would bypass the dependency order (decision 0177).
+            self.record_ambient_read(expr.span, format!("entity_ref.{}", name.name), false);
             self.fields.insert(
                 expr.id,
                 FieldKind::RefField {

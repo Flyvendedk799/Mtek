@@ -1,0 +1,6 @@
+# Wide moves, Main (the active camera) does not (decision 0177).
+name = "writing a named camera does not move the active one"
+steps = [
+  { step = 2, dt = 0.0625 },
+  { expect_state = { main_x = 0, wide_x = 4 } },
+]

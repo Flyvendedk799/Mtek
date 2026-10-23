@@ -1,0 +1,21 @@
+[
+  {
+    "code": "MTEK-E4002",
+    "file": "src/main.mtek",
+    "startByte": 110,
+    "endByte": 136,
+    "message": "The pure function 'left' calls `key_pressed`, which is CPU-only.",
+    "related": [
+      {
+        "message": "'left' is declared `fn` here",
+        "file": "src/main.mtek",
+        "startByte": 82,
+        "endByte": 86
+      }
+    ],
+    "notes": [
+      "`key_pressed` is a CPU-only built-in function",
+      "help: a `fn` may call only `fn`s and pure built-in functions; declare 'left' as `cpu fn` if it needs the CPU"
+    ]
+  }
+]

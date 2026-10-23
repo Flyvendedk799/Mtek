@@ -1138,7 +1138,7 @@ fn manifest_prefabs(
                     symbol: state.symbol.to_string(),
                     shared: false,
                     persist: None,
-                    stored_type: None,
+                    stored_type: state.stored_type.clone(),
                 })
                 .collect(),
             update: has(&BehaviorKind::Update),

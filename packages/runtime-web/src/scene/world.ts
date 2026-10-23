@@ -28,7 +28,7 @@ import { DynamicEntities, type DynamicHost, type PrefabRuntime } from "./dynamic
 import { ParticleSim, type ParticleDraw } from "./particles.js";
 import { RuntimeInternalError } from "./errors.js";
 import { INERT_GAME, type GameHooks } from "./game.js";
-import { TimerList, type TimerOwner } from "./timers.js";
+import { MAX_TIMERS, TimerList, type TimerOwner } from "./timers.js";
 import { makeRef, type EntityRef } from "./slots.js";
 import { TagQueries } from "./tags.js";
 import type { ResolvedEntity, ResolvedInstance, SceneStructure } from "./structure.js";
@@ -58,6 +58,8 @@ export const CONTEXT_MEMBERS = [
   "setVisible",
   "setParam",
   "setCamera",
+  "setCameraOn",
+  "cameraOn",
   "selectCamera",
   "particleCount",
   "setLight",
@@ -370,7 +372,11 @@ export class World {
   /** `ctx.budget` (decision 0075): the iterations of CPU loops left in this frame. Only a preview build checks it. */
   private readonly loopBudget: LoopBudget = { n: 0 };
   /** The scene's `after`/`every` timers (decision 0142). */
-  readonly timers = new TimerList();
+  readonly timers = new TimerList((spanId) => {
+    this.reportTimerCap(spanId);
+  });
+  /** The call sites that already reported `W8205`. */
+  private readonly cappedTimerSpans = new Set<number>();
   /** Living particles (decision 0155). */
   private readonly particles = new ParticleSim();
   /** Playing glTF clips (decision 0156). */
@@ -518,6 +524,10 @@ export class World {
       setCamera: (field: unknown, value: unknown): void => {
         this.setCamera(field, value);
       },
+      setCameraOn: (name: unknown, field: unknown, value: unknown): void => {
+        this.setCameraOn(name, field, value);
+      },
+      cameraOn: (name: unknown): CameraRecord => this.cameraNamed("ctx.cameraOn", name),
       selectCamera: (name: unknown): void => {
         this.selectCamera(name);
       },
@@ -1146,6 +1156,20 @@ export class World {
     return undefined;
   }
 
+  /** `W8205`: a timer was not started because the scene already has {@link MAX_TIMERS} (decision 0177). */
+  private reportTimerCap(spanId: number): void {
+    if (this.cappedTimerSpans.has(spanId)) return;
+    this.cappedTimerSpans.add(spanId);
+    this.report(
+      makeRuntimeDiagnostic("W8205", {
+        phase: this.phase,
+        message: `The scene already has ${String(MAX_TIMERS)} timers waiting, so this timer was not started. A timer started in update or fixed_update starts again every time it runs: start it once, behind a state flag or in a handler.`,
+        source: spanId >= 0 ? resolveSpan(this.manifest, spanId) : null,
+        expected: `at most ${String(MAX_TIMERS)} timers at a time`,
+      }),
+    );
+  }
+
   private reportCamera(message: string): void {
     const info = this.cameraInfo();
     const span = spanOfSymbol(this.manifest, info.symbol);
@@ -1158,25 +1182,26 @@ export class World {
     );
   }
 
-  /** `ctx.selectCamera(name)` (decision 0154). */
-  selectCamera(name: unknown): void {
+  /** The record of the camera `name`; an unknown name is a defect of the emitted code (decision 0154). */
+  private cameraNamed(call: string, name: unknown): CameraRecord {
     if (typeof name !== "string") {
-      throw new RuntimeInternalError(`ctx.selectCamera got ${describeValue(name)}; expected a camera name.`);
+      throw new RuntimeInternalError(`${call} got ${describeValue(name)}; expected a camera name.`);
     }
     const record = this.cameraByName.get(name);
     if (record === undefined) {
-      throw new RuntimeInternalError(`ctx.selectCamera(${JSON.stringify(name)}) names a camera this scene does not have.`);
+      throw new RuntimeInternalError(`${call}(${JSON.stringify(name)}) names a camera this scene does not have.`);
     }
-    this.activeCamera = record;
+    return record;
   }
 
-  /** Writes `field` of the named camera without changing which camera is active. */
-  setCameraOn(name: string, field: unknown, value: unknown): void {
-    const record = this.cameraByName.get(name);
-    if (record === undefined) {
-      this.setCamera(field, value);
-      return;
-    }
+  /** `ctx.selectCamera(name)` (decision 0154). */
+  selectCamera(name: unknown): void {
+    this.activeCamera = this.cameraNamed("ctx.selectCamera", name);
+  }
+
+  /** Writes `field` of the named camera without changing which camera is active (decision 0177). */
+  setCameraOn(name: unknown, field: unknown, value: unknown): void {
+    const record = this.cameraNamed("ctx.setCameraOn", name);
     const previous = this.activeCamera;
     this.activeCamera = record;
     try {

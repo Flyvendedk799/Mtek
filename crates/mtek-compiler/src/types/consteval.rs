@@ -761,43 +761,51 @@ impl Checker<'_> {
         }
     }
 
-    /// A `match` expression (decision 0129): every arm value is folded (each
-    /// is a constant expression in its own right); with a constant
-    /// scrutinee the match is the value of the arm it selects.
+    /// A `match` expression (decision 0129): with a constant scrutinee the match is the value of
+    /// the one arm it selects, and only that arm is folded (an arm that cannot run reports
+    /// nothing, decision 0177); otherwise every arm value is folded, each a constant expression
+    /// in its own right.
     fn fold_match(&mut self, expr: &Expr, scrutinee: &Expr, arms: &[MatchArm]) -> Folded {
         let selector = self.fold(scrutinee);
-        let mut values: Vec<(Vec<Option<u32>>, Folded)> = Vec::with_capacity(arms.len());
-        for arm in arms {
-            let patterns = arm
-                .patterns
+        let patterns_of = |this: &Self, arm: &MatchArm| -> Vec<Option<u32>> {
+            arm.patterns
                 .iter()
                 .map(|pattern| match &pattern.kind {
                     PatternKind::Wildcard => None,
-                    PatternKind::Value(value) => match self.fields.get(&value.id) {
+                    PatternKind::Value(value) => match this.fields.get(&value.id) {
                         Some(FieldKind::EnumVariant { index, .. }) => Some(*index),
                         // Not a variant: reported (`E3204`); it never matches.
                         _ => Some(u32::MAX),
                     },
                 })
-                .collect();
-            let folded = match &arm.body {
-                ArmBody::Expr(value) => self.fold(value),
-                ArmBody::Block(_) => Folded::Unknown,
-            };
-            values.push((patterns, folded));
-        }
-        let index = match selector {
-            Folded::Value(ConstValue::U32(index)) => index,
-            Folded::Value(_) | Folded::Unknown => return Folded::Unknown,
-            Folded::NotConstant(reason) => return Folded::NotConstant(reason),
+                .collect()
         };
-        if self.typed(expr).is_none() {
-            return Folded::Unknown;
-        }
-        values
-            .into_iter()
-            .find(|(patterns, _)| patterns.iter().any(|p| p.is_none_or(|p| p == index)))
-            .map_or(Folded::Unknown, |(_, folded)| folded)
+        let fold_arm = |this: &mut Self, arm: &MatchArm| match &arm.body {
+            ArmBody::Expr(value) => this.fold(value),
+            ArmBody::Block(_) => Folded::Unknown,
+        };
+        let index = match selector {
+            Folded::Value(ConstValue::U32(index)) if self.typed(expr).is_some() => index,
+            Folded::Value(ConstValue::U32(_)) => return Folded::Unknown,
+            Folded::NotConstant(reason) => {
+                for arm in arms {
+                    fold_arm(self, arm);
+                }
+                return Folded::NotConstant(reason);
+            }
+            Folded::Value(_) | Folded::Unknown => {
+                for arm in arms {
+                    fold_arm(self, arm);
+                }
+                return Folded::Unknown;
+            }
+        };
+        let selected = arms.iter().find(|arm| {
+            patterns_of(self, arm)
+                .iter()
+                .any(|p| p.is_none_or(|p| p == index))
+        });
+        selected.map_or(Folded::Unknown, |arm| fold_arm(self, arm))
     }
 
     /// `base[index]`: a constant index out of range is `E3030` whether or

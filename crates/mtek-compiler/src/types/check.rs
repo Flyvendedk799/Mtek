@@ -1951,17 +1951,11 @@ impl<'a> Checker<'a> {
                     if name == "spawn" {
                         self.note_spawn_argument(args);
                     }
-                    if name == "go_to" && !self.go_to_argument(args) {
-                        // `E5201` described a name already; an expression is still checked.
-                        let named = args.iter().all(|arg| {
-                            matches!(super::prefab::strip_parens(arg).kind, ExprKind::Name(_))
-                        });
-                        if !named {
-                            self.synth_args(args);
-                        }
-                        return TyId::UNIT;
-                    }
-                    if name == "set_camera" && !self.set_camera_argument(args) {
+                    if (name == "go_to" && !self.go_to_argument(args))
+                        || (name == "set_camera" && !self.set_camera_argument(args))
+                    {
+                        // `E5201` / `E5015` described a name already; an expression is still
+                        // checked.
                         let named = args.iter().all(|arg| {
                             matches!(super::prefab::strip_parens(arg).kind, ExprKind::Name(_))
                         });

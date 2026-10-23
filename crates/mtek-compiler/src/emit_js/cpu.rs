@@ -44,6 +44,14 @@ use super::printer::identifier_part;
 use super::program::value_expr;
 use super::rt_ops;
 
+/// `ctx.cameraOn("Name")`: the record of the named camera, whichever camera is active
+/// (decision 0177).
+fn camera_record(camera: &str) -> Expr {
+    Expr::ident("ctx")
+        .member("cameraOn")
+        .call(vec![Expr::string(camera)])
+}
+
 /// What the build mode changes in the CPU code (`spec/tooling.md` section 2).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct CpuFlags {
@@ -795,9 +803,7 @@ impl FnLowering<'_, '_> {
         Ok(match root {
             ir::PlaceRoot::State { owner, name, .. } => self.state_path(*owner, name),
             ir::PlaceRoot::EntityField { entity, field, .. } => self.entity(*entity).member(field),
-            ir::PlaceRoot::CameraField { field, .. } => {
-                Expr::ident("ctx").member("cam").member(field)
-            }
+            ir::PlaceRoot::CameraField { camera, field, .. } => camera_record(camera).member(field),
             ir::PlaceRoot::InstanceParam { entity, param, .. } => {
                 self.entity(*entity).member("mat").member("p").member(param)
             }
@@ -808,7 +814,7 @@ impl FnLowering<'_, '_> {
         })
     }
 
-    /// `ctx.setTransform(e, "position", v)`, `ctx.setVisible(e, v)`, `ctx.setCamera("position", v)`
+    /// `ctx.setTransform(e, "position", v)`, `ctx.setVisible(e, v)`, `ctx.setCameraOn("Main", "position", v)`
     /// `ctx.setParam(e, "name", v)` or `ctx.setLight(e, "intensity", v)`: the context validates the
     /// value (`E8090`, `E8100`).
     fn setter(&self, root: &ir::PlaceRoot, value: Expr, span: Span) -> Result<Stmt, String> {
@@ -822,9 +828,9 @@ impl FnLowering<'_, '_> {
                     .call(vec![self.entity(*entity), value]),
                 other => return Err(format!("a write to the entity field '{other}'")),
             },
-            ir::PlaceRoot::CameraField { field, .. } => Expr::ident("ctx")
-                .member("setCamera")
-                .call(vec![Expr::string(field), value]),
+            ir::PlaceRoot::CameraField { camera, field, .. } => Expr::ident("ctx")
+                .member("setCameraOn")
+                .call(vec![Expr::string(camera), Expr::string(field), value]),
             ir::PlaceRoot::InstanceParam { entity, param, .. } => Expr::ident("ctx")
                 .member("setParam")
                 .call(vec![self.entity(*entity), Expr::string(param), value]),
@@ -1211,9 +1217,7 @@ impl FnLowering<'_, '_> {
                     .member("refField")
                     .call(vec![value, Expr::string(field)])
             }
-            ir::ExprKind::CameraField { field, .. } => {
-                Expr::ident("ctx").member("cam").member(field)
-            }
+            ir::ExprKind::CameraField { camera, field } => camera_record(camera).member(field),
             ir::ExprKind::InstanceParam { entity, param } => {
                 self.entity(*entity).member("mat").member("p").member(param)
             }

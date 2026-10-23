@@ -1,0 +1,9 @@
+// Which entity an entity_ref names, and so where it is, is known only at run time: a pure `fn`
+// cannot read a field through one (decision 0177).
+fn height_of(r: entity_ref) -> f32 {
+    return r.position.y;
+}
+
+scene Demo {
+    camera Main {}
+}

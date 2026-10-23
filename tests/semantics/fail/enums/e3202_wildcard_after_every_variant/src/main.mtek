@@ -1,0 +1,16 @@
+// A `_` after arms that cover every variant matches nothing.
+// covers: [S: match-patterns]
+enum Phase { Menu, Playing, GameOver }
+
+fn level(phase: Phase) -> i32 {
+    return match phase {
+        Phase.Menu => 0,
+        Phase.Playing => 1,
+        Phase.GameOver => 2,
+        _ => 3,
+    };
+}
+
+scene Demo {
+    camera Main {}
+}

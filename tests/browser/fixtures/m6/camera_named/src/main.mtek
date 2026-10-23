@@ -1,0 +1,20 @@
+// Decision 0177: an imperative read or write of a named camera's field addresses that camera, not
+// the active one. Main is active; `update` moves Wide and reads both back.
+scene Demo {
+    state main_x: f32 = 0.0;
+    state wide_x: f32 = 0.0;
+    camera Main {
+        active: true;
+        position: vec3(0.0, 1.0, 5.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+    camera Wide {
+        position: vec3(0.0, 3.0, 9.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+    update(dt: f32) {
+        Wide.position = vec3(4.0, 3.0, 9.0);
+        main_x = Main.position.x;
+        wide_x = Wide.position.x;
+    }
+}

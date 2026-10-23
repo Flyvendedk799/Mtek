@@ -1,0 +1,19 @@
+// A constant `match` is the value of the arm its scrutinee selects. An arm that cannot run is not
+// folded, so an overflow or a division by zero there reports nothing (decision 0177).
+enum Mode { Safe, Wild }
+
+const MODE: Mode = Mode.Safe;
+const LIMIT: i32 = match Mode.Safe {
+    Mode.Safe => 10,
+    Mode.Wild => 2147483647 + 1,
+};
+const RATIO: f32 = match MODE {
+    Mode.Safe => 0.5,
+    Mode.Wild => 1.0 / 0.0,
+};
+
+scene Demo {
+    state limit: i32 = LIMIT;
+    state ratio: f32 = RATIO;
+    camera Main {}
+}

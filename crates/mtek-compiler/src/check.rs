@@ -219,6 +219,39 @@ pub fn analyze_with(root: &ProjectRoot, fs: &dyn Fs, options: &AnalyzeOptions) -
     front.finish(report)
 }
 
+/// `E5230` at every scene declared in a module other than the entry module (decision 0178).
+/// The scenes of a game are checked and packaged as one set (names, `go_to` targets, shared and
+/// saved state), and only the entry module's scenes are known to that set.
+fn report_scenes_outside_entry(project: &Project, loaded: &[LoadedModule], sink: &mut Diagnostics) {
+    let entry = project.modules.entry().path().to_string();
+    for module in project.modules.modules() {
+        let Some(unit) = loaded
+            .get(module.id().index())
+            .filter(|_| module.id().index() > 0)
+        else {
+            continue;
+        };
+        for item in &unit.ast.items {
+            let ItemKind::Scene(scene) = &item.kind else {
+                continue;
+            };
+            sink.push(
+                Diagnostic::new(
+                    Code::E5230,
+                    format!(
+                        "The scene '{}' is declared in '{}', but scenes belong in the entry module '{entry}'.",
+                        scene.name.name,
+                        module.path()
+                    ),
+                )
+                .at(scene.name.span)
+                .note("the scenes of a program share one set of names, `go_to` targets, shared state and saved state, which is checked over the entry module")
+                .help("move the scene into the entry module; prefabs, materials, structs, enums, functions and constants can stay in imported modules"),
+            );
+        }
+    }
+}
+
 /// The front end, reporting to `sink`.
 pub(crate) fn front_end(root: &ProjectRoot, fs: &dyn Fs, sink: &mut Diagnostics) -> FrontEnd {
     front_end_with(root, fs, &AnalyzeOptions::default(), sink)
@@ -262,6 +295,8 @@ pub(crate) fn front_end_with(
             sink,
         );
     }
+
+    report_scenes_outside_entry(&project, &loaded, sink);
 
     let mut loader = AssetLoader::new(fs, AssetLimits::from(&project.config.assets));
     let mut types: Vec<Option<Typeck>> = loaded.iter().map(|_| None).collect();

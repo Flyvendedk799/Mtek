@@ -1,0 +1,21 @@
+[
+  {
+    "code": "MTEK-E4002",
+    "file": "src/main.mtek",
+    "startByte": 125,
+    "endByte": 140,
+    "message": "The pure function 'pick' calls `choose`, which is CPU-only.",
+    "related": [
+      {
+        "message": "'pick' is declared `fn` here",
+        "file": "src/main.mtek",
+        "startByte": 76,
+        "endByte": 80
+      }
+    ],
+    "notes": [
+      "`choose` is a CPU-only built-in function",
+      "help: a `fn` may call only `fn`s and pure built-in functions; declare 'pick' as `cpu fn` if it needs the CPU"
+    ]
+  }
+]

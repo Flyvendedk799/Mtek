@@ -297,7 +297,7 @@ export interface MtekStateEntry {
   readonly shared?: true;
   /** `saved state` or `setting state` (decisions 0145, 0146): kept in the browser's storage. Absent otherwise. */
   readonly persist?: "saved" | "setting";
-  /** With `persist`: the structural description of the type a stored value must have (decision 0145). */
+  /** The structural description of the type (decisions 0145, 0177): what a stored value must match, and what a reload or `go_to` compares. Always present with `persist`; otherwise only when it differs from `type`. */
   readonly storedType?: string;
 }
 

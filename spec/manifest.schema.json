@@ -566,7 +566,7 @@
         "symbol": { "$ref": "#/$defs/symbolId" },
         "shared": { "type": "boolean", "const": true, "description": "`shared state` (decision 0141): its value carries over when go_to switches to a scene with a shared state of the same name and type. Absent for ordinary state." },
         "persist": { "enum": ["saved", "setting"], "description": "`saved state` or `setting state` (decisions 0145, 0146): the value is kept in the browser's storage under game.storage, restored when the scene starts, written by save() (and, for a setting, whenever it changes). Absent for other state." },
-        "storedType": { "type": "string", "minLength": 1, "maxLength": 4096, "description": "With persist: the structural description of the state's type that a stored value must have (decision 0145): a struct is spelled out as {field: T, ...} in field order, a user enum as enum(A|B) in variant order, otherwise the type name. A stored value recorded with another description is ignored (W5402). Absent for other state." }
+        "storedType": { "type": "string", "minLength": 1, "maxLength": 4096, "description": "The structural description of the state's type (decisions 0145, 0177): a struct is spelled out as {field: T, ...} in field order, a user enum as enum(A|B) in variant order, otherwise the type name. With persist, a stored value recorded with another description is ignored (W5402). Without persist it is present only when the description differs from type, and a hot reload or a go_to carries the value only when the description is unchanged. Absent for other state." }
       }
     },
     "game": {

@@ -1,0 +1,9 @@
+// `set_camera` changes the running game, so it is allowed only in lifecycle functions and
+// handlers, not in a function (decision 0177).
+fn leave() {
+    set_camera(Main);
+}
+
+scene Demo {
+    camera Main {}
+}

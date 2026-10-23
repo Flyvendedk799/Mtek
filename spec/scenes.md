@@ -156,6 +156,8 @@ The parameter name is free; its type must be `f32`, and there must be exactly on
 
 A key that goes down and up in one frame makes both `key_pressed` and `key_released` true, and `is_key_down` false. The edges last until the next frame's phase 1.
 
+**Edges are per frame, not per tick** (decision 0177). The transitions are delivered once per frame, in phase 1, and `key_pressed` and `key_released` answer for the whole frame. In `update` that is the frame the key changed in. In `fixed_update` the same answer is given on every tick of that frame, so a frame that runs two ticks sees the edge twice and a frame that runs none (the accumulator had less than a step) never shows it to `fixed_update` at all. The edge is not rewound to a tick. Use `is_key_down` for a held key in `fixed_update`; for "once per press" use an `on key_down` handler, or read the edge in `update` and keep it in a `state` that `fixed_update` consumes.
+
 7.4 **Focus loss.** When the canvas's document loses focus or becomes hidden, the runtime records `key_up` transitions for every held key and a release for held pointer buttons; they are delivered at the start of the next frame. Input is therefore re-synchronised, never stuck.
 
 7.5 **Frame values** (namespace `frame`, readable in CPU contexts and in `bind` expressions; not readable from GPU stage code — route them through material params):

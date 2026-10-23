@@ -324,7 +324,7 @@ Reading `frame.*`, or reading a body property through an `entity_ref` parameter,
 
 9.1 **Imports.** `import { A, B } from "./relative/path.mtek";`. The specifier is a string literal that must start with `./` or `../`, use `/` separators, and end in `.mtek` (`E2030`). It is resolved relative to the importing file, normalised (`.` and `..` segments removed), and must remain inside the project root (`E2031`, path traversal). Case must match the file system entry exactly, even on case-insensitive file systems (`E2032`) — this keeps projects portable. Importing a name that the target does not `export` is `E2033`; importing the same name twice is `E2002`. There are no wildcard imports, no aliases (`as` is reserved), and no package imports in v0.1 (bare specifiers like `"physics"` are `E2034`).
 
-9.2 **Exports.** `export` makes an item importable. Only items can be exported. The project entry module may declare its entry scene without `export` (blueprint §4.5).
+9.2 **Exports.** `export` makes an item importable. Only items can be exported. The project entry module may declare its entry scene without `export` (blueprint §4.5). Scenes are declared in the entry module only: a `scene` in any other module is `E5230` (decision 0178).
 
 9.3 **Cycles.** An import cycle is error `E2035`, reported once, at the import that closes the cycle, with every module of the cycle listed in order as related spans.
 
@@ -941,7 +941,7 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 What the build does **not** support is on [limitations.md](limitations.md); `supported.notSupported` of `mtek context` has the same list.
 
-## Part D. Diagnostics (241 codes)
+## Part D. Diagnostics (244 codes)
 
 Every diagnostic has a stable code: `E` for an error, `W` for a warning, then four digits; the first digit is the area. The full catalogue, the JSON form (`mtek check --format json`), the human rendering and the suggested edits are in [spec/diagnostics.md](../spec/diagnostics.md).
 
@@ -952,10 +952,10 @@ Every diagnostic has a stable code: `E` for an error, `W` for a warning, then fo
 | `2xxx` | names, scopes, modules | 14 |
 | `3xxx` | types, values, constant evaluation | 35 |
 | `4xxx` | functions, effects, execution domains, material stages | 15 |
-| `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 63 |
+| `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 65 |
 | `6xxx` | GPU layout, target profile, generated-shader validation | 4 |
 | `7xxx` | assets | 36 |
-| `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 32 |
+| `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 33 |
 | `9xxx` | project, configuration, tooling, internal | 13 |
 
 Within each range the `x9xx` codes mean "specified as not supported in v0.1"; all of them are listed, with their reasons, on [limitations.md](limitations.md).

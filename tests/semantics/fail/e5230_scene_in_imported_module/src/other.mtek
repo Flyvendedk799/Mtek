@@ -1,0 +1,6 @@
+export const Helper: i32 = 1;
+
+scene Level {
+    camera Main {}
+    saved state score: f32 = 0.0;
+}

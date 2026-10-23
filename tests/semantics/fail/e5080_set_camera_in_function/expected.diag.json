@@ -1,0 +1,32 @@
+[
+  {
+    "code": "MTEK-E5080",
+    "file": "src/main.mtek",
+    "startByte": 156,
+    "endByte": 172,
+    "message": "`set_camera` may be called only in lifecycle functions and event handlers, not in the function 'leave'.",
+    "notes": [
+      "switching the camera is a lifecycle operation of the scene"
+    ]
+  },
+  {
+    "code": "MTEK-E2003",
+    "file": "src/main.mtek",
+    "startByte": 167,
+    "endByte": 171,
+    "message": "Unknown name 'Main'."
+  },
+  {
+    "code": "MTEK-E5015",
+    "file": "src/main.mtek",
+    "startByte": 167,
+    "endByte": 171,
+    "message": "`set_camera` takes the name of a camera of this scene, but its argument is a name that is not a camera.",
+    "expected": "the name of a camera",
+    "actual": "a name that is not a camera",
+    "notes": [
+      "the camera to switch to is fixed where `set_camera` is written",
+      "help: the cameras of this module are 'Main'"
+    ]
+  }
+]
