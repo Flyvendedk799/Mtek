@@ -130,11 +130,13 @@ The runtime passes `ctx` to every generated function. Its shape is part of ABI 1
 | `ctx.s` | scene state object (`ctx.s.speed`). Read and write directly (`ctx.s.speed = v`). |
 | `ctx.e[i]` | static entity record by index (manifest order). An **entity record** — the type of every `e`/`self` parameter in this table — has: `position`, `rotation`, `scale`, `visible` (read directly; write only through the setters below), `state` (object; read **and write directly**, e.g. `self.state.hits = v`), `params` (prefab params, read-only), `mat` (material instance: `p` = current param values, read-only; write through `setParam`), `ref` (its `entity_ref`). |
 | `ctx.cam` | the active camera record: `position`, `target`, `rotation`, `projection` fields. It follows `ctx.selectCamera` (decision 0154). |
+| `ctx.cameraOn(name)` | the record of the camera `name`, whichever camera is active: generated code reads `Wide.position` as `ctx.cameraOn("Wide").position` (decision 0177). An unknown name is an internal error. |
 | `ctx.frame` | `{ time, delta, index }` (f32/f32/u32 already converted). |
 | `ctx.setTransform(e, field, value)` | `field` ∈ `"position" | "rotation" | "scale"`; validates scale (`E8090`), marks transform dirty. |
 | `ctx.setVisible(e, value)` | |
 | `ctx.setParam(e, name, value)` | writes the instance's mirror through the generated field writer; validates opaque colours (`E8100`). |
-| `ctx.setCamera(field, value)`, `ctx.setLight(e, field, value)` | `setCamera` writes the active camera. A binding that names a camera writes that camera and leaves the active one (`setCameraOn`). |
+| `ctx.setCamera(field, value)`, `ctx.setLight(e, field, value)` | `setCamera` writes the active camera. |
+| `ctx.setCameraOn(name, field, value)` | writes `field` of the camera `name` and leaves the active camera alone; an imperative write `Wide.position = v` and a binding that names a camera both use it (decision 0177). An unknown name is an internal error, like `selectCamera`. |
 | `ctx.selectCamera(name)` | `set_camera(Name)` (decision 0154). `name` is a camera of this scene. |
 | `ctx.particleCount()` | `particle_count()` (decision 0155): how many particles are alive. |
 | `ctx.spawn(prefabSymbol, params, spanId) → entity_ref`, `ctx.destroy(ref, spanId)`, `ctx.alive(ref)` | `spec/scenes.md` §9, decision 0064. `prefabSymbol` is the key of the `prefabs` table of `app.js`; `params` is the object of evaluated params (every param, defaults filled in by the generated code), which the runtime freezes and hands to `init` and to `self.params`. An `entity_ref` is a frozen `{ slot, gen }`; two references are equal when both fields are (`rt.refEq`). `E8030`, `W8032` and `E8033` carry `spanId`. |

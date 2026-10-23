@@ -58,6 +58,8 @@ export const CONTEXT_MEMBERS = [
   "setVisible",
   "setParam",
   "setCamera",
+  "setCameraOn",
+  "cameraOn",
   "selectCamera",
   "particleCount",
   "setLight",
@@ -518,6 +520,10 @@ export class World {
       setCamera: (field: unknown, value: unknown): void => {
         this.setCamera(field, value);
       },
+      setCameraOn: (name: unknown, field: unknown, value: unknown): void => {
+        this.setCameraOn(name, field, value);
+      },
+      cameraOn: (name: unknown): CameraRecord => this.cameraNamed("ctx.cameraOn", name),
       selectCamera: (name: unknown): void => {
         this.selectCamera(name);
       },
@@ -1158,25 +1164,26 @@ export class World {
     );
   }
 
-  /** `ctx.selectCamera(name)` (decision 0154). */
-  selectCamera(name: unknown): void {
+  /** The record of the camera `name`; an unknown name is a defect of the emitted code (decision 0154). */
+  private cameraNamed(call: string, name: unknown): CameraRecord {
     if (typeof name !== "string") {
-      throw new RuntimeInternalError(`ctx.selectCamera got ${describeValue(name)}; expected a camera name.`);
+      throw new RuntimeInternalError(`${call} got ${describeValue(name)}; expected a camera name.`);
     }
     const record = this.cameraByName.get(name);
     if (record === undefined) {
-      throw new RuntimeInternalError(`ctx.selectCamera(${JSON.stringify(name)}) names a camera this scene does not have.`);
+      throw new RuntimeInternalError(`${call}(${JSON.stringify(name)}) names a camera this scene does not have.`);
     }
-    this.activeCamera = record;
+    return record;
   }
 
-  /** Writes `field` of the named camera without changing which camera is active. */
-  setCameraOn(name: string, field: unknown, value: unknown): void {
-    const record = this.cameraByName.get(name);
-    if (record === undefined) {
-      this.setCamera(field, value);
-      return;
-    }
+  /** `ctx.selectCamera(name)` (decision 0154). */
+  selectCamera(name: unknown): void {
+    this.activeCamera = this.cameraNamed("ctx.selectCamera", name);
+  }
+
+  /** Writes `field` of the named camera without changing which camera is active (decision 0177). */
+  setCameraOn(name: unknown, field: unknown, value: unknown): void {
+    const record = this.cameraNamed("ctx.setCameraOn", name);
     const previous = this.activeCamera;
     this.activeCamera = record;
     try {

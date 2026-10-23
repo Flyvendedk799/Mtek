@@ -127,6 +127,39 @@ describe("World records before init", () => {
     expect(world.camera.position).toEqual(wide);
   });
 
+  it("setCameraOn and cameraOn address the named camera, not the active one (decision 0177)", () => {
+    const json = minimalManifestJson();
+    const cameras = (json["scene"] as { cameras: Record<string, unknown>[] }).cameras;
+    const main = cameras[0];
+    if (main === undefined) throw new Error("minimal manifest has no camera");
+    cameras.push({ ...main, name: "Wide", symbol: "src/main.mtek::Demo.Wide", active: false });
+    const { world, ctx } = makeWorld(manifestFrom(json));
+    const named = ctx as unknown as {
+      setCameraOn(name: string, field: string, value: unknown): void;
+      cameraOn(name: string): { position: unknown };
+    };
+    const wide = { x: 0, y: 3, z: 8 };
+    named.setCameraOn("Wide", "position", wide);
+    expect(world.cameraInfo().name).toBe("Main");
+    expect(world.camera.position).toEqual({ x: 0, y: 0, z: 5 });
+    expect(named.cameraOn("Wide").position).toEqual(wide);
+    expect(named.cameraOn("Main").position).toEqual({ x: 0, y: 0, z: 5 });
+  });
+
+  it("setCameraOn and cameraOn throw for a camera the scene does not have", () => {
+    const { world, ctx } = makeWorld(manifestFrom(minimalManifestJson()));
+    const named = ctx as unknown as {
+      setCameraOn(name: string, field: string, value: unknown): void;
+      cameraOn(name: string): unknown;
+    };
+    const before = world.camera.position;
+    expect(() => {
+      named.setCameraOn("Nope", "position", { x: 1, y: 1, z: 1 });
+    }).toThrow(RuntimeInternalError);
+    expect(() => named.cameraOn("Nope")).toThrow(RuntimeInternalError);
+    expect(world.camera.position).toEqual(before);
+  });
+
   it("gives an orthographic camera the orthographic defaults", () => {
     const json = minimalManifestJson();
     const camera = (json["scene"] as { cameras: Record<string, unknown>[] }).cameras[0];
