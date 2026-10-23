@@ -12,7 +12,13 @@ use std::path::Path;
 use mtek_compiler::package::identity::sha256_hex;
 use serde_json::Value;
 
-const FILES: [&str; 4] = ["runtime.js", "runtime.dev.js", "runtime.d.ts", "physics.js"];
+const FILES: [&str; 5] = [
+    "runtime.js",
+    "runtime.dev.js",
+    "runtime.min.js",
+    "runtime.d.ts",
+    "physics.js",
+];
 
 fn prebuilt() -> &'static Path {
     Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/prebuilt"))

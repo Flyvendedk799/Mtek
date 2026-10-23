@@ -174,7 +174,7 @@ Done here:
 - `node scripts/game-budgets.mjs frames` with no file: exit 1, "needs a run on real GPU hardware".
 
 Not run here:
-- CI itself. The jobs are in `ci/small-games-ci.patch`, not applied, because GitHub refused a push touching `.github/workflows/` without the `workflow` token scope. Apply it (`ci/README.md`), push, and look at the Actions tab. The `game-budgets (ubuntu-latest)` job must be green. The YAML was edited by hand and not parsed on the box, so a syntax error would show as a workflow error on GitHub.
+- CI itself. The jobs `game-budgets (ubuntu-latest)` and the manual `frame-evidence` are in `.github/workflows/ci.yml` (the former patch was applied on 2026-10-23, see `ci/README.md`). Push and look at the Actions tab: `game-budgets` must be green. The YAML was not parsed on the box, so a syntax error would show as a workflow error on GitHub.
 - `scripts/record-frame-evidence.mjs` was never executed. The box has no GPU and no Chromium; `node --check` passes.
 
 Abe, on each GPU machine (NVIDIA, Intel, Apple silicon):
@@ -207,7 +207,7 @@ Nothing below has code here. There is nothing to test until it is built.
   - multiple cameras and switching.
   Each one changes the renderer, the manifest or WGSL generation, and each needs GPU verification that cannot happen on this box. Only 6.2 (tweens via `easing`) is done.
 - **Phase 8.2.** This is decision 0132 and the unsupported-browser screen, committed earlier (ff5fd55d). It is WebGPU-only, with no WebGL2 fallback, by decision. Nothing new was added in this round.
-- **Phase 8.3 CI.** The workflow change is a patch (`ci/small-games-ci.patch`), not applied: the push token lacks the `workflow` scope.
+- **Phase 8.3 CI.** The workflow change was a patch (`ci/small-games-ci.patch`) while the push token lacked the `workflow` scope; it is applied in `.github/workflows/ci.yml` now.
 - **Hardware frame-time evidence.** There is none for NVIDIA, Intel or Apple. It needs Abe's machines (§8).
 
 ## Pre-existing failures seen while running targeted tests (not caused by this branch)
