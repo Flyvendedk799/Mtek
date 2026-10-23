@@ -890,6 +890,20 @@ impl Checker<'_> {
             return false;
         };
         if let Some(write) = write {
+            if let WriteTarget::Field { object, field } = &write
+                && field == "material"
+                && let Some(instance) = self.out.entity_materials.get(object).copied()
+            {
+                for (param, _) in self.instance_params(instance) {
+                    self.out.writes.push(WriteSite {
+                        target: WriteTarget::MaterialParam {
+                            entity: *object,
+                            param,
+                        },
+                        span: target.span,
+                    });
+                }
+            }
             self.out.writes.push(WriteSite {
                 target: write,
                 span: target.span,
@@ -1033,6 +1047,19 @@ impl Checker<'_> {
         };
         if let Some(handled) = self.physics_owned_write(expr, object, field) {
             return (None, handled);
+        }
+        if field == "material" {
+            let instance = self.out.entity_materials.get(&object).copied();
+            let params = instance.map(|ty| self.instance_params(ty));
+            if params
+                .as_ref()
+                .is_none_or(|params| params.iter().any(|(_, ty)| self.is_resource(*ty)))
+            {
+                self.sink.push(Diagnostic::new(Code::E5073,
+                    "Whole-material replacement requires a known material with value-only parameters.")
+                    .at(expr.span).help("assign individual material parameters instead"));
+                return (None, false);
+            }
         }
         let schema = match self.res.def(object).map(|d| d.kind) {
             Some(DefKind::Entity | DefKind::Prefab) => {

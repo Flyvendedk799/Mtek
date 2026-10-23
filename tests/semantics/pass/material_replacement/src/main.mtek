@@ -1,0 +1,13 @@
+scene Demo {
+    camera Main {}
+    state tint: color = #ff0000;
+    state red: f32 = 0.0;
+    entity Cube {
+        mesh: Box {};
+        material: Unlit { color: #00ff00 };
+    }
+    update(dt: f32) {
+        Cube.material = Unlit { color: tint };
+        red = Cube.material.color.r;
+    }
+}

@@ -60,23 +60,20 @@ scene Arcade {
     }
 
     // The speaker icon of the mute button: green when sound is on, red when muted. Its height shows the volume.
-    entity SpeakerOn {
+    entity Speaker {
         position: vec3(-5.2, 2.7, 0.0);
         scale: bind(vec3(0.6, 0.2 + 0.3 * volume, 0.2));
-        visible: bind(!muted);
+
         mesh: Box { size: vec3(1.0, 1.0, 1.0) };
         material: Unlit { color: #30d070 };
     }
-    entity SpeakerOff {
-        position: vec3(-5.2, 2.7, 0.0);
-        scale: vec3(0.6, 0.2, 0.2);
-        visible: bind(muted);
-        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
-        material: Unlit { color: #d03030 };
-    }
-
     update(dt: f32) {
         flash = max(flash - dt * 2.0, 0.0);
+        if muted {
+            Speaker.material = Unlit { color: #d03030 };
+        } else {
+            Speaker.material = Unlit { color: #30d070 };
+        }
     }
 
     on key_down(Key.Space) {

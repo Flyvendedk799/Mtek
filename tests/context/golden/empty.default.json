@@ -283,7 +283,7 @@
         "scale: vec3 = vec3(1.0, 1.0, 1.0) [WB] // Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body.",
         "visible: bool = true [WB] // Hides the mesh draw only; the entity's behaviour keeps running.",
         "mesh: mesh [C] // The mesh drawn for this entity: a mesh descriptor (`Box`, `Sphere`, `Plane`) or an asset mesh.",
-        "material: material = Unlit {} [C] // The material instance used to draw the mesh. The instance is construction-only; its parameters are writable and bindable. Requires `mesh`.",
+        "material: material = Unlit {} [W] // Material instance. Value-only instances can be replaced by the same material type; parameters are writable and bindable. Requires `mesh`.",
         "light: light [C] // A light component (`DirectionalLight`, `PointLight`). Its fields are writable and bindable as their schemas say. Named entities only.",
         "body: body [C] // A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; requires `collider`.",
         "collider: collider [C] // A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`.",

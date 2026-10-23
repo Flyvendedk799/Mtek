@@ -60,6 +60,7 @@ export const CONTEXT_MEMBERS = [
   "setTransform",
   "setVisible",
   "setParam",
+  "setMaterial",
   "setCamera",
   "setCameraOn",
   "cameraOn",
@@ -591,6 +592,7 @@ export class World {
       chance: (p: unknown): boolean => services.random() < num(p, "chance"),
       choose: (items: unknown): unknown => chooseItem(services.random(), items),
       shuffle: (items: unknown): unknown => shuffled(items, () => services.random()),
+      setMaterial: (entity: unknown, value: unknown): void => this.setMaterial(entity, value),
       refField: (ref: unknown, field: unknown): unknown => this.refField(ref, field),
       overlapSpheres,
       overlapBoxes,
@@ -1056,6 +1058,19 @@ export class World {
       throw new TypeError(`debug.setParam: param '${param}' of '${entityName}' is a ${declared.type}; got ${describeValue(value)}: ${problem}.`);
     }
     this.setParam(record, param, value);
+  }
+
+  private setMaterial(entity: unknown, value: unknown): void {
+    const index = this.indexOf(entity, "setMaterial");
+    const material = this.resolvedBySlot[index]?.instance?.material;
+    if (material === undefined || material.resources.length > 0 || typeof value !== "object" || value === null) {
+      throw new RuntimeInternalError("ctx.setMaterial requires a value-only material instance.");
+    }
+    const values = value as Record<string, unknown>;
+    for (const param of material.params) {
+      if (paramValueProblem(param.type, values[param.name]) !== undefined) throw new RuntimeInternalError(`ctx.setMaterial has an invalid '${param.name}'.`);
+    }
+    for (const param of material.params) this.setParam(entity, param.name, values[param.name]);
   }
 
   private setParam(entity: unknown, name: unknown, value: unknown): void {

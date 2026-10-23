@@ -2805,7 +2805,15 @@ impl<'a> Checker<'a> {
                         field: field.name.to_owned(),
                     },
                 );
-                self.out.interner.from_type_ref(field.ty)
+                if field.name == "material" {
+                    self.out
+                        .entity_materials
+                        .get(&owner)
+                        .copied()
+                        .unwrap_or(TyId::MATERIAL)
+                } else {
+                    self.out.interner.from_type_ref(field.ty)
+                }
             }
             None => {
                 let fields: Vec<&str> = self

@@ -1,0 +1,5 @@
+scene Demo {
+    camera Main {}
+    entity Cube { mesh: Box {}; material: Unlit {}; }
+    update(dt: f32) { Cube.material = Pbr {}; }
+}

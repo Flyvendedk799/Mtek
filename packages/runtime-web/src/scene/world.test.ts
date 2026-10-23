@@ -84,6 +84,16 @@ function makeWorld(manifest: MtekManifest = manifestFrom(minimalManifestJson()))
 
 const IDENTITY = { x: 0, y: 0, z: 0, w: 1 };
 
+it("replaces a material value through its parameter writer and validates before changing it", () => {
+  const { world, writes } = makeWorld();
+  const setter = (world.ctx as { setMaterial(entity: unknown, value: unknown): void }).setMaterial;
+  setter(world.entities[0], { color: { r: 1, g: 0, b: 0, a: 1 } });
+  expect(writes.at(-1)).toMatchObject({ name: "color", value: { r: 1, g: 0, b: 0, a: 1 } });
+  const count = writes.length;
+  expect(() => setter(world.entities[0], { color: 4 })).toThrow(RuntimeInternalError);
+  expect(writes).toHaveLength(count);
+});
+
 it("runs user init hooks once, scene before entities, before the first input", () => {
   const { world } = makeWorld();
   const seen: string[] = [];

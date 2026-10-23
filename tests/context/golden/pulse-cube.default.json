@@ -411,7 +411,7 @@
         "scale: vec3 = vec3(1.0, 1.0, 1.0) [WB]",
         "visible: bool = true [WB]",
         "mesh: mesh [C]",
-        "material: material = Unlit {} [C]",
+        "material: material = Unlit {} [W]",
         "light: light [C]",
         "body: body [C]",
         "collider: collider [C]",

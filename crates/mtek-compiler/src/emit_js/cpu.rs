@@ -802,6 +802,9 @@ impl FnLowering<'_, '_> {
     fn root_read(&self, root: &ir::PlaceRoot) -> Result<Expr, String> {
         Ok(match root {
             ir::PlaceRoot::State { owner, name, .. } => self.state_path(*owner, name),
+            ir::PlaceRoot::EntityField { entity, field, .. } if field == "material" => {
+                self.entity(*entity).member("mat").member("p")
+            }
             ir::PlaceRoot::EntityField { entity, field, .. } => self.entity(*entity).member(field),
             ir::PlaceRoot::CameraField { camera, field, .. } => camera_record(camera).member(field),
             ir::PlaceRoot::InstanceParam { entity, param, .. } => {
@@ -825,6 +828,9 @@ impl FnLowering<'_, '_> {
                     .call(vec![self.entity(*entity), Expr::string(field), value]),
                 "visible" => Expr::ident("ctx")
                     .member("setVisible")
+                    .call(vec![self.entity(*entity), value]),
+                "material" => Expr::ident("ctx")
+                    .member("setMaterial")
                     .call(vec![self.entity(*entity), value]),
                 other => return Err(format!("a write to the entity field '{other}'")),
             },
@@ -1209,6 +1215,9 @@ impl FnLowering<'_, '_> {
                 return Err(format!(
                     "a literal of the prefab '{prefab}' outside the argument of spawn"
                 ));
+            }
+            ir::ExprKind::EntityField { entity, field } if field == "material" => {
+                self.entity(*entity).member("mat").member("p")
             }
             ir::ExprKind::EntityField { entity, field } => self.entity(*entity).member(field),
             ir::ExprKind::RefField { target, field } => {
