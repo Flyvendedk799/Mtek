@@ -1242,7 +1242,8 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         this.hostInputs.applyQueued({ state: world.sceneState });
         // The HUD (decision 0134) is drawn again by every frame's handlers, ticks and update.
         this.deps.services.hud?.beginFrame?.();
-        this.behaviors.dispatchInput(this.input.deliver());
+          this.deps.services.gamepads?.poll();
+          this.behaviors.dispatchInput(this.input.deliver());
       },
       phase2_tick: (step) => {
         this.framePhase = "runtime:tick";

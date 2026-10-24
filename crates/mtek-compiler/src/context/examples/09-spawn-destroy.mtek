@@ -1,14 +1,12 @@
-// `spawn(Prefab { params })` creates an entity from a handler or update; `destroy(self)` removes one.
-prefab Crate {
-    param origin: vec3 = vec3(0.0, 4.0, 0.0);
-
-    position: origin;
-    mesh: Box {};
-    body: Dynamic { mass: 1.0; };
-    collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
-
-    fixed_update(dt: f32) {
-        if self.position.y < -10.0 {
+// Spawn tagged sprites, expire them, and start timers once in init.
+prefab Spark {
+    tag: "spark";
+    mesh: Plane {};
+    material: Sprite { columns: 1.0; rows: 1.0 };
+    state age: f32 = 0.0;
+    update(dt: f32) {
+        age += dt;
+        if age > 1.0 {
             destroy(self);
         }
     }
@@ -16,18 +14,16 @@ prefab Crate {
 
 scene Demo {
     camera Main {
-        position: vec3(0.0, 4.0, 12.0);
-        target: vec3(0.0, 1.0, 0.0);
+        position: vec3(0.0, 0.0, 6.0);
     }
-
-    entity Floor {
-        position: vec3(0.0, -0.5, 0.0);
-        mesh: Box { size: vec3(10.0, 1.0, 10.0); };
-        body: Static {};
-        collider: BoxCollider { size: vec3(10.0, 1.0, 10.0); };
-    }
-
-    on key_down(Key.C) {
-        spawn(Crate { origin: vec3(0.0, 6.0, 0.0); });
+    init() {
+        every(0.5) {
+            spawn(Spark {});
+        }
+        after(10.0) {
+            for spark in tagged("spark") {
+                destroy(spark);
+            }
+        }
     }
 }

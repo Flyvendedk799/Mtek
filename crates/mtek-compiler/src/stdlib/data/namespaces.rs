@@ -456,6 +456,17 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
         ),
         // Decision 0134 (spec/hud.md): immediate-mode HUD drawn over the canvas each frame.
         hud_namespace(),
+        namespace("gamepad", Milestone::M1, "Polled gamepads; raw browser indices, sampled once per input phase.", vec![
+            NamespaceMember::Function(function("axis", Domain::Cpu, false, Milestone::M1,
+                "Axis in [-1,1]; missing/disconnected is zero.",
+                vec![sig(&[p("pad", exact(TypeRef::I32)), p("axis", exact(TypeRef::I32))], F32)])),
+            NamespaceMember::Function(function("button", Domain::Cpu, false, Milestone::M1,
+                "Button pressure in [0,1]; missing/disconnected is zero.",
+                vec![sig(&[p("pad", exact(TypeRef::I32)), p("button", exact(TypeRef::I32))], F32)])),
+            NamespaceMember::Function(function("connected", Domain::Cpu, false, Milestone::M1,
+                "Whether the pad is connected.",
+                vec![sig(&[p("pad", exact(TypeRef::I32))], exact(TypeRef::Bool))])),
+        ]),
         // Decision 0135 (spec/tweens.md): easing curves for tweens.
         ease_namespace(),
         // `lighting.pbr` and the `Pbr` material landed with task M4-03, before the M4 gate

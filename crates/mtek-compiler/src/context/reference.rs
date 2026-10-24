@@ -165,13 +165,13 @@ fn function_line(name: &str, def: &IntrinsicDef, doc: &str) -> String {
         // A compile-time function (`texture.white()`, `asset.glb(..)`) runs in the compiler, so
         // its being CPU-side is no restriction on where it is written.
         Domain::Cpu if def.const_eligible => {}
-        Domain::Cpu => tags.push("cpu only"),
-        Domain::Gpu => tags.push("gpu only"),
+        Domain::Cpu => tags.push("CPU"),
+        Domain::Gpu => tags.push("GPU"),
     }
     if def.handlers_only {
         // Only the CPU side has handlers: the restriction subsumes `cpu only`.
         tags.clear();
-        tags.push("handlers and lifecycle functions only");
+        tags.push("handler");
     }
     if !tags.is_empty() {
         let _ = write!(line, " [{}]", tags.join(", "));

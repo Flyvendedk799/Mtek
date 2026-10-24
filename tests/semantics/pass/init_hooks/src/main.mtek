@@ -1,0 +1,34 @@
+prefab Child {
+    tag: "child";
+    state initialized: bool = false;
+    init() {
+        self.initialized = true;
+        self.visible = false;
+    }
+}
+
+scene Demo {
+    camera Main {}
+    state scene_inits: i32 = 0;
+    state entity_inits: i32 = 0;
+    state ticks: i32 = 0;
+    state child_hidden: bool = false;
+    init() {
+        scene_inits += 1;
+        spawn(Child {});
+        after(0.2) {
+            ticks += 10;
+        }
+    }
+    entity Receiver {
+        init() {
+            entity_inits += 1;
+        }
+    }
+    update(dt: f32) {
+        ticks += 1;
+        for child in tagged("child") {
+            child_hidden = !child.visible;
+        }
+    }
+}

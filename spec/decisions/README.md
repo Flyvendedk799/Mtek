@@ -184,5 +184,14 @@ recorded here before code depends on it (blueprint §15).
 | 0177 | Game checker hardening: a named camera is read and written by name (`ctx.cameraOn`, `ctx.setCameraOn`); enum host inputs stay `E9020`; reload and `go_to` carry state by its structural `storedType`; an `entity_ref` field read is an ambient CPU read (`E4002`, `E5005`); `W5301` for an unconditional `after`/`every` in `update`/`fixed_update` and a 4096 live-timer cap `W8205`; `E3203` wording for registry enums; a constant `match` folds only the selected arm |
 | 0178 | Scenes belong in the entry module: a `scene` in an imported module is `E5230` (it was packaged without the cross-scene checks and could not be reached by `go_to`) |
 | 0179 | Save id: `[project] id` (written by `mtek new --template game`) makes the save key `mtek.save.<name>.<id>` so two games of one name on one origin (itch.io) do not share saves; `migrate_saves = true` adopts the old key once (`game.legacyStorage`). |
+| 0180 | [Entity messages](0180-entity-messages.md): queued state changes preserve entity ownership |
+| 0181 | [Lightweight overlaps](0181-lightweight-overlap.md): sphere and oriented-box checks without physics |
+| 0182 | [Screen/world coordinates](0182-screen-world-coordinates.md): active-camera projection and world-plane picking |
+| 0183 | [User init hooks](0183-user-init-hooks.md): setup once after saved/shared state restoration |
+| 0184 | [Scene helpers](0184-scene-helper-functions.md): CPU functions capture their own scene |
+| 0185 | [Particle budget](0185-particle-draw-budget.md): draw up to 4096 billboards |
+| 0186 | [Gamepad polling](0186-gamepad-polling.md): axes and analog buttons sampled per input phase |
+| 0187 | [Material replacement](0187-compatible-material-replacement.md): compatible value-only instances preserve shader types and bindings |
+| 0188 | [Grammar/parser conformance](0188-grammar-parser-conformance.md): match dispatch, diagnostic pattern syntax and parsed interpolation in GBNF |
 
 Numbers 0157-0169 are unused: the sprites record is 0170 and no record has been written in between. (Earlier versions of this index listed ghost rows 0160-0162 for what are records 0130-0132; they were removed.)

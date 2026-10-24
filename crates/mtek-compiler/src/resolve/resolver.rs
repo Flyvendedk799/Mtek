@@ -913,6 +913,9 @@ impl<'a> Resolver<'a> {
         // the scene scope, and their order does not matter.
         for member in &decl.members {
             match member {
+                SceneMember::Function(function) => {
+                    self.declare(DefKind::Fn, &function.name, function.id, owner);
+                }
                 SceneMember::Const(c) => {
                     self.declare(DefKind::Const, &c.name, c.id, owner);
                 }
@@ -947,6 +950,7 @@ impl<'a> Resolver<'a> {
                         Some(Construct::SceneField),
                     );
                 }
+                SceneMember::Function(function) => self.function(function),
                 SceneMember::Const(c) => self.body_const(c),
                 SceneMember::State(s) => self.state(s.span, &s.ty, &s.value),
                 SceneMember::Object(object) => self.scene_object(object),

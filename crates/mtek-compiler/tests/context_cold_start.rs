@@ -367,11 +367,11 @@ fn an_empty_project_lists_the_signature_of_every_built_in() {
     assert!(has("color.srgb(rgb: vec3, a: f32) -> color"));
     assert!(has("quat.euler(x: f32, y: f32, z: f32) -> quat"));
     assert!(has(
-        "sample(t: texture, s: sampler, uv: vec2) -> vec4 [gpu only]"
+        "sample(t: texture, s: sampler, uv: vec2) -> vec4 [GPU]"
     ));
     assert!(has("asset.texture(path: string) -> texture"));
     assert!(has(
-        "spawn(prefab: prefab descriptor) -> entity_ref [handlers and lifecycle functions only]"
+        "spawn(prefab: prefab descriptor) -> entity_ref [handler]"
     ));
     assert!(has("frame.delta: f32"));
 
@@ -694,7 +694,7 @@ fn overloads_and_families_share_a_line_without_losing_a_function() {
         };
         assert!(easing.contains(def.name), "{}", def.name);
     }
-    assert!(easing.contains("(t: f32) -> f32 [cpu only] // `t` is clamped to 0..1"));
+    assert!(easing.contains("(t: f32) -> f32 [CPU] // `t` is clamped to 0..1"));
     assert_eq!(lines.iter().filter(|l| l.starts_with("easing.")).count(), 1);
     // No function has two lines, whatever it is grouped with.
     let mut names: Vec<(String, String)> = Vec::new();

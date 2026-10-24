@@ -362,12 +362,12 @@
           "default": "Unlit {}",
           "defaultWhenSet": "mesh",
           "required": false,
-          "writable": false,
+          "writable": true,
           "bindable": false,
-          "constructionOnly": true,
+          "constructionOnly": false,
           "range": null,
           "since": "M1",
-          "doc": "The material instance used to draw the mesh. The instance is construction-only; its parameters are writable and bindable. Requires `mesh`."
+          "doc": "Material instance. Value-only instances can be replaced by the same material type; parameters are writable and bindable. Requires `mesh`."
         },
         {
           "name": "mesh",
@@ -996,6 +996,18 @@
       "requiresCollider": false,
       "since": "M1",
       "doc": "Delivered when the filtered key is released."
+    },
+    {
+      "name": "message",
+      "form": "parameter",
+      "argumentType": "string",
+      "allowedIn": [
+        "entity",
+        "prefab"
+      ],
+      "requiresCollider": false,
+      "since": "M1",
+      "doc": "A queued string sent to this entity; delivered before its next unpaused update."
     },
     {
       "name": "pointer_down",
@@ -1800,6 +1812,30 @@
       "doc": "The vector scaled to length 1."
     },
     {
+      "name": "overlap_boxes",
+      "signatures": [
+        "(a: vec3, size_a: vec3, rotation_a: quat, b: vec3, size_b: vec3, rotation_b: quat) -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Oriented box intersection; world centers, full sizes and rotations. No physics required."
+    },
+    {
+      "name": "overlap_spheres",
+      "signatures": [
+        "(a: vec3, radius_a: f32, b: vec3, radius_b: f32) -> bool"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "World-space sphere intersection, including touching. No physics required."
+    },
+    {
       "name": "particle_count",
       "signatures": [
         "() -> i32"
@@ -2044,6 +2080,30 @@
       "doc": "Writes the saved and setting state to storage."
     },
     {
+      "name": "screen_to_world",
+      "signatures": [
+        "(point: vec2, z: f32) -> vec3"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Canvas NDC to the world Z plane `z`; parallel rays return NaN x/y."
+    },
+    {
+      "name": "send",
+      "signatures": [
+        "(target: entity_ref, message: string) -> ()"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": true,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Queues a string for a live entity's `on message(value: string)` handler."
+    },
+    {
       "name": "set_camera",
       "signatures": [
         "(camera: camera name) -> ()"
@@ -2222,6 +2282,18 @@
       "cpuSemantics": "",
       "since": "M1",
       "doc": "Integer part of `x`, rounding toward zero."
+    },
+    {
+      "name": "world_to_screen",
+      "signatures": [
+        "(point: vec3) -> vec2"
+      ],
+      "domain": "cpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "World position to canvas NDC, using the active camera and viewport."
     }
   ],
   "namespaces": [
@@ -2495,6 +2567,52 @@
           "domain": "cpu",
           "since": "M1",
           "doc": "Active application time in seconds since mount, excluding paused time."
+        }
+      ]
+    },
+    {
+      "name": "gamepad",
+      "since": "M1",
+      "doc": "Polled gamepads; raw browser indices, sampled once per input phase.",
+      "members": [
+        {
+          "name": "axis",
+          "kind": "function",
+          "signatures": [
+            "(pad: i32, axis: i32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Axis in [-1,1]; missing/disconnected is zero."
+        },
+        {
+          "name": "button",
+          "kind": "function",
+          "signatures": [
+            "(pad: i32, button: i32) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Button pressure in [0,1]; missing/disconnected is zero."
+        },
+        {
+          "name": "connected",
+          "kind": "function",
+          "signatures": [
+            "(pad: i32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Whether the pad is connected."
         }
       ]
     },

@@ -48,6 +48,7 @@
       "event:collision_exit",
       "event:key_down",
       "event:key_up",
+      "event:message",
       "event:pointer_down",
       "event:pointer_move",
       "event:pointer_up",
@@ -92,6 +93,9 @@
       "function:first_tagged",
       "function:floor",
       "function:fract",
+      "function:gamepad.axis",
+      "function:gamepad.button",
+      "function:gamepad.connected",
       "function:go_to",
       "function:has_tag",
       "function:hud.button",
@@ -119,6 +123,8 @@
       "function:mix",
       "function:nearest_tagged",
       "function:normalize",
+      "function:overlap_boxes",
+      "function:overlap_spheres",
       "function:particle_count",
       "function:pause",
       "function:paused",
@@ -146,6 +152,8 @@
       "function:sampler.nearest_repeat",
       "function:saturate",
       "function:save",
+      "function:screen_to_world",
+      "function:send",
       "function:set_camera",
       "function:set_muted",
       "function:set_volume",
@@ -163,6 +171,7 @@
       "function:texture.white",
       "function:transpose",
       "function:trunc",
+      "function:world_to_screen",
       "method:glb_asset.material",
       "method:glb_asset.material_base_color",
       "method:glb_asset.material_metallic",
@@ -177,6 +186,7 @@
       "namespace:color",
       "namespace:easing",
       "namespace:frame",
+      "namespace:gamepad",
       "namespace:hud",
       "namespace:lighting",
       "namespace:mat4",
@@ -371,7 +381,7 @@
       "type": "entity: Crate",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 80
+      "line": 81
     }
   ],
   "schemaGuide": "A field line reads `name: type = default [flags]`; R required, W writable, B bindable, C construction-only.",
@@ -407,7 +417,7 @@
         "scale: vec3 = vec3(1.0, 1.0, 1.0) [WB]",
         "visible: bool = true [WB]",
         "mesh: mesh [C]",
-        "material: material = Unlit {} [C]",
+        "material: material = Unlit {} [W]",
         "light: light [C]",
         "body: body [C]",
         "collider: collider [C]",
@@ -429,20 +439,20 @@
   ],
   "examples": [
     {
-      "title": "Spawn and destroy entities",
-      "source": "// `spawn(Prefab { params })` creates an entity from a handler or update; `destroy(self)` removes one.\nprefab Crate {\n    param origin: vec3 = vec3(0.0, 4.0, 0.0);\n\n    position: origin;\n    mesh: Box {};\n    body: Dynamic { mass: 1.0; };\n    collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };\n\n    fixed_update(dt: f32) {\n        if self.position.y < -10.0 {\n            destroy(self);\n        }\n    }\n}\n\nscene Demo {\n    camera Main {\n        position: vec3(0.0, 4.0, 12.0);\n        target: vec3(0.0, 1.0, 0.0);\n    }\n\n    entity Floor {\n        position: vec3(0.0, -0.5, 0.0);\n        mesh: Box { size: vec3(10.0, 1.0, 10.0); };\n        body: Static {};\n        collider: BoxCollider { size: vec3(10.0, 1.0, 10.0); };\n    }\n\n    on key_down(Key.C) {\n        spawn(Crate { origin: vec3(0.0, 6.0, 0.0); });\n    }\n}\n"
+      "title": "Timers, tagged sprites, spawn and destroy",
+      "source": "// Spawn tagged sprites, expire them, and start timers once in init.\nprefab Spark {\n    tag: \"spark\";\n    mesh: Plane {};\n    material: Sprite { columns: 1.0; rows: 1.0 };\n    state age: f32 = 0.0;\n    update(dt: f32) {\n        age += dt;\n        if age > 1.0 {\n            destroy(self);\n        }\n    }\n}\n\nscene Demo {\n    camera Main {\n        position: vec3(0.0, 0.0, 6.0);\n    }\n    init() {\n        every(0.5) {\n            spawn(Spark {});\n        }\n        after(10.0) {\n            for spark in tagged(\"spark\") {\n                destroy(spark);\n            }\n        }\n    }\n}\n"
     },
     {
       "title": "Prefabs and prefab instances",
       "source": "// A prefab is a reusable entity with params; `entity Name: Prefab { param: value; }` makes one.\nprefab Crate {\n    param origin: vec3 = vec3(0.0, 0.5, 0.0);\n    param tint: color = #5b8def;\n\n    position: origin;\n    mesh: Box {};\n    material: Pbr { base_color: tint; };\n}\n\nscene Demo {\n    camera Main {\n        position: vec3(0.0, 3.0, 8.0);\n        target: vec3(0.0, 0.5, 0.0);\n    }\n\n    entity Left: Crate {\n        origin: vec3(-1.5, 0.5, 0.0);\n    }\n\n    entity Right: Crate {\n        origin: vec3(1.5, 0.5, 0.0);\n        tint: #ff8a3d;\n    }\n}\n"
     },
     {
-      "title": "Animate an entity in update",
-      "source": "// `update(dt)` runs every frame; assign to `self.rotation` to turn the entity.\nscene Demo {\n    state speed: f32 = 0.7;\n\n    camera Main {\n        position: vec3(0.0, 2.0, 5.0);\n        target: vec3(0.0, 0.5, 0.0);\n    }\n\n    entity Cube {\n        mesh: Box {};\n        position: vec3(0.0, 0.5, 0.0);\n\n        update(dt: f32) {\n            self.rotation *= quat.axis_angle(vec3(0.0, 1.0, 0.0), speed * dt);\n        }\n    }\n}\n"
+      "title": "Physics bodies and collision events",
+      "source": "// A dynamic body falls onto a static one; `on collision_enter(other)` needs a collider on its host.\nscene Demo {\n    state hits: i32 = 0;\n\n    camera Main {\n        position: vec3(0.0, 3.0, 9.0);\n        target: vec3(0.0, 1.0, 0.0);\n    }\n\n    entity Floor {\n        position: vec3(0.0, -0.5, 0.0);\n        mesh: Box { size: vec3(8.0, 1.0, 8.0); };\n        body: Static {};\n        collider: BoxCollider { size: vec3(8.0, 1.0, 8.0); };\n    }\n\n    entity Ball {\n        position: vec3(0.0, 4.0, 0.0);\n        mesh: Sphere { radius: 0.5; };\n        body: Dynamic { mass: 1.0; };\n        collider: SphereCollider { radius: 0.5; restitution: 0.6; };\n\n        on collision_enter(other: entity_ref) {\n            hits += 1;\n        }\n    }\n}\n"
     },
     {
-      "title": "React to a key press",
-      "source": "// `on key_down(Key.Space)` runs when the key goes down; handlers may assign scene state.\nscene Demo {\n    state speed: f32 = 0.7;\n\n    camera Main {\n        position: vec3(0.0, 2.0, 5.0);\n        target: vec3(0.0, 0.5, 0.0);\n    }\n\n    entity Cube {\n        mesh: Box {};\n\n        update(dt: f32) {\n            self.rotation *= quat.axis_angle(vec3(0.0, 1.0, 0.0), speed * dt);\n        }\n    }\n\n    on key_down(Key.Space) {\n        speed = -speed;\n    }\n}\n"
+      "title": "Animate an entity in update",
+      "source": "// `update(dt)` runs every frame; assign to `self.rotation` to turn the entity.\nscene Demo {\n    state speed: f32 = 0.7;\n\n    camera Main {\n        position: vec3(0.0, 2.0, 5.0);\n        target: vec3(0.0, 0.5, 0.0);\n    }\n\n    entity Cube {\n        mesh: Box {};\n        position: vec3(0.0, 0.5, 0.0);\n\n        update(dt: f32) {\n            self.rotation *= quat.axis_angle(vec3(0.0, 1.0, 0.0), speed * dt);\n        }\n    }\n}\n"
     }
   ],
   "diagnosticsGuide": "`mtek check --format json` prints one JSON report; each diagnostic has code, severity, title, message, source (file, startByte, endByte, startLine, startColumn, endLine, endColumn), expected and actual (when relevant), related, notes, suggestedEdits and phase. Fix errors in report order, apply a suggestedEdit only when it is present (they are validated), and never delete the feature a diagnostic is about."

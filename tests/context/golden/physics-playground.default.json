@@ -48,6 +48,7 @@
       "event:collision_exit",
       "event:key_down",
       "event:key_up",
+      "event:message",
       "event:pointer_down",
       "event:pointer_move",
       "event:pointer_up",
@@ -92,6 +93,9 @@
       "function:first_tagged",
       "function:floor",
       "function:fract",
+      "function:gamepad.axis",
+      "function:gamepad.button",
+      "function:gamepad.connected",
       "function:go_to",
       "function:has_tag",
       "function:hud.button",
@@ -119,6 +123,8 @@
       "function:mix",
       "function:nearest_tagged",
       "function:normalize",
+      "function:overlap_boxes",
+      "function:overlap_spheres",
       "function:particle_count",
       "function:pause",
       "function:paused",
@@ -146,6 +152,8 @@
       "function:sampler.nearest_repeat",
       "function:saturate",
       "function:save",
+      "function:screen_to_world",
+      "function:send",
       "function:set_camera",
       "function:set_muted",
       "function:set_volume",
@@ -163,6 +171,7 @@
       "function:texture.white",
       "function:transpose",
       "function:trunc",
+      "function:world_to_screen",
       "method:glb_asset.material",
       "method:glb_asset.material_base_color",
       "method:glb_asset.material_metallic",
@@ -177,6 +186,7 @@
       "namespace:color",
       "namespace:easing",
       "namespace:frame",
+      "namespace:gamepad",
       "namespace:hud",
       "namespace:lighting",
       "namespace:mat4",
@@ -387,7 +397,7 @@
       "type": "i32",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 53
+      "line": 54
     },
     {
       "name": "Playground.spawned",
@@ -395,7 +405,7 @@
       "type": "i32",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 55
+      "line": 56
     },
     {
       "name": "Playground.Main",
@@ -403,7 +413,7 @@
       "type": "Camera",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 57
+      "line": 58
     },
     {
       "name": "Playground.Sun",
@@ -411,7 +421,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 65
+      "line": 66
     },
     {
       "name": "Playground.Floor",
@@ -419,7 +429,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 71
+      "line": 72
     },
     {
       "name": "Playground.First",
@@ -427,7 +437,7 @@
       "type": "entity: Crate",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 80
+      "line": 81
     },
     {
       "name": "Playground.Zone",
@@ -435,7 +445,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 87
+      "line": 88
     },
     {
       "name": "Playground.ZoneMarker",
@@ -443,7 +453,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 107
+      "line": 108
     },
     {
       "name": "Playground.Meter",
@@ -451,7 +461,7 @@
       "type": "entity",
       "doc": "",
       "file": "src/main.mtek",
-      "line": 115
+      "line": 116
     }
   ],
   "schemaGuide": "A field line reads `name: type = default [flags]`; R required, W writable, B bindable, C construction-only.",
@@ -497,7 +507,7 @@
         "scale: vec3 = vec3(1.0, 1.0, 1.0) [WB]",
         "visible: bool = true [WB]",
         "mesh: mesh [C]",
-        "material: material = Unlit {} [C]",
+        "material: material = Unlit {} [W]",
         "light: light [C]",
         "body: body [C]",
         "collider: collider [C]",
@@ -550,16 +560,16 @@
       "source": "// A dynamic body falls onto a static one; `on collision_enter(other)` needs a collider on its host.\nscene Demo {\n    state hits: i32 = 0;\n\n    camera Main {\n        position: vec3(0.0, 3.0, 9.0);\n        target: vec3(0.0, 1.0, 0.0);\n    }\n\n    entity Floor {\n        position: vec3(0.0, -0.5, 0.0);\n        mesh: Box { size: vec3(8.0, 1.0, 8.0); };\n        body: Static {};\n        collider: BoxCollider { size: vec3(8.0, 1.0, 8.0); };\n    }\n\n    entity Ball {\n        position: vec3(0.0, 4.0, 0.0);\n        mesh: Sphere { radius: 0.5; };\n        body: Dynamic { mass: 1.0; };\n        collider: SphereCollider { radius: 0.5; restitution: 0.6; };\n\n        on collision_enter(other: entity_ref) {\n            hits += 1;\n        }\n    }\n}\n"
     },
     {
-      "title": "Spawn and destroy entities",
-      "source": "// `spawn(Prefab { params })` creates an entity from a handler or update; `destroy(self)` removes one.\nprefab Crate {\n    param origin: vec3 = vec3(0.0, 4.0, 0.0);\n\n    position: origin;\n    mesh: Box {};\n    body: Dynamic { mass: 1.0; };\n    collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };\n\n    fixed_update(dt: f32) {\n        if self.position.y < -10.0 {\n            destroy(self);\n        }\n    }\n}\n\nscene Demo {\n    camera Main {\n        position: vec3(0.0, 4.0, 12.0);\n        target: vec3(0.0, 1.0, 0.0);\n    }\n\n    entity Floor {\n        position: vec3(0.0, -0.5, 0.0);\n        mesh: Box { size: vec3(10.0, 1.0, 10.0); };\n        body: Static {};\n        collider: BoxCollider { size: vec3(10.0, 1.0, 10.0); };\n    }\n\n    on key_down(Key.C) {\n        spawn(Crate { origin: vec3(0.0, 6.0, 0.0); });\n    }\n}\n"
-    },
-    {
       "title": "Lights and the Pbr material",
       "source": "// Lights are entity fields; `Pbr` is the physically based built-in material.\nscene Demo {\n    ambient_color: #ffffff;\n    ambient_intensity: 0.1;\n\n    camera Main {\n        position: vec3(0.0, 2.0, 5.0);\n        target: vec3(0.0, 0.5, 0.0);\n    }\n\n    entity Sun {\n        rotation: quat.euler(-0.9, 0.4, 0.0);\n        light: DirectionalLight { color: #fff4e0; intensity: 3.0; };\n    }\n\n    entity Ball {\n        mesh: Sphere { radius: 0.6; };\n        position: vec3(0.0, 0.6, 0.0);\n        material: Pbr { base_color: #b04a2f; metallic: 0.2; roughness: 0.4; };\n    }\n}\n"
     },
     {
-      "title": "React to a key press",
-      "source": "// `on key_down(Key.Space)` runs when the key goes down; handlers may assign scene state.\nscene Demo {\n    state speed: f32 = 0.7;\n\n    camera Main {\n        position: vec3(0.0, 2.0, 5.0);\n        target: vec3(0.0, 0.5, 0.0);\n    }\n\n    entity Cube {\n        mesh: Box {};\n\n        update(dt: f32) {\n            self.rotation *= quat.axis_angle(vec3(0.0, 1.0, 0.0), speed * dt);\n        }\n    }\n\n    on key_down(Key.Space) {\n        speed = -speed;\n    }\n}\n"
+      "title": "A HUD, pause menu, saved score and scene change",
+      "source": "// `on key_down(Key.Space)` runs when the key goes down; handlers may assign scene state.\nscene Demo {\n    state speed: f32 = 0.7;\n    state score: i32 = 0;\n    shared saved state best: i32 = 0;\n\n    init() {\n        after(30.0) {\n            go_to(Demo);\n        }\n    }\n\n    camera Main {\n        position: vec3(0.0, 2.0, 5.0);\n        target: vec3(0.0, 0.5, 0.0);\n    }\n\n    entity Cube {\n        mesh: Box {};\n\n        update(dt: f32) {\n            self.rotation *= quat.axis_angle(vec3(0.0, 1.0, 0.0), speed * dt);\n        }\n    }\n\n    on key_down(Key.Space) {\n        speed = -speed;\n        score += 1;\n        if score > best {\n            best = score;\n            save();\n        }\n    }\n\n    ui(dt: f32) {\n        hud.text(\"Best ${best}\", vec2(0.0, 0.8), 24.0, #ffffff, 0.5);\n        if paused() {\n            if hud.button(\"Resume\", vec2(0.0, 0.0), 24.0) {\n                resume();\n            }\n        } else if hud.button(\"Pause\", vec2(0.0, 0.0), 24.0) {\n            pause();\n        }\n    }\n\n    on key_down(Key.Enter) {\n        go_to(Demo);\n    }\n}\n"
+    },
+    {
+      "title": "Pointer events and arrays",
+      "source": "// `on pointer_down(event: PointerEvent)` receives a click; arrays have a fixed length and index with `[i]`.\nconst PALETTE: array<color, 3> = [#ff5a5f, #ffd166, #06d6a0];\n\nscene Demo {\n    state index: i32 = 0;\n    state tint: color = #ff5a5f;\n\n    camera Main {\n        position: vec3(0.0, 2.0, 5.0);\n        target: vec3(0.0, 0.5, 0.0);\n    }\n\n    entity Cube {\n        mesh: Box {};\n        material: Unlit { color: bind(tint); };\n    }\n\n    on pointer_down(event: PointerEvent) {\n        index = (index + 1) % 3;\n        tint = PALETTE[index];\n    }\n}\n"
     }
   ],
   "diagnosticsGuide": "`mtek check --format json` prints one JSON report; each diagnostic has code, severity, title, message, source (file, startByte, endByte, startLine, startColumn, endLine, endColumn), expected and actual (when relevant), related, notes, suggestedEdits and phase. Fix errors in report order, apply a suggestedEdit only when it is present (they are validated), and never delete the feature a diagnostic is about."

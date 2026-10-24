@@ -105,6 +105,7 @@ export const FORMS: readonly Form[] = [
     ["place/step:component", "assignment to a vector component"],
   ]),
   ...forms("behaviours", "spec/scenes.md sections 6 and 7", [
+    ["behavior/init", "`init` lifecycle function (runs once)"],
     ["behavior/update", "`update` lifecycle function"],
     ["behavior/fixedUpdate", "`fixed_update` lifecycle function"],
     ["behavior/ui", "`ui` lifecycle function (runs while paused)"],
@@ -260,6 +261,7 @@ export const IR_VARIANTS: Readonly<Record<string, string>> = {
   "ExprKind.Match": "match",
   "BodyTarget.Entity": "expr/body-target:entity",
   "BodyTarget.Ref": "expr/body-target:ref",
+  "BehaviorKind.Init": "behavior/init",
   "BehaviorKind.Update": "behavior/update",
   "BehaviorKind.FixedUpdate": "behavior/fixedUpdate",
   "BehaviorKind.Ui": "behavior/ui",

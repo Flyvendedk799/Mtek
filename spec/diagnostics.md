@@ -374,7 +374,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-w8203"></a>W8203 | too many HUD items | runtime: a frame drew more than 512 `hud` items; the rest of that frame is not shown (reported once per call site, decision 0134) |
 | <a id="mtek-w8204"></a>W8204 | font could not be loaded | the browser rejected an `asset.font` file when the HUD first used it; the text uses the default family (decision 0139) |
 | <a id="mtek-w8205"></a>W8205 | too many timers | runtime: a scene already has 4096 live timers, and the timer a call site tried to start is not started; reported once per call site (decision 0177) |
-| <a id="mtek-w8210"></a>W8210 | too many particles | runtime: more than 256 particles are alive in a frame; only the first 256 are drawn (reported once per scene run, decision 0173) |
+| <a id="mtek-w8210"></a>W8210 | too many particles | runtime: more than 4096 particles are alive in a frame; only the first 4096 are drawn (reported once per scene run, decision 0173) |
 | (E8105–E8199) | further physics runtime codes | reserved; added with the feature that needs them |
 
 ### 5.9 Project and internal (`9xxx`)

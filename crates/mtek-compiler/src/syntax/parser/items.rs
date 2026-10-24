@@ -246,7 +246,7 @@ impl Parser<'_> {
 
     /// `fn name(params) -> T { ... }` and `cpu fn ...`. `None` if the header is
     /// broken (its body, if any, has been parsed and dropped).
-    fn fn_decl(&mut self) -> Option<FnDecl> {
+    pub(super) fn fn_decl(&mut self) -> Option<FnDecl> {
         let start = self.span().start;
         let cpu = self.kind() == TokenKind::KwCpu;
         if cpu {

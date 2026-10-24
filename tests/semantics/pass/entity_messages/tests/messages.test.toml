@@ -1,0 +1,6 @@
+name = "named and queried references deliver messages to the receiving entity state"
+steps = [
+  { press = "Space" },
+  { step = 2, dt = 0.016 },
+  { expect_state = { observed = 2 } },
+]

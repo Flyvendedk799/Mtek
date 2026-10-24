@@ -1,0 +1,27 @@
+[
+  {
+    "code": "MTEK-E5081",
+    "file": "src/main.mtek",
+    "startByte": 67,
+    "endByte": 101,
+    "message": "`scene scope` cannot be read during initialisation, including through a function call.",
+    "related": [
+      {
+        "message": "the initialiser of the state 'value' runs during initialisation",
+        "file": "src/main.mtek",
+        "startByte": 36,
+        "endByte": 62
+      },
+      {
+        "message": "'the initialiser of the state 'value'' calls 'seed' here",
+        "file": "src/main.mtek",
+        "startByte": 55,
+        "endByte": 61
+      }
+    ],
+    "notes": [
+      "physics bodies are created after state and field initialisation and the first binding evaluation",
+      "help: read the body property in `update`, `fixed_update` or an event handler instead"
+    ]
+  }
+]

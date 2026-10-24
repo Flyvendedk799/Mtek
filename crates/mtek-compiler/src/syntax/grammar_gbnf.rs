@@ -33,7 +33,10 @@
 //! keyword `material` is a field name (decision 0023 item 1), a lone carriage
 //! return is never accepted (E0003), a `\u{…}` escape must name a Unicode
 //! scalar value (E0023), and `_` (a token of its own) cannot name a
-//! descriptor literal or a scene object (E1001). Everything else is the model as written; the
+//! descriptor literal or a scene object (E1001). As the parser does, match patterns
+//! admit postfix values for semantic E3204 diagnostics, a leading `match` selects
+//! the statement form, and string interpolation requires an expression on one
+//! quote-free line (decision 0188). Everything else is the model as written; the
 //! `[S: …]` restrictions are not expressed, so the grammar accepts programs
 //! the compiler then rejects with those codes. The grammar does not bound the
 //! length of the output: the caller enforces a maximum (the harness's
@@ -43,7 +46,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::fmt::Write as _;
 
 use super::grammar_model::{
-    ClassItem, Derivation, Expr, GrammarModel, Level, Production, Repeat, grammar,
+    Arm, ClassItem, Derivation, Expr, GrammarModel, Level, Production, Repeat, grammar,
 };
 
 /// The start rule of the exported grammar.
@@ -447,8 +450,19 @@ impl<'m> Translator<'m> {
             .filter(|p| p.level == Level::Syntactic)
             .collect();
         for production in syntactic.iter().filter(|p| p.derivation.is_none()) {
-            rules.insert(production.name.to_owned(), field_names(production)?);
+            rules.insert(production.name.to_owned(), parser_refinements(production)?);
             order.push(production.name.to_owned());
+        }
+        // The parser commits to MatchStmt when `match` starts a statement.
+        // Only the leading expression is restricted: RHS operands, arguments
+        // and parenthesised expressions may still contain MatchExpr.
+        let copies = without_at_start(&rules, "Expr", "MatchExpr", "StatementStart")?;
+        for (name, rhs) in copies {
+            order.push(name.clone());
+            rules.insert(name, rhs);
+        }
+        if let Some(Expr::Seq(items)) = rules.get_mut("SimpleStmt") {
+            items[0] = Expr::Ref("ExprStatementStart");
         }
         // The derived productions are expanded once every original is known;
         // their copies follow the originals.
@@ -943,6 +957,9 @@ impl<'m> Translator<'m> {
         let module = self
             .compile("Module", &Expr::Ref("Module"), Last::Punct, ALL_LASTS)?
             .ok_or("the module rule has no derivation")?;
+        let interpolation = self
+            .compile("interpolation", &Expr::Ref("Expr"), Last::Punct, ALL_LASTS)?
+            .ok_or("the interpolation expression has no derivation")?;
         while let Some(variant) = self.pending.pop() {
             let body = self.build_variant(&variant)?;
             self.variants.insert(variant, body);
@@ -957,7 +974,9 @@ impl<'m> Translator<'m> {
 
         let mut out = String::new();
         out.push_str(HEADER);
-        let rule = |name: &str, body: G, out: &mut String| {
+        let mut definitions = vec![("interpolation-expr".to_owned(), interpolation)];
+        let mut rule = |name: &str, body: G, out: &mut String| {
+            definitions.push((name.to_owned(), body.clone()));
             let mut text = String::new();
             print(&normalize(body), &mut text);
             let _ = writeln!(out, "{name} ::= {text}");
@@ -1034,6 +1053,15 @@ impl<'m> Translator<'m> {
         for (name, body) in lexical.identifiers()? {
             rule(&name, body, &mut out);
         }
+        // Interpolation is lexed on a single line, with no quote even inside
+        // a comment (decision 0133). Intersect the expression grammar with
+        // that character restriction, rather than allowing nested strings.
+        out.push_str("\n# Single-line, quote-free expression grammar for interpolation.\n");
+        for (name, body) in interpolation_rules(&definitions) {
+            let mut text = String::new();
+            print(&normalize(body), &mut text);
+            let _ = writeln!(out, "interp-{name} ::= {text}");
+        }
         Ok(out)
     }
 }
@@ -1057,8 +1085,11 @@ const HEADER: &str = "\
 # - Follows the compiler where it is stricter than the reference grammar: no
 #   lone carriage return, \\u{...} escapes name Unicode scalar values, `_`
 #   names no descriptor literal or scene object, and the keyword `material`
-#   is a field name (decision 0023). The [S: ...]
-#   restrictions of the reference grammar are not expressed: accepted text
+#   is a field name (decision 0023).
+# - A leading `match` selects MatchStmt; patterns accept postfix values for
+#   semantic checking. String interpolation contains an expression on one
+#   quote-free line (decision 0188); format specs remain semantic checks.
+# - The [S: ...] restrictions of the reference grammar are not expressed: accepted text
 #   still goes through the compiler.
 ";
 
@@ -1214,10 +1245,11 @@ fn leak(name: String) -> &'static str {
     Box::leak(name.into_boxed_str())
 }
 
-/// The model with the field names of decision 0023 item 1: the first
+/// Parser refinements: postfix pattern values and the field names of decision 0023.
+/// The first
 /// identifier of `FieldInit` and `DescField` and the identifier after `.` in
 /// `PostfixOp` are `field-name` (an identifier or `material`).
-fn field_names(production: &Production) -> Result<Expr, String> {
+fn parser_refinements(production: &Production) -> Result<Expr, String> {
     let rhs = production.rhs.clone();
     let rewritten = match production.name {
         "FieldInit" | "DescField" => match rhs {
@@ -1272,6 +1304,7 @@ fn field_names(production: &Production) -> Result<Expr, String> {
             }
             other => return Err(format!("SceneObject is not Ident Ident …: {other:?}")),
         },
+        "Pattern" => pattern_rhs(),
         _ => rhs,
     };
     Ok(rewritten)
@@ -1282,6 +1315,221 @@ const FIELD_NAME_REF: &str = FIELD_NAME;
 /// An identifier other than `_` (the trie with `_` among the excluded words).
 const NAMED: &str = "ident-not-underscore";
 const NAMED_REF: &str = NAMED;
+
+/// Copies only the non-nullable expression prefix. Tokens such as `(` and
+/// unary operators stop the rewrite; a match after one of them is legal.
+fn without_at_start(
+    rules: &BTreeMap<String, Expr>,
+    base: &str,
+    removed: &str,
+    suffix: &str,
+) -> Result<Vec<(String, Expr)>, String> {
+    fn rewrite(
+        expr: &Expr,
+        rules: &BTreeMap<String, Expr>,
+        removed: &str,
+        suffix: &str,
+        pending: &mut Vec<String>,
+    ) -> Option<Expr> {
+        match expr {
+            Expr::Ref(name) if *name == removed => None,
+            Expr::Ref(name) if rules.contains_key(*name) => {
+                pending.push((*name).to_owned());
+                Some(Expr::Ref(leak(format!("{name}{suffix}"))))
+            }
+            Expr::Seq(items) if !items.is_empty() => {
+                let mut copy = items.clone();
+                copy[0] = rewrite(&items[0], rules, removed, suffix, pending)?;
+                Some(Expr::Seq(copy))
+            }
+            Expr::Alt(arms) => {
+                let arms: Vec<_> = arms
+                    .iter()
+                    .filter_map(|arm| {
+                        rewrite(&arm.expr, rules, removed, suffix, pending).map(|expr| Arm {
+                            expr,
+                            line_break: arm.line_break,
+                        })
+                    })
+                    .collect();
+                (!arms.is_empty()).then_some(Expr::Alt(arms))
+            }
+            Expr::Group(inner) => rewrite(inner, rules, removed, suffix, pending)
+                .map(|copy| Expr::Group(Box::new(copy))),
+            _ => Some(expr.clone()),
+        }
+    }
+    let mut pending = vec![base.to_owned()];
+    let mut copies = BTreeMap::new();
+    while let Some(name) = pending.pop() {
+        let copy_name = format!("{name}{suffix}");
+        if copies.contains_key(&copy_name) {
+            continue;
+        }
+        let rhs = rules.get(&name).ok_or_else(|| format!("no rule {name}"))?;
+        let copy = rewrite(rhs, rules, removed, suffix, &mut pending)
+            .ok_or_else(|| format!("no leading alternative remains for {name}"))?;
+        copies.insert(copy_name, copy);
+    }
+    Ok(copies.into_iter().collect())
+}
+
+/// The parser accepts postfix pattern values so the type checker can report
+/// E3204 for e.g. `Menu`, `3` or `self.material`, without syntax cascades.
+fn pattern_rhs() -> Expr {
+    let choice = |items: Vec<Expr>| {
+        Expr::Alt(
+            items
+                .into_iter()
+                .map(|expr| Arm {
+                    expr,
+                    line_break: false,
+                })
+                .collect(),
+        )
+    };
+    let postfix = Expr::Repeat(Box::new(Expr::Ref("PostfixOp")), Repeat::ZeroOrMore);
+    choice(vec![
+        Expr::Literal("_"),
+        Expr::Seq(vec![
+            Expr::Literal("_"),
+            Expr::Literal("."),
+            Expr::Ref(FIELD_NAME_REF),
+            postfix.clone(),
+        ]),
+        Expr::Seq(vec![
+            choice(vec![
+                Expr::Ref("Int"),
+                Expr::Ref("Float"),
+                Expr::Ref("String"),
+                Expr::Ref("Color"),
+                Expr::Ref("Bool"),
+                Expr::Literal("self"),
+                Expr::Ref(NAMED_REF),
+                Expr::Seq(vec![
+                    Expr::Literal("("),
+                    Expr::Ref("Expr"),
+                    Expr::Literal(")"),
+                ]),
+            ]),
+            postfix,
+        ]),
+    ])
+}
+
+/// Intersect generated rules with the interpolation scanner's character
+/// domain. Dead alternatives (notably String) are removed by productivity,
+/// so no undefined or nonterminating rules are emitted.
+fn interpolation_rules(definitions: &[(String, G)]) -> Vec<(String, G)> {
+    fn restrict(g: &G, productive: Option<&BTreeSet<String>>) -> Option<G> {
+        match g {
+            G::Empty => Some(G::Empty),
+            G::Lit(s) => (!s.contains(['"', '\r', '\n'])).then(|| g.clone()),
+            G::Class { negated, ranges } => {
+                let mut allowed = if *negated {
+                    subtract_ranges(&[(0, 0x10ffff)], ranges)
+                } else {
+                    ranges.clone()
+                };
+                allowed = subtract_ranges(&allowed, &[(10, 10), (13, 13), (34, 34)]);
+                (!allowed.is_empty()).then(|| class(&allowed))
+            }
+            G::Sym(name) => {
+                if productive.is_some_and(|known| !known.contains(name)) {
+                    return None;
+                }
+                Some(sym(&format!("interp-{name}")))
+            }
+            G::Seq(items) => items
+                .iter()
+                .map(|item| restrict(item, productive))
+                .collect::<Option<Vec<_>>>()
+                .map(seq),
+            G::Alt(items) => alt(items
+                .iter()
+                .filter_map(|item| restrict(item, productive))
+                .collect()),
+            G::Rep(inner, repeat) => match restrict(inner, productive) {
+                Some(inner) => Some(G::Rep(Box::new(inner), *repeat)),
+                None if *repeat != Repeat::OneOrMore => Some(G::Empty),
+                None => None,
+            },
+            G::Times(inner, min, max) => match restrict(inner, productive) {
+                Some(inner) => Some(G::Times(Box::new(inner), *min, *max)),
+                None if *min == 0 => Some(G::Empty),
+                None => None,
+            },
+        }
+    }
+    let mut productive = BTreeSet::new();
+    loop {
+        let before = productive.len();
+        for (name, body) in definitions {
+            if restrict(body, Some(&productive)).is_some() {
+                productive.insert(name.clone());
+            }
+        }
+        if before == productive.len() {
+            break;
+        }
+    }
+    let restricted: BTreeMap<_, _> = definitions
+        .iter()
+        .filter_map(|(name, body)| {
+            restrict(body, Some(&productive)).map(|body| (name.clone(), body))
+        })
+        .collect();
+    fn references(g: &G, names: &mut Vec<String>) {
+        match g {
+            G::Sym(name) => names.push(name.trim_start_matches("interp-").to_owned()),
+            G::Seq(items) | G::Alt(items) => items.iter().for_each(|g| references(g, names)),
+            G::Rep(inner, _) | G::Times(inner, _, _) => references(inner, names),
+            _ => {}
+        }
+    }
+    let mut pending = vec!["interpolation-expr".to_owned()];
+    let mut used = BTreeSet::new();
+    while let Some(name) = pending.pop() {
+        if !used.insert(name.clone()) {
+            continue;
+        }
+        if let Some(body) = restricted.get(&name) {
+            references(body, &mut pending);
+        }
+    }
+    restricted
+        .into_iter()
+        .filter(|(name, _)| used.contains(name))
+        .collect()
+}
+
+fn subtract_ranges(ranges: &[(u32, u32)], remove: &[(u32, u32)]) -> Vec<(u32, u32)> {
+    let mut out = Vec::new();
+    for &(start, end) in ranges {
+        let mut pieces = vec![(start, end)];
+        for &(lo, hi) in remove {
+            pieces = pieces
+                .into_iter()
+                .flat_map(|(a, b)| {
+                    let mut next = Vec::new();
+                    if hi < a || lo > b {
+                        next.push((a, b));
+                    } else {
+                        if a < lo {
+                            next.push((a, lo - 1));
+                        }
+                        if hi < b {
+                            next.push((hi + 1, b));
+                        }
+                    }
+                    next
+                })
+                .collect();
+        }
+        out.extend(pieces);
+    }
+    out
+}
 
 // ----- lexical productions ----------------------------------------------------------
 
@@ -1339,6 +1587,65 @@ impl Lexical<'_> {
             }
             let production = self.production(name)?;
             let mut body = translate(&production.rhs, name)?;
+            if name == "String" {
+                // A dollar is text unless immediately followed by `{`. These
+                // states prevent the plain-text alternative swallowing `${`.
+                let regular = G::Class {
+                    negated: true,
+                    ranges: vec![(10, 10), (13, 13), (34, 34), (36, 36), (92, 92)],
+                };
+                let after_dollar = G::Class {
+                    negated: true,
+                    ranges: vec![(10, 10), (13, 13), (34, 34), (36, 36), (92, 92), (123, 123)],
+                };
+                body = seq(vec![lit("\""), sym("string-tail")]);
+                out.push((
+                    "string-tail".to_owned(),
+                    alt(vec![
+                        lit("\""),
+                        seq(vec![regular, sym("string-tail")]),
+                        seq(vec![sym("escape"), sym("string-tail")]),
+                        seq(vec![lit("$"), sym("string-dollar")]),
+                    ])
+                    .unwrap_or(G::Empty),
+                ));
+                out.push((
+                    "string-dollar".to_owned(),
+                    alt(vec![
+                        lit("\""),
+                        seq(vec![lit("$"), sym("string-dollar")]),
+                        seq(vec![after_dollar, sym("string-tail")]),
+                        seq(vec![sym("escape"), sym("string-tail")]),
+                        seq(vec![
+                            lit("{"),
+                            sym("interp-interpolation-expr"),
+                            sym("interp-ws"),
+                            G::Rep(
+                                Box::new(seq(vec![lit(":"), sym("interpolation-format")])),
+                                Repeat::Optional,
+                            ),
+                            lit("}"),
+                            sym("string-tail"),
+                        ]),
+                    ])
+                    .unwrap_or(G::Empty),
+                ));
+                // The format spec is checked semantically (E3502), not by
+                // lexing/parsing. It can be empty or malformed but braces balance.
+                out.push((
+                    "interpolation-format".to_owned(),
+                    star(
+                        alt(vec![
+                            G::Class {
+                                negated: true,
+                                ranges: vec![(10, 10), (13, 13), (34, 34), (123, 123), (125, 125)],
+                            },
+                            seq(vec![lit("{"), sym("interpolation-format"), lit("}")]),
+                        ])
+                        .unwrap_or(G::Empty),
+                    ),
+                ));
+            }
             if name == "Escape" {
                 body = scalar_escape(body)?;
                 out.push(("unicode-scalar".to_owned(), unicode_scalar()));
@@ -1347,7 +1654,7 @@ impl Lexical<'_> {
             let mut refs = BTreeSet::new();
             lexical_refs(&production.rhs, &mut refs);
             for r in refs {
-                if r != "Ident" {
+                if r != "Ident" && !(name == "String" && r == "StringChar") {
                     wanted.push(r);
                 }
             }

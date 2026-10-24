@@ -58,6 +58,7 @@ Types: `bool i32 u32 f32 string vec2 vec3 vec4 mat4 quat color mesh material tex
 | `hud` | `text(content: string, at: vec2[, size: f32[, tint: color[, align: f32[, font: font]]]])`, `pixel_font() -> font` (decision 0139), `rect(at: vec2, size: vec2, tint: color[, align: f32])`, `button(label: string, at: vec2[, size: f32]) -> bool` — CPU, handlers and lifecycle functions only; immediate mode, drawn over the canvas (`spec/hud.md`, decision 0134) |
 | `easing` | `in_quad(t: f32) -> f32`, `out_quad(t: f32) -> f32`, `in_out_quad(t: f32) -> f32`, `in_cubic(t: f32) -> f32`, `out_cubic(t: f32) -> f32`, `in_out_cubic(t: f32) -> f32`, `in_out_sine(t: f32) -> f32`, `out_back(t: f32) -> f32`, `out_elastic(t: f32) -> f32`, `out_bounce(t: f32) -> f32` — CPU, also allowed in `bind`; `t` clamped to 0..1, result binary32 (`spec/tweens.md`, decision 0135) |
 | `Key` | enum constants (§5.2) |
+| `gamepad` | `connected(pad: i32) -> bool`, `axis(pad: i32, axis: i32) -> f32`, `button(pad: i32, button: i32) -> f32` — CPU, one sample per input phase; missing controls are neutral (decision 0186) |
 
 ## 3. Schemas
 
@@ -79,7 +80,7 @@ Flags: **R** required · **W** writable from handlers · **B** bindable · **C**
 | `scale` | `vec3` (> 0) | `vec3(1.0)` | W B (C if the entity has a body) |
 | `visible` | `bool` | `true` | W B |
 | `mesh` | mesh schema | — | C |
-| `material` | material instance | `Unlit {}` when `mesh` is set | C (params W B) |
+| `material` | material instance | `Unlit {}` when `mesh` is set | W for compatible value-only replacements (params W B) |
 | `light` | light schema | — | C (fields W B) |
 | `body` | body schema | — | C |
 | `collider` | collider schema | — | C |
@@ -146,6 +147,7 @@ Generated meshes with identical descriptor values are shared (immutable), keyed 
 | `key_down`, `key_up` | filter: `Key` constant | scene, entity, prefab | M3 |
 | `pointer_down`, `pointer_up`, `pointer_move` | parameter `(name: PointerEvent)` | scene, entity, prefab | M3 |
 | `collision_enter`, `collision_exit` | parameter `(name: entity_ref)` | entity, prefab with collider | M5 |
+| `message` | parameter `(value: string)` | entity, prefab | M1 |
 
 ### 5.2 `Key` (maps to `KeyboardEvent.code`)
 | Mtek | `code` |
@@ -200,6 +202,11 @@ Notation: `T` ranges over `f32, vec2, vec3, vec4` (component-wise), `I` over `i3
 | `is_pointer_down` | `(i32) → bool` | cpu | — | button 0, 1 or 2 was down; any other button is false (decision 0153) |
 | `spawn` | `(prefab descriptor) → entity_ref` | cpu (handlers only) | — | the argument is a prefab literal `Prefab { param: value; }`; params may be run-time values (decision 0064) |
 | `destroy` | `(entity_ref) → ()` | cpu (handlers only) | — | `E5030` for a named entity |
+| `send` | `(entity_ref, string) → ()` | cpu (handlers only) | — | queues an entity message until the next unpaused update (decision 0180) |
+| `overlap_spheres` | `(vec3, f32, vec3, f32) → bool` | cpu | — | world-space spheres, touching included; no physics required (decision 0181) |
+| `overlap_boxes` | `(vec3, vec3, quat, vec3, vec3, quat) → bool` | cpu | — | oriented boxes with full world-space sizes; no physics required |
+| `screen_to_world` | `(vec2, f32) → vec3` | cpu | — | canvas NDC onto a world Z plane; parallel rays return NaN x/y (decision 0182) |
+| `world_to_screen` | `(vec3) → vec2` | cpu | — | world point to canvas NDC through the active camera |
 | `play` | `(sound) → ()`, `(sound, f32) → ()`, `(sound, f32, f32) → ()` | cpu (handlers only) | — | volume `0..4` (default 1), pitch `0.0625..16` (default 1); `spec/audio.md` §3 (decision 0130) |
 | `play_at` | `(sound, vec3) → ()`, `(sound, vec3, f32) → ()` | cpu (handlers only) | — | positional: distance attenuation and panning from the active camera; `spec/audio.md` §3 |
 | `play_music` | `(sound) → ()`, `(sound, f32) → ()` | cpu (handlers only) | — | loops; replaces the music that plays |

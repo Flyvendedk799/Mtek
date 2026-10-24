@@ -34,6 +34,7 @@ import { MtekMountError, makeRuntimeDiagnostic, type MtekDiagnostic } from "../d
 import { acquireDevice, type AcquiredDevice } from "../gpu/device.js";
 import { ResourceRegistry } from "../gpu/registry.js";
 import { MountedApp, RECOVERY_ATTEMPTS } from "./app.js";
+import { GamepadInput } from "../input/gamepad.js";
 import { defaultEnvironment, isWithinBase, restrictToBase, type FetchResponseLike, type HostEnvironment } from "./environment.js";
 import { DiagnosticSink, abiFailureToDiagnostic, mountError, resolveSpan } from "./failures.js";
 import { FailureOverlay } from "./overlay.js";
@@ -384,6 +385,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
     const seed = options.seed === undefined ? (Math.floor(environment.now() * 1000) ^ Date.now()) >>> 0 : Math.trunc(options.seed) >>> 0;
     const generator = new Xoshiro128(seed);
     const input = new InputState();
+    const gamepads = new GamepadInput(() => environment.getGamepads?.() ?? []);
     // `go_to`, `reset`, `pause`, `resume`, `paused` (decisions 0140, 0141, 0143): the application connects the link.
     const game = new GameLink();
     // Saved state and settings (decisions 0145, 0146): the page's localStorage unless the host chose; never under test.
@@ -456,6 +458,8 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
             })(),
           });
     const services: CpuServices = {
+      gamepads,
+      aspectRatio: () => surface === undefined ? 1 : surface.size.width / Math.max(1, surface.size.height),
       game,
       random: () => generator.nextF32(),
       isKeyDown: (code) => input.isKeyDown(code),

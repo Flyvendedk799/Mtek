@@ -189,6 +189,7 @@ impl Printer<'_> {
     fn scene_member(&mut self, member: &SceneMember) -> Doc {
         match member {
             SceneMember::Field(field) => self.field_init(field),
+            SceneMember::Function(function) => self.fn_decl(function),
             SceneMember::Const(decl) => self.const_decl(decl),
             SceneMember::State(decl) => self.state_decl(decl),
             SceneMember::Object(object) => self.scene_object(object),

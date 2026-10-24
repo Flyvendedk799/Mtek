@@ -1,6 +1,7 @@
 // A sprite, a fade and a bob (decisions 0135, 0138, 0139, 0153, 0170).
-// The sheet is the built-in white texture, so the cells look the same; the bob,
-// the fade and the pointer marker are what you see.
+// Eight frames of a bursting star; regenerate the sheet with scripts/make-sprite-sheet.mjs.
+const SHEET = asset.texture("../textures/star.png");
+
 scene Pop {
     clear_color: #101418;
     state t: f32 = 0.0;
@@ -15,6 +16,7 @@ scene Pop {
         rotation: quat.euler(1.5707964, 0.0, 0.0);
         position: bind(vec3(0.0, easing.in_out_sine(fract(t)) * 0.6, 0.0));
         material: Sprite {
+            sheet: SHEET;
             columns: 4.0;
             rows: 2.0;
             cell: bind(t * 8.0);
@@ -26,6 +28,9 @@ scene Pop {
 
     update(dt: f32) {
         t = t + dt;
+    }
+
+    ui(dt: f32) {
         hud.text("SPRITE", vec2(0.0, 0.72), 32.0, #ffffff, 0.5, hud.pixel_font());
         let at = pointer_position();
         hud.rect(at, vec2(14.0, 14.0), #ffd040, 0.5);

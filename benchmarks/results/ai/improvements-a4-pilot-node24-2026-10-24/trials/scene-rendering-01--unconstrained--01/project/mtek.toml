@@ -1,0 +1,5 @@
+[project]
+name = "scene-rendering-01"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Demo"

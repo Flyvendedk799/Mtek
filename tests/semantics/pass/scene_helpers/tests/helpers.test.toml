@@ -1,0 +1,8 @@
+name = "scene helpers capture state and keep same-named helpers in separate scenes"
+steps = [
+  { step = 1, dt = 0.016 },
+  { expect_state = { count = 4 } },
+  { press = "Space" },
+  { step = 1, dt = 0.016 },
+  { expect_state = { count = 0 } },
+]

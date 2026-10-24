@@ -802,6 +802,9 @@ impl FnLowering<'_, '_> {
     fn root_read(&self, root: &ir::PlaceRoot) -> Result<Expr, String> {
         Ok(match root {
             ir::PlaceRoot::State { owner, name, .. } => self.state_path(*owner, name),
+            ir::PlaceRoot::EntityField { entity, field, .. } if field == "material" => {
+                rt("copy", vec![self.entity(*entity).member("mat").member("p")])
+            }
             ir::PlaceRoot::EntityField { entity, field, .. } => self.entity(*entity).member(field),
             ir::PlaceRoot::CameraField { camera, field, .. } => camera_record(camera).member(field),
             ir::PlaceRoot::InstanceParam { entity, param, .. } => {
@@ -825,6 +828,9 @@ impl FnLowering<'_, '_> {
                     .call(vec![self.entity(*entity), Expr::string(field), value]),
                 "visible" => Expr::ident("ctx")
                     .member("setVisible")
+                    .call(vec![self.entity(*entity), value]),
+                "material" => Expr::ident("ctx")
+                    .member("setMaterial")
                     .call(vec![self.entity(*entity), value]),
                 other => return Err(format!("a write to the entity field '{other}'")),
             },
@@ -1209,6 +1215,9 @@ impl FnLowering<'_, '_> {
                 return Err(format!(
                     "a literal of the prefab '{prefab}' outside the argument of spawn"
                 ));
+            }
+            ir::ExprKind::EntityField { entity, field } if field == "material" => {
+                rt("copy", vec![self.entity(*entity).member("mat").member("p")])
             }
             ir::ExprKind::EntityField { entity, field } => self.entity(*entity).member(field),
             ir::ExprKind::RefField { target, field } => {
@@ -2009,6 +2018,7 @@ fn behavior_function(
     span_id: &mut dyn FnMut(Span) -> Result<u32, String>,
 ) -> Result<Vec<Stmt>, String> {
     let label = match &behavior.kind {
+        ir::BehaviorKind::Init => "init".to_owned(),
         ir::BehaviorKind::Update => "update".to_owned(),
         ir::BehaviorKind::FixedUpdate => "fixed_update".to_owned(),
         ir::BehaviorKind::Ui => "ui".to_owned(),
@@ -2056,6 +2066,7 @@ fn behavior_function(
 /// The base of the name of the function that implements `behavior` (`update`, `on_key_down`).
 fn behavior_base(behavior: &ir::Behavior) -> String {
     match &behavior.kind {
+        ir::BehaviorKind::Init => "init".to_owned(),
         ir::BehaviorKind::Update => "update".to_owned(),
         ir::BehaviorKind::FixedUpdate => "fixed_update".to_owned(),
         ir::BehaviorKind::Ui => "ui".to_owned(),
@@ -2167,6 +2178,12 @@ pub fn emit_behaviors(
             ir::Owner::Entity { index } => Some(index),
         };
         match (&behavior.kind, owner_index) {
+            (ir::BehaviorKind::Init, owner) => emitted.events.push(EmittedEvent {
+                event: "init".to_owned(),
+                key: None,
+                owner,
+                function: name,
+            }),
             (ir::BehaviorKind::Update, None) => emitted.update = Some(name),
             (ir::BehaviorKind::FixedUpdate, None) => emitted.fixed_update = Some(name),
             (ir::BehaviorKind::Ui, None) => emitted.ui = Some(name),
@@ -2247,6 +2264,12 @@ pub fn emit_prefab_behaviors(
             &mut *span_id,
         )?);
         match &behavior.kind {
+            ir::BehaviorKind::Init => emitted.events.push(EmittedEvent {
+                event: "init".to_owned(),
+                key: None,
+                owner: None,
+                function: name,
+            }),
             ir::BehaviorKind::Update => emitted.update = Some(name),
             ir::BehaviorKind::FixedUpdate => emitted.fixed_update = Some(name),
             ir::BehaviorKind::Ui => return Err("a prefab has a `ui` lifecycle function".to_owned()),
@@ -2279,6 +2302,14 @@ pub fn emit_prefab_behaviors(
 fn tag_member(function: &str) -> Option<&'static str> {
     Some(match function {
         "count_tagged" => "countTagged",
+        "send" => "send",
+        "overlap_spheres" => "overlapSpheres",
+        "overlap_boxes" => "overlapBoxes",
+        "screen_to_world" => "screenToWorld",
+        "world_to_screen" => "worldToScreen",
+        "gamepad.axis" => "gamepadAxis",
+        "gamepad.button" => "gamepadButton",
+        "gamepad.connected" => "gamepadConnected",
         "first_tagged" => "firstTagged",
         "nearest_tagged" => "nearestTagged",
         "has_tag" => "hasTag",

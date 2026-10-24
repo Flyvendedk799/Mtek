@@ -117,6 +117,8 @@ export const INPUT_EVENTS = ["key_down", "key_up", "pointer_down", "pointer_up",
 
 /** The events the physics step delivers (`spec/physics.md` section 6, decision 0066). */
 export const COLLISION_EVENTS = ["collision_enter", "collision_exit"] as const satisfies readonly MtekEventName[];
+/** Entity-local queued events; init hooks are a separate internal lifecycle entry. */
+export const ENTITY_EVENTS = ["message"] as const satisfies readonly MtekEventName[];
 
 /** Joins the prefabs of the manifest to their code in the program module (checked by `checkProgram`). */
 export function buildPrefabRuntimes(prefabs: readonly ResolvedPrefab[], code: ReadonlyMap<string, MtekProgramPrefab>): Map<string, PrefabRuntime> {
@@ -132,7 +134,7 @@ export function buildPrefabRuntimes(prefabs: readonly ResolvedPrefab[], code: Re
         return { binding, compute };
       });
     const handlers = new Map<MtekEventName, readonly MtekPrefabEventHandler[]>();
-    for (const event of [...INPUT_EVENTS, ...COLLISION_EVENTS]) {
+    for (const event of [...INPUT_EVENTS, ...COLLISION_EVENTS, ...ENTITY_EVENTS, "init"] as const) {
       const declared = program.events[event];
       // Declaration order is kept: several handlers of one event run in the order they were written.
       if (declared !== undefined && declared.length > 0) handlers.set(event, declared);
@@ -357,7 +359,7 @@ export class DynamicEntities {
       for (const request of spawned) created.push(this.create(request.ref, request.payload));
       this.liveList = [...this.liveList, ...created];
       // Announced once the list is consistent, in spawn order.
-      for (const entity of created) this.announce(entity);
+      for (const entity of created) this.announce(entity, true);
     }
     this.versionCounter += 1;
   }
@@ -466,8 +468,11 @@ export class DynamicEntities {
     return entity;
   }
 
-  private announce(entity: DynamicEntity): void {
+  private announce(entity: DynamicEntity, initialize = false): void {
     for (const listener of this.listeners) listener.created?.(entity);
+    if (initialize) {
+      for (const handler of entity.prefab.program.events.init ?? []) handler.fn(this.options.host.ctx, entity.record, undefined);
+    }
   }
 
   /** Releases everything the removed entity `ref` owns. */

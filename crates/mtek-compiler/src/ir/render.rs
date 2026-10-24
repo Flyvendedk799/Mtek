@@ -580,6 +580,7 @@ impl Tree<'_> {
     fn behavior(&mut self, depth: usize, behavior: &Behavior) {
         let location = self.location(behavior.span);
         let what = match &behavior.kind {
+            BehaviorKind::Init => "init".to_owned(),
             BehaviorKind::Update => "update".to_owned(),
             BehaviorKind::FixedUpdate => "fixed_update".to_owned(),
             BehaviorKind::Ui => "ui".to_owned(),

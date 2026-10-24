@@ -715,11 +715,11 @@ fn e1030_a_function_body_inside_a_loop_is_not_in_the_loop() {
 
 #[test]
 fn e1040_a_member_that_does_not_belong() {
-    let (dump, found) = flawed("scene S { fn helper() {} state a: f32 = 1.0; }");
+    let (dump, found) = flawed("scene S { entity E { fn helper() {} state a: f32 = 1.0; } }");
     assert_eq!(found, [d(Code::E1040, "fn")]);
     assert_eq!(
         dump,
-        "(module (scene S (error) (state a (type f32) (lit float 1.0))))"
+        "(module (scene S (entity E (error) (state a (type f32) (lit float 1.0)))))"
     );
     assert_eq!(
         diags("scene S { entity E { param p: f32; } }"),
@@ -796,7 +796,7 @@ fn e1040_in_a_material() {
 #[test]
 fn e1040_still_reports_what_is_wrong_inside_the_dropped_member() {
     assert_eq!(
-        diags("scene S { fn helper( { } }"),
+        diags("scene S { entity E { fn helper( { } } }"),
         [d(Code::E1040, "fn"), d(Code::E1002, "{")]
     );
 }
@@ -1141,7 +1141,8 @@ import { A } from \"./a.mtek\";
 
 #[test]
 fn an_indented_declaration_in_a_body_is_not_a_missing_brace() {
-    // It is a declaration in the wrong place (`spec/scenes.md` 2).
+    // Scene helpers are valid; a function nested in a function remains misplaced.
+    assert!(diags("scene S {\n/* comment */\ncpu fn helper() {}\n}\n").is_empty());
     assert_eq!(
         diags(
             "scene S {
@@ -1149,7 +1150,7 @@ fn an_indented_declaration_in_a_body_is_not_a_missing_brace() {
 }
 "
         ),
-        [d(Code::E1040, "fn")]
+        []
     );
     assert_eq!(
         diags(

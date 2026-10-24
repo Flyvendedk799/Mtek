@@ -24,7 +24,7 @@ scene Score {
     ambient_intensity: 0.4;
 
     state points: i32 = 0;
-    state best: i32 = 0;
+    saved state best: i32 = 0;
     state elapsed: f32 = 0.0;
     // How long the cube still pops after a point, in seconds (PULSE down to 0).
     state pulse: f32 = 0.0;
@@ -45,6 +45,11 @@ scene Score {
         scale: bind(vec3(1.0, 1.0, 1.0) * (1.4 - 0.4 * easing.out_back(1.0 - pulse / PULSE)));
         mesh: Box { size: vec3(1.0, 1.0, 1.0) };
         material: Pbr { base_color: #4fa3ff; roughness: 0.35 };
+    }
+
+    cpu fn reset_round() {
+        points = 0;
+        elapsed = 0.0;
     }
 
     update(dt: f32) {
@@ -71,8 +76,7 @@ scene Score {
                 resume();
             }
             if hud.button("Reset", vec2(0.0, -0.05), 24.0) {
-                points = 0;
-                elapsed = 0.0;
+                reset_round();
                 resume();
             }
         } else if left <= 0.0 {
@@ -81,26 +85,26 @@ scene Score {
             hud.text("GAME OVER", vec2(0.0, 0.3), 56.0, #ff5050, 0.5);
             hud.text("${points} points", vec2(0.0, 0.12), 28.0, #ffffff, 0.5);
             if hud.button("Play again", vec2(0.0, -0.05), 24.0) {
-                points = 0;
-                elapsed = 0.0;
+                reset_round();
             }
         } else if hud.button("Reset", vec2(0.0, -0.85)) {
-            points = 0;
-            elapsed = 0.0;
+            reset_round();
         }
     }
 
     on key_down(Key.Space) {
         if elapsed < ROUND && !paused() {
             points += 1;
-            best = max(best, points);
+            if points > best {
+                best = points;
+                save();
+            }
             pulse = PULSE;
         }
     }
 
     on key_down(Key.R) {
-        points = 0;
-        elapsed = 0.0;
+        reset_round();
     }
 
     on key_down(Key.Escape) {

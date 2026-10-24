@@ -11,14 +11,22 @@
     ]
   },
   {
-    "code": "MTEK-E1040",
+    "code": "MTEK-E4002",
     "file": "src/main.mtek",
     "startByte": 193,
-    "endByte": 195,
-    "message": "`fn` declarations cannot appear in a scene.",
+    "endByte": 248,
+    "message": "The pure function 'twice' reads `scene scope`, which is ambient CPU state.",
+    "related": [
+      {
+        "message": "'twice' is declared `fn` here",
+        "file": "src/main.mtek",
+        "startByte": 196,
+        "endByte": 201
+      }
+    ],
     "notes": [
-      "help: a scene contains fields (`name: value;`), `const`, `state`, scene objects (`camera Name { ... }`), `entity` declarations, lifecycle functions and `on` handlers",
-      "help: declare functions at the top level of the file, outside the scene, entity or block, and call them from there"
+      "a pure function computes only on its parameters, locals and constants",
+      "help: pass the value as a parameter; use `cpu fn` only when the helper needs to read CPU state"
     ]
   }
 ]

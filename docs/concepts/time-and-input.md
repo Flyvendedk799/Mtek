@@ -35,6 +35,7 @@ The events of this build:
 | `on collision_exit(...)` | one parameter of type `entity_ref` | entity, prefab (with a collider) | The entity's collider stopped touching another entity's collider; the parameter is the other entity. |
 | `on key_down(...)` | a constant `Key` as filter | scene, entity, prefab | Delivered when the filtered key transitions to pressed. Auto-repeat is ignored. |
 | `on key_up(...)` | a constant `Key` as filter | scene, entity, prefab | Delivered when the filtered key is released. |
+| `on message(...)` | one parameter of type `string` | entity, prefab | A queued string sent to this entity; delivered before its next unpaused update. |
 | `on pointer_down(...)` | one parameter of type `PointerEvent` | scene, entity, prefab | A pointer button was pressed on the canvas. |
 | `on pointer_move(...)` | one parameter of type `PointerEvent` | scene, entity, prefab | The pointer moved; at most once per frame with the latest position. |
 | `on pointer_up(...)` | one parameter of type `PointerEvent` | scene, entity, prefab | A pointer button was released. |

@@ -1,6 +1,14 @@
 // `on key_down(Key.Space)` runs when the key goes down; handlers may assign scene state.
 scene Demo {
     state speed: f32 = 0.7;
+    state score: i32 = 0;
+    shared saved state best: i32 = 0;
+
+    init() {
+        after(30.0) {
+            go_to(Demo);
+        }
+    }
 
     camera Main {
         position: vec3(0.0, 2.0, 5.0);
@@ -17,5 +25,25 @@ scene Demo {
 
     on key_down(Key.Space) {
         speed = -speed;
+        score += 1;
+        if score > best {
+            best = score;
+            save();
+        }
+    }
+
+    ui(dt: f32) {
+        hud.text("Best ${best}", vec2(0.0, 0.8), 24.0, #ffffff, 0.5);
+        if paused() {
+            if hud.button("Resume", vec2(0.0, 0.0), 24.0) {
+                resume();
+            }
+        } else if hud.button("Pause", vec2(0.0, 0.0), 24.0) {
+            pause();
+        }
+    }
+
+    on key_down(Key.Enter) {
+        go_to(Demo);
     }
 }

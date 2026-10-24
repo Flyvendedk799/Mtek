@@ -1,0 +1,11 @@
+scene Demo {
+    camera Main {}
+    state horizontal: f32 = 0.0;
+    state fire: bool = false;
+    update(dt: f32) {
+        if gamepad.connected(0) {
+            horizontal = gamepad.axis(0, 0);
+            fire = gamepad.button(0, 0) > 0.5;
+        }
+    }
+}

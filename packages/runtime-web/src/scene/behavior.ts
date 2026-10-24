@@ -26,6 +26,16 @@ function pointerEvent(x: number, y: number, button: number): unknown {
 }
 
 export class Behaviors {
+  private initialized = false;
+
+  /** User init hooks see restored saved/shared state, before the first input or update. */
+  private start(): void {
+    if (this.initialized) return;
+    this.initialized = true;
+    for (const handler of [...(this.scene.events.init ?? [])].sort((a, b) => a.owner - b.owner)) {
+      handler.fn(this.world.ctx, this.owner(handler.owner), undefined);
+    }
+  }
   private readonly handlers = new Map<MtekEventName, readonly MtekEventHandler[]>();
   /** The collision handlers of the named entities: by event, then by static index, each list in declaration order. */
   private readonly collisionHandlers = new Map<MtekEventName, ReadonlyMap<number, readonly MtekEventHandler[]>>();
@@ -39,7 +49,7 @@ export class Behaviors {
       // Array.prototype.sort is stable: handlers of one owner keep their declaration order.
       if (declared !== undefined && declared.length > 0) this.handlers.set(event, [...declared].sort((a, b) => a.owner - b.owner));
     }
-    for (const event of COLLISION_EVENTS) {
+    for (const event of [...COLLISION_EVENTS, "message"] as const) {
       const byOwner = new Map<number, MtekEventHandler[]>();
       for (const handler of scene.events[event] ?? []) {
         const list = byOwner.get(handler.owner);
@@ -82,6 +92,7 @@ export class Behaviors {
 
   /** Phase 1: delivers `transitions` in the order given; for each, the scene's handlers, the entities', the spawned ones'. */
   dispatchInput(transitions: readonly InputTransition[]): void {
+    this.start();
     for (const transition of transitions) {
       const list = this.handlers.get(transition.kind);
       const argument = "code" in transition ? undefined : pointerEvent(transition.x, transition.y, transition.button);
@@ -103,16 +114,31 @@ export class Behaviors {
 
   /** Phase 2 (c): `fixed_update`, the scene's then the entities', then the spawned entities'. */
   fixedUpdate(step: number): void {
+    this.start();
     this.run(this.scene.fixedUpdate, this.scene.entityFixedUpdate, step, false);
   }
 
   /** Phase 3: `update(dt)`, the scene's then the entities', then the spawned entities'. */
   update(delta: number): void {
+    this.start();
+    for (const message of this.world.messages.splice(0)) {
+      if (!this.world.dynamic.alive(message.target)) continue;
+      const slot = message.target.slot;
+      if (slot < this.world.entities.length) {
+        const record = this.entity(slot);
+        for (const handler of this.collisionHandlers.get("message")?.get(slot) ?? []) handler.fn(this.world.ctx, record, message.value);
+      } else {
+        const entity = this.world.dynamic.entityAt(slot);
+        if (entity === undefined) continue;
+        for (const handler of entity.prefab.handlers.get("message") ?? []) handler.fn(this.world.ctx, entity.record, message.value);
+      }
+    }
     this.run(this.scene.update, this.scene.entityUpdate, delta, true);
   }
 
   /** Phase 3, after `update` and also while the game is paused: the scene's `ui(dt)` (decision 0175). */
   ui(delta: number): void {
+    this.start();
     this.scene.ui?.(this.world.ctx, Math.fround(delta));
   }
 

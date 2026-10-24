@@ -33,6 +33,8 @@ export type MtekProgramWriters = Readonly<Record<string, MtekWriterEntry>>;
 export type MtekProgramFunctions = Readonly<Record<string, (ctx: MtekContext, ...args: never[]) => unknown>>;
 
 export type MtekEventName =
+  | "init"
+  | "message"
   | "key_down"
   | "key_up"
   | "pointer_down"

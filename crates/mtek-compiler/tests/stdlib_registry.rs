@@ -91,7 +91,7 @@ fn schema_rows() -> Vec<Row> {
             "material",
             "material",
             Some("Unlit {}"),
-            "C",
+            "W",
             None,
         ),
         ("Entity", "light", "light", None, "C", None),
@@ -711,11 +711,23 @@ fn every_namespace_member_of_section_2_is_present() {
     let namespaces: Vec<&str> = registry.namespaces.iter().map(|n| n.name).collect();
     for name in [
         "quat", "mat4", "color", "texture", "sampler", "frame", "asset", "lighting", "hud",
-        "easing",
+        "easing", "gamepad",
     ] {
         assert!(namespaces.contains(&name), "missing namespace {name}");
     }
-    assert_eq!(namespaces.len(), 10);
+    assert_eq!(namespaces.len(), 11);
+    for (member, expected) in [
+        ("axis", "(i32, i32) -> f32"),
+        ("button", "(i32, i32) -> f32"),
+        ("connected", "(i32) -> bool"),
+    ] {
+        let NamespaceMember::Function(function) =
+            registry.namespace_member("gamepad", member).unwrap()
+        else {
+            panic!("not a function")
+        };
+        assert_eq!(shape(&function.signatures[0]), expected);
+    }
     // Member counts: nothing beyond the specification.
     let count = |name: &str| registry.namespace(name).map_or(0, |n| n.members.len());
     assert_eq!(
@@ -857,7 +869,11 @@ fn glb_asset_accessors_follow_the_assets_specification() {
 #[test]
 fn events_follow_section_5_1() {
     let registry = registry();
-    assert_eq!(registry.events.len(), 7);
+    assert_eq!(registry.events.len(), 8);
+    assert_eq!(
+        registry.event("message").unwrap().form,
+        EventForm::Parameter(TypeRef::String)
+    );
     for name in ["key_down", "key_up"] {
         let event = registry.event(name).unwrap();
         assert_eq!(event.form, EventForm::Filter(TypeRef::Enum("Key")));
@@ -1081,6 +1097,26 @@ fn intrinsic_rows() -> Vec<IntrinsicRow> {
     rows.push(("save", &["() -> ()"], Domain::Cpu, false));
     rows.push(("load", &["() -> bool"], Domain::Cpu, false));
     rows.push(("clear_saved", &["() -> ()"], Domain::Cpu, false));
+    rows.push(("send", &["(entity_ref, string) -> ()"], Domain::Cpu, false));
+    rows.push((
+        "overlap_spheres",
+        &["(vec3, f32, vec3, f32) -> bool"],
+        Domain::Cpu,
+        false,
+    ));
+    rows.push((
+        "overlap_boxes",
+        &["(vec3, vec3, quat, vec3, vec3, quat) -> bool"],
+        Domain::Cpu,
+        false,
+    ));
+    rows.push((
+        "screen_to_world",
+        &["(vec2, f32) -> vec3"],
+        Domain::Cpu,
+        false,
+    ));
+    rows.push(("world_to_screen", &["(vec3) -> vec2"], Domain::Cpu, false));
     rows
 }
 
@@ -1315,7 +1351,12 @@ fn validation_reports_broken_tables() {
         .position(|s| s.name == "Sphere")
         .unwrap();
     broken.schemas[sphere].fields[0].default = Some(ConstValue::F32(-1.0));
-    broken.events[0].hosts = &[];
+    broken
+        .events
+        .iter_mut()
+        .find(|event| event.name == "key_down")
+        .unwrap()
+        .hosts = &[];
     // Rules, range codes and the active-object selection must name real fields and codes
     // of the scene range.
     broken.schemas[sphere].rules.push(FieldRule::Requires {

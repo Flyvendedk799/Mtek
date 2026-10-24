@@ -754,7 +754,7 @@ fn declared_fields(
 const STATEMENT_KEYWORDS: &[&str] = &[
     "let", "var", "const", "if", "for", "while", "return", "break", "continue", "match",
 ];
-const LIFECYCLE_KEYWORDS: &[&str] = &["update", "fixed_update", "ui"];
+const LIFECYCLE_KEYWORDS: &[&str] = &["init", "update", "fixed_update", "ui"];
 
 fn keywords(words: &[&str]) -> Vec<Candidate> {
     words
@@ -787,7 +787,7 @@ fn member_start_candidates(
                     .map(|k| Candidate::new(k.keyword, CompletionItemKind::KEYWORD, 8).doc(k.doc)),
             );
             out.extend(keywords(&[
-                "const", "state", "shared", "saved", "setting", "entity", "on",
+                "const", "state", "shared", "saved", "setting", "entity", "on", "cpu", "fn",
             ]));
             out.extend(keywords(LIFECYCLE_KEYWORDS));
             out

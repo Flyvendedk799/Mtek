@@ -348,6 +348,20 @@ describe("misuse by generated code is an internal error", () => {
 });
 
 describe("lifecycle listeners (the physics hook)", () => {
+  it("runs user init after creation listeners and does not repeat it on hot reload", () => {
+    const code = (_symbol: string, log: string[]): Partial<MtekProgramPrefab> => ({
+      events: { init: [{ owner: "self", fn: () => { log.push("user-init"); } }] },
+    });
+    const first = harness({ code });
+    first.dynamic.addListener({ created: () => { first.log.push("physics-ready"); } });
+    first.dynamic.spawn("src/main.mtek::A", { n: 1 }, 0);
+    first.dynamic.flush();
+    expect(first.log.indexOf("physics-ready")).toBeLessThan(first.log.indexOf("user-init"));
+    expect(first.log.filter(item => item === "user-init")).toHaveLength(1);
+    const reloaded = harness({ code });
+    reloaded.dynamic.restoreFrom(first.dynamic, () => undefined);
+    expect(reloaded.log).not.toContain("user-init");
+  });
   it("hears each creation, in spawn order, after init and the whole flush's list is consistent, and each removal before the release", () => {
     const { dynamic, log } = harness();
     const heard: string[] = [];

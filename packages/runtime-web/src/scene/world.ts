@@ -12,6 +12,9 @@
  * compiler gates them by milestone), so reaching one is a bug.
  */
 import type { MtekManifest } from "../abi/manifest-types.js";
+import { overlapSpheres, overlapBoxes } from "../math/overlap.js";
+import { screenToWorld, worldToScreen } from "../math/screen.js";
+import type { Vec2 } from "../math/types.js";
 import {
   RUNTIME_DIAGNOSTIC_CATALOGUE,
   makeRuntimeDiagnostic,
@@ -57,6 +60,7 @@ export const CONTEXT_MEMBERS = [
   "setTransform",
   "setVisible",
   "setParam",
+  "setMaterial",
   "setCamera",
   "setCameraOn",
   "cameraOn",
@@ -87,6 +91,14 @@ export const CONTEXT_MEMBERS = [
   "choose",
   "shuffle",
   "refField",
+  "send",
+  "overlapSpheres",
+  "overlapBoxes",
+  "screenToWorld",
+  "worldToScreen",
+  "gamepadAxis",
+  "gamepadButton",
+  "gamepadConnected",
   "print",
   "goTo",
   "reset",
@@ -176,6 +188,9 @@ export interface ParamSink {
 
 /** The CPU intrinsics generated code reaches through `ctx` (`spec/runtime-abi.md` section 4.2). */
 export interface CpuServices {
+  readonly gamepads?: import("../input/gamepad.js").GamepadInput;
+  /** Current render-target aspect ratio, also used by the renderer. Defaults to 1 in isolated worlds. */
+  aspectRatio?(): number;
   /** `random()`: an f32 in `[0, 1)`. */
   random(): number;
   /** `is_key_down`: the delivered key state. `code` is a DOM `KeyboardEvent.code`. */
@@ -577,7 +592,19 @@ export class World {
       chance: (p: unknown): boolean => services.random() < num(p, "chance"),
       choose: (items: unknown): unknown => chooseItem(services.random(), items),
       shuffle: (items: unknown): unknown => shuffled(items, () => services.random()),
+      setMaterial: (entity: unknown, value: unknown): void => this.setMaterial(entity, value),
       refField: (ref: unknown, field: unknown): unknown => this.refField(ref, field),
+      overlapSpheres,
+      overlapBoxes,
+      gamepadAxis: (pad: number, axis: number): number => services.gamepads?.axis(pad, axis) ?? 0,
+      gamepadButton: (pad: number, button: number): number => services.gamepads?.button(pad, button) ?? 0,
+      gamepadConnected: (pad: number): boolean => services.gamepads?.connected(pad) ?? false,
+      screenToWorld: (point: Vec2, z: number): Vec3 => screenToWorld(this.camera, services.aspectRatio?.() ?? 1, point, z),
+      worldToScreen: (point: Vec3): Vec2 => worldToScreen(this.camera, services.aspectRatio?.() ?? 1, point),
+      send: (ref: unknown, message: unknown): void => {
+        if (typeof message !== "string") throw new RuntimeInternalError("ctx.send expected a string message.");
+        if (this.dynamic.alive(ref)) this.messages.push({ target: ref as EntityRef, value: message });
+      },
       isKeyDown: (code: unknown): boolean => {
         if (typeof code !== "string") throw new RuntimeInternalError(`ctx.isKeyDown got ${describeValue(code)}; expected a DOM key code.`);
         return services.isKeyDown(code);
@@ -1033,6 +1060,19 @@ export class World {
     this.setParam(record, param, value);
   }
 
+  private setMaterial(entity: unknown, value: unknown): void {
+    const index = this.indexOf(entity, "setMaterial");
+    const material = this.resolvedBySlot[index]?.instance?.material;
+    if (material === undefined || material.resources.length > 0 || typeof value !== "object" || value === null) {
+      throw new RuntimeInternalError("ctx.setMaterial requires a value-only material instance.");
+    }
+    const values = value as Record<string, unknown>;
+    for (const param of material.params) {
+      if (paramValueProblem(param.type, values[param.name]) !== undefined) throw new RuntimeInternalError(`ctx.setMaterial has an invalid '${param.name}'.`);
+    }
+    for (const param of material.params) this.setParam(entity, param.name, values[param.name]);
+  }
+
   private setParam(entity: unknown, name: unknown, value: unknown): void {
     const index = this.indexOf(entity, "setParam");
     const record = this.records[index];
@@ -1298,6 +1338,8 @@ export class World {
    * A reference that is not alive reads as zero: position and scale `(0, 0, 0)`, rotation identity,
    * `visible` false. The live fields are the same objects the named-entity reads return.
    */
+  readonly messages: { target: EntityRef; value: string }[] = [];
+
   refField(ref: unknown, field: unknown): unknown {
     const name = typeof field === "string" ? field : "";
     const zero = (): unknown => {

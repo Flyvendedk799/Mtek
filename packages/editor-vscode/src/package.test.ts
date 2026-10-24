@@ -27,6 +27,7 @@ const manifest = JSON.parse(readFileSync(join(PACKAGE_ROOT, "package.json"), "ut
 };
 
 function packagedFiles(): string[] {
+  requireBundle();
   const vsce = join(dirname(require.resolve("@vscode/vsce/package.json")), "vsce");
   const out = execFileSync(process.execPath, [vsce, "ls", "--no-dependencies"], {
     cwd: PACKAGE_ROOT,
@@ -37,6 +38,12 @@ function packagedFiles(): string[] {
     .map((line) => line.trim().replaceAll("\\", "/"))
     .filter((line) => line !== "")
     .sort();
+}
+
+function requireBundle(): void {
+  if (!existsSync(join(PACKAGE_ROOT, "dist", "extension.cjs"))) {
+    throw new Error("Extension package tests need dist/extension.cjs: run `npm run build` first.");
+  }
 }
 
 describe("the extension package", () => {
@@ -97,6 +104,7 @@ describe("the extension package", () => {
   });
 
   it("is a bundle that needs nothing but `vscode` and Node (the .vsix carries no node_modules)", () => {
+    requireBundle();
     const bundle = readFileSync(join(PACKAGE_ROOT, "dist", "extension.cjs"), "utf8");
     const required = new Set([...bundle.matchAll(/\brequire\("([^"]+)"\)/g)].map((m) => m[1] ?? ""));
     const allowed = new Set(["vscode", ...builtinModules, ...builtinModules.map((m) => `node:${m}`)]);

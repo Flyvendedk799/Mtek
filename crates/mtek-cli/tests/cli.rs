@@ -563,15 +563,16 @@ fn a_failed_build_leaves_the_previous_output_untouched() {
     );
 }
 
-/// The runtime files as `npm run build` left them.
+/// The runtime files selected by `build.rs`, including its fresh-clone prebuilt fallback.
 #[cfg(mtek_runtime_embedded)]
 fn runtime_file(name: &str) -> Vec<u8> {
-    fs::read(
-        Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../packages/runtime-web/dist")
-            .join(name),
-    )
-    .unwrap()
+    let path = Path::new(env!("MTEK_RUNTIME_ORIGIN_DIR")).join(name);
+    fs::read(&path).unwrap_or_else(|error| {
+        panic!(
+            "cannot read embedded runtime source {}: {error}; run `npm run build` first",
+            path.display()
+        )
+    })
 }
 
 #[cfg(mtek_runtime_embedded)]
@@ -597,7 +598,7 @@ fn build_writes_the_output_tree_with_the_embedded_runtime() {
         .find(|k| k.starts_with("runtime.") && k.ends_with(".js"))
         .unwrap()
         .clone();
-    assert_eq!(built[&runtime_name], runtime_file("runtime.js"));
+    assert_eq!(built[&runtime_name], runtime_file("runtime.min.js"));
     assert_eq!(built["runtime.d.ts"], runtime_file("runtime.d.ts"));
 
     // The codegen golden was built with the stub runtime: everything else is identical, except
@@ -650,7 +651,7 @@ fn a_release_build_has_no_overlay_code_and_dev_and_test_builds_do() {
     let scratch = Scratch::new("build-flavours");
     let project = scratch.project("app", VALID);
     for (mode, flavour) in [
-        ("release", "runtime.js"),
+        ("release", "runtime.min.js"),
         ("dev", "runtime.dev.js"),
         ("test", "runtime.dev.js"),
     ] {

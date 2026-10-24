@@ -3,9 +3,9 @@ const PROP = asset.glb("../models/prop.glb");
 
 scene Stage {
     clear_color: #101418;
+    // Test probes: fixtures observe camera switching and particle emission.
     state view: i32 = 1;
     state sparks: i32 = 0;
-    state spin: f32 = 0.0;
 
     camera Main {
         position: vec3(0.0, 1.6, 4.5);
@@ -48,6 +48,5 @@ scene Stage {
 
     update(dt: f32) {
         sparks = particle_count();
-        spin = Prop.rotation.y;
     }
 }

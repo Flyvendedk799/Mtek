@@ -1,0 +1,4 @@
+scene Demo {
+    camera Main {}
+    init(dt: f32) {}
+}

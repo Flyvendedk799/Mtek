@@ -28,7 +28,7 @@ The fields of an entity, a camera and a light, and whether a field can be bound 
 | `clip` | `string` | none | fixed at construction |  | The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. It composes with the entity's own transform (decision 0174). |
 | `collider` | `collider` | none | fixed at construction |  | A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`. |
 | `light` | `light` | none | fixed at construction |  | A light component (`DirectionalLight`, `PointLight`). Its fields are writable and bindable as their schemas say. Named entities only. |
-| `material` | `material` | `Unlit {}` | fixed at construction |  | The material instance used to draw the mesh. The instance is construction-only; its parameters are writable and bindable. Requires `mesh`. |
+| `material` | `material` | `Unlit {}` | assignable |  | Material instance. Value-only instances can be replaced by the same material type; parameters are writable and bindable. Requires `mesh`. |
 | `mesh` | `mesh` | none | fixed at construction |  | The mesh drawn for this entity: a mesh descriptor (`Box`, `Sphere`, `Plane`) or an asset mesh. |
 | `particles` | `emitter` | none | fixed at construction |  | A particle emitter (decision 0155). Up to 64 particles live at once. They are drawn with this entity's mesh as camera-facing billboards, in the colour of its material. Without a mesh the particles are still counted. |
 | `position` | `vec3` | `vec3(0.0, 0.0, 0.0)` | assignable, bindable |  | Position local to the parent, in metres. |

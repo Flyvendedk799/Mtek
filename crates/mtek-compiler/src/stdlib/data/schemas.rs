@@ -184,8 +184,8 @@ fn objects() -> Vec<SchemaDef> {
             field(
                 "material",
                 TypeRef::Material,
-                C,
-                "The material instance used to draw the mesh. The instance is construction-only; its parameters are writable and bindable. Requires `mesh`.",
+                FieldFlags::WRITABLE,
+                "Material instance. Value-only instances can be replaced by the same material type; parameters are writable and bindable. Requires `mesh`.",
             )
             .default(ConstValue::EmptyDescriptor("Unlit"))
             .default_when_set("mesh"),

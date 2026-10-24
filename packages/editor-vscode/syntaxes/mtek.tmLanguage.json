@@ -120,6 +120,9 @@
       "include": "#value-frame"
     },
     {
+      "include": "#function-gamepad"
+    },
+    {
       "include": "#function-asset"
     },
     {
@@ -518,7 +521,7 @@
       }
     },
     "lifecycle": {
-      "match": "(?<![A-Za-z0-9_.])((?:fixed_update|update|ui))\\s*(?=\\()",
+      "match": "(?<![A-Za-z0-9_.])((?:fixed_update|update|init|ui))\\s*(?=\\()",
       "captures": {
         "1": {
           "name": "entity.name.function.lifecycle.mtek"
@@ -568,6 +571,20 @@
         },
         "3": {
           "name": "support.constant.builtin.mtek"
+        }
+      }
+    },
+    "function-gamepad": {
+      "match": "(?<![A-Za-z0-9_.])(gamepad)(\\.)((?:connected|button|axis))\\s*(?=\\()",
+      "captures": {
+        "1": {
+          "name": "support.class.namespace.mtek"
+        },
+        "2": {
+          "name": "punctuation.accessor.mtek"
+        },
+        "3": {
+          "name": "support.function.builtin.mtek"
         }
       }
     },
@@ -699,7 +716,7 @@
     },
     "namespace": {
       "name": "support.class.namespace.mtek",
-      "match": "(?<![A-Za-z0-9_.])(?:lighting|sampler|texture|easing|asset|color|frame|mat4|quat|hud)(?=\\s*\\.)"
+      "match": "(?<![A-Za-z0-9_.])(?:lighting|gamepad|sampler|texture|easing|asset|color|frame|mat4|quat|hud)(?=\\s*\\.)"
     },
     "enum": {
       "name": "support.type.enum.mtek",
@@ -707,7 +724,7 @@
     },
     "builtin-function": {
       "name": "support.function.builtin.mtek",
-      "match": "(?<![A-Za-z0-9_.])(?:pointer_position|is_pointer_down|destroy_tagged|nearest_tagged|particle_count|count_tagged|first_tagged|inverse_sqrt|key_released|random_range|clear_saved|is_key_down|key_pressed|play_music|random_int|set_camera|set_volume|smoothstep|stop_music|normalize|set_muted|transpose|distance|is_muted|saturate|degrees|destroy|has_tag|play_at|radians|reflect|shuffle|chance|choose|length|paused|random|resume|sample|tagged|alive|atan2|clamp|cross|floor|fract|go_to|pause|print|reset|round|spawn|trunc|acos|asin|atan|ceil|exp2|load|log2|play|save|sign|sqrt|step|abs|cos|dot|exp|log|max|min|mix|pow|sin|tan)\\s*(?=\\()"
+      "match": "(?<![A-Za-z0-9_.])(?:pointer_position|is_pointer_down|overlap_spheres|screen_to_world|world_to_screen|destroy_tagged|nearest_tagged|particle_count|overlap_boxes|count_tagged|first_tagged|inverse_sqrt|key_released|random_range|clear_saved|is_key_down|key_pressed|play_music|random_int|set_camera|set_volume|smoothstep|stop_music|normalize|set_muted|transpose|distance|is_muted|saturate|degrees|destroy|has_tag|play_at|radians|reflect|shuffle|chance|choose|length|paused|random|resume|sample|tagged|alive|atan2|clamp|cross|floor|fract|go_to|pause|print|reset|round|spawn|trunc|acos|asin|atan|ceil|exp2|load|log2|play|save|send|sign|sqrt|step|abs|cos|dot|exp|log|max|min|mix|pow|sin|tan)\\s*(?=\\()"
     },
     "builtin-type": {
       "name": "support.type.builtin.mtek",

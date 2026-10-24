@@ -228,6 +228,7 @@ impl Walker<'_> {
             for member in &decl.members {
                 match member {
                     SceneMember::Field(field) => w.field_init(field),
+                    SceneMember::Function(function) => w.fn_decl(function),
                     SceneMember::Const(decl) => w.const_decl(decl),
                     SceneMember::State(state) => w.state(state),
                     SceneMember::Object(object) => w.scene_object(object),

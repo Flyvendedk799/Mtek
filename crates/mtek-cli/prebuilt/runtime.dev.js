@@ -7989,6 +7989,133 @@ function copy(value) {
   return value;
 }
 
+// src/math/mat4.ts
+function at(a, i) {
+  let value = a[i];
+  if (value === void 0) throw new RangeError(`matrix index ${i} out of range`);
+  return value;
+}
+function identity() {
+  let m = new Float32Array(16);
+  return m[0] = 1, m[5] = 1, m[10] = 1, m[15] = 1, m;
+}
+function translation(v) {
+  let m = identity();
+  return m[12] = v.x, m[13] = v.y, m[14] = v.z, m;
+}
+function scaling(v) {
+  let m = new Float32Array(16);
+  return m[0] = v.x, m[5] = v.y, m[10] = v.z, m[15] = 1, m;
+}
+function transpose(m) {
+  let out = new Float32Array(16);
+  for (let row = 0; row < 4; row++)
+    for (let col = 0; col < 4; col++) out[row * 4 + col] = at(m, col * 4 + row);
+  return out;
+}
+function multiply(a, b) {
+  return multiplyInto(new Float32Array(16), a, b);
+}
+function multiplyInto(out, a, b) {
+  for (let col = 0; col < 4; col++)
+    for (let row = 0; row < 4; row++) {
+      let sum = 0;
+      for (let k = 0; k < 4; k++) sum += a[k * 4 + row] * b[col * 4 + k];
+      out[col * 4 + row] = sum;
+    }
+  return out;
+}
+function rotation(q) {
+  return rotationInto(new Float32Array(16), q);
+}
+function rotationInto(m, q) {
+  let { x, y, z, w } = q, xx = x * x, yy = y * y, zz = z * z, xy = x * y, xz = x * z, yz = y * z, wx = w * x, wy = w * y, wz = w * z;
+  return m[0] = 1 - 2 * (yy + zz), m[1] = 2 * (xy + wz), m[2] = 2 * (xz - wy), m[3] = 0, m[4] = 2 * (xy - wz), m[5] = 1 - 2 * (xx + zz), m[6] = 2 * (yz + wx), m[7] = 0, m[8] = 2 * (xz + wy), m[9] = 2 * (yz - wx), m[10] = 1 - 2 * (xx + yy), m[11] = 0, m[12] = 0, m[13] = 0, m[14] = 0, m[15] = 1, m;
+}
+function fromRotationTranslationScaleInto(out, scratch, rotationQuat, translationVec, scale) {
+  let r = rotationInto(scratch, rotationQuat), sx = scale.x, sy = scale.y, sz = scale.z;
+  return out[0] = r[0] * sx, out[1] = r[1] * sx, out[2] = r[2] * sx, out[3] = 0, out[4] = r[4] * sy, out[5] = r[5] * sy, out[6] = r[6] * sy, out[7] = 0, out[8] = r[8] * sz, out[9] = r[9] * sz, out[10] = r[10] * sz, out[11] = 0, out[12] = translationVec.x, out[13] = translationVec.y, out[14] = translationVec.z, out[15] = 1, out;
+}
+function perspective(fovY, aspect, near, far) {
+  let f = 1 / Math.tan(fovY / 2), m = new Float32Array(16);
+  return m[0] = f / aspect, m[5] = f, m[10] = far / (near - far), m[11] = -1, m[14] = near * far / (near - far), m;
+}
+function orthographic(height, aspect, near, far) {
+  let width = height * aspect, m = new Float32Array(16);
+  return m[0] = 2 / width, m[5] = 2 / height, m[10] = 1 / (near - far), m[14] = near / (near - far), m[15] = 1, m;
+}
+function lookAtRotation(position, target) {
+  let fx = target.x - position.x, fy = target.y - position.y, fz = target.z - position.z, fLength = Math.hypot(fx, fy, fz);
+  if (!(fLength > 0) || !Number.isFinite(fLength))
+    throw new RangeError("look-at needs distinct, finite position and target");
+  fx /= fLength, fy /= fLength, fz /= fLength;
+  let upIsMinusZ = Math.abs(fy) > 1 - 1e-6, ux0 = 0, uy0 = upIsMinusZ ? 0 : 1, uz0 = upIsMinusZ ? -1 : 0, rx = fy * uz0 - fz * uy0, ry = fz * ux0 - fx * uz0, rz = fx * uy0 - fy * ux0, rLength = Math.hypot(rx, ry, rz);
+  rx /= rLength, ry /= rLength, rz /= rLength;
+  let ux = ry * fz - rz * fy, uy = rz * fx - rx * fz, uz = rx * fy - ry * fx, m = new Float32Array(16);
+  return m[0] = rx, m[1] = ry, m[2] = rz, m[4] = ux, m[5] = uy, m[6] = uz, m[8] = -fx, m[9] = -fy, m[10] = -fz, m[15] = 1, m;
+}
+function viewFromRotation(position, r) {
+  return multiply(transpose(r), translation({ x: -position.x, y: -position.y, z: -position.z }));
+}
+function viewMatrix(position, orientation) {
+  let r = "target" in orientation ? lookAtRotation(position, orientation.target) : rotation(orientation.rotation);
+  return viewFromRotation(position, r);
+}
+function normalMatrixInto(out, offset, model) {
+  let a = at(model, 0), b = at(model, 4), c = at(model, 8), d = at(model, 1), e = at(model, 5), f = at(model, 9), g = at(model, 2), h = at(model, 6), i = at(model, 10), c00 = e * i - f * h, c01 = f * g - d * i, c02 = d * h - e * g, c10 = c * h - b * i, c11 = a * i - c * g, c12 = b * g - a * h, c20 = b * f - c * e, c21 = c * d - a * f, c22 = a * e - b * d, det = a * c00 + b * c01 + c * c02;
+  if (det === 0 || !Number.isFinite(det))
+    throw new RangeError("normal matrix of a singular transform is undefined");
+  let inv = 1 / det;
+  return out[offset] = c00 * inv, out[offset + 1] = c10 * inv, out[offset + 2] = c20 * inv, out[offset + 3] = 0, out[offset + 4] = c01 * inv, out[offset + 5] = c11 * inv, out[offset + 6] = c21 * inv, out[offset + 7] = 0, out[offset + 8] = c02 * inv, out[offset + 9] = c12 * inv, out[offset + 10] = c22 * inv, out[offset + 11] = 0, out[offset + 12] = 0, out[offset + 13] = 0, out[offset + 14] = 0, out[offset + 15] = 1, out;
+}
+
+// src/math/overlap.ts
+function dot(a, b) {
+  return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+function cross(a, b) {
+  return { x: a.y * b.z - a.z * b.y, y: a.z * b.x - a.x * b.z, z: a.x * b.y - a.y * b.x };
+}
+function valid(v) {
+  return Number.isFinite(v.x) && Number.isFinite(v.y) && Number.isFinite(v.z);
+}
+function overlapSpheres(a, radiusA, b, radiusB) {
+  if (!valid(a) || !valid(b) || !Number.isFinite(radiusA + radiusB) || radiusA < 0 || radiusB < 0) return !1;
+  let dx = a.x - b.x, dy = a.y - b.y, dz = a.z - b.z;
+  return dx * dx + dy * dy + dz * dz <= (radiusA + radiusB) ** 2;
+}
+function axes(q) {
+  let m = rotation(q);
+  return [0, 4, 8].map((i) => ({ x: m[i] ?? 0, y: m[i + 1] ?? 0, z: m[i + 2] ?? 0 }));
+}
+function overlapBoxes(a, sizeA, rotationA, b, sizeB, rotationB) {
+  if (![a, sizeA, b, sizeB].every(valid) || [sizeA, sizeB].some((s) => s.x < 0 || s.y < 0 || s.z < 0)) return !1;
+  let aa = axes(rotationA), bb = axes(rotationB), delta = { x: b.x - a.x, y: b.y - a.y, z: b.z - a.z }, extent = (basis, size, axis) => basis.reduce((sum, v, i) => sum + Math.abs(dot(v, axis)) * ([size.x, size.y, size.z][i] ?? 0) * 0.5, 0);
+  for (let axis of [...aa, ...bb, ...aa.flatMap((x) => bb.map((y) => cross(x, y)))])
+    if (!(dot(axis, axis) < 1e-12) && Math.abs(dot(delta, axis)) > extent(aa, sizeA, axis) + extent(bb, sizeB, axis))
+      return !1;
+  return !0;
+}
+
+// src/math/screen.ts
+function view(camera) {
+  return viewMatrix(camera.position, camera.target === null ? { rotation: camera.rotation } : { target: camera.target });
+}
+function screenToWorld(camera, aspect, point2, z) {
+  let v = view(camera), rotate = (x2, y2, localZ) => ({
+    x: (v[0] ?? 0) * x2 + (v[1] ?? 0) * y2 + (v[2] ?? 0) * localZ,
+    y: (v[4] ?? 0) * x2 + (v[5] ?? 0) * y2 + (v[6] ?? 0) * localZ,
+    z: (v[8] ?? 0) * x2 + (v[9] ?? 0) * y2 + (v[10] ?? 0) * localZ
+  }), p = camera.projection, half = p.kind === "perspective" ? Math.tan(p.fov_y / 2) : p.height / 2, x = point2.x * half * aspect, y = point2.y * half, offset = p.kind === "perspective" ? { x: 0, y: 0, z: 0 } : rotate(x, y, 0), direction = p.kind === "perspective" ? rotate(x, y, -1) : rotate(0, 0, -1), origin = { x: camera.position.x + offset.x, y: camera.position.y + offset.y, z: camera.position.z + offset.z };
+  if (Math.abs(direction.z) < 1e-8) return { x: NaN, y: NaN, z };
+  let t = (z - origin.z) / direction.z;
+  return { x: Math.fround(origin.x + t * direction.x), y: Math.fround(origin.y + t * direction.y), z };
+}
+function worldToScreen(camera, aspect, point2) {
+  let v = view(camera), component3 = (row) => (v[row] ?? 0) * point2.x + (v[4 + row] ?? 0) * point2.y + (v[8 + row] ?? 0) * point2.z + (v[12 + row] ?? 0), p = camera.projection, half = p.kind === "perspective" ? -component3(2) * Math.tan(p.fov_y / 2) : p.height / 2;
+  return { x: Math.fround(component3(0) / (half * aspect)), y: Math.fround(component3(1) / half) };
+}
+
 // src/audio/audio.ts
 var VOLUME_RANGE = [0, 4], PITCH_RANGE = [0.0625, 16];
 function browserAudioBackend() {
@@ -8207,12 +8334,12 @@ function relativeToListener(position, pose) {
   let d = [px - pose.position.x, py - pose.position.y, pz - pose.position.z], { x, y, z, w } = pose.rotation, right = [1 - 2 * (y * y + z * z), 2 * (x * y + w * z), 2 * (x * z - w * y)], up = [2 * (x * y - w * z), 1 - 2 * (x * x + z * z), 2 * (y * z + w * x)], forward = [-2 * (x * z + w * y), -2 * (y * z - w * x), -(1 - 2 * (x * x + y * y))];
   if (pose.target !== null) {
     let f = normalize([pose.target.x - pose.position.x, pose.target.y - pose.position.y, pose.target.z - pose.position.z]);
-    f !== void 0 && (forward = f, right = normalize(cross(f, [0, 1, 0])) ?? [1, 0, 0], up = cross(right, f));
+    f !== void 0 && (forward = f, right = normalize(cross2(f, [0, 1, 0])) ?? [1, 0, 0], up = cross2(right, f));
   }
-  let dot = (a, b) => (a[0] ?? 0) * (b[0] ?? 0) + (a[1] ?? 0) * (b[1] ?? 0) + (a[2] ?? 0) * (b[2] ?? 0);
-  return [dot(d, right), dot(d, up), -dot(d, forward)];
+  let dot2 = (a, b) => (a[0] ?? 0) * (b[0] ?? 0) + (a[1] ?? 0) * (b[1] ?? 0) + (a[2] ?? 0) * (b[2] ?? 0);
+  return [dot2(d, right), dot2(d, up), -dot2(d, forward)];
 }
-function cross(a, b) {
+function cross2(a, b) {
   return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 }
 function normalize(v) {
@@ -8931,86 +9058,6 @@ function set(style, name, value) {
   style[name] = value;
 }
 
-// src/math/mat4.ts
-function at(a, i) {
-  let value = a[i];
-  if (value === void 0) throw new RangeError(`matrix index ${i} out of range`);
-  return value;
-}
-function identity() {
-  let m = new Float32Array(16);
-  return m[0] = 1, m[5] = 1, m[10] = 1, m[15] = 1, m;
-}
-function translation(v) {
-  let m = identity();
-  return m[12] = v.x, m[13] = v.y, m[14] = v.z, m;
-}
-function scaling(v) {
-  let m = new Float32Array(16);
-  return m[0] = v.x, m[5] = v.y, m[10] = v.z, m[15] = 1, m;
-}
-function transpose(m) {
-  let out = new Float32Array(16);
-  for (let row = 0; row < 4; row++)
-    for (let col = 0; col < 4; col++) out[row * 4 + col] = at(m, col * 4 + row);
-  return out;
-}
-function multiply(a, b) {
-  return multiplyInto(new Float32Array(16), a, b);
-}
-function multiplyInto(out, a, b) {
-  for (let col = 0; col < 4; col++)
-    for (let row = 0; row < 4; row++) {
-      let sum = 0;
-      for (let k = 0; k < 4; k++) sum += a[k * 4 + row] * b[col * 4 + k];
-      out[col * 4 + row] = sum;
-    }
-  return out;
-}
-function rotation(q) {
-  return rotationInto(new Float32Array(16), q);
-}
-function rotationInto(m, q) {
-  let { x, y, z, w } = q, xx = x * x, yy = y * y, zz = z * z, xy = x * y, xz = x * z, yz = y * z, wx = w * x, wy = w * y, wz = w * z;
-  return m[0] = 1 - 2 * (yy + zz), m[1] = 2 * (xy + wz), m[2] = 2 * (xz - wy), m[3] = 0, m[4] = 2 * (xy - wz), m[5] = 1 - 2 * (xx + zz), m[6] = 2 * (yz + wx), m[7] = 0, m[8] = 2 * (xz + wy), m[9] = 2 * (yz - wx), m[10] = 1 - 2 * (xx + yy), m[11] = 0, m[12] = 0, m[13] = 0, m[14] = 0, m[15] = 1, m;
-}
-function fromRotationTranslationScaleInto(out, scratch, rotationQuat, translationVec, scale) {
-  let r = rotationInto(scratch, rotationQuat), sx = scale.x, sy = scale.y, sz = scale.z;
-  return out[0] = r[0] * sx, out[1] = r[1] * sx, out[2] = r[2] * sx, out[3] = 0, out[4] = r[4] * sy, out[5] = r[5] * sy, out[6] = r[6] * sy, out[7] = 0, out[8] = r[8] * sz, out[9] = r[9] * sz, out[10] = r[10] * sz, out[11] = 0, out[12] = translationVec.x, out[13] = translationVec.y, out[14] = translationVec.z, out[15] = 1, out;
-}
-function perspective(fovY, aspect, near, far) {
-  let f = 1 / Math.tan(fovY / 2), m = new Float32Array(16);
-  return m[0] = f / aspect, m[5] = f, m[10] = far / (near - far), m[11] = -1, m[14] = near * far / (near - far), m;
-}
-function orthographic(height, aspect, near, far) {
-  let width = height * aspect, m = new Float32Array(16);
-  return m[0] = 2 / width, m[5] = 2 / height, m[10] = 1 / (near - far), m[14] = near / (near - far), m[15] = 1, m;
-}
-function lookAtRotation(position, target) {
-  let fx = target.x - position.x, fy = target.y - position.y, fz = target.z - position.z, fLength = Math.hypot(fx, fy, fz);
-  if (!(fLength > 0) || !Number.isFinite(fLength))
-    throw new RangeError("look-at needs distinct, finite position and target");
-  fx /= fLength, fy /= fLength, fz /= fLength;
-  let upIsMinusZ = Math.abs(fy) > 1 - 1e-6, ux0 = 0, uy0 = upIsMinusZ ? 0 : 1, uz0 = upIsMinusZ ? -1 : 0, rx = fy * uz0 - fz * uy0, ry = fz * ux0 - fx * uz0, rz = fx * uy0 - fy * ux0, rLength = Math.hypot(rx, ry, rz);
-  rx /= rLength, ry /= rLength, rz /= rLength;
-  let ux = ry * fz - rz * fy, uy = rz * fx - rx * fz, uz = rx * fy - ry * fx, m = new Float32Array(16);
-  return m[0] = rx, m[1] = ry, m[2] = rz, m[4] = ux, m[5] = uy, m[6] = uz, m[8] = -fx, m[9] = -fy, m[10] = -fz, m[15] = 1, m;
-}
-function viewFromRotation(position, r) {
-  return multiply(transpose(r), translation({ x: -position.x, y: -position.y, z: -position.z }));
-}
-function viewMatrix(position, orientation) {
-  let r = "target" in orientation ? lookAtRotation(position, orientation.target) : rotation(orientation.rotation);
-  return viewFromRotation(position, r);
-}
-function normalMatrixInto(out, offset, model) {
-  let a = at(model, 0), b = at(model, 4), c = at(model, 8), d = at(model, 1), e = at(model, 5), f = at(model, 9), g = at(model, 2), h = at(model, 6), i = at(model, 10), c00 = e * i - f * h, c01 = f * g - d * i, c02 = d * h - e * g, c10 = c * h - b * i, c11 = a * i - c * g, c12 = b * g - a * h, c20 = b * f - c * e, c21 = c * d - a * f, c22 = a * e - b * d, det = a * c00 + b * c01 + c * c02;
-  if (det === 0 || !Number.isFinite(det))
-    throw new RangeError("normal matrix of a singular transform is undefined");
-  let inv = 1 / det;
-  return out[offset] = c00 * inv, out[offset + 1] = c10 * inv, out[offset + 2] = c20 * inv, out[offset + 3] = 0, out[offset + 4] = c01 * inv, out[offset + 5] = c11 * inv, out[offset + 6] = c21 * inv, out[offset + 7] = 0, out[offset + 8] = c02 * inv, out[offset + 9] = c12 * inv, out[offset + 10] = c22 * inv, out[offset + 11] = 0, out[offset + 12] = 0, out[offset + 13] = 0, out[offset + 14] = 0, out[offset + 15] = 1, out;
-}
-
 // src/scene/clips.ts
 function sampleChannelInto(channel, time, out) {
   let comps = channelWidth(channel), times = channel.times, count2 = times.length, values = channel.values, identity2 = () => {
@@ -9036,9 +9083,9 @@ function sampleChannelInto(channel, time, out) {
   }
   let t0 = times[lo] ?? 0, span = (times[hi] ?? t0) - t0, t = span === 0 ? 0 : (time - t0) / span, to = hi * comps;
   if (comps === 4) {
-    let dot = 0;
-    for (let i = 0; i < 4; i += 1) dot += (values[from + i] ?? 0) * (values[to + i] ?? 0);
-    let sign2 = dot < 0 ? -1 : 1;
+    let dot2 = 0;
+    for (let i = 0; i < 4; i += 1) dot2 += (values[from + i] ?? 0) * (values[to + i] ?? 0);
+    let sign2 = dot2 < 0 ? -1 : 1;
     for (let i = 0; i < 4; i += 1) {
       let a = values[from + i] ?? 0;
       out[i] = a + (sign2 * (values[to + i] ?? 0) - a) * t;
@@ -9224,7 +9271,7 @@ var FREE = 0, RESERVED = 1, ALIVE = 2, REMOVING = 3, CANCELLED = 4, EntitySlots 
 };
 
 // src/scene/dynamic.ts
-var INPUT_EVENTS = ["key_down", "key_up", "pointer_down", "pointer_up", "pointer_move"], COLLISION_EVENTS = ["collision_enter", "collision_exit"];
+var INPUT_EVENTS = ["key_down", "key_up", "pointer_down", "pointer_up", "pointer_move"], COLLISION_EVENTS = ["collision_enter", "collision_exit"], ENTITY_EVENTS = ["message"];
 function buildPrefabRuntimes(prefabs, code) {
   let runtimes = /* @__PURE__ */ new Map();
   for (let resolved of prefabs) {
@@ -9235,7 +9282,7 @@ function buildPrefabRuntimes(prefabs, code) {
       if (compute === void 0) throw new RuntimeInternalError(`binding ${String(binding.id)} of prefab '${resolved.symbol}' has no function in the program module.`);
       return { binding, compute };
     }), handlers = /* @__PURE__ */ new Map();
-    for (let event of [...INPUT_EVENTS, ...COLLISION_EVENTS]) {
+    for (let event of [...INPUT_EVENTS, ...COLLISION_EVENTS, ...ENTITY_EVENTS, "init"]) {
       let declared = program.events[event];
       declared !== void 0 && declared.length > 0 && handlers.set(event, declared);
     }
@@ -9397,7 +9444,7 @@ var DynamicEntities = class {
       let created = [];
       for (let request of spawned) created.push(this.create(request.ref, request.payload));
       this.liveList = [...this.liveList, ...created];
-      for (let entity of created) this.announce(entity);
+      for (let entity of created) this.announce(entity, !0);
     }
     this.versionCounter += 1;
   }
@@ -9472,8 +9519,10 @@ var DynamicEntities = class {
     }, host = this.options.host, record = host.makeRecord(ref, resolved, prefab, params), entity = { record, resolved, ref, prefab, tag: prefab.resolved.tag, order: this.nextOrder++, removing: !1, attachments: /* @__PURE__ */ new Map() };
     return this.bySlot[slot] = entity, host.register(slot, record, resolved), instance !== null && materials.createInstance(instance), render.addEntity(resolved), prefab.program.init(host.ctx, record, params), this.bind(entity), instance !== null && instance.shareable && materials.shareInstance(instance.index), this.spawnedTotal += 1, entity;
   }
-  announce(entity) {
+  announce(entity, initialize = !1) {
     for (let listener of this.listeners) listener.created?.(entity);
+    if (initialize)
+      for (let handler of entity.prefab.program.events.init ?? []) handler.fn(this.options.host.ctx, entity.record, void 0);
   }
   /** Releases everything the removed entity `ref` owns. */
   remove(ref) {
@@ -9790,6 +9839,7 @@ var CONTEXT_MEMBERS = [
   "setTransform",
   "setVisible",
   "setParam",
+  "setMaterial",
   "setCamera",
   "setCameraOn",
   "cameraOn",
@@ -9820,6 +9870,14 @@ var CONTEXT_MEMBERS = [
   "choose",
   "shuffle",
   "refField",
+  "send",
+  "overlapSpheres",
+  "overlapBoxes",
+  "screenToWorld",
+  "worldToScreen",
+  "gamepadAxis",
+  "gamepadButton",
+  "gamepadConnected",
   "print",
   "goTo",
   "reset",
@@ -10126,7 +10184,19 @@ var World = class {
       chance: (p) => services.random() < num(p, "chance"),
       choose: (items) => chooseItem(services.random(), items),
       shuffle: (items) => shuffled(items, () => services.random()),
+      setMaterial: (entity, value) => this.setMaterial(entity, value),
       refField: (ref, field) => this.refField(ref, field),
+      overlapSpheres,
+      overlapBoxes,
+      gamepadAxis: (pad, axis) => services.gamepads?.axis(pad, axis) ?? 0,
+      gamepadButton: (pad, button) => services.gamepads?.button(pad, button) ?? 0,
+      gamepadConnected: (pad) => services.gamepads?.connected(pad) ?? !1,
+      screenToWorld: (point2, z) => screenToWorld(this.camera, services.aspectRatio?.() ?? 1, point2, z),
+      worldToScreen: (point2) => worldToScreen(this.camera, services.aspectRatio?.() ?? 1, point2),
+      send: (ref, message) => {
+        if (typeof message != "string") throw new RuntimeInternalError("ctx.send expected a string message.");
+        this.dynamic.alive(ref) && this.messages.push({ target: ref, value: message });
+      },
       isKeyDown: (code) => {
         if (typeof code != "string") throw new RuntimeInternalError(`ctx.isKeyDown got ${describeValue(code)}; expected a DOM key code.`);
         return services.isKeyDown(code);
@@ -10461,6 +10531,15 @@ var World = class {
       throw new TypeError(`debug.setParam: param '${param}' of '${entityName}' is a ${declared.type}; got ${describeValue(value)}: ${problem}.`);
     this.setParam(record, param, value);
   }
+  setMaterial(entity, value) {
+    let index = this.indexOf(entity, "setMaterial"), material = this.resolvedBySlot[index]?.instance?.material;
+    if (material === void 0 || material.resources.length > 0 || typeof value != "object" || value === null)
+      throw new RuntimeInternalError("ctx.setMaterial requires a value-only material instance.");
+    let values = value;
+    for (let param of material.params)
+      if (paramValueProblem(param.type, values[param.name]) !== void 0) throw new RuntimeInternalError(`ctx.setMaterial has an invalid '${param.name}'.`);
+    for (let param of material.params) this.setParam(entity, param.name, values[param.name]);
+  }
   setParam(entity, name, value) {
     let index = this.indexOf(entity, "setParam"), record = this.records[index], instance = this.resolvedBySlot[index]?.instance;
     if (record === void 0 || record.mat === null || instance === null || instance === void 0)
@@ -10655,6 +10734,7 @@ var World = class {
    * A reference that is not alive reads as zero: position and scale `(0, 0, 0)`, rotation identity,
    * `visible` false. The live fields are the same objects the named-entity reads return.
    */
+  messages = [];
   refField(ref, field) {
     let name = typeof field == "string" ? field : "", zero = () => name === "visible" ? !1 : name === "rotation" ? { x: 0, y: 0, z: 0, w: 1 } : { x: 0, y: 0, z: 0 };
     if (typeof ref != "object" || ref === null || !("slot" in ref) || !("gen" in ref))
@@ -11742,9 +11822,9 @@ function paddedBytesPerRow(width) {
 var Surface = class {
   constructor(options) {
     this.options = options;
-    let view = srgbViewFormat(options.format);
-    if (view === void 0) throw new Error(`Surface: no sRGB view format for ${options.format}`);
-    this.viewFormat = view, this.device = options.device;
+    let view2 = srgbViewFormat(options.format);
+    if (view2 === void 0) throw new Error(`Surface: no sRGB view format for ${options.format}`);
+    this.viewFormat = view2, this.device = options.device;
   }
   options;
   get timer() {
@@ -12161,7 +12241,7 @@ var TranslucentOrder = class {
    * column-major world-to-view matrix, `centres` the world-space bounding-sphere centres by entity slot. Returns
    * `draws` itself when nothing is translucent.
    */
-  order(draws, view, centres) {
+  order(draws, view2, centres) {
     let first = -1;
     for (let i = 0; i < draws.length; i++)
       if (draws[i].translucent === !0) {
@@ -12172,7 +12252,7 @@ var TranslucentOrder = class {
       return this.unchanged = !1, draws;
     let count2 = draws.length - first;
     this.depth.length < count2 && (this.depth = new Float64Array(Math.max(count2, this.depth.length * 2)));
-    let { depth, rank, sorted } = this, z0 = view[2] ?? 0, z1 = view[6] ?? 0, z2 = view[10] ?? 0, z3 = view[14] ?? 0;
+    let { depth, rank, sorted } = this, z0 = view2[2] ?? 0, z1 = view2[6] ?? 0, z2 = view2[10] ?? 0, z3 = view2[14] ?? 0;
     rank.length = count2;
     for (let k = 0; k < count2; k++) {
       let e = draws[first + k].entity * 3;
@@ -12701,8 +12781,8 @@ var Renderer = class {
     this.particleBatchCount = 0;
     let draws = this.options.world.particleDraws();
     if (draws.length === 0) return;
-    let { device, meshes, materials, registry } = this.options, view = this.lastView, { particleAxes: axes, particleNormal: normal, particleBatches: batches } = this;
-    axes[0] = view[0] ?? 1, axes[1] = view[4] ?? 0, axes[2] = view[8] ?? 0, axes[3] = view[1] ?? 0, axes[4] = view[5] ?? 1, axes[5] = view[9] ?? 0, axes[6] = view[2] ?? 0, axes[7] = view[6] ?? 0, axes[8] = view[10] ?? 1;
+    let { device, meshes, materials, registry } = this.options, view2 = this.lastView, { particleAxes: axes2, particleNormal: normal, particleBatches: batches } = this;
+    axes2[0] = view2[0] ?? 1, axes2[1] = view2[4] ?? 0, axes2[2] = view2[8] ?? 0, axes2[3] = view2[1] ?? 0, axes2[4] = view2[5] ?? 1, axes2[5] = view2[9] ?? 0, axes2[6] = view2[2] ?? 0, axes2[7] = view2[6] ?? 0, axes2[8] = view2[10] ?? 1;
     let total = 0;
     for (let draw of draws) total += draw.points.length;
     if (total === 0) return;
@@ -12730,7 +12810,7 @@ var Renderer = class {
       batch.draw = draw, batch.pipeline = pipeline, batch.mesh = mesh, batch.attributes = material.shader.vertexAttributes, batch.instance = draw.instanceIndex, batch.blended = blended !== void 0;
       let depth = 0;
       if (batch.blended) {
-        for (let point2 of draw.points) depth += (view[2] ?? 0) * point2.x + (view[6] ?? 0) * point2.y + (view[10] ?? 0) * point2.z + (view[14] ?? 0);
+        for (let point2 of draw.points) depth += (view2[2] ?? 0) * point2.x + (view2[6] ?? 0) * point2.y + (view2[10] ?? 0) * point2.z + (view2[14] ?? 0);
         depth /= draw.points.length;
       }
       batch.depth = depth, count2 += 1;
@@ -12748,14 +12828,14 @@ var Renderer = class {
         this.particleDepth.length < n && (this.particleDepth = new Float64Array(Math.max(n, this.particleDepth.length * 2)));
         for (let k = 0; k < n; k++) {
           let point2 = points[k];
-          this.particleDepth[k] = (view[2] ?? 0) * point2.x + (view[6] ?? 0) * point2.y + (view[10] ?? 0) * point2.z + (view[14] ?? 0);
+          this.particleDepth[k] = (view2[2] ?? 0) * point2.x + (view2[6] ?? 0) * point2.y + (view2[10] ?? 0) * point2.z + (view2[14] ?? 0);
         }
         rank.sort(this.byParticleDepth);
       }
       batch.start = written;
       for (let k = 0; k < n; k++) {
         let point2 = points[rank[k]], base = written * INSTANCE_FLOATS, size = point2.size;
-        writeBasis(mirror, base, axes, 0, size), writeBasis(mirror, base + 4, axes, 6, size), writeBasis(mirror, base + 8, axes, 3, -size), mirror[base + 12] = point2.x, mirror[base + 13] = point2.y, mirror[base + 14] = point2.z, mirror[base + 15] = 1, normalMatrixInto(normal, 0, mirror.subarray(base, base + 16)), mirror.set(normal, base + 16), written += 1;
+        writeBasis(mirror, base, axes2, 0, size), writeBasis(mirror, base + 4, axes2, 6, size), writeBasis(mirror, base + 8, axes2, 3, -size), mirror[base + 12] = point2.x, mirror[base + 13] = point2.y, mirror[base + 14] = point2.z, mirror[base + 15] = 1, normalMatrixInto(normal, 0, mirror.subarray(base, base + 16)), mirror.set(normal, base + 16), written += 1;
       }
       batch.count = n, live += 1;
     }
@@ -12780,9 +12860,9 @@ var Renderer = class {
       pass.setVertexBuffer(batch.attributes.length, buffer), pass.setIndexBuffer(batch.mesh.indexBuffer, batch.mesh.indexFormat), pass.drawIndexed(batch.mesh.indexCount, batch.count, 0, 0, batch.start);
     }
   }
-}, PARTICLE_DRAW_CAP = 256;
-function writeBasis(out, at3, axes, axis, size) {
-  out[at3] = (axes[axis] ?? 0) * size, out[at3 + 1] = (axes[axis + 1] ?? 0) * size, out[at3 + 2] = (axes[axis + 2] ?? 0) * size, out[at3 + 3] = 0;
+}, PARTICLE_DRAW_CAP = 4096;
+function writeBasis(out, at3, axes2, axis, size) {
+  out[at3] = (axes2[axis] ?? 0) * size, out[at3 + 1] = (axes2[axis + 1] ?? 0) * size, out[at3 + 2] = (axes2[axis + 2] ?? 0) * size, out[at3 + 3] = 0;
 }
 function exposureScale(ev100) {
   return 1 / (1.2 * 2 ** ev100);
@@ -12921,7 +13001,7 @@ var Behaviors = class {
       let declared = scene.events[event];
       declared !== void 0 && declared.length > 0 && this.handlers.set(event, [...declared].sort((a, b) => a.owner - b.owner));
     }
-    for (let event of COLLISION_EVENTS) {
+    for (let event of [...COLLISION_EVENTS, "message"]) {
       let byOwner = /* @__PURE__ */ new Map();
       for (let handler of scene.events[event] ?? []) {
         let list = byOwner.get(handler.owner);
@@ -12932,6 +13012,15 @@ var Behaviors = class {
   }
   scene;
   world;
+  initialized = !1;
+  /** User init hooks see restored saved/shared state, before the first input or update. */
+  start() {
+    if (!this.initialized) {
+      this.initialized = !0;
+      for (let handler of [...this.scene.events.init ?? []].sort((a, b) => a.owner - b.owner))
+        handler.fn(this.world.ctx, this.owner(handler.owner), void 0);
+    }
+  }
   handlers = /* @__PURE__ */ new Map();
   /** The collision handlers of the named entities: by event, then by static index, each list in declaration order. */
   collisionHandlers = /* @__PURE__ */ new Map();
@@ -12964,6 +13053,7 @@ var Behaviors = class {
   }
   /** Phase 1: delivers `transitions` in the order given; for each, the scene's handlers, the entities', the spawned ones'. */
   dispatchInput(transitions) {
+    this.start();
     for (let transition of transitions) {
       let list = this.handlers.get(transition.kind), argument = "code" in transition ? void 0 : pointerEvent(transition.x, transition.y, transition.button);
       if (list !== void 0)
@@ -12977,15 +13067,28 @@ var Behaviors = class {
   }
   /** Phase 2 (c): `fixed_update`, the scene's then the entities', then the spawned entities'. */
   fixedUpdate(step2) {
-    this.run(this.scene.fixedUpdate, this.scene.entityFixedUpdate, step2, !1);
+    this.start(), this.run(this.scene.fixedUpdate, this.scene.entityFixedUpdate, step2, !1);
   }
   /** Phase 3: `update(dt)`, the scene's then the entities', then the spawned entities'. */
   update(delta) {
+    this.start();
+    for (let message of this.world.messages.splice(0)) {
+      if (!this.world.dynamic.alive(message.target)) continue;
+      let slot = message.target.slot;
+      if (slot < this.world.entities.length) {
+        let record = this.entity(slot);
+        for (let handler of this.collisionHandlers.get("message")?.get(slot) ?? []) handler.fn(this.world.ctx, record, message.value);
+      } else {
+        let entity = this.world.dynamic.entityAt(slot);
+        if (entity === void 0) continue;
+        for (let handler of entity.prefab.handlers.get("message") ?? []) handler.fn(this.world.ctx, entity.record, message.value);
+      }
+    }
     this.run(this.scene.update, this.scene.entityUpdate, delta, !0);
   }
   /** Phase 3, after `update` and also while the game is paused: the scene's `ui(dt)` (decision 0175). */
   ui(delta) {
-    this.scene.ui?.(this.world.ctx, Math.fround(delta));
+    this.start(), this.scene.ui?.(this.world.ctx, Math.fround(delta));
   }
   run(sceneFunction, entityFunctions, dt, update) {
     let value = Math.fround(dt);
@@ -13218,7 +13321,7 @@ function checkWriters(layout, entry, diagnostics) {
   }
   return { all: all, fields: byName };
 }
-var EVENT_NAMES = ["key_down", "key_up", "pointer_down", "pointer_up", "pointer_move", "collision_enter", "collision_exit"];
+var EVENT_NAMES = ["key_down", "key_up", "pointer_down", "pointer_up", "pointer_move", "collision_enter", "collision_exit", "message", "init"];
 function functionOrNull(value) {
   return value === null || typeof value == "function";
 }
@@ -13618,8 +13721,8 @@ function decodeValue(stored, template) {
   if (typeof template == "number") return typeof stored == "number" && Number.isFinite(stored) ? stored : void 0;
   if (typeof template == "boolean" || typeof template == "string") return typeof stored == typeof template ? stored : void 0;
   if (ArrayBuffer.isView(template)) {
-    let view = template;
-    return !Array.isArray(stored) || stored.length !== view.length || !stored.every((item) => typeof item == "number" && Number.isFinite(item)) ? void 0 : new view.constructor(stored);
+    let view2 = template;
+    return !Array.isArray(stored) || stored.length !== view2.length || !stored.every((item) => typeof item == "number" && Number.isFinite(item)) ? void 0 : new view2.constructor(stored);
   }
   if (Array.isArray(template)) {
     if (!Array.isArray(stored) || stored.length !== template.length) return;
@@ -13687,8 +13790,8 @@ function sameAsSnapshot(snapshot2, current) {
   if (snapshot2 === current) return !0;
   if (typeof snapshot2 == "number" && typeof current == "number") return Number.isNaN(snapshot2) && Number.isNaN(current);
   if (ArrayBuffer.isView(current)) {
-    let view = current;
-    return Array.isArray(snapshot2) && snapshot2.length === view.length && snapshot2.every((item, i) => sameAsSnapshot(item, view[i]));
+    let view2 = current;
+    return Array.isArray(snapshot2) && snapshot2.length === view2.length && snapshot2.every((item, i) => sameAsSnapshot(item, view2[i]));
   }
   if (Array.isArray(current))
     return Array.isArray(snapshot2) && snapshot2.length === current.length && current.every((item, i) => sameAsSnapshot(snapshot2[i], item));
@@ -15162,7 +15265,7 @@ var MountedApp = class {
       phase1_input: () => {
         this.applyPendingSwap(), this.framePhase = "runtime:input", this.frameStartMs = now();
         let { world } = this.deps.scene;
-        world.resetBudget(), world.setFrame(this.scheduler.activeTime, this.scheduler.delta, this.scheduler.frameIndex), this.hostInputs.applyQueued({ state: world.sceneState }), this.deps.services.hud?.beginFrame?.(), this.behaviors.dispatchInput(this.input.deliver());
+        world.resetBudget(), world.setFrame(this.scheduler.activeTime, this.scheduler.delta, this.scheduler.frameIndex), this.hostInputs.applyQueued({ state: world.sceneState }), this.deps.services.hud?.beginFrame?.(), this.deps.services.gamepads?.poll(), this.behaviors.dispatchInput(this.input.deliver());
       },
       phase2_tick: (step2) => {
         this.framePhase = "runtime:tick", this.deps.scene.world.dynamic.flush();
@@ -15338,6 +15441,40 @@ var MountedApp = class {
   }
 };
 
+// src/input/gamepad.ts
+var GamepadInput = class {
+  constructor(read) {
+    this.read = read;
+  }
+  read;
+  pads = [];
+  poll() {
+    try {
+      this.pads = Array.from(this.read(), (pad) => pad?.connected === !0 ? {
+        connected: !0,
+        axes: Array.from(pad.axes),
+        buttons: Array.from(pad.buttons, (b) => ({ value: b.value }))
+      } : null);
+    } catch {
+      this.pads = [];
+    }
+  }
+  connected(pad) {
+    return Number.isInteger(pad) && pad >= 0 && this.pads[pad]?.connected === !0;
+  }
+  axis(pad, index) {
+    return this.value(pad, index, !1);
+  }
+  button(pad, index) {
+    return this.value(pad, index, !0);
+  }
+  value(pad, index, button) {
+    if (!this.connected(pad) || !Number.isInteger(index) || index < 0) return 0;
+    let state = this.pads[pad], value = button ? state?.buttons[index]?.value : state?.axes[index];
+    return typeof value == "number" && Number.isFinite(value) ? Math.fround(Math.max(button ? 0 : -1, Math.min(1, value))) : 0;
+  }
+};
+
 // src/host/environment.ts
 function browserSha256() {
   let subtle = typeof crypto > "u" ? void 0 : crypto.subtle;
@@ -15353,6 +15490,7 @@ function browserDecodeImage(bytes) {
 }
 function defaultEnvironment() {
   return {
+    getGamepads: () => typeof navigator > "u" || typeof navigator.getGamepads != "function" || typeof document < "u" && document.visibilityState === "hidden" ? [] : navigator.getGamepads(),
     gpu: (typeof navigator > "u" ? void 0 : navigator)?.gpu ?? null,
     fetch: (url) => fetch(url),
     fetchBytes: (url) => fetch(url),
@@ -15506,7 +15644,7 @@ var FailureOverlay = class _FailureOverlay {
   }
   /** The "unsupported browser" panel: what happened and what to do, for the browser in use. */
   renderUnsupported(code) {
-    let doc = this.canvas.ownerDocument, view = doc.defaultView, advice = unsupportedAdvice(guessBrowser(view?.navigator.userAgent ?? ""), code, view?.isSecureContext !== !1), panel = doc.createElement("section");
+    let doc = this.canvas.ownerDocument, view2 = doc.defaultView, advice = unsupportedAdvice(guessBrowser(view2?.navigator.userAgent ?? ""), code, view2?.isSecureContext !== !1), panel = doc.createElement("section");
     panel.setAttribute("data-mtek-unsupported-browser", code), panel.style.cssText = "margin:0 0 16px;padding:0 0 12px;border-bottom:1px solid rgba(255,255,255,.4);font:15px/1.5 system-ui,sans-serif";
     let title = doc.createElement("h1");
     title.textContent = advice.title, title.style.cssText = "margin:0 0 8px;font-size:20px;font-weight:700";
@@ -16012,7 +16150,7 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
     images = loadedAssets.images;
     let startupFailures = [...shaders.diagnostics, ...loadedAssets.diagnostics, ...loadedPhysics?.ok === !1 ? loadedPhysics.diagnostics : []];
     if (startupFailures.length > 0) throw mountError(startupFailures);
-    let assets = loadedAssets.assets, seed = options.seed === void 0 ? (Math.floor(environment.now() * 1e3) ^ Date.now()) >>> 0 : Math.trunc(options.seed) >>> 0, generator = new Xoshiro128(seed), input = new InputState(), game = new GameLink(), pageStorage = options.storage === void 0 && options.test === void 0 ? defaultSaveStorage() : null, saveStorage = options.storage ?? pageStorage ?? new MemorySaveStorage(), saveStorageUnavailable = options.storage === void 0 && options.test === void 0 && pageStorage === null, listening = {}, manifestNow = () => app?.currentManifest() ?? manifest, unlockInstalled = !1, installUnlock = () => {
+    let assets = loadedAssets.assets, seed = options.seed === void 0 ? (Math.floor(environment.now() * 1e3) ^ Date.now()) >>> 0 : Math.trunc(options.seed) >>> 0, generator = new Xoshiro128(seed), input = new InputState(), gamepads = new GamepadInput(() => environment.getGamepads?.() ?? []), game = new GameLink(), pageStorage = options.storage === void 0 && options.test === void 0 ? defaultSaveStorage() : null, saveStorage = options.storage ?? pageStorage ?? new MemorySaveStorage(), saveStorageUnavailable = options.storage === void 0 && options.test === void 0 && pageStorage === null, listening = {}, manifestNow = () => app?.currentManifest() ?? manifest, unlockInstalled = !1, installUnlock = () => {
       if (unlockInstalled || audio === void 0 || registry === void 0) return;
       unlockInstalled = !0;
       let unlocking = audio, unlock = () => {
@@ -16057,6 +16195,8 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
       })()
     });
     let services = {
+      gamepads,
+      aspectRatio: () => surface === void 0 ? 1 : surface.size.width / Math.max(1, surface.size.height),
       game,
       random: () => generator.nextF32(),
       isKeyDown: (code) => input.isKeyDown(code),

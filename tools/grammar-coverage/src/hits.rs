@@ -285,6 +285,15 @@ impl Hits<'_> {
     fn scene_member(&mut self, member: &SceneMember) {
         const P: &str = "SceneMember";
         match member {
+            SceneMember::Function(decl) => {
+                self.alt(P, "FnDecl");
+                self.hit("FnDecl");
+                self.params(&decl.params);
+                if let Some(ret) = &decl.ret {
+                    self.ty(ret);
+                }
+                self.block(&decl.body);
+            }
             SceneMember::Field(field) => {
                 self.alt(P, "FieldInit");
                 self.field_init(field);

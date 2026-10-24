@@ -29,9 +29,9 @@ fn every_production_alternative_and_rule_is_covered() {
         (hit, alternatives_hit, covered),
         (productions, alternatives, rules)
     );
-    // The grammar as frozen at M2 (`spec/grammar-notes.md`, "Frozen subset"):
+    // The grammar as frozen at M2, extended with scene helpers (decision 0184):
     // a production, alternative or rule added or removed changes these.
-    assert_eq!((productions, alternatives, rules), (82, 122, 18));
+    assert_eq!((productions, alternatives, rules), (82, 123, 18));
 }
 
 #[test]
