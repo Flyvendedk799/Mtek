@@ -25,6 +25,7 @@ import type {
   MtekStateEntry,
   MtekVertexAttribute,
 } from "../abi/manifest-types.js";
+import { skinProblem } from "./skeleton.js";
 import { makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
 import { regionProblem } from "../mesh/asset.js";
 import type { MeshSource } from "../mesh/cache.js";
@@ -342,7 +343,11 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
         diagnostics.push(broken(`${field}`, `mesh '${mesh.id}' (primitive ${String(mesh.primitive)} of '${mesh.asset}') cannot be read: ${problem}.`));
         return;
       }
-      meshes.push({ id: mesh.id, descriptor: { kind: "asset", asset: mesh.asset, primitive: mesh.primitive, layout } });
+      if (mesh.skin !== undefined) {
+        const problem = skinProblem(mesh.skin, layout.vertexCount);
+        if (problem !== undefined) { diagnostics.push(broken(field, problem)); return; }
+      }
+      meshes.push({ id: mesh.id, descriptor: { kind: "asset", asset: mesh.asset, primitive: mesh.primitive, layout, ...(mesh.skin === undefined ? {} : { skin: mesh.skin }) } });
       return;
     }
     meshes.push({ id: mesh.id, descriptor: mesh });

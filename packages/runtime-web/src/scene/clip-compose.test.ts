@@ -11,6 +11,11 @@ import { World, type EntityRecord } from "./world.js";
 interface Ctx {
   readonly e: readonly EntityRecord[];
   setTransform(e: unknown, field: string, value: unknown): void;
+  animationPlay(ref: unknown, looping: boolean, speed: number): boolean;
+  animationPause(ref: unknown): boolean;
+  animationSeek(ref: unknown, time: number): boolean;
+  animationFade(ref: unknown, weight: number, duration: number): boolean;
+  animationTime(ref: unknown): number;
 }
 
 /** One entity with a clip of `duration` seconds and `channels`. */
@@ -38,6 +43,28 @@ function translationOf(world: World): number[] {
 }
 
 describe("a clip on an entity that is placed elsewhere", () => {
+  it("preserves init controls and applies seeks and zero-duration fades immediately", () => {
+    const { world, ctx } = clipped([SLIDE]);
+    const ref = ctx.e[0]?.ref;
+    world.initialise(() => {
+      ctx.animationPause(ref);
+      ctx.animationSeek(ref, 0.75);
+    });
+    expect(translationOf(world)).toEqual([1.5, 0, 0]);
+    world.advanceClips(1);
+    world.propagate();
+    expect(translationOf(world)).toEqual([1.5, 0, 0]);
+    expect(ctx.animationFade(ref, 0.5, 0)).toBe(true);
+    world.propagate();
+    expect(translationOf(world)).toEqual([0.75, 0, 0]);
+    expect(ctx.animationSeek(ref, 0.25)).toBe(true);
+    world.propagate();
+    expect(translationOf(world)).toEqual([0.25, 0, 0]);
+    expect(ctx.animationPlay({ slot: 0, gen: 99 }, false, 1)).toBe(false);
+    expect(ctx.animationTime({ slot: 0, gen: 99 })).toBe(0);
+    expect(ctx.animationTime(ref)).toBe(0.25);
+  });
+
   it("plays around the entity's own position, not the origin", () => {
     const { world, ctx } = clipped([SLIDE]);
     world.initialise(() => undefined);

@@ -140,6 +140,8 @@ The runtime passes `ctx` to every generated function. Its shape is part of ABI 1
 | `ctx.setCameraOn(name, field, value)` | writes `field` of the camera `name` and leaves the active camera alone; an imperative write `Wide.position = v` and a binding that names a camera both use it (decision 0177). An unknown name is an internal error, like `selectCamera`. |
 | `ctx.selectCamera(name)` | `set_camera(Name)` (decision 0154). `name` is a camera of this scene. |
 | `ctx.particleCount()` | `particle_count()` (decision 0155): how many particles are alive. |
+| `ctx.animationPlay(ref, looping, speed)`, `animationPause(ref)`, `animationResume(ref)`, `animationSeek(ref, time)`, `animationFade(ref, weight, duration)` | `animation` controls (decision 0190); boolean result, generation-checked; apply poses immediately. |
+| `ctx.animationTime(ref)`, `animationDuration(ref)`, `animationWeight(ref)`, `animationPlaying(ref)`, `animationFinished(ref)`, `animationCrossed(ref, marker)` | Queries for decision 0190. Numeric results are f32-rounded; unavailable clips return zero/false. |
 | `ctx.spawn(prefabSymbol, params, spanId) → entity_ref`, `ctx.destroy(ref, spanId)`, `ctx.alive(ref)` | `spec/scenes.md` §9, decision 0064. `prefabSymbol` is the key of the `prefabs` table of `app.js`; `params` is the object of evaluated params (every param, defaults filled in by the generated code), which the runtime freezes and hands to `init` and to `self.params`. An `entity_ref` is a frozen `{ slot, gen }`; two references are equal when both fields are (`rt.refEq`). `E8030`, `W8032` and `E8033` carry `spanId`. |
 | `ctx.body(refOrEntity, spanId)` | the **body handle** of an entity record (`ctx.e[i]`, `self`) or of an `entity_ref`, for the body commands and velocity reads of `spec/physics.md` §3 (decision 0065): `h.applyImpulse(v)`, `h.applyForce(v)`, `h.setKinematicTarget(position, rotation)`, `h.teleport(position, rotation, keepVelocity)`, `h.setLinearVelocity(v)` (commands: queued for the next tick, in the category order of physics §4) and the read-only `h.linearVelocity`, `h.angularVelocity` (`vec3`, as of the last completed tick, zero before the first). The compiler has checked the body kind of a record; for an `entity_ref` the handle reports `E8101` and drops a command the body kind of its target does not support (and `W8031` for a pending or dead target). `spanId` is the manifest span of the command or property in the Mtek source (decision 0066), for `W8031`, `E8101` and `E8104`; a command with a value that is not finite is dropped with `E8104`. Generated code calls it as `ctx.body(self, 7).applyImpulse(..)`, `ctx.body(ctx.e[3], 8).teleport(..)`, `ctx.body(a_other, 9).applyForce(..)` |
 | `ctx.random()`, `ctx.print(message, spanId)`, `ctx.isKeyDown(code)` | CPU intrinsics |
@@ -563,3 +565,17 @@ With `renderTarget`, frames render into an offscreen `rgba8unorm-srgb` texture o
 Runtime diagnostics use the same envelope as compiler diagnostics (`spec/diagnostics.md` §2) with codes in the `8xxx` range, source spans resolved through the manifest `spans` table (byte range and line/column range, decision 0019), and `"phase"` set to the scheduler phase where they arose. Each distinct `(code, span)` is reported once per mount unless its documentation says otherwise. They are delivered to `onDiagnostic`, to the overlay (errors only, or all in dev builds), and to `console` in dev builds.
 
 **Shader and pipeline failures.** At mount, `E8051` rejects `mountMtek` with `shader-failed`. After mount (hot reload, device recovery) a material whose shader or pipeline fails is reported with `E8051` (phase `runtime:reload` or `runtime:device`) and is **no longer drawn**; the scene keeps running, the entities and their params stay, and the `failedMaterials` counter counts it (decision 0046).
+
+### Skeletal animation (decision 0191)
+
+Asset mesh descriptors may include `skin`: `meshNode`, hierarchy `nodes`,
+`joints`, `inverseBind`, four `indices` and `weights` per vertex, and named `clips`.
+The manifest schema defines bounds and shapes; scene validation checks hierarchy,
+influence indices, weights and channel consistency before creating players.
+Generated CPU code calls `ctx.animationTransition(ref, name, seconds, looping,
+speed)`, `ctx.animationJointPosition(ref, name)` and
+`ctx.animationJointRotation(ref, name)`. Socket values are mesh-local. Each live
+entity has its own player; teardown removes it before slot reuse.
+
+Decision 0192 adds `ctx.animationCopyPose(target, source) -> boolean` for a held,
+independent skeletal pose snapshot. References must be live and rigs compatible.

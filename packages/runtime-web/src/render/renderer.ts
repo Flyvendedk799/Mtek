@@ -458,6 +458,7 @@ export class Renderer {
 
   /** A spawned entity was removed: its object block is released and the draw list forgets it. */
   removeEntity(entity: ResolvedEntity): void {
+    this.options.meshes.releaseSkin(entity.index);
     const slot = this.objectSlots[entity.index];
     if (slot !== undefined) this.objectArena.release(slot);
     this.objectSlots[entity.index] = undefined;
@@ -579,7 +580,8 @@ export class Renderer {
       if (this.failedMaterials.has(entity.instance.material.id)) return;
       const pipeline = pipelines.get(entity.instance.material.id);
       if (pipeline === undefined) throw new Error(`internal error: no pipeline for material '${entity.instance.material.id}'`);
-      const gpuMesh = meshes.get(entity.mesh.id);
+      const skin = world.skinPlayer(entity.index);
+      const gpuMesh = meshes.forEntity(entity.mesh.id, entity.index, skin);
       const translucent = materials.isTranslucent(entity.instance.index) || alwaysBlends(entity.instance.material);
       const blended = translucent ? this.blendedPipeline(entity.instance.material) : undefined;
       items.push({
@@ -590,7 +592,7 @@ export class Renderer {
         order,
         pipeline: blended?.pipeline ?? pipeline.pipeline,
         // A translucent draw is never instanced: the pass is ordered back to front per draw.
-        instancedPipeline: blended === undefined ? pipeline.instanced : undefined,
+        instancedPipeline: blended === undefined && skin === undefined ? pipeline.instanced : undefined,
         attributes: entity.instance.material.shader.vertexAttributes,
         gpuMesh,
         objectSlot,
@@ -626,6 +628,10 @@ export class Renderer {
     materials.flush(device.queue);
 
     const listed = this.drawList();
+    for(const draw of listed) {
+      const skin=this.options.world.skinPlayer(draw.entity);
+      if(skin!==undefined) this.options.meshes.updateSkin(draw.entity,skin);
+    }
     const culled = this.cull(listed, viewProj);
     const draws = this.translucentOrder.order(culled, this.lastView, this.sphereCentres);
     if (draws !== culled) this.drawnUnchanged = this.translucentOrder.unchanged;

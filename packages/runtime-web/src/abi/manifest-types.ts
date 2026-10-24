@@ -209,6 +209,17 @@ export interface MtekAssetMesh {
   readonly asset: string;
   /** Index into that entry's `primitives`. */
   readonly primitive: number;
+  readonly skin?: MtekSkin;
+}
+
+export interface MtekSkin {
+  readonly meshNode: number;
+  readonly nodes: readonly { readonly name: string; readonly parent: number; readonly translation: readonly number[]; readonly rotation: readonly number[]; readonly scale: readonly number[] }[];
+  readonly joints: readonly number[];
+  readonly inverseBind: readonly (readonly number[])[];
+  readonly indices: readonly (readonly number[])[];
+  readonly weights: readonly (readonly number[])[];
+  readonly clips: readonly { readonly name: string; readonly duration: number; readonly channels: readonly (MtekClipChannel & { readonly node: number })[] }[];
 }
 
 export type MtekMesh = MtekBoxMesh | MtekSphereMesh | MtekPlaneMesh | MtekAssetMesh;

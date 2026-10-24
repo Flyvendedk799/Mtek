@@ -147,3 +147,9 @@ The baseline is competent TypeScript with three.js r186 (`three/webgpu`, `three/
 - Runs on recorded hardware only (`isFallbackAdapter === false`), with the environment record attached. Benchmark definitions are frozen (tree hash recorded) before a release comparison; changing them requires a recorded rationale, and a failing workload is never removed retroactively.
 
 **Implementation (M7-04).** The seven workloads, their three implementations, the measurement harness, the frozen definitions and the generated report live in `benchmarks/runtime/` (README there); the published raw results and `report.md` in `benchmarks/results/runtime/`. How each metric is measured: decision 0095; the workloads and which metric the threshold is applied to: 0096; freezing: 0097; results, report and the plateau rule: 0098; what the first run showed about Mtek: 0099.
+
+The context exporter keeps the machine-readable `supported` capability lists
+compact on one line. Other sections use readable one-space indentation. This preserves
+the complete cold-start reference within the default 30,000-byte budget as the
+built-in API grows; explicit smaller budgets still use the documented truncation
+rules. Capability values and context format version are unchanged.

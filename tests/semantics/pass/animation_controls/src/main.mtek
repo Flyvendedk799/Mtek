@@ -1,0 +1,31 @@
+scene Demo {
+    state elapsed: f32 = 0.0;
+    state duration: f32 = 0.0;
+    state weight: f32 = 0.0;
+    state playing: bool = false;
+    state finished: bool = false;
+    state impact: bool = false;
+    state socket: vec3 = vec3(0.0, 0.0, 0.0);
+    state turn: quat = quat.identity();
+    camera Main {}
+    entity Part {}
+    on key_down(Key.Space) {
+        animation.play(Part, false, 2.0);
+        animation.pause(Part);
+        animation.seek(Part, 0.25);
+        animation.fade(Part, 0.5, 0.1);
+        animation.resume(Part);
+        animation.copy_pose(Part, Part);
+        animation.transition(Part, "idle", 0.2, true, 1.0);
+    }
+    update(dt: f32) {
+        socket = animation.joint_position(Part, "hand");
+        turn = animation.joint_rotation(Part, "hand");
+        elapsed = animation.time(Part);
+        duration = animation.duration(Part);
+        weight = animation.weight(Part);
+        playing = animation.playing(Part);
+        finished = animation.finished(Part);
+        impact = animation.crossed(Part, 0.2);
+    }
+}

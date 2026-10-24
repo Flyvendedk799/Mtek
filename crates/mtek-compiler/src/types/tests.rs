@@ -899,7 +899,7 @@ fn mat4_constructors_fold_column_major() {
 }
 
 #[test]
-fn strings_are_values_without_operators() {
+fn strings_support_exact_equality_but_not_arithmetic_or_ordering() {
     let c = clean("const TITLE = \"Show\\troom\";\nconst SAME: string = TITLE;");
     assert_eq!(c.ty("SAME"), "string");
     assert_eq!(c.value("SAME"), Some(ConstValue::Str("Show\troom".into())));
@@ -908,8 +908,16 @@ fn strings_are_values_without_operators() {
         c.only("E3014").message,
         "The operator `+` is not defined for string and string."
     );
-    let c = consts("const A = \"a\" == \"a\";");
-    assert_eq!(c.codes(), ["E3014"]);
+    let c = clean(
+        "const A = \"a\" == \"a\"; const B = \"\" != \"a\"; const C = \"a\" == \"A\"; const D = \"é\" == \"é\";",
+    );
+    assert_eq!(c.value("A"), Some(ConstValue::Bool(true)));
+    assert_eq!(c.value("B"), Some(ConstValue::Bool(true)));
+    assert_eq!(c.value("C"), Some(ConstValue::Bool(false)));
+    assert_eq!(c.value("D"), Some(ConstValue::Bool(false)));
+    for source in ["const A = \"a\" < \"b\";", "const A = \"a\" == 1;"] {
+        assert_eq!(consts(source).codes(), ["E3014"]);
+    }
 }
 
 #[test]

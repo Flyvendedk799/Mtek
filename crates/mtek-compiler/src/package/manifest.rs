@@ -467,6 +467,8 @@ pub enum MeshShape {
     Asset {
         asset: String,
         primitive: u32,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        skin: Option<crate::assets::skin::Skin>,
     },
 }
 

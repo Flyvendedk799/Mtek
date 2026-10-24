@@ -47,6 +47,7 @@ Types: `bool i32 u32 f32 string vec2 vec3 vec4 mat4 quat color mesh material tex
 
 | Namespace | Members |
 |---|---|
+| `animation` | `play(target: entity_ref, looping: bool, speed: f32) -> bool`, `pause(target: entity_ref) -> bool`, `resume(target: entity_ref) -> bool`, `seek(target: entity_ref, time: f32) -> bool`, `fade(target: entity_ref, weight: f32, duration: f32) -> bool`, `time(target: entity_ref) -> f32`, `duration(target: entity_ref) -> f32`, `weight(target: entity_ref) -> f32`, `playing(target: entity_ref) -> bool`, `finished(target: entity_ref) -> bool`, `crossed(target: entity_ref, marker: f32) -> bool`, `copy_pose(target: entity_ref, source: entity_ref) -> bool`, `transition(target: entity_ref, name: string, seconds: f32, looping: bool, speed: f32) -> bool`, `joint_position(target: entity_ref, name: string) -> vec3`, `joint_rotation(target: entity_ref, name: string) -> quat` — CPU only; controls node and skeletal clips with mesh-local sockets (decision 0191). [Decision 0190](decisions/0190-controlled-node-animation.md). |
 | `quat` | `identity()`, `axis_angle(axis: vec3, angle: f32)`, `euler(x: f32, y: f32, z: f32)` |
 | `mat4` | `identity()`, `translation(v: vec3)`, `rotation(q: quat)`, `scale(v: vec3)`, `columns(c0, c1, c2, c3: vec4)` |
 | `color` | `linear(rgb: vec3, a: f32)`, `srgb(rgb: vec3, a: f32)` |

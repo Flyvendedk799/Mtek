@@ -21,6 +21,7 @@ mod glb;
 mod host;
 mod image;
 pub mod pack;
+pub mod skin;
 mod transform;
 
 pub use glb::{

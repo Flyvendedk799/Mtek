@@ -1,0 +1,342 @@
+import { magazine_drop, slide_travel } from "./animation.mtek";
+import {
+    blocked,
+    obstruction,
+    POPULATION,
+    NAMES,
+    guard_at,
+    route_direction,
+    Spark,
+    Trace,
+} from "./world.mtek";
+
+export const SHOT = asset.sound("../sounds/shot.wav");
+
+export const HIT = asset.sound("../sounds/hit.wav");
+
+export const RELOAD = asset.sound("../sounds/reload.wav");
+
+export const CHIME = asset.sound("../sounds/chime.wav");
+
+export const SWING = asset.sound("../sounds/swing.wav");
+
+const ENEMY_MODEL = asset.glb("../models/Enemy.glb");
+
+const WEAPON = asset.glb("../models/slide.glb");
+
+const ATLAS = asset.texture("../models/Enemy-atlas.png");
+
+prefab Fallen {
+    param source: entity_ref;
+    param at: vec3 = vec3(0.0, 0.0, 0.0);
+    param angle: f32 = 0.0;
+    tag: "body";
+    state life: f32 = 9.0;
+    position: at;
+    rotation: quat.euler(0.0, angle, 0.0);
+    scale: vec3(1.08, 1.08, 1.08);
+    mesh: ENEMY_MODEL.mesh("Enemy");
+    clip: "death";
+    material: Pbr { base_color_texture: ATLAS; roughness: 0.80 };
+    init() {
+        animation.copy_pose(self, source);
+        animation.transition(self, "death", 0.16, false, 1.0);
+        animation.play(self, false, 1.0);
+    }
+    update(dt: f32) {
+        self.life -= dt;
+        if self.life <= 0.0 {
+            destroy(self);
+        }
+    }
+}
+
+export prefab Guard {
+    param slot: i32 = 0;
+    state room: i32 = 0;
+    state kind: i32 = slot % 3;
+    state delay: f32 = 1.2 + f32(slot) * 0.35;
+    tag: "enemy";
+    position: vec3(0.0, -100.0, 0.0);
+    visible: bind(!dead);
+    state hp: i32 = 3;
+    state angle: f32 = 0.0;
+    state gait: f32 = 0.0;
+    state stride: f32 = 0.0;
+    state cooldown: f32 = 1.0;
+    state windup: f32 = 0.0;
+    state stagger: f32 = 0.0;
+    state reaction: string = "hit";
+    state shove: vec3 = vec3(0.0, 0.0, 0.0);
+    state flash: f32 = 0.0;
+    state shot_age: f32 = 1.0;
+    state rounds: i32 = 6;
+    state reload: f32 = 0.0;
+    state aim: vec3 = vec3(0.0, 1.4, 7.0);
+    state dead: bool = true;
+    state route_wait: f32 = 0.0;
+    state heading: vec3 = vec3(0.0, 0.0, 0.0);
+    rotation: bind(quat.euler(0.0, angle, 0.0));
+    scale: vec3(1.08, 1.08, 1.08);
+    mesh: ENEMY_MODEL.mesh("Enemy");
+    clip: "idle";
+    material: Pbr { base_color_texture: ATLAS; roughness: 0.80 };
+    state weapon_at: vec3 = vec3(0.155, 1.29, -0.47);
+    state weapon_turn: quat = quat.identity();
+
+    entity Weapon {
+        position: bind(weapon_at);
+        rotation: bind(weapon_turn);
+        entity Slide {
+            visible: bind(!dead && kind == 0);
+            position: bind(vec3(0.0, 0.02, -0.10 + slide_travel(shot_age)));
+            mesh: WEAPON.mesh("Slide");
+            material: Pbr { base_color: #222934; metallic: 0.7; roughness: 0.25 };
+        }
+        entity Grip {
+            visible: bind(!dead && kind == 0);
+            position: vec3(0.0, -0.075, -0.015);
+            rotation: quat.euler(-0.22, 0.0, 0.0);
+            mesh: Box { size: vec3(0.06, 0.14, 0.085) };
+            material: Pbr { base_color: #171d25; roughness: 0.8 };
+        }
+        entity NpcMagazine {
+            visible: bind(!dead && kind == 0);
+            position: bind(vec3(0.0, -0.14 - magazine_drop(reload) * 0.24, -0.005));
+            mesh: Box { size: vec3(0.045, 0.11, 0.06) };
+            material: Pbr { base_color: #747b83; metallic: 0.7 };
+        }
+        entity Barrel {
+            visible: bind(!dead && kind == 0);
+            position: vec3(0.0, 0.005, -0.24);
+            mesh: Box { size: vec3(0.04, 0.035, 0.09) };
+            material: Pbr { base_color: #0d1116; metallic: 0.8 };
+        }
+    }
+    entity Muzzle {
+        visible: bind(!dead && flash > 0.0);
+        position: bind(weapon_at + weapon_turn * vec3(0.0, 0.01, -0.33));
+        mesh: Sphere { radius: 0.055; segments: 6; rings: 4 };
+        material: Unlit { color: #ffe6ad };
+    }
+
+    on message(value: string) {
+        for i in 0..6 {
+            if value == NAMES[i] {
+                self.room = i;
+                self.dead = slot >= POPULATION[i];
+                self.hp = 3;
+                self.rounds = 6;
+                self.reload = 0.0;
+                self.stride = 0.0;
+                self.shot_age = 1.0;
+                self.cooldown = 1.2 + f32(slot) * 0.35;
+                self.windup = 0.0;
+                self.stagger = 0.0;
+                self.shove = vec3(0.0, 0.0, 0.0);
+                self.flash = 0.0;
+                if !self.dead {
+                    self.position = guard_at(i, slot);
+                    self.route_wait = 0.0;
+                } else {
+                    self.position = vec3(0.0, -100.0, 0.0);
+                }
+                return;
+            }
+        }
+        if !self.dead {
+            if value == "grapple" {
+                self.reload = 0.0;
+                self.stagger = 0.28;
+                self.windup = 0.0;
+                self.reaction = "held";
+                animation.transition(self, "held", 0.06, false, 1.0);
+                animation.play(self, false, 1.0);
+                return;
+            }
+            if value == "head" || value == "finish" {
+                self.hp = 0;
+            } else if (value == "punch_left" || value == "punch_right") {
+                self.hp -= 2;
+            } else {
+                self.hp -= 2;
+            }
+            self.stagger = 0.65;
+            self.reload = 0.0;
+            self.reaction = "hit";
+            if value == "punch_left" {
+                self.reaction = "hit_left";
+            }
+            if value == "punch_right" {
+                self.reaction = "hit_right";
+            }
+            let attacker = first_tagged("player");
+            if alive(attacker) {
+                let away = self.position - attacker.position;
+                var strength = 0.9;
+                if value == "punch_left" || value == "punch_right" {
+                    strength = 2.2;
+                }
+                self.shove = normalize(vec3(away.x, 0.0, away.z)) * strength;
+            }
+            animation.transition(self, self.reaction, 0.035, false, 1.0);
+            animation.play(self, false, 1.0);
+            self.windup = 0.0;
+            self.cooldown = 0.9;
+            if self.hp <= 0 {
+                self.dead = true;
+                for player in tagged("player") {
+                    if (value == "punch_left" || value == "punch_right") || value == "finish" {
+                        send(player, "closekill");
+                    } else {
+                        send(player, "kill");
+                    }
+                }
+                spawn(Fallen { at: self.position; angle: self.angle; source: self });
+                self.position = vec3(0.0, -100.0, 0.0);
+            }
+        }
+    }
+
+    update(dt: f32) {
+        if !self.dead && length(self.shove) > 0.01 {
+            for step in 0..4 {
+                let next = self.position + self.shove * dt * 0.25;
+                if !blocked(next, room, 0.35) {
+                    self.position = next;
+                }
+            }
+            self.shove *= exp(-10.0 * dt);
+        }
+        self.route_wait = max(0.0, self.route_wait - dt);
+        self.shot_age += dt;
+        self.flash = max(0.0, self.flash - dt);
+        self.stagger = max(0.0, self.stagger - dt);
+        self.cooldown = max(0.0, self.cooldown - dt);
+        let player = first_tagged("player");
+        if alive(player) && !self.dead && self.stagger <= 0.0 {
+            let delta = player.position - self.position;
+            let flat = vec3(delta.x, 0.0, delta.z);
+            let range = length(flat);
+            let facing = atan2(-delta.x, -delta.z);
+            // Commit the attack direction before contact so a sidestep can evade it.
+            if (self.stride <= 0.0 && self.windup <= 0.0) || self.windup > 0.35 {
+                self.angle += atan2(sin(facing - self.angle), cos(facing - self.angle))
+                    * min(1.0, dt * 12.0);
+            }
+            let origin = self.position + vec3(0.0, 1.4, 0.0);
+            let sight = normalize(player.position - origin);
+            let clear = obstruction(origin, sight, room) > length(player.position - origin);
+            if self.reload > 0.0 {
+                self.stride = 0.0;
+                self.reload = max(0.0, self.reload - dt);
+                if self.reload <= 0.0 {
+                    self.rounds = 6;
+                    self.cooldown = 0.45;
+                }
+            } else if kind == 0 && self.rounds <= 0 && self.windup <= 0.0 {
+                self.reload = 1.25;
+                self.stride = 0.0;
+                animation.transition(self, "reload", 0.10, false, 1.0);
+                animation.play(self, false, 1.0);
+            } else if self.windup > 0.0 {
+                self.windup -= dt;
+                self.stride = 0.0;
+                if animation.crossed(self, 0.40) {
+                    if kind != 0 {
+                        let forward = vec3(-sin(self.angle), 0.0, -cos(self.angle));
+                        let along = dot(flat, forward);
+                        let lateral = length(flat - forward * along);
+                        if range < 1.45 && along > 0.0 && lateral < 0.40 && clear {
+                            send(player, "hurt");
+                        }
+                    } else {
+                        let muzzle = self.position
+                            + quat.euler(0.0, self.angle, 0.0)
+                                * (
+                                    (self.weapon_at + self.weapon_turn * vec3(0.0, 0.01, -0.33))
+                                        * 1.08
+                                );
+                        let dir = normalize(self.aim - muzzle);
+                        let along = dot(player.position - muzzle, dir);
+                        let miss = length(player.position - (muzzle + dir * along));
+                        if along > 0.0 && miss < 0.42 && obstruction(muzzle, dir, room) > along {
+                            send(player, "hurt");
+                        }
+                        let span = min(length(self.aim - muzzle), obstruction(muzzle, dir, room));
+                        spawn(
+                            Trace {
+                                at: muzzle + dir * span * 0.5;
+                                yaw: atan2(-dir.x, -dir.z);
+                                pitch: asin(dir.y);
+                                span: max(span, 0.01);
+                                tint: #ff7861;
+                            },
+                        );
+                        self.flash = 0.045;
+                        self.shot_age = 0.0;
+                        self.rounds -= 1;
+                        play(SHOT, 0.18, 0.8);
+                    }
+                    self.cooldown = 1.3 + delay * 0.3;
+                }
+            } else {
+                var desired = 4.5;
+                if kind != 0 {
+                    desired = 1.05;
+                }
+                self.stride = 0.0;
+                if range > desired || !clear {
+                    if self.route_wait <= 0.0 {
+                        self.heading = route_direction(self.position, player.position, room);
+                        self.route_wait = 0.22 + f32(slot) * 0.015;
+                    }
+                    var velocity = self.heading * 1.5;
+                    if kind != 0 {
+                        velocity = self.heading * 2.65;
+                    }
+                    let next = self.position + velocity * dt;
+                    if !blocked(next, room, 0.35) {
+                        self.position = next;
+                        let moving = atan2(-self.heading.x, -self.heading.z);
+                        self.angle += atan2(sin(moving - self.angle), cos(moving - self.angle))
+                            * min(1.0, dt * 18.0);
+                        self.stride = 1.0;
+                    }
+                    self.gait += dt * 9.0;
+                }
+                if self.cooldown <= 0.0 && clear && range < desired + 0.35 {
+                    self.windup = 0.65;
+                    self.aim = player.position;
+                }
+            }
+        }
+        if !self.dead {
+            if self.stagger > 0.0 {
+                animation.transition(self, self.reaction, 0.035, false, 1.0);
+            } else if self.reload > 0.0 {
+                animation.transition(self, "reload", 0.10, false, 1.0);
+            } else if self.windup > 0.0 {
+                if kind == 0 {
+                    animation.transition(self, "shoot", 0.08, false, 1.0);
+                } else {
+                    animation.transition(self, "strike", 0.06, false, 1.0);
+                }
+            } else if self.stride > 0.0 {
+                if kind == 0 {
+                    animation.transition(self, "walk", 0.16, true, 1.0);
+                } else {
+                    animation.transition(self, "run", 0.12, true, 1.0);
+                }
+            } else {
+                if kind == 0 {
+                    animation.transition(self, "idle", 0.16, true, 1.0);
+                } else {
+                    animation.transition(self, "ready", 0.16, true, 1.0);
+                }
+            }
+            self.weapon_at = animation.joint_position(self, "weapon");
+            self.weapon_turn = animation.joint_rotation(self, "weapon");
+        }
+    }
+}

@@ -75,7 +75,7 @@
     {
       "id": "lang-loops",
       "area": "Language",
-      "restriction": "No `loop`. Write `while true { … }` and leave it with `break`. `while` runs at most 1 000 000 iterations.",
+      "restriction": "No `loop`. Write `while true { â€¦ }` and leave it with `break`. `while` runs at most 1 000 000 iterations.",
       "reason": "`loop` stays reserved (decision 0144). A `while` that runs past the cap fails the frame with E8080.",
       "codes": [
         "E0013",
@@ -516,7 +516,7 @@
     {
       "id": "gltf-animation",
       "area": "Assets",
-      "restriction": "No skinning, morph targets, cubic-spline interpolation or sparse accessors. A node clip of translation, rotation and scale with LINEAR or STEP interpolation plays (decision 0156) on top of the entity's own transform; an animation the profile cannot play is an error only where a `clip` names it (decision 0174).",
+      "restriction": "No morph targets, cubic-spline interpolation or sparse accessors. Skeletal meshes support four influences, up to 128 joints and 256 hierarchy nodes, named clip transitions and sockets (decision 0191); deformation currently runs on the CPU. A node clip of translation, rotation and scale with LINEAR or STEP interpolation plays (decision 0156) on top of the entity's own transform; an animation the profile cannot play is an error only where a `clip` names it (decision 0174).",
       "reason": "Decision 0015 rejected every animation. Decision 0156 plays TRS clips and keeps the rest of that rejection; decision 0174 composes clips with the entity and narrows the error to the use.",
       "codes": [
         "E7008",
@@ -526,11 +526,12 @@
       "decisions": [
         "0015",
         "0156",
-        "0174"
+        "0174",
+        "0191"
       ],
       "source": {
-        "file": "spec/decisions/0015-asset-strictness.md",
-        "quote": "skinning, morphs, animations, sparse accessors"
+        "file": "spec/decisions/0191-skeletal-animation.md",
+        "quote": "A skinned GLB mesh retains its hierarchy"
       }
     },
     {

@@ -1,0 +1,25 @@
+:root { color-scheme: dark; font-family: 'Segoe UI', sans-serif; color: #eee8dc; background: #0c121c; }
+* { box-sizing: border-box; }
+body { margin: 0; overflow: hidden; }
+#game { display: block; width: 100vw; height: 100vh; outline: none; }
+#vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse, transparent 45%, #03071260); }
+#menu { position: fixed; inset: 0; display: flex; flex-direction: column; padding: 5vh 6vw 3vh; background: linear-gradient(90deg,#0b111bf5 0%,#0b111be8 44%,#0b111b65); }
+#menu { z-index: 2; }
+#menu[hidden] { display: none; }
+.eyebrow, footer { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: .2em; color: #9eabbc; }
+.eyebrow { border-top: 1px solid #68717b66; padding-top: 18px; }
+.title { margin: auto 0; }
+.title > p:first-child { letter-spacing: .22em; font-size: 11px; color: #dabd8d; }
+h1 { font-size: clamp(60px, 11vh, 132px); letter-spacing: -.07em; line-height: .86; margin: 26px 0; font-weight: 800; }
+h1 em { font-style: normal; color: #d8bd91; }
+.rule { height: 3px; width: 52px; background: #d8bd91; margin: 28px 0 20px; }
+.brief { color: #b7c0cc; font-size: 16px; line-height: 1.6; }
+button { border: 1px solid #d8bd91; color: #101722; background: #d8bd91; padding: 16px 27px; margin-top: 14px; cursor: pointer; font-size: 12px; letter-spacing: .14em; font-weight: 700; }
+button:hover { background: #f1dbb7; } button:focus-visible { outline: 3px solid #8ed7bd; outline-offset: 4px; } button:disabled { opacity: .5; cursor: wait; }
+#status { color: #98a9ba; font-size: 12px; min-height: 18px; }
+.controls { display: flex; gap: 3vw; padding: 22px 0; border-top: 1px solid #68717b55; }
+.controls div { display: flex; flex-direction: column; gap: 9px; font-size: 10px; letter-spacing: .06em; }
+.controls b { color: #e0d1b8; font-weight: 600; }.controls span { color: #98a9ba; }
+footer { padding-top: 10px; font-size: 9px; }
+@media (max-height: 650px) { h1 { font-size: 64px; margin: 15px 0; } .rule { margin: 16px 0; } .brief { font-size: 13px; } .controls { padding: 12px 0; } }
+@media (max-width: 700px) { .controls { flex-wrap: wrap; gap: 16px; } footer span:last-child { display: none; } }

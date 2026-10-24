@@ -1,3 +1,4 @@
+import { AnimationPlayers, type SkeletonPlayer } from "./skeleton.js";
 /**
  * The CPU world of a mounted scene (`spec/runtime-abi.md` sections 4.2, 4.3 and 5.2; `spec/scenes.md`
  * sections 3, 11 and 12): entity records, the active camera record, the generated-code context (`ctx`)
@@ -26,7 +27,7 @@ import { NO_HUD, type HudService } from "../hud/hud.js";
 import { resolveSpan, spanOfSymbol } from "../host/failures.js";
 import { fromRotationTranslationScaleInto, multiplyInto, type Mat4 } from "../math/mat4.js";
 import type { LoopBudget } from "./budget.js";
-import { ClipPlayers, sampleChannelInto, type PlayableChannel } from "./clips.js";
+import { sampleChannelInto, type PlayableChannel } from "./clips.js";
 import { DynamicEntities, type DynamicHost, type PrefabRuntime } from "./dynamic.js";
 import { ParticleSim, type ParticleDraw } from "./particles.js";
 import { RuntimeInternalError } from "./errors.js";
@@ -97,6 +98,21 @@ export const CONTEXT_MEMBERS = [
   "screenToWorld",
   "worldToScreen",
   "gamepadAxis",
+  "animationPlay",
+  "animationTransition",
+  "animationCopyPose",
+  "animationJointPosition",
+  "animationJointRotation",
+  "animationPause",
+  "animationResume",
+  "animationSeek",
+  "animationFade",
+  "animationTime",
+  "animationDuration",
+  "animationWeight",
+  "animationPlaying",
+  "animationFinished",
+  "animationCrossed",
   "gamepadButton",
   "gamepadConnected",
   "print",
@@ -402,7 +418,7 @@ export class World {
   /** Living particles (decision 0155). */
   private readonly particles = new ParticleSim();
   /** Playing glTF clips (decision 0156). */
-  private readonly clips = new ClipPlayers();
+  private readonly clips = new AnimationPlayers();
   /** Per entity slot, the pose its clip last sampled; `undefined` for an entity without a clip. The local transform is the entity's own one times this (decision 0174). */
   private readonly clipPoses: (ClipPose | undefined)[] = [];
   private readonly clipBase = new Float32Array(16);
@@ -593,7 +609,57 @@ export class World {
       choose: (items: unknown): unknown => chooseItem(services.random(), items),
       shuffle: (items: unknown): unknown => shuffled(items, () => services.random()),
       setMaterial: (entity: unknown, value: unknown): void => this.setMaterial(entity, value),
+      animationJointPosition: (ref: unknown, name: string): Vec3 => this.dynamic.alive(ref) ? this.clips.skin((ref as EntityRef).slot)?.jointPosition(name) ?? ORIGIN : ORIGIN,
+      animationJointRotation: (ref: unknown, name: string): Quat => this.dynamic.alive(ref) ? this.clips.skin((ref as EntityRef).slot)?.jointRotation(name) ?? IDENTITY : IDENTITY,
+      animationCopyPose: (target: unknown, source: unknown): boolean =>
+        this.dynamic.alive(target) && this.dynamic.alive(source)
+          && this.clips.copyPose((target as EntityRef).slot,(source as EntityRef).slot),
+      animationTransition: (ref: unknown, name: string, seconds: number, looping: boolean, speed: number): boolean => {
+        if (!this.dynamic.alive(ref)) return false;
+        return this.clips.transition((ref as EntityRef).slot, name, seconds, looping, speed);
+      },
       refField: (ref: unknown, field: unknown): unknown => this.refField(ref, field),
+      animationPlay: (ref: unknown, looping: boolean, speed: number): boolean => {
+        if (!this.dynamic.alive(ref)) return false;
+        const slot = (ref as EntityRef).slot;
+        const result = this.clips.play(slot, looping, speed);
+        if (result) this.clips.poseSlot(slot, (s, c, v) => this.writeChannel(s, c, v));
+        return result;
+      },
+      animationPause: (ref: unknown): boolean => {
+        if (!this.dynamic.alive(ref)) return false;
+        const slot = (ref as EntityRef).slot;
+        const result = this.clips.pause(slot);
+        if (result) this.clips.poseSlot(slot, (s, c, v) => this.writeChannel(s, c, v));
+        return result;
+      },
+      animationResume: (ref: unknown): boolean => {
+        if (!this.dynamic.alive(ref)) return false;
+        const slot = (ref as EntityRef).slot;
+        const result = this.clips.resume(slot);
+        if (result) this.clips.poseSlot(slot, (s, c, v) => this.writeChannel(s, c, v));
+        return result;
+      },
+      animationSeek: (ref: unknown, time: number): boolean => {
+        if (!this.dynamic.alive(ref)) return false;
+        const slot = (ref as EntityRef).slot;
+        const result = this.clips.seek(slot, time);
+        if (result) this.clips.poseSlot(slot, (s, c, v) => this.writeChannel(s, c, v));
+        return result;
+      },
+      animationFade: (ref: unknown, weight: number, duration: number): boolean => {
+        if (!this.dynamic.alive(ref)) return false;
+        const slot = (ref as EntityRef).slot;
+        const result = this.clips.fade(slot, weight, duration);
+        if (result) this.clips.poseSlot(slot, (s, c, v) => this.writeChannel(s, c, v));
+        return result;
+      },
+      animationTime: (ref: unknown): number => this.dynamic.alive(ref) ? Math.fround(this.clips.time((ref as EntityRef).slot)) : 0,
+      animationDuration: (ref: unknown): number => this.dynamic.alive(ref) ? Math.fround(this.clips.duration((ref as EntityRef).slot)) : 0,
+      animationWeight: (ref: unknown): number => this.dynamic.alive(ref) ? Math.fround(this.clips.weight((ref as EntityRef).slot)) : 0,
+      animationPlaying: (ref: unknown): boolean => this.dynamic.alive(ref) ? this.clips.playing((ref as EntityRef).slot) : false,
+      animationFinished: (ref: unknown): boolean => this.dynamic.alive(ref) ? this.clips.finished((ref as EntityRef).slot) : false,
+      animationCrossed: (ref: unknown, marker: number): boolean => this.dynamic.alive(ref) ? this.clips.crossed((ref as EntityRef).slot, marker) : false,
       overlapSpheres,
       overlapBoxes,
       gamepadAxis: (pad: number, axis: number): number => services.gamepads?.axis(pad, axis) ?? 0,
@@ -737,8 +803,8 @@ export class World {
       init(this.ctx);
       // Bindings are evaluated once after `init`, so bound fields have values before the first frame.
       afterInit?.();
-      // A clip is the pose at t = 0 once the defaults are written (decision 0156).
-      this.poseClips(0);
+      // Preserve controls issued by init; otherwise this is the default t = 0 pose.
+      this.poseClips();
     } finally {
       this.initialising = false;
     }
@@ -1278,7 +1344,7 @@ export class World {
     }
   }
 
-  private poseClips(time: number): void {
+  private poseClips(time?: number): void {
     this.clips.pose((slot, channel, value) => {
       this.writeChannel(slot, channel, value);
     }, time);
@@ -1306,6 +1372,8 @@ export class World {
     this.transformsPending = true;
   }
 
+  skinPlayer(slot: number): SkeletonPlayer | undefined { return this.clips.skin(slot); }
+
   private trackMotion(slot: number, resolved: ResolvedEntity, spawned = false): void {
     if (resolved.particles !== undefined) {
       this.particles.add({
@@ -1319,6 +1387,11 @@ export class World {
         materialId: resolved.instance?.material.id ?? null,
         instanceIndex: resolved.instance?.index ?? null,
       });
+    }
+    const descriptor = resolved.mesh?.descriptor;
+    if (descriptor?.kind === "asset" && descriptor.skin !== undefined) {
+      this.clips.addSkin(slot, descriptor.skin, resolved.clip?.name);
+      return;
     }
     if (resolved.clip !== undefined) {
       this.clipPoses[slot] = { translation: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0, w: 1 }, scale: { x: 1, y: 1, z: 1 } };

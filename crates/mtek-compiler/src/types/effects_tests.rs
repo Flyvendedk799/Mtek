@@ -290,6 +290,25 @@ fn caller() -> f32 { return pure_make(); }
 }
 
 #[test]
+fn animation_controls_are_handler_only_and_queries_need_the_cpu() {
+    let r = run(
+        "cpu fn start(target: entity_ref) -> bool { return animation.play(target, false, 1.0); }",
+        &[],
+    );
+    assert_eq!(r.codes(), ["E5080"], "{:#?}", r.diagnostics);
+    let r = run(
+        "fn clock(target: entity_ref) -> f32 { return animation.time(target); }",
+        &[],
+    );
+    assert_eq!(r.codes(), ["E4002"], "{:#?}", r.diagnostics);
+    let r = run(
+        "cpu fn clock(target: entity_ref) -> f32 { return animation.time(target); }",
+        &[],
+    );
+    assert!(r.codes().is_empty(), "{:#?}", r.diagnostics);
+}
+
+#[test]
 fn each_cycle_is_reported_once_at_its_first_function() {
     let text = "fn a() { b(); }
 fn b() { a(); }

@@ -1,0 +1,23 @@
+const EMPTY: bool = "" == "";
+const DIFFERENT: bool = "hit" != "miss";
+
+scene Demo {
+    state hits: i32 = 0;
+    state payload: string = "hit";
+    state same: bool = EMPTY;
+    state different: bool = DIFFERENT;
+    camera Main {}
+    entity Target {
+        on message(value: string) {
+            if value == "hit" { hits += 1; }
+            if value != "hit" { hits -= 1; }
+        }
+    }
+    on key_down(Key.Space) {
+        if EMPTY && DIFFERENT { send(Target, payload); }
+    }
+    update(dt: f32) {
+        same = payload == "hit";
+        different = payload != "hit";
+    }
+}

@@ -1,0 +1,1018 @@
+import { punch_reach, magazine_drop, slide_travel } from "./animation.mtek";
+import {
+    POPULATION,
+    NAMES,
+    ACCENTS,
+    cover_at,
+    cover_count,
+    cover_size,
+    Solid,
+    StoneTop,
+    GallerySolid,
+    LoungeSolid,
+    ArtPanel,
+    Casing,
+    blocked,
+    ray_box,
+    obstruction,
+    direction,
+    camera_offset,
+    Prop,
+    Strip,
+    Spark,
+    Trace,
+} from "./world.mtek";
+import { Guard, SHOT, HIT, RELOAD, CHIME, SWING } from "./actors.mtek";
+
+const HANDS = asset.glb("../models/Hands.glb");
+
+const CHARACTER_ATLAS = asset.texture("../models/Hands-atlas.png");
+
+const STONE = asset.texture("../textures/stone.png");
+
+const WALNUT = asset.texture("../textures/walnut.png");
+
+const SIGN = asset.texture("../textures/sign.png");
+
+const STEEL = asset.texture("../textures/steel.png");
+
+const GRIP = asset.texture("../textures/grip.png");
+
+const WEAPON = asset.glb("../models/slide.glb");
+
+// NIGHT SHIFT: one level, six rooms, exactly thirty guards. All simulation is Mtek.
+scene Hotel {
+    clear_color: #10141e;
+    ambient_color: #b4c5de;
+    ambient_intensity: 0.28;
+
+    // The host only supplies relative mouse look and focus. Keyboard/mouse buttons are native input.
+    state yaw: f32 = 0.0;
+    state pitch: f32 = 0.0;
+    state active: bool = false;
+    state health: i32 = 100;
+    state kills: i32 = 0;
+    state room: i32 = 0;
+    state room_kills: i32 = 0;
+    state victory: bool = false;
+    state loaded: bool = false;
+    state ammo: i32 = 12;
+    state shots: i32 = 0;
+    state headshots: i32 = 0;
+    state melee_kills: i32 = 0;
+    state elapsed: f32 = 0.0;
+    state reload: f32 = 0.0;
+    state fire_wait: f32 = 0.0;
+    state recoil: f32 = 0.0;
+    state recoil_velocity: f32 = 0.0;
+    state shot_age: f32 = 1.0;
+    state slide_time: f32 = 0.0;
+    state weapon_socket: vec3 = vec3(0.24, -0.25, -0.62);
+    state weapon_rotation: quat = quat.identity();
+    state rig_offset: vec3 = vec3(0.0, 0.0, 0.0);
+    state strike_socket: vec3 = vec3(0.0, 0.0, 0.0);
+    state impact: f32 = 0.0;
+    state punch: f32 = 0.0;
+    state punch_side: f32 = 1.0;
+    state finishing: bool = false;
+    state closing: bool = false;
+    state melee_wait: f32 = 0.0;
+    state melee_buffer: f32 = 0.0;
+    state finish_goal: vec3 = vec3(0.0, 0.0, 0.0);
+    state hitmark: f32 = 0.0;
+    state hurt: f32 = 0.0;
+    state immunity: f32 = 0.0;
+    state dash: f32 = 0.0;
+    state dash_wait: f32 = 0.0;
+    state dash_dir: vec3 = vec3(0.0, 0.0, -1.0);
+    state velocity: vec3 = vec3(0.0, 0.0, 0.0);
+    state bob: f32 = 0.0;
+    state motion: f32 = 0.0;
+    state turn_sway: f32 = 0.0;
+    state previous_yaw: f32 = 0.0;
+    state sprint_pose: f32 = 0.0;
+    state ads: f32 = 0.0;
+    state door: f32 = 0.0;
+    state banner: f32 = 2.5;
+    state fade: f32 = 0.0;
+    state eye: vec3 = vec3(0.0, 1.65, 7.0);
+    state look_pitch: f32 = 0.0;
+
+    camera Eyes {
+        position: bind(eye);
+        target: bind(eye + direction(yaw, look_pitch));
+        projection: Perspective { fov_y: 1.12; near: 0.035; far: 65.0 };
+    }
+    entity KeyLight {
+        rotation: quat.euler(-0.7, -0.4, 0.0);
+        light: DirectionalLight { color: #ffe4bb; intensity: 0.65 };
+    }
+    entity EntryLight {
+        position: vec3(0.0, 3.4, 6.0);
+        light: PointLight { color: #ffc98e; intensity: 5.5; range: 12.0 };
+    }
+    entity MeridianSign {
+        position: vec3(0.0, 3.58, -7.76);
+        mesh: Box { size: vec3(3.8, 0.72, 0.04) };
+        material: Pbr { base_color_texture: SIGN; roughness: 0.7 };
+    }
+    entity WarmPool {
+        position: vec3(-4.8, 2.8, 0.5);
+        light: PointLight { color: #ffce8b; intensity: 3.0; range: 7.0 };
+    }
+    entity AccentPool {
+        position: vec3(4.8, 2.8, -4.0);
+        light: PointLight { color: bind(ACCENTS[room]); intensity: 3.0; range: 7.0 };
+    }
+    entity Floor {
+        position: vec3(0.0, -0.13, -0.5);
+        mesh: Box { size: vec3(14.0, 0.25, 20.0) };
+        material: Pbr { base_color_texture: STONE; metallic: 0.18; roughness: 0.35 };
+    }
+    entity Ceiling {
+        position: vec3(0.0, 4.1, -0.5);
+        mesh: Box { size: vec3(14.0, 0.2, 20.0) };
+        material: Pbr { base_color: #18202a; roughness: 0.9 };
+    }
+    entity LeftWall {
+        position: vec3(-7.0, 2.0, 0.0);
+        mesh: Box { size: vec3(0.8, 4.0, 20.0) };
+        material: Pbr { base_color: #a5a7ad; base_color_texture: WALNUT; roughness: 0.58 };
+    }
+    entity RightWall {
+        position: vec3(7.0, 2.0, 0.0);
+        mesh: Box { size: vec3(0.8, 4.0, 20.0) };
+        material: Pbr { base_color: #a5a7ad; base_color_texture: WALNUT; roughness: 0.58 };
+    }
+    entity BackWall {
+        position: vec3(0.0, 2.0, 8.7);
+        mesh: Box { size: vec3(14.0, 4.0, 0.8) };
+        material: Pbr { base_color: #1d2530 };
+    }
+    entity ExitLeft {
+        position: vec3(-4.15, 2.0, -8.2);
+        mesh: Box { size: vec3(5.6, 4.0, 0.8) };
+        material: Pbr { base_color: #242b36 };
+    }
+    entity ExitRight {
+        position: vec3(4.15, 2.0, -8.2);
+        mesh: Box { size: vec3(5.6, 4.0, 0.8) };
+        material: Pbr { base_color: #242b36 };
+    }
+    entity ExitHeader {
+        position: vec3(0.0, 3.5, -8.2);
+        mesh: Box { size: vec3(2.7, 1.0, 0.8) };
+        material: Pbr { base_color: #242b36 };
+    }
+    entity Door {
+        position: bind(vec3(door * 2.8, 1.5, -8.25));
+        mesh: Box { size: vec3(2.7, 3.0, 0.20) };
+        material: Pbr { base_color: #46372b; metallic: 0.45; roughness: 0.42 };
+        entity InlayLeft {
+            position: vec3(-0.9, 0.0, 0.108);
+            mesh: Box { size: vec3(0.022, 2.72, 0.012) };
+            material: Pbr { base_color: #b89a66; metallic: 0.7; roughness: 0.3 };
+        }
+        entity InlayRight {
+            position: vec3(0.9, 0.0, 0.108);
+            mesh: Box { size: vec3(0.022, 2.72, 0.012) };
+            material: Pbr { base_color: #b89a66; metallic: 0.7; roughness: 0.3 };
+        }
+        entity Handle {
+            position: vec3(0.65, -0.05, 0.16);
+            mesh: Box { size: vec3(0.035, 0.42, 0.06) };
+            material: Pbr { base_color: #c5a978; metallic: 0.8; roughness: 0.25 };
+        }
+    }
+    entity DoorLight {
+        position: vec3(0.0, 3.12, -7.77);
+        mesh: Box { size: vec3(2.7, 0.055, 0.04) };
+        material: Unlit {
+            color: bind(
+                color.linear(vec3(0.15 + 0.65 * (1.0 - door), 0.15 + door * 0.7, 0.2), 1.0)
+            );
+        };
+    }
+    entity CorridorEnd {
+        position: vec3(0.0, 2.0, -10.0);
+        mesh: Box { size: vec3(14.0, 4.0, 0.3) };
+        material: Unlit { color: #10151b };
+    }
+
+    entity Player {
+        tag: "player";
+        position: vec3(0.0, 1.65, 7.0);
+        on message(value: string) {
+            if value == "kill" || value == "closekill" {
+                kills += 1;
+                room_kills += 1;
+                if value == "closekill" {
+                    health = min(100, health + 8);
+                    melee_kills += 1;
+                }
+                if room_kills == POPULATION[room] {
+                    banner = 2.8;
+                    play(CHIME, 0.5);
+                }
+            } else if value == "hurt" && immunity <= 0.0 && health > 0 {
+                health = max(0, health - 14);
+                hurt = 0.45;
+                immunity = 0.35;
+                play(HIT, 0.45, 0.7);
+            }
+        }
+    }
+
+    entity Guard0: Guard {
+        slot: 0;
+    }
+    entity Guard1: Guard {
+        slot: 1;
+    }
+    entity Guard2: Guard {
+        slot: 2;
+    }
+    entity Guard3: Guard {
+        slot: 3;
+    }
+    entity Guard4: Guard {
+        slot: 4;
+    }
+    entity Guard5: Guard {
+        slot: 5;
+    }
+    entity Guard6: Guard {
+        slot: 6;
+    }
+
+    entity Arms {
+        mesh: HANDS.mesh("Hands");
+        clip: "idle";
+        material: Pbr { base_color_texture: CHARACTER_ATLAS; roughness: 0.82 };
+        position: bind(eye + camera_offset(rig_offset, yaw, look_pitch));
+        rotation: bind(quat.euler(look_pitch, yaw, 0.0));
+    }
+    // The weapon follows an animated wrist socket; it never slides through the gripping hand.
+    entity Hands {
+        position: bind(eye + camera_offset(weapon_socket + rig_offset, yaw, look_pitch));
+        rotation: bind(quat.euler(look_pitch, yaw, 0.0) * weapon_rotation);
+        entity Slide {
+            tag: "weapon_slide";
+            position: vec3(0.0, 0.02, -0.10);
+            mesh: WEAPON.mesh("Slide");
+            clip: "Cycle";
+            material: Pbr {
+                base_color: #d5dbe0;
+                base_color_texture: STEEL;
+                metallic: 0.8;
+                roughness: 0.36;
+            };
+        }
+        entity Barrel {
+            position: vec3(0.0, 0.005, -0.24);
+            mesh: Box { size: vec3(0.04, 0.035, 0.09) };
+            material: Pbr { base_color: #0d1116; metallic: 0.8 };
+        }
+        entity EjectionPort {
+            position: bind(vec3(0.033, 0.025, -0.08) + vec3(0.0, 0.0, slide_travel(slide_time)));
+            mesh: Box { size: vec3(0.004, 0.027, 0.055) };
+            material: Pbr { base_color: #0b1017; metallic: 0.8 };
+        }
+        entity RearSight {
+            position: bind(vec3(0.0, 0.054, 0.014) + vec3(0.0, 0.0, slide_travel(slide_time)));
+            mesh: Box { size: vec3(0.052, 0.008, 0.017) };
+            material: Pbr { base_color: #10151e };
+        }
+        entity RearSightLeft {
+            position: bind(vec3(-0.020, 0.0645, 0.014) + vec3(0.0, 0.0, slide_travel(slide_time)));
+            mesh: Box { size: vec3(0.012, 0.012, 0.017) };
+            material: Pbr { base_color: #10151e };
+        }
+        entity RearSightRight {
+            position: bind(vec3(0.020, 0.0645, 0.014) + vec3(0.0, 0.0, slide_travel(slide_time)));
+            mesh: Box { size: vec3(0.012, 0.012, 0.017) };
+            material: Pbr { base_color: #10151e };
+        }
+        entity TriggerGuard {
+            position: vec3(0.0, -0.072, -0.09);
+            mesh: Box { size: vec3(0.03, 0.012, 0.10) };
+            material: Pbr { base_color: #151b24; metallic: 0.6 };
+        }
+        entity Grip {
+            position: vec3(0.0, -0.075, -0.015);
+            rotation: quat.euler(-0.22, 0.0, 0.0);
+            mesh: Box { size: vec3(0.06, 0.14, 0.085) };
+            material: Pbr { base_color_texture: GRIP; roughness: 0.85 };
+        }
+        entity Sight {
+            position: bind(vec3(0.0, 0.064, -0.21) + vec3(0.0, 0.0, slide_travel(slide_time)));
+            mesh: Box { size: vec3(0.012, 0.013, 0.018) };
+            material: Unlit { color: #8ee6d3 };
+        }
+        entity Magazine {
+            position: bind(vec3(0.0, -0.14 - magazine_drop(reload) * 0.24, -0.005));
+            mesh: Box { size: vec3(0.045, 0.11, 0.06) };
+            material: Pbr { base_color: #747b83; metallic: 0.7 };
+        }
+        entity Flash {
+            position: vec3(0.0, 0.01, -0.33);
+            visible: bind(shot_age < 0.035);
+            rotation: bind(quat.euler(0.0, 0.0, f32(shots) * 2.3));
+            mesh: Sphere { radius: 0.055; segments: 5; rings: 3 };
+            scale: vec3(1.0, 0.7, 2.4);
+            material: Unlit { color: #ffe4a0 };
+        }
+    }
+    update(dt: f32) {
+        if !active || health <= 0 || victory {
+            pause();
+            return;
+        }
+        if !loaded {
+            loaded = true;
+            animation.pause(first_tagged("weapon_slide"));
+            animation.seek(first_tagged("weapon_slide"), 0.0);
+            for guard in tagged("enemy") {
+                send(guard, NAMES[room]);
+            }
+            for i in 0..cover_count(room) {
+                let c = cover_at(room, i);
+                let size = cover_size(room, i);
+                var tint = #d0b9b0;
+                if room == 2 {
+                    tint = #e5b992;
+                }
+                if room == 3 {
+                    tint = #e8e7df;
+                }
+                if room == 4 {
+                    tint = #a0c6be;
+                }
+                if room == 5 {
+                    tint = #b8adc8;
+                }
+                if room == 3 {
+                    spawn(GallerySolid { at: c; size: size });
+                } else if room == 1 && size.y < 1.0 {
+                    spawn(LoungeSolid { at: c; size: size });
+                } else {
+                    spawn(Solid { at: c; size: size; tint: tint });
+                }
+                spawn(
+                    StoneTop {
+                        at: c + vec3(0.0, size.y * 0.5 + 0.025, 0.0);
+                        size: vec3(size.x + 0.06, 0.05, size.z + 0.06);
+                    },
+                );
+                spawn(
+                    Prop {
+                        at: c + vec3(0.0, size.y * 0.5 - 0.035, size.z * 0.5 + 0.006);
+                        size: vec3(size.x, 0.025, 0.015);
+                        tint: #b79a65;
+                    },
+                );
+                for rib in 0..8 {
+                    spawn(
+                        Prop {
+                            at: c
+                                + vec3(
+                                    (f32(rib) / 7.0 - 0.5) * size.x * 0.93,
+                                    0.0,
+                                    size.z * 0.5 + 0.008,
+                                );
+                            size: vec3(0.012, size.y * 0.86, 0.015);
+                            tint: #6b5541;
+                        },
+                    );
+                }
+                if size.y < 1.5 {
+                    spawn(
+                        Strip {
+                            at: c + vec3(0.0, -size.y * 0.3, size.z * 0.5 + 0.01);
+                            size: vec3(size.x * 0.85, 0.025, 0.02);
+                            tint: ACCENTS[room];
+                        },
+                    );
+                }
+            }
+            // Room-specific silhouettes and floor plans, beyond a palette change.
+            if room == 0 {
+                spawn(
+                    Prop { at: vec3(-3.5, 1.48, 1.0); size: vec3(0.6, 0.3, 0.25); tint: #141e27 },
+                );
+                spawn(Prop { at: vec3(0.0, 0.01, 4.5); size: vec3(5.0, 0.02, 3.0); tint: #25484d });
+            }
+            if room == 1 {
+                for seat in 0..3 {
+                    spawn(
+                        Prop {
+                            at: vec3(-5.0 + f32(seat), 0.95, -1.1);
+                            size: vec3(0.88, 0.12, 0.75);
+                            tint: #8a4260;
+                        },
+                    );
+                    spawn(
+                        Prop {
+                            at: vec3(3.0 + f32(seat), 0.95, -4.1);
+                            size: vec3(0.88, 0.12, 0.75);
+                            tint: #8a4260;
+                        },
+                    );
+                }
+                spawn(
+                    Prop { at: vec3(-4.0, 0.01, 0.4); size: vec3(4.0, 0.02, 5.0); tint: #442e48 },
+                );
+            }
+            if room == 2 {
+                for place in 0..5 {
+                    let z = 1.8 - f32(place) * 1.3;
+                    spawn(
+                        Prop {
+                            at: vec3(-0.7, 0.91, z);
+                            size: vec3(0.4, 0.025, 0.4);
+                            tint: #e2d9c2;
+                        },
+                    );
+                    spawn(
+                        Prop { at: vec3(0.7, 0.91, z); size: vec3(0.4, 0.025, 0.4); tint: #e2d9c2 },
+                    );
+                    spawn(
+                        Strip {
+                            at: vec3(0.0, 1.04, z);
+                            size: vec3(0.05, 0.3, 0.05);
+                            tint: #ffcd7c;
+                        },
+                    );
+                }
+                spawn(
+                    Strip { at: vec3(0.0, 3.3, -1.0); size: vec3(0.6, 0.12, 7.0); tint: #ffd08e },
+                );
+            }
+            if room == 3 {
+                for exhibit in 0..4 {
+                    let at = cover_at(room, exhibit);
+                    spawn(
+                        Prop {
+                            at: at + vec3(0.0, 0.63, 0.0);
+                            size: vec3(1.7, 0.03, 1.1);
+                            tint: #182531;
+                        },
+                    );
+                    spawn(
+                        Strip {
+                            at: at + vec3(0.0, 0.65, 0.0);
+                            size: vec3(1.3, 0.02, 0.7);
+                            tint: ACCENTS[room];
+                        },
+                    );
+                }
+            }
+            if room == 4 {
+                spawn(
+                    Prop { at: vec3(2.0, 1.55, -3.3); size: vec3(1.0, 0.5, 0.08); tint: #111d27 },
+                );
+                spawn(
+                    Strip {
+                        at: vec3(2.0, 1.55, -3.24);
+                        size: vec3(0.9, 0.4, 0.015);
+                        tint: #80b5b8;
+                    },
+                );
+                spawn(
+                    Prop { at: vec3(2.0, 0.01, -4.0); size: vec3(6.0, 0.02, 5.0); tint: #253b40 },
+                );
+            }
+            if room == 5 {
+                // A panoramic city wall replaces the repeated picture frames.
+                spawn(
+                    Strip { at: vec3(6.55, 2.0, -0.5); size: vec3(0.02, 3.2, 13.0); tint: #132238 },
+                );
+                for building in 0..18 {
+                    let z = 5.6 - f32(building) * 0.68;
+                    let height = 0.5 + f32(building % 4) * 0.35;
+                    spawn(
+                        Strip {
+                            at: vec3(6.52, 0.5 + height * 0.5, z);
+                            size: vec3(0.02, height, 0.48);
+                            tint: #274962;
+                        },
+                    );
+                    spawn(
+                        Strip {
+                            at: vec3(6.50, 0.9 + height * 0.4, z);
+                            size: vec3(0.02, 0.06, 0.25);
+                            tint: #d4b579;
+                        },
+                    );
+                }
+            }
+            for side in 0..2 {
+                let x = (f32(side) * 2.0 - 1.0) * 6.53;
+                spawn(
+                    Prop { at: vec3(x, 1.05, -0.5); size: vec3(0.08, 0.035, 16.2); tint: #9d8053 },
+                );
+                spawn(
+                    Prop { at: vec3(x, 3.72, -0.5); size: vec3(0.09, 0.06, 16.2); tint: #9d8053 },
+                );
+            }
+            for i in 0..9 {
+                let z = 7.5 - f32(i) * 1.8;
+                spawn(
+                    Strip {
+                        at: vec3(-6.56, 0.12, z);
+                        size: vec3(0.03, 0.045, 1.5);
+                        tint: ACCENTS[room];
+                    },
+                );
+                spawn(
+                    Strip {
+                        at: vec3(6.56, 0.12, z);
+                        size: vec3(0.03, 0.045, 1.5);
+                        tint: ACCENTS[room];
+                    },
+                );
+                spawn(Prop { at: vec3(-6.5, 2.0, z); size: vec3(0.14, 3.6, 0.055); tint: #a58d63 });
+                spawn(Prop { at: vec3(6.5, 2.0, z); size: vec3(0.14, 3.6, 0.055); tint: #a58d63 });
+            }
+            for i in 0..4 {
+                let z = 5.0 - f32(i) * 3.5;
+                spawn(Prop { at: vec3(0.0, 3.94, z); size: vec3(11.5, 0.12, 2.4); tint: #10151a });
+                spawn(Prop { at: vec3(0.0, 3.86, z); size: vec3(5.0, 0.10, 0.38); tint: #57452f });
+                spawn(
+                    Strip { at: vec3(0.0, 3.82, z); size: vec3(4.4, 0.025, 0.07); tint: #d9b77f },
+                );
+                spawn(Prop { at: vec3(-6.4, 2.2, z); size: vec3(0.08, 1.5, 1.8); tint: #111b28 });
+                spawn(ArtPanel { at: vec3(-6.34, 2.2, z) });
+                if room != 5 {
+                    spawn(
+                        Prop { at: vec3(6.4, 2.2, z); size: vec3(0.08, 1.5, 1.8); tint: #111b28 },
+                    );
+                    spawn(ArtPanel { at: vec3(6.34, 2.2, z) });
+                }
+            }
+        }
+        elapsed += dt;
+        banner = max(0.0, banner - dt);
+        fade = max(0.0, fade - dt);
+        immunity = max(0.0, immunity - dt);
+        hurt = max(0.0, hurt - dt);
+        hitmark = max(0.0, hitmark - dt);
+        fire_wait = max(0.0, fire_wait - dt);
+        shot_age += dt;
+        slide_time = animation.time(first_tagged("weapon_slide"));
+        impact = max(0.0, impact - dt);
+        // Damped recoil spring, integrated in substeps; slight settling rather than a linear reset.
+        for substep in 0..4 {
+            recoil_velocity += (-340.0 * recoil - 25.0 * recoil_velocity) * dt * 0.25;
+            recoil += recoil_velocity * dt * 0.25;
+        }
+        melee_wait = max(0.0, melee_wait - dt);
+        dash_wait = max(0.0, dash_wait - dt);
+        dash = max(0.0, dash - dt);
+        var aim_target = 0.0;
+        if is_pointer_down(2) && reload <= 0.0 && punch <= 0.0 {
+            aim_target = 1.0;
+        }
+        ads = mix(ads, aim_target, 1.0 - exp(-16.0 * dt));
+        pitch = clamp(pitch, -1.15, 1.15);
+        // Arrow keys are an accessible fallback when running the generated scene-only page.
+        if is_key_down(Key.ArrowLeft) {
+            yaw += dt * 1.8;
+        }
+        if is_key_down(Key.ArrowRight) {
+            yaw -= dt * 1.8;
+        }
+        let forward = direction(yaw, 0.0);
+        let right = vec3(cos(yaw), 0.0, -sin(yaw));
+        var movement = vec3(0.0, 0.0, 0.0);
+        if is_key_down(Key.W) {
+            movement += forward;
+        }
+        if is_key_down(Key.S) {
+            movement -= forward;
+        }
+        if is_key_down(Key.D) {
+            movement += right;
+        }
+        if is_key_down(Key.A) {
+            movement -= right;
+        }
+        var speed = 4.1 - ads * 1.7;
+        if is_key_down(Key.ShiftLeft) && ads < 0.1 {
+            speed = 6.2;
+        }
+        if key_pressed(Key.Space) && dash_wait <= 0.0 {
+            dash = 0.18;
+            dash_wait = 0.85;
+            immunity = 0.22;
+            dash_dir = forward;
+            if length(movement) > 0.01 {
+                dash_dir = normalize(movement);
+            }
+        }
+        velocity = mix(velocity, normalize(movement) * speed, 1.0 - exp(-18.0 * dt));
+        var travel = velocity;
+        if dash > 0.0 {
+            travel = dash_dir * 11.0;
+        }
+        if closing && punch > 0.30 {
+            let close_delta = vec3(
+                finish_goal.x - Player.position.x,
+                0.0,
+                finish_goal.z - Player.position.z,
+            );
+            let gap = length(close_delta);
+            var approach_speed = 1.8;
+            if finishing {
+                approach_speed = 5.5;
+            }
+            if gap > 0.85 {
+                travel = normalize(close_delta)
+                    * min(approach_speed, (gap - 0.85) / max(dt, 0.001));
+            } else {
+                travel = vec3(0.0, 0.0, 0.0);
+            }
+        }
+        let movement_start = Player.position;
+        // Substeps preserve wall collision even at the runtime's maximum frame delta.
+        for step in 0..4 {
+            var next = Player.position + vec3(travel.x * dt * 0.25, 0.0, 0.0);
+            if !blocked(next, room, 0.3) {
+                Player.position = next;
+            }
+            next = Player.position + vec3(0.0, 0.0, travel.z * dt * 0.25);
+            if !blocked(next, room, 0.3) && (next.z > -7.45 || door > 0.95) {
+                Player.position = next;
+            }
+        }
+        let travelled = length(Player.position - movement_start);
+        motion = mix(motion, min(travelled / max(dt, 0.001), 6.2), 1.0 - exp(-16.0 * dt));
+        bob += travelled * 2.2;
+        let turn_rate = atan2(sin(yaw - previous_yaw), cos(yaw - previous_yaw)) / max(dt, 0.001);
+        previous_yaw = yaw;
+        turn_sway = mix(turn_sway, clamp(turn_rate * -0.008, -0.025, 0.025), 1.0 - exp(-12.0 * dt));
+        var sprint_target = 0.0;
+        if speed > 6.0 && motion > 4.5 && reload <= 0.0 && punch <= 0.0 && shot_age > 0.25 {
+            sprint_target = 1.0;
+        }
+        sprint_pose = mix(sprint_pose, sprint_target, 1.0 - exp(-14.0 * dt));
+        eye = Player.position + vec3(0.0, sin(bob) * min(motion, 1.0) * 0.022 - dash * 0.65, 0.0);
+        eye += forward * max(punch_reach(punch), 0.0) * 0.08;
+        look_pitch = pitch + recoil * 0.018 + sin(impact * 55.0) * impact * 0.07;
+        let aim = direction(yaw, look_pitch);
+
+        // Last-round hold-open persists until the magazine is seated.
+        if ammo == 0 && shot_age > 0.025 {
+            if reload <= 0.0 || reload > 0.25 {
+                animation.pause(first_tagged("weapon_slide"));
+                animation.seek(first_tagged("weapon_slide"), 0.025);
+            } else {
+                animation.resume(first_tagged("weapon_slide"));
+            }
+        }
+        if reload > 0.0 {
+            reload = max(0.0, reload - dt);
+            if reload <= 0.0 {
+                ammo = 12;
+            }
+        }
+        if (key_pressed(Key.R) || (ammo == 0 && is_pointer_down(0)))
+            && ammo < 12
+            && reload <= 0.0
+            && punch <= 0.0 {
+            reload = 1.25;
+            animation.transition(Arms, "reload", 0.06, false, 1.0);
+            animation.play(Arms, false, 1.0);
+            play(RELOAD, 0.5);
+        }
+        melee_buffer = max(0.0, melee_buffer - dt);
+        if key_pressed(Key.F) && punch > 0.0 && punch < 0.28 {
+            melee_buffer = 0.32;
+        }
+        if (key_pressed(Key.F) || key_pressed(Key.E) || melee_buffer > 0.0) && melee_wait <= 0.0 {
+            melee_buffer = 0.0;
+            punch = 0.5;
+            banner = 0.0;
+            play(SWING, 0.55);
+            melee_wait = 0.5;
+            punch_side = -punch_side;
+            finishing = false;
+            closing = false;
+            {
+                var closest_grab = 1.45;
+                if key_pressed(Key.E) {
+                    closest_grab = 1.75;
+                }
+                var victim = first_tagged("enemy");
+                for enemy in tagged("enemy") {
+                    let delta = enemy.position + vec3(0.0, 1.3, 0.0) - eye;
+                    let range = length(delta);
+                    if range < closest_grab
+                        && dot(normalize(delta), aim) > 0.72
+                        && obstruction(eye, normalize(delta), room) > range {
+                        closest_grab = range;
+                        victim = enemy;
+                        closing = true;
+                        finishing = key_pressed(Key.E);
+                    }
+                }
+                if closing {
+                    finish_goal = victim.position;
+                }
+                if finishing {
+                    send(victim, "grapple");
+                    immunity = max(immunity, 0.30);
+                }
+            }
+            reload = 0.0;
+            if finishing {
+                animation.transition(Arms, "finish", 0.08, false, 1.0);
+            } else if punch_side < 0.0 {
+                animation.transition(Arms, "jab", 0.08, false, 1.0);
+            } else {
+                animation.transition(Arms, "cross", 0.08, false, 1.0);
+            }
+            animation.play(Arms, false, 1.0);
+            if finishing {
+                melee_wait = 0.9;
+            }
+        }
+        if punch > 0.0 {
+            punch = max(0.0, punch - dt);
+            if animation.crossed(Arms, 0.20) {
+                var closest = 1.55;
+                var target = first_tagged("enemy");
+                var found = false;
+                for enemy in tagged("enemy") {
+                    let delta = enemy.position + vec3(0.0, 1.3, 0.0) - eye;
+                    let range = length(delta);
+                    if range < closest
+                        && dot(normalize(delta), aim) > 0.65
+                        && obstruction(eye, normalize(delta), room) > range {
+                        closest = range;
+                        target = enemy;
+                        found = true;
+                    }
+                }
+                if found {
+                    if finishing && closest < 1.75 {
+                        send(target, "finish");
+                    } else {
+                        if punch_side < 0.0 {
+                            send(target, "punch_left");
+                        } else {
+                            send(target, "punch_right");
+                        }
+                    }
+                    play(HIT, 0.7);
+                    hitmark = 0.2;
+                    impact = 0.12;
+                    immunity = 0.25;
+                    spawn(Spark { at: target.position + vec3(0.0, 1.4, 0.0); tint: #ffffff });
+                }
+            }
+        }
+        if is_pointer_down(0) && fire_wait <= 0.0 && reload <= 0.0 && punch <= 0.0 && ammo > 0 {
+            ammo -= 1;
+            shots += 1;
+            banner = 0.0;
+            fire_wait = 0.19;
+            recoil = 1.0;
+            recoil_velocity = 0.0;
+            shot_age = 0.0;
+            if ads > 0.5 {
+                animation.transition(Arms, "aim_fire", 0.015, false, 1.0);
+            } else {
+                animation.transition(Arms, "fire", 0.015, false, 1.0);
+            }
+            animation.play(Arms, false, 1.0);
+            animation.play(first_tagged("weapon_slide"), false, 1.0);
+            play(SHOT, 0.55, 1.0);
+            spawn(
+                Casing {
+                    at: eye
+                        + camera_offset(
+                            weapon_socket + rig_offset + weapon_rotation * vec3(0.04, 0.025, -0.08),
+                            yaw,
+                            look_pitch,
+                        );
+                    velocity: right * 1.8 + vec3(0.0, 0.9, 0.0);
+                },
+            );
+            var nearest = obstruction(eye, aim, room);
+            var target = first_tagged("enemy");
+            var found = false;
+            var head = false;
+            for enemy in tagged("enemy") {
+                let skull = ray_box(
+                    eye,
+                    aim,
+                    enemy.position + vec3(0.0, 1.65, 0.0),
+                    vec3(0.23, 0.24, 0.23),
+                );
+                let body = ray_box(
+                    eye,
+                    aim,
+                    enemy.position + vec3(0.0, 0.87, 0.0),
+                    vec3(0.38, 0.65, 0.32),
+                );
+                if min(skull, body) < nearest {
+                    nearest = min(skull, body);
+                    target = enemy;
+                    found = true;
+                    head = skull < body;
+                }
+            }
+            if found {
+                if head {
+                    send(target, "head");
+                    headshots += 1;
+                } else {
+                    send(target, "shot");
+                }
+                hitmark = 0.16;
+                play(HIT, 0.3, 1.25);
+            }
+            spawn(Spark { at: eye + aim * nearest });
+            // Start at the muzzle, outside the near plane: a tracer starting at the eye
+            // becomes a huge triangle across the viewport.
+            if nearest > 1.0 {
+                let muzzle = eye
+                    + camera_offset(
+                        weapon_socket + rig_offset + weapon_rotation * vec3(0.0, 0.01, -0.33),
+                        yaw,
+                        look_pitch,
+                    );
+                let end = eye + aim * nearest;
+                let ray = normalize(end - muzzle);
+                spawn(
+                    Trace {
+                        at: (muzzle + end) * 0.5;
+                        yaw: atan2(-ray.x, -ray.z);
+                        pitch: asin(ray.y);
+                        span: distance(muzzle, end);
+                    },
+                );
+            }
+        }
+
+        if room_kills >= POPULATION[room] {
+            door = min(1.0, door + dt * 1.7);
+            if Player.position.z < -8.65 {
+                if room == 5 {
+                    victory = true;
+                    pause();
+                } else {
+                    room += 1;
+                    room_kills = 0;
+                    loaded = false;
+                    door = 0.0;
+                    destroy_tagged("decor");
+                    destroy_tagged("cover");
+                    destroy_tagged("body");
+                    destroy_tagged("effect");
+                    Player.position = vec3(0.0, 1.65, 7.0);
+                    eye = Player.position;
+                    velocity = vec3(0.0, 0.0, 0.0);
+                    ammo = 12;
+                    health = min(100, health + 20);
+                    reload = 0.0;
+                    punch = 0.0;
+                    dash = 0.0;
+                    immunity = 1.0;
+                    banner = 2.5;
+                    fade = 0.5;
+                }
+            }
+        }
+        if reload <= 0.0 && punch <= 0.0 && shot_age > 0.19 {
+            if aim_target > 0.5 {
+                animation.transition(Arms, "aim", 0.18, true, 1.0);
+            } else {
+                animation.transition(Arms, "idle", 0.18, true, 1.0);
+            }
+        }
+        rig_offset = vec3(
+            (sin(bob * 0.5) * min(motion, 1.0) * 0.010 + turn_sway) * (1.0 - ads),
+            (cos(bob) * min(motion, 1.0) * 0.008 - sprint_pose * 0.075) * (1.0 - ads),
+            sprint_pose * 0.025,
+        );
+        weapon_socket = animation.joint_position(Arms, "weapon");
+        weapon_rotation = animation.joint_rotation(Arms, "weapon");
+        if ads > 0.99 && shot_age > 0.19 && reload <= 0.0 && punch <= 0.0 {
+            let sight_tip = weapon_socket + weapon_rotation * vec3(0.0, 0.0705, -0.21);
+            rig_offset = mix(rig_offset, vec3(-sight_tip.x, -sight_tip.y, 0.0), ads);
+        }
+        if punch_side < 0.0 {
+            strike_socket = animation.joint_position(Arms, "LHand");
+        } else {
+            strike_socket = animation.joint_position(Arms, "RHand");
+        }
+    }
+
+    ui(dt: f32) {
+        // The host owns the title/pause panel. Avoid drawing gameplay labels over its controls.
+        if !active && health > 0 && !victory {
+            return;
+        }
+        if active && health > 0 && !victory && paused() {
+            resume();
+        }
+        hud.text("NIGHT SHIFT", vec2(-0.94, 0.91), 19.0, #e8d7b3, 0.0);
+        hud.text("01 / THE MERIDIAN", vec2(-0.94, 0.84), 12.0, #99a6b6, 0.0);
+        hud.text("${kills} / 30", vec2(0.94, 0.91), 26.0, #f5efe1, 1.0);
+        hud.text("ROOM ${room + 1} / 6", vec2(0.94, 0.83), 12.0, #99a6b6, 1.0);
+        hud.text("${health}", vec2(-0.94, -0.81), 30.0, #f5efe1, 0.0);
+        hud.text("VITALS", vec2(-0.94, -0.9), 11.0, #99a6b6, 0.0);
+        hud.rect(vec2(-0.94, -0.75), vec2(f32(health) * 1.1, 3.0), #8ed7bd, 0.0);
+        hud.text("${ammo} / 12", vec2(0.94, -0.81), 30.0, #f5efe1, 1.0);
+        if reload > 0.0 {
+            hud.text("RELOADING", vec2(0.94, -0.9), 11.0, #e8d7b3, 1.0);
+        } else {
+            hud.text("9 MM  /  INFINITE RESERVE", vec2(0.94, -0.9), 11.0, #99a6b6, 1.0);
+        }
+        if ads < 0.95 {
+            hud.rect(vec2(0.0, 0.0), vec2(3.0, 3.0), #f5efe1, 0.5);
+        }
+        if hitmark > 0.0 {
+            hud.text("×", vec2(0.0, -0.012), 30.0, #f2c98c, 0.5);
+        }
+        if dash_wait <= 0.0 {
+            hud.text("DODGE READY", vec2(0.0, -0.91), 10.0, #8ed7bd, 0.5);
+        }
+        if room_kills >= POPULATION[room] {
+            hud.text(
+                "ROOM CLEAR  /  MOVE THROUGH THE GOLD DOOR",
+                vec2(0.0, 0.69),
+                16.0,
+                #8ed7bd,
+                0.5,
+            );
+        } else if banner > 0.0 {
+            hud.text(NAMES[room], vec2(0.0, 0.69), 24.0, #e8d7b3, 0.5);
+            hud.text(
+                "${POPULATION[room] - room_kills} HOSTILES",
+                vec2(0.0, 0.60),
+                12.0,
+                #99a6b6,
+                0.5,
+            );
+        }
+        let close = nearest_tagged("enemy", Player.position);
+        if punch <= 0.0
+            && alive(close)
+            && distance(close.position + vec3(0.0, 1.3, 0.0), eye) < 1.75 {
+            hud.text("E  TAKEDOWN  /  F  STRIKE", vec2(0.0, -0.45), 14.0, #e8d7b3, 0.5);
+        }
+        if hurt > 0.0 {
+            hud.rect(vec2(-1.0, 0.0), vec2(12.0, 4000.0), #d95455, 0.0);
+            hud.rect(vec2(1.0, 0.0), vec2(12.0, 4000.0), #d95455, 1.0);
+        }
+        if fade > 0.0 {
+            hud.rect(
+                vec2(0.0, 0.0),
+                vec2(8000.0, 8000.0),
+                color.linear(vec3(0.02, 0.03, 0.05), fade * 2.0),
+                0.5,
+            );
+        }
+        if health <= 0 || victory {
+            hud.rect(vec2(0.0, 0.0), vec2(8000.0, 8000.0), #080e18dc, 0.5);
+            if victory {
+                hud.text("CONTRACT COMPLETE", vec2(0.0, 0.28), 38.0, #e8d7b3, 0.5);
+            } else {
+                hud.text("END OF SHIFT", vec2(0.0, 0.28), 38.0, #e8d7b3, 0.5);
+            }
+            hud.text(
+                "${kills} / 30   /   ${headshots} HEADSHOTS   /   ${melee_kills} CLOSE QUARTERS",
+                vec2(0.0, 0.08),
+                16.0,
+                #f5efe1,
+                0.5,
+            );
+            hud.text(
+                "${elapsed:.1} SECONDS  /  ${shots} SHOTS FIRED",
+                vec2(0.0, -0.04),
+                13.0,
+                #99a6b6,
+                0.5,
+            );
+            hud.text("PRESS ENTER TO RUN IT AGAIN", vec2(0.0, -0.25), 16.0, #8ed7bd, 0.5);
+        }
+    }
+    on key_down(Key.Enter) {
+        if health <= 0 || victory {
+            reset();
+        } else {
+            active = true;
+            resume();
+        }
+    }
+    on key_down(Key.Escape) {
+        active = false;
+        pause();
+    }
+    on key_down(Key.M) {
+        set_muted(!is_muted());
+    }
+}

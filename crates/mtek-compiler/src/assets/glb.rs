@@ -213,10 +213,11 @@ pub struct GlbFile {
     /// The default scene: `scene`, or the first scene when the file names none.
     pub default_scene: Option<usize>,
     /// Node TRS clips (decision 0156). Empty when the file has no LINEAR or STEP
-    /// translation, rotation or scale channels. Skins are rejected (`E7019`); an animation with
+    /// translation, rotation or scale channels. Skeletal data is validated separately; an animation with
     /// a morph-weight channel, a cubic spline or another interpolation is not a clip but is
     /// listed in [`Self::unsupported_animations`] (decision 0174).
     pub clips: Vec<GlbClip>,
+    pub skins: Vec<super::skin::SkinMesh>,
     /// Animations the profile cannot play. They do not fail the file: a program that never
     /// names one in a `clip` does not notice them (`E7019` at the `clip` that does).
     pub unsupported_animations: Vec<UnsupportedAnimation>,
@@ -318,6 +319,9 @@ impl GlbFile {
     #[must_use]
     pub fn clip_for(&self, name: &str, mesh: &str) -> Option<GlbClip> {
         let clip = self.clips.iter().find(|clip| clip.name == name)?;
+        if self.skins.iter().any(|skin| skin.mesh == mesh) {
+            return Some(clip.clone());
+        }
         let node = clip.channels.iter().find(|channel| {
             channel.mesh_name.as_deref() == Some(mesh) || channel.node_name.as_deref() == Some(mesh)
         })?;
@@ -726,7 +730,7 @@ pub fn read_glb(path: &str, bytes: &[u8], limits: &AssetLimits) -> Result<GlbFil
             )]);
         }
     };
-    let root = document.into_json();
+    let root = document.clone().into_json();
     let bin = chunks.bin.unwrap_or(&[]);
     let mut validator = Validator::new(&root, bin, limits);
     validator.run();
@@ -742,6 +746,7 @@ pub fn read_glb(path: &str, bytes: &[u8], limits: &AssetLimits) -> Result<GlbFil
     if !issues.is_empty() {
         return Err(finish(issues));
     }
+    let skins = super::skin::read(&document, bin, &clips).map_err(|issue| vec![issue])?;
     let effective = effective_len(&root, bin);
     let (nodes, scenes, default_scene) = hierarchy(&root);
     Ok(GlbFile {
@@ -755,6 +760,7 @@ pub fn read_glb(path: &str, bytes: &[u8], limits: &AssetLimits) -> Result<GlbFil
         nodes,
         scenes,
         default_scene,
+        skins,
         clips,
         unsupported_animations,
     })
@@ -1224,6 +1230,7 @@ impl<'a> Validator<'a> {
                 Semantic::TexCoords(0) => {
                     uv = self.float_attribute(what, "TEXCOORD_0", accessor_index, Type::Vec2);
                 }
+                Semantic::Joints(0) | Semantic::Weights(0) if !self.root.skins.is_empty() => {},
                 Semantic::Joints(_) | Semantic::Weights(_) => self.report(
                     5,
                     Issue::new(
@@ -1841,25 +1848,11 @@ impl<'a> Validator<'a> {
         sampler.map(|sampler| GlbTexture { image, sampler })
     }
 
-    /// Skins stay `E7019` (decision 0156). LINEAR and STEP translation, rotation and scale
+    /// Invalid skins use `E7019` (decision 0191). LINEAR and STEP translation, rotation and scale
     /// channels are packaged as [`GlbClip`]s. An animation with a morph-weight channel, a cubic
     /// spline, another interpolation or a keyframe count outside 1 to 4096 is listed as
     /// unsupported instead (decision 0174): it fails only where a `clip` names it.
     fn check_animations(&mut self) {
-        let skins = self.root.skins.len();
-        if skins > 0 {
-            self.report(
-                12,
-                Issue::new(
-                    Code::E7019,
-                    format!(
-                        "The file contains {skins} skin{}; the v0.1 profile has no skins.",
-                        plural(skins)
-                    ),
-                )
-                .help("export the model without skins"),
-            );
-        }
         let mut names: Vec<String> = Vec::new();
         for (index, animation) in self.root.animations.iter().enumerate() {
             let name = animation
@@ -2202,10 +2195,6 @@ impl ClipComponent {
             }
         }
     }
-}
-
-fn plural(count: usize) -> &'static str {
-    if count == 1 { "" } else { "s" }
 }
 
 fn semantic_name(semantic: &Semantic) -> String {

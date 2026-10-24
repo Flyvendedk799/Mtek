@@ -211,7 +211,7 @@ Parentheses group. There is no ternary operator, no assignment expression, no co
 | `!` | `bool` | `bool` |
 | `&& \|\|` | `bool` | `bool`, short-circuit on CPU; on GPU both operands are evaluated only if both are side-effect-free, which v0.1 GPU code always is |
 | `< <= > >=` | `f32`, `i32`, `u32` (same type) | `bool` |
-| `== !=` | same-typed `bool`, `f32`, `i32`, `u32`, `entity_ref`, values of one user `enum` (§5.7) | `bool` |
+| `== !=` | same-typed `bool`, `f32`, `i32`, `u32`, `string` (CPU only, exact text equality), `entity_ref`, values of one user `enum` (§5.7) | `bool` |
 
 Vector `==` is not defined in v0.1 (`E3012`). `%` on `f32` is the truncated remainder `x - y * trunc(x / y)`.
 
@@ -681,6 +681,28 @@ A physical keyboard key, independent of the layout. Written `Key.<Member>` with 
 
 ### Namespaces
 
+#### `animation`
+
+Controls an entity's imported node clip (decision 0190).
+
+| Member | Kind | Signatures | Domain | Constant | Description |
+|---|---|---|---|---|---|
+| `animation.copy_pose` | function | `(target: entity_ref, source: entity_ref) -> bool` | cpu | no | Copies the displayed pose from a compatible skeleton and holds it. A subsequent transition blends from that pose. |
+| `animation.crossed` | function | `(target: entity_ref, marker: f32) -> bool` | cpu | no | Whether a marker in (0, duration] was crossed in the latest update, including loop wraps. Not consumed by reading. |
+| `animation.duration` | function | `(target: entity_ref) -> f32` | cpu | no | Clip duration in seconds; zero for an unavailable clip. |
+| `animation.fade` | function | `(target: entity_ref, weight: f32, duration: f32) -> bool` | cpu | no | Smoothly blends clip weight toward a clamped 0..1 target over seconds; zero applies immediately. |
+| `animation.finished` | function | `(target: entity_ref) -> bool` | cpu | no | Whether a one-shot clip reached its end. |
+| `animation.joint_position` | function | `(target: entity_ref, name: string) -> vec3` | cpu | no | Joint position in the skeletal mesh local space; zero if missing. |
+| `animation.joint_rotation` | function | `(target: entity_ref, name: string) -> quat` | cpu | no | Joint rotation in skeletal mesh local space; identity if missing. |
+| `animation.pause` | function | `(target: entity_ref) -> bool` | cpu | no | Freezes clip time; fades continue during scene updates. |
+| `animation.play` | function | `(target: entity_ref, looping: bool, speed: f32) -> bool` | cpu | no | Restarts the clip. Speed must be finite and nonnegative. Returns false for an unavailable clip. |
+| `animation.playing` | function | `(target: entity_ref) -> bool` | cpu | no | Whether clip time is advancing; false for an unavailable clip. |
+| `animation.resume` | function | `(target: entity_ref) -> bool` | cpu | no | Continues a paused clip; returns false for a finished clip. |
+| `animation.seek` | function | `(target: entity_ref, time: f32) -> bool` | cpu | no | Clamps time to the clip duration and applies the pose immediately, without crossing markers or resuming. |
+| `animation.time` | function | `(target: entity_ref) -> f32` | cpu | no | Current clip time in seconds; zero for an unavailable clip. |
+| `animation.transition` | function | `(target: entity_ref, name: string, seconds: f32, looping: bool, speed: f32) -> bool` | cpu | no | Selects a skeletal clip, crossfading from the current pose. Repeating the current name does not restart it; use play to restart. |
+| `animation.weight` | function | `(target: entity_ref) -> f32` | cpu | no | Current clip weight; zero for an unavailable clip. |
+
 #### `asset`
 
 Compile-time asset declarations. The argument must be a string literal naming a file inside the project.
@@ -903,7 +925,7 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `angular_velocity` | `vec3` | Dynamic, Kinematic | Angular velocity as of the last completed tick. Read-only. |
 | `linear_velocity` | `vec3` | Dynamic, Kinematic | Linear velocity as of the last completed tick. Read-only. |
 
-## Part C. Features of this build (234)
+## Part C. Features of this build (250)
 
 The list below is `supported.features` of `mtek context`, printed by the compiler this document was generated with. It is derived by the compiler from its construct table and from the registry, never typed in. A feature is supported when a test that would fail without it passes in a recorded environment (`spec/testing.md`); `docs/coverage-matrix.md` shows which program or fixture exercises each one.
 
@@ -927,17 +949,17 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 `event:collision_enter` `event:collision_exit` `event:key_down` `event:key_up` `event:message` `event:pointer_down` `event:pointer_move` `event:pointer_up`
 
-### Functions (120)
+### Functions (135)
 
-`function:abs` `function:acos` `function:alive` `function:asin` `function:asset.font` `function:asset.glb` `function:asset.linear_texture` `function:asset.sound` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:chance` `function:choose` `function:clamp` `function:clear_saved` `function:color.linear` `function:color.srgb` `function:cos` `function:count_tagged` `function:cross` `function:degrees` `function:destroy` `function:destroy_tagged` `function:distance` `function:dot` `function:easing.in_cubic` `function:easing.in_out_cubic` `function:easing.in_out_quad` `function:easing.in_out_sine` `function:easing.in_quad` `function:easing.out_back` `function:easing.out_bounce` `function:easing.out_cubic` `function:easing.out_elastic` `function:easing.out_quad` `function:exp` `function:exp2` `function:first_tagged` `function:floor` `function:fract` `function:gamepad.axis` `function:gamepad.button` `function:gamepad.connected` `function:go_to` `function:has_tag` `function:hud.button` `function:hud.pixel_font` `function:hud.rect` `function:hud.text` `function:inverse_sqrt` `function:is_key_down` `function:is_muted` `function:is_pointer_down` `function:key_pressed` `function:key_released` `function:length` `function:lighting.pbr` `function:load` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:nearest_tagged` `function:normalize` `function:overlap_boxes` `function:overlap_spheres` `function:particle_count` `function:pause` `function:paused` `function:play` `function:play_at` `function:play_music` `function:pointer_position` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:random_int` `function:random_range` `function:reflect` `function:reset` `function:resume` `function:round` `function:sample` `function:sampler.linear_clamp` `function:sampler.linear_repeat` `function:sampler.nearest_clamp` `function:sampler.nearest_repeat` `function:saturate` `function:save` `function:screen_to_world` `function:send` `function:set_camera` `function:set_muted` `function:set_volume` `function:shuffle` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:stop_music` `function:tagged` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc` `function:world_to_screen`
+`function:abs` `function:acos` `function:alive` `function:animation.copy_pose` `function:animation.crossed` `function:animation.duration` `function:animation.fade` `function:animation.finished` `function:animation.joint_position` `function:animation.joint_rotation` `function:animation.pause` `function:animation.play` `function:animation.playing` `function:animation.resume` `function:animation.seek` `function:animation.time` `function:animation.transition` `function:animation.weight` `function:asin` `function:asset.font` `function:asset.glb` `function:asset.linear_texture` `function:asset.sound` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:chance` `function:choose` `function:clamp` `function:clear_saved` `function:color.linear` `function:color.srgb` `function:cos` `function:count_tagged` `function:cross` `function:degrees` `function:destroy` `function:destroy_tagged` `function:distance` `function:dot` `function:easing.in_cubic` `function:easing.in_out_cubic` `function:easing.in_out_quad` `function:easing.in_out_sine` `function:easing.in_quad` `function:easing.out_back` `function:easing.out_bounce` `function:easing.out_cubic` `function:easing.out_elastic` `function:easing.out_quad` `function:exp` `function:exp2` `function:first_tagged` `function:floor` `function:fract` `function:gamepad.axis` `function:gamepad.button` `function:gamepad.connected` `function:go_to` `function:has_tag` `function:hud.button` `function:hud.pixel_font` `function:hud.rect` `function:hud.text` `function:inverse_sqrt` `function:is_key_down` `function:is_muted` `function:is_pointer_down` `function:key_pressed` `function:key_released` `function:length` `function:lighting.pbr` `function:load` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:nearest_tagged` `function:normalize` `function:overlap_boxes` `function:overlap_spheres` `function:particle_count` `function:pause` `function:paused` `function:play` `function:play_at` `function:play_music` `function:pointer_position` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:random_int` `function:random_range` `function:reflect` `function:reset` `function:resume` `function:round` `function:sample` `function:sampler.linear_clamp` `function:sampler.linear_repeat` `function:sampler.nearest_clamp` `function:sampler.nearest_repeat` `function:saturate` `function:save` `function:screen_to_world` `function:send` `function:set_camera` `function:set_muted` `function:set_volume` `function:shuffle` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:stop_music` `function:tagged` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc` `function:world_to_screen`
 
 ### Type methods (10)
 
 `method:glb_asset.material` `method:glb_asset.material_base_color` `method:glb_asset.material_metallic` `method:glb_asset.material_roughness` `method:glb_asset.material_texture` `method:glb_asset.mesh` `method:glb_asset.node_position` `method:glb_asset.node_rotation` `method:glb_asset.node_scale` `method:glb_asset.primitive`
 
-### Namespaces (11)
+### Namespaces (12)
 
-`namespace:asset` `namespace:color` `namespace:easing` `namespace:frame` `namespace:gamepad` `namespace:hud` `namespace:lighting` `namespace:mat4` `namespace:quat` `namespace:sampler` `namespace:texture`
+`namespace:animation` `namespace:asset` `namespace:color` `namespace:easing` `namespace:frame` `namespace:gamepad` `namespace:hud` `namespace:lighting` `namespace:mat4` `namespace:quat` `namespace:sampler` `namespace:texture`
 
 ### Scene objects (1)
 

@@ -232,7 +232,11 @@ fn the_repository_sources_that_ci_checks_are_canonical() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let mut dirs = Vec::new();
     mtek_dirs(&root.join("benchmarks"), &mut dirs);
-    let mut paths: Vec<String> = vec!["examples".into(), "crates/mtek-cli/templates".into()];
+    let mut paths: Vec<String> = vec![
+        "examples".into(),
+        "GameExamples".into(),
+        "crates/mtek-cli/templates".into(),
+    ];
     for dir in dirs {
         let relative = dir
             .strip_prefix(&root)

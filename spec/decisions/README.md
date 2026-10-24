@@ -193,5 +193,9 @@ recorded here before code depends on it (blueprint §15).
 | 0186 | [Gamepad polling](0186-gamepad-polling.md): axes and analog buttons sampled per input phase |
 | 0187 | [Material replacement](0187-compatible-material-replacement.md): compatible value-only instances preserve shader types and bindings |
 | 0188 | [Grammar/parser conformance](0188-grammar-parser-conformance.md): match dispatch, diagnostic pattern syntax and parsed interpolation in GBNF |
+| 0189 | [String equality](0189-string-equality.md): exact CPU text comparisons for message dispatch |
+| 0190 | [Controlled node animation](0190-controlled-node-animation.md): one-shot playback, timing, markers and base-pose blending |
+| 0191 | [Skeletal animation](0191-skeletal-animation.md): rig import, named clip transitions and sockets |
+| 0192 | [Animation continuity](0192-animation-continuity.md): moving crossfades and pose transfer |
 
 Numbers 0157-0169 are unused: the sprites record is 0170 and no record has been written in between. (Earlier versions of this index listed ghost rows 0160-0162 for what are records 0130-0132; they were removed.)

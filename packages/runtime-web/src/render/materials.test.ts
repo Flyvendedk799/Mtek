@@ -4,7 +4,7 @@ import type { MtekWriterMemory } from "../abi/program.js";
 import { ResourceRegistry, type RegistryDevice } from "../gpu/registry.js";
 import type { LayoutWriters } from "../scene/program.js";
 import type { ResolvedInstance, ResolvedMaterial, SceneStructure } from "../scene/structure.js";
-import { FakeBindGroup, FakeBuffer, FakeDevice, asGpu } from "../test-support/fake-gpu.js";
+import { FakeBindGroup, FakeBuffer, FakeDevice, FakeImageBitmap, asGpu } from "../test-support/fake-gpu.js";
 import { MaterialStore } from "./materials.js";
 import { BindingPlan } from "./pipelines.js";
 import { SAMPLER_PRESETS } from "./resources.js";
@@ -404,5 +404,31 @@ describe("MaterialStore: textures and samplers (decision 0054)", () => {
   it("a scene without textures creates none", () => {
     const { registry } = harness([PULSE, PLAIN]);
     expect(registry.snapshot().texturesAllocated).toBe(0);
+  });
+});
+
+
+describe("prefab texture lifetime", () => {
+  it("uploads prefab-only textures before host bitmaps close and reuses them for later spawns", () => {
+    const device = new FakeDevice();
+    const registry = new ResourceRegistry(asGpu<RegistryDevice>(device));
+    const plan = new BindingPlan(registry, FRAME, OBJECT);
+    const bitmap = new FakeImageBitmap(1, 1, Uint8Array.from([90, 80, 70, 255]));
+    const resource = { name: "image", kind: "texture", binding: 1, value: "art.png",
+      asset: { kind: "image", url: "art.png", colorSpace: "srgb", width: 1, height: 1 } };
+    const resources = [resource] as unknown as ResolvedInstance["resources"];
+    const art = material("Art", 0, null, [{ name: "image", kind: "texture", binding: 1 }]);
+    const structure = { instances: [], prefabs: [{ material: { resources } }] } as unknown as SceneStructure;
+    const store = new MaterialStore(asGpu<GPUDevice>(device), registry, plan, structure, new Map(), undefined,
+      new Map([["art.png", asGpu<ImageBitmap>(bitmap)]]));
+    expect(device.queue.externalCopies).toHaveLength(1);
+    bitmap.close();
+    for (let index = 0; index < 2; index++) {
+      expect(() => store.createInstance({ index, entity: index, material: art, resources, shareable: true })).not.toThrow();
+    }
+    expect(device.queue.externalCopies).toHaveLength(1);
+    const texture = device.textures.find(value => (value.descriptor as { label?: string }).label === "mtek asset art.png");
+    store.dispose();
+    expect(texture?.destroyed).toBe(true);
   });
 });

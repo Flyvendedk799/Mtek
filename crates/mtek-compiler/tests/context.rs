@@ -1403,12 +1403,12 @@ const GOLDENS: &[Golden] = &[
         max_bytes: DEFAULT_MAX_BYTES,
     },
     Golden {
-        name: "pulse-cube.max-bytes-10500.json",
+        name: "pulse-cube.max-bytes-11000.json",
         project: "examples/pulse-cube",
         symbols: &["Demo.Cube", "Pulse"],
         // The supported-feature floor grows as builtins are added. Keep this deliberately
         // tight truncation fixture above that floor; the default remains 30,000 bytes.
-        max_bytes: 10500,
+        max_bytes: 11000,
     },
     Golden {
         name: "physics-playground.default.json",
@@ -1459,7 +1459,7 @@ fn goldens() {
         assert_valid(&output);
         assert_examples_check(&output);
         assert!(
-            !output.context.examples.is_empty() || golden.max_bytes <= 10_500,
+            !output.context.examples.is_empty() || golden.max_bytes <= 11_000,
             "{}",
             golden.name
         );

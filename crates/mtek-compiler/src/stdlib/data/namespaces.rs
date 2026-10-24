@@ -70,9 +70,142 @@ fn compile_time(
     )
 }
 
-/// `hud` (decision 0134, `spec/hud.md`): text, rectangles and buttons over the canvas, drawn again
-/// every frame. Positions are normalised device coordinates of the canvas (as `PointerEvent`),
-/// sizes CSS pixels.
+/// Imported node clip controls (decision 0190).
+fn animation_namespace() -> NamespaceDef {
+    let target = p("target", exact(TypeRef::EntityRef));
+    let boolean = exact(TypeRef::Bool);
+    let member = |name, doc, params: Vec<_>, ret, mutation| {
+        let f = function(
+            name,
+            Domain::Cpu,
+            false,
+            Milestone::M1,
+            doc,
+            vec![sig(&params, ret)],
+        );
+        NamespaceMember::Function(if mutation { f.handlers_only() } else { f })
+    };
+    namespace(
+        "animation",
+        Milestone::M1,
+        "Controls an entity's imported node clip (decision 0190).",
+        vec![
+            member(
+                "copy_pose",
+                "Copies the displayed pose from a compatible skeleton and holds it. A subsequent transition blends from that pose.",
+                vec![target, p("source", exact(TypeRef::EntityRef))],
+                boolean,
+                true,
+            ),
+            member(
+                "joint_position",
+                "Joint position in the skeletal mesh local space; zero if missing.",
+                vec![target, p("name", exact(TypeRef::String))],
+                exact(TypeRef::Vec3),
+                false,
+            ),
+            member(
+                "joint_rotation",
+                "Joint rotation in skeletal mesh local space; identity if missing.",
+                vec![target, p("name", exact(TypeRef::String))],
+                exact(TypeRef::Quat),
+                false,
+            ),
+            member(
+                "transition",
+                "Selects a skeletal clip, crossfading from the current pose. Repeating the current name does not restart it; use play to restart.",
+                vec![
+                    target,
+                    p("name", exact(TypeRef::String)),
+                    p("seconds", F32),
+                    p("looping", boolean),
+                    p("speed", F32),
+                ],
+                boolean,
+                true,
+            ),
+            member(
+                "play",
+                "Restarts the clip. Speed must be finite and nonnegative. Returns false for an unavailable clip.",
+                vec![target, p("looping", boolean), p("speed", F32)],
+                boolean,
+                true,
+            ),
+            member(
+                "pause",
+                "Freezes clip time; fades continue during scene updates.",
+                vec![target],
+                boolean,
+                true,
+            ),
+            member(
+                "resume",
+                "Continues a paused clip; returns false for a finished clip.",
+                vec![target],
+                boolean,
+                true,
+            ),
+            member(
+                "seek",
+                "Clamps time to the clip duration and applies the pose immediately, without crossing markers or resuming.",
+                vec![target, p("time", F32)],
+                boolean,
+                true,
+            ),
+            member(
+                "fade",
+                "Smoothly blends clip weight toward a clamped 0..1 target over seconds; zero applies immediately.",
+                vec![target, p("weight", F32), p("duration", F32)],
+                boolean,
+                true,
+            ),
+            member(
+                "time",
+                "Current clip time in seconds; zero for an unavailable clip.",
+                vec![target],
+                F32,
+                false,
+            ),
+            member(
+                "duration",
+                "Clip duration in seconds; zero for an unavailable clip.",
+                vec![target],
+                F32,
+                false,
+            ),
+            member(
+                "weight",
+                "Current clip weight; zero for an unavailable clip.",
+                vec![target],
+                F32,
+                false,
+            ),
+            member(
+                "playing",
+                "Whether clip time is advancing; false for an unavailable clip.",
+                vec![target],
+                boolean,
+                false,
+            ),
+            member(
+                "finished",
+                "Whether a one-shot clip reached its end.",
+                vec![target],
+                boolean,
+                false,
+            ),
+            member(
+                "crossed",
+                "Whether a marker in (0, duration] was crossed in the latest update, including loop wraps. Not consumed by reading.",
+                vec![target, p("marker", F32)],
+                boolean,
+                false,
+            ),
+        ],
+    )
+}
+
+/// Immediate-mode text, rectangles and buttons (decision 0134, `spec/hud.md`).
 fn hud_namespace() -> NamespaceDef {
     let string = exact(TypeRef::String);
     let vec2 = exact(TypeRef::Vec2);
@@ -251,6 +384,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
         })
     };
     vec![
+        animation_namespace(),
         namespace(
             "quat",
             Milestone::M1,

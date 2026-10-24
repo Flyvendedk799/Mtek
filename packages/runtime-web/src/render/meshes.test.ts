@@ -5,6 +5,8 @@ import { generateBox, generateSphere } from "../mesh/primitives.js";
 import type { ResolvedMesh } from "../scene/structure.js";
 import { FakeBuffer, FakeDevice, asGpu } from "../test-support/fake-gpu.js";
 import { MeshStore, uploadBuffer, vertexBufferOf } from "./meshes.js";
+import { SkeletonPlayer } from "../scene/skeleton.js";
+import type { MtekSkin } from "../abi/manifest-types.js";
 
 const COPY_DST = 0x08;
 const INDEX = 0x10;
@@ -217,5 +219,39 @@ describe("MeshStore: meshes from asset files (decision 0060)", () => {
   it("needs the loaded files: an asset mesh without them is an internal error", () => {
     const { store } = setup();
     expect(() => store.upload([quad])).toThrow(/no assets were loaded/);
+  });
+
+  it("isolates skin buffers, skips unchanged uploads and rebuilds after disposal", () => {
+    const skin: MtekSkin = {
+      meshNode: 0, nodes: [
+        { name: "mesh", parent: -1, translation: [0, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
+        { name: "joint", parent: -1, translation: [0, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
+      ], joints: [1], inverseBind: [[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]],
+      indices: Array.from({ length: 4 }, () => [0, 0, 0, 0]),
+      weights: Array.from({ length: 4 }, () => [1, 0, 0, 0]),
+      clips: [{ name: "move", duration: 1, channels: [{ node: 1, path: "translation", interpolation: "linear", times: [0, 1], values: [0, 0, 0, 1, 0, 0] }] }],
+    };
+    const mesh: ResolvedMesh = { id: "mesh:0", descriptor: { kind: "asset", asset: "assets/f.bin", primitive: 0, layout: layout0, skin } };
+    const { store, registry } = setup(); store.upload([{ ...quad, id: "rigid" }, mesh], loaded());
+    const first = new SkeletonPlayer(skin, "move"), second = new SkeletonPlayer(skin, "move");
+    first.advance(.5);
+    const a = store.forEntity("mesh:0", 0, first), b = store.forEntity("mesh:0", 1, second);
+    expect(a.indexBuffer).toBe(b.indexBuffer);
+    expect(a.vertexBuffers.position).not.toBe(b.vertexBuffers.position);
+    store.updateSkin(0, first); store.updateSkin(1, second);
+    const before = registry.snapshot().uploads; store.updateSkin(0, first);
+    expect(registry.snapshot().uploads).toBe(before);
+    const aBytes = fake(a.vertexBuffers.position!).contents.slice();
+    expect(aBytes).not.toEqual(fake(b.vertexBuffers.position!).contents);
+    store.releaseSkin(0); expect(fake(a.vertexBuffers.position!).destroyed).toBe(true);
+    const reused = store.forEntity("mesh:0", 0, second);
+    store.updateSkin(0, second);
+    expect(fake(reused.vertexBuffers.position!).contents).toEqual(fake(b.vertexBuffers.position!).contents);
+    store.dispose(); expect(registry.snapshot().liveBuffers).toBe(0);
+    // Device recovery constructs a fresh store from retained verified asset bytes.
+    const recovered = setup(); recovered.store.upload([mesh], loaded());
+    const rebuilt = recovered.store.forEntity("mesh:0", 0, first);
+    recovered.store.updateSkin(0, first);
+    expect(fake(rebuilt.vertexBuffers.position!).contents).toEqual(aBytes);
   });
 });

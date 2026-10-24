@@ -30,6 +30,7 @@ interface PointerLike extends Event {
   readonly clientX: number;
   readonly clientY: number;
   readonly button: number;
+  readonly buttons?: number;
   readonly pointerId: number;
   readonly isPrimary: boolean;
 }
@@ -87,6 +88,16 @@ export function attachInputListeners(input: InputState, targets: InputTargets): 
   // The pointer that pressed: the events of any other pointer (a second finger) never touch the primary's state.
   let pressing: number | null = null;
   const ofPressing = (pointer: PointerLike): boolean => pointer.isPrimary && (pressing === null || pointer.pointerId === pressing);
+  // Pointer Events emit down/up only when entering/leaving the active-buttons
+  // state. Additional button transitions arrive as pointermove with button >= 0.
+  const syncButtons = (pointer: PointerLike, where: { x: number; y: number }): void => {
+    if (pointer.buttons === undefined) return;
+    const masks = [1, 4, 2]; // DOM button indices: left, middle, right.
+    for (let button = 0; button < masks.length; button++) {
+      if ((pointer.buttons & masks[button]!) !== 0) input.pointerDown(where.x, where.y, button);
+      else input.pointerUp(where.x, where.y, button);
+    }
+  };
   registry.addEventListener(canvas, "pointerdown", (event) => {
     const pointer = event as PointerLike;
     if (!pointer.isPrimary) return;
@@ -105,6 +116,7 @@ export function attachInputListeners(input: InputState, targets: InputTargets): 
     if (!ofPressing(event as PointerLike)) return;
     const where = at(event);
     input.pointerUp(where.x, where.y, where.button);
+    syncButtons(event as PointerLike, where);
   });
   registry.addEventListener(canvas, "pointercancel", (event) => {
     if (!ofPressing(event as PointerLike)) return;
@@ -112,8 +124,10 @@ export function attachInputListeners(input: InputState, targets: InputTargets): 
     input.pointerCancelled();
   });
   registry.addEventListener(canvas, "pointermove", (event) => {
-    if (!(event as PointerLike).isPrimary) return;
+    const pointer = event as PointerLike;
+    if (!ofPressing(pointer)) return;
     const where = at(event);
+    if (pointer.button >= 0) syncButtons(pointer, where);
     input.pointerMove(where.x, where.y);
   });
 }

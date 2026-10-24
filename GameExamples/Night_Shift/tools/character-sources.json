@@ -1,0 +1,12 @@
+{
+  "repository": "https://github.com/kblood/CharacterCreator",
+  "commit": "852e48f316b90a0937234886630e4fb4cdfd1f78",
+  "files": {
+    "base_body_anim.glb": "0eb271d4adea12b7f6bb1d4d8f7398db702f9449479be559ab9f019b5ab30b0f",
+    "clothing_jacket.glb": "22c489abb90fa3af3381948a91016ae2fa5dc5ab1c1152721527ac74c70e9dbd",
+    "clothing_jeans.glb": "dac0e90aba219415e895eed0e471c0a9aab6b53f8870be1f8dfd41cd89c25d11",
+    "clothing_shirt.glb": "c3467876f712e63a901fa664b1d54eb0127c56d20888dbbb0a606973fd26e9cc",
+    "clothing_shoes.glb": "ea483876a6de5d51bf9fef16e1fd1e8957573398eab3321870d93af8c7dbc9a2",
+    "hair_short02.glb": "eb341c197acf3948dac1f41f7722e9dad31018149541504a13ebcc8b6aa9d5aa"
+  }
+}

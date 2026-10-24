@@ -2,7 +2,7 @@
  * Shared primitive meshes (`spec/stdlib.md` 4: "Generated meshes with identical
  * descriptor values are shared (immutable), keyed by the canonical descriptor").
  */
-import type { MtekMeshPrimitive } from "../abi/manifest-types.js";
+import type { MtekMeshPrimitive, MtekSkin } from "../abi/manifest-types.js";
 import { generateBox, generatePlane, generateSphere } from "./primitives.js";
 import type { MeshData } from "./primitives.js";
 
@@ -20,6 +20,7 @@ export interface AssetMeshSource {
   /** Index into that entry's `primitives`. */
   readonly primitive: number;
   readonly layout: MtekMeshPrimitive;
+  readonly skin?: MtekSkin;
 }
 
 /** Where a manifest mesh comes from: generated from a descriptor, or read from an asset file. */
@@ -37,7 +38,7 @@ function canonicalNumber(value: number): string {
 export function meshKey(descriptor: MeshSource): string {
   switch (descriptor.kind) {
     case "asset":
-      return `asset:${descriptor.asset}#${String(descriptor.primitive)}`;
+      return `asset:${descriptor.asset}#${String(descriptor.primitive)}${descriptor.skin === undefined ? "" : ":skin"}`;
     case "box":
       return `box:${descriptor.size.map(canonicalNumber).join(",")}`;
     case "plane":

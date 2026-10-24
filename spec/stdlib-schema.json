@@ -2298,6 +2298,208 @@
   ],
   "namespaces": [
     {
+      "name": "animation",
+      "since": "M1",
+      "doc": "Controls an entity's imported node clip (decision 0190).",
+      "members": [
+        {
+          "name": "copy_pose",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, source: entity_ref) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Copies the displayed pose from a compatible skeleton and holds it. A subsequent transition blends from that pose."
+        },
+        {
+          "name": "crossed",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, marker: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Whether a marker in (0, duration] was crossed in the latest update, including loop wraps. Not consumed by reading."
+        },
+        {
+          "name": "duration",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Clip duration in seconds; zero for an unavailable clip."
+        },
+        {
+          "name": "fade",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, weight: f32, duration: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Smoothly blends clip weight toward a clamped 0..1 target over seconds; zero applies immediately."
+        },
+        {
+          "name": "finished",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Whether a one-shot clip reached its end."
+        },
+        {
+          "name": "joint_position",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, name: string) -> vec3"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Joint position in the skeletal mesh local space; zero if missing."
+        },
+        {
+          "name": "joint_rotation",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, name: string) -> quat"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Joint rotation in skeletal mesh local space; identity if missing."
+        },
+        {
+          "name": "pause",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Freezes clip time; fades continue during scene updates."
+        },
+        {
+          "name": "play",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, looping: bool, speed: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Restarts the clip. Speed must be finite and nonnegative. Returns false for an unavailable clip."
+        },
+        {
+          "name": "playing",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Whether clip time is advancing; false for an unavailable clip."
+        },
+        {
+          "name": "resume",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Continues a paused clip; returns false for a finished clip."
+        },
+        {
+          "name": "seek",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, time: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Clamps time to the clip duration and applies the pose immediately, without crossing markers or resuming."
+        },
+        {
+          "name": "time",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Current clip time in seconds; zero for an unavailable clip."
+        },
+        {
+          "name": "transition",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, name: string, seconds: f32, looping: bool, speed: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Selects a skeletal clip, crossfading from the current pose. Repeating the current name does not restart it; use play to restart."
+        },
+        {
+          "name": "weight",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Current clip weight; zero for an unavailable clip."
+        }
+      ]
+    },
+    {
       "name": "asset",
       "since": "M1",
       "doc": "Compile-time asset declarations. The argument must be a string literal naming a file inside the project.",

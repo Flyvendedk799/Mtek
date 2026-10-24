@@ -199,7 +199,7 @@ Parentheses group. There is no ternary operator, no assignment expression, no co
 | `!` | `bool` | `bool` |
 | `&& \|\|` | `bool` | `bool`, short-circuit on CPU; on GPU both operands are evaluated only if both are side-effect-free, which v0.1 GPU code always is |
 | `< <= > >=` | `f32`, `i32`, `u32` (same type) | `bool` |
-| `== !=` | same-typed `bool`, `f32`, `i32`, `u32`, `entity_ref`, values of one user `enum` (§5.7) | `bool` |
+| `== !=` | same-typed `bool`, `f32`, `i32`, `u32`, `string` (CPU only, exact text equality), `entity_ref`, values of one user `enum` (§5.7) | `bool` |
 
 Vector `==` is not defined in v0.1 (`E3012`). `%` on `f32` is the truncated remainder `x - y * trunc(x / y)`.
 

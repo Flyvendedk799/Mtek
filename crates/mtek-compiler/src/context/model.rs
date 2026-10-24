@@ -261,11 +261,27 @@ impl Truncated {
     }
 }
 
-/// The text of a context: two-space indentation, a trailing line feed, LF line endings.
+fn indented_json(value: &impl Serialize) -> String {
+    let mut bytes = Vec::new();
+    let formatter = serde_json::ser::PrettyFormatter::with_indent(b" ");
+    let mut serializer = serde_json::Serializer::with_formatter(&mut bytes, formatter);
+    let _ = value.serialize(&mut serializer);
+    String::from_utf8(bytes).unwrap_or_default()
+}
+
+/// One-space indentation, except the machine-readable capability list, with a trailing LF.
+/// Compact capabilities leave room for the complete cold-start API as builtins grow.
 pub fn render(context: &Context) -> String {
     // The derived `Serialize` of these types cannot fail (no maps with non-string keys, no
     // custom serialisers).
-    let mut text = serde_json::to_string_pretty(context).unwrap_or_default();
+    let mut text = indented_json(context);
+    let supported = indented_json(&context.supported);
+    let expanded = format!("\"supported\": {}", supported.replace('\n', "\n "));
+    let compact = format!(
+        "\"supported\": {}",
+        serde_json::to_string(&context.supported).unwrap_or_default()
+    );
+    text = text.replacen(&expanded, &compact, 1);
     text.push('\n');
     text
 }

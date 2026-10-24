@@ -114,6 +114,13 @@ export class MaterialStore implements ParamSink {
   ) {
     this.builtins = new BuiltinResources(registry, device.queue, textures);
     this.assetTextures = new AssetTextures(registry, device.queue, images);
+    // Mount closes decoded bitmaps after startup. Prefab-only textures must be
+    // uploaded now, before a later spawn first requests their material instance.
+    for (const prefab of structure.prefabs ?? []) {
+      for (const resource of prefab.material?.resources ?? []) {
+        if ("asset" in resource) this.assetTextures.textureView(resource.asset);
+      }
+    }
     const counts = new Map<string, number>();
     for (const instance of structure.instances) {
       const layout = instance.material.layout;

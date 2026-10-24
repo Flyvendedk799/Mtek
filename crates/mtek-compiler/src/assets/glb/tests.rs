@@ -131,12 +131,61 @@ fn the_bounding_sphere_encloses_every_vertex_and_is_centred_on_the_box() {
 #[test]
 fn rows_are_reported_in_the_order_of_the_profile_table() {
     let (mut json, bin) = base();
-    // Written in the reverse order of the table: a skin (still E7019), material, mode.
-    // A translation channel is a clip now, so the row is a skin rather than an animation.
+    // Profile errors precede the separate skeletal hierarchy validation.
     json["skins"] = json!([{ "joints": [0] }]);
     json["materials"][0]["alphaMode"] = json!("BLEND");
     json["meshes"][0]["primitives"][0]["mode"] = json!(1);
-    assert_eq!(codes(&read(&json, &bin)), ["E7006", "E7015", "E7019"]);
+    assert_eq!(codes(&read(&json, &bin)), ["E7006", "E7015"]);
+}
+
+fn skinned_triangle() -> (Value, Vec<u8>) {
+    let (mut json, mut bin) = base();
+    bin.resize(44, 0);
+    bin.extend([0_u8; 12]);
+    bin.extend(le(&[2., 0., 0., 0., 1., 0., 0., 0., 1., 0., 0., 0.]));
+    json["buffers"][0]["byteLength"] = json!(bin.len());
+    json["bufferViews"].as_array_mut().unwrap().extend([
+        json!({"buffer":0,"byteOffset":44,"byteLength":12}),
+        json!({"buffer":0,"byteOffset":56,"byteLength":48}),
+    ]);
+    json["accessors"].as_array_mut().unwrap().extend([
+        json!({"bufferView":2,"componentType":5121,"count":3,"type":"VEC4"}),
+        json!({"bufferView":3,"componentType":5126,"count":3,"type":"VEC4"}),
+    ]);
+    json["meshes"][0]["primitives"][0]["attributes"]["JOINTS_0"] = json!(2);
+    json["meshes"][0]["primitives"][0]["attributes"]["WEIGHTS_0"] = json!(3);
+    json["nodes"][0]["skin"] = json!(0);
+    json["nodes"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({"name":"joint"}));
+    json["skins"] = json!([{"joints":[1]}]);
+    (json, bin)
+}
+
+#[test]
+fn skeletal_triangle_retains_influences_and_normalizes_weights() {
+    let (json, bin) = skinned_triangle();
+    let file = read(&json, &bin).unwrap();
+    let skin = &file.skins[0].skin;
+    assert_eq!(skin.joints, [1]);
+    assert_eq!(skin.weights, [[1., 0., 0., 0.]; 3]);
+    assert_eq!(skin.indices, [[0; 4]; 3]);
+    assert_eq!(skin.inverse_bind[0][15], 1.);
+    assert_eq!(skin.nodes[1].name, "joint");
+}
+
+#[test]
+fn skeletal_triangle_rejects_invalid_influences_and_hierarchy() {
+    let (json, mut bin) = skinned_triangle();
+    bin[44] = 1;
+    assert_eq!(codes(&read(&json, &bin)), ["E7019"]);
+    bin[44] = 0;
+    bin[56..72].fill(0);
+    assert_eq!(codes(&read(&json, &bin)), ["E7019"]);
+    let (mut json, bin) = skinned_triangle();
+    json["nodes"][1]["children"] = json!([1]);
+    assert_eq!(codes(&read(&json, &bin)), ["E7019"]);
 }
 
 #[test]

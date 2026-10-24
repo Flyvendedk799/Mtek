@@ -1366,7 +1366,7 @@ fn binary_op(
     Ok(match op {
         "&&" => Expr::binary("&&", left, right),
         "||" => Expr::binary("||", left, right),
-        "==" | "!=" if lt == rt_ty && scalar(lt) => {
+        "==" | "!=" if lt == rt_ty && (scalar(lt) || lt == "string") => {
             Expr::binary(if op == "==" { "===" } else { "!==" }, left, right)
         }
         // A reference is `{ slot, gen }`: equal when both are (decision 0064).
@@ -1880,6 +1880,15 @@ mod tests {
             "a <= b"
         );
         assert!(binary_op("==", "vec3", "vec3", "bool", a(), b()).is_err());
+        assert_eq!(
+            text(binary_op("==", "string", "string", "bool", a(), b())),
+            "a === b"
+        );
+        assert_eq!(
+            text(binary_op("!=", "string", "string", "bool", a(), b())),
+            "a !== b"
+        );
+        assert!(binary_op("<", "string", "string", "bool", a(), b()).is_err());
         assert!(binary_op("+", "color", "color", "color", a(), b()).is_err());
     }
 
@@ -2308,6 +2317,21 @@ fn tag_member(function: &str) -> Option<&'static str> {
         "screen_to_world" => "screenToWorld",
         "world_to_screen" => "worldToScreen",
         "gamepad.axis" => "gamepadAxis",
+        "animation.play" => "animationPlay",
+        "animation.joint_position" => "animationJointPosition",
+        "animation.joint_rotation" => "animationJointRotation",
+        "animation.transition" => "animationTransition",
+        "animation.copy_pose" => "animationCopyPose",
+        "animation.pause" => "animationPause",
+        "animation.resume" => "animationResume",
+        "animation.seek" => "animationSeek",
+        "animation.fade" => "animationFade",
+        "animation.time" => "animationTime",
+        "animation.duration" => "animationDuration",
+        "animation.weight" => "animationWeight",
+        "animation.playing" => "animationPlaying",
+        "animation.finished" => "animationFinished",
+        "animation.crossed" => "animationCrossed",
         "gamepad.button" => "gamepadButton",
         "gamepad.connected" => "gamepadConnected",
         "first_tagged" => "firstTagged",

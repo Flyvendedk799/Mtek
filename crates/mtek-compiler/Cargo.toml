@@ -13,7 +13,7 @@ sha2 = "=0.11.0"
 libm = "=0.2.16"
 naga = { version = "=30.0.1", default-features = false, features = ["wgsl-in"] }
 toml = { version = "=1.1.6", default-features = false, features = ["std", "parse"] }
-gltf = { version = "=1.4.1", default-features = false, features = ["names", "extras"] }
+gltf = { version = "=1.4.1", default-features = false, features = ["names", "extras", "utils"] }
 imagesize = "=0.15.0"
 
 [dev-dependencies]

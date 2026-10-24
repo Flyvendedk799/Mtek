@@ -285,7 +285,7 @@ impl LogicOp {
 }
 
 /// `l op r` for a comparison or equality operator: same-typed `f32`, `i32`,
-/// `u32`, and for equality also `bool` (`spec/language.md` 6.2). `f32`
+/// `u32`, and for equality also `bool` and `string` (`spec/language.md` 6.2). `f32`
 /// compares as IEEE 754 does (`-0.0 == 0.0`; folded values are finite).
 pub fn compare(op: CompareOp, l: &ConstValue, r: &ConstValue) -> EvalResult {
     use ConstValue as V;
@@ -294,6 +294,7 @@ pub fn compare(op: CompareOp, l: &ConstValue, r: &ConstValue) -> EvalResult {
         (V::I32(a), V::I32(b)) => op.holds(*a, *b),
         (V::U32(a), V::U32(b)) => op.holds(*a, *b),
         (V::Bool(a), V::Bool(b)) if op.is_equality() => op.holds(*a, *b),
+        (V::Str(a), V::Str(b)) if op.is_equality() => op.holds(a, b),
         _ => return Err(EvalError::Mismatch),
     };
     Ok(V::Bool(result))

@@ -1,0 +1,21 @@
+[project]
+name = "night-shift"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Hotel"
+id = "b4873c91"
+
+[build]
+target = "web"
+title = "Night Shift | The Meridian"
+
+[host.inputs]
+yaw = "Hotel.yaw"
+pitch = "Hotel.pitch"
+active = "Hotel.active"
+
+[host.outputs]
+health = "Hotel.health"
+kills = "Hotel.kills"
+room = "Hotel.room"
+victory = "Hotel.victory"

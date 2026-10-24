@@ -18,6 +18,8 @@ import { roundUp } from "../gpu/uniform-arena.js";
 import { meshRegions } from "../mesh/asset.js";
 import { MeshCache, meshKey, type AssetMeshSource } from "../mesh/cache.js";
 import type { ResolvedMesh } from "../scene/structure.js";
+import type { SkeletonPlayer } from "../scene/skeleton.js";
+import { deformSkin } from "../mesh/skinning.js";
 
 // WebGPU buffer usage flags (constants of the standard; the globals do not exist outside a browser).
 const BUFFER_USAGE_COPY_DST = 0x08;
@@ -70,6 +72,41 @@ export function uploadBuffer(registry: ResourceRegistry, queue: GPUQueue, label:
 export class MeshStore {
   private readonly byKey = new Map<string, GpuMesh>();
   private readonly byId = new Map<string, GpuMesh>();
+  private readonly skinSources = new Map<string, { positions: Float32Array; normals?: Float32Array }>();
+  private readonly skinInstances = new Map<number, { mesh: GpuMesh; positions: Float32Array; normals: Float32Array; revision: number }>();
+
+  forEntity(id: string, slot: number, player?: SkeletonPlayer): GpuMesh {
+    const source = this.get(id);
+    if (player === undefined) return source;
+    const existing = this.skinInstances.get(slot);
+    if (existing !== undefined) return existing.mesh;
+    const positions=new Float32Array(source.vertexCount*3), normals=new Float32Array(source.vertexCount*3);
+    const mesh: GpuMesh={...source, key:source.key+"@"+String(slot), boundingRadius:Infinity,
+      vertexBuffers:{...source.vertexBuffers,
+        position:uploadBuffer(this.registry,this.queue,"skin positions",BUFFER_USAGE_VERTEX,positions),
+        ...(source.vertexBuffers.normal===undefined?{}:{normal:uploadBuffer(this.registry,this.queue,"skin normals",BUFFER_USAGE_VERTEX,normals)})}};
+    this.skinInstances.set(slot,{mesh,positions,normals,revision:-1});
+    return mesh;
+  }
+
+  updateSkin(slot: number, player: SkeletonPlayer): void {
+    const instance=this.skinInstances.get(slot);
+    if(instance===undefined || instance.revision===player.revision) return;
+    const source=this.skinSources.get(instance.mesh.key.split("@")[0]!);
+    if(source===undefined) throw new Error("Missing skin source vertices");
+    deformSkin(player.skin,player.palette,source.positions,source.normals,instance.positions,instance.normals);
+    this.registry.writeBuffer(this.queue,instance.mesh.vertexBuffers.position!,0,instance.positions.buffer as ArrayBuffer,0,instance.positions.byteLength);
+    if(instance.mesh.vertexBuffers.normal!==undefined) this.registry.writeBuffer(this.queue,instance.mesh.vertexBuffers.normal,0,instance.normals.buffer as ArrayBuffer,0,instance.normals.byteLength);
+    instance.revision=player.revision;
+  }
+
+  releaseSkin(slot: number): void {
+    const instance=this.skinInstances.get(slot);
+    if(instance===undefined) return;
+    this.registry.release(instance.mesh.vertexBuffers.position!);
+    if(instance.mesh.vertexBuffers.normal!==undefined) this.registry.release(instance.mesh.vertexBuffers.normal);
+    this.skinInstances.delete(slot);
+  }
 
   constructor(
     private readonly registry: ResourceRegistry,
@@ -126,6 +163,10 @@ export class MeshStore {
     if (assets === undefined) throw new Error(`internal error: the mesh '${key}' comes from an asset, but no assets were loaded`);
     const bytes = assets.bytes(source.asset);
     const { layout } = source;
+    if(source.skin!==undefined) {
+      const floats=(offset: number): Float32Array => new Float32Array(bytes.slice(offset,offset+layout.vertexCount*12).buffer);
+      this.skinSources.set(key,{positions:floats(layout.offsets.position),...(layout.offsets.normal===undefined?{}:{normals:floats(layout.offsets.normal)})});
+    }
     const label = `mtek mesh ${key}`;
     const regions = meshRegions(layout);
     // A region the device cannot allocate is reported like a failed allocation, before anything is created.
@@ -167,6 +208,8 @@ export class MeshStore {
 
   /** Releases every uploaded buffer (hot reload: discard a retired scene). */
   dispose(): void {
+    for(const slot of this.skinInstances.keys()) this.releaseSkin(slot);
+    this.skinSources.clear();
     for (const gpu of this.byKey.values()) {
       for (const buffer of Object.values(gpu.vertexBuffers)) this.registry.release(buffer);
       this.registry.release(gpu.indexBuffer);

@@ -710,12 +710,22 @@ fn every_namespace_member_of_section_2_is_present() {
     }
     let namespaces: Vec<&str> = registry.namespaces.iter().map(|n| n.name).collect();
     for name in [
-        "quat", "mat4", "color", "texture", "sampler", "frame", "asset", "lighting", "hud",
-        "easing", "gamepad",
+        "quat",
+        "mat4",
+        "color",
+        "texture",
+        "sampler",
+        "frame",
+        "asset",
+        "lighting",
+        "hud",
+        "easing",
+        "gamepad",
+        "animation",
     ] {
         assert!(namespaces.contains(&name), "missing namespace {name}");
     }
-    assert_eq!(namespaces.len(), 11);
+    assert_eq!(namespaces.len(), 12);
     for (member, expected) in [
         ("axis", "(i32, i32) -> f32"),
         ("button", "(i32, i32) -> f32"),
@@ -741,9 +751,10 @@ fn every_namespace_member_of_section_2_is_present() {
             count("asset"),
             count("lighting"),
             count("hud"),
-            count("easing")
+            count("easing"),
+            count("animation")
         ],
-        [3, 5, 2, 2, 4, 3, 5, 1, 4, 10]
+        [3, 5, 2, 2, 4, 3, 5, 1, 4, 10, 15]
     );
 }
 

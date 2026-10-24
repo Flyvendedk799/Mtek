@@ -500,7 +500,7 @@ fn package_scene(
         layouts: layouts.iter().map(Layout::from_record).collect(),
         shaders,
         materials: manifest_materials,
-        meshes: meshes(&plan, &packed).map_err(defect)?,
+        meshes: meshes(&plan, &packed, input.assets).map_err(defect)?,
         assets: packed.assets.clone(),
         prefabs: manifest_prefabs,
         scene: manifest_scene,
@@ -780,7 +780,7 @@ fn pack_assets(
 }
 
 /// The manifest's `meshes`.
-fn meshes(plan: &ResourcePlan, packed: &Packed) -> Result<Vec<Mesh>, String> {
+fn meshes(plan: &ResourcePlan, packed: &Packed, assets: &AssetStore) -> Result<Vec<Mesh>, String> {
     let mut meshes = Vec::with_capacity(plan.meshes.len());
     for (index, desc) in plan.meshes.iter().enumerate() {
         let index = u32::try_from(index).map_err(|_| "too many meshes".to_owned())?;
@@ -812,6 +812,16 @@ fn meshes(plan: &ResourcePlan, packed: &Packed) -> Result<Vec<Mesh>, String> {
                 MeshShape::Asset {
                     asset: location.asset.clone(),
                     primitive: location.primitive,
+                    skin: assets
+                        .glb(file)
+                        .and_then(|asset| {
+                            asset
+                                .file
+                                .skins
+                                .iter()
+                                .find(|s| s.mesh == *mesh && s.primitive == *primitive as usize)
+                        })
+                        .map(|s| s.skin.clone()),
                 }
             }
         };
@@ -1221,6 +1231,13 @@ fn manifest_clip(entity: &ir::Entity, assets: &AssetStore) -> Result<Option<Clip
             entity.name
         )
     })?;
+    if declared.file.skins.iter().any(|skin| skin.mesh == *mesh) {
+        return Ok(Some(Clip {
+            name: clip.name,
+            duration: num(clip.duration)?,
+            channels: Vec::new(),
+        }));
+    }
     let channels = clip
         .channels
         .iter()

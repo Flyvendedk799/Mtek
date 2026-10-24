@@ -92,12 +92,13 @@ pub fn negation_result(operand: Ty) -> Option<Ty> {
 
 /// The type of `lhs op rhs` for a comparison (`< <= > >=`: same-typed
 /// `f32`, `i32`, `u32`) or equality operator (`== !=`: same-typed `bool`,
-/// `f32`, `i32`, `u32`, `entity_ref`, one user enum, decision 0129): `bool`,
+/// `f32`, `i32`, `u32`, `string`, `entity_ref`, one user enum): `bool`,
 /// or `None`.
 #[must_use]
 pub fn comparison_result(op: CompareOp, lhs: Ty, rhs: Ty) -> Option<Ty> {
     let ordered = matches!(lhs, Ty::F32 | Ty::I32 | Ty::U32);
-    let equatable = ordered || matches!(lhs, Ty::Bool | Ty::EntityRef | Ty::UserEnum(_));
+    let equatable =
+        ordered || matches!(lhs, Ty::Bool | Ty::String | Ty::EntityRef | Ty::UserEnum(_));
     let accepted = if op.is_equality() { equatable } else { ordered };
     (lhs == rhs && accepted).then_some(Ty::Bool)
 }
@@ -199,7 +200,10 @@ mod tests {
             assert_eq!(comparison_result(op, Ty::F32, Ty::I32), None);
             assert_eq!(comparison_result(op, Ty::Vec3, Ty::Vec3), None);
             assert_eq!(comparison_result(op, Ty::Color, Ty::Color), None);
-            assert_eq!(comparison_result(op, Ty::String, Ty::String), None);
+            assert_eq!(
+                comparison_result(op, Ty::String, Ty::String),
+                op.is_equality().then_some(Ty::Bool)
+            );
         }
         for op in [Eq, Ne] {
             assert_eq!(comparison_result(op, Ty::Bool, Ty::Bool), Some(Ty::Bool));

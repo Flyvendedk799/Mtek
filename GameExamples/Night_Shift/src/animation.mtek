@@ -1,0 +1,73 @@
+// Authored phases: preparation, fast contact, short hold, slower recovery.
+// These are deterministic CPU curves, shared by geometry and the contact timing.
+export fn ease(a: f32, b: f32, t: f32) -> f32 {
+    let x = clamp((t - a) / (b - a), 0.0, 1.0);
+    return x * x * (3.0 - 2.0 * x);
+}
+
+export fn punch_reach(timer: f32) -> f32 {
+    let t = 0.42 - timer;
+    if t < 0.08 {
+        return -0.12 * ease(0.0, 0.08, t);
+    }
+    if t < 0.20 {
+        return -0.12 + 1.12 * ease(0.08, 0.20, t);
+    }
+    return 1.0 - ease(0.245, 0.42, t);
+}
+
+export fn reload_pose(timer: f32) -> f32 {
+    let t = 1.25 - timer;
+    return ease(0.0, 0.16, t) * (1.0 - ease(0.96, 1.25, t));
+}
+
+export fn magazine_drop(timer: f32) -> f32 {
+    let t = 1.25 - timer;
+    return ease(0.20, 0.43, t) * (1.0 - ease(0.69, 0.94, t));
+}
+
+export fn slide_cycle(age: f32) -> f32 {
+    return ease(0.0, 0.018, age) * (1.0 - ease(0.025, 0.085, age));
+}
+
+export fn strike_hand(timer: f32, side: f32) -> vec3 {
+    let reach = punch_reach(timer);
+    return vec3(side * (0.28 - reach * 0.22), -0.27 + reach * 0.17, -0.55 - reach * 0.62);
+}
+
+export fn grab_hand(timer: f32, side: f32) -> vec3 {
+    return vec3(-side * 0.22, -0.04, -0.58 - punch_reach(timer) * 0.28);
+}
+
+export fn shoulder(side: f32) -> vec3 {
+    return vec3(side * 0.32, -0.56, -0.18);
+}
+
+export fn elbow(hand: vec3, side: f32) -> vec3 {
+    return mix(shoulder(side), hand, 0.5) + vec3(side * 0.08, -0.08, 0.04);
+}
+
+export fn bone_rotation(a: vec3, b: vec3, yaw: f32, pitch: f32) -> quat {
+    let d = normalize(b - a);
+    return quat.euler(pitch, yaw, 0.0) * quat.euler(asin(d.y), atan2(-d.x, -d.z), 0.0);
+}
+
+// Match the authored slide clip so its sights and port move with the steel.
+export fn slide_travel(t: f32) -> f32 {
+    if t < 0.008 {
+        return mix(0.0, 0.025, t / 0.008);
+    }
+    if t < 0.018 {
+        return mix(0.025, 0.055, (t - 0.008) / 0.010);
+    }
+    if t < 0.025 {
+        return 0.055;
+    }
+    if t < 0.040 {
+        return mix(0.055, 0.045, (t - 0.025) / 0.015);
+    }
+    if t < 0.060 {
+        return mix(0.045, 0.018, (t - 0.040) / 0.020);
+    }
+    return mix(0.018, 0.0, clamp((t - 0.060) / 0.025, 0.0, 1.0));
+}

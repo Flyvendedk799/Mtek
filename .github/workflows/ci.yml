@@ -68,6 +68,8 @@ jobs:
       # path without a runtime (E9030) with MTEK_NO_EMBEDDED_RUNTIME=1.
       - name: CLI tests with the embedded runtime
         run: cargo test -p mtek-cli --locked
+      - name: Build Night Shift showcase
+        run: node GameExamples/Night_Shift/tools/build.mjs
       - name: Type-check
         run: npm run check:ts
       - name: Lint

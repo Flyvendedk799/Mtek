@@ -101,6 +101,26 @@ describe("pointer listeners", () => {
     expect(codes(input.deliver())).toEqual(["pointer_up:0"]);
     expect(input.isKeyDown("KeyA")).toBe(true);
   });
+
+  it("tracks aim and fire when chorded button transitions arrive as pointermove", () => {
+    const { canvas, input } = setup();
+    canvas.dispatch("pointerdown", { ...down, button: 2, buttons: 2 });
+    input.deliver();
+    canvas.dispatch("pointermove", { ...down, button: 0, buttons: 3 });
+    expect(codes(input.deliver())).toEqual(["pointer_down:0", "pointer_move:0"]);
+    expect(input.isPointerDown(0)).toBe(true);
+    expect(input.isPointerDown(2)).toBe(true);
+    canvas.dispatch("pointermove", { ...down, button: 0, buttons: 2 });
+    expect(codes(input.deliver())).toEqual(["pointer_up:0", "pointer_move:0"]);
+    expect(input.isPointerDown(2)).toBe(true);
+    // Middle is bit 4, despite having DOM button index 1.
+    canvas.dispatch("pointermove", { ...down, button: 1, buttons: 6 });
+    input.deliver(); expect(input.isPointerDown(1)).toBe(true);
+    canvas.dispatch("pointercancel", down);
+    input.deliver();
+    expect(input.isPointerDown(1)).toBe(false);
+    expect(input.isPointerDown(2)).toBe(false);
+  });
 });
 
 describe("listener lifetime", () => {
