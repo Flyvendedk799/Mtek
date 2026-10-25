@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+    <meta charset="utf-8" /><meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    />
+    <title>Mtek animation inside Three.js</title>
+    <style>
+        body {
+            margin: 0;
+            background: #111820;
+            color: #e3edf4;
+            font: 15px system-ui;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        aside {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            width: 280px;
+            padding: 24px;
+            background: #1b2832ee;
+            border: 1px solid #405360;
+            border-radius: 12px;
+        }
+        h1 {
+            font-size: 23px;
+            margin: 6px 0 12px;
+        }
+        p {
+            line-height: 1.5;
+            color: #afc0cc;
+        }
+        label {
+            display: block;
+            margin: 15px 0;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        small {
+            color: #68d6b0;
+        }
+        output {
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+    <canvas id="scene"></canvas>
+    <aside>
+        <small>MTEK EXTENSION API 1</small>
+        <h1>One animation system.<br />Two different rigs.</h1>
+        <p>
+            Mtek evaluates the poses. Three.js draws the scene. The taller
+            character uses retargeted clips.
+        </p>
+        <label
+            >Upper-body action
+            <input
+                id="action"
+                type="range"
+                min="0"
+                max="1"
+                step=".01"
+                value=".65"
+        /></label>
+        <label
+            ><input id="feet" type="checkbox" checked /> Feet on uneven
+            surfaces</label
+        >
+        <label><input id="grip" type="checkbox" /> Two-hand prop grip</label>
+        <label><input id="skeleton" type="checkbox" /> Skeleton overlay</label>
+        <label
+            ><input id="throttle" type="checkbox" /> Evaluate the tall rig at 15
+            Hz</label
+        >
+        <p><output id="stats">Starting…</output></p>
+        <p>Drag to orbit. Scroll to zoom.</p>
+    </aside>
+    <script type="module" src="./dist/main.js"></script>
+</html>

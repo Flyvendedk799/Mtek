@@ -1,0 +1,62 @@
+prefab Pip {
+    param x: f32;
+    position: vec3(x, 0.0, 0.0);
+    mesh: Box { size: vec3(0.8, 0.8, 0.5) };
+    material: Unlit { color: #38bdf8 };
+}
+
+scene Demo {
+    state pip_count: i32 = 0;
+    state pip_0: entity_ref = nil;
+    state pip_1: entity_ref = nil;
+    state pip_2: entity_ref = nil;
+    state pip_3: entity_ref = nil;
+    state pip_4: entity_ref = nil;
+
+    clear_color: #202020;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Rail {
+        position: vec3(0.0, -1.5, 0.0);
+        mesh: Box { size: vec3(12.0, 0.2, 0.2) };
+        material: Unlit { color: #404040 };
+    }
+
+    on key_down(Key.Space) {
+        if pip_count < 5 {
+            let x_pos: f32 = -4.0 + 2.0 * f32(pip_count);
+            let new_pip: entity_ref = spawn(Pip { x: x_pos; });
+            if pip_count == 0 { pip_0 = new_pip; }
+            if pip_count == 1 { pip_1 = new_pip; }
+            if pip_count == 2 { pip_2 = new_pip; }
+            if pip_count == 3 { pip_3 = new_pip; }
+            if pip_count == 4 { pip_4 = new_pip; }
+            pip_count = pip_count + 1;
+        }
+    }
+
+    on key_down(Key.Backspace) {
+        if pip_count > 0 {
+            pip_count = pip_count - 1;
+            if pip_count == 0 { destroy(pip_0); }
+            if pip_count == 1 { destroy(pip_1); }
+            if pip_count == 2 { destroy(pip_2); }
+            if pip_count == 3 { destroy(pip_3); }
+            if pip_count == 4 { destroy(pip_4); }
+        }
+    }
+
+    on key_down(Key.Enter) {
+        if pip_count > 0 { destroy(pip_0); }
+        if pip_count > 1 { destroy(pip_1); }
+        if pip_count > 2 { destroy(pip_2); }
+        if pip_count > 3 { destroy(pip_3); }
+        if pip_count > 4 { destroy(pip_4); }
+        pip_count = 0;
+    }
+}

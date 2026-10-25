@@ -1336,10 +1336,9 @@ fn the_prerequisites_and_the_install_commands_are_the_repositorys() {
     );
     let package: Value =
         serde_json::from_str(&fs::read_to_string(root.join("package.json")).unwrap()).unwrap();
-    // `.nvmrc` pins the version CI uses; `engines` accepts it and everything from the floor of
-    // decision 0131 on.
+    // `.nvmrc` pins CI; default type stripping arrived at different points on Node 22/23.
     let engines = package["engines"]["node"].as_str().unwrap();
-    assert_eq!(engines, ">=22.18.0");
+    assert_eq!(engines, "^22.18.0 || >=23.6.0");
     assert!(nvmrc.trim().parse::<u32>().unwrap() >= 22);
 
     let items = parse_document(DOC);

@@ -1,49 +1,49 @@
 {
-  "$comment": "Small-game budgets (decision 0137). size: the game package of each example (mtek build --release --itch), the folder and the zip, in bytes; checked in CI by scripts/game-budgets.mjs size, which also fails when an example directory has no entry here. frame: p95 frame time of scripts/record-frame-evidence.mjs on a real GPU; checked by scripts/game-budgets.mjs frames, never on a software adapter. Raise a budget only in a reviewed commit that says why. Size budgets were re-baselined on 2026-10-23 (Windows, main d28886b8 plus the green-main fixes) as the measured size plus 10 %, rounded up to 10 kB: the runtime had grown about 13 % since 2026-10-21 and pulse-cube and modular-scene were over budget. The four game examples (small-game, sprite-pop, lane-runner, stage-show) were added then.",
+  "$comment": "Small-game budgets (decision 0137). size: the game package of each example (mtek build --release --itch), the folder and the zip, in bytes; checked in CI by scripts/game-budgets.mjs size, which also fails when an example directory has no entry here. frame: p95 frame time of scripts/record-frame-evidence.mjs on a real GPU; checked by scripts/game-budgets.mjs frames, never on a software adapter. Raise a budget only in a reviewed commit that says why. Size budgets were re-baselined on 2026-10-23 (Windows, main d28886b8 plus the green-main fixes) as the measured size plus 10 %, rounded up to 10 kB: the runtime had grown about 13 % since 2026-10-21 and pulse-cube and modular-scene were over budget. The four game examples (small-game, sprite-pop, lane-runner, stage-show) were added then. Platform runtime increment (decision 0193): the new GPU/animation/extension/content/render APIs add 34,007 bytes to the minified runtime and 6,095 bytes to its public declarations (40,102 bytes total, measured against the previous embedded runtime). Non-physics package limits increase by a fixed 40,000 bytes to admit that concrete feature cost while preserving approximately the existing headroom; physics-playground retains its existing limit. This is a feature-scope budget change for review, not a performance improvement claim.",
   "size": {
     "arcade-audio": {
-      "maxFolderBytes": 840000,
-      "maxZipBytes": 840000
+      "maxFolderBytes": 880000,
+      "maxZipBytes": 880000
     },
     "hud-score": {
-      "maxFolderBytes": 780000,
-      "maxZipBytes": 780000
+      "maxFolderBytes": 820000,
+      "maxZipBytes": 820000
     },
     "lane-runner": {
-      "maxFolderBytes": 770000,
-      "maxZipBytes": 770000
+      "maxFolderBytes": 810000,
+      "maxZipBytes": 810000
     },
     "material-configurator": {
-      "maxFolderBytes": 930000,
-      "maxZipBytes": 930000
+      "maxFolderBytes": 970000,
+      "maxZipBytes": 970000
     },
     "modular-scene": {
-      "maxFolderBytes": 720000,
-      "maxZipBytes": 720000
+      "maxFolderBytes": 760000,
+      "maxZipBytes": 760000
     },
     "physics-playground": {
       "maxFolderBytes": 5660000,
       "maxZipBytes": 5660000
     },
     "product-configurator": {
-      "maxFolderBytes": 830000,
-      "maxZipBytes": 830000
+      "maxFolderBytes": 870000,
+      "maxZipBytes": 870000
     },
     "pulse-cube": {
-      "maxFolderBytes": 700000,
-      "maxZipBytes": 700000
+      "maxFolderBytes": 740000,
+      "maxZipBytes": 740000
     },
     "small-game": {
-      "maxFolderBytes": 730000,
-      "maxZipBytes": 730000
+      "maxFolderBytes": 770000,
+      "maxZipBytes": 770000
     },
     "sprite-pop": {
-      "maxFolderBytes": 730000,
-      "maxZipBytes": 730000
+      "maxFolderBytes": 770000,
+      "maxZipBytes": 770000
     },
     "stage-show": {
-      "maxFolderBytes": 700000,
-      "maxZipBytes": 700000
+      "maxFolderBytes": 740000,
+      "maxZipBytes": 740000
     }
   },
   "frame": {

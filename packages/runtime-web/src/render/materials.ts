@@ -37,6 +37,7 @@ import type { ParamSink } from "../scene/world.js";
 import type { BindingPlan } from "./pipelines.js";
 import type { DecodedImages } from "../assets/loader.js";
 import { AssetTextures, BuiltinResources, type TextureOverrides } from "./resources.js";
+import type {MipmapGenerator} from "./mipmaps.js";
 
 /** The arena slot of a parameter block with its writers and bind group layout. */
 interface BlockStorage {
@@ -111,9 +112,10 @@ export class MaterialStore implements ParamSink {
     private readonly writers: ReadonlyMap<string, LayoutWriters>,
     textures?: TextureOverrides,
     images: DecodedImages = new Map(),
+    private readonly mipmaps?:MipmapGenerator,
   ) {
     this.builtins = new BuiltinResources(registry, device.queue, textures);
-    this.assetTextures = new AssetTextures(registry, device.queue, images);
+    this.assetTextures = new AssetTextures(registry, device.queue, images, mipmaps);
     // Mount closes decoded bitmaps after startup. Prefab-only textures must be
     // uploaded now, before a later spawn first requests their material instance.
     for (const prefab of structure.prefabs ?? []) {
@@ -409,6 +411,7 @@ export class MaterialStore implements ParamSink {
     this.resources.clear();
     this.builtins.dispose();
     this.assetTextures.dispose();
+    this.mipmaps?.dispose();
   }
 
   private blockOfInstance(instance: number): Block {

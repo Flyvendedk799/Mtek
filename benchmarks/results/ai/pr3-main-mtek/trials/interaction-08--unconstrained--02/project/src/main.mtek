@@ -1,0 +1,54 @@
+const TRACK_WIDTH = 12.0;
+const TRACK_HEIGHT = 0.2;
+const TRACK_DEPTH = 0.2;
+const RUNNER_WIDTH = 1.0;
+const RUNNER_HEIGHT = 1.0;
+const RUNNER_DEPTH = 0.5;
+const RUNNER_SPEED = 4.0;
+const RUNNER_MAX_X = 6.0;
+const RUNNER_WRAP_DISTANCE = 12.0;
+
+scene Demo {
+  clear_color: #202020;
+  
+  camera Main {
+    position: vec3(0.0, 0.0, 10.0);
+    target: vec3(0.0, 0.0, 0.0);
+    projection: Orthographic {
+      height: 12.8;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+
+  entity Track {
+    position: vec3(0.0, -1.0, 0.0);
+    mesh: Box { size: vec3(TRACK_WIDTH, TRACK_HEIGHT, TRACK_DEPTH); };
+    material: Unlit { color: #404040; };
+  }
+
+  entity Runner {
+    position: vec3(-5.0, 0.0, 0.0);
+    mesh: Box { size: vec3(RUNNER_WIDTH, RUNNER_HEIGHT, RUNNER_DEPTH); };
+    material: Unlit { color: #f97316; };
+    
+    state running: bool = false;
+    state runner_x: f32 = -5.0;
+    
+    on key_down(Key.Space) {
+      running = !running;
+    }
+    
+    fn update(dt: f32) {
+      if running {
+        runner_x = runner_x + RUNNER_SPEED * dt;
+        
+        if runner_x >= RUNNER_MAX_X {
+          runner_x = runner_x - RUNNER_WRAP_DISTANCE;
+        }
+        
+        self.position = vec3(runner_x, 0.0, 0.0);
+      }
+    }
+  }
+}

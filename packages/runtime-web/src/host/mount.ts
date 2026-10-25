@@ -33,6 +33,7 @@ import { closeImages, loadAssets, type DecodedImages, type LoadedAssets } from "
 import { MtekMountError, makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
 import { acquireDevice, type AcquiredDevice } from "../gpu/device.js";
 import { ResourceRegistry } from "../gpu/registry.js";
+import {validateExtensions} from "./extensions.js";
 import { MountedApp, RECOVERY_ATTEMPTS } from "./app.js";
 import { GamepadInput } from "../input/gamepad.js";
 import { defaultEnvironment, isWithinBase, restrictToBase, type FetchResponseLike, type HostEnvironment } from "./environment.js";
@@ -210,6 +211,9 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
   options: MtekMountOptions<I> = {},
 ): Promise<MtekApp<I, O>> {
   validateOptions(options as MtekMountOptions<never>);
+  validateExtensions(options.extensions??[]);
+  const effects=options.rendering?.postProcessing??[];
+  if(new Set(effects.map(e=>e.id)).size!==effects.length || effects.some(e=>e.id===""||typeof e.wgsl!=="string"))throw new RangeError("Post effects need unique nonempty IDs and WGSL source");
   FailureOverlay.removeFor(canvas);
   const sink = new DiagnosticSink(options.onDiagnostic);
   const overlay = options.failureDisplay === "none" ? null : new FailureOverlay(canvas);
@@ -326,6 +330,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
     // otherwise no timer exists and GPU time is reported as unavailable (section 10.1).
     const timer = __MTEK_DEV__ && options.devOverlay === true && hasTimestampQuery(device) ? new GpuTimer(device, registry) : null;
     surface = new Surface({
+      ...(options.rendering?.postProcessing===undefined?{}:{postProcessing:options.rendering.postProcessing}),
       timer: timer ?? undefined,
       canvas,
       context,
@@ -354,6 +359,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
       throw mountError(allocationFailures);
     }
 
+    await surface.preparePostProcessing();
     // Startup shaders and assets, concurrently. The shader files are remembered for the rebuild after a device
     // loss; the verified asset bytes are retained for the same purpose (decision 0060). Every failure of
     // either is reported, shaders first.
@@ -479,6 +485,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
     let started: Awaited<ReturnType<typeof startScene>>;
     try {
       started = await startScene({
+        ...(options.rendering===undefined?{}:{rendering:options.rendering}),
         manifest,
         structure: structure.structure,
         program: checked.program,
@@ -513,6 +520,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
     if (loadedPhysics?.ok === true) {
       try {
         physics = new PhysicsSystem({
+          ...(options.physics?.continuousCollision===undefined?{}:{continuousCollision:options.physics.continuousCollision}),
           backend: loadedPhysics.backend,
           manifest,
           world: started.scene.world,
@@ -564,6 +572,8 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
         : null;
 
     app = new MountedApp<I, O>({
+      ...(options.physics?.continuousCollision===undefined?{}:{continuousCollision:options.physics.continuousCollision}),
+      ...(options.rendering===undefined?{}:{rendering:options.rendering}),
       devTools,
       manifest,
       device,
@@ -602,6 +612,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
       modules: new Map(shaders.modules),
       program: program as import("./types.js").MtekMountProgram<Record<string, unknown>>,
     });
+    app.installExtensions(options.extensions??[],options.hostServices);
     // Initial host inputs: validated like setInput (queued for the first phase 1).
     for (const name of Object.keys(options.inputs ?? {}).sort()) {
       const value = (options.inputs as Record<string, unknown>)[name];
@@ -618,6 +629,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
     for (const diagnostic of earlyReports) app.report(diagnostic);
     return app;
   } catch (error) {
+    if(app!==undefined) {app.dispose();throw error;}
     // Release everything acquired so far, then make the failure visible.
     if (images !== undefined) closeImages(images);
     audio?.dispose();

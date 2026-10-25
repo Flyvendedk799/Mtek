@@ -33,6 +33,8 @@ import type { FetchResponseLike, HostEnvironment, ResizeObserverLike } from "./e
 import { resolveSpan, type DiagnosticSink } from "./failures.js";
 import { GameSaves, MemorySaveStorage, persistentEntries, type SaveProblem, type SaveStorage } from "../scene/saves.js";
 import { HostOutputs } from "./outputs.js";
+import {ExtensionHost,sceneAccess,type MtekExtension} from "./extensions.js";
+import type {MtekRenderingOptions} from "../render/options.js";
 import { HostInputs, unknownInputResult } from "./inputs.js";
 import type { FailureOverlay } from "./overlay.js";
 import {
@@ -114,6 +116,8 @@ function carryValue(value: unknown): unknown {
 class RecoveryAbandoned extends Error {}
 
 export interface AppDependencies {
+  readonly continuousCollision?:boolean;
+  readonly rendering?:MtekRenderingOptions;
   /** Mutable: updated on a successful hot-reload swap. */
   manifest: MtekManifest;
   /** Mutable: replaced by the recreated device after a device loss. */
@@ -179,6 +183,14 @@ function attemptFailureText(error: unknown): string {
 }
 
 export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>> implements MtekApp<I, O> {
+  private extensions: ExtensionHost | undefined;
+  installExtensions(extensions: readonly MtekExtension[],services:Readonly<Record<string,unknown>>={}):void {
+    const access=sceneAccess(()=>this.deps.scene.world,()=>{if(this.current==="disposed"||this.current==="failed")throw new Error(`The application is ${this.current}`);});
+    this.extensions=new ExtensionHost({apiVersion:1,...access,service:<T>(name:string)=>services[name] as T|undefined},(id,error)=>{
+      this.report(makeRuntimeDiagnostic("E8050",{phase:"runtime:update",message:`Extension '${id}' failed and was disabled: ${errorText(error)}`}));
+    });
+    this.extensions.install(extensions);
+  }
   readonly debug?: MtekDebug;
   readonly seed: number;
 
@@ -693,6 +705,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         assertActive();
 
         started = await startScene({
+          ...(this.deps.rendering===undefined?{}:{rendering:this.deps.rendering}),
           assertActive,
           manifest,
           structure: structure.structure,
@@ -816,6 +829,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
   dispose(): void {
     if (this.current === "disposed") return;
     this.current = "disposed";
+    this.extensions?.dispose();
     if (this.deps.game !== undefined) this.deps.game.target = INERT_GAME;
     this.hostOutputs.dispose();
     if (this.pendingSwap !== undefined) {
@@ -1069,6 +1083,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       this.ensureRecovering();
       registry.recycle(device);
       surface.recover(device);
+      await surface.preparePostProcessing();
 
       const manifest = this.deps.manifest;
       const structure = resolveStructure(manifest);
@@ -1103,6 +1118,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
 
         const { world, bindings } = this.deps.scene;
         const started = await startScene({
+          ...(this.deps.rendering===undefined?{}:{rendering:this.deps.rendering}),
           manifest,
           structure: structure.structure,
           program: checked.program,
@@ -1239,6 +1255,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         // The budget is per frame: every handler, tick, update and binding of this frame draws on one counter.
         world.resetBudget();
         world.setFrame(this.scheduler.activeTime, this.scheduler.delta, this.scheduler.frameIndex);
+        this.extensions?.frame("beforeFrame",this.scheduler.delta);
         this.hostInputs.applyQueued({ state: world.sceneState });
         // The HUD (decision 0134) is drawn again by every frame's handlers, ticks and update.
         this.deps.services.hud?.beginFrame?.();
@@ -1286,6 +1303,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         this.renderStartMs = now();
         this.deps.scene.renderer.frame();
         this.deps.services.hud?.present?.();
+        this.extensions?.frame("afterFrame",this.scheduler.delta);
         const end = now();
         this.cpuUpdateMs = this.renderStartMs - this.frameStartMs;
         this.renderPrepMs = end - this.renderStartMs;
@@ -1314,6 +1332,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
     if (pending.physicsModule !== undefined) {
       try {
         physics = new PhysicsSystem({
+          ...(this.deps.continuousCollision===undefined?{}:{continuousCollision:this.deps.continuousCollision}),
           backend: pending.physicsModule.backend,
           manifest: pending.manifest,
           world: pending.scene.world,

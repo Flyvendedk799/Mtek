@@ -120,6 +120,9 @@
       "include": "#value-frame"
     },
     {
+      "include": "#function-animation"
+    },
+    {
       "include": "#function-gamepad"
     },
     {
@@ -574,6 +577,20 @@
         }
       }
     },
+    "function-animation": {
+      "match": "(?<![A-Za-z0-9_.])(animation)(\\.)((?:joint_position|joint_rotation|transition|copy_pose|duration|finished|crossed|playing|resume|weight|pause|fade|play|seek|time))\\s*(?=\\()",
+      "captures": {
+        "1": {
+          "name": "support.class.namespace.mtek"
+        },
+        "2": {
+          "name": "punctuation.accessor.mtek"
+        },
+        "3": {
+          "name": "support.function.builtin.mtek"
+        }
+      }
+    },
     "function-gamepad": {
       "match": "(?<![A-Za-z0-9_.])(gamepad)(\\.)((?:connected|button|axis))\\s*(?=\\()",
       "captures": {
@@ -716,7 +733,7 @@
     },
     "namespace": {
       "name": "support.class.namespace.mtek",
-      "match": "(?<![A-Za-z0-9_.])(?:lighting|gamepad|sampler|texture|easing|asset|color|frame|mat4|quat|hud)(?=\\s*\\.)"
+      "match": "(?<![A-Za-z0-9_.])(?:animation|lighting|gamepad|sampler|texture|easing|asset|color|frame|mat4|quat|hud)(?=\\s*\\.)"
     },
     "enum": {
       "name": "support.type.enum.mtek",

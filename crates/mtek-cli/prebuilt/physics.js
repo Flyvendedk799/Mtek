@@ -7993,6 +7993,7 @@ var RapierWorld = class {
         requireNonNegative(desc.linearDamping, "linearDamping");
         requireNonNegative(desc.angularDamping, "angularDamping");
         bodyDesc = NC.RigidBodyDesc.dynamic().setLinearDamping(desc.linearDamping).setAngularDamping(desc.angularDamping);
+        bodyDesc.setCcdEnabled(desc.continuousCollision ?? false);
         break;
     }
     bodyDesc.setTranslation(pose.position.x, pose.position.y, pose.position.z).setRotation(pose.rotation);
@@ -8079,6 +8080,81 @@ var RapierWorld = class {
     this.alive();
     const body = this.record(h2).body;
     return { linear: toVec3(body.linvel()), angular: toVec3(body.angvel()) };
+  }
+  refreshQueries() {
+    this.world.propagateModifiedBodyPositionsToColliders();
+  }
+  setCollisionGroups(h2, memberships, filter) {
+    this.alive();
+    for (const value of [memberships, filter]) if (!Number.isInteger(value) || value < 0 || value > 65535) throw new RangeError("physics: collision memberships and filters must be 16-bit masks");
+    this.world.getCollider(this.record(h2).colliderHandle).setCollisionGroups((memberships << 16 | filter) >>> 0);
+  }
+  queryFlags(filter) {
+    if (filter.groups !== void 0 && (!Number.isInteger(filter.groups) || filter.groups < 0 || filter.groups > 4294967295)) throw new RangeError("physics: collision groups must be an unsigned 32-bit mask");
+    return filter.includeSensors === true ? void 0 : NC.QueryFilterFlags.EXCLUDE_SENSORS;
+  }
+  castShape(shape, pose, displacement, filter = {}) {
+    this.alive();
+    requirePose(pose, "query pose");
+    requireVec3(displacement, "query displacement");
+    let query;
+    if (shape.kind === "sphere") {
+      requirePositive(shape.radius, "query radius");
+      query = new NC.Ball(shape.radius);
+    } else {
+      requirePositive(shape.size.x, "query size x");
+      requirePositive(shape.size.y, "query size y");
+      requirePositive(shape.size.z, "query size z");
+      query = new NC.Cuboid(shape.size.x / 2, shape.size.y / 2, shape.size.z / 2);
+    }
+    const flags = this.queryFlags(filter), exclude = filter.exclude === void 0 ? void 0 : this.record(filter.exclude).body;
+    this.refreshQueries();
+    const hit = this.world.castShape(pose.position, pose.rotation, displacement, query, 0, 1, true, flags, filter.groups, void 0, exclude);
+    if (hit === null) return void 0;
+    return { userId: this.userIds.get(hit.collider.handle), fraction: hit.time_of_impact, normal: toVec3(hit.normal1), point: toVec3(hit.witness1) };
+  }
+  moveCharacter(h2, displacement, options = {}) {
+    this.alive();
+    requireVec3(displacement, "character displacement");
+    const record = this.record(h2);
+    if (!record.body.isKinematic()) throw new RangeError("physics: character movement requires a kinematic body");
+    const offset = options.offset ?? 0.01, slope = options.maxSlope ?? Math.PI / 4, snap = options.snapToGround ?? 0, step = options.stepHeight ?? 0, width = options.stepMinWidth ?? 0.1;
+    requirePositive(offset, "character offset");
+    requireNonNegative(snap, "ground snap");
+    requireNonNegative(step, "step height");
+    requirePositive(width, "step width");
+    if (!Number.isFinite(slope) || slope < 0 || slope > Math.PI / 2) throw new RangeError("physics: slope angle must be in [0, pi/2]");
+    const flags = this.queryFlags(options), exclude = options.exclude === void 0 ? void 0 : this.record(options.exclude).colliderHandle;
+    this.refreshQueries();
+    const controller = this.world.createCharacterController(offset);
+    try {
+      controller.setMaxSlopeClimbAngle(slope);
+      controller.setMinSlopeSlideAngle(slope);
+      if (snap > 0) controller.enableSnapToGround(snap);
+      if (step > 0) controller.enableAutostep(step, width, false);
+      controller.computeColliderMovement(this.world.getCollider(record.colliderHandle), displacement, flags, options.groups, (collider) => collider.handle !== exclude);
+      const contacts = [];
+      for (let i2 = 0; i2 < controller.numComputedCollisions(); i2++) {
+        const hit = controller.computedCollision(i2);
+        if (hit?.collider === null || hit === null) continue;
+        contacts.push({ userId: this.userIds.get(hit.collider.handle), fraction: hit.toi, normal: toVec3(hit.normal1), point: toVec3(hit.witness1) });
+      }
+      return { displacement: toVec3(controller.computedMovement()), grounded: controller.computedGrounded(), contacts };
+    } finally {
+      this.world.removeCharacterController(controller);
+    }
+  }
+  contacts(h2) {
+    this.alive();
+    const collider = this.world.getCollider(this.record(h2).colliderHandle), result = [];
+    this.world.contactPairsWith(collider, (other) => this.world.contactPair(collider, other, (manifold, flipped) => {
+      const n2 = manifold.normal(), normal = { x: n2.x * (flipped ? -1 : 1), y: n2.y * (flipped ? -1 : 1), z: n2.z * (flipped ? -1 : 1) };
+      for (let i2 = 0; i2 < manifold.numSolverContacts(); i2++) {
+        const point = manifold.solverContactPoint(i2);
+        if (point !== null) result.push({ userId: this.userIds.get(other.handle), normal, point: toVec3(point), distance: manifold.solverContactDist(i2) });
+      }
+    }));
+    return result;
   }
   drainCollisions(sink) {
     this.alive();

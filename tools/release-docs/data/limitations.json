@@ -260,12 +260,14 @@
     {
       "id": "materials-scope",
       "area": "Materials and rendering",
-      "restriction": "No vertex or compute stages, no blend modes other than alpha over, no shadows, no post-processing, no multiple render targets, no material inheritance, no mip-map generation, no derivatives (`dpdx`), no storage buffers, no texture arrays or cube maps.",
-      "reason": "Not in v0.1 (spec/materials.md section 10); the specification records no rationale beyond scope. Vertex and compute stages are E4901.",
+      "restriction": "No Mtek-authored vertex or compute stages, multiply blending, shadows, multiple render targets, material inheritance, derivatives, language-visible storage buffers, texture arrays or cube maps. Host options provide additive materials and LDR post effects; image assets receive mipmaps on WebGPU (decision 0193). Normal mapping, other glTF PBR texture channels, environment lighting and HDR post-processing remain unsupported.",
+      "reason": "The Mtek source language keeps its v0.1 shader-stage contract. Decision 0193 extends the host runtime without adding shader stages.",
       "codes": [
         "E4901"
       ],
-      "decisions": [],
+      "decisions": [
+        "0193"
+      ],
       "source": {
         "file": "spec/materials.md",
         "quote": "## 10. Not in v0.1"
@@ -426,11 +428,12 @@
     {
       "id": "physics-no-ccd",
       "area": "Physics",
-      "restriction": "No continuous collision detection: a small body moving faster than about one thin-obstacle window per fixed step can pass through a thin moving obstacle (measured: a 0.05 m ball against a 0.1 m wall tunnels in a share of the phases above 7.2 m/s at the 1/60 s step). Against a static wall nothing was seen to pass.",
-      "reason": "A measured known limitation of the engine adapter (spec/physics.md section 7.1, decision 0068); enabling the engine's CCD changed nothing in the measurement, so it is no mitigation either. Keep thin walls static, keep the speed within the window, or make the obstacle thicker.",
+      "restriction": "Default discrete physics can miss thin moving obstacles: the recorded radius-0.05 m ball and 0.1 m moving plate can tunnel above 7.2 m/s at 60 Hz, depending on phase. Host physics options can enable CCD. A regression covers 240 m/s against that plate; this does not establish a universal CCD guarantee (decision 0193).",
+      "reason": "The default retains the recorded discrete-physics contract. CCD is explicit and adds solver work. Swept spatial queries and character movement are optional adapter capabilities, without new Mtek language intrinsics.",
       "codes": [],
       "decisions": [
-        "0068"
+        "0068",
+        "0193"
       ],
       "source": {
         "file": "spec/physics.md",
@@ -516,7 +519,7 @@
     {
       "id": "gltf-animation",
       "area": "Assets",
-      "restriction": "No morph targets, cubic-spline interpolation or sparse accessors. Skeletal meshes support four influences, up to 128 joints and 256 hierarchy nodes, named clip transitions and sockets (decision 0191); deformation currently runs on the CPU. A node clip of translation, rotation and scale with LINEAR or STEP interpolation plays (decision 0156) on top of the entity's own transform; an animation the profile cannot play is an error only where a `clip` names it (decision 0174).",
+      "restriction": "No morph targets, cubic-spline interpolation or sparse accessors. Validated skeletal meshes retain four influences, up to 128 joints and 256 nodes. WebGPU deforms visible actors on the GPU using conservative animated bounds; the CPU skinning function remains available for inspection (decision 0193). Skeletal geometry still uses individual draw calls. Named LINEAR/STEP clips, transitions and sockets remain supported; host APIs add masks, additive layers, positional IK and validated bind-relative retargeting. These have no new Mtek language intrinsics.",
       "reason": "Decision 0015 rejected every animation. Decision 0156 plays TRS clips and keeps the rest of that rejection; decision 0174 composes clips with the entity and narrows the error to the use.",
       "codes": [
         "E7008",
@@ -527,7 +530,8 @@
         "0015",
         "0156",
         "0174",
-        "0191"
+        "0191",
+        "0193"
       ],
       "source": {
         "file": "spec/decisions/0191-skeletal-animation.md",

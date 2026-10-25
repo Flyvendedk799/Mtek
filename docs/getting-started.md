@@ -18,7 +18,7 @@ works, and what it normalises, is in the maintenance note at the end.
 | You need | Version | What for |
 |---|---|---|
 | Rust, installed with [rustup](https://rustup.rs) | **1.99.0** (rustup installs it by itself from `rust-toolchain.toml`) | building the `mtek` command line tool |
-| Node.js with npm | **24** (`.nvmrc`; 22.18.0 or later works) | rebuilding the runtime bundle that is embedded into `mtek` (a fresh clone embeds the prebuilt one of `crates/mtek-cli/prebuilt`, so `mtek build` works without Node); `mtek test` |
+| Node.js with npm | **24** (`.nvmrc`; Node 22.18+ on 22.x, or Node 23.6+, also works) | rebuilding the runtime bundle that is embedded into `mtek` (a fresh clone embeds the prebuilt one of `crates/mtek-cli/prebuilt`, so `mtek build` works without Node); `mtek test` |
 | A browser with WebGPU | Chromium (the one the project's tests use) | seeing the program run |
 
 `mtek check`, `mtek build`, `mtek fmt` and the editor-facing commands never touch the GPU. Only

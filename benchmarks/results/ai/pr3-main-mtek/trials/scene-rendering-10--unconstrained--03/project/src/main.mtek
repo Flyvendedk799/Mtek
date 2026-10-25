@@ -1,0 +1,62 @@
+const POINT_LIGHT_INTENSITY = 9.0;
+const AMBIENT_INTENSITY = 0.03;
+
+export scene Demo {
+  clear_color: #0a0a0f;
+  ambient_color: color.srgb(vec3(0.376, 0.439, 0.627), 1.0);
+  ambient_intensity: AMBIENT_INTENSITY;
+  
+  entity Ball {
+    position: vec3(0.0, 1.0, 0.0);
+    mesh: Sphere {
+      radius: 1.0;
+      segments: 32;
+      rings: 16;
+    };
+    material: Pbr {
+      base_color: color.srgb(vec3(0.953, 0.961, 0.965), 1.0);
+      metallic: 0.0;
+      roughness: 0.7;
+    };
+  }
+  
+  entity Floor {
+    position: vec3(0.0, 0.0, 0.0);
+    mesh: Plane {
+      size: vec2(12.0, 12.0);
+    };
+    material: Pbr {
+      base_color: color.srgb(vec3(0.898, 0.906, 0.922), 1.0);
+      metallic: 0.0;
+      roughness: 0.9;
+    };
+  }
+  
+  entity LampLeft {
+    position: vec3(-3.0, 2.5, 2.0);
+    light: PointLight {
+      color: color.srgb(vec3(1.0, 0.188, 0.188), 1.0);
+      intensity: POINT_LIGHT_INTENSITY;
+      range: 0.0;
+    };
+  }
+  
+  entity LampRight {
+    position: vec3(3.0, 2.5, 2.0);
+    light: PointLight {
+      color: color.srgb(vec3(0.188, 0.314, 1.0), 1.0);
+      intensity: POINT_LIGHT_INTENSITY;
+      range: 0.0;
+    };
+  }
+  
+  camera Main {
+    position: vec3(0.0, 3.0, 9.0);
+    target: vec3(0.0, 0.5, 0.0);
+    projection: Perspective {
+      fov_y: 0.8;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+}

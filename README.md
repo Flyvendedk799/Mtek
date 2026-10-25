@@ -25,13 +25,18 @@ specification, the registry and the compiler, and checked against the compiler, 
 by `npm run check:release`. The [draft release notes](docs/release-notes-v0.1.md) cite evidence for every
 claim and mark every result that does not exist yet as pending.
 
+The new [platform runtime guide](docs/platform-runtime.md) covers independent Three.js
+animation integration, host extensions, asynchronous asset leases, additive rendering,
+custom post effects and optional CCD. The [platform step scorecard](evidence/platform-step/scorecard.md)
+records what is implemented and what still needs work; the full platform roadmap is not complete.
+
 ## Requirements
 
 What a clean checkout needs. The list comes from building and testing fresh clones on one Windows 11 machine ([`evidence/M7/reproducible-builds.md`](evidence/M7/reproducible-builds.md) says what that run did and did not exercise); no manual edit and no step beyond these was needed there.
 
 - Git, to clone.
 - Rust **1.99.0** (installed automatically by `rustup` from `rust-toolchain.toml`). On Windows `rustup`'s default toolchain targets MSVC (`x86_64-pc-windows-msvc`), which needs the Visual Studio Build Tools with the C++ workload for its linker.
-- Node.js **24** (`.nvmrc`, the version CI and the recorded runs use) with the bundled npm (`packageManager` names npm 11.16.0, which Node 24.18 bundles). Any Node.js from **22.18.0** on also works: `engines` says `>=22.18.0` (the first release that runs TypeScript without a flag, which the tools rely on) and `.npmrc` sets `engine-strict=true`, so `npm ci` refuses only an older Node (decision 0131).
+- Node.js **24** (`.nvmrc`, the version CI and the recorded runs use) with the bundled npm (`packageManager` names npm 11.16.0, which Node 24.18 bundles). Node **22.18+** on 22.x and **23.6+** also run the TypeScript tools without a flag. `engines` says `^22.18.0 || >=23.6.0`, and `.npmrc` sets `engine-strict=true` to reject unsupported versions (decisions 0131 and 0193).
 - Node.js is not needed just to build and use `mtek`: the CLI embeds the prebuilt runtime of [`crates/mtek-cli/prebuilt`](crates/mtek-cli/prebuilt) when `packages/runtime-web/dist` was not built, so `cargo build -p mtek-cli` on a fresh clone gives an `mtek` whose `build` works (decision 0131). Node is needed to change the runtime, for `mtek test` and for the test suites.
 - Network access for `npm ci` (npm registry) and for the first `cargo` run (crates.io, locked by `Cargo.lock`).
 

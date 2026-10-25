@@ -3,6 +3,9 @@
 
 
 Status: accepted. Extends 0190; replaces the blanket skin rejection in 0058/0156.
+The renderer and host animation API described below were subsequently extended by
+[0193](0193-platform-runtime-extensions.md), which supersedes the CPU-only deformation,
+uncullable-skin and no-host-layer/IK implementation statements in this record.
 
 
 

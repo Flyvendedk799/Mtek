@@ -1,0 +1,68 @@
+scene Demo {
+    clear_color: #202020;
+
+    state accumulator: f32 = 0.0;
+    const TICK_DURATION: f32 = 0.016666667;
+    const TICKER_SPEED: f32 = 0.1;
+    const GLIDER_SPEED: f32 = 6.0;
+    const MAX_FRAME_DELTA: f32 = 0.1;
+    const MAX_TICKS_PER_FRAME: i32 = 4;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Ticker {
+        position: vec3(-5.5, 3.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #ef4444 };
+
+        update(dt: f32) {
+            let clamped_dt: f32 = min(dt, MAX_FRAME_DELTA);
+            accumulator = accumulator + clamped_dt;
+            
+            var tick_count: i32 = 0;
+            
+            if (accumulator >= TICK_DURATION) {
+                tick_count = 1;
+                accumulator = accumulator - TICK_DURATION;
+                self.position.x = self.position.x + TICKER_SPEED;
+            }
+            
+            if (accumulator >= TICK_DURATION) && (tick_count < MAX_TICKS_PER_FRAME) {
+                tick_count = tick_count + 1;
+                accumulator = accumulator - TICK_DURATION;
+                self.position.x = self.position.x + TICKER_SPEED;
+            }
+            
+            if (accumulator >= TICK_DURATION) && (tick_count < MAX_TICKS_PER_FRAME) {
+                tick_count = tick_count + 1;
+                accumulator = accumulator - TICK_DURATION;
+                self.position.x = self.position.x + TICKER_SPEED;
+            }
+            
+            if (accumulator >= TICK_DURATION) && (tick_count < MAX_TICKS_PER_FRAME) {
+                tick_count = tick_count + 1;
+                accumulator = accumulator - TICK_DURATION;
+                self.position.x = self.position.x + TICKER_SPEED;
+            }
+            
+            if (tick_count >= MAX_TICKS_PER_FRAME) {
+                accumulator = fract(accumulator / TICK_DURATION) * TICK_DURATION;
+            }
+        }
+    }
+
+    entity Glider {
+        position: vec3(-5.5, -3.0, 0.0);
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #38bdf8 };
+
+        update(dt: f32) {
+            let clamped_dt: f32 = min(dt, MAX_FRAME_DELTA);
+            self.position.x = self.position.x + (GLIDER_SPEED * clamped_dt);
+        }
+    }
+}

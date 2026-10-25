@@ -1,0 +1,47 @@
+fn get_beacon_color(beacon_state: i32) -> color {
+    if beacon_state == 0 {
+        return #3a3a3a;
+    } else if beacon_state == 1 {
+        return #ffb000;
+    } else {
+        return #22c55e;
+    }
+}
+
+scene Demo {
+    clear_color: #202020;
+
+    state beacon_state: i32 = 0;
+    state run_elapsed: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Beacon {
+        mesh: Box { size: vec3(4.0, 4.0, 0.5) };
+        material: Unlit { color: bind(get_beacon_color(beacon_state)); };
+
+        update(dt: f32) {
+            if beacon_state == 1 {
+                run_elapsed += dt;
+                if run_elapsed >= 1.5 {
+                    beacon_state = 2;
+                    run_elapsed = 0.0;
+                }
+            }
+        }
+    }
+
+    on key_down(Key.Space) {
+        if beacon_state == 0 {
+            beacon_state = 1;
+            run_elapsed = 0.0;
+        } else if beacon_state == 2 {
+            beacon_state = 0;
+            run_elapsed = 0.0;
+        }
+    }
+}

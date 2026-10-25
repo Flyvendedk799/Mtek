@@ -33,6 +33,7 @@ export type BodyDesc =
       readonly mass: number;
       readonly linearDamping: number;
       readonly angularDamping: number;
+      readonly continuousCollision?:boolean;
     };
 
 /**
@@ -59,6 +60,12 @@ export interface PhysicsBackend {
 }
 
 export interface PhysicsWorld {
+  /** Optional spatial-query capability; alternative adapters may omit it. Displacement is swept over [0,1]. */
+  castShape?(shape:ColliderDesc["shape"],pose:Pose,displacement:Vec3,filter?:PhysicsQueryFilter):ShapeHit|undefined;
+  /** Computes safe kinematic movement; caller owns applying the returned displacement. */
+  moveCharacter?(body:BodyHandle,displacement:Vec3,options?:CharacterMoveOptions):CharacterMovement;
+  contacts?(body:BodyHandle):readonly PhysicsContact[];
+  setCollisionGroups?(body:BodyHandle,memberships:number,filter:number):void;
   addBody(desc: BodyDesc, collider: ColliderDesc, pose: Pose, userId: number): BodyHandle;
   removeBody(h: BodyHandle): void;
   applyImpulse(h: BodyHandle, v: Vec3): void;
@@ -73,6 +80,15 @@ export interface PhysicsWorld {
   counts(): { bodies: number; colliders: number };
   dispose(): void;
 }
+
+export interface PhysicsQueryFilter {readonly exclude?:BodyHandle;readonly groups?:number;readonly includeSensors?:boolean}
+export interface ShapeHit {readonly userId:number;readonly fraction:number;readonly normal:Vec3;readonly point:Vec3}
+export interface PhysicsContact {readonly userId:number;readonly normal:Vec3;readonly point:Vec3;readonly distance:number}
+export interface CharacterMoveOptions extends PhysicsQueryFilter {
+  readonly offset?:number;readonly maxSlope?:number;readonly snapToGround?:number;
+  readonly stepHeight?:number;readonly stepMinWidth?:number;
+}
+export interface CharacterMovement {readonly displacement:Vec3;readonly grounded:boolean;readonly contacts:readonly ShapeHit[]}
 
 /** The default export of `physics/<h16>.js`. */
 export type LoadPhysics = () => Promise<PhysicsBackend>;

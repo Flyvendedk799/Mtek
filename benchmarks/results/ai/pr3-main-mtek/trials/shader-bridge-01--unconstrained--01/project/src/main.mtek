@@ -1,0 +1,23 @@
+material Flat {
+    param color: color = #808080;
+
+    fragment(surface: SurfaceInput) -> color {
+        return color;
+    }
+}
+
+scene Demo {
+    clear_color: #202020;
+
+    var tint: color = #808080;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Cube {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Flat { color: bind(tint); };
+    }
+}

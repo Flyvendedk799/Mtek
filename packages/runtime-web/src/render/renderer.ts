@@ -48,6 +48,7 @@ import { extractFrustumPlanes, sphereIntersectsFrustum, worldBoundingSphere, typ
 import { batchDraws, instancingCandidates, type Batch } from "./instancing.js";
 import type { MaterialStore } from "./materials.js";
 import { vertexBufferOf, type GpuMesh, type MeshStore } from "./meshes.js";
+import {skinWorldScale} from "../mesh/skin-bounds.js";
 import { INSTANCE_FLOATS, INSTANCE_STRIDE, type BindingPlan, alwaysBlends } from "./pipelines.js";
 import type { ParticleDraw } from "../scene/particles.js";
 
@@ -175,6 +176,7 @@ export function blendedKey(materialId: string, instanced: boolean): string {
 }
 
 export interface RendererOptions {
+  readonly additiveMaterials?:ReadonlySet<string>;
   readonly device: ArenaDevice;
   readonly registry: ResourceRegistry;
   readonly surface: RenderSurface;
@@ -582,7 +584,7 @@ export class Renderer {
       if (pipeline === undefined) throw new Error(`internal error: no pipeline for material '${entity.instance.material.id}'`);
       const skin = world.skinPlayer(entity.index);
       const gpuMesh = meshes.forEntity(entity.mesh.id, entity.index, skin);
-      const translucent = materials.isTranslucent(entity.instance.index) || alwaysBlends(entity.instance.material);
+      const translucent = materials.isTranslucent(entity.instance.index) || alwaysBlends(entity.instance.material) || this.options.additiveMaterials?.has(entity.instance.material.id)===true;
       const blended = translucent ? this.blendedPipeline(entity.instance.material) : undefined;
       items.push({
         pipelineKey: blended === undefined ? pipeline.key : TRANSLUCENT_KEY_PREFIX + blended.key,
@@ -630,9 +632,21 @@ export class Renderer {
     const listed = this.drawList();
     for(const draw of listed) {
       const skin=this.options.world.skinPlayer(draw.entity);
-      if(skin!==undefined) this.options.meshes.updateSkin(draw.entity,skin);
+      if(skin!==undefined) {
+        if (this.options.meshes.updateSkinBounds(draw.entity,skin)) this.cullDirty = true;
+        worldBoundingSphere(this.options.world.worldMatrix(draw.entity), 1, this.sphere, draw.gpuMesh.boundingCenter);
+        this.sphereCentres[draw.entity*3] = this.sphere.x;
+        this.sphereCentres[draw.entity*3+1] = this.sphere.y;
+        this.sphereCentres[draw.entity*3+2] = this.sphere.z;
+        this.sphereScales[draw.entity]=skinWorldScale(this.options.world.worldMatrix(draw.entity));
+      }
     }
     const culled = this.cull(listed, viewProj);
+    for (const draw of culled) {
+      const skin = this.options.world.skinPlayer(draw.entity);
+      if (skin !== undefined) this.options.meshes.updateSkin(draw.entity,skin);
+    }
+    this.options.meshes.flushSkins();
     const draws = this.translucentOrder.order(culled, this.lastView, this.sphereCentres);
     if (draws !== culled) this.drawnUnchanged = this.translucentOrder.unchanged;
     const instanced = this.groupDraws(draws);
@@ -1037,7 +1051,7 @@ export class Renderer {
       if (draw.points.length === 0) continue;
       const material = this.materialsById.get(draw.materialId);
       if (material === undefined) continue;
-      const wanted = materials.isTranslucent(draw.instanceIndex) || alwaysBlends(material);
+      const wanted = materials.isTranslucent(draw.instanceIndex) || alwaysBlends(material) || this.options.additiveMaterials?.has(material.id)===true;
       const blended = wanted ? this.blendedPipeline(material, true) : undefined;
       const pipeline = blended?.pipeline ?? this.options.pipelines.get(draw.materialId)?.instanced;
       if (pipeline === undefined) continue;

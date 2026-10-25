@@ -1,0 +1,64 @@
+const MAX_COUNT: i32 = 5;
+
+scene Demo {
+    clear_color: #202020;
+    // How many pips are lit, from 0 to MAX_COUNT.
+    state count: i32 = 0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 8.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Pip1 {
+        position: vec3(-3.0, -2.0, 0.0);
+        visible: bind(count >= 1);
+        mesh: Box { size: vec3(0.7, 0.7, 0.7) };
+        material: Unlit { color: #22c55e };
+    }
+
+    entity Pip2 {
+        position: vec3(-1.5, -2.0, 0.0);
+        visible: bind(count >= 2);
+        mesh: Box { size: vec3(0.7, 0.7, 0.7) };
+        material: Unlit { color: #22c55e };
+    }
+
+    entity Pip3 {
+        position: vec3(0.0, -2.0, 0.0);
+        visible: bind(count >= 3);
+        mesh: Box { size: vec3(0.7, 0.7, 0.7) };
+        material: Unlit { color: #22c55e };
+    }
+
+    entity Pip4 {
+        position: vec3(1.5, -2.0, 0.0);
+        visible: bind(count >= 4);
+        mesh: Box { size: vec3(0.7, 0.7, 0.7) };
+        material: Unlit { color: #22c55e };
+    }
+
+    entity Pip5 {
+        position: vec3(3.0, -2.0, 0.0);
+        visible: bind(count >= 5);
+        mesh: Box { size: vec3(0.7, 0.7, 0.7) };
+        material: Unlit { color: #22c55e };
+    }
+
+    entity Alarm {
+        position: vec3(0.0, 2.0, 0.0);
+        visible: bind(count == MAX_COUNT);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Unlit { color: #ef4444 };
+    }
+
+    on key_down(Key.Space) {
+        if count < MAX_COUNT {
+            count += 1;
+        }
+    }
+
+    on key_down(Key.R) {
+        count = 0;
+    }
+}

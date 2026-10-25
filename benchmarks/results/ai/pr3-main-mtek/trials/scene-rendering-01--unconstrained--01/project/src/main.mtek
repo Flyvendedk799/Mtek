@@ -1,0 +1,33 @@
+scene Demo {
+  clear_color: #202020;
+  
+  camera Main {
+    position: vec3(0.0, 0.0, 6.0);
+    target: vec3(0.0, 0.0, 0.0);
+    projection: Perspective {
+      fov_y: 0.9;
+      near: 0.1;
+      far: 1000.0;
+    };
+  }
+  
+  entity Cube {
+    position: vec3(0.0, 0.0, 0.0);
+    mesh: Box {
+      size: vec3(1.0, 1.0, 1.0);
+    };
+    material: Unlit {
+      color: #22c55e;
+    };
+  }
+  
+  entity Ball {
+    position: vec3(2.0, 0.0, 0.0);
+    mesh: Sphere {
+      radius: 0.5;
+    };
+    material: Unlit {
+      color: #3b82f6;
+    };
+  }
+}

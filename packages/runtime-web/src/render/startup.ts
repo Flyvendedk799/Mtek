@@ -26,18 +26,21 @@ import { buildPrefabRuntimes } from "../scene/dynamic.js";
 import { World, type CpuServices } from "../scene/world.js";
 import { MaterialStore } from "./materials.js";
 import { MeshStore } from "./meshes.js";
+import {MipmapGenerator} from "./mipmaps.js";
+import type {MtekRenderingOptions} from "./options.js";
 import { instancingCandidates } from "./instancing.js";
 import { BindingPlan, PipelineCache, alwaysBlends, canBlend, materialPipelineKey, type PipelineResult } from "./pipelines.js";
 import type { TextureOverrides } from "./resources.js";
 import { Renderer, blendedKey, type MaterialPipeline, type RenderSurface } from "./renderer.js";
 
 export interface SceneStartupOptions {
+  readonly rendering?:MtekRenderingOptions;
   /** Reject stale asynchronous candidate work before allocating or publishing scene resources. */
   readonly assertActive?: () => void;
   readonly manifest: MtekManifest;
   readonly structure: SceneStructure;
   readonly program: CheckedProgram;
-  readonly device: Pick<GPUDevice, "queue" | "limits" | "pushErrorScope" | "popErrorScope">;
+  readonly device: Pick<GPUDevice, "queue" | "limits" | "pushErrorScope" | "popErrorScope"> & Partial<Pick<GPUDevice, "createCommandEncoder" | "createComputePipeline">>;
   readonly registry: ResourceRegistry;
   readonly surface: RenderSurface & { readonly colorFormat: GPUTextureFormat };
   /** Startup shader modules by shader hash (`host/shaders.ts`). */
@@ -103,11 +106,15 @@ function missingModule(material: ResolvedMaterial, phase: MtekRuntimePhase | und
 /** Builds and initialises the scene. Errors thrown by generated code (internal errors) propagate. */
 export async function startScene(options: SceneStartupOptions): Promise<SceneStartupResult> {
   const { manifest, structure, program, device, registry, surface, modules, report, services } = options;
+  const additive=new Set(options.rendering?.additiveMaterials??[]);
+  const blendMode=(material:ResolvedMaterial):"alpha"|"additive"=>additive.has(material.id)?"additive":"alpha";
   options.assertActive?.();
   const generation = registry.generation;
 
   const plan = options.bindingPlan ?? new BindingPlan(registry, structure.frameLayout, structure.objectLayout);
-  const materials = new MaterialStore(device, registry, plan, structure, program.writers, options.textures, options.assets?.images);
+  const mipmaps=device.createCommandEncoder!==undefined&&device.createComputePipeline!==undefined&&[...options.assets?.images.values()??[]].some(image=>image.width>1||image.height>1)
+    ?new MipmapGenerator({queue:device.queue,createCommandEncoder:device.createCommandEncoder.bind(device)},registry):undefined;
+  const materials = new MaterialStore(device, registry, plan, structure, program.writers, options.textures, options.assets?.images, mipmaps);
   let meshes: MeshStore | undefined;
   let renderer: Renderer | undefined;
   let committed = false;
@@ -139,7 +146,7 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
     // Every instance holds its initial values: identical immutable ones now share a parameter block.
     materials.shareIdentical();
 
-    meshes = new MeshStore(registry, device.queue, undefined, device.limits.maxBufferSize);
+    meshes = new MeshStore(registry, device.queue, undefined, device.limits.maxBufferSize, structure.meshes.some(m => m.descriptor.kind === "asset" && m.descriptor.skin !== undefined) ? device : undefined);
     meshes.upload(structure.meshes, options.assets?.files);
 
     const pipelines = options.pipelineCache ?? new PipelineCache(device, registry, plan, manifest);
@@ -209,20 +216,20 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
     const blendedSeed = new Map<string, { readonly key: string; readonly pipeline: GPURenderPipeline }>();
     const wanted = new Map<string, { readonly material: ResolvedMaterial; readonly instanced: boolean }>();
     const want = (material: ResolvedMaterial, instancedVariant: boolean): void => {
-      if (!canBlend(material) || modules.get(material.shader.hash) === undefined || !byMaterial.has(material.id)) return;
+      if ((!canBlend(material)&&!additive.has(material.id)) || modules.get(material.shader.hash) === undefined || !byMaterial.has(material.id)) return;
       if (instancedVariant && material.shader.instancedVertexEntry === undefined) return;
       wanted.set(blendedKey(material.id, instancedVariant), { material, instanced: instancedVariant });
     };
     for (const entity of structure.entities) {
       if (entity.mesh === null || entity.instance === null) continue;
       const { material } = entity.instance;
-      if (!alwaysBlends(material) && !materials.isTranslucent(entity.instance.index)) continue;
+      if (!alwaysBlends(material) && !materials.isTranslucent(entity.instance.index) && !additive.has(material.id)) continue;
       want(material, false);
       if (entity.particles !== undefined) want(material, true);
     }
     for (const prefab of structure.prefabs) {
       const material = prefab.material?.material;
-      if (prefab.mesh === null || material === undefined || !alwaysBlends(material)) continue;
+      if (prefab.mesh === null || material === undefined || (!alwaysBlends(material)&&!additive.has(material.id))) continue;
       want(material, false);
       if (prefab.particles !== undefined) want(material, true);
     }
@@ -230,7 +237,7 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
       [...wanted].map(async ([id, { material, instanced: instancedVariant }]) => {
         const module = modules.get(material.shader.hash);
         if (module === undefined) return;
-        const made = await pipelines.obtain({ material, module, colorFormat: surface.colorFormat, blended: true, ...(instancedVariant ? { instanced: true } : {}) });
+        const made = await pipelines.obtain({ material, module, colorFormat: surface.colorFormat, blended: true, blendMode:blendMode(material), ...(instancedVariant ? { instanced: true } : {}) });
         if (made.ok) blendedSeed.set(id, { key: made.key, pipeline: made.pipeline });
         // A failure here is reported when a draw asks for the pipeline, as for a lazily made one.
       }),
@@ -251,12 +258,13 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
       meshes,
       pipelines: byMaterial,
       blendedSeed,
+      additiveMaterials:additive,
       // The translucent variant (decision 0138) of a material not known to blend at startup is made the first time a draw needs it.
       blend: async (material, instancedVariant) => {
         const module = modules.get(material.shader.hash);
-        if (module === undefined || !canBlend(material)) return undefined;
+        if (module === undefined || (!canBlend(material)&&!additive.has(material.id))) return undefined;
         if (instancedVariant && material.shader.instancedVertexEntry === undefined) return undefined;
-        const made = await pipelines.obtain({ material, module, colorFormat: surface.colorFormat, blended: true, ...(instancedVariant ? { instanced: true } : {}) });
+        const made = await pipelines.obtain({ material, module, colorFormat: surface.colorFormat, blended: true, blendMode:blendMode(material), ...(instancedVariant ? { instanced: true } : {}) });
         if (made.ok) return { key: made.key, pipeline: made.pipeline };
         report(made.diagnostic);
         return undefined;

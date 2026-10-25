@@ -137,6 +137,8 @@ describe("runtime.d.ts with tsc --strict", () => {
   it("keeps one-generic host programs, handles and mount calls compatible with generated Outputs interfaces", () => {
     // An interface (including an empty one) is not implicitly assignable to Record<string, unknown>.
     // This must exercise the compiler's interface shape, rather than hiding the regression with a type alias.
+    // Two complete tsc programs can exceed the default 5s under parallel CI load;
+    // this checks compatibility, not compiler timing.
     for (const fields of ["", "total: number; position: readonly [number, number, number]"]) {
       const problems = compile(`
         import { mountMtek } from "./runtime.js";
@@ -168,7 +170,7 @@ describe("runtime.d.ts with tsc --strict", () => {
       `, { types: ["@webgpu/types"] });
       expect(problems).toEqual([]);
     }
-  });
+  }, 20_000);
 
   // The app.d.ts the compiler emits (M1-17 golden; no host inputs before M3).
   const compiledAppDts = readFileSync(
@@ -333,6 +335,23 @@ describe("runtime.d.ts with tsc --strict", () => {
 });
 
 describe("runtime.d.ts agrees with the implementation", () => {
+  it("accepts independently consumed animation and asset APIs with their implementation types",()=>{
+    const problems=compile(`
+      import type * as D from "./runtime.js";
+      import * as A from "./animation.js";
+      import {AssetPool} from "./assets/pool.js";
+      declare const skin:D.MtekSkin;
+      export const controller:D.AnimationController=A.createAnimationController(skin);
+      export const pool:Pick<D.AssetPool,"load"|"snapshot"|"dispose">=new AssetPool({baseUrl:new URL("https://example.test/")});
+      const loader:D.AssetLoader<string>={id:"text",apiVersion:1,decode:bytes=>new TextDecoder().decode(bytes)};
+      export const lease:Promise<D.AssetLease<string>>=pool.load({url:"asset.txt"},loader);
+      controller.setLayer("action",{clip:"wave",weight:0.5,mask:{arm:1}});
+      controller.setIK("hand",{chain:["arm","elbow","hand"],target:[1,2,3]});
+      controller.player.setRootMotion("hips");
+      export const delta=controller.player.consumeRootMotion();
+    `,{types:["@webgpu/types"],skipLibCheck:true});
+    expect(problems).toEqual([]);
+  });
   it("every public type is mutually assignable with its implementation type, and mountMtek has the same signature", () => {
     const problems = compile(
       `

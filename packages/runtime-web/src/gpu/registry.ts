@@ -9,6 +9,7 @@ export type RegistryDevice = Pick<
   | "createShaderModule"
   | "createRenderPipeline"
   | "createRenderPipelineAsync"
+  | "createComputePipeline"
   | "createBindGroup"
   | "createBindGroupLayout"
   | "createPipelineLayout"
@@ -52,6 +53,7 @@ export type ReleasableResource =
   | GPUSampler
   | GPUShaderModule
   | GPURenderPipeline
+  | GPUComputePipeline
   | GPUBindGroup;
 
 interface ListenerRecord {
@@ -87,7 +89,7 @@ export class ResourceRegistry {
   private readonly textures = new Set<GPUTexture>();
   private readonly samplers = new Set<GPUSampler>();
   private readonly shaderModules = new Set<GPUShaderModule>();
-  private readonly pipelines = new Set<GPURenderPipeline>();
+  private readonly pipelines = new Set<GPURenderPipeline | GPUComputePipeline>();
   private readonly bindGroups = new Set<GPUBindGroup>();
   private readonly listeners = new Set<ListenerRecord>();
 
@@ -202,6 +204,13 @@ export class ResourceRegistry {
 
   createRenderPipeline(descriptor: GPURenderPipelineDescriptor): GPURenderPipeline {
     const pipeline = this.device.createRenderPipeline(descriptor);
+    this.pipelines.add(pipeline);
+    this.pipelinesCreated += 1;
+    return pipeline;
+  }
+
+  createComputePipeline(descriptor: GPUComputePipelineDescriptor): GPUComputePipeline {
+    const pipeline = this.device.createComputePipeline(descriptor);
     this.pipelines.add(pipeline);
     this.pipelinesCreated += 1;
     return pipeline;

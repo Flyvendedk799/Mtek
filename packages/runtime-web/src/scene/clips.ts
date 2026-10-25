@@ -139,6 +139,7 @@ export class ClipPlayers {
     const p = this.player(slot);
     if (p === undefined || !Number.isFinite(speed) || speed < 0) return false;
     p.time = 0;
+    p.previous = 0;
     p.travel = 0;
     p.looping = looping;
     p.speed = speed;
@@ -165,6 +166,7 @@ export class ClipPlayers {
     const p = this.player(slot);
     if (p === undefined || !Number.isFinite(time)) return false;
     p.time = Math.max(0, Math.min(p.clip.duration, time));
+    p.previous = p.time;
     p.travel = 0;
     p.finished = !p.looping && p.time === p.clip.duration;
     if (p.finished) p.playing = false;
@@ -187,6 +189,11 @@ export class ClipPlayers {
   weight(slot: number): number { return this.player(slot)?.weight ?? 0; }
   playing(slot: number): boolean { return this.player(slot)?.playing ?? false; }
   finished(slot: number): boolean { return this.player(slot)?.finished ?? false; }
+  /** Number of wraps during the latest advance; seeking and play reset this to zero. */
+  wraps(slot: number): number {
+    const p=this.player(slot);
+    return p===undefined || p.clip.duration<=0 ? 0 : Math.max(0,Math.round((p.previous+p.travel-p.time)/p.clip.duration));
+  }
 
   /** A marker in (0, duration] crossed during the latest advance, even across wraps/hitches. */
   crossed(slot: number, marker: number): boolean {

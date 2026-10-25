@@ -1,0 +1,32 @@
+const RISE: f32 = 0.5;
+
+fn sway(t: f32, amplitude: f32) -> f32 {
+    return amplitude * sin(t);
+}
+
+scene Demo {
+    clear_color: #202020;
+    // Seconds since the start.
+    state elapsed: f32 = 0.0;
+    // How many times Space has been pressed.
+    state presses: i32 = 0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 8.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Bob {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Unlit { color: #ec4899ff };
+    }
+
+    update(dt: f32) {
+        elapsed += dt;
+        Bob.position = vec3(sway(elapsed, 2.0), RISE * f32(presses), 0.0);
+    }
+
+    on key_down(Key.Space) {
+        presses += 1;
+    }
+}

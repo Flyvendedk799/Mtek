@@ -1,6 +1,6 @@
 // scripts/game-budgets.mjs (decision 0137): the frame-evidence check refuses anything that is not hardware evidence
 // of a game that ran, and every example directory needs a size budget.
-import { readdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -58,8 +58,8 @@ describe("game-budgets size", () => {
     expect(script.missingBudgets(["pulse-cube", "brand-new"], { "pulse-cube": {} })).toEqual([expect.stringContaining("brand-new")]);
   });
 
-  it("has a budget for every directory under examples/", () => {
-    const examples = readdirSync(join(REPO_ROOT, "examples"), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+  it("has a budget for every packaged Mtek project under examples/", () => {
+    const examples = readdirSync(join(REPO_ROOT, "examples"), { withFileTypes: true }).filter((entry) => entry.isDirectory() && existsSync(join(REPO_ROOT,"examples",entry.name,"mtek.toml"))).map((entry) => entry.name);
     expect(script.missingBudgets(examples, script.budgets.size)).toEqual([]);
   });
 });

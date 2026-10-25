@@ -197,5 +197,6 @@ recorded here before code depends on it (blueprint §15).
 | 0190 | [Controlled node animation](0190-controlled-node-animation.md): one-shot playback, timing, markers and base-pose blending |
 | 0191 | [Skeletal animation](0191-skeletal-animation.md): rig import, named clip transitions and sockets |
 | 0192 | [Animation continuity](0192-animation-continuity.md): moving crossfades and pose transfer |
+| 0193 | [Platform runtime extensions](0193-platform-runtime-extensions.md): GPU deformation and culling, composable host animation, independent loaders, rendering options and optional spatial queries |
 
 Numbers 0157-0169 are unused: the sprites record is 0170 and no record has been written in between. (Earlier versions of this index listed ghost rows 0160-0162 for what are records 0130-0132; they were removed.)

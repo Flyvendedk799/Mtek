@@ -8,7 +8,7 @@
 //       checks frame-time evidence recorded by scripts/record-frame-evidence.mjs on a real GPU against the
 //       frame budget; a software or unknown adapter is refused, not counted
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -69,7 +69,8 @@ function size(args) {
   const mtek = resolve(args[args.indexOf("--mtek") + 1] && args.includes("--mtek") ? args[args.indexOf("--mtek") + 1] : join(root, "target/debug/mtek"));
   const scratch = mkdtempSync(join(tmpdir(), "mtek-budgets-"));
   const rows = {};
-  const problems = missingBudgets(readdirSync(join(root, "examples"), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name));
+  // Standalone host integrations have no mtek.toml and cannot be packaged by mtek build.
+  const problems = missingBudgets(readdirSync(join(root, "examples"), { withFileTypes: true }).filter((entry) => entry.isDirectory() && existsSync(join(root,"examples",entry.name,"mtek.toml"))).map((entry) => entry.name));
   try {
     for (const [name, budget] of Object.entries(budgets.size)) {
       const out = join(scratch, name);

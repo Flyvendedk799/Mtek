@@ -4,6 +4,8 @@
  * the two agree in both directions.
  */
 import type { MtekDiagnostic } from "../diagnostics/types.js";
+import type { MtekExtension } from "./extensions.js";
+import type {MtekRenderingOptions} from "../render/options.js";
 
 /** `spec/runtime-abi.md` section 10.2. */
 export interface MtekTestOptions {
@@ -142,6 +144,10 @@ export interface MtekApp<I = Record<string, unknown>, O = Record<string, unknown
 }
 
 export interface MtekMountOptions<I = Record<string, unknown>> {
+  physics?:{readonly continuousCollision?:boolean};
+  rendering?:MtekRenderingOptions;
+  extensions?: readonly MtekExtension[];
+  hostServices?: Readonly<Record<string,unknown>>;
   inputs?: Partial<I>;
   onDiagnostic?: (d: MtekDiagnostic) => void;
   failureDisplay?: "overlay" | "none";

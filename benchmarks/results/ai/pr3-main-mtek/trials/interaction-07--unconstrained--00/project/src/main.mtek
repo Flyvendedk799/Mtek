@@ -1,0 +1,46 @@
+prefab Pip {
+    param x: f32;
+    position: vec3(x, 0.0, 0.0);
+    mesh: Box { size: vec3(0.8, 0.8, 0.5) };
+    material: Unlit { color: #38bdf8 };
+}
+
+scene Demo {
+    clear_color: #202020;
+    state pip_count: i32 = 0;
+    state pips: array<entity_ref, 5> = [Rail, Rail, Rail, Rail, Rail];
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Rail {
+        position: vec3(0.0, -1.5, 0.0);
+        mesh: Box { size: vec3(12.0, 0.2, 0.2) };
+        material: Unlit { color: #404040 };
+    }
+
+    on key_down(key: Key) {
+        if key == Key.Space {
+            if pip_count < 5 {
+                let count_f: f32 = 0.0 + pip_count;
+                let x: f32 = -4.0 + 2.0 * count_f;
+                pips[pip_count] = spawn(Pip { x: x; });
+                pip_count = pip_count + 1;
+            }
+        } else if key == Key.Backspace {
+            if pip_count > 0 {
+                pip_count = pip_count - 1;
+                destroy(pips[pip_count]);
+            }
+        } else if key == Key.Enter {
+            let j: i32 = 0;
+            for j in 0 .. pip_count {
+                destroy(pips[j]);
+            }
+            pip_count = 0;
+        }
+    }
+}

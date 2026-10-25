@@ -29,7 +29,13 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "../../support/fixtures.ts";
 import { M5_FIXTURES_DIR, PHYSICS_TUNNEL } from "../../support/m5-fixtures.ts";
-import { STEP, TARGET, openFixture, type AppLike, type DiagnosticLike } from "./physics-support.ts";
+import {
+  STEP,
+  TARGET,
+  openFixture,
+  type AppLike,
+  type DiagnosticLike,
+} from "./physics-support.ts";
 
 const FIXTURE = PHYSICS_TUNNEL;
 const WALL = 5;
@@ -44,6 +50,51 @@ const WINDOW = WALL - WINDOW_START;
 const THRESHOLD_SPEED = WINDOW / STEP;
 const TICKS = 120;
 
+test("opt-in CCD retains a reproducible moving-body limitation", async ({
+  page,
+  gpu,
+}, testInfo) => {
+  void gpu;
+  await openFixture(page, FIXTURE);
+  const result = await page.evaluate(
+    async ({ dt, ticks, target }) => {
+      const w = window as unknown as {
+        __mtekMount: (options: object) => Promise<AppLike>;
+      };
+      const diagnostics: DiagnosticLike[] = [];
+      const app = await w.__mtekMount({
+        physics: { continuousCollision: true },
+        test: { manualClock: true, renderTarget: target },
+        onDiagnostic: (d: DiagnosticLike) => diagnostics.push(d),
+      });
+      app.debug.pressKey("Space");
+      app.debug.step(1, dt);
+      app.debug.releaseKey("Space");
+      app.debug.step(ticks - 1, dt);
+      const entities = app.debug
+        .scene()
+        .entities.filter((e) => /^D\d\d$/.test(e.name))
+        .map((e) => ({ name: e.name, x: e.position.x }));
+      app.dispose();
+      return { entities, diagnostics };
+    },
+    { dt: STEP, ticks: TICKS, target: TARGET },
+  );
+  expect(result.diagnostics).toEqual([]);
+  expect(result.entities).toHaveLength(17);
+  await testInfo.attach("ccd-moving-plate-lanes.json", {
+    body: JSON.stringify(result, null, 2),
+    contentType: "application/json",
+  });
+  // Keep the failure explicit: all-body CCD is not a general mitigation of this fixture.
+  const leaking = result.entities.find((e) => e.name === "D06");
+  expect(leaking?.x).toBeCloseTo(3.065 + 9 * TICKS * STEP, 1);
+  for (const entity of result.entities.filter(
+    (e) => Number(e.name.slice(1)) <= 4,
+  ))
+    expect(entity.x, entity.name).toBeLessThan(WALL + 1);
+});
+
 interface Lane {
   index: number;
   x0: number;
@@ -52,10 +103,19 @@ interface Lane {
 
 /** The lane table of the fixture: `entity Snn: Shot { lane: ..; x0: ..; speed: ..; }` (the D group repeats it). */
 function readLanes(): Lane[] {
-  const source = readFileSync(join(M5_FIXTURES_DIR, FIXTURE, "src", "main.mtek"), "utf8");
+  const source = readFileSync(
+    join(M5_FIXTURES_DIR, FIXTURE, "src", "main.mtek"),
+    "utf8",
+  );
   const lanes: Lane[] = [];
-  for (const match of source.matchAll(/entity S(\d\d): Shot \{ lane: [\d.]+; x0: ([\d.]+); speed: ([\d.]+); \}/g)) {
-    lanes.push({ index: Number(match[1]), x0: Number(match[2]), speed: Number(match[3]) });
+  for (const match of source.matchAll(
+    /entity S(\d\d): Shot \{ lane: [\d.]+; x0: ([\d.]+); speed: ([\d.]+); \}/g,
+  )) {
+    lanes.push({
+      index: Number(match[1]),
+      x0: Number(match[2]),
+      speed: Number(match[3]),
+    });
   }
   return lanes;
 }
@@ -63,7 +123,8 @@ function readLanes(): Lane[] {
 /** The samples the engine sees: x0 + k * v * step up to the far side of the wall. */
 function samples(lane: Lane): number[] {
   const out: number[] = [];
-  for (let k = 0; lane.x0 + k * lane.speed * STEP < WALL + 1; k += 1) out.push(lane.x0 + k * lane.speed * STEP);
+  for (let k = 0; lane.x0 + k * lane.speed * STEP < WALL + 1; k += 1)
+    out.push(lane.x0 + k * lane.speed * STEP);
   return out;
 }
 
@@ -75,14 +136,22 @@ function predictedStopped(lane: Lane): boolean {
 /** How far the decisive samples are from the window's edges (the lanes are chosen so that none is closer than 12 mm). */
 function margin(lane: Lane): number {
   const inside = samples(lane).filter((x) => x >= WINDOW_START && x < WALL);
-  if (inside.length > 0) return Math.max(...inside.map((x) => Math.min(x - WINDOW_START, WALL - x)));
-  const before = samples(lane).filter((x) => x < WINDOW_START).at(-1) ?? Number.NEGATIVE_INFINITY;
-  const after = samples(lane).find((x) => x >= WALL) ?? Number.POSITIVE_INFINITY;
+  if (inside.length > 0)
+    return Math.max(...inside.map((x) => Math.min(x - WINDOW_START, WALL - x)));
+  const before =
+    samples(lane)
+      .filter((x) => x < WINDOW_START)
+      .at(-1) ?? Number.NEGATIVE_INFINITY;
+  const after =
+    samples(lane).find((x) => x >= WALL) ?? Number.POSITIVE_INFINITY;
   return Math.min(WINDOW_START - before, after - WALL);
 }
 
 test.describe("high-speed limitation on the real engine (M5-06)", () => {
-  test("the model: stopped exactly when a sample lies in the window; static walls stop everything", async ({ page, gpu }, testInfo) => {
+  test("the model: stopped exactly when a sample lies in the window; static walls stop everything", async ({
+    page,
+    gpu,
+  }, testInfo) => {
     void gpu;
     const lanes = readLanes();
     expect(lanes, "the lane table of the fixture").toHaveLength(17);
@@ -91,14 +160,23 @@ test.describe("high-speed limitation on the real engine (M5-06)", () => {
     await openFixture(page, FIXTURE);
     const run = await page.evaluate(
       async ({ target, dt, ticks }) => {
-        const w = window as unknown as { __mtekMount: (options: object) => Promise<AppLike> };
+        const w = window as unknown as {
+          __mtekMount: (options: object) => Promise<AppLike>;
+        };
         const reported: DiagnosticLike[] = [];
-        const app = await w.__mtekMount({ test: { manualClock: true, renderTarget: target }, onDiagnostic: (d: DiagnosticLike) => reported.push(d) });
+        const app = await w.__mtekMount({
+          test: { manualClock: true, renderTarget: target },
+          onDiagnostic: (d: DiagnosticLike) => reported.push(d),
+        });
         app.debug.pressKey("Space");
         app.debug.step(1, dt);
         app.debug.releaseKey("Space");
         app.debug.step(ticks - 1, dt);
-        const x = Object.fromEntries(app.debug.scene().entities.map((entity) => [entity.name, entity.position.x]));
+        const x = Object.fromEntries(
+          app.debug
+            .scene()
+            .entities.map((entity) => [entity.name, entity.position.x]),
+        );
         const counters = { ...app.debug.counters() };
         app.dispose();
         return { reported, x, counters };
@@ -106,43 +184,72 @@ test.describe("high-speed limitation on the real engine (M5-06)", () => {
       { target: TARGET, dt: STEP, ticks: TICKS },
     );
     expect(run.reported, "no runtime diagnostics").toEqual([]);
-    expect(run.counters).toMatchObject({ physicsSteps: TICKS, physicsBodies: 1 + 17 + 17 + 17, physicsFrozenBodies: 0 });
+    expect(run.counters).toMatchObject({
+      physicsSteps: TICKS,
+      physicsBodies: 1 + 17 + 17 + 17,
+      physicsFrozenBodies: 0,
+    });
 
     const table: string[] = [];
     let passed = 0;
     for (const lane of lanes) {
       const name = String(lane.index).padStart(2, "0");
       const stoppedByModel = predictedStopped(lane);
-      expect(margin(lane), `lane ${name}: the decisive samples are at least 12 mm from the edges of the window`).toBeGreaterThanOrEqual(0.0125);
+      expect(
+        margin(lane),
+        `lane ${name}: the decisive samples are at least 12 mm from the edges of the window`,
+      ).toBeGreaterThanOrEqual(0.0125);
 
       // A static wall: stopped at the face in every lane, with no exception (ball centre 0.05 from the face at 4.95).
       const stat = run.x[`S${name}`] ?? Number.NaN;
-      expect(Math.abs(stat - (WALL - THICKNESS / 2 - RADIUS)), `static, lane ${name} (${String(lane.speed)} m/s): x = ${String(stat)}`).toBeLessThan(0.02);
+      expect(
+        Math.abs(stat - (WALL - THICKNESS / 2 - RADIUS)),
+        `static, lane ${name} (${String(lane.speed)} m/s): x = ${String(stat)}`,
+      ).toBeLessThan(0.02);
 
       // A dynamic plate: the model decides.
       const dyn = run.x[`D${name}`] ?? Number.NaN;
       if (stoppedByModel) {
         // Stopped on the near side; the plate (10 000 kg) gives way by less than the ball's momentum allows: 4 cm at most.
-        expect(dyn, `dynamic, lane ${name} (${String(lane.speed)} m/s from ${String(lane.x0)}): predicted stopped`).toBeLessThan(WALL - THICKNESS / 2);
+        expect(
+          dyn,
+          `dynamic, lane ${name} (${String(lane.speed)} m/s from ${String(lane.x0)}): predicted stopped`,
+        ).toBeLessThan(WALL - THICKNESS / 2);
         expect(dyn).toBeGreaterThan(WALL - THICKNESS / 2 - RADIUS - 0.05);
       } else {
         passed += 1;
         // Not stopped: the ball flew through and on at its own speed for every tick.
         const flown = lane.x0 + lane.speed * TICKS * STEP;
-        expect(Math.abs(dyn - flown) / flown, `dynamic, lane ${name} (${String(lane.speed)} m/s from ${String(lane.x0)}): predicted to pass, x = ${String(dyn)}, flown ${String(flown)}`).toBeLessThan(1e-3);
+        expect(
+          Math.abs(dyn - flown) / flown,
+          `dynamic, lane ${name} (${String(lane.speed)} m/s from ${String(lane.x0)}): predicted to pass, x = ${String(dyn)}, flown ${String(flown)}`,
+        ).toBeLessThan(1e-3);
       }
-      table.push(`${String(lane.speed)} m/s (${(lane.speed * STEP).toFixed(4)} m/step) x0=${String(lane.x0)}: model ${stoppedByModel ? "stopped" : "passes"}, dynamic plate x=${dyn.toFixed(3)}, static wall x=${stat.toFixed(3)}`);
+      table.push(
+        `${String(lane.speed)} m/s (${(lane.speed * STEP).toFixed(4)} m/step) x0=${String(lane.x0)}: model ${stoppedByModel ? "stopped" : "passes"}, dynamic plate x=${dyn.toFixed(3)}, static wall x=${stat.toFixed(3)}`,
+      );
     }
 
     // The table spans the threshold: slower lanes are all stopped, and above it both outcomes occur.
     const slow = lanes.filter((lane) => lane.speed <= THRESHOLD_SPEED);
     const fast = lanes.filter((lane) => lane.speed > THRESHOLD_SPEED);
     expect(slow.length).toBeGreaterThanOrEqual(5);
-    expect(slow.every(predictedStopped), "at or below 7.2 m/s no phase gets past the window").toBe(true);
-    expect(fast.some(predictedStopped) && fast.some((lane) => !predictedStopped(lane))).toBe(true);
-    expect(passed, "balls that passed through a dynamic plate").toBe(fast.filter((lane) => !predictedStopped(lane)).length);
+    expect(
+      slow.every(predictedStopped),
+      "at or below 7.2 m/s no phase gets past the window",
+    ).toBe(true);
+    expect(
+      fast.some(predictedStopped) &&
+        fast.some((lane) => !predictedStopped(lane)),
+    ).toBe(true);
+    expect(passed, "balls that passed through a dynamic plate").toBe(
+      fast.filter((lane) => !predictedStopped(lane)).length,
+    );
     expect(passed).toBeGreaterThanOrEqual(6);
 
-    testInfo.annotations.push({ type: "m5-tunnelling", description: `window ${WINDOW.toFixed(3)} m = ${THRESHOLD_SPEED.toFixed(2)} m/s per step ${String(STEP)}; ${table.join("; ")}` });
+    testInfo.annotations.push({
+      type: "m5-tunnelling",
+      description: `window ${WINDOW.toFixed(3)} m = ${THRESHOLD_SPEED.toFixed(2)} m/s per step ${String(STEP)}; ${table.join("; ")}`,
+    });
   });
 });

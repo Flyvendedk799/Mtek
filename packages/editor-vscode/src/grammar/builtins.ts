@@ -72,7 +72,7 @@ export const BUILTINS: Builtins = {
     "Unlit",
   ],
   enums: ["Key"],
-  namespaces: ["asset", "color", "easing", "frame", "gamepad", "hud", "lighting", "mat4", "quat", "sampler", "texture"],
+  namespaces: ["animation", "asset", "color", "easing", "frame", "gamepad", "hud", "lighting", "mat4", "quat", "sampler", "texture"],
   functions: [
     "abs",
     "acos",
@@ -157,6 +157,7 @@ export const BUILTINS: Builtins = {
     "world_to_screen",
   ],
   namespaceFunctions: [
+    ...["copy_pose", "crossed", "duration", "fade", "finished", "joint_position", "joint_rotation", "pause", "play", "playing", "resume", "seek", "time", "transition", "weight"].map(name=>({namespace:"animation",name})),
     { namespace: "gamepad", name: "axis" },
     { namespace: "gamepad", name: "button" },
     { namespace: "gamepad", name: "connected" },

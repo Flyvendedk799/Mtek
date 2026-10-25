@@ -1,34 +1,42 @@
 import type { MtekSkin } from "../abi/manifest-types.js";
 import { identity, multiplyInto, fromRotationTranslationScaleInto, normalMatrixInto } from "../math/mat4.js";
 import { ClipPlayers, sampleChannelInto, type PlayableChannel, type PlayableClip } from "./clips.js";
+import { PoseLayers } from "./pose-layers.js";
+import { PoseIK } from "./ik.js";
 
 /** Shared file data, independently evaluated by every entity instance. */
 export function skinProblem(skin: MtekSkin, vertices: number): string | undefined {
   const n = skin.nodes.length;
-  if (skin.meshNode >= n || skin.joints.some(j => j >= n) || skin.inverseBind.length !== skin.joints.length) return "skin node or inverse-bind count is invalid";
+  if(n>256||skin.joints.length>128)return "skin exceeds the 256-node or 128-joint profile";
+  const index=(i: number,max: number): boolean => Number.isInteger(i)&&i>=0&&i<max;
+  const finite=(values: readonly number[],length: number): boolean => values.length===length&&values.every(Number.isFinite);
+  if (!index(skin.meshNode,n) || skin.joints.length===0 || skin.joints.some(j => !index(j,n)) || skin.inverseBind.length !== skin.joints.length
+    || skin.inverseBind.some(m=>!finite(m,16))) return "skin node or inverse-bind count is invalid";
   if (skin.indices.length !== vertices || skin.weights.length !== vertices) return "skin influences do not match the vertex count";
   for (let i = 0; i < n; i++) {
     const node = skin.nodes[i]!;
-    if (node.parent >= n || node.scale.some(v => v <= 0) || Math.hypot(...node.rotation) < 1e-8) return "invalid skeletal bind transform";
+    if ((node.parent!==-1&&!index(node.parent,n)) || !finite(node.translation,3) || !finite(node.rotation,4) || !finite(node.scale,3) || node.scale.some(v => v <= 0) || Math.hypot(...node.rotation) < 1e-8) return "invalid skeletal bind transform";
     let parent = i;
     for (let depth = 0; parent >= 0; depth++) {
+      if(!index(parent,n))return "invalid skeletal bind transform";
       if (depth >= n) return "cyclic skeletal hierarchy";
       parent = skin.nodes[parent]!.parent;
     }
   }
   for (let i = 0; i < vertices; i++) {
     const weights = skin.weights[i]!;
-    if (skin.indices[i]!.some(j => j >= skin.joints.length) || weights.some(w => w < 0) || Math.abs(weights.reduce((a,b) => a+b,0)-1) > 0.001) return "invalid vertex joint indices or weights";
+    if (skin.indices[i]!.length!==4 || skin.indices[i]!.some(j => !index(j,skin.joints.length)) || !finite(weights,4) || weights.some(w => w < 0) || Math.abs(weights.reduce((a,b) => a+b,0)-1) > 0.001) return "invalid vertex joint indices or weights";
   }
   const names = new Set<string>();
   for (const clip of skin.clips) {
     if (names.has(clip.name)) return "duplicate skeletal clip name";
+    if(!Number.isFinite(clip.duration)||clip.duration<0) return "invalid skeletal clip duration";
     names.add(clip.name);
     const channels = new Set<string>();
     for (const c of clip.channels) {
       const key = String(c.node) + c.path;
-      if (c.node >= n || channels.has(key) || c.values.length !== c.times.length * (c.path === "rotation" ? 4 : 3)
-        || c.times.some((t,i) => t < 0 || t > clip.duration || (i > 0 && t <= c.times[i-1]!))
+      if (!index(c.node,n) || channels.has(key) || c.times.length===0 || c.values.length !== c.times.length * (c.path === "rotation" ? 4 : 3) || c.values.some(v=>!Number.isFinite(v))
+        || c.times.some((t,i) => !Number.isFinite(t) || t < 0 || t > clip.duration || (i > 0 && t <= c.times[i-1]!))
         || (c.path === "scale" && c.values.some(v => v <= 0))) return "invalid skeletal clip channel";
       if (c.path === "rotation") {
         for (let k=0;k<c.values.length;k+=4) if (Math.hypot(...c.values.slice(k,k+4)) < 1e-8) return "invalid skeletal rotation";
@@ -50,12 +58,34 @@ function slerp(out: Float64Array, at: number, a: Float64Array, b: Float64Array, 
 }
 
 export class SkeletonPlayer {
+  readonly layers: PoseLayers;
+  readonly ik: PoseIK;
+  private rootNode = -1;
+  private readonly rootDelta = new Float64Array(3);
+  private readonly rootSample = new Float64Array(4);
+  /** Host ownership extracts base-clip translation; the displayed root stays at bind translation. */
+  setRootMotion(node: string | undefined): void {
+    const index=node===undefined?-1:this.skin.nodes.findIndex(n=>n.name===node);
+    if(node!==undefined&&index<0) throw new RangeError(`Unknown root-motion node: ${node}`);
+    this.rootNode=index;this.rootDelta.fill(0);this.evaluatedTime=NaN;
+  }
+  consumeRootMotion(): {x: number;y: number;z: number} {
+    const result={x:this.rootDelta[0]!,y:this.rootDelta[1]!,z:this.rootDelta[2]!};this.rootDelta.fill(0);return result;
+  }
+  /** Final local-pose adjustment, after layers and before world matrices/sockets. */
+  private override: ((pose: Float64Array) => void) | undefined;
+  private evaluatedLayers = -1;
+  private evaluatedIK = -1;
+  setProceduralOverride(override: ((pose: Float64Array) => void) | undefined): void {
+    this.override = override; this.evaluatedTime = NaN;
+  }
   clock = new ClipPlayers();
   private outgoing: { name: string; clock: ClipPlayers } | undefined;
   private held = false;
   readonly palette: Float32Array;
   readonly pose: Float64Array;
   private readonly bind: Float64Array;
+  /** Incoming sample during evaluation; unlayered displayed pose between evaluations. */
   private readonly sample: Float64Array;
   private readonly from: Float64Array;
   private readonly locals: Float32Array[];
@@ -99,6 +129,8 @@ export class SkeletonPlayer {
   }
 
   constructor(readonly skin: MtekSkin, initial?: string) {
+    this.layers = new PoseLayers(skin);
+    this.ik = new PoseIK(skin);
     this.bind = new Float64Array(skin.nodes.length*10);
     skin.nodes.forEach((node,i) => {
       this.bind.set(node.translation,i*10);
@@ -122,7 +154,7 @@ export class SkeletonPlayer {
     if (name === this.name) return true; // declarative state selection doesn't restart every update
     this.outgoing = this.name !== "" && !this.held && this.blendTime >= this.blendDuration
       ? { name: this.name, clock: this.clock } : undefined;
-    this.from.set(this.pose);
+    this.from.set(this.sample);
     this.held = false;
     this.clock = new ClipPlayers();
     this.name = name;
@@ -159,21 +191,54 @@ export class SkeletonPlayer {
   }
   play(looping: boolean, speed: number): boolean {
     const ok = this.clock.play(0,looping,speed);
-    if (ok) { this.from.set(this.pose); this.blendTime=0; this.evaluate(); }
+    if (ok) { this.from.set(this.sample); this.blendTime=0; this.evaluate(); }
     return ok;
   }
-  advance(dt: number): void {
+  advance(dt: number, evaluate = true): void {
     if (!Number.isFinite(dt) || dt < 0) return;
+    const previous=this.clock.time(0), outgoingTime=this.outgoing?.clock.time(0)??0, oldBlend=this.blendTime;
     this.clock.advance(dt,()=>undefined);
     this.outgoing?.clock.advance(dt,()=>undefined);
+    this.layers.advance(dt);
     this.blendTime=Math.min(this.blendDuration,this.blendTime+dt);
+    if(this.rootNode>=0) {
+      // Mean smoothstep transition weight over this update; constant root velocities
+      // integrate independently of render cadence, including an interval past the fade.
+      const integral=(t: number): number => t*t*t-.5*t*t*t*t;
+      const duration=this.blendDuration;
+      let blend=1;
+      if(duration>0 && dt>0 && oldBlend<duration) {
+        const end=Math.min(duration,oldBlend+dt),area=duration*(integral(end/duration)-integral(oldBlend/duration));
+        blend=(area+Math.max(0,oldBlend+dt-duration))/dt;
+      }
+      this.extractRoot(this.name,this.clock,previous,blend*this.clock.weight(0));
+      if(this.outgoing!==undefined) this.extractRoot(this.outgoing.name,this.outgoing.clock,outgoingTime,(1-blend)*this.outgoing.clock.weight(0));
+    }
     if (this.blendTime >= this.blendDuration) this.outgoing=undefined;
-    this.evaluate();
+    if (evaluate) this.evaluate();
+  }
+  private extractRoot(name: string, clock: ClipPlayers, previous: number, weight: number): void {
+    if(weight===0 || this.held) return;
+    const clip=this.skin.clips.find(c=>c.name===name),channel=clip?.channels.find(c=>c.node===this.rootNode&&c.path==="translation");
+    if(channel===undefined || clip===undefined) return;
+    sampleChannelInto(channel,previous,this.rootSample);
+    for(let c=0;c<3;c++) this.rootDelta[c]=this.rootDelta[c]!-this.rootSample[c]!*weight;
+    sampleChannelInto(channel,clock.time(0),this.rootSample);
+    for(let c=0;c<3;c++) this.rootDelta[c]=this.rootDelta[c]!+this.rootSample[c]!*weight;
+    const wraps=clock.wraps(0);
+    if(wraps>0) {
+      sampleChannelInto(channel,0,this.rootSample);
+      for(let c=0;c<3;c++) this.rootDelta[c]=this.rootDelta[c]!-this.rootSample[c]!*weight*wraps;
+      sampleChannelInto(channel,clip.duration,this.rootSample);
+      for(let c=0;c<3;c++) this.rootDelta[c]=this.rootDelta[c]!+this.rootSample[c]!*weight*wraps;
+    }
   }
   evaluate(): void {
     const time = this.clock.time(0), weight = this.clock.weight(0);
-    if (time === this.evaluatedTime && this.blendTime === this.evaluatedBlend && weight === this.evaluatedWeight) return;
+    if (this.override === undefined && time === this.evaluatedTime && this.blendTime === this.evaluatedBlend && weight === this.evaluatedWeight && this.evaluatedLayers === this.layers.revision && this.evaluatedIK === this.ik.revision) return;
     this.evaluatedTime = time; this.evaluatedBlend = this.blendTime; this.evaluatedWeight = weight;
+    this.evaluatedLayers = this.layers.revision;
+    this.evaluatedIK = this.ik.revision;
     if (this.held) this.sample.set(this.from);
     else this.samplePose(this.name,time,this.sample);
     if (this.outgoing !== undefined) {
@@ -194,6 +259,21 @@ export class SkeletonPlayer {
       for(const c of [0,1,2,7,8,9]) this.pose[at+c]=this.bind[at+c]!+(this.pose[at+c]!-this.bind[at+c]!)*weight;
       slerp(this.pose,at+3,this.bind,this.pose,weight);
     }
+    // Interruption/restart snapshots must precede composition, otherwise an additive
+    // or weighted layer would be applied again to an already composed snapshot.
+    this.sample.set(this.pose);
+    this.layers.apply(this.pose,this.bind);
+    this.override?.(this.pose);
+    if(this.rootNode>=0) for(let c=0;c<3;c++) this.pose[this.rootNode*10+c]=this.bind[this.rootNode*10+c]!;
+    for (let i=0;i<this.pose.length;i++) {
+      if (!Number.isFinite(this.pose[i]) || (i%10>=7 && this.pose[i]!<=0)) throw new RangeError("Procedural pose contains an invalid transform");
+    }
+    for (let at=3;at<this.pose.length;at+=10) {
+      const length=Math.hypot(...this.pose.subarray(at,at+4));
+      if(length<1e-8) throw new RangeError("Procedural pose contains a zero quaternion");
+      for(let c=0;c<4;c++) this.pose[at+c]=this.pose[at+c]!/length;
+    }
+    this.ik.apply(this.pose);
     for(const i of this.order) {
       const a=i*10,p=this.pose;
       fromRotationTranslationScaleInto(this.locals[i]!,this.scratch,

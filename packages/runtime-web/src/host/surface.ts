@@ -11,6 +11,8 @@
  * After a device loss `recover` moves the surface to the new device (`spec/runtime-abi.md` section 9.4).
  */
 import type { ResourceRegistry } from "../gpu/registry.js";
+import {PostProcessor} from "../render/post-processing.js";
+import type {PostEffect} from "../render/options.js";
 
 // The WebGPU usage flag values are constants of the standard. They are spelled out because the
 // `GPUTextureUsage` / `GPUBufferUsage` / `GPUMapMode` globals do not exist outside a browser.
@@ -70,6 +72,7 @@ export interface PassTimer {
 }
 
 export interface SurfaceOptions {
+  readonly postProcessing?:readonly PostEffect[];
   readonly canvas: HTMLCanvasElement;
   readonly context: GPUCanvasContext;
   readonly device: GPUDevice;
@@ -86,6 +89,7 @@ export interface SurfaceOptions {
 }
 
 export class Surface {
+  private post:PostProcessor|undefined;
   private get timer(): PassTimer | undefined {
     return this.timerDropped ? undefined : this.options.timer;
   }
@@ -114,6 +118,16 @@ export class Surface {
     if (view === undefined) throw new Error(`Surface: no sRGB view format for ${options.format}`);
     this.viewFormat = view;
     this.device = options.device;
+  }
+
+  async preparePostProcessing():Promise<void> {
+    if(this.post!==undefined || (this.options.postProcessing?.length??0)===0)return;
+    this.device.pushErrorScope("validation");
+    try {this.post=new PostProcessor(this.options.registry,this.colorFormat,this.options.postProcessing!);}
+    catch(error){await this.device.popErrorScope();throw error;}
+    const scope=this.device.popErrorScope();
+    const [,error]=await Promise.all([this.post.validate(),scope]);
+    if(error!==null)throw new Error(`Post-processing pipeline failed: ${error.message}`);
   }
 
   /** Frames that were drawn / skipped because the canvas has no pixels. */
@@ -236,6 +250,8 @@ export class Surface {
    * the browser or the registry throws; the caller treats that as a failed recovery attempt.
    */
   recover(device: GPUDevice): void {
+    // The registry has already retired all resources from the previous device.
+    this.post=undefined;
     this.device = device;
     this.timerDropped = true;
     this.depth = null;
@@ -285,13 +301,15 @@ export class Surface {
     const { context } = this.options;
     const { device } = this;
     const target = this.offscreen ?? context.getCurrentTexture();
+    const output=target.createView({format:this.offscreen!==null?OFFSCREEN_FORMAT:this.viewFormat});
+    if(this.post===undefined && (this.options.postProcessing?.length??0)>0) this.post=new PostProcessor(this.options.registry,this.colorFormat,this.options.postProcessing!);
     const encoder = device.createCommandEncoder({ label: "mtek frame" });
     const timestampWrites = this.timer?.passTimestampWrites();
     const pass = encoder.beginRenderPass({
       ...(timestampWrites === undefined ? {} : { timestampWrites }),
       colorAttachments: [
         {
-          view: target.createView({ format: this.offscreen !== null ? OFFSCREEN_FORMAT : this.viewFormat }),
+          view: this.post?.input(this.widthPx,this.heightPx)??output,
           clearValue: { r: clearColor[0], g: clearColor[1], b: clearColor[2], a: 1 },
           loadOp: "clear",
           storeOp: "store",
@@ -306,6 +324,7 @@ export class Surface {
     });
     encode?.(pass);
     pass.end();
+    this.post?.encode(encoder,output);
     if (timestampWrites !== undefined) this.timer?.resolve(encoder);
     device.queue.submit([encoder.finish()]);
     if (timestampWrites !== undefined) this.timer?.submitted();
@@ -360,6 +379,7 @@ export class Surface {
 
   /** Unconfigures the canvas. The textures are released by the registry's `destroyAll`. */
   dispose(): void {
+    this.post?.dispose();this.post=undefined;
     this.parked = false;
     if (this.configured) {
       this.configured = false;

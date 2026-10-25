@@ -37,6 +37,7 @@ export type CollisionEventName = "collision_enter" | "collision_exit";
 
 /** Everything the system needs from the application. */
 export interface PhysicsOptions {
+  readonly continuousCollision?:boolean;
   readonly backend: PhysicsBackend;
   readonly manifest: MtekManifest;
   readonly world: World;
@@ -172,7 +173,8 @@ export class PhysicsSystem implements BodyService {
       this.report("E8104", ref.slot, `The body of '${name}' was not created: its pose ${describeValue(pose.position)} / ${describeValue(pose.rotation)} is not finite. The entity keeps its pose and does not take part in the simulation.`);
       return;
     }
-    entry.handle = this.physics.addBody(bodyDesc(body), colliderDesc(collider), pose, ref.slot);
+    const description=bodyDesc(body);
+    entry.handle = this.physics.addBody(description.kind==="dynamic"&&this.options.continuousCollision===true?{...description,continuousCollision:true}:description, colliderDesc(collider), pose, ref.slot);
   }
 
   // ---- ctx.body ----

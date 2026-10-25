@@ -22,6 +22,7 @@ import type { MtekBuiltinResourceName, MtekImageAsset } from "../abi/manifest-ty
 import type { DecodedImages } from "../assets/loader.js";
 import type { ResourceRegistry } from "../gpu/registry.js";
 import type { MtekTestTexture } from "../host/types.js";
+import {mipLevelCount,type MipmapGenerator} from "./mipmaps.js";
 
 // WebGPU texture usage flags (constants of the standard).
 const USAGE_COPY_DST = 0x02;
@@ -93,6 +94,7 @@ export class AssetTextures {
     private readonly registry: ResourceRegistry,
     private readonly queue: GPUQueue,
     private readonly images: DecodedImages,
+    private readonly mipmaps?:MipmapGenerator,
   ) {}
 
   /** The view of the texture of image file `asset`, created and filled on first use. */
@@ -105,9 +107,11 @@ export class AssetTextures {
         label: `mtek asset ${asset.url}`,
         size: [bitmap.width, bitmap.height],
         format: TEXTURE_FORMATS[asset.colorSpace],
+        mipLevelCount:this.mipmaps===undefined?1:mipLevelCount(bitmap.width,bitmap.height),
         usage: USAGE_TEXTURE_BINDING | USAGE_COPY_DST | USAGE_RENDER_ATTACHMENT,
       });
       this.registry.copyExternalImage(this.queue, bitmap, texture);
+      this.mipmaps?.generate(texture,TEXTURE_FORMATS[asset.colorSpace],bitmap.width,bitmap.height);
       found = { texture, view: texture.createView() };
       this.textures.set(asset.url, found);
     }

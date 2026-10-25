@@ -1,0 +1,46 @@
+scene Demo {
+    clear_color: #202020;
+
+    state ship_x: f32 = 0.0;
+    state ship_y: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity Field {
+        position: vec3(0.0, 0.0, -1.0);
+        mesh: Box { size: vec3(10.0, 10.0, 0.2) };
+        material: Unlit { color: #303030 };
+    }
+
+    entity Ship {
+        position: bind(vec3(ship_x, ship_y, 0.0));
+        mesh: Box { size: vec3(2.0, 2.0, 0.5) };
+        material: Unlit { color: #38bdf8 };
+
+        update(dt: f32) {
+            let speed: f32 = 8.0;
+            var dx: f32 = 0.0;
+            var dy: f32 = 0.0;
+
+            if is_key_down(Key.ArrowRight) {
+                dx = dx + speed * dt;
+            }
+            if is_key_down(Key.ArrowLeft) {
+                dx = dx - speed * dt;
+            }
+            if is_key_down(Key.ArrowUp) {
+                dy = dy + speed * dt;
+            }
+            if is_key_down(Key.ArrowDown) {
+                dy = dy - speed * dt;
+            }
+
+            ship_x = clamp(ship_x + dx, -4.0, 4.0);
+            ship_y = clamp(ship_y + dy, -4.0, 4.0);
+        }
+    }
+}

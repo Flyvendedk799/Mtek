@@ -209,4 +209,10 @@ The 2D camera preset is a camera on `+Z` looking down `-Z` with `projection: Ort
 
 ## 10. Not in v0.1
 
-Vertex and compute stages; blend modes other than alpha "over" (additive, multiply) and per-triangle sorting of translucent draws; shadows; post-processing; multiple render targets; material inheritance; changing material identity at run time; texture params written at run time; mip-map generation; derivatives (`dpdx`); storage buffers; texture arrays and cube maps.
+Mtek-authored vertex and compute stages; multiply blending and per-triangle sorting of translucent draws; shadows; multiple render targets; material inheritance; texture params written at run time; derivatives (`dpdx`); language-visible storage buffers; texture arrays and cube maps.
+
+The host runtime provides additive material selection and ordered custom WGSL LDR
+post effects through `MtekMountOptions.rendering` (decision 0193). Image asset textures
+receive complete mip chains on WebGPU, averaged in linear light. These do not add
+Mtek language syntax or new shader stages. Normal maps, glTF metallic/roughness and
+occlusion textures, environment lighting and HDR post-processing remain unsupported.

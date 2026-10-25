@@ -1,0 +1,63 @@
+const SWATCH = asset.texture("../assets/swatch.png");
+
+material PlainMat {
+    param tex: texture = texture.white();
+    param smp: sampler = sampler.nearest_clamp();
+
+    fragment(input: SurfaceInput) -> color {
+        let texel = sample(tex, smp, input.uv);
+        return color.srgb(texel.xyz, 1.0);
+    }
+}
+
+material TiledMat {
+    param tex: texture = texture.white();
+    param smp: sampler = sampler.nearest_repeat();
+
+    fragment(input: SurfaceInput) -> color {
+        let texel = sample(tex, smp, input.uv);
+        return color.srgb(texel.xyz, 1.0);
+    }
+}
+
+material SmoothMat {
+    param tex: texture = texture.white();
+    param smp: sampler = sampler.linear_clamp();
+
+    fragment(input: SurfaceInput) -> color {
+        let texel = sample(tex, smp, input.uv);
+        return color.srgb(texel.xyz, 1.0);
+    }
+}
+
+scene Demo {
+    clear_color: #1b2430;
+
+    camera Main {
+        position: vec3(0.0, 11.0, 3.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective {
+            fov_y: 0.72;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+
+    entity Plain {
+        mesh: Plane { size: vec2(3.6, 3.6) };
+        material: PlainMat { tex: SWATCH; smp: sampler.nearest_clamp() };
+        position: vec3(-2.0, 0.0, -2.0);
+    }
+
+    entity Tiled {
+        mesh: Plane { size: vec2(3.6, 3.6) };
+        material: TiledMat { tex: SWATCH; smp: sampler.nearest_repeat() };
+        position: vec3(0.0, 0.0, 2.0);
+    }
+
+    entity Smooth {
+        mesh: Plane { size: vec2(3.6, 3.6) };
+        material: SmoothMat { tex: SWATCH; smp: sampler.linear_clamp() };
+        position: vec3(2.0, 0.0, -2.0);
+    }
+}

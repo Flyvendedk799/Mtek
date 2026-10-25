@@ -19,8 +19,9 @@ pub const RUNNER_VARIABLE: &str = "MTEK_TEST_RUNNER";
 /// The runner, relative to the repository root.
 const RUNNER_PATH: [&str; 4] = ["tests", "browser", "support", "mtek-test"];
 const RUNNER_FILE: &str = "main.ts";
-/// The oldest Node that runs TypeScript files without a flag.
-const MIN_NODE_MAJOR: u32 = 24;
+/// Versions with default type stripping (backported on the Node 22 release line).
+const NODE_REQUIREMENT: &str = "22.18+ on Node 22, 23.6+ on Node 23, or Node 24+";
+type NodeVersion = (u32, u32, u32);
 
 /// Node and the runner script.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -48,17 +49,17 @@ fn locate_with(
     exe: Option<&Path>,
 ) -> Result<Runner, String> {
     let node = node.unwrap_or_else(|| OsString::from("node"));
-    let (version, major) = node_version(&node)?;
+    let (version, parsed) = node_version(&node)?;
     let script = locate_script(script, exe)?;
-    // Node strips the types of a TypeScript runner itself, from version 24 on without a flag; a
+    // Node strips types by default from 22.18, 23.6 and 24 onward; a
     // JavaScript runner (a stand-in set with `MTEK_TEST_RUNNER`) runs on any Node.
     if script
         .extension()
         .is_some_and(|extension| extension == "ts")
-        && major < MIN_NODE_MAJOR
+        && !strips_types(parsed)
     {
         return Err(format!(
-            "Node.js {MIN_NODE_MAJOR} or newer is required to run the browser runner, found {version}"
+            "Node.js {NODE_REQUIREMENT} is required to run the browser runner, found {version}"
         ));
     }
     Ok(Runner { node, script })
@@ -103,8 +104,8 @@ fn find_beside(exe: &Path) -> Option<PathBuf> {
     })
 }
 
-/// The version text and the major version of `node`, if it runs.
-fn node_version(node: &OsString) -> Result<(String, u32), String> {
+/// The version text and parsed release version of `node`, if it runs.
+fn node_version(node: &OsString) -> Result<(String, NodeVersion), String> {
     let output = match Command::new(node).arg("--version").output() {
         Ok(output) if output.status.success() => output,
         Ok(output) => {
@@ -116,21 +117,30 @@ fn node_version(node: &OsString) -> Result<(String, u32), String> {
         }
         Err(error) => {
             return Err(format!(
-                "Node.js was not found ('{}': {error}); install Node.js {MIN_NODE_MAJOR} or set {NODE_VARIABLE}",
+                "Node.js was not found ('{}': {error}); install Node.js {NODE_REQUIREMENT} or set {NODE_VARIABLE}",
                 node.to_string_lossy()
             ));
         }
     };
     let version = String::from_utf8_lossy(&output.stdout).trim().to_owned();
-    match node_major(&version) {
-        Some(major) => Ok((version, major)),
+    match node_parts(&version) {
+        Some(parsed) => Ok((version, parsed)),
         None => Err(format!("cannot read the Node.js version '{version}'")),
     }
 }
 
-/// The major version of `v24.1.0`.
-fn node_major(version: &str) -> Option<u32> {
-    version.strip_prefix('v')?.split('.').next()?.parse().ok()
+fn node_parts(version: &str) -> Option<NodeVersion> {
+    let mut parts = version.strip_prefix('v')?.split('.');
+    let result = (
+        parts.next()?.parse().ok()?,
+        parts.next()?.parse().ok()?,
+        parts.next()?.parse().ok()?,
+    );
+    parts.next().is_none().then_some(result)
+}
+
+fn strips_types(version: NodeVersion) -> bool {
+    matches!(version, (22, 18.., _) | (23, 6.., _) | (24.., _, _))
 }
 
 /// What the runner reported about one fixture.
@@ -248,11 +258,16 @@ mod tests {
 
     #[test]
     fn node_versions() {
-        assert_eq!(node_major("v24.9.0"), Some(24));
-        assert_eq!(node_major("v8.0.0"), Some(8));
-        assert_eq!(node_major("24.0.0"), None);
-        assert_eq!(node_major("vx"), None);
-        assert_eq!(node_major(""), None);
+        assert_eq!(node_parts("v24.9.0"), Some((24, 9, 0)));
+        for version in ["24.0.0", "vx", "", "v22.18", "v24.0.0.1"] {
+            assert_eq!(node_parts(version), None);
+        }
+        for version in ["v22.18.0", "v22.23.2", "v23.6.0", "v24.0.0", "v26.0.0"] {
+            assert!(strips_types(node_parts(version).unwrap()), "{version}");
+        }
+        for version in ["v8.0.0", "v22.17.9", "v23.0.0", "v23.5.9"] {
+            assert!(!strips_types(node_parts(version).unwrap()), "{version}");
+        }
     }
 
     #[test]

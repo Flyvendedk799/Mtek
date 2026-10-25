@@ -1,0 +1,30 @@
+const COOL: color = #1e3a8a;
+
+const HOT: color = #f97316;
+
+material Heat {
+    param warmth: f32 = 0.0;
+
+    fragment(surface: SurfaceInput) -> color {
+        return color.linear(mix(COOL.rgb, HOT.rgb, saturate(warmth)), 1.0);
+    }
+}
+
+scene Demo {
+    clear_color: #202020;
+    state lift: f32 = 0.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 6.0);
+        target: vec3(0.0, 0.0, 0.0);
+    }
+
+    entity Cube {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Heat { warmth: bind(lift / 2.0); };
+
+        update(dt: f32) {
+            self.position = vec3(0.0, lift, 0.0);
+        }
+    }
+}

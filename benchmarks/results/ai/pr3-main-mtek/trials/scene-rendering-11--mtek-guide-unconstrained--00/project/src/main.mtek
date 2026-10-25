@@ -1,0 +1,65 @@
+const SWATCH = asset.texture("../assets/swatch.png");
+
+material PlainMaterial {
+    param texture_: texture = texture.white();
+    param smp: sampler = sampler.nearest_clamp();
+    
+    fragment(input: SurfaceInput) -> color {
+        let uv = vec2(1.0 - input.uv.x, input.uv.y);
+        // Hard-edged, single copy covering the whole square
+        let texel = sample(texture_, smp, uv);
+        return color.linear(texel.xyz, 1.0);
+    }
+}
+
+material TiledMaterial {
+    param texture_: texture = texture.white();
+    param smp: sampler = sampler.nearest_repeat();
+    
+    fragment(input: SurfaceInput) -> color {
+        let uv = vec2(1.0 - input.uv.x, input.uv.y);
+        // Tiled 2x2 with hard edges
+        let texel = sample(texture_, smp, uv);
+        return color.linear(texel.xyz, 1.0);
+    }
+}
+
+material SmoothMaterial {
+    param texture_: texture = texture.white();
+    param smp: sampler = sampler.linear_clamp();
+    
+    fragment(input: SurfaceInput) -> color {
+        let uv = vec2(1.0 - input.uv.x, input.uv.y);
+        // Smooth bilinear filtering with clamping
+        let texel = sample(texture_, smp, uv);
+        return color.linear(texel.xyz, 1.0);
+    }
+}
+
+scene Demo {
+    clear_color: #1b2430;
+    
+    camera Main {
+        position: vec3(0.0, 11.0, 3.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Perspective { fov_y: 0.72; near: 0.1; far: 1000.0 };
+    }
+    
+    entity Plain {
+        mesh: Plane { size: vec2(3.6, 3.6) };
+        material: PlainMaterial { texture_: SWATCH };
+        position: vec3(-2.0, 0.0, -2.0);
+    }
+    
+    entity Tiled {
+        mesh: Plane { size: vec2(3.6, 3.6) };
+        material: TiledMaterial { texture_: SWATCH };
+        position: vec3(0.0, 0.0, 2.0);
+    }
+    
+    entity Smooth {
+        mesh: Plane { size: vec2(3.6, 3.6) };
+        material: SmoothMaterial { texture_: SWATCH };
+        position: vec3(2.0, 0.0, -2.0);
+    }
+}

@@ -115,6 +115,16 @@ The engine-level evidence of M5-06 (decision `spec/decisions/0068-physics-behavi
 
 ### 7.1 Known limitation: high-speed bodies (measured)
 
+The following measurements describe the default discrete adapter settings. Decision
+[0193](decisions/0193-platform-runtime-extensions.md) adds an explicit host opt-in,
+`physics: { continuousCollision: true }`, and optional sweep, character-movement,
+collision-group and contact queries on the independent Rapier adapter. Its regression
+stops a radius-0.05 m body travelling at 240 m/s against a 0.1 m moving plate; the
+same case tunnels with CCD off. That is additional evidence for one case, not a
+general guarantee for every speed, phase, shape or moving obstacle. The original
+experiment reporting no benefit from CCD does not establish that the opt-in is
+ineffective in every configuration. Teleports remain unswept.
+
 The adapter enables no continuous collision detection (a measurement with `setCcdEnabled(true)` on dynamic bodies changed nothing for two moving bodies, so it is not a mitigation either). The engine looks for contacts once per fixed step on the poses the previous step left. For a small ball (radius *r*) flying at a thin obstacle (thickness *t*) the ball is **stopped exactly when one of the poses the engine samples, `x₀ + k·v·dt`, lies within the window `t/2 + r + 0.02 m` before the obstacle's midplane** (0.02 m is the prediction distance, decision 0063 item 5), and flies through otherwise. Consequences, measured on the real engine at the 1/60 s step with a ball of radius 0.05 m and a wall of 0.1 m (window 0.12 m):
 
 - A body that moves at most the window per step (`v·dt ≤ t/2 + r + 0.02`, here **7.2 m/s**) **cannot tunnel** whatever its phase. Above it a body tunnels in the share `1 − window / (v·dt)` of the phases (0.2 at 9 m/s, 0.4 at 12 m/s, 0.88 at 60 m/s; a ball that is not stopped keeps its speed).

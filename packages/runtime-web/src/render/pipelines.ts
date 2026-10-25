@@ -176,6 +176,7 @@ export interface PipelineRequest {
   readonly instanced?: boolean;
   /** The alpha-blended variant for translucent draws (decision 0138): no depth writes, never instanced. */
   readonly blended?: boolean;
+  readonly blendMode?:"alpha"|"additive";
 }
 
 /** Whether `material` has a colour param, whose alpha below 1 makes its draws translucent (decision 0138). */
@@ -195,6 +196,10 @@ export function alwaysBlends(material: { readonly id: string }): boolean {
 export const ALPHA_BLEND: GPUBlendState = {
   color: { srcFactor: "src-alpha", dstFactor: "one-minus-src-alpha", operation: "add" },
   alpha: { srcFactor: "one", dstFactor: "one-minus-src-alpha", operation: "add" },
+};
+export const ADDITIVE_BLEND: GPUBlendState = {
+  color:{srcFactor:"src-alpha",dstFactor:"one",operation:"add"},
+  alpha:{srcFactor:"one",dstFactor:"one",operation:"add"},
 };
 
 export type PipelineResult =
@@ -231,7 +236,7 @@ export function pipelineDescriptor(plan: BindingPlan, request: PipelineRequest):
     fragment: {
       module,
       entryPoint: material.shader.fragmentEntry,
-      targets: [request.blended === true ? { format: colorFormat, blend: ALPHA_BLEND } : { format: colorFormat }],
+      targets: [request.blended === true ? { format: colorFormat, blend: request.blendMode==="additive"?ADDITIVE_BLEND:ALPHA_BLEND } : { format: colorFormat }],
     },
     primitive: { topology: TOPOLOGY, cullMode: CULL_MODE, frontFace: FRONT_FACE },
     // Translucent draws test depth against the opaque scene but do not write it (decision 0138).
@@ -277,7 +282,7 @@ export class PipelineCache {
 
   /** Returns the cached pipeline of the request's key, or creates it inside a validation error scope. */
   async obtain(request: PipelineRequest): Promise<PipelineResult> {
-    const key = materialPipelineKey(request.material, request.colorFormat, request.instanced === true) + (request.blended === true ? "|blend" : "");
+    const key = materialPipelineKey(request.material, request.colorFormat, request.instanced === true) + (request.blended === true ? request.blendMode==="additive"?"|additive":"|blend" : "");
     const cached = this.pipelines.get(key);
     if (cached !== undefined) return { ok: true, key, pipeline: cached };
 

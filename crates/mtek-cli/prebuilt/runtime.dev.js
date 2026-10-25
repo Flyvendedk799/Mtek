@@ -1,3 +1,1191 @@
+// src/math/mat4.ts
+function at(a, i) {
+  let value = a[i];
+  if (value === void 0) throw new RangeError(`matrix index ${i} out of range`);
+  return value;
+}
+function identity() {
+  let m = new Float32Array(16);
+  return m[0] = 1, m[5] = 1, m[10] = 1, m[15] = 1, m;
+}
+function translation(v) {
+  let m = identity();
+  return m[12] = v.x, m[13] = v.y, m[14] = v.z, m;
+}
+function scaling(v) {
+  let m = new Float32Array(16);
+  return m[0] = v.x, m[5] = v.y, m[10] = v.z, m[15] = 1, m;
+}
+function transpose(m) {
+  let out = new Float32Array(16);
+  for (let row = 0; row < 4; row++)
+    for (let col = 0; col < 4; col++) out[row * 4 + col] = at(m, col * 4 + row);
+  return out;
+}
+function multiply(a, b) {
+  return multiplyInto(new Float32Array(16), a, b);
+}
+function multiplyInto(out, a, b) {
+  for (let col = 0; col < 4; col++)
+    for (let row = 0; row < 4; row++) {
+      let sum = 0;
+      for (let k = 0; k < 4; k++) sum += a[k * 4 + row] * b[col * 4 + k];
+      out[col * 4 + row] = sum;
+    }
+  return out;
+}
+function rotation(q) {
+  return rotationInto(new Float32Array(16), q);
+}
+function rotationInto(m, q) {
+  let { x, y, z, w } = q, xx = x * x, yy = y * y, zz = z * z, xy = x * y, xz = x * z, yz = y * z, wx = w * x, wy = w * y, wz = w * z;
+  return m[0] = 1 - 2 * (yy + zz), m[1] = 2 * (xy + wz), m[2] = 2 * (xz - wy), m[3] = 0, m[4] = 2 * (xy - wz), m[5] = 1 - 2 * (xx + zz), m[6] = 2 * (yz + wx), m[7] = 0, m[8] = 2 * (xz + wy), m[9] = 2 * (yz - wx), m[10] = 1 - 2 * (xx + yy), m[11] = 0, m[12] = 0, m[13] = 0, m[14] = 0, m[15] = 1, m;
+}
+function fromRotationTranslationScaleInto(out, scratch, rotationQuat, translationVec, scale) {
+  let r = rotationInto(scratch, rotationQuat), sx = scale.x, sy = scale.y, sz = scale.z;
+  return out[0] = r[0] * sx, out[1] = r[1] * sx, out[2] = r[2] * sx, out[3] = 0, out[4] = r[4] * sy, out[5] = r[5] * sy, out[6] = r[6] * sy, out[7] = 0, out[8] = r[8] * sz, out[9] = r[9] * sz, out[10] = r[10] * sz, out[11] = 0, out[12] = translationVec.x, out[13] = translationVec.y, out[14] = translationVec.z, out[15] = 1, out;
+}
+function perspective(fovY, aspect, near, far) {
+  let f = 1 / Math.tan(fovY / 2), m = new Float32Array(16);
+  return m[0] = f / aspect, m[5] = f, m[10] = far / (near - far), m[11] = -1, m[14] = near * far / (near - far), m;
+}
+function orthographic(height, aspect, near, far) {
+  let width = height * aspect, m = new Float32Array(16);
+  return m[0] = 2 / width, m[5] = 2 / height, m[10] = 1 / (near - far), m[14] = near / (near - far), m[15] = 1, m;
+}
+function lookAtRotation(position, target) {
+  let fx = target.x - position.x, fy = target.y - position.y, fz = target.z - position.z, fLength = Math.hypot(fx, fy, fz);
+  if (!(fLength > 0) || !Number.isFinite(fLength))
+    throw new RangeError("look-at needs distinct, finite position and target");
+  fx /= fLength, fy /= fLength, fz /= fLength;
+  let upIsMinusZ = Math.abs(fy) > 1 - 1e-6, ux0 = 0, uy0 = upIsMinusZ ? 0 : 1, uz0 = upIsMinusZ ? -1 : 0, rx = fy * uz0 - fz * uy0, ry = fz * ux0 - fx * uz0, rz = fx * uy0 - fy * ux0, rLength = Math.hypot(rx, ry, rz);
+  rx /= rLength, ry /= rLength, rz /= rLength;
+  let ux = ry * fz - rz * fy, uy = rz * fx - rx * fz, uz = rx * fy - ry * fx, m = new Float32Array(16);
+  return m[0] = rx, m[1] = ry, m[2] = rz, m[4] = ux, m[5] = uy, m[6] = uz, m[8] = -fx, m[9] = -fy, m[10] = -fz, m[15] = 1, m;
+}
+function viewFromRotation(position, r) {
+  return multiply(transpose(r), translation({ x: -position.x, y: -position.y, z: -position.z }));
+}
+function viewMatrix(position, orientation) {
+  let r = "target" in orientation ? lookAtRotation(position, orientation.target) : rotation(orientation.rotation);
+  return viewFromRotation(position, r);
+}
+function normalMatrixInto(out, offset, model) {
+  let a = at(model, 0), b = at(model, 4), c = at(model, 8), d = at(model, 1), e = at(model, 5), f = at(model, 9), g = at(model, 2), h = at(model, 6), i = at(model, 10), c00 = e * i - f * h, c01 = f * g - d * i, c02 = d * h - e * g, c10 = c * h - b * i, c11 = a * i - c * g, c12 = b * g - a * h, c20 = b * f - c * e, c21 = c * d - a * f, c22 = a * e - b * d, det = a * c00 + b * c01 + c * c02;
+  if (det === 0 || !Number.isFinite(det))
+    throw new RangeError("normal matrix of a singular transform is undefined");
+  let inv = 1 / det;
+  return out[offset] = c00 * inv, out[offset + 1] = c10 * inv, out[offset + 2] = c20 * inv, out[offset + 3] = 0, out[offset + 4] = c01 * inv, out[offset + 5] = c11 * inv, out[offset + 6] = c21 * inv, out[offset + 7] = 0, out[offset + 8] = c02 * inv, out[offset + 9] = c12 * inv, out[offset + 10] = c22 * inv, out[offset + 11] = 0, out[offset + 12] = 0, out[offset + 13] = 0, out[offset + 14] = 0, out[offset + 15] = 1, out;
+}
+
+// src/scene/clips.ts
+function sampleChannelInto(channel, time, out) {
+  let comps = channelWidth(channel), times = channel.times, count2 = times.length, values = channel.values, identity2 = () => {
+    out[0] = 0, out[1] = 0, out[2] = 0, comps === 4 && (out[3] = 1);
+  };
+  if (count2 === 0) {
+    identity2();
+    return;
+  }
+  let first = times[0] ?? 0;
+  if (time <= first) {
+    for (let i = 0; i < comps; i += 1) out[i] = values[i] ?? 0;
+    comps === 4 && normalizeInto(out);
+    return;
+  }
+  let hi = 1;
+  for (; hi < count2 && (times[hi] ?? 0) <= time; ) hi += 1;
+  let lo = hi - 1, from = lo * comps;
+  if (channel.interpolation === "step" || hi >= count2) {
+    for (let i = 0; i < comps; i += 1) out[i] = values[from + i] ?? 0;
+    comps === 4 && normalizeInto(out);
+    return;
+  }
+  let t0 = times[lo] ?? 0, span = (times[hi] ?? t0) - t0, t = span === 0 ? 0 : (time - t0) / span, to = hi * comps;
+  if (comps === 4) {
+    let dot2 = 0;
+    for (let i = 0; i < 4; i += 1) dot2 += (values[from + i] ?? 0) * (values[to + i] ?? 0);
+    let sign2 = dot2 < 0 ? -1 : 1, angle = Math.acos(Math.min(1, Math.abs(dot2))), sine = Math.sin(angle), aWeight = sine > 1e-6 ? Math.sin((1 - t) * angle) / sine : 1 - t, bWeight = sine > 1e-6 ? Math.sin(t * angle) / sine : t;
+    for (let i = 0; i < 4; i += 1) {
+      let a = values[from + i] ?? 0;
+      out[i] = a * aWeight + sign2 * (values[to + i] ?? 0) * bWeight;
+    }
+    normalizeInto(out);
+    return;
+  }
+  for (let i = 0; i < 3; i += 1) {
+    let a = values[from + i] ?? 0;
+    out[i] = a + ((values[to + i] ?? a) - a) * t;
+  }
+}
+function channelWidth(channel) {
+  return channel.path === "rotation" ? 4 : 3;
+}
+function normalizeInto(value) {
+  let length2 = Math.hypot(value[0] ?? 0, value[1] ?? 0, value[2] ?? 0, value[3] ?? 0);
+  if (!(length2 > 0)) {
+    value[0] = 0, value[1] = 0, value[2] = 0, value[3] = 1;
+    return;
+  }
+  for (let i = 0; i < 4; i += 1) value[i] = (value[i] ?? 0) / length2;
+}
+var ClipPlayers = class {
+  players = [];
+  scratch = new Float64Array(4);
+  add(clip) {
+    this.remove(clip.slot), this.players.push({
+      clip,
+      time: 0,
+      playing: !0,
+      looping: !0,
+      speed: 1,
+      finished: !1,
+      weight: 1,
+      fadeFrom: 1,
+      fadeTo: 1,
+      fadeTime: 0,
+      fadeDuration: 0,
+      previous: 0,
+      travel: 0
+    });
+  }
+  player(slot) {
+    return this.players.find((player) => player.clip.slot === slot);
+  }
+  play(slot, looping, speed) {
+    let p = this.player(slot);
+    return p === void 0 || !Number.isFinite(speed) || speed < 0 ? !1 : (p.time = 0, p.previous = 0, p.travel = 0, p.looping = looping, p.speed = speed, p.finished = !looping && p.clip.duration === 0, p.playing = !p.finished, !0);
+  }
+  pause(slot) {
+    let p = this.player(slot);
+    return p === void 0 ? !1 : (p.playing = !1, !0);
+  }
+  resume(slot) {
+    let p = this.player(slot);
+    return p === void 0 || p.finished ? !1 : (p.playing = !0, !0);
+  }
+  seek(slot, time) {
+    let p = this.player(slot);
+    return p === void 0 || !Number.isFinite(time) ? !1 : (p.time = Math.max(0, Math.min(p.clip.duration, time)), p.previous = p.time, p.travel = 0, p.finished = !p.looping && p.time === p.clip.duration, p.finished && (p.playing = !1), !0);
+  }
+  fade(slot, weight, duration) {
+    let p = this.player(slot);
+    return p === void 0 || !Number.isFinite(weight) || !Number.isFinite(duration) || duration < 0 ? !1 : (p.fadeFrom = p.weight, p.fadeTo = Math.max(0, Math.min(1, weight)), p.fadeDuration = duration, p.fadeTime = 0, duration === 0 && (p.weight = p.fadeTo), !0);
+  }
+  time(slot) {
+    return this.player(slot)?.time ?? 0;
+  }
+  duration(slot) {
+    return this.player(slot)?.clip.duration ?? 0;
+  }
+  weight(slot) {
+    return this.player(slot)?.weight ?? 0;
+  }
+  playing(slot) {
+    return this.player(slot)?.playing ?? !1;
+  }
+  finished(slot) {
+    return this.player(slot)?.finished ?? !1;
+  }
+  /** Number of wraps during the latest advance; seeking and play reset this to zero. */
+  wraps(slot) {
+    let p = this.player(slot);
+    return p === void 0 || p.clip.duration <= 0 ? 0 : Math.max(0, Math.round((p.previous + p.travel - p.time) / p.clip.duration));
+  }
+  /** A marker in (0, duration] crossed during the latest advance, even across wraps/hitches. */
+  crossed(slot, marker) {
+    let p = this.player(slot);
+    if (p === void 0 || !Number.isFinite(marker) || marker <= 0 || marker > p.clip.duration || p.travel <= 0) return !1;
+    let distance2 = marker - p.previous;
+    return distance2 <= 0 && p.looping && (distance2 += p.clip.duration), distance2 > 0 && distance2 <= p.travel;
+  }
+  remove(slot) {
+    let index = this.players.findIndex((player) => player.clip.slot === slot);
+    index >= 0 && this.players.splice(index, 1);
+  }
+  /** Writes every channel at `time` (the player's own time when omitted) without advancing. */
+  pose(apply, time) {
+    for (let player of this.players)
+      for (let channel of player.clip.channels) this.write(apply, player, channel, time ?? player.time);
+  }
+  poseSlot(slot, apply) {
+    let p = this.player(slot);
+    if (p !== void 0) for (let channel of p.clip.channels) this.write(apply, p, channel, p.time);
+  }
+  /** Advances by `dt` seconds, wrapping after the duration, then writes the new pose. */
+  advance(dt, apply) {
+    if (!(!Number.isFinite(dt) || dt < 0))
+      for (let player of this.players) {
+        player.previous = player.time, player.travel = player.playing ? dt * player.speed : 0;
+        let next = player.time + player.travel, { duration } = player.clip;
+        if (!player.looping && next >= duration ? (next = duration, player.travel = duration - player.time, player.finished = !0, player.playing = !1) : duration > 0 && next > duration && (next %= duration), duration === 0 && (next = 0), player.time = next, player.fadeDuration > 0) {
+          player.fadeTime = Math.min(player.fadeDuration, player.fadeTime + dt);
+          let t = player.fadeTime / player.fadeDuration, eased = t * t * (3 - 2 * t);
+          player.weight = player.fadeFrom + (player.fadeTo - player.fadeFrom) * eased;
+        }
+        for (let channel of player.clip.channels) this.write(apply, player, channel, next);
+      }
+  }
+  write(apply, player, channel, time) {
+    sampleChannelInto(channel, time, this.scratch);
+    let weight = player.weight;
+    if (channel.path === "rotation") {
+      let w = this.scratch[3] ?? 1, sign2 = w < 0 ? -1 : 1, angle = Math.acos(Math.min(1, Math.abs(w))), sine = Math.sin(angle), factor = sine > 1e-6 ? Math.sin(weight * angle) / sine : weight;
+      for (let i = 0; i < 3; i += 1) this.scratch[i] = (this.scratch[i] ?? 0) * factor * sign2;
+      this.scratch[3] = Math.cos(weight * angle), normalizeInto(this.scratch);
+    } else {
+      let base = channel.path === "scale" ? 1 : 0;
+      for (let i = 0; i < 3; i += 1) this.scratch[i] = base + ((this.scratch[i] ?? base) - base) * weight;
+    }
+    apply(player.clip.slot, channel, this.scratch);
+  }
+};
+
+// src/scene/pose-layers.ts
+function multiplyQuat(out, at3, a, ai, b, bi) {
+  let x = a[ai], y = a[ai + 1], z = a[ai + 2], w = a[ai + 3], u = b[bi], v = b[bi + 1], s = b[bi + 2], t = b[bi + 3];
+  out[at3] = w * u + x * t + y * s - z * v, out[at3 + 1] = w * v - x * s + y * t + z * u, out[at3 + 2] = w * s + x * v - y * u + z * t, out[at3 + 3] = w * t - x * u - y * v - z * s;
+}
+function blendQuat(out, at3, b, bi, weight) {
+  let dot2 = 0;
+  for (let i = 0; i < 4; i++) dot2 += out[at3 + i] * b[bi + i];
+  let angle = Math.acos(Math.min(1, Math.abs(dot2))), sine = Math.sin(angle), aWeight = sine > 1e-6 ? Math.sin((1 - weight) * angle) / sine : 1 - weight, bWeight = (sine > 1e-6 ? Math.sin(weight * angle) / sine : weight) * (dot2 < 0 ? -1 : 1);
+  for (let i = 0; i < 4; i++)
+    out[at3 + i] = out[at3 + i] * aWeight + b[bi + i] * bWeight;
+  let length2 = Math.hypot(out[at3], out[at3 + 1], out[at3 + 2], out[at3 + 3]);
+  for (let i = 0; i < 4; i++) out[at3 + i] = out[at3 + i] / length2;
+}
+var PoseLayers = class {
+  constructor(skin) {
+    this.skin = skin;
+  }
+  skin;
+  layers = /* @__PURE__ */ new Map();
+  value = new Float64Array(4);
+  rotation = new Float64Array(4);
+  inverse = new Float64Array(4);
+  revision = 0;
+  set(id, options) {
+    let clip = this.skin.clips.find((c) => c.name === options.clip);
+    if (id === "" || clip === void 0)
+      throw new RangeError("A layer needs an ID and an existing clip");
+    if (!Number.isFinite(options.weight) || options.weight < 0 || options.weight > 1 || !Number.isFinite(options.speed ?? 1) || (options.speed ?? 1) < 0)
+      throw new RangeError("Invalid animation layer weight or speed");
+    let mask = new Float64Array(this.skin.nodes.length).fill(
+      options.mask === void 0 ? 1 : 0
+    );
+    for (let [name, weight] of Object.entries(options.mask ?? {})) {
+      let i = this.skin.nodes.findIndex((n) => n.name === name);
+      if (i < 0 || !Number.isFinite(weight) || weight < 0 || weight > 1)
+        throw new RangeError(`Invalid bone mask: ${name}`);
+      mask[i] = weight;
+    }
+    let previous = this.layers.get(id), clock = previous?.options.clip === options.clip ? previous.clock : new ClipPlayers();
+    if (clock !== previous?.clock)
+      clock.add({ slot: 0, duration: clip.duration, channels: [] }), clock.play(0, options.looping ?? !0, options.speed ?? 1);
+    else if (previous.options.speed !== options.speed || previous.options.looping !== options.looping) {
+      let time = clock.time(0);
+      clock.play(0, options.looping ?? !0, options.speed ?? 1), clock.seek(0, time);
+    }
+    this.layers.set(id, { options: { ...options }, mask, clock }), this.revision++;
+  }
+  remove(id) {
+    this.layers.delete(id) && this.revision++;
+  }
+  clear() {
+    this.layers.size > 0 && (this.layers.clear(), this.revision++);
+  }
+  seek(id, seconds) {
+    let layer = this.layers.get(id);
+    return layer === void 0 || !layer.clock.seek(0, seconds) ? !1 : (this.revision++, !0);
+  }
+  crossed(id, marker) {
+    return this.layers.get(id)?.clock.crossed(0, marker) ?? !1;
+  }
+  advance(dt) {
+    for (let layer of this.layers.values()) {
+      let before = layer.clock.time(0);
+      layer.clock.advance(dt, () => {
+      }), before !== layer.clock.time(0) && this.revision++;
+    }
+  }
+  apply(pose, bind) {
+    for (let { options, mask, clock } of this.layers.values()) {
+      let clip = this.skin.clips.find((c) => c.name === options.clip);
+      for (let channel of clip.channels) {
+        let w = options.weight * mask[channel.node];
+        if (w === 0) continue;
+        sampleChannelInto(channel, clock.time(0), this.value);
+        let at3 = channel.node * 10 + (channel.path === "translation" ? 0 : channel.path === "rotation" ? 3 : 7);
+        if (channel.path === "rotation")
+          if (options.additive === !0) {
+            for (let i = 0; i < 4; i++)
+              this.inverse[i] = bind[at3 + i] * (i < 3 ? -1 : 1);
+            multiplyQuat(this.rotation, 0, this.inverse, 0, this.value, 0), this.value.set([0, 0, 0, 1]), blendQuat(this.value, 0, this.rotation, 0, w), multiplyQuat(pose, at3, pose, at3, this.value, 0);
+          } else blendQuat(pose, at3, this.value, 0, w);
+        else
+          for (let c = 0; c < 3; c++)
+            options.additive !== !0 ? pose[at3 + c] = pose[at3 + c] + (this.value[c] - pose[at3 + c]) * w : channel.path === "scale" ? pose[at3 + c] = pose[at3 + c] * (1 + (this.value[c] / bind[at3 + c] - 1) * w) : pose[at3 + c] = pose[at3 + c] + (this.value[c] - bind[at3 + c]) * w;
+      }
+    }
+  }
+};
+
+// src/scene/ik.ts
+var PoseIK = class {
+  constructor(skin) {
+    this.skin = skin;
+    this.globals = skin.nodes.map(() => identity());
+    let seen = /* @__PURE__ */ new Set(), visit = (i) => {
+      if (seen.has(i)) return;
+      let p = skin.nodes[i].parent;
+      p >= 0 && visit(p), seen.add(i), this.order.push(i);
+    };
+    skin.nodes.forEach((_, i) => visit(i));
+  }
+  skin;
+  constraints = /* @__PURE__ */ new Map();
+  globals;
+  local = identity();
+  scratch = identity();
+  inverse = identity();
+  delta = new Float64Array(4);
+  order = [];
+  revision = 0;
+  set(id, options) {
+    let indices = options.chain.map(
+      (name) => this.skin.nodes.findIndex((n) => n.name === name)
+    );
+    if (id === "" || indices.length < 2 || indices.some(
+      (i, k) => i < 0 || k > 0 && this.skin.nodes[i].parent !== indices[k - 1]
+    ))
+      throw new RangeError(
+        "IK needs a contiguous chain of at least two named nodes"
+      );
+    if (options.target.length !== 3 || options.target.some((x) => !Number.isFinite(x)) || !Number.isFinite(options.weight ?? 1) || (options.weight ?? 1) < 0 || (options.weight ?? 1) > 1 || !Number.isInteger(options.iterations ?? 12) || (options.iterations ?? 12) < 1 || (options.iterations ?? 12) > 64 || !Number.isFinite(options.tolerance ?? 1e-3) || (options.tolerance ?? 1e-3) <= 0)
+      throw new RangeError(
+        "Invalid IK target, weight, iterations or tolerance"
+      );
+    this.constraints.set(id, {
+      indices,
+      options: {
+        ...options,
+        target: [...options.target],
+        chain: [...options.chain]
+      }
+    }), this.revision++;
+  }
+  remove(id) {
+    this.constraints.delete(id) && this.revision++;
+  }
+  clear() {
+    this.constraints.size > 0 && (this.constraints.clear(), this.revision++);
+  }
+  matrices(pose) {
+    for (let i of this.order) {
+      let at3 = i * 10, p = pose;
+      fromRotationTranslationScaleInto(
+        this.local,
+        this.scratch,
+        { x: p[at3 + 3], y: p[at3 + 4], z: p[at3 + 5], w: p[at3 + 6] },
+        { x: p[at3], y: p[at3 + 1], z: p[at3 + 2] },
+        { x: p[at3 + 7], y: p[at3 + 8], z: p[at3 + 9] }
+      );
+      let parent = this.skin.nodes[i].parent;
+      parent < 0 ? this.globals[i].set(this.local) : multiplyInto(this.globals[i], this.globals[parent], this.local);
+    }
+  }
+  apply(pose) {
+    for (let { indices, options } of this.constraints.values()) {
+      let weight = options.weight ?? 1;
+      if (weight === 0) continue;
+      this.matrices(pose);
+      let mesh = this.globals[this.skin.meshNode], t = options.target, end = this.globals[indices.at(-1)], tx = end[12] + (mesh[0] * t[0] + mesh[4] * t[1] + mesh[8] * t[2] + mesh[12] - end[12]) * weight, ty = end[13] + (mesh[1] * t[0] + mesh[5] * t[1] + mesh[9] * t[2] + mesh[13] - end[13]) * weight, tz = end[14] + (mesh[2] * t[0] + mesh[6] * t[1] + mesh[10] * t[2] + mesh[14] - end[14]) * weight;
+      for (let iteration = 0; iteration < (options.iterations ?? 12) && !(Math.hypot(end[12] - tx, end[13] - ty, end[14] - tz) < (options.tolerance ?? 1e-3)); iteration++)
+        for (let k = indices.length - 2; k >= 0; k--) {
+          let i = indices[k], joint = this.globals[i], parent = this.skin.nodes[i].parent;
+          parent < 0 ? this.inverse.set(identity()) : normalMatrixInto(this.inverse, 0, this.globals[parent]);
+          let ax = end[12] - joint[12], ay = end[13] - joint[13], az = end[14] - joint[14], bx = tx - joint[12], by = ty - joint[13], bz = tz - joint[14], m = this.inverse, x = m[0] * ax + m[1] * ay + m[2] * az, y = m[4] * ax + m[5] * ay + m[6] * az, z = m[8] * ax + m[9] * ay + m[10] * az, u = m[0] * bx + m[1] * by + m[2] * bz, v = m[4] * bx + m[5] * by + m[6] * bz, s = m[8] * bx + m[9] * by + m[10] * bz, a = Math.hypot(x, y, z), b = Math.hypot(u, v, s);
+          if (a < 1e-10 || b < 1e-10) continue;
+          x /= a, y /= a, z /= a, u /= b, v /= b, s /= b;
+          let qx = y * s - z * v, qy = z * u - x * s, qz = x * v - y * u, qw = 1 + Math.max(-1, Math.min(1, x * u + y * v + z * s));
+          qw < 1e-8 && (Math.abs(x) < 0.9 ? (qx = 0, qy = z, qz = -y) : (qx = -z, qy = 0, qz = x), qw = 0);
+          let length2 = Math.hypot(qx, qy, qz, qw);
+          if (this.delta.set([qx / length2, qy / length2, qz / length2, qw / length2]), this.delta[3] < Math.SQRT1_2) {
+            let axis = Math.hypot(
+              this.delta[0],
+              this.delta[1],
+              this.delta[2]
+            );
+            for (let c = 0; c < 3; c++)
+              this.delta[c] = this.delta[c] / axis * Math.SQRT1_2;
+            this.delta[3] = Math.SQRT1_2;
+          }
+          multiplyQuat(pose, i * 10 + 3, this.delta, 0, pose, i * 10 + 3), this.matrices(pose);
+        }
+    }
+  }
+};
+
+// src/scene/skeleton.ts
+function skinProblem(skin, vertices) {
+  let n = skin.nodes.length;
+  if (n > 256 || skin.joints.length > 128) return "skin exceeds the 256-node or 128-joint profile";
+  let index = (i, max2) => Number.isInteger(i) && i >= 0 && i < max2, finite3 = (values, length2) => values.length === length2 && values.every(Number.isFinite);
+  if (!index(skin.meshNode, n) || skin.joints.length === 0 || skin.joints.some((j) => !index(j, n)) || skin.inverseBind.length !== skin.joints.length || skin.inverseBind.some((m) => !finite3(m, 16))) return "skin node or inverse-bind count is invalid";
+  if (skin.indices.length !== vertices || skin.weights.length !== vertices) return "skin influences do not match the vertex count";
+  for (let i = 0; i < n; i++) {
+    let node = skin.nodes[i];
+    if (node.parent !== -1 && !index(node.parent, n) || !finite3(node.translation, 3) || !finite3(node.rotation, 4) || !finite3(node.scale, 3) || node.scale.some((v) => v <= 0) || Math.hypot(...node.rotation) < 1e-8) return "invalid skeletal bind transform";
+    let parent = i;
+    for (let depth = 0; parent >= 0; depth++) {
+      if (!index(parent, n)) return "invalid skeletal bind transform";
+      if (depth >= n) return "cyclic skeletal hierarchy";
+      parent = skin.nodes[parent].parent;
+    }
+  }
+  for (let i = 0; i < vertices; i++) {
+    let weights = skin.weights[i];
+    if (skin.indices[i].length !== 4 || skin.indices[i].some((j) => !index(j, skin.joints.length)) || !finite3(weights, 4) || weights.some((w) => w < 0) || Math.abs(weights.reduce((a, b) => a + b, 0) - 1) > 1e-3) return "invalid vertex joint indices or weights";
+  }
+  let names = /* @__PURE__ */ new Set();
+  for (let clip of skin.clips) {
+    if (names.has(clip.name)) return "duplicate skeletal clip name";
+    if (!Number.isFinite(clip.duration) || clip.duration < 0) return "invalid skeletal clip duration";
+    names.add(clip.name);
+    let channels = /* @__PURE__ */ new Set();
+    for (let c of clip.channels) {
+      let key = String(c.node) + c.path;
+      if (!index(c.node, n) || channels.has(key) || c.times.length === 0 || c.values.length !== c.times.length * (c.path === "rotation" ? 4 : 3) || c.values.some((v) => !Number.isFinite(v)) || c.times.some((t, i) => !Number.isFinite(t) || t < 0 || t > clip.duration || i > 0 && t <= c.times[i - 1]) || c.path === "scale" && c.values.some((v) => v <= 0)) return "invalid skeletal clip channel";
+      if (c.path === "rotation") {
+        for (let k = 0; k < c.values.length; k += 4) if (Math.hypot(...c.values.slice(k, k + 4)) < 1e-8) return "invalid skeletal rotation";
+      }
+      channels.add(key);
+    }
+  }
+}
+function slerp(out, at3, a, b, t) {
+  let dot2 = 0;
+  for (let i = 0; i < 4; i++) dot2 += a[at3 + i] * b[at3 + i];
+  let sign2 = dot2 < 0 ? -1 : 1, angle = Math.acos(Math.min(1, Math.abs(dot2))), sin2 = Math.sin(angle), wa = sin2 > 1e-6 ? Math.sin((1 - t) * angle) / sin2 : 1 - t, wb = sin2 > 1e-6 ? Math.sin(t * angle) / sin2 : t;
+  for (let i = 0; i < 4; i++) out[at3 + i] = a[at3 + i] * wa + b[at3 + i] * wb * sign2;
+  let norm = Math.hypot(out[at3], out[at3 + 1], out[at3 + 2], out[at3 + 3]);
+  for (let i = 0; i < 4; i++) out[at3 + i] = out[at3 + i] / norm;
+}
+var SkeletonPlayer = class {
+  constructor(skin, initial) {
+    this.skin = skin;
+    this.layers = new PoseLayers(skin), this.ik = new PoseIK(skin), this.bind = new Float64Array(skin.nodes.length * 10), skin.nodes.forEach((node, i) => {
+      this.bind.set(node.translation, i * 10);
+      let q = node.rotation, norm = Math.hypot(...q);
+      this.bind.set(q.map((v) => v / norm), i * 10 + 3), this.bind.set(node.scale, i * 10 + 7);
+    }), this.pose = this.bind.slice(), this.sample = this.bind.slice(), this.from = this.bind.slice(), this.locals = skin.nodes.map(() => identity()), this.globals = skin.nodes.map(() => identity()), this.inverseBind = skin.inverseBind.map((m) => new Float32Array(m)), this.palette = new Float32Array(skin.joints.length * 16);
+    let visited = /* @__PURE__ */ new Set(), visit = (i) => {
+      if (visited.has(i)) return;
+      let parent = skin.nodes[i].parent;
+      parent >= 0 && visit(parent), visited.add(i), this.order.push(i);
+    };
+    skin.nodes.forEach((_, i) => visit(i)), (initial === void 0 || !this.transition(initial, 0, !0, 1)) && (this.clock.add({ slot: 0, duration: 0, channels: [] }), this.clock.pause(0), this.evaluate());
+  }
+  skin;
+  layers;
+  ik;
+  rootNode = -1;
+  rootDelta = new Float64Array(3);
+  rootSample = new Float64Array(4);
+  /** Host ownership extracts base-clip translation; the displayed root stays at bind translation. */
+  setRootMotion(node) {
+    let index = node === void 0 ? -1 : this.skin.nodes.findIndex((n) => n.name === node);
+    if (node !== void 0 && index < 0) throw new RangeError(`Unknown root-motion node: ${node}`);
+    this.rootNode = index, this.rootDelta.fill(0), this.evaluatedTime = NaN;
+  }
+  consumeRootMotion() {
+    let result = { x: this.rootDelta[0], y: this.rootDelta[1], z: this.rootDelta[2] };
+    return this.rootDelta.fill(0), result;
+  }
+  /** Final local-pose adjustment, after layers and before world matrices/sockets. */
+  override;
+  evaluatedLayers = -1;
+  evaluatedIK = -1;
+  setProceduralOverride(override) {
+    this.override = override, this.evaluatedTime = NaN;
+  }
+  clock = new ClipPlayers();
+  outgoing;
+  held = !1;
+  palette;
+  pose;
+  bind;
+  /** Incoming sample during evaluation; unlayered displayed pose between evaluations. */
+  sample;
+  from;
+  locals;
+  globals;
+  inverseBind;
+  order = [];
+  scratch = identity();
+  inverseMesh = identity();
+  product = identity();
+  value = new Float64Array(4);
+  name = "";
+  blendTime = 0;
+  blendDuration = 0;
+  revisionValue = 0;
+  evaluatedTime = NaN;
+  evaluatedBlend = NaN;
+  evaluatedWeight = NaN;
+  get revision() {
+    return this.revisionValue;
+  }
+  jointPosition(name) {
+    let i = this.skin.nodes.findIndex((n) => n.name === name);
+    return i < 0 ? { x: 0, y: 0, z: 0 } : (multiplyInto(this.product, this.inverseMesh, this.globals[i]), { x: Math.fround(this.product[12]), y: Math.fround(this.product[13]), z: Math.fround(this.product[14]) });
+  }
+  jointRotation(name) {
+    let i = this.skin.nodes.findIndex((n2) => n2.name === name);
+    if (i < 0) return { x: 0, y: 0, z: 0, w: 1 };
+    multiplyInto(this.product, this.inverseMesh, this.globals[i]);
+    let m = this.product, sx = Math.hypot(m[0], m[1], m[2]), sy = Math.hypot(m[4], m[5], m[6]), sz = Math.hypot(m[8], m[9], m[10]), a = m[0] / sx, b = m[4] / sy, c = m[8] / sz, d = m[1] / sx, e = m[5] / sy, f = m[9] / sz, g = m[2] / sx, h = m[6] / sy, j = m[10] / sz, x, y, z, w, trace = a + e + j;
+    if (trace > 0) {
+      let s = Math.sqrt(trace + 1) * 2;
+      w = s / 4, x = (h - f) / s, y = (c - g) / s, z = (d - b) / s;
+    } else if (a > e && a > j) {
+      let s = Math.sqrt(1 + a - e - j) * 2;
+      w = (h - f) / s, x = s / 4, y = (b + d) / s, z = (c + g) / s;
+    } else if (e > j) {
+      let s = Math.sqrt(1 + e - a - j) * 2;
+      w = (c - g) / s, x = (b + d) / s, y = s / 4, z = (f + h) / s;
+    } else {
+      let s = Math.sqrt(1 + j - a - e) * 2;
+      w = (d - b) / s, x = (c + g) / s, y = (f + h) / s, z = s / 4;
+    }
+    let n = Math.hypot(x, y, z), length2 = Math.hypot(n, w);
+    return { x: Math.fround(x / length2), y: Math.fround(y / length2), z: Math.fround(z / length2), w: Math.fround(w / length2) };
+  }
+  transition(name, seconds, looping, speed) {
+    let clip = this.skin.clips.find((c) => c.name === name);
+    return clip === void 0 || !Number.isFinite(seconds) || seconds < 0 || !Number.isFinite(speed) || speed < 0 ? !1 : (name === this.name || (this.outgoing = this.name !== "" && !this.held && this.blendTime >= this.blendDuration ? { name: this.name, clock: this.clock } : void 0, this.from.set(this.sample), this.held = !1, this.clock = new ClipPlayers(), this.name = name, this.evaluatedTime = NaN, this.blendTime = 0, this.blendDuration = seconds, this.clock.add({ slot: 0, duration: clip.duration, channels: [] }), this.clock.play(0, looping, speed), this.evaluate()), !0);
+  }
+  /** Snapshot only: the destination owns its pose and never follows source lifetime. */
+  copyPose(source) {
+    return this.skin.meshNode !== source.skin.meshNode || this.skin.nodes.length !== source.skin.nodes.length || this.skin.nodes.some((n, i) => {
+      let other = source.skin.nodes[i];
+      return n.name !== other.name || n.parent !== other.parent || n.translation.some((v, k) => v !== other.translation[k]) || n.rotation.some((v, k) => v !== other.rotation[k]) || n.scale.some((v, k) => v !== other.scale[k]);
+    }) ? !1 : (this.from.set(source.pose), this.pose.set(source.pose), this.held = !0, this.name = "", this.outgoing = void 0, this.blendDuration = 0, this.blendTime = 0, this.evaluatedTime = NaN, this.clock = new ClipPlayers(), this.clock.add({ slot: 0, duration: 0, channels: [] }), this.clock.pause(0), this.evaluate(), !0);
+  }
+  samplePose(name, time, out) {
+    out.set(this.bind);
+    let clip = this.skin.clips.find((c) => c.name === name);
+    for (let channel of clip?.channels ?? []) {
+      sampleChannelInto(channel, time, this.value);
+      let offset = channel.node * 10 + (channel.path === "translation" ? 0 : channel.path === "rotation" ? 3 : 7);
+      out.set(this.value.subarray(0, channel.path === "rotation" ? 4 : 3), offset);
+    }
+  }
+  play(looping, speed) {
+    let ok = this.clock.play(0, looping, speed);
+    return ok && (this.from.set(this.sample), this.blendTime = 0, this.evaluate()), ok;
+  }
+  advance(dt, evaluate = !0) {
+    if (!Number.isFinite(dt) || dt < 0) return;
+    let previous = this.clock.time(0), outgoingTime = this.outgoing?.clock.time(0) ?? 0, oldBlend = this.blendTime;
+    if (this.clock.advance(dt, () => {
+    }), this.outgoing?.clock.advance(dt, () => {
+    }), this.layers.advance(dt), this.blendTime = Math.min(this.blendDuration, this.blendTime + dt), this.rootNode >= 0) {
+      let integral = (t) => t * t * t - 0.5 * t * t * t * t, duration = this.blendDuration, blend = 1;
+      if (duration > 0 && dt > 0 && oldBlend < duration) {
+        let end = Math.min(duration, oldBlend + dt);
+        blend = (duration * (integral(end / duration) - integral(oldBlend / duration)) + Math.max(0, oldBlend + dt - duration)) / dt;
+      }
+      this.extractRoot(this.name, this.clock, previous, blend * this.clock.weight(0)), this.outgoing !== void 0 && this.extractRoot(this.outgoing.name, this.outgoing.clock, outgoingTime, (1 - blend) * this.outgoing.clock.weight(0));
+    }
+    this.blendTime >= this.blendDuration && (this.outgoing = void 0), evaluate && this.evaluate();
+  }
+  extractRoot(name, clock, previous, weight) {
+    if (weight === 0 || this.held) return;
+    let clip = this.skin.clips.find((c) => c.name === name), channel = clip?.channels.find((c) => c.node === this.rootNode && c.path === "translation");
+    if (channel === void 0 || clip === void 0) return;
+    sampleChannelInto(channel, previous, this.rootSample);
+    for (let c = 0; c < 3; c++) this.rootDelta[c] = this.rootDelta[c] - this.rootSample[c] * weight;
+    sampleChannelInto(channel, clock.time(0), this.rootSample);
+    for (let c = 0; c < 3; c++) this.rootDelta[c] = this.rootDelta[c] + this.rootSample[c] * weight;
+    let wraps = clock.wraps(0);
+    if (wraps > 0) {
+      sampleChannelInto(channel, 0, this.rootSample);
+      for (let c = 0; c < 3; c++) this.rootDelta[c] = this.rootDelta[c] - this.rootSample[c] * weight * wraps;
+      sampleChannelInto(channel, clip.duration, this.rootSample);
+      for (let c = 0; c < 3; c++) this.rootDelta[c] = this.rootDelta[c] + this.rootSample[c] * weight * wraps;
+    }
+  }
+  evaluate() {
+    let time = this.clock.time(0), weight = this.clock.weight(0);
+    if (this.override === void 0 && time === this.evaluatedTime && this.blendTime === this.evaluatedBlend && weight === this.evaluatedWeight && this.evaluatedLayers === this.layers.revision && this.evaluatedIK === this.ik.revision) return;
+    if (this.evaluatedTime = time, this.evaluatedBlend = this.blendTime, this.evaluatedWeight = weight, this.evaluatedLayers = this.layers.revision, this.evaluatedIK = this.ik.revision, this.held ? this.sample.set(this.from) : this.samplePose(this.name, time, this.sample), this.outgoing !== void 0) {
+      this.samplePose(this.outgoing.name, this.outgoing.clock.time(0), this.from);
+      let oldWeight = this.outgoing.clock.weight(0);
+      for (let i = 0; i < this.skin.nodes.length; i++) {
+        let at3 = i * 10;
+        for (let c of [0, 1, 2, 7, 8, 9]) this.from[at3 + c] = this.bind[at3 + c] + (this.from[at3 + c] - this.bind[at3 + c]) * oldWeight;
+        slerp(this.from, at3 + 3, this.bind, this.from, oldWeight);
+      }
+    }
+    let t = this.blendDuration > 0 ? Math.min(1, this.blendTime / this.blendDuration) : 1, blend = t * t * (3 - 2 * t);
+    for (let i = 0; i < this.skin.nodes.length; i++) {
+      let at3 = i * 10;
+      for (let c = 0; c < 10; c++) this.pose[at3 + c] = this.from[at3 + c] + (this.sample[at3 + c] - this.from[at3 + c]) * blend;
+      slerp(this.pose, at3 + 3, this.from, this.sample, blend);
+      for (let c of [0, 1, 2, 7, 8, 9]) this.pose[at3 + c] = this.bind[at3 + c] + (this.pose[at3 + c] - this.bind[at3 + c]) * weight;
+      slerp(this.pose, at3 + 3, this.bind, this.pose, weight);
+    }
+    if (this.sample.set(this.pose), this.layers.apply(this.pose, this.bind), this.override?.(this.pose), this.rootNode >= 0) for (let c = 0; c < 3; c++) this.pose[this.rootNode * 10 + c] = this.bind[this.rootNode * 10 + c];
+    for (let i = 0; i < this.pose.length; i++)
+      if (!Number.isFinite(this.pose[i]) || i % 10 >= 7 && this.pose[i] <= 0) throw new RangeError("Procedural pose contains an invalid transform");
+    for (let at3 = 3; at3 < this.pose.length; at3 += 10) {
+      let length2 = Math.hypot(...this.pose.subarray(at3, at3 + 4));
+      if (length2 < 1e-8) throw new RangeError("Procedural pose contains a zero quaternion");
+      for (let c = 0; c < 4; c++) this.pose[at3 + c] = this.pose[at3 + c] / length2;
+    }
+    this.ik.apply(this.pose);
+    for (let i of this.order) {
+      let a = i * 10, p = this.pose;
+      fromRotationTranslationScaleInto(
+        this.locals[i],
+        this.scratch,
+        { x: p[a + 3], y: p[a + 4], z: p[a + 5], w: p[a + 6] },
+        { x: p[a], y: p[a + 1], z: p[a + 2] },
+        { x: p[a + 7], y: p[a + 8], z: p[a + 9] }
+      );
+      let parent = this.skin.nodes[i].parent;
+      parent < 0 ? this.globals[i].set(this.locals[i]) : multiplyInto(this.globals[i], this.globals[parent], this.locals[i]);
+    }
+    let mesh = this.globals[this.skin.meshNode];
+    normalMatrixInto(this.scratch, 0, mesh), this.inverseMesh.set(identity());
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) this.inverseMesh[c * 4 + r] = this.scratch[r * 4 + c];
+    for (let r = 0; r < 3; r++) this.inverseMesh[12 + r] = -(this.inverseMesh[r] * mesh[12] + this.inverseMesh[4 + r] * mesh[13] + this.inverseMesh[8 + r] * mesh[14]);
+    for (let j = 0; j < this.skin.joints.length; j++)
+      multiplyInto(this.product, this.globals[this.skin.joints[j]], this.inverseBind[j]), multiplyInto(this.palette.subarray(j * 16, j * 16 + 16), this.inverseMesh, this.product);
+    this.revisionValue++;
+  }
+}, AnimationPlayers = class {
+  nodes = new ClipPlayers();
+  rigs = /* @__PURE__ */ new Map();
+  skin(slot) {
+    return this.rigs.get(slot);
+  }
+  add(clip) {
+    this.nodes.add(clip);
+  }
+  addSkin(slot, skin, clip) {
+    this.rigs.set(slot, new SkeletonPlayer(skin, clip));
+  }
+  remove(slot) {
+    this.nodes.remove(slot), this.rigs.delete(slot);
+  }
+  copyPose(target, source) {
+    let a = this.rigs.get(target), b = this.rigs.get(source);
+    return a !== void 0 && b !== void 0 && a.copyPose(b);
+  }
+  transition(slot, name, seconds, looping, speed) {
+    return this.rigs.get(slot)?.transition(name, seconds, looping, speed) ?? !1;
+  }
+  play(slot, looping, speed) {
+    let r = this.rigs.get(slot);
+    return r === void 0 ? this.nodes.play(slot, looping, speed) : r.play(looping, speed);
+  }
+  clock(slot) {
+    let r = this.rigs.get(slot);
+    return r === void 0 ? [this.nodes, slot] : [r.clock, 0];
+  }
+  pause(slot) {
+    let [c, s] = this.clock(slot);
+    return c.pause(s);
+  }
+  resume(slot) {
+    let [c, s] = this.clock(slot);
+    return c.resume(s);
+  }
+  seek(slot, time) {
+    let [c, s] = this.clock(slot);
+    return c.seek(s, time);
+  }
+  fade(slot, weight, duration) {
+    let [c, s] = this.clock(slot);
+    return c.fade(s, weight, duration);
+  }
+  time(slot) {
+    let [c, s] = this.clock(slot);
+    return c.time(s);
+  }
+  duration(slot) {
+    let [c, s] = this.clock(slot);
+    return c.duration(s);
+  }
+  weight(slot) {
+    let [c, s] = this.clock(slot);
+    return c.weight(s);
+  }
+  playing(slot) {
+    let [c, s] = this.clock(slot);
+    return c.playing(s);
+  }
+  finished(slot) {
+    let [c, s] = this.clock(slot);
+    return c.finished(s);
+  }
+  crossed(slot, marker) {
+    let [c, s] = this.clock(slot);
+    return c.crossed(s, marker);
+  }
+  advance(dt, apply) {
+    this.nodes.advance(dt, apply);
+    for (let r of this.rigs.values()) r.advance(dt);
+  }
+  pose(apply, time) {
+    this.nodes.pose(apply, time);
+    for (let r of this.rigs.values()) r.evaluate();
+  }
+  poseSlot(slot, apply) {
+    this.nodes.poseSlot(slot, apply), this.rigs.get(slot)?.evaluate();
+  }
+};
+
+// src/scene/retarget.ts
+function retargetSkin(source, target, mapping, translationScale = 1) {
+  if (!Number.isFinite(translationScale) || translationScale <= 0)
+    throw new RangeError("Retarget translation scale must be positive");
+  for (let skin of [source, target]) {
+    let problem2 = skinProblem(skin, skin.indices.length);
+    if (problem2 !== void 0) throw new RangeError(problem2);
+  }
+  for (let skin of [source, target])
+    if (new Set(skin.nodes.map((n) => n.name)).size !== skin.nodes.length)
+      throw new RangeError("Retargeting needs unique node names");
+  let indices = /* @__PURE__ */ new Map(), used = /* @__PURE__ */ new Set();
+  for (let [from, to] of Object.entries(mapping)) {
+    let a = source.nodes.findIndex((n) => n.name === from), b = target.nodes.findIndex((n) => n.name === to);
+    if (a < 0 || b < 0 || used.has(b))
+      throw new RangeError(`Invalid retarget mapping: ${from} -> ${to}`);
+    indices.set(a, b), used.add(b);
+  }
+  for (let [a, b] of indices) {
+    let parent = source.nodes[a].parent;
+    if (parent >= 0 && (!indices.has(parent) || indices.get(parent) !== target.nodes[b].parent))
+      throw new RangeError(
+        "Retarget mapping must preserve mapped parent relationships"
+      );
+    if (parent < 0 && target.nodes[b].parent >= 0)
+      throw new RangeError("Retarget roots must map to roots");
+  }
+  let q = new Float64Array(4), inverse = new Float64Array(4), correction = new Float64Array(4), clips = source.clips.map((clip) => ({
+    ...clip,
+    channels: clip.channels.map((channel) => {
+      let node = indices.get(channel.node);
+      if (node === void 0)
+        throw new RangeError(
+          `Unmapped animated node: ${source.nodes[channel.node].name}`
+        );
+      let a = source.nodes[channel.node], b = target.nodes[node], values = [...channel.values], width = channel.path === "rotation" ? 4 : 3;
+      if (channel.path === "rotation") {
+        let al = Math.hypot(...a.rotation), bl = Math.hypot(...b.rotation);
+        for (let k = 0; k < 4; k++)
+          inverse[k] = a.rotation[k] / al * (k < 3 ? -1 : 1), q[k] = b.rotation[k] / bl;
+        multiplyQuat(correction, 0, q, 0, inverse, 0);
+      }
+      for (let at3 = 0; at3 < values.length; at3 += width)
+        if (channel.path === "rotation") {
+          multiplyQuat(q, 0, correction, 0, values, at3);
+          let length2 = Math.hypot(...q);
+          for (let k = 0; k < 4; k++) values[at3 + k] = q[k] / length2;
+        } else
+          for (let k = 0; k < 3; k++)
+            values[at3 + k] = channel.path === "scale" ? b.scale[k] * values[at3 + k] / a.scale[k] : b.translation[k] + (values[at3 + k] - a.translation[k]) * translationScale;
+      return { ...channel, node, values };
+    })
+  })), result = { ...target, clips }, problem = skinProblem(result, result.indices.length);
+  if (problem !== void 0) throw new RangeError(problem);
+  return result;
+}
+
+// src/mesh/skinning.ts
+function deformSkin(skin, palette, positions, normals, outPositions, outNormals) {
+  for (let v = 0; v < skin.indices.length; v++) {
+    let ids = skin.indices[v], ws = skin.weights[v], a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0, h = 0, i = 0, tx = 0, ty = 0, tz = 0;
+    for (let k = 0; k < 4; k++) {
+      let w = ws[k];
+      if (w === 0) continue;
+      let j = ids[k] * 16;
+      a += palette[j] * w, b += palette[j + 4] * w, c += palette[j + 8] * w, d += palette[j + 1] * w, e += palette[j + 5] * w, f += palette[j + 9] * w, g += palette[j + 2] * w, h += palette[j + 6] * w, i += palette[j + 10] * w, tx += palette[j + 12] * w, ty += palette[j + 13] * w, tz += palette[j + 14] * w;
+    }
+    let at3 = v * 3, x = positions[at3], y = positions[at3 + 1], z = positions[at3 + 2];
+    if (outPositions[at3] = a * x + b * y + c * z + tx, outPositions[at3 + 1] = d * x + e * y + f * z + ty, outPositions[at3 + 2] = g * x + h * y + i * z + tz, normals !== void 0) {
+      let nx = normals[at3], ny = normals[at3 + 1], nz = normals[at3 + 2], sign2 = a * (e * i - f * h) + b * (f * g - d * i) + c * (d * h - e * g) < 0 ? -1 : 1, ox = ((e * i - f * h) * nx + (f * g - d * i) * ny + (d * h - e * g) * nz) * sign2, oy = ((c * h - b * i) * nx + (a * i - c * g) * ny + (b * g - a * h) * nz) * sign2, oz = ((b * f - c * e) * nx + (c * d - a * f) * ny + (a * e - b * d) * nz) * sign2, length2 = Math.hypot(ox, oy, oz);
+      length2 < 1e-10 && (ox = nx, oy = ny, oz = nz, length2 = Math.hypot(nx, ny, nz) || 1), outNormals[at3] = ox / length2, outNormals[at3 + 1] = oy / length2, outNormals[at3 + 2] = oz / length2;
+    }
+  }
+}
+
+// src/animation.ts
+var AnimationController = class {
+  apiVersion = 1;
+  player;
+  targets;
+  elapsed = 0;
+  interval = 0;
+  disposed = !1;
+  constructor(skin, options = {}) {
+    let problem = skinProblem(skin, skin.indices.length);
+    if (problem !== void 0) throw new RangeError(problem);
+    this.player = new SkeletonPlayer(skin, options.clip), this.setUpdateInterval(options.updateInterval ?? 0), this.targets = Object.entries(options.bones ?? {}).map(([name, bone]) => {
+      let node = skin.nodes.findIndex((n) => n.name === name);
+      if (node < 0) throw new RangeError(`Unknown animation bone: ${name}`);
+      return { node, bone };
+    }), this.apply();
+  }
+  active() {
+    if (this.disposed) throw new Error("Animation controller is disposed");
+  }
+  setUpdateInterval(seconds) {
+    if (this.active(), !Number.isFinite(seconds) || seconds < 0)
+      throw new RangeError(
+        "Animation update interval must be finite and nonnegative"
+      );
+    this.interval = seconds, this.elapsed = 0;
+  }
+  setLayer(id, layer) {
+    this.active(), this.player.layers.set(id, layer);
+  }
+  setIK(id, constraint) {
+    this.active(), this.player.ik.set(id, constraint);
+  }
+  update(dt, force = !1) {
+    if (this.active(), !Number.isFinite(dt) || dt < 0)
+      throw new RangeError("Animation delta must be finite and nonnegative");
+    return this.player.advance(dt, !1), this.elapsed += dt, !force && this.elapsed < this.interval ? !1 : (this.elapsed = this.interval > 0 ? this.elapsed % this.interval : 0, this.player.evaluate(), this.apply(), !0);
+  }
+  apply() {
+    let p = this.player.pose;
+    for (let { node, bone } of this.targets) {
+      let at3 = node * 10;
+      bone.position.set(p[at3], p[at3 + 1], p[at3 + 2]), bone.quaternion.set(p[at3 + 3], p[at3 + 4], p[at3 + 5], p[at3 + 6]), bone.scale.set(p[at3 + 7], p[at3 + 8], p[at3 + 9]);
+    }
+  }
+  dispose() {
+    this.disposed || (this.disposed = !0, this.targets = [], this.player.layers.clear(), this.player.ik.clear(), this.player.setProceduralOverride(void 0));
+  }
+};
+function createAnimationController(skin, options) {
+  return new AnimationController(skin, options);
+}
+
+// src/host/extensions.ts
+var EXTENSION_API_VERSION = 1;
+function validateExtensions(extensions) {
+  let ids = /* @__PURE__ */ new Set();
+  for (let extension of extensions) {
+    if (extension.apiVersion !== 1)
+      throw new RangeError(
+        `Extension '${extension.id}' requires an unsupported API version: ${String(extension.apiVersion)}`
+      );
+    if (extension.id === "" || ids.has(extension.id) || typeof extension.setup != "function")
+      throw new RangeError(
+        `Invalid or duplicate extension ID: ${extension.id}`
+      );
+    ids.add(extension.id);
+  }
+}
+function sceneAccess(getWorld, active) {
+  let epochs = /* @__PURE__ */ new WeakMap(), nextEpoch = 0, records = () => {
+    let world = getWorld(), entries = /* @__PURE__ */ new Map();
+    epochs.has(world) || epochs.set(world, ++nextEpoch);
+    let prefix = `scene:${String(epochs.get(world))}:`;
+    for (let slot = 0; slot < world.entities.length; slot++) {
+      let entity = world.resolvedAt(slot), record = world.recordAt(slot);
+      entity !== void 0 && record !== void 0 && entries.set(prefix + entity.symbol, record);
+    }
+    for (let entity of world.dynamic.live)
+      entity.removing || entries.set(
+        `${prefix}spawn:${String(entity.ref.slot)}:${String(entity.ref.gen)}`,
+        entity.record
+      );
+    return entries;
+  };
+  return {
+    readTransforms: () => {
+      active();
+      let world = getWorld();
+      return [...records()].map(([id, r]) => ({
+        id,
+        name: world.resolvedAt(r.ref.slot).name,
+        position: { ...r.position },
+        rotation: { ...r.rotation },
+        scale: { ...r.scale },
+        visible: r.visible
+      }));
+    },
+    writeTransforms: (updates) => {
+      active();
+      let world = getWorld(), entries = records(), writes = [];
+      for (let update of updates) {
+        let record = entries.get(update.id);
+        if (record === void 0)
+          throw new RangeError(`Unknown or stale entity ID: ${update.id}`);
+        for (let field of ["position", "rotation", "scale"]) {
+          let value = update[field];
+          if (value !== void 0) {
+            if (![value.x, value.y, value.z].every(Number.isFinite) || field === "scale" && (value.x <= 0 || value.y <= 0 || value.z <= 0))
+              throw new RangeError(`Invalid ${field} for ${update.id}`);
+            if (field === "rotation") {
+              let q = value;
+              if (!Number.isFinite(q.w) || Math.hypot(q.x, q.y, q.z, q.w) < 1e-8)
+                throw new RangeError(`Invalid rotation for ${update.id}`);
+              let length2 = Math.hypot(q.x, q.y, q.z, q.w);
+              writes.push({
+                record,
+                field,
+                value: Object.freeze({
+                  x: q.x / length2,
+                  y: q.y / length2,
+                  z: q.z / length2,
+                  w: q.w / length2
+                })
+              });
+            } else
+              writes.push({ record, field, value: Object.freeze({ ...value }) });
+          }
+        }
+      }
+      for (let { record, field, value } of writes)
+        world.transformSetter(record, field)(value);
+    },
+    animation: (id) => {
+      active();
+      let record = records().get(id);
+      if (record === void 0)
+        throw new RangeError(`Unknown or stale entity ID: ${id}`);
+      return getWorld().skinPlayer(record.ref.slot);
+    }
+  };
+}
+var ExtensionHost = class {
+  constructor(context, report) {
+    this.context = context;
+    this.report = report;
+  }
+  context;
+  report;
+  installed = [];
+  install(extensions) {
+    validateExtensions(extensions);
+    try {
+      for (let extension of extensions) {
+        let dispose = extension.setup(this.context);
+        this.installed.push({ extension, dispose: dispose ?? void 0 });
+      }
+    } catch (error) {
+      throw this.dispose(), error;
+    }
+  }
+  frame(phase, delta) {
+    for (let item of [...this.installed])
+      try {
+        item.extension[phase]?.(this.context, delta);
+      } catch (error) {
+        this.report(item.extension.id, error), this.remove(item);
+      }
+  }
+  remove(item) {
+    let index = this.installed.indexOf(item);
+    if (!(index < 0)) {
+      this.installed.splice(index, 1);
+      try {
+        item.dispose?.();
+      } catch (error) {
+        this.report(item.extension.id, error);
+      }
+    }
+  }
+  dispose() {
+    for (let item of [...this.installed].reverse()) this.remove(item);
+  }
+};
+
+// src/assets/pool.ts
+var AssetPool = class {
+  constructor(options) {
+    this.options = options;
+    if (this.origins = new Set(options.allowedOrigins ?? [options.baseUrl.origin]), this.maximum = options.maxAssetBytes ?? 64 * 1024 * 1024, !Number.isSafeInteger(this.maximum) || this.maximum < 1)
+      throw new RangeError("maxAssetBytes must be a positive safe integer");
+  }
+  options;
+  entries = /* @__PURE__ */ new Map();
+  loaders = /* @__PURE__ */ new Map();
+  origins;
+  maximum;
+  disposed = !1;
+  async load(asset, loader, options = {}) {
+    if (this.disposed) throw new Error("Asset pool is disposed");
+    if (loader.apiVersion !== 1 || loader.id === "")
+      throw new RangeError("Unsupported asset loader API or empty ID");
+    let known = this.loaders.get(loader.id);
+    if (known !== void 0 && known !== loader)
+      throw new RangeError(
+        `Asset loader '${loader.id}' is already registered with a different implementation`
+      );
+    this.loaders.set(loader.id, loader);
+    let url = new URL(asset.url, this.options.baseUrl);
+    if (!["http:", "https:"].includes(url.protocol) || !this.origins.has(url.origin) || url.username !== "" || url.password !== "")
+      throw new Error(
+        `Asset URL requires an undeclared origin capability: ${url.origin}`
+      );
+    if (asset.bytes !== void 0 && (!Number.isSafeInteger(asset.bytes) || asset.bytes < 0 || asset.bytes > this.maximum))
+      throw new RangeError("Invalid asset byte length");
+    if (asset.sha256 !== void 0 && !/^[a-f0-9]{64}$/i.test(asset.sha256))
+      throw new RangeError("Invalid asset SHA-256");
+    options.signal?.throwIfAborted();
+    let key = JSON.stringify([
+      loader.id,
+      url.href,
+      asset.bytes ?? null,
+      asset.sha256?.toLowerCase() ?? null
+    ]), entry = this.entries.get(key);
+    if (entry === void 0) {
+      let abort2 = new AbortController();
+      entry = {
+        abort: abort2,
+        terminated: new Promise(
+          (_, reject) => abort2.signal.addEventListener(
+            "abort",
+            () => reject(new DOMException("Asset resource retired", "AbortError")),
+            { once: !0 }
+          )
+        ),
+        loader,
+        promise: Promise.resolve(void 0),
+        refs: 0,
+        bytes: 0,
+        value: void 0,
+        ready: !1,
+        retired: !1,
+        listeners: /* @__PURE__ */ new Set()
+      }, this.entries.set(key, entry);
+      let pending = entry;
+      entry.promise = this.fetch(asset, url, pending).then(async (bytes) => {
+        let value = await loader.decode(bytes, pending.abort.signal);
+        if (pending.retired)
+          throw loader.dispose?.(value), new DOMException("Asset request cancelled", "AbortError");
+        return pending.value = value, pending.ready = !0, value;
+      });
+    }
+    entry.refs++;
+    let current = entry, observer = options.onProgress;
+    observer !== void 0 && current.listeners.add(observer);
+    let released = !1, release = () => {
+      released || (released = !0, observer !== void 0 && current.listeners.delete(observer), current.refs--, current.refs === 0 && this.retire(key, current));
+    }, abort, cancelled = new Promise((_, reject) => {
+      options.signal !== void 0 && (abort = () => {
+        release();
+        let reason = options.signal.reason;
+        reject(
+          reason instanceof Error ? reason : new DOMException("Asset request cancelled", "AbortError")
+        );
+      }, options.signal.addEventListener("abort", abort, { once: !0 }), options.signal.aborted && abort());
+    });
+    try {
+      let value = await Promise.race([
+        current.promise,
+        cancelled,
+        current.terminated
+      ]);
+      if (current.retired)
+        throw new DOMException("Asset pool disposed", "AbortError");
+      return observer !== void 0 && current.listeners.delete(observer), { value, bytes: current.bytes, release };
+    } catch (error) {
+      throw release(), error;
+    } finally {
+      abort !== void 0 && options.signal.removeEventListener("abort", abort);
+    }
+  }
+  async fetch(asset, url, entry) {
+    let response = await (this.options.fetch ?? globalThis.fetch)(url, {
+      signal: entry.abort.signal,
+      redirect: "error",
+      credentials: "omit"
+    });
+    if (!response.ok)
+      throw new Error(
+        `Asset request failed: HTTP ${String(response.status)} (${url.href})`
+      );
+    let length2 = response.headers.get("content-length"), total = length2 === null ? void 0 : Number(length2);
+    if (total !== void 0 && (!Number.isSafeInteger(total) || total < 0 || total > this.maximum))
+      throw await response.body?.cancel(), new RangeError("Asset exceeds maxAssetBytes");
+    let chunks = [], reader = response.body?.getReader(), loaded = 0, push = (chunk) => {
+      if (loaded += chunk.byteLength, loaded > this.maximum)
+        throw new RangeError("Asset exceeds maxAssetBytes");
+      chunks.push(chunk);
+      for (let observer of entry.listeners)
+        try {
+          observer({ loaded, total });
+        } catch {
+        }
+    };
+    if (reader === void 0)
+      push(new Uint8Array(await response.arrayBuffer()));
+    else
+      try {
+        for (; ; ) {
+          let result = await reader.read();
+          if (result.done) break;
+          push(result.value);
+        }
+      } catch (error) {
+        throw await reader.cancel().catch(() => {
+        }), error;
+      } finally {
+        reader.releaseLock();
+      }
+    let bytes = new Uint8Array(loaded), at3 = 0;
+    for (let chunk of chunks)
+      bytes.set(chunk, at3), at3 += chunk.length;
+    if (asset.bytes !== void 0 && loaded !== asset.bytes)
+      throw new Error(
+        `Asset length mismatch: expected ${String(asset.bytes)}, received ${String(loaded)}`
+      );
+    if (asset.sha256 !== void 0) {
+      if (globalThis.crypto?.subtle === void 0)
+        throw new Error("SHA-256 verification requires a secure context");
+      let hash = await crypto.subtle.digest("SHA-256", bytes);
+      if (Array.from(
+        new Uint8Array(hash),
+        (b) => b.toString(16).padStart(2, "0")
+      ).join("") !== asset.sha256.toLowerCase())
+        throw new Error("Asset SHA-256 mismatch");
+    }
+    return entry.bytes = bytes.length, bytes;
+  }
+  retire(key, entry) {
+    entry.retired || (entry.retired = !0, entry.abort.abort(), this.entries.get(key) === entry && this.entries.delete(key), entry.ready && entry.loader.dispose?.(entry.value));
+  }
+  snapshot() {
+    let pending = 0, bytes = 0, leases = 0;
+    for (let entry of this.entries.values())
+      pending += entry.ready ? 0 : 1, bytes += entry.bytes, leases += entry.refs;
+    return { resources: this.entries.size, pending, bytes, leases };
+  }
+  dispose() {
+    if (this.disposed) return;
+    this.disposed = !0;
+    let errors = [];
+    for (let [key, entry] of this.entries)
+      try {
+        this.retire(key, entry);
+      } catch (error) {
+        errors.push(error);
+      }
+    if (this.loaders.clear(), errors.length > 0)
+      throw new AggregateError(errors, "Asset loader cleanup failed");
+  }
+};
+
 // src/diagnostics/types.ts
 var RUNTIME_DIAGNOSTIC_CATALOGUE = {
   E8001: "unsupported platform endianness",
@@ -7747,6 +8935,10 @@ var ResourceRegistry = class {
     let pipeline = this.device.createRenderPipeline(descriptor);
     return this.pipelines.add(pipeline), this.pipelinesCreated += 1, pipeline;
   }
+  createComputePipeline(descriptor) {
+    let pipeline = this.device.createComputePipeline(descriptor);
+    return this.pipelines.add(pipeline), this.pipelinesCreated += 1, pipeline;
+  }
   /** Counted when the pipeline is ready; a rejected creation is not counted. */
   async createRenderPipelineAsync(descriptor) {
     let generation = this.currentGeneration, pipeline = await this.device.createRenderPipelineAsync(descriptor);
@@ -8142,7 +9334,8 @@ var SUPPORTED = {
       this.report("E8104", ref.slot, `The body of '${name}' was not created: its pose ${describeValue(pose.position)} / ${describeValue(pose.rotation)} is not finite. The entity keeps its pose and does not take part in the simulation.`);
       return;
     }
-    entry.handle = this.physics.addBody(bodyDesc(body), colliderDesc(collider), pose, ref.slot);
+    let description = bodyDesc(body);
+    entry.handle = this.physics.addBody(description.kind === "dynamic" && this.options.continuousCollision === !0 ? { ...description, continuousCollision: !0 } : description, colliderDesc(collider), pose, ref.slot);
   }
   // ---- ctx.body ----
   /** `ctx.body(target, spanId)` (`spec/runtime-abi.md` section 4.2). */
@@ -8533,504 +9726,6 @@ function copy(value) {
   }
   return value;
 }
-
-// src/math/mat4.ts
-function at(a, i) {
-  let value = a[i];
-  if (value === void 0) throw new RangeError(`matrix index ${i} out of range`);
-  return value;
-}
-function identity() {
-  let m = new Float32Array(16);
-  return m[0] = 1, m[5] = 1, m[10] = 1, m[15] = 1, m;
-}
-function translation(v) {
-  let m = identity();
-  return m[12] = v.x, m[13] = v.y, m[14] = v.z, m;
-}
-function scaling(v) {
-  let m = new Float32Array(16);
-  return m[0] = v.x, m[5] = v.y, m[10] = v.z, m[15] = 1, m;
-}
-function transpose(m) {
-  let out = new Float32Array(16);
-  for (let row = 0; row < 4; row++)
-    for (let col = 0; col < 4; col++) out[row * 4 + col] = at(m, col * 4 + row);
-  return out;
-}
-function multiply(a, b) {
-  return multiplyInto(new Float32Array(16), a, b);
-}
-function multiplyInto(out, a, b) {
-  for (let col = 0; col < 4; col++)
-    for (let row = 0; row < 4; row++) {
-      let sum = 0;
-      for (let k = 0; k < 4; k++) sum += a[k * 4 + row] * b[col * 4 + k];
-      out[col * 4 + row] = sum;
-    }
-  return out;
-}
-function rotation(q) {
-  return rotationInto(new Float32Array(16), q);
-}
-function rotationInto(m, q) {
-  let { x, y, z, w } = q, xx = x * x, yy = y * y, zz = z * z, xy = x * y, xz = x * z, yz = y * z, wx = w * x, wy = w * y, wz = w * z;
-  return m[0] = 1 - 2 * (yy + zz), m[1] = 2 * (xy + wz), m[2] = 2 * (xz - wy), m[3] = 0, m[4] = 2 * (xy - wz), m[5] = 1 - 2 * (xx + zz), m[6] = 2 * (yz + wx), m[7] = 0, m[8] = 2 * (xz + wy), m[9] = 2 * (yz - wx), m[10] = 1 - 2 * (xx + yy), m[11] = 0, m[12] = 0, m[13] = 0, m[14] = 0, m[15] = 1, m;
-}
-function fromRotationTranslationScaleInto(out, scratch, rotationQuat, translationVec, scale) {
-  let r = rotationInto(scratch, rotationQuat), sx = scale.x, sy = scale.y, sz = scale.z;
-  return out[0] = r[0] * sx, out[1] = r[1] * sx, out[2] = r[2] * sx, out[3] = 0, out[4] = r[4] * sy, out[5] = r[5] * sy, out[6] = r[6] * sy, out[7] = 0, out[8] = r[8] * sz, out[9] = r[9] * sz, out[10] = r[10] * sz, out[11] = 0, out[12] = translationVec.x, out[13] = translationVec.y, out[14] = translationVec.z, out[15] = 1, out;
-}
-function perspective(fovY, aspect, near, far) {
-  let f = 1 / Math.tan(fovY / 2), m = new Float32Array(16);
-  return m[0] = f / aspect, m[5] = f, m[10] = far / (near - far), m[11] = -1, m[14] = near * far / (near - far), m;
-}
-function orthographic(height, aspect, near, far) {
-  let width = height * aspect, m = new Float32Array(16);
-  return m[0] = 2 / width, m[5] = 2 / height, m[10] = 1 / (near - far), m[14] = near / (near - far), m[15] = 1, m;
-}
-function lookAtRotation(position, target) {
-  let fx = target.x - position.x, fy = target.y - position.y, fz = target.z - position.z, fLength = Math.hypot(fx, fy, fz);
-  if (!(fLength > 0) || !Number.isFinite(fLength))
-    throw new RangeError("look-at needs distinct, finite position and target");
-  fx /= fLength, fy /= fLength, fz /= fLength;
-  let upIsMinusZ = Math.abs(fy) > 1 - 1e-6, ux0 = 0, uy0 = upIsMinusZ ? 0 : 1, uz0 = upIsMinusZ ? -1 : 0, rx = fy * uz0 - fz * uy0, ry = fz * ux0 - fx * uz0, rz = fx * uy0 - fy * ux0, rLength = Math.hypot(rx, ry, rz);
-  rx /= rLength, ry /= rLength, rz /= rLength;
-  let ux = ry * fz - rz * fy, uy = rz * fx - rx * fz, uz = rx * fy - ry * fx, m = new Float32Array(16);
-  return m[0] = rx, m[1] = ry, m[2] = rz, m[4] = ux, m[5] = uy, m[6] = uz, m[8] = -fx, m[9] = -fy, m[10] = -fz, m[15] = 1, m;
-}
-function viewFromRotation(position, r) {
-  return multiply(transpose(r), translation({ x: -position.x, y: -position.y, z: -position.z }));
-}
-function viewMatrix(position, orientation) {
-  let r = "target" in orientation ? lookAtRotation(position, orientation.target) : rotation(orientation.rotation);
-  return viewFromRotation(position, r);
-}
-function normalMatrixInto(out, offset, model) {
-  let a = at(model, 0), b = at(model, 4), c = at(model, 8), d = at(model, 1), e = at(model, 5), f = at(model, 9), g = at(model, 2), h = at(model, 6), i = at(model, 10), c00 = e * i - f * h, c01 = f * g - d * i, c02 = d * h - e * g, c10 = c * h - b * i, c11 = a * i - c * g, c12 = b * g - a * h, c20 = b * f - c * e, c21 = c * d - a * f, c22 = a * e - b * d, det = a * c00 + b * c01 + c * c02;
-  if (det === 0 || !Number.isFinite(det))
-    throw new RangeError("normal matrix of a singular transform is undefined");
-  let inv = 1 / det;
-  return out[offset] = c00 * inv, out[offset + 1] = c10 * inv, out[offset + 2] = c20 * inv, out[offset + 3] = 0, out[offset + 4] = c01 * inv, out[offset + 5] = c11 * inv, out[offset + 6] = c21 * inv, out[offset + 7] = 0, out[offset + 8] = c02 * inv, out[offset + 9] = c12 * inv, out[offset + 10] = c22 * inv, out[offset + 11] = 0, out[offset + 12] = 0, out[offset + 13] = 0, out[offset + 14] = 0, out[offset + 15] = 1, out;
-}
-
-// src/scene/clips.ts
-function sampleChannelInto(channel, time, out) {
-  let comps = channelWidth(channel), times = channel.times, count2 = times.length, values = channel.values, identity2 = () => {
-    out[0] = 0, out[1] = 0, out[2] = 0, comps === 4 && (out[3] = 1);
-  };
-  if (count2 === 0) {
-    identity2();
-    return;
-  }
-  let first = times[0] ?? 0;
-  if (time <= first) {
-    for (let i = 0; i < comps; i += 1) out[i] = values[i] ?? 0;
-    comps === 4 && normalizeInto(out);
-    return;
-  }
-  let hi = 1;
-  for (; hi < count2 && (times[hi] ?? 0) <= time; ) hi += 1;
-  let lo = hi - 1, from = lo * comps;
-  if (channel.interpolation === "step" || hi >= count2) {
-    for (let i = 0; i < comps; i += 1) out[i] = values[from + i] ?? 0;
-    comps === 4 && normalizeInto(out);
-    return;
-  }
-  let t0 = times[lo] ?? 0, span = (times[hi] ?? t0) - t0, t = span === 0 ? 0 : (time - t0) / span, to = hi * comps;
-  if (comps === 4) {
-    let dot2 = 0;
-    for (let i = 0; i < 4; i += 1) dot2 += (values[from + i] ?? 0) * (values[to + i] ?? 0);
-    let sign2 = dot2 < 0 ? -1 : 1, angle = Math.acos(Math.min(1, Math.abs(dot2))), sine = Math.sin(angle), aWeight = sine > 1e-6 ? Math.sin((1 - t) * angle) / sine : 1 - t, bWeight = sine > 1e-6 ? Math.sin(t * angle) / sine : t;
-    for (let i = 0; i < 4; i += 1) {
-      let a = values[from + i] ?? 0;
-      out[i] = a * aWeight + sign2 * (values[to + i] ?? 0) * bWeight;
-    }
-    normalizeInto(out);
-    return;
-  }
-  for (let i = 0; i < 3; i += 1) {
-    let a = values[from + i] ?? 0;
-    out[i] = a + ((values[to + i] ?? a) - a) * t;
-  }
-}
-function channelWidth(channel) {
-  return channel.path === "rotation" ? 4 : 3;
-}
-function normalizeInto(value) {
-  let length2 = Math.hypot(value[0] ?? 0, value[1] ?? 0, value[2] ?? 0, value[3] ?? 0);
-  if (!(length2 > 0)) {
-    value[0] = 0, value[1] = 0, value[2] = 0, value[3] = 1;
-    return;
-  }
-  for (let i = 0; i < 4; i += 1) value[i] = (value[i] ?? 0) / length2;
-}
-var ClipPlayers = class {
-  players = [];
-  scratch = new Float64Array(4);
-  add(clip) {
-    this.remove(clip.slot), this.players.push({
-      clip,
-      time: 0,
-      playing: !0,
-      looping: !0,
-      speed: 1,
-      finished: !1,
-      weight: 1,
-      fadeFrom: 1,
-      fadeTo: 1,
-      fadeTime: 0,
-      fadeDuration: 0,
-      previous: 0,
-      travel: 0
-    });
-  }
-  player(slot) {
-    return this.players.find((player) => player.clip.slot === slot);
-  }
-  play(slot, looping, speed) {
-    let p = this.player(slot);
-    return p === void 0 || !Number.isFinite(speed) || speed < 0 ? !1 : (p.time = 0, p.travel = 0, p.looping = looping, p.speed = speed, p.finished = !looping && p.clip.duration === 0, p.playing = !p.finished, !0);
-  }
-  pause(slot) {
-    let p = this.player(slot);
-    return p === void 0 ? !1 : (p.playing = !1, !0);
-  }
-  resume(slot) {
-    let p = this.player(slot);
-    return p === void 0 || p.finished ? !1 : (p.playing = !0, !0);
-  }
-  seek(slot, time) {
-    let p = this.player(slot);
-    return p === void 0 || !Number.isFinite(time) ? !1 : (p.time = Math.max(0, Math.min(p.clip.duration, time)), p.travel = 0, p.finished = !p.looping && p.time === p.clip.duration, p.finished && (p.playing = !1), !0);
-  }
-  fade(slot, weight, duration) {
-    let p = this.player(slot);
-    return p === void 0 || !Number.isFinite(weight) || !Number.isFinite(duration) || duration < 0 ? !1 : (p.fadeFrom = p.weight, p.fadeTo = Math.max(0, Math.min(1, weight)), p.fadeDuration = duration, p.fadeTime = 0, duration === 0 && (p.weight = p.fadeTo), !0);
-  }
-  time(slot) {
-    return this.player(slot)?.time ?? 0;
-  }
-  duration(slot) {
-    return this.player(slot)?.clip.duration ?? 0;
-  }
-  weight(slot) {
-    return this.player(slot)?.weight ?? 0;
-  }
-  playing(slot) {
-    return this.player(slot)?.playing ?? !1;
-  }
-  finished(slot) {
-    return this.player(slot)?.finished ?? !1;
-  }
-  /** A marker in (0, duration] crossed during the latest advance, even across wraps/hitches. */
-  crossed(slot, marker) {
-    let p = this.player(slot);
-    if (p === void 0 || !Number.isFinite(marker) || marker <= 0 || marker > p.clip.duration || p.travel <= 0) return !1;
-    let distance2 = marker - p.previous;
-    return distance2 <= 0 && p.looping && (distance2 += p.clip.duration), distance2 > 0 && distance2 <= p.travel;
-  }
-  remove(slot) {
-    let index = this.players.findIndex((player) => player.clip.slot === slot);
-    index >= 0 && this.players.splice(index, 1);
-  }
-  /** Writes every channel at `time` (the player's own time when omitted) without advancing. */
-  pose(apply, time) {
-    for (let player of this.players)
-      for (let channel of player.clip.channels) this.write(apply, player, channel, time ?? player.time);
-  }
-  poseSlot(slot, apply) {
-    let p = this.player(slot);
-    if (p !== void 0) for (let channel of p.clip.channels) this.write(apply, p, channel, p.time);
-  }
-  /** Advances by `dt` seconds, wrapping after the duration, then writes the new pose. */
-  advance(dt, apply) {
-    if (!(!Number.isFinite(dt) || dt < 0))
-      for (let player of this.players) {
-        player.previous = player.time, player.travel = player.playing ? dt * player.speed : 0;
-        let next = player.time + player.travel, { duration } = player.clip;
-        if (!player.looping && next >= duration ? (next = duration, player.travel = duration - player.time, player.finished = !0, player.playing = !1) : duration > 0 && next > duration && (next %= duration), duration === 0 && (next = 0), player.time = next, player.fadeDuration > 0) {
-          player.fadeTime = Math.min(player.fadeDuration, player.fadeTime + dt);
-          let t = player.fadeTime / player.fadeDuration, eased = t * t * (3 - 2 * t);
-          player.weight = player.fadeFrom + (player.fadeTo - player.fadeFrom) * eased;
-        }
-        for (let channel of player.clip.channels) this.write(apply, player, channel, next);
-      }
-  }
-  write(apply, player, channel, time) {
-    sampleChannelInto(channel, time, this.scratch);
-    let weight = player.weight;
-    if (channel.path === "rotation") {
-      let w = this.scratch[3] ?? 1, sign2 = w < 0 ? -1 : 1, angle = Math.acos(Math.min(1, Math.abs(w))), sine = Math.sin(angle), factor = sine > 1e-6 ? Math.sin(weight * angle) / sine : weight;
-      for (let i = 0; i < 3; i += 1) this.scratch[i] = (this.scratch[i] ?? 0) * factor * sign2;
-      this.scratch[3] = Math.cos(weight * angle), normalizeInto(this.scratch);
-    } else {
-      let base = channel.path === "scale" ? 1 : 0;
-      for (let i = 0; i < 3; i += 1) this.scratch[i] = base + ((this.scratch[i] ?? base) - base) * weight;
-    }
-    apply(player.clip.slot, channel, this.scratch);
-  }
-};
-
-// src/scene/skeleton.ts
-function skinProblem(skin, vertices) {
-  let n = skin.nodes.length;
-  if (skin.meshNode >= n || skin.joints.some((j) => j >= n) || skin.inverseBind.length !== skin.joints.length) return "skin node or inverse-bind count is invalid";
-  if (skin.indices.length !== vertices || skin.weights.length !== vertices) return "skin influences do not match the vertex count";
-  for (let i = 0; i < n; i++) {
-    let node = skin.nodes[i];
-    if (node.parent >= n || node.scale.some((v) => v <= 0) || Math.hypot(...node.rotation) < 1e-8) return "invalid skeletal bind transform";
-    let parent = i;
-    for (let depth = 0; parent >= 0; depth++) {
-      if (depth >= n) return "cyclic skeletal hierarchy";
-      parent = skin.nodes[parent].parent;
-    }
-  }
-  for (let i = 0; i < vertices; i++) {
-    let weights = skin.weights[i];
-    if (skin.indices[i].some((j) => j >= skin.joints.length) || weights.some((w) => w < 0) || Math.abs(weights.reduce((a, b) => a + b, 0) - 1) > 1e-3) return "invalid vertex joint indices or weights";
-  }
-  let names = /* @__PURE__ */ new Set();
-  for (let clip of skin.clips) {
-    if (names.has(clip.name)) return "duplicate skeletal clip name";
-    names.add(clip.name);
-    let channels = /* @__PURE__ */ new Set();
-    for (let c of clip.channels) {
-      let key = String(c.node) + c.path;
-      if (c.node >= n || channels.has(key) || c.values.length !== c.times.length * (c.path === "rotation" ? 4 : 3) || c.times.some((t, i) => t < 0 || t > clip.duration || i > 0 && t <= c.times[i - 1]) || c.path === "scale" && c.values.some((v) => v <= 0)) return "invalid skeletal clip channel";
-      if (c.path === "rotation") {
-        for (let k = 0; k < c.values.length; k += 4) if (Math.hypot(...c.values.slice(k, k + 4)) < 1e-8) return "invalid skeletal rotation";
-      }
-      channels.add(key);
-    }
-  }
-}
-function slerp(out, at3, a, b, t) {
-  let dot2 = 0;
-  for (let i = 0; i < 4; i++) dot2 += a[at3 + i] * b[at3 + i];
-  let sign2 = dot2 < 0 ? -1 : 1, angle = Math.acos(Math.min(1, Math.abs(dot2))), sin2 = Math.sin(angle), wa = sin2 > 1e-6 ? Math.sin((1 - t) * angle) / sin2 : 1 - t, wb = sin2 > 1e-6 ? Math.sin(t * angle) / sin2 : t;
-  for (let i = 0; i < 4; i++) out[at3 + i] = a[at3 + i] * wa + b[at3 + i] * wb * sign2;
-  let norm = Math.hypot(out[at3], out[at3 + 1], out[at3 + 2], out[at3 + 3]);
-  for (let i = 0; i < 4; i++) out[at3 + i] = out[at3 + i] / norm;
-}
-var SkeletonPlayer = class {
-  constructor(skin, initial) {
-    this.skin = skin;
-    this.bind = new Float64Array(skin.nodes.length * 10), skin.nodes.forEach((node, i) => {
-      this.bind.set(node.translation, i * 10);
-      let q = node.rotation, norm = Math.hypot(...q);
-      this.bind.set(q.map((v) => v / norm), i * 10 + 3), this.bind.set(node.scale, i * 10 + 7);
-    }), this.pose = this.bind.slice(), this.sample = this.bind.slice(), this.from = this.bind.slice(), this.locals = skin.nodes.map(() => identity()), this.globals = skin.nodes.map(() => identity()), this.inverseBind = skin.inverseBind.map((m) => new Float32Array(m)), this.palette = new Float32Array(skin.joints.length * 16);
-    let visited = /* @__PURE__ */ new Set(), visit = (i) => {
-      if (visited.has(i)) return;
-      let parent = skin.nodes[i].parent;
-      parent >= 0 && visit(parent), visited.add(i), this.order.push(i);
-    };
-    skin.nodes.forEach((_, i) => visit(i)), (initial === void 0 || !this.transition(initial, 0, !0, 1)) && (this.clock.add({ slot: 0, duration: 0, channels: [] }), this.clock.pause(0), this.evaluate());
-  }
-  skin;
-  clock = new ClipPlayers();
-  outgoing;
-  held = !1;
-  palette;
-  pose;
-  bind;
-  sample;
-  from;
-  locals;
-  globals;
-  inverseBind;
-  order = [];
-  scratch = identity();
-  inverseMesh = identity();
-  product = identity();
-  value = new Float64Array(4);
-  name = "";
-  blendTime = 0;
-  blendDuration = 0;
-  revisionValue = 0;
-  evaluatedTime = NaN;
-  evaluatedBlend = NaN;
-  evaluatedWeight = NaN;
-  get revision() {
-    return this.revisionValue;
-  }
-  jointPosition(name) {
-    let i = this.skin.nodes.findIndex((n) => n.name === name);
-    return i < 0 ? { x: 0, y: 0, z: 0 } : (multiplyInto(this.product, this.inverseMesh, this.globals[i]), { x: Math.fround(this.product[12]), y: Math.fround(this.product[13]), z: Math.fround(this.product[14]) });
-  }
-  jointRotation(name) {
-    let i = this.skin.nodes.findIndex((n2) => n2.name === name);
-    if (i < 0) return { x: 0, y: 0, z: 0, w: 1 };
-    multiplyInto(this.product, this.inverseMesh, this.globals[i]);
-    let m = this.product, sx = Math.hypot(m[0], m[1], m[2]), sy = Math.hypot(m[4], m[5], m[6]), sz = Math.hypot(m[8], m[9], m[10]), a = m[0] / sx, b = m[4] / sy, c = m[8] / sz, d = m[1] / sx, e = m[5] / sy, f = m[9] / sz, g = m[2] / sx, h = m[6] / sy, j = m[10] / sz, x, y, z, w, trace = a + e + j;
-    if (trace > 0) {
-      let s = Math.sqrt(trace + 1) * 2;
-      w = s / 4, x = (h - f) / s, y = (c - g) / s, z = (d - b) / s;
-    } else if (a > e && a > j) {
-      let s = Math.sqrt(1 + a - e - j) * 2;
-      w = (h - f) / s, x = s / 4, y = (b + d) / s, z = (c + g) / s;
-    } else if (e > j) {
-      let s = Math.sqrt(1 + e - a - j) * 2;
-      w = (c - g) / s, x = (b + d) / s, y = s / 4, z = (f + h) / s;
-    } else {
-      let s = Math.sqrt(1 + j - a - e) * 2;
-      w = (d - b) / s, x = (c + g) / s, y = (f + h) / s, z = s / 4;
-    }
-    let n = Math.hypot(x, y, z), length2 = Math.hypot(n, w);
-    return { x: Math.fround(x / length2), y: Math.fround(y / length2), z: Math.fround(z / length2), w: Math.fround(w / length2) };
-  }
-  transition(name, seconds, looping, speed) {
-    let clip = this.skin.clips.find((c) => c.name === name);
-    return clip === void 0 || !Number.isFinite(seconds) || seconds < 0 || !Number.isFinite(speed) || speed < 0 ? !1 : (name === this.name || (this.outgoing = this.name !== "" && !this.held && this.blendTime >= this.blendDuration ? { name: this.name, clock: this.clock } : void 0, this.from.set(this.pose), this.held = !1, this.clock = new ClipPlayers(), this.name = name, this.evaluatedTime = NaN, this.blendTime = 0, this.blendDuration = seconds, this.clock.add({ slot: 0, duration: clip.duration, channels: [] }), this.clock.play(0, looping, speed), this.evaluate()), !0);
-  }
-  /** Snapshot only: the destination owns its pose and never follows source lifetime. */
-  copyPose(source) {
-    return this.skin.meshNode !== source.skin.meshNode || this.skin.nodes.length !== source.skin.nodes.length || this.skin.nodes.some((n, i) => {
-      let other = source.skin.nodes[i];
-      return n.name !== other.name || n.parent !== other.parent || n.translation.some((v, k) => v !== other.translation[k]) || n.rotation.some((v, k) => v !== other.rotation[k]) || n.scale.some((v, k) => v !== other.scale[k]);
-    }) ? !1 : (this.from.set(source.pose), this.pose.set(source.pose), this.held = !0, this.name = "", this.outgoing = void 0, this.blendDuration = 0, this.blendTime = 0, this.evaluatedTime = NaN, this.clock = new ClipPlayers(), this.clock.add({ slot: 0, duration: 0, channels: [] }), this.clock.pause(0), this.evaluate(), !0);
-  }
-  samplePose(name, time, out) {
-    out.set(this.bind);
-    let clip = this.skin.clips.find((c) => c.name === name);
-    for (let channel of clip?.channels ?? []) {
-      sampleChannelInto(channel, time, this.value);
-      let offset = channel.node * 10 + (channel.path === "translation" ? 0 : channel.path === "rotation" ? 3 : 7);
-      out.set(this.value.subarray(0, channel.path === "rotation" ? 4 : 3), offset);
-    }
-  }
-  play(looping, speed) {
-    let ok = this.clock.play(0, looping, speed);
-    return ok && (this.from.set(this.pose), this.blendTime = 0, this.evaluate()), ok;
-  }
-  advance(dt) {
-    !Number.isFinite(dt) || dt < 0 || (this.clock.advance(dt, () => {
-    }), this.outgoing?.clock.advance(dt, () => {
-    }), this.blendTime = Math.min(this.blendDuration, this.blendTime + dt), this.blendTime >= this.blendDuration && (this.outgoing = void 0), this.evaluate());
-  }
-  evaluate() {
-    let time = this.clock.time(0), weight = this.clock.weight(0);
-    if (time === this.evaluatedTime && this.blendTime === this.evaluatedBlend && weight === this.evaluatedWeight) return;
-    if (this.evaluatedTime = time, this.evaluatedBlend = this.blendTime, this.evaluatedWeight = weight, this.held ? this.sample.set(this.from) : this.samplePose(this.name, time, this.sample), this.outgoing !== void 0) {
-      this.samplePose(this.outgoing.name, this.outgoing.clock.time(0), this.from);
-      let oldWeight = this.outgoing.clock.weight(0);
-      for (let i = 0; i < this.skin.nodes.length; i++) {
-        let at3 = i * 10;
-        for (let c of [0, 1, 2, 7, 8, 9]) this.from[at3 + c] = this.bind[at3 + c] + (this.from[at3 + c] - this.bind[at3 + c]) * oldWeight;
-        slerp(this.from, at3 + 3, this.bind, this.from, oldWeight);
-      }
-    }
-    let t = this.blendDuration > 0 ? Math.min(1, this.blendTime / this.blendDuration) : 1, blend = t * t * (3 - 2 * t);
-    for (let i = 0; i < this.skin.nodes.length; i++) {
-      let at3 = i * 10;
-      for (let c = 0; c < 10; c++) this.pose[at3 + c] = this.from[at3 + c] + (this.sample[at3 + c] - this.from[at3 + c]) * blend;
-      slerp(this.pose, at3 + 3, this.from, this.sample, blend);
-      for (let c of [0, 1, 2, 7, 8, 9]) this.pose[at3 + c] = this.bind[at3 + c] + (this.pose[at3 + c] - this.bind[at3 + c]) * weight;
-      slerp(this.pose, at3 + 3, this.bind, this.pose, weight);
-    }
-    for (let i of this.order) {
-      let a = i * 10, p = this.pose;
-      fromRotationTranslationScaleInto(
-        this.locals[i],
-        this.scratch,
-        { x: p[a + 3], y: p[a + 4], z: p[a + 5], w: p[a + 6] },
-        { x: p[a], y: p[a + 1], z: p[a + 2] },
-        { x: p[a + 7], y: p[a + 8], z: p[a + 9] }
-      );
-      let parent = this.skin.nodes[i].parent;
-      parent < 0 ? this.globals[i].set(this.locals[i]) : multiplyInto(this.globals[i], this.globals[parent], this.locals[i]);
-    }
-    let mesh = this.globals[this.skin.meshNode];
-    normalMatrixInto(this.scratch, 0, mesh), this.inverseMesh.set(identity());
-    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) this.inverseMesh[c * 4 + r] = this.scratch[r * 4 + c];
-    for (let r = 0; r < 3; r++) this.inverseMesh[12 + r] = -(this.inverseMesh[r] * mesh[12] + this.inverseMesh[4 + r] * mesh[13] + this.inverseMesh[8 + r] * mesh[14]);
-    for (let j = 0; j < this.skin.joints.length; j++)
-      multiplyInto(this.product, this.globals[this.skin.joints[j]], this.inverseBind[j]), multiplyInto(this.palette.subarray(j * 16, j * 16 + 16), this.inverseMesh, this.product);
-    this.revisionValue++;
-  }
-}, AnimationPlayers = class {
-  nodes = new ClipPlayers();
-  rigs = /* @__PURE__ */ new Map();
-  skin(slot) {
-    return this.rigs.get(slot);
-  }
-  add(clip) {
-    this.nodes.add(clip);
-  }
-  addSkin(slot, skin, clip) {
-    this.rigs.set(slot, new SkeletonPlayer(skin, clip));
-  }
-  remove(slot) {
-    this.nodes.remove(slot), this.rigs.delete(slot);
-  }
-  copyPose(target, source) {
-    let a = this.rigs.get(target), b = this.rigs.get(source);
-    return a !== void 0 && b !== void 0 && a.copyPose(b);
-  }
-  transition(slot, name, seconds, looping, speed) {
-    return this.rigs.get(slot)?.transition(name, seconds, looping, speed) ?? !1;
-  }
-  play(slot, looping, speed) {
-    let r = this.rigs.get(slot);
-    return r === void 0 ? this.nodes.play(slot, looping, speed) : r.play(looping, speed);
-  }
-  clock(slot) {
-    let r = this.rigs.get(slot);
-    return r === void 0 ? [this.nodes, slot] : [r.clock, 0];
-  }
-  pause(slot) {
-    let [c, s] = this.clock(slot);
-    return c.pause(s);
-  }
-  resume(slot) {
-    let [c, s] = this.clock(slot);
-    return c.resume(s);
-  }
-  seek(slot, time) {
-    let [c, s] = this.clock(slot);
-    return c.seek(s, time);
-  }
-  fade(slot, weight, duration) {
-    let [c, s] = this.clock(slot);
-    return c.fade(s, weight, duration);
-  }
-  time(slot) {
-    let [c, s] = this.clock(slot);
-    return c.time(s);
-  }
-  duration(slot) {
-    let [c, s] = this.clock(slot);
-    return c.duration(s);
-  }
-  weight(slot) {
-    let [c, s] = this.clock(slot);
-    return c.weight(s);
-  }
-  playing(slot) {
-    let [c, s] = this.clock(slot);
-    return c.playing(s);
-  }
-  finished(slot) {
-    let [c, s] = this.clock(slot);
-    return c.finished(s);
-  }
-  crossed(slot, marker) {
-    let [c, s] = this.clock(slot);
-    return c.crossed(s, marker);
-  }
-  advance(dt, apply) {
-    this.nodes.advance(dt, apply);
-    for (let r of this.rigs.values()) r.advance(dt);
-  }
-  pose(apply, time) {
-    this.nodes.pose(apply, time);
-    for (let r of this.rigs.values()) r.evaluate();
-  }
-  poseSlot(slot, apply) {
-    this.nodes.poseSlot(slot, apply), this.rigs.get(slot)?.evaluate();
-  }
-};
 
 // src/math/overlap.ts
 function dot(a, b) {
@@ -12088,8 +12783,108 @@ var UniformArena = class {
   }
 };
 
+// src/render/mipmaps.ts
+function mipLevelCount(width, height) {
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1)
+    throw new RangeError("Mip dimensions must be positive integers");
+  return Math.floor(Math.log2(Math.max(width, height))) + 1;
+}
+var SHADER = `
+@group(0) @binding(0) var source: texture_2d<f32>;
+@vertex fn vs(@builtin(vertex_index) i:u32)->@builtin(position) vec4f {
+  let p=array<vec2f,3>(vec2f(-1,-1),vec2f(3,-1),vec2f(-1,3));
+  return vec4f(p[i],0,1);
+}
+@fragment fn fs(@builtin(position) p:vec4f)->@location(0) vec4f {
+  let size=textureDimensions(source);
+  let dst=max(vec2u(1),size/2u);
+  let lo=vec2u(p.xy)*size/dst;
+  let hi=(vec2u(p.xy)+1u)*size/dst;
+  var color=vec4f(0); var count=0.0;
+  for(var y=lo.y;y<hi.y;y++){for(var x=lo.x;x<hi.x;x++){
+    color+=textureLoad(source,vec2i(vec2u(x,y)),0);count+=1.0;
+  }}
+  return color/count;
+}`, MipmapGenerator = class {
+  constructor(device, registry) {
+    this.device = device;
+    this.registry = registry;
+    this.module = registry.createShaderModule({
+      label: "mtek mipmaps",
+      code: SHADER
+    }), this.layout = registry.createBindGroupLayout({
+      entries: [
+        { binding: 0, visibility: 2, texture: { sampleType: "float" } }
+      ]
+    }), this.pipelineLayout = registry.createPipelineLayout({
+      bindGroupLayouts: [this.layout]
+    });
+  }
+  device;
+  registry;
+  module;
+  layout;
+  pipelineLayout;
+  pipelines = /* @__PURE__ */ new Map();
+  generate(texture, format, width, height) {
+    let levels = mipLevelCount(width, height);
+    if (levels === 1) return;
+    let pipeline = this.pipelines.get(format);
+    pipeline === void 0 && (pipeline = this.registry.createRenderPipeline({
+      label: "mtek mipmaps",
+      layout: this.pipelineLayout,
+      vertex: { module: this.module, entryPoint: "vs" },
+      fragment: {
+        module: this.module,
+        entryPoint: "fs",
+        targets: [{ format }]
+      }
+    }), this.pipelines.set(format, pipeline));
+    let encoder = this.device.createCommandEncoder({ label: "mtek mipmaps" }), groups = [];
+    try {
+      for (let level = 1; level < levels; level++) {
+        let group = this.registry.createBindGroup({
+          layout: this.layout,
+          entries: [
+            {
+              binding: 0,
+              resource: texture.createView({
+                baseMipLevel: level - 1,
+                mipLevelCount: 1
+              })
+            }
+          ]
+        });
+        groups.push(group);
+        let pass = encoder.beginRenderPass({
+          colorAttachments: [
+            {
+              view: texture.createView({
+                baseMipLevel: level,
+                mipLevelCount: 1
+              }),
+              loadOp: "clear",
+              storeOp: "store",
+              clearValue: [0, 0, 0, 0]
+            }
+          ]
+        });
+        pass.setPipeline(pipeline), pass.setBindGroup(0, group), pass.draw(3), pass.end();
+      }
+      this.device.queue.submit([encoder.finish()]);
+    } finally {
+      for (let group of groups) this.registry.release(group);
+    }
+  }
+  dispose() {
+    for (let pipeline of this.pipelines.values())
+      this.registry.release(pipeline);
+    this.pipelines.clear(), this.registry.release(this.module);
+  }
+};
+
 // src/render/resources.ts
-var TEXTURE_FORMATS = { srgb: "rgba8unorm-srgb", linear: "rgba8unorm" }, SAMPLER_PRESETS = {
+var USAGE_COPY_DST2 = 2, USAGE_TEXTURE_BINDING = 4, USAGE_RENDER_ATTACHMENT = 16, TEXTURE_FORMATS = { srgb: "rgba8unorm-srgb", linear: "rgba8unorm" }, SAMPLER_PRESETS = {
   "sampler.linear_repeat": { magFilter: "linear", minFilter: "linear", mipmapFilter: "linear", addressModeU: "repeat", addressModeV: "repeat" },
   "sampler.linear_clamp": { magFilter: "linear", minFilter: "linear", mipmapFilter: "linear", addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge" },
   "sampler.nearest_repeat": { magFilter: "nearest", minFilter: "nearest", mipmapFilter: "nearest", addressModeU: "repeat", addressModeV: "repeat" },
@@ -12117,14 +12912,16 @@ function checkTestTextures(overrides) {
   return checked;
 }
 var AssetTextures = class {
-  constructor(registry, queue, images) {
+  constructor(registry, queue, images, mipmaps) {
     this.registry = registry;
     this.queue = queue;
     this.images = images;
+    this.mipmaps = mipmaps;
   }
   registry;
   queue;
   images;
+  mipmaps;
   textures = /* @__PURE__ */ new Map();
   /** The view of the texture of image file `asset`, created and filled on first use. */
   textureView(asset) {
@@ -12136,9 +12933,10 @@ var AssetTextures = class {
         label: `mtek asset ${asset.url}`,
         size: [bitmap.width, bitmap.height],
         format: TEXTURE_FORMATS[asset.colorSpace],
-        usage: 22
+        mipLevelCount: this.mipmaps === void 0 ? 1 : mipLevelCount(bitmap.width, bitmap.height),
+        usage: USAGE_TEXTURE_BINDING | USAGE_COPY_DST2 | USAGE_RENDER_ATTACHMENT
       });
-      this.registry.copyExternalImage(this.queue, bitmap, texture), found = { texture, view: texture.createView() }, this.textures.set(asset.url, found);
+      this.registry.copyExternalImage(this.queue, bitmap, texture), this.mipmaps?.generate(texture, TEXTURE_FORMATS[asset.colorSpace], bitmap.width, bitmap.height), found = { texture, view: texture.createView() }, this.textures.set(asset.url, found);
     }
     return found.view;
   }
@@ -12168,7 +12966,7 @@ var AssetTextures = class {
         label: `mtek ${name}`,
         size: [pixels.width, pixels.height],
         format: TEXTURE_FORMATS[pixels.colorSpace],
-        usage: 6
+        usage: USAGE_TEXTURE_BINDING | USAGE_COPY_DST2
       });
       this.registry.writeTexture(this.queue, texture, pixels.data, pixels.width * 4, pixels.width, pixels.height), found = { texture, view: texture.createView() }, this.textures.set(name, found);
     }
@@ -12209,12 +13007,13 @@ function resourceSignature(instance) {
 }
 var MaterialStore = class {
   /** `images`: the decoded image files that instances' texture params may name (`spec/assets.md` section 5). */
-  constructor(device, registry, plan, structure, writers, textures, images = /* @__PURE__ */ new Map()) {
+  constructor(device, registry, plan, structure, writers, textures, images = /* @__PURE__ */ new Map(), mipmaps) {
     this.device = device;
     this.registry = registry;
     this.plan = plan;
     this.writers = writers;
-    this.builtins = new BuiltinResources(registry, device.queue, textures), this.assetTextures = new AssetTextures(registry, device.queue, images);
+    this.mipmaps = mipmaps;
+    this.builtins = new BuiltinResources(registry, device.queue, textures), this.assetTextures = new AssetTextures(registry, device.queue, images, mipmaps);
     for (let prefab of structure.prefabs ?? [])
       for (let resource of prefab.material?.resources ?? [])
         "asset" in resource && this.assetTextures.textureView(resource.asset);
@@ -12230,6 +13029,7 @@ var MaterialStore = class {
   registry;
   plan;
   writers;
+  mipmaps;
   arenas = /* @__PURE__ */ new Map();
   /** The live instances by index (the scene's, then the spawned ones). */
   instances = /* @__PURE__ */ new Map();
@@ -12432,7 +13232,7 @@ var MaterialStore = class {
     this.arenas.clear();
     for (let block of new Set(this.blocks))
       block?.resourceGroup !== void 0 && this.registry.release(block.resourceGroup);
-    this.blocks.length = 0, this.instances.clear(), this.buckets.clear(), this.resources.clear(), this.builtins.dispose(), this.assetTextures.dispose();
+    this.blocks.length = 0, this.instances.clear(), this.buckets.clear(), this.resources.clear(), this.builtins.dispose(), this.assetTextures.dispose(), this.mipmaps?.dispose();
   }
   blockOfInstance(instance) {
     let block = this.blocks[instance];
@@ -12597,23 +13397,196 @@ var MeshCache = class {
   }
 };
 
-// src/mesh/skinning.ts
-function deformSkin(skin, palette, positions, normals, outPositions, outNormals) {
-  for (let v = 0; v < skin.indices.length; v++) {
-    let ids = skin.indices[v], ws = skin.weights[v], a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0, h = 0, i = 0, tx = 0, ty = 0, tz = 0;
-    for (let k = 0; k < 4; k++) {
-      let w = ws[k];
-      if (w === 0) continue;
-      let j = ids[k] * 16;
-      a += palette[j] * w, b += palette[j + 4] * w, c += palette[j + 8] * w, d += palette[j + 1] * w, e += palette[j + 5] * w, f += palette[j + 9] * w, g += palette[j + 2] * w, h += palette[j + 6] * w, i += palette[j + 10] * w, tx += palette[j + 12] * w, ty += palette[j + 13] * w, tz += palette[j + 14] * w;
+// src/mesh/skin-bounds.ts
+function skinWorldScale(matrix) {
+  let maximum = 0;
+  for (let row = 0; row < 3; row++) {
+    let sum = 0;
+    for (let col = 0; col < 3; col++) {
+      let dot2 = 0;
+      for (let k = 0; k < 3; k++)
+        dot2 += matrix[row * 4 + k] * matrix[col * 4 + k];
+      sum += Math.abs(dot2);
     }
-    let at3 = v * 3, x = positions[at3], y = positions[at3 + 1], z = positions[at3 + 2];
-    if (outPositions[at3] = a * x + b * y + c * z + tx, outPositions[at3 + 1] = d * x + e * y + f * z + ty, outPositions[at3 + 2] = g * x + h * y + i * z + tz, normals !== void 0) {
-      let nx = normals[at3], ny = normals[at3 + 1], nz = normals[at3 + 2], sign2 = a * (e * i - f * h) + b * (f * g - d * i) + c * (d * h - e * g) < 0 ? -1 : 1, ox = ((e * i - f * h) * nx + (f * g - d * i) * ny + (d * h - e * g) * nz) * sign2, oy = ((c * h - b * i) * nx + (a * i - c * g) * ny + (b * g - a * h) * nz) * sign2, oz = ((b * f - c * e) * nx + (c * d - a * f) * ny + (a * e - b * d) * nz) * sign2, length2 = Math.hypot(ox, oy, oz);
-      length2 < 1e-10 && (ox = nx, oy = ny, oz = nz, length2 = Math.hypot(nx, ny, nz) || 1), outNormals[at3] = ox / length2, outNormals[at3 + 1] = oy / length2, outNormals[at3 + 2] = oz / length2;
-    }
+    maximum = Math.max(maximum, sum);
   }
+  return Math.sqrt(maximum);
 }
+var SkinBounds = class {
+  boxes;
+  constructor(skin, positions) {
+    this.boxes = new Float64Array(skin.joints.length * 6);
+    for (let j = 0; j < skin.joints.length; j++)
+      this.boxes.set(
+        [1 / 0, 1 / 0, 1 / 0, -1 / 0, -1 / 0, -1 / 0],
+        j * 6
+      );
+    for (let v = 0; v < skin.indices.length; v++)
+      for (let k = 0; k < 4; k++) {
+        if (skin.weights[v][k] <= 0) continue;
+        let at3 = skin.indices[v][k] * 6;
+        for (let c = 0; c < 3; c++) {
+          let p = positions[v * 3 + c];
+          this.boxes[at3 + c] = Math.min(this.boxes[at3 + c], p), this.boxes[at3 + 3 + c] = Math.max(this.boxes[at3 + 3 + c], p);
+        }
+      }
+  }
+  /**
+   * Encloses every joint-transformed box. Nonnegative normalized skin weights make
+   * each deformed vertex a convex combination of points inside this union's AABB.
+   * Uses O(joints) work, including arbitrary scale/shear; no vertex deformation.
+   */
+  sphere(palette, center) {
+    let lx = 1 / 0, ly = 1 / 0, lz = 1 / 0, hx = -1 / 0, hy = -1 / 0, hz = -1 / 0;
+    for (let j = 0; j < this.boxes.length / 6; j++) {
+      let at3 = j * 6;
+      if (!Number.isFinite(this.boxes[at3])) continue;
+      let m = j * 16;
+      for (let corner = 0; corner < 8; corner++) {
+        let x = this.boxes[at3 + (corner & 1 ? 3 : 0)], y = this.boxes[at3 + (corner & 2 ? 4 : 1)], z = this.boxes[at3 + (corner & 4 ? 5 : 2)], px = palette[m] * x + palette[m + 4] * y + palette[m + 8] * z + palette[m + 12], py = palette[m + 1] * x + palette[m + 5] * y + palette[m + 9] * z + palette[m + 13], pz = palette[m + 2] * x + palette[m + 6] * y + palette[m + 10] * z + palette[m + 14];
+        lx = Math.min(lx, px), ly = Math.min(ly, py), lz = Math.min(lz, pz), hx = Math.max(hx, px), hy = Math.max(hy, py), hz = Math.max(hz, pz);
+      }
+    }
+    return Number.isFinite(lx) ? (center[0] = (lx + hx) / 2, center[1] = (ly + hy) / 2, center[2] = (lz + hz) / 2, Math.hypot(hx - lx, hy - ly, hz - lz) / 2 + Math.max(
+      1,
+      Math.abs(lx),
+      Math.abs(hx),
+      Math.abs(ly),
+      Math.abs(hy),
+      Math.abs(lz),
+      Math.abs(hz)
+    ) * 2e-3) : (center.fill(0), 0);
+  }
+};
+
+// src/render/gpu-skinning.ts
+var SKINNING_WGSL = `
+struct Influence { joints: vec4u, weights: vec4f }
+@group(0) @binding(0) var<storage, read> positions: array<f32>;
+@group(0) @binding(1) var<storage, read> normals: array<f32>;
+@group(0) @binding(2) var<storage, read> influences: array<Influence>;
+@group(0) @binding(3) var<storage, read> palette: array<mat4x4f>;
+@group(0) @binding(4) var<storage, read_write> outputPositions: array<f32>;
+@group(0) @binding(5) var<storage, read_write> outputNormals: array<f32>;
+@compute @workgroup_size(64)
+fn skin(@builtin(global_invocation_id) id: vec3u) {
+  let v = id.x;
+  if (v >= arrayLength(&influences)) { return; }
+  let inf = influences[v];
+  let m = palette[inf.joints.x] * inf.weights.x + palette[inf.joints.y] * inf.weights.y
+        + palette[inf.joints.z] * inf.weights.z + palette[inf.joints.w] * inf.weights.w;
+  let at = v * 3u;
+  let p = m * vec4f(positions[at], positions[at+1u], positions[at+2u], 1.0);
+  outputPositions[at] = p.x; outputPositions[at+1u] = p.y; outputPositions[at+2u] = p.z;
+  let n = vec3f(normals[at], normals[at+1u], normals[at+2u]);
+  let a = m[0].xyz; let b = m[1].xyz; let c = m[2].xyz;
+  let cofactor = mat3x3f(cross(b,c), cross(c,a), cross(a,b));
+  let determinant = dot(a,cross(b,c));
+  var transformed = cofactor * n * select(1.0, -1.0, determinant < 0.0);
+  if (length(transformed) < 1e-10) { transformed = n; }
+  let result = transformed / max(length(transformed), 1e-30);
+  outputNormals[at] = result.x; outputNormals[at+1u] = result.y; outputNormals[at+2u] = result.z;
+}`, GpuSkinning = class {
+  constructor(device, registry) {
+    this.device = device;
+    this.registry = registry;
+    this.module = registry.createShaderModule({
+      label: "mtek GPU skinning",
+      code: SKINNING_WGSL
+    }), this.layout = registry.createBindGroupLayout({
+      entries: Array.from({ length: 6 }, (_, binding) => ({
+        binding,
+        visibility: 4,
+        buffer: { type: binding < 4 ? "read-only-storage" : "storage" }
+      }))
+    }), this.pipeline = registry.createComputePipeline({
+      label: "mtek GPU skinning",
+      layout: registry.createPipelineLayout({
+        bindGroupLayouts: [this.layout]
+      }),
+      compute: { module: this.module, entryPoint: "skin" }
+    });
+  }
+  device;
+  registry;
+  module;
+  layout;
+  pipeline;
+  encoder;
+  pass;
+  source(skin, normals, count2) {
+    let data = new ArrayBuffer(count2 * 32), ids = new Uint32Array(data), weights = new Float32Array(data);
+    for (let v = 0; v < count2; v++)
+      for (let k = 0; k < 4; k++)
+        ids[v * 8 + k] = skin.indices[v][k], weights[v * 8 + 4 + k] = skin.weights[v][k];
+    return {
+      influences: uploadBuffer(
+        this.registry,
+        this.device.queue,
+        "skin influences",
+        128,
+        ids
+      ),
+      normals: normals ?? uploadBuffer(
+        this.registry,
+        this.device.queue,
+        "skin absent normals",
+        128,
+        new Float32Array(count2 * 3)
+      ),
+      ownsNormals: normals === void 0
+    };
+  }
+  instance(source, position, outputPosition, outputNormal, count2, joints) {
+    let palette = this.registry.createBuffer({
+      label: "skin palette",
+      size: joints * 64,
+      usage: 136
+    }), normals = outputNormal ?? this.registry.createBuffer({
+      label: "skin unused normals",
+      size: count2 * 12,
+      usage: 128
+    }), buffers = [
+      position,
+      source.normals,
+      source.influences,
+      palette,
+      outputPosition,
+      normals
+    ], group = this.registry.createBindGroup({
+      layout: this.layout,
+      entries: buffers.map((buffer, binding) => ({
+        binding,
+        resource: { buffer }
+      }))
+    });
+    return { palette, group, normals, ownsNormals: outputNormal === void 0 };
+  }
+  update(instance, palette, count2) {
+    this.registry.writeBuffer(
+      this.device.queue,
+      instance.palette,
+      0,
+      palette.buffer,
+      palette.byteOffset,
+      palette.byteLength
+    ), this.encoder ??= this.device.createCommandEncoder({
+      label: "mtek skinning"
+    }), this.pass === void 0 && (this.pass = this.encoder.beginComputePass(), this.pass.setPipeline(this.pipeline)), this.pass.setBindGroup(0, instance.group), this.pass.dispatchWorkgroups(Math.ceil(count2 / 64));
+  }
+  flush() {
+    this.encoder !== void 0 && (this.pass?.end(), this.pass = void 0, this.device.queue.submit([this.encoder.finish()]), this.encoder = void 0);
+  }
+  release(instance) {
+    this.registry.release(instance.group), this.registry.release(instance.palette), instance.ownsNormals && this.registry.release(instance.normals);
+  }
+  releaseSource(source) {
+    this.registry.release(source.influences), source.ownsNormals && this.registry.release(source.normals);
+  }
+  dispose() {
+    this.encoder = void 0, this.pass = void 0, this.registry.release(this.pipeline), this.registry.release(this.module);
+  }
+};
 
 // src/render/meshes.ts
 var BUFFER_USAGE_COPY_DST = 8, BUFFER_USAGE_INDEX = 16, BUFFER_USAGE_VERTEX = 32, ORIGIN2 = [0, 0, 0];
@@ -12632,11 +13605,12 @@ function uploadBuffer(registry, queue, label, usage, data) {
   return registry.writeBuffer(queue, buffer, 0, bytes, 0, size), buffer;
 }
 var MeshStore = class {
-  constructor(registry, queue, cache = new MeshCache(), maxBufferSize = 1 / 0) {
+  constructor(registry, queue, cache = new MeshCache(), maxBufferSize = 1 / 0, device) {
     this.registry = registry;
     this.queue = queue;
     this.cache = cache;
     this.maxBufferSize = maxBufferSize;
+    device?.createComputePipeline !== void 0 && device.createCommandEncoder !== void 0 && (this.gpuSkinning = new GpuSkinning({ queue: device.queue, createCommandEncoder: device.createCommandEncoder.bind(device) }, registry));
   }
   registry;
   queue;
@@ -12646,33 +13620,49 @@ var MeshStore = class {
   byId = /* @__PURE__ */ new Map();
   skinSources = /* @__PURE__ */ new Map();
   skinInstances = /* @__PURE__ */ new Map();
+  gpuSkinning;
   forEntity(id, slot, player) {
     let source = this.get(id);
     if (player === void 0) return source;
     let existing = this.skinInstances.get(slot);
     if (existing !== void 0) return existing.mesh;
-    let positions = new Float32Array(source.vertexCount * 3), normals = new Float32Array(source.vertexCount * 3), mesh = {
+    let positions = new Float32Array(this.gpuSkinning === void 0 ? source.vertexCount * 3 : 0), normals = new Float32Array(this.gpuSkinning === void 0 ? source.vertexCount * 3 : 0), usage = BUFFER_USAGE_VERTEX | (this.gpuSkinning === void 0 ? 0 : 128), output = (label, data) => this.gpuSkinning === void 0 ? uploadBuffer(this.registry, this.queue, label, usage, data) : this.registry.createBuffer({ label, size: source.vertexCount * 12, usage }), mesh = {
       ...source,
       key: source.key + "@" + String(slot),
+      boundingCenter: [0, 0, 0],
       boundingRadius: 1 / 0,
       vertexBuffers: {
         ...source.vertexBuffers,
-        position: uploadBuffer(this.registry, this.queue, "skin positions", BUFFER_USAGE_VERTEX, positions),
-        ...source.vertexBuffers.normal === void 0 ? {} : { normal: uploadBuffer(this.registry, this.queue, "skin normals", BUFFER_USAGE_VERTEX, normals) }
+        position: output("skin positions", positions),
+        ...source.vertexBuffers.normal === void 0 ? {} : { normal: output("skin normals", normals) }
       }
-    };
-    return this.skinInstances.set(slot, { mesh, positions, normals, revision: -1 }), mesh;
+    }, gpuSource = this.skinSources.get(source.key)?.gpu, gpu = gpuSource === void 0 ? void 0 : this.gpuSkinning.instance(gpuSource, source.vertexBuffers.position, mesh.vertexBuffers.position, mesh.vertexBuffers.normal, source.vertexCount, player.skin.joints.length);
+    return this.skinInstances.set(slot, { mesh, sourceKey: source.key, positions, normals, revision: -1, boundsRevision: -1, ...gpu === void 0 ? {} : { gpu } }), mesh;
   }
   updateSkin(slot, player) {
     let instance = this.skinInstances.get(slot);
     if (instance === void 0 || instance.revision === player.revision) return;
-    let source = this.skinSources.get(instance.mesh.key.split("@")[0]);
+    let source = this.skinSources.get(instance.sourceKey);
     if (source === void 0) throw new Error("Missing skin source vertices");
+    if (instance.gpu !== void 0) {
+      this.gpuSkinning.update(instance.gpu, player.palette, instance.mesh.vertexCount), instance.revision = player.revision;
+      return;
+    }
     deformSkin(player.skin, player.palette, source.positions, source.normals, instance.positions, instance.normals), this.registry.writeBuffer(this.queue, instance.mesh.vertexBuffers.position, 0, instance.positions.buffer, 0, instance.positions.byteLength), instance.mesh.vertexBuffers.normal !== void 0 && this.registry.writeBuffer(this.queue, instance.mesh.vertexBuffers.normal, 0, instance.normals.buffer, 0, instance.normals.byteLength), instance.revision = player.revision;
+  }
+  /** Bounds are evaluated before culling; deformation only runs for visible actors. */
+  updateSkinBounds(slot, player) {
+    let instance = this.skinInstances.get(slot);
+    if (instance === void 0 || instance.boundsRevision === player.revision) return !1;
+    let source = this.skinSources.get(instance.sourceKey), mesh = instance.mesh;
+    return mesh.boundingRadius = source.bounds.sphere(player.palette, mesh.boundingCenter), instance.boundsRevision = player.revision, !0;
+  }
+  flushSkins() {
+    this.gpuSkinning?.flush();
   }
   releaseSkin(slot) {
     let instance = this.skinInstances.get(slot);
-    instance !== void 0 && (this.registry.release(instance.mesh.vertexBuffers.position), instance.mesh.vertexBuffers.normal !== void 0 && this.registry.release(instance.mesh.vertexBuffers.normal), this.skinInstances.delete(slot));
+    instance !== void 0 && (instance.gpu !== void 0 && this.gpuSkinning.release(instance.gpu), this.registry.release(instance.mesh.vertexBuffers.position), instance.mesh.vertexBuffers.normal !== void 0 && this.registry.release(instance.mesh.vertexBuffers.normal), this.skinInstances.delete(slot));
   }
   /** Number of distinct meshes on the GPU. */
   get size() {
@@ -12712,8 +13702,8 @@ var MeshStore = class {
     if (assets === void 0) throw new Error(`internal error: the mesh '${key}' comes from an asset, but no assets were loaded`);
     let bytes = assets.bytes(source.asset), { layout } = source;
     if (source.skin !== void 0) {
-      let floats = (offset) => new Float32Array(bytes.slice(offset, offset + layout.vertexCount * 12).buffer);
-      this.skinSources.set(key, { positions: floats(layout.offsets.position), ...layout.offsets.normal === void 0 ? {} : { normals: floats(layout.offsets.normal) } });
+      let floats = (offset) => new Float32Array(bytes.slice(offset, offset + layout.vertexCount * 12).buffer), positions = floats(layout.offsets.position);
+      this.skinSources.set(key, { positions, bounds: new SkinBounds(source.skin, positions), ...layout.offsets.normal === void 0 ? {} : { normals: floats(layout.offsets.normal) } });
     }
     let label = `mtek mesh ${key}`, regions = meshRegions(layout);
     for (let region of regions) {
@@ -12726,10 +13716,10 @@ var MeshStore = class {
     let vertexBuffers = {}, indexBuffer;
     for (let region of regions) {
       let data = bytes.subarray(region.offset, region.offset + region.byteLength);
-      region.name === "index" ? indexBuffer = uploadBuffer(this.registry, this.queue, `${label} index`, BUFFER_USAGE_INDEX, data) : vertexBuffers[region.name] = uploadBuffer(this.registry, this.queue, `${label} ${region.name}`, BUFFER_USAGE_VERTEX, data);
+      region.name === "index" ? indexBuffer = uploadBuffer(this.registry, this.queue, `${label} index`, BUFFER_USAGE_INDEX, data) : vertexBuffers[region.name] = uploadBuffer(this.registry, this.queue, `${label} ${region.name}`, BUFFER_USAGE_VERTEX | (source.skin === void 0 || this.gpuSkinning === void 0 || region.name === "uv" ? 0 : 128), data);
     }
     if (indexBuffer === void 0) throw new Error("internal error: meshRegions returned no index region");
-    return {
+    return source.skin !== void 0 && this.gpuSkinning !== void 0 && (this.skinSources.get(key).gpu = this.gpuSkinning.source(source.skin, vertexBuffers.normal, layout.vertexCount)), {
       key,
       order: this.byKey.size,
       vertexBuffers,
@@ -12750,7 +13740,8 @@ var MeshStore = class {
   /** Releases every uploaded buffer (hot reload: discard a retired scene). */
   dispose() {
     for (let slot of this.skinInstances.keys()) this.releaseSkin(slot);
-    this.skinSources.clear();
+    for (let source of this.skinSources.values()) source.gpu !== void 0 && this.gpuSkinning.releaseSource(source.gpu);
+    this.skinSources.clear(), this.gpuSkinning?.dispose(), this.gpuSkinning = void 0;
     for (let gpu of this.byKey.values()) {
       for (let buffer of Object.values(gpu.vertexBuffers)) this.registry.release(buffer);
       this.registry.release(gpu.indexBuffer);
@@ -12805,8 +13796,122 @@ function instancingCandidates(structure, blockOf, pipelineKeyOf) {
   return { materials, capacity };
 }
 
+// src/render/post-processing.ts
+var PREFIX = `
+@group(0) @binding(0) var sceneColor:texture_2d<f32>;
+@group(0) @binding(1) var sceneSampler:sampler;
+fn sampleScene(uv:vec2f)->vec4f {return textureSampleLevel(sceneColor,sceneSampler,uv,0.0);}
+struct VertexOut {@builtin(position) position:vec4f,@location(0) uv:vec2f}
+@vertex fn vs(@builtin(vertex_index) i:u32)->VertexOut {
+  let p=array<vec2f,3>(vec2f(-1,-1),vec2f(3,-1),vec2f(-1,3));
+  var out:VertexOut;out.position=vec4f(p[i],0,1);out.uv=p[i]*vec2f(0.5,-0.5)+vec2f(0.5);return out;
+}
+@fragment fn fs(input:VertexOut)->@location(0) vec4f {return effect(sampleScene(input.uv),input.uv);}
+`, PostProcessor = class {
+  constructor(registry, format, effects) {
+    this.registry = registry;
+    this.format = format;
+    if (new Set(effects.map((e) => e.id)).size !== effects.length || effects.some((e) => e.id === ""))
+      throw new RangeError("Post effects require unique nonempty IDs");
+    this.layout = registry.createBindGroupLayout({
+      entries: [
+        { binding: 0, visibility: 2, texture: { sampleType: "float" } },
+        { binding: 1, visibility: 2, sampler: { type: "filtering" } }
+      ]
+    }), this.sampler = registry.createSampler({
+      minFilter: "linear",
+      magFilter: "linear"
+    });
+    let layout = registry.createPipelineLayout({
+      bindGroupLayouts: [this.layout]
+    });
+    for (let effect of effects) {
+      let module = registry.createShaderModule({
+        label: `mtek post effect ${effect.id}`,
+        code: PREFIX + effect.wgsl
+      });
+      this.modules.push(module), this.pipelines.push(
+        registry.createRenderPipeline({
+          label: `mtek post effect ${effect.id}`,
+          layout,
+          vertex: { module, entryPoint: "vs" },
+          fragment: { module, entryPoint: "fs", targets: [{ format }] }
+        })
+      );
+    }
+  }
+  registry;
+  format;
+  layout;
+  sampler;
+  modules = [];
+  pipelines = [];
+  textures = [];
+  groups = [];
+  width = 0;
+  height = 0;
+  input(width, height) {
+    if (width !== this.width || height !== this.height) {
+      this.releaseTargets(), this.width = width, this.height = height;
+      for (let i = 0; i < Math.min(2, this.pipelines.length); i++) {
+        let texture = this.registry.createTexture({
+          label: "mtek post scratch",
+          size: [width, height],
+          format: this.format,
+          usage: 20
+        });
+        this.textures.push(texture), this.groups.push(
+          this.registry.createBindGroup({
+            layout: this.layout,
+            entries: [
+              { binding: 0, resource: texture.createView() },
+              { binding: 1, resource: this.sampler }
+            ]
+          })
+        );
+      }
+    }
+    return this.textures[0].createView();
+  }
+  async validate() {
+    let errors = (await Promise.all(
+      this.modules.map((module) => module.getCompilationInfo())
+    )).flatMap(
+      (info) => info.messages.filter((m) => m.type === "error").map((m) => m.message)
+    );
+    if (errors.length > 0)
+      throw new Error(`Post-processing WGSL failed: ${errors.join("; ")}`);
+  }
+  encode(encoder, output) {
+    for (let i = 0; i < this.pipelines.length; i++) {
+      let pass = encoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: i === this.pipelines.length - 1 ? output : this.textures[(i + 1) % 2].createView(),
+            loadOp: "clear",
+            storeOp: "store",
+            clearValue: [0, 0, 0, 0]
+          }
+        ]
+      });
+      pass.setPipeline(this.pipelines[i]), pass.setBindGroup(0, this.groups[i % 2]), pass.draw(3), pass.end();
+    }
+  }
+  releaseTargets() {
+    for (let group of this.groups) this.registry.release(group);
+    for (let texture of this.textures) this.registry.release(texture);
+    this.groups = [], this.textures = [];
+  }
+  dispose() {
+    this.releaseTargets();
+    for (let pipeline of this.pipelines) this.registry.release(pipeline);
+    for (let module of this.modules) this.registry.release(module);
+    this.registry.release(this.sampler);
+  }
+};
+
 // src/host/surface.ts
-var OFFSCREEN_FORMAT = "rgba8unorm-srgb", DEPTH_FORMAT = "depth24plus";
+var TEXTURE_USAGE_COPY_SRC = 1, TEXTURE_USAGE_RENDER_ATTACHMENT = 16, BUFFER_USAGE_MAP_READ = 1, BUFFER_USAGE_COPY_DST2 = 8, MAP_MODE_READ = 1, OFFSCREEN_FORMAT = "rgba8unorm-srgb", DEPTH_FORMAT = "depth24plus";
 function srgbViewFormat(format) {
   if (format === "bgra8unorm") return "bgra8unorm-srgb";
   if (format === "rgba8unorm") return "rgba8unorm-srgb";
@@ -12826,6 +13931,7 @@ var Surface = class {
     this.viewFormat = view2, this.device = options.device;
   }
   options;
+  post;
   get timer() {
     return this.timerDropped ? void 0 : this.options.timer;
   }
@@ -12847,6 +13953,17 @@ var Surface = class {
   configured = !1;
   /** Unconfigured because the canvas has no pixels; configured again when it has (decision 0132). */
   parked = !1;
+  async preparePostProcessing() {
+    if (this.post !== void 0 || (this.options.postProcessing?.length ?? 0) === 0) return;
+    this.device.pushErrorScope("validation");
+    try {
+      this.post = new PostProcessor(this.options.registry, this.colorFormat, this.options.postProcessing);
+    } catch (error2) {
+      throw await this.device.popErrorScope(), error2;
+    }
+    let scope = this.device.popErrorScope(), [, error] = await Promise.all([this.post.validate(), scope]);
+    if (error !== null) throw new Error(`Post-processing pipeline failed: ${error.message}`);
+  }
   /** Frames that were drawn / skipped because the canvas has no pixels. */
   get framesRendered() {
     return this.rendered;
@@ -12913,7 +14030,7 @@ var Surface = class {
       label: "mtek render target",
       size: [this.widthPx, this.heightPx],
       format: OFFSCREEN_FORMAT,
-      usage: 17
+      usage: TEXTURE_USAGE_RENDER_ATTACHMENT | TEXTURE_USAGE_COPY_SRC
     }), previous = this.offscreen;
     this.offscreen = next, this.offscreenWidth = this.widthPx, this.offscreenHeight = this.heightPx, previous !== null && this.options.registry.release(previous);
   }
@@ -12923,7 +14040,7 @@ var Surface = class {
    * the browser or the registry throws; the caller treats that as a failed recovery attempt.
    */
   recover(device) {
-    this.device = device, this.timerDropped = !0, this.depth = null, this.depthWidth = 0, this.depthHeight = 0, this.offscreen = null, this.offscreenWidth = 0, this.offscreenHeight = 0, this.widthPx = 0, this.heightPx = 0, this.configured = !1, this.parked = !1, this.configure(), this.allocate();
+    this.post = void 0, this.device = device, this.timerDropped = !0, this.depth = null, this.depthWidth = 0, this.depthHeight = 0, this.offscreen = null, this.offscreenWidth = 0, this.offscreenHeight = 0, this.widthPx = 0, this.heightPx = 0, this.configured = !1, this.parked = !1, this.configure(), this.allocate();
   }
   /** Creates the depth texture for the current size; the old one is released only after the new one exists. */
   ensureDepth() {
@@ -12932,7 +14049,7 @@ var Surface = class {
       label: "mtek depth",
       size: [this.widthPx, this.heightPx],
       format: DEPTH_FORMAT,
-      usage: 16
+      usage: TEXTURE_USAGE_RENDER_ATTACHMENT
     }), previous = this.depth;
     this.depth = next, this.depthWidth = this.widthPx, this.depthHeight = this.heightPx, previous !== null && this.options.registry.release(previous);
   }
@@ -12945,11 +14062,13 @@ var Surface = class {
   render(clearColor, encode) {
     if (!this.renderable || this.depth === null)
       return this.skipped += 1, !1;
-    let { context } = this.options, { device } = this, target = this.offscreen ?? context.getCurrentTexture(), encoder = device.createCommandEncoder({ label: "mtek frame" }), timestampWrites = this.timer?.passTimestampWrites(), pass = encoder.beginRenderPass({
+    let { context } = this.options, { device } = this, output = (this.offscreen ?? context.getCurrentTexture()).createView({ format: this.offscreen !== null ? OFFSCREEN_FORMAT : this.viewFormat });
+    this.post === void 0 && (this.options.postProcessing?.length ?? 0) > 0 && (this.post = new PostProcessor(this.options.registry, this.colorFormat, this.options.postProcessing));
+    let encoder = device.createCommandEncoder({ label: "mtek frame" }), timestampWrites = this.timer?.passTimestampWrites(), pass = encoder.beginRenderPass({
       ...timestampWrites === void 0 ? {} : { timestampWrites },
       colorAttachments: [
         {
-          view: target.createView({ format: this.offscreen !== null ? OFFSCREEN_FORMAT : this.viewFormat }),
+          view: this.post?.input(this.widthPx, this.heightPx) ?? output,
           clearValue: { r: clearColor[0], g: clearColor[1], b: clearColor[2], a: 1 },
           loadOp: "clear",
           storeOp: "store"
@@ -12962,7 +14081,7 @@ var Surface = class {
         depthStoreOp: "store"
       }
     });
-    return encode?.(pass), pass.end(), timestampWrites !== void 0 && this.timer?.resolve(encoder), device.queue.submit([encoder.finish()]), timestampWrites !== void 0 && this.timer?.submitted(), this.rendered += 1, !0;
+    return encode?.(pass), pass.end(), this.post?.encode(encoder, output), timestampWrites !== void 0 && this.timer?.resolve(encoder), device.queue.submit([encoder.finish()]), timestampWrites !== void 0 && this.timer?.submitted(), this.rendered += 1, !0;
   }
   /**
    * Copies the offscreen target to a mappable buffer (`bytesPerRow` padded to 256), maps it and returns
@@ -12977,11 +14096,11 @@ var Surface = class {
     let width = this.offscreenWidth, height = this.offscreenHeight, bytesPerRow = paddedBytesPerRow(width), staging = registry.createBuffer({
       label: "mtek readback",
       size: bytesPerRow * height,
-      usage: 9
+      usage: BUFFER_USAGE_MAP_READ | BUFFER_USAGE_COPY_DST2
     });
     try {
       let encoder = device.createCommandEncoder({ label: "mtek readback" });
-      encoder.copyTextureToBuffer({ texture: offscreen }, { buffer: staging, bytesPerRow }, [width, height]), device.queue.submit([encoder.finish()]), await staging.mapAsync(1);
+      encoder.copyTextureToBuffer({ texture: offscreen }, { buffer: staging, bytesPerRow }, [width, height]), device.queue.submit([encoder.finish()]), await staging.mapAsync(MAP_MODE_READ);
       let mapped = new Uint8Array(staging.getMappedRange()), data = new Uint8Array(width * height * 4);
       for (let row = 0; row < height; row += 1)
         data.set(mapped.subarray(row * bytesPerRow, row * bytesPerRow + width * 4), row * width * 4);
@@ -12995,7 +14114,7 @@ var Surface = class {
   }
   /** Unconfigures the canvas. The textures are released by the registry's `destroyAll`. */
   dispose() {
-    this.parked = !1, this.configured && (this.configured = !1, this.options.context.unconfigure()), this.depth = null, this.offscreen = null;
+    this.post?.dispose(), this.post = void 0, this.parked = !1, this.configured && (this.configured = !1, this.options.context.unconfigure()), this.depth = null, this.offscreen = null;
   }
 };
 
@@ -13082,6 +14201,9 @@ function alwaysBlends(material) {
 var ALPHA_BLEND = {
   color: { srcFactor: "src-alpha", dstFactor: "one-minus-src-alpha", operation: "add" },
   alpha: { srcFactor: "one", dstFactor: "one-minus-src-alpha", operation: "add" }
+}, ADDITIVE_BLEND = {
+  color: { srcFactor: "src-alpha", dstFactor: "one", operation: "add" },
+  alpha: { srcFactor: "one", dstFactor: "one", operation: "add" }
 };
 function materialPipelineKey(material, colorFormat, instanced = !1) {
   return pipelineKey({
@@ -13107,7 +14229,7 @@ function pipelineDescriptor(plan, request) {
     fragment: {
       module,
       entryPoint: material.shader.fragmentEntry,
-      targets: [request.blended === !0 ? { format: colorFormat, blend: ALPHA_BLEND } : { format: colorFormat }]
+      targets: [request.blended === !0 ? { format: colorFormat, blend: request.blendMode === "additive" ? ADDITIVE_BLEND : ALPHA_BLEND } : { format: colorFormat }]
     },
     primitive: { topology: TOPOLOGY, cullMode: CULL_MODE, frontFace: FRONT_FACE },
     // Translucent draws test depth against the opaque scene but do not write it (decision 0138).
@@ -13148,7 +14270,7 @@ var PipelineCache = class {
   }
   /** Returns the cached pipeline of the request's key, or creates it inside a validation error scope. */
   async obtain(request) {
-    let key = materialPipelineKey(request.material, request.colorFormat, request.instanced === !0) + (request.blended === !0 ? "|blend" : ""), cached = this.pipelines.get(key);
+    let key = materialPipelineKey(request.material, request.colorFormat, request.instanced === !0) + (request.blended === !0 ? request.blendMode === "additive" ? "|additive" : "|blend" : ""), cached = this.pipelines.get(key);
     if (cached !== void 0) return { ok: !0, key, pipeline: cached };
     let descriptor = pipelineDescriptor(this.plan, request);
     this.device.pushErrorScope("validation");
@@ -13273,7 +14395,7 @@ var TranslucentOrder = class {
 function blendedKey(materialId, instanced) {
   return instanced ? `${materialId}#instanced` : materialId;
 }
-var BUFFER_USAGE_COPY_DST2 = 8, BUFFER_USAGE_VERTEX2 = 32, VIEW_KEY_LENGTH = 13;
+var BUFFER_USAGE_COPY_DST3 = 8, BUFFER_USAGE_VERTEX2 = 32, VIEW_KEY_LENGTH = 13;
 function fieldWriter(writers, name, layoutId) {
   let writer = writers.fields.get(name);
   if (writer === void 0) throw new Error(`internal error: the layout '${layoutId}' has no writer for '${name}'`);
@@ -13429,7 +14551,7 @@ var Renderer = class {
   /** Makes the instance buffer hold `records` records (a new buffer, zeroed, with the old one released). */
   allocateInstances(records) {
     let { registry } = this.options, old = this.instanceBuffer;
-    this.instanceBuffer = registry.createBuffer({ label: "mtek instance matrices", size: records * INSTANCE_STRIDE, usage: BUFFER_USAGE_VERTEX2 | BUFFER_USAGE_COPY_DST2 }), this.instanceRecords = records, this.instanceMirror = new Float32Array(records * INSTANCE_FLOATS), this.instanceMirrorWords = new Uint32Array(this.instanceMirror.buffer), this.batchedDraws = void 0, old !== void 0 && registry.release(old);
+    this.instanceBuffer = registry.createBuffer({ label: "mtek instance matrices", size: records * INSTANCE_STRIDE, usage: BUFFER_USAGE_VERTEX2 | BUFFER_USAGE_COPY_DST3 }), this.instanceRecords = records, this.instanceMirror = new Float32Array(records * INSTANCE_FLOATS), this.instanceMirrorWords = new Uint32Array(this.instanceMirror.buffer), this.batchedDraws = void 0, old !== void 0 && registry.release(old);
   }
   /** Grows the instance buffer to hold at least `records` records. Called before the frame's commands are encoded. */
   ensureInstances(records) {
@@ -13545,7 +14667,7 @@ var Renderer = class {
       if (visible !== !0 || entity.mesh === null || entity.instance === null || objectSlot === void 0 || this.failedMaterials.has(entity.instance.material.id)) return;
       let pipeline = pipelines.get(entity.instance.material.id);
       if (pipeline === void 0) throw new Error(`internal error: no pipeline for material '${entity.instance.material.id}'`);
-      let skin = world.skinPlayer(entity.index), gpuMesh = meshes.forEntity(entity.mesh.id, entity.index, skin), blended = materials.isTranslucent(entity.instance.index) || alwaysBlends(entity.instance.material) ? this.blendedPipeline(entity.instance.material) : void 0;
+      let skin = world.skinPlayer(entity.index), gpuMesh = meshes.forEntity(entity.mesh.id, entity.index, skin), blended = materials.isTranslucent(entity.instance.index) || alwaysBlends(entity.instance.material) || this.options.additiveMaterials?.has(entity.instance.material.id) === !0 ? this.blendedPipeline(entity.instance.material) : void 0;
       items.push({
         pipelineKey: blended === void 0 ? pipeline.key : TRANSLUCENT_KEY_PREFIX + blended.key,
         instance: materials.blockOf(entity.instance.index),
@@ -13575,9 +14697,15 @@ var Renderer = class {
     let listed = this.drawList();
     for (let draw of listed) {
       let skin = this.options.world.skinPlayer(draw.entity);
+      skin !== void 0 && (this.options.meshes.updateSkinBounds(draw.entity, skin) && (this.cullDirty = !0), worldBoundingSphere(this.options.world.worldMatrix(draw.entity), 1, this.sphere, draw.gpuMesh.boundingCenter), this.sphereCentres[draw.entity * 3] = this.sphere.x, this.sphereCentres[draw.entity * 3 + 1] = this.sphere.y, this.sphereCentres[draw.entity * 3 + 2] = this.sphere.z, this.sphereScales[draw.entity] = skinWorldScale(this.options.world.worldMatrix(draw.entity)));
+    }
+    let culled = this.cull(listed, viewProj);
+    for (let draw of culled) {
+      let skin = this.options.world.skinPlayer(draw.entity);
       skin !== void 0 && this.options.meshes.updateSkin(draw.entity, skin);
     }
-    let culled = this.cull(listed, viewProj), draws = this.translucentOrder.order(culled, this.lastView, this.sphereCentres);
+    this.options.meshes.flushSkins();
+    let draws = this.translucentOrder.order(culled, this.lastView, this.sphereCentres);
     draws !== culled && (this.drawnUnchanged = this.translucentOrder.unchanged);
     let instanced = this.groupDraws(draws);
     this.writeIndividualObjectBlocks(draws), this.objectArena.flush(device.queue), this.prepareParticles();
@@ -13803,7 +14931,7 @@ var Renderer = class {
       if (draw.points.length === 0) continue;
       let material = this.materialsById.get(draw.materialId);
       if (material === void 0) continue;
-      let blended = materials.isTranslucent(draw.instanceIndex) || alwaysBlends(material) ? this.blendedPipeline(material, !0) : void 0, pipeline = blended?.pipeline ?? this.options.pipelines.get(draw.materialId)?.instanced;
+      let blended = materials.isTranslucent(draw.instanceIndex) || alwaysBlends(material) || this.options.additiveMaterials?.has(material.id) === !0 ? this.blendedPipeline(material, !0) : void 0, pipeline = blended?.pipeline ?? this.options.pipelines.get(draw.materialId)?.instanced;
       if (pipeline === void 0) continue;
       let mesh;
       try {
@@ -13847,7 +14975,7 @@ var Renderer = class {
     this.particleBatchCount = live, written !== 0 && (this.particleBuffer ??= registry.createBuffer({
       label: "mtek particle billboards",
       size: PARTICLE_DRAW_CAP * INSTANCE_STRIDE,
-      usage: BUFFER_USAGE_VERTEX2 | BUFFER_USAGE_COPY_DST2
+      usage: BUFFER_USAGE_VERTEX2 | BUFFER_USAGE_COPY_DST3
     }), registry.writeBuffer(device.queue, this.particleBuffer, 0, mirror.buffer, 0, written * INSTANCE_STRIDE));
   }
   /** Encodes the calls `prepareParticles` made ready. Binds groups 0 and 2 itself: the caller forgets its pipeline, group 1 and mesh. */
@@ -13884,9 +15012,9 @@ function missingModule(material, phase) {
   };
 }
 async function startScene(options) {
-  let { manifest, structure, program, device, registry, surface, modules, report, services } = options;
+  let { manifest, structure, program, device, registry, surface, modules, report, services } = options, additive = new Set(options.rendering?.additiveMaterials ?? []), blendMode = (material) => additive.has(material.id) ? "additive" : "alpha";
   options.assertActive?.();
-  let generation = registry.generation, plan = options.bindingPlan ?? new BindingPlan(registry, structure.frameLayout, structure.objectLayout), materials = new MaterialStore(device, registry, plan, structure, program.writers, options.textures, options.assets?.images), meshes, renderer, committed = !1;
+  let generation = registry.generation, plan = options.bindingPlan ?? new BindingPlan(registry, structure.frameLayout, structure.objectLayout), mipmaps = device.createCommandEncoder !== void 0 && device.createComputePipeline !== void 0 && [...options.assets?.images.values() ?? []].some((image) => image.width > 1 || image.height > 1) ? new MipmapGenerator({ queue: device.queue, createCommandEncoder: device.createCommandEncoder.bind(device) }, registry) : void 0, materials = new MaterialStore(device, registry, plan, structure, program.writers, options.textures, options.assets?.images, mipmaps), meshes, renderer, committed = !1;
   try {
     let { recover } = options, world, bindings;
     if (recover === void 0) {
@@ -13903,7 +15031,7 @@ async function startScene(options) {
       }), world = fresh, bindings = freshBindings;
     } else
       ({ world, bindings } = recover), world.rebindParams(materials);
-    options.assertActive?.(), materials.shareIdentical(), meshes = new MeshStore(registry, device.queue, void 0, device.limits.maxBufferSize), meshes.upload(structure.meshes, options.assets?.files);
+    options.assertActive?.(), materials.shareIdentical(), meshes = new MeshStore(registry, device.queue, void 0, device.limits.maxBufferSize, structure.meshes.some((m) => m.descriptor.kind === "asset" && m.descriptor.skin !== void 0) ? device : void 0), meshes.upload(structure.meshes, options.assets?.files);
     let pipelines = options.pipelineCache ?? new PipelineCache(device, registry, plan, manifest), phase = recover === void 0 ? void 0 : "runtime:device", instanced = new Set(
       options.instancing === !1 ? [] : instancingCandidates(
         structure,
@@ -13945,22 +15073,22 @@ async function startScene(options) {
     }), diagnostics.length > 0)
       return { ok: !1, diagnostics };
     let blendedSeed = /* @__PURE__ */ new Map(), wanted = /* @__PURE__ */ new Map(), want = (material, instancedVariant) => {
-      !canBlend(material) || modules.get(material.shader.hash) === void 0 || !byMaterial.has(material.id) || instancedVariant && material.shader.instancedVertexEntry === void 0 || wanted.set(blendedKey(material.id, instancedVariant), { material, instanced: instancedVariant });
+      !canBlend(material) && !additive.has(material.id) || modules.get(material.shader.hash) === void 0 || !byMaterial.has(material.id) || instancedVariant && material.shader.instancedVertexEntry === void 0 || wanted.set(blendedKey(material.id, instancedVariant), { material, instanced: instancedVariant });
     };
     for (let entity of structure.entities) {
       if (entity.mesh === null || entity.instance === null) continue;
       let { material } = entity.instance;
-      !alwaysBlends(material) && !materials.isTranslucent(entity.instance.index) || (want(material, !1), entity.particles !== void 0 && want(material, !0));
+      !alwaysBlends(material) && !materials.isTranslucent(entity.instance.index) && !additive.has(material.id) || (want(material, !1), entity.particles !== void 0 && want(material, !0));
     }
     for (let prefab of structure.prefabs) {
       let material = prefab.material?.material;
-      prefab.mesh === null || material === void 0 || !alwaysBlends(material) || (want(material, !1), prefab.particles !== void 0 && want(material, !0));
+      prefab.mesh === null || material === void 0 || !alwaysBlends(material) && !additive.has(material.id) || (want(material, !1), prefab.particles !== void 0 && want(material, !0));
     }
     await Promise.all(
       [...wanted].map(async ([id, { material, instanced: instancedVariant }]) => {
         let module = modules.get(material.shader.hash);
         if (module === void 0) return;
-        let made = await pipelines.obtain({ material, module, colorFormat: surface.colorFormat, blended: !0, ...instancedVariant ? { instanced: !0 } : {} });
+        let made = await pipelines.obtain({ material, module, colorFormat: surface.colorFormat, blended: !0, blendMode: blendMode(material), ...instancedVariant ? { instanced: !0 } : {} });
         made.ok && blendedSeed.set(id, { key: made.key, pipeline: made.pipeline });
       })
     ), options.assertActive?.(), world.phase = "runtime:update", renderer = new Renderer({
@@ -13976,11 +15104,12 @@ async function startScene(options) {
       meshes,
       pipelines: byMaterial,
       blendedSeed,
+      additiveMaterials: additive,
       // The translucent variant (decision 0138) of a material not known to blend at startup is made the first time a draw needs it.
       blend: async (material, instancedVariant) => {
         let module = modules.get(material.shader.hash);
-        if (module === void 0 || !canBlend(material) || instancedVariant && material.shader.instancedVertexEntry === void 0) return;
-        let made = await pipelines.obtain({ material, module, colorFormat: surface.colorFormat, blended: !0, ...instancedVariant ? { instanced: !0 } : {} });
+        if (module === void 0 || !canBlend(material) && !additive.has(material.id) || instancedVariant && material.shader.instancedVertexEntry === void 0) return;
+        let made = await pipelines.obtain({ material, module, colorFormat: surface.colorFormat, blended: !0, blendMode: blendMode(material), ...instancedVariant ? { instanced: !0 } : {} });
         if (made.ok) return { key: made.key, pipeline: made.pipeline };
         report(made.diagnostic);
       },
@@ -15560,6 +16689,15 @@ var MountedApp = class {
     ), this.saves.restore(persistentEntries(manifest.scene.state), deps.scene.world.sceneState), deps.game !== void 0 && (deps.game.target = this.hooks), this.scheduler.start();
   }
   deps;
+  extensions;
+  installExtensions(extensions, services = {}) {
+    let access = sceneAccess(() => this.deps.scene.world, () => {
+      if (this.current === "disposed" || this.current === "failed") throw new Error(`The application is ${this.current}`);
+    });
+    this.extensions = new ExtensionHost({ apiVersion: 1, ...access, service: (name) => services[name] }, (id, error) => {
+      this.report(makeRuntimeDiagnostic("E8050", { phase: "runtime:update", message: `Extension '${id}' failed and was disabled: ${errorText6(error)}` }));
+    }), this.extensions.install(extensions);
+  }
   debug;
   seed;
   current = "running";
@@ -15909,6 +17047,7 @@ var MountedApp = class {
           physicsModule = { url: loadedPhysics.url, backend: loadedPhysics.backend };
         }
         assertActive(), started = await startScene({
+          ...this.deps.rendering === void 0 ? {} : { rendering: this.deps.rendering },
           assertActive,
           manifest,
           structure: structure.structure,
@@ -15992,7 +17131,7 @@ var MountedApp = class {
    */
   dispose() {
     if (this.current === "disposed") return;
-    this.current = "disposed", this.deps.game !== void 0 && (this.deps.game.target = INERT_GAME), this.hostOutputs.dispose(), this.pendingSwap !== void 0 && (this.pendingSwap.scene.materials.dispose(), this.pendingSwap.scene.meshes.dispose(), this.pendingSwap.scene.renderer.dispose(), this.pendingSwap = void 0);
+    this.current = "disposed", this.extensions?.dispose(), this.deps.game !== void 0 && (this.deps.game.target = INERT_GAME), this.hostOutputs.dispose(), this.pendingSwap !== void 0 && (this.pendingSwap.scene.materials.dispose(), this.pendingSwap.scene.meshes.dispose(), this.pendingSwap.scene.renderer.dispose(), this.pendingSwap = void 0);
     let { device, registry, surface, overlay } = this.deps;
     this.deps.physics?.dispose(), this.deps.services.audio?.dispose?.(), this.deps.services.hud?.dispose?.(), this.scheduler.stop(), this.clearRecoveryTimer(), this.resizeObserver?.disconnect(), surface.dispose(), overlay?.remove(), this.deps.devTools?.dispose(), registry.destroyAll(), device.onuncapturederror = null, device.destroy();
   }
@@ -16167,7 +17306,7 @@ var MountedApp = class {
       }
     }), { device } = acquired, committed = !1;
     try {
-      this.ensureRecovering(), registry.recycle(device), surface.recover(device);
+      this.ensureRecovering(), registry.recycle(device), surface.recover(device), await surface.preparePostProcessing();
       let manifest = this.deps.manifest, structure = resolveStructure(manifest);
       if (!structure.ok) throw new Error(structure.diagnostics.map((diagnostic2) => diagnostic2.message).join(" "));
       let checked = checkProgram(this.deps.program, manifest);
@@ -16194,6 +17333,7 @@ var MountedApp = class {
         if (decoded.diagnostics.length > 0) throw new Error(decoded.diagnostics.map((diagnostic2) => diagnostic2.message).join(" "));
         this.ensureRecovering();
         let { world, bindings } = this.deps.scene, started = await startScene({
+          ...this.deps.rendering === void 0 ? {} : { rendering: this.deps.rendering },
           manifest,
           structure: structure.structure,
           program: checked.program,
@@ -16277,7 +17417,7 @@ var MountedApp = class {
       phase1_input: () => {
         this.applyPendingSwap(), this.framePhase = "runtime:input", this.frameStartMs = now();
         let { world } = this.deps.scene;
-        world.resetBudget(), world.setFrame(this.scheduler.activeTime, this.scheduler.delta, this.scheduler.frameIndex), this.hostInputs.applyQueued({ state: world.sceneState }), this.deps.services.hud?.beginFrame?.(), this.deps.services.gamepads?.poll(), this.behaviors.dispatchInput(this.input.deliver());
+        world.resetBudget(), world.setFrame(this.scheduler.activeTime, this.scheduler.delta, this.scheduler.frameIndex), this.extensions?.frame("beforeFrame", this.scheduler.delta), this.hostInputs.applyQueued({ state: world.sceneState }), this.deps.services.hud?.beginFrame?.(), this.deps.services.gamepads?.poll(), this.behaviors.dispatchInput(this.input.deliver());
       },
       phase2_tick: (step2) => {
         this.framePhase = "runtime:tick", this.deps.scene.world.dynamic.flush();
@@ -16300,7 +17440,7 @@ var MountedApp = class {
         this.deps.scene.world.propagate();
       },
       phase7_render: () => {
-        this.renderStartMs = now(), this.deps.scene.renderer.frame(), this.deps.services.hud?.present?.();
+        this.renderStartMs = now(), this.deps.scene.renderer.frame(), this.deps.services.hud?.present?.(), this.extensions?.frame("afterFrame", this.scheduler.delta);
         let end = now();
         this.cpuUpdateMs = this.renderStartMs - this.frameStartMs, this.renderPrepMs = end - this.renderStartMs, this.frameTimeMs = end - this.frameStartMs, this.deps.devTools?.afterFrame(this.frameTimeMs, () => this.counters()), this.hostOutputs.publish(this.deps.scene.world.sceneState), this.saves.autosave(persistentEntries(this.deps.manifest.scene.state), this.deps.scene.world.sceneState);
       }
@@ -16315,6 +17455,7 @@ var MountedApp = class {
     if (pending.physicsModule !== void 0) {
       try {
         physics = new PhysicsSystem({
+          ...this.deps.continuousCollision === void 0 ? {} : { continuousCollision: this.deps.continuousCollision },
           backend: pending.physicsModule.backend,
           manifest: pending.manifest,
           world: pending.scene.world,
@@ -17054,7 +18195,10 @@ function mountMtek(canvas, program, options) {
   return mountMtekWith(defaultEnvironment(), canvas, program, options);
 }
 async function mountMtekWith(environment, canvas, program, options = {}) {
-  validateOptions(options), FailureOverlay.removeFor(canvas);
+  validateOptions(options), validateExtensions(options.extensions ?? []);
+  let effects = options.rendering?.postProcessing ?? [];
+  if (new Set(effects.map((e) => e.id)).size !== effects.length || effects.some((e) => e.id === "" || typeof e.wgsl != "string")) throw new RangeError("Post effects need unique nonempty IDs and WGSL source");
+  FailureOverlay.removeFor(canvas);
   let sink = new DiagnosticSink(options.onDiagnostic), overlay = options.failureDisplay === "none" ? null : new FailureOverlay(canvas), acquired, registry, surface, app, images, physics, audio, hud, early = {}, allocationFailures = [], earlyReports = [];
   try {
     if (program.abi !== 1)
@@ -17119,6 +18263,7 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
       ]);
     let dprOption = options.devicePixelRatio ?? "auto", timer = options.devOverlay === !0 && hasTimestampQuery(device) ? new GpuTimer(device, registry) : null;
     surface = new Surface({
+      ...options.rendering?.postProcessing === void 0 ? {} : { postProcessing: options.rendering.postProcessing },
       timer: timer ?? void 0,
       canvas,
       context,
@@ -17142,6 +18287,7 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
     } catch (error) {
       throw allocationFailures.length === 0 ? error : mountError(allocationFailures);
     }
+    await surface.preparePostProcessing();
     let fetchShaderFile = rememberingFetch(environment), [shaders, loadedAssets, loadedPhysics] = await Promise.all([
       loadStartupShaders({
         manifest,
@@ -17224,6 +18370,7 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
     }, started;
     try {
       started = await startScene({
+        ...options.rendering === void 0 ? {} : { rendering: options.rendering },
         manifest,
         structure: structure.structure,
         program: checked.program,
@@ -17246,6 +18393,7 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
     if (listening.world = started.scene.world, audio.hasSounds && installUnlock(), loadedPhysics?.ok === !0)
       try {
         physics = new PhysicsSystem({
+          ...options.physics?.continuousCollision === void 0 ? {} : { continuousCollision: options.physics.continuousCollision },
           backend: loadedPhysics.backend,
           manifest,
           world: started.scene.world,
@@ -17280,6 +18428,8 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
       timer
     }) : null;
     app = new MountedApp({
+      ...options.physics?.continuousCollision === void 0 ? {} : { continuousCollision: options.physics.continuousCollision },
+      ...options.rendering === void 0 ? {} : { rendering: options.rendering },
       devTools,
       manifest,
       device,
@@ -17316,7 +18466,7 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
       physicsModule: loadedPhysics?.ok === !0 ? { url: loadedPhysics.url, backend: loadedPhysics.backend } : void 0,
       modules: new Map(shaders.modules),
       program
-    });
+    }), app.installExtensions(options.extensions ?? [], options.hostServices);
     for (let name of Object.keys(options.inputs ?? {}).sort()) {
       let value = options.inputs[name], result = app.setInput(name, value);
       result.ok || sink.report(
@@ -17329,6 +18479,8 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
     for (let diagnostic2 of earlyReports) app.report(diagnostic2);
     return app;
   } catch (error) {
+    if (app !== void 0)
+      throw app.dispose(), error;
     if (images !== void 0 && closeImages(images), audio?.dispose(), hud?.dispose(), physics?.dispose(), surface?.dispose(), registry?.destroyAll(), acquired !== void 0 && (acquired.device.onuncapturederror = null, acquired.device.destroy()), error instanceof MtekMountError) {
       for (let diagnostic2 of error.diagnostics) sink.report(diagnostic2);
       overlay?.show(error.diagnostics);
@@ -17921,6 +19073,9 @@ function fmt(value, type, precision) {
 // src/index.ts
 var RUNTIME_ABI = 1, RUNTIME_VERSION = "0.1.0-dev";
 export {
+  AnimationController,
+  AssetPool,
+  EXTENSION_API_VERSION,
   I32_MAX,
   I32_MIN,
   MAX_SCHEMA_FAILURES,
@@ -17951,8 +19106,10 @@ export {
   color,
   copy,
   cos,
+  createAnimationController,
   crgb,
   csrgb,
+  deformSkin,
   degrees,
   distance,
   easeInCubic,
@@ -18019,6 +19176,7 @@ export {
   quat,
   radians,
   refEq,
+  retargetSkin,
   round,
   roundUp,
   saturate,

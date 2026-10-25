@@ -1,0 +1,41 @@
+scene Demo {
+    clear_color: #202020;
+
+    state running: bool = false;
+    state runner_x: f32 = -5.0;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic {
+            height: 12.8;
+            near: 0.1;
+            far: 1000.0;
+        };
+    }
+
+    entity Track {
+        mesh: Box { size: vec3(12.0, 0.2, 0.2) };
+        material: Unlit { color: #404040 };
+        position: vec3(0.0, -1.0, 0.0);
+    }
+
+    entity Runner {
+        mesh: Box { size: vec3(1.0, 1.0, 0.5) };
+        material: Unlit { color: #f97316 };
+        position: bind(vec3(runner_x, 0.0, 0.0));
+    }
+
+    update(dt: f32) {
+        if running {
+            runner_x = runner_x + 4.0 * dt;
+            if runner_x >= 6.0 {
+                runner_x = runner_x - 12.0;
+            }
+        }
+    }
+
+    on key_down(Key.Space) {
+        running = !running;
+    }
+}

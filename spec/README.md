@@ -29,7 +29,7 @@ which its subject was delivered.
 | `browser-support.md` | Browser Support: WebGPU Only, the Browsers It Covers, and the Unsupported-Browser Screen | small-game extension (decision 0132) |
 | `tooling.md` | Developer Tooling: CLI, Project File, Dev Server, Formatter, LSP | M0 (`--version`), M1 onward |
 | `ai-and-benchmarks.md` | AI Workflow, Untrusted Previews and Benchmarks | M0 (initial benchmark tasks), M6 |
-| `decisions/` | Decision records 0001–0192 (indexed in `README.md`), the sources list `sources.md` | M0 |
+| `decisions/` | Decision records 0001–0193 (indexed in `README.md`), the sources list `sources.md` | M0 |
 
 The "First needed" column is a planning aid taken from the milestone markers inside the documents;
 the documents themselves are authoritative.

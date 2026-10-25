@@ -203,6 +203,10 @@ export interface MtekApp<I = Record<string, unknown>, O = Record<string, unknown
 }
 
 export interface MtekMountOptions<I = Record<string, unknown>> {
+  physics?:{readonly continuousCollision?:boolean};
+  rendering?:MtekRenderingOptions;
+  extensions?: readonly MtekExtension[];
+  hostServices?: Readonly<Record<string,unknown>>;
   /** Initial host inputs (validated like setInput). */
   inputs?: Partial<I>;
   /** Every runtime diagnostic, including warnings. */
@@ -235,3 +239,81 @@ export declare function mountMtek<I = Record<string, unknown>, O = Record<string
   program: MtekProgram<I, O>,
   options?: MtekMountOptions<I>,
 ): Promise<MtekApp<I, O>>;
+
+export declare const EXTENSION_API_VERSION = 1;
+export interface PostEffect {readonly id:string;readonly wgsl:string}
+export interface MtekRenderingOptions {readonly additiveMaterials?:readonly string[];readonly postProcessing?:readonly PostEffect[]}
+export interface AnimationVector { readonly x:number;readonly y:number;readonly z:number }
+export interface AnimationQuaternion extends AnimationVector { readonly w:number }
+export interface SceneTransform {
+  readonly id:string;readonly name:string;readonly position:AnimationVector;
+  readonly rotation:AnimationQuaternion;readonly scale:AnimationVector;readonly visible:boolean;
+}
+export interface TransformUpdate {readonly id:string;readonly position?:AnimationVector;readonly rotation?:AnimationQuaternion;readonly scale?:AnimationVector}
+export interface ExtensionContext {
+  readonly apiVersion:1;
+  readTransforms():readonly SceneTransform[];
+  writeTransforms(updates:readonly TransformUpdate[]):void;
+  animation(id:string):AnimationPlayer|undefined;
+  service<T>(name:string):T|undefined;
+}
+export interface MtekExtension {
+  readonly id:string;readonly apiVersion:1;
+  setup(context:ExtensionContext):void|(()=>void);
+  beforeFrame?(context:ExtensionContext,delta:number):void;
+  afterFrame?(context:ExtensionContext,delta:number):void;
+}
+export interface MtekSkin {
+  readonly meshNode:number;
+  readonly nodes:readonly {readonly name:string;readonly parent:number;readonly translation:readonly number[];readonly rotation:readonly number[];readonly scale:readonly number[]}[];
+  readonly joints:readonly number[];readonly inverseBind:readonly (readonly number[])[];
+  readonly indices:readonly (readonly number[])[];readonly weights:readonly (readonly number[])[];
+  readonly clips:readonly {readonly name:string;readonly duration:number;readonly channels:readonly {readonly node:number;readonly path:"translation"|"rotation"|"scale";readonly interpolation:"linear"|"step";readonly times:readonly number[];readonly values:readonly number[]}[]}[];
+}
+export interface AnimationLayer {
+  readonly clip:string;readonly weight:number;readonly mask?:Readonly<Record<string,number>>;
+  readonly additive?:boolean;readonly speed?:number;readonly looping?:boolean;
+}
+export interface IKConstraint {readonly chain:readonly string[];readonly target:readonly [number,number,number];readonly weight?:number;readonly iterations?:number;readonly tolerance?:number}
+export interface AnimationBone {
+  readonly position:{set(x:number,y:number,z:number):unknown};
+  readonly quaternion:{set(x:number,y:number,z:number,w:number):unknown};
+  readonly scale:{set(x:number,y:number,z:number):unknown};
+}
+export interface AnimationControllerOptions {readonly clip?:string;readonly bones?:Readonly<Record<string,AnimationBone>>;readonly updateInterval?:number}
+export interface AnimationClock {
+  play(slot:number,looping:boolean,speed:number):boolean;pause(slot:number):boolean;resume(slot:number):boolean;
+  seek(slot:number,time:number):boolean;fade(slot:number,weight:number,duration:number):boolean;
+  time(slot:number):number;duration(slot:number):number;weight(slot:number):number;playing(slot:number):boolean;finished(slot:number):boolean;crossed(slot:number,marker:number):boolean;
+}
+export interface AnimationPlayer {
+  readonly skin:MtekSkin;readonly palette:Float32Array;readonly pose:Float64Array;readonly revision:number;
+  readonly clock:AnimationClock;
+  readonly layers:{set(id:string,options:AnimationLayer):void;remove(id:string):void;clear():void;seek(id:string,seconds:number):boolean;crossed(id:string,marker:number):boolean};
+  readonly ik:{set(id:string,options:IKConstraint):void;remove(id:string):void;clear():void};
+  transition(name:string,seconds:number,looping:boolean,speed:number):boolean;
+  play(looping:boolean,speed:number):boolean;advance(dt:number,evaluate?:boolean):void;evaluate():void;
+  jointPosition(name:string):AnimationVector;jointRotation(name:string):AnimationQuaternion;
+  setProceduralOverride(override:((pose:Float64Array)=>void)|undefined):void;
+  setRootMotion(node:string|undefined):void;consumeRootMotion():AnimationVector;
+}
+export declare class AnimationController {
+  readonly apiVersion=1;readonly player:AnimationPlayer;
+  constructor(skin:MtekSkin,options?:AnimationControllerOptions);
+  setUpdateInterval(seconds:number):void;setLayer(id:string,layer:AnimationLayer):void;setIK(id:string,constraint:IKConstraint):void;
+  update(dt:number,force?:boolean):boolean;dispose():void;
+}
+export declare function createAnimationController(skin:MtekSkin,options?:AnimationControllerOptions):AnimationController;
+export declare function retargetSkin(source:MtekSkin,target:MtekSkin,mapping:Readonly<Record<string,string>>,translationScale?:number):MtekSkin;
+export declare function deformSkin(skin:MtekSkin,palette:Float32Array,positions:Float32Array,normals:Float32Array|undefined,outPositions:Float32Array,outNormals:Float32Array):void;
+export interface AssetDescriptor {readonly url:string;readonly bytes?:number;readonly sha256?:string}
+export interface AssetProgress {readonly loaded:number;readonly total:number|undefined}
+export interface AssetLoader<T> {readonly id:string;readonly apiVersion:1;decode(bytes:Uint8Array,signal:AbortSignal):Promise<T>|T;dispose?(value:T):void}
+export interface AssetLease<T> {readonly value:T;readonly bytes:number;release():void}
+export interface AssetRequestOptions {readonly signal?:AbortSignal;readonly onProgress?:(progress:AssetProgress)=>void}
+export interface AssetPoolOptions {readonly baseUrl:URL;readonly allowedOrigins?:readonly string[];readonly maxAssetBytes?:number;readonly fetch?:typeof fetch}
+export declare class AssetPool {
+  constructor(options:AssetPoolOptions);
+  load<T>(asset:AssetDescriptor,loader:AssetLoader<T>,options?:AssetRequestOptions):Promise<AssetLease<T>>;
+  snapshot():{resources:number;pending:number;bytes:number;leases:number};dispose():void;
+}

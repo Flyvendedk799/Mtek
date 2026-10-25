@@ -1,0 +1,43 @@
+scene Demo {
+  clear_color: #1e293b;
+  camera Main {
+    position: vec3(0.0, 0.0, 10.0);
+    target: vec3(0.0, 0.0, 0.0);
+    projection: Perspective {
+      fov_y: 0.9;
+      near: 4.0;
+      far: 12.0;
+    };
+  }
+  entity Mid {
+    position: vec3(0.0, 0.0, 0.0);
+    mesh: Box { size: vec3(2.0, 2.0, 2.0); };
+    material: Unlit { color: #ef4444; };
+  }
+  entity Slab {
+    position: vec3(-2.5, 0.0, 5.5);
+    mesh: Box { size: vec3(2.0, 2.0, 2.0); };
+    material: Unlit { color: #22c55e; };
+  }
+  entity Far {
+    position: vec3(3.2, 0.0, -4.0);
+    mesh: Box { size: vec3(3.0, 3.0, 3.0); };
+    material: Unlit { color: #3b82f6; };
+  }
+  entity Behind {
+    position: vec3(0.0, 0.0, 14.0);
+    mesh: Box { size: vec3(2.0, 2.0, 2.0); };
+    material: Unlit { color: #ec4899; };
+  }
+  entity Ghost {
+    position: vec3(3.0, 0.0, 2.0);
+    visible: false;
+    mesh: Box { size: vec3(2.0, 2.0, 2.0); };
+    material: Unlit { color: #facc15; };
+  }
+  entity Rim {
+    position: vec3(3.2, -2.2, 0.0);
+    mesh: Box { size: vec3(2.0, 2.0, 5.0); };
+    material: Unlit { color: #a855f7; };
+  }
+}

@@ -1,0 +1,52 @@
+fn lamp_color(is_on: bool) -> color {
+    let off_color = #3a3a3a;
+    let on_color = #ffd24a;
+    if is_on {
+        return on_color;
+    } else {
+        return off_color;
+    }
+}
+
+scene Demo {
+    state lamp_a_on: bool = false;
+    state lamp_b_on: bool = false;
+
+    clear_color: #202020;
+
+    camera Main {
+        position: vec3(0.0, 0.0, 10.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 12.8 };
+    }
+
+    entity LampA {
+        position: vec3(-3.0, 0.0, 0.0);
+        mesh: Box { size: vec3(2.0, 2.0, 0.5) };
+        material: Unlit { color: bind(lamp_color(lamp_a_on)) };
+    }
+
+    entity LampB {
+        position: vec3(3.0, 0.0, 0.0);
+        mesh: Box { size: vec3(2.0, 2.0, 0.5) };
+        material: Unlit { color: bind(lamp_color(lamp_b_on)) };
+    }
+
+    on key_down(Key.A) {
+        lamp_a_on = !lamp_a_on;
+    }
+
+    on key_down(Key.B) {
+        lamp_b_on = !lamp_b_on;
+    }
+
+    on key_down(Key.Space) {
+        lamp_a_on = !lamp_a_on;
+        lamp_b_on = !lamp_b_on;
+    }
+
+    on key_down(Key.Enter) {
+        lamp_a_on = false;
+        lamp_b_on = false;
+    }
+}
