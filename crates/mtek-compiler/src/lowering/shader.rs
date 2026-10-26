@@ -46,8 +46,10 @@
 //!
 //! A typed IR node this lowering cannot represent is a compiler defect: `E9999`.
 
+mod compute;
 mod helpers;
 mod types;
+pub use compute::{compute_dispatch_layout, lower_compute};
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -97,7 +99,7 @@ pub fn lower_material(
     material: &MaterialItem,
 ) -> Result<MaterialShader, Vec<Diagnostic>> {
     let symbol = material.symbol.as_str();
-    let description = ShaderLowering::new(program, material)
+    let description = ShaderLowering::new(program, ShaderOwner::Material(material))
         .description()
         .map_err(|defect| internal(symbol, defect))?;
     build_standard_stage(&description)
@@ -106,10 +108,37 @@ pub fn lower_material(
 
 /// The lowering of one material.
 struct ShaderLowering<'p> {
-    material: &'p MaterialItem,
+    owner: ShaderOwner<'p>,
     functions: BTreeMap<&'p str, &'p ir::Function>,
     types: TypeMapper<'p>,
     helpers: BTreeSet<Helper>,
+}
+
+#[derive(Clone, Copy)]
+enum ShaderOwner<'p> {
+    Material(&'p MaterialItem),
+    Compute(&'p ir::ComputeItem),
+}
+
+impl<'p> ShaderOwner<'p> {
+    fn span(self) -> Span {
+        match self {
+            Self::Material(item) => item.span,
+            Self::Compute(item) => item.span,
+        }
+    }
+    fn symbol(self) -> &'p str {
+        match self {
+            Self::Material(item) => item.symbol.as_str(),
+            Self::Compute(item) => item.symbol.as_str(),
+        }
+    }
+    fn layout(self) -> Option<&'p crate::layout::LayoutRecord> {
+        match self {
+            Self::Material(item) => item.layout.as_ref(),
+            Self::Compute(item) => item.layout.as_ref(),
+        }
+    }
 }
 
 /// What one function body needs: its locals and the calls it makes.
@@ -120,7 +149,7 @@ struct Body<'p> {
 }
 
 impl<'p> ShaderLowering<'p> {
-    fn new(program: &'p Program, material: &'p MaterialItem) -> ShaderLowering<'p> {
+    fn new(program: &'p Program, owner: ShaderOwner<'p>) -> ShaderLowering<'p> {
         let functions = program
             .modules
             .iter()
@@ -131,19 +160,21 @@ impl<'p> ShaderLowering<'p> {
             })
             .collect();
         ShaderLowering {
-            material,
+            owner,
             functions,
-            types: TypeMapper::new(program, material.span),
+            types: TypeMapper::new(program, owner.span()),
             helpers: BTreeSet::new(),
         }
     }
 
     fn span(&self) -> Span {
-        self.material.span
+        self.owner.span()
     }
 
     fn description(mut self) -> Result<MaterialDescription, Defect> {
-        let material = self.material;
+        let ShaderOwner::Material(material) = self.owner else {
+            return Err("material lowering of compute".into());
+        };
         let stage = &material.fragment;
         let mut body = Body {
             locals: &stage.locals,
@@ -218,52 +249,7 @@ impl<'p> ShaderLowering<'p> {
             None
         };
 
-        // Every function the stage reaches, lowered once.
-        let mut lowered: BTreeMap<String, (Function, Vec<String>)> = BTreeMap::new();
-        let mut pending: Vec<String> = body.calls.iter().rev().cloned().collect();
-        while let Some(symbol) = pending.pop() {
-            if lowered.contains_key(&symbol) {
-                continue;
-            }
-            let (function, calls) = self.function(&symbol)?;
-            pending.extend(calls.iter().rev().cloned());
-            lowered.insert(symbol, (function, calls));
-        }
-        // Callees before callers: a depth-first post-order over the calls, with an
-        // explicit stack.
-        let mut order = Vec::with_capacity(lowered.len());
-        let mut visited = BTreeSet::new();
-        for root in &body.calls {
-            if !visited.insert(root.clone()) {
-                continue;
-            }
-            let mut stack: Vec<(&str, usize)> = vec![(root.as_str(), 0)];
-            while let Some((symbol, next)) = stack.pop() {
-                let calls = lowered
-                    .get(symbol)
-                    .map(|(_, calls)| calls.as_slice())
-                    .unwrap_or(&[]);
-                match calls.get(next) {
-                    Some(callee) => {
-                        stack.push((symbol, next + 1));
-                        if visited.insert(callee.clone()) {
-                            stack.push((callee.as_str(), 0));
-                        }
-                    }
-                    None => order.push(symbol.to_owned()),
-                }
-            }
-        }
-        let mut functions: Vec<Function> = self
-            .helpers
-            .iter()
-            .map(|helper| helper.function(material.span, material.symbol.as_str()))
-            .collect();
-        for symbol in order {
-            if let Some((function, _)) = lowered.remove(&symbol) {
-                functions.push(function);
-            }
-        }
+        let functions = self.reachable_functions(&body.calls)?;
 
         let lighting = self.helpers.contains(&Helper::LightingPbr)
             || self.helpers.contains(&Helper::LightingPbrMapped);
@@ -297,6 +283,57 @@ impl<'p> ShaderLowering<'p> {
             structs,
             functions,
         })
+    }
+
+    /// Every reachable function once, with callees before callers.
+    fn reachable_functions(&mut self, roots: &[String]) -> Result<Vec<Function>, Defect> {
+        let mut lowered: BTreeMap<String, (Function, Vec<String>)> = BTreeMap::new();
+        let mut pending: Vec<String> = roots.iter().rev().cloned().collect();
+        while let Some(symbol) = pending.pop() {
+            if lowered.contains_key(&symbol) {
+                continue;
+            }
+            let (function, calls) = self.function(&symbol)?;
+            pending.extend(calls.iter().rev().cloned());
+            lowered.insert(symbol, (function, calls));
+        }
+        // Callees before callers: a depth-first post-order over the calls, with an
+        // explicit stack.
+        let mut order = Vec::with_capacity(lowered.len());
+        let mut visited = BTreeSet::new();
+        for root in roots {
+            if !visited.insert(root.clone()) {
+                continue;
+            }
+            let mut stack: Vec<(&str, usize)> = vec![(root.as_str(), 0)];
+            while let Some((symbol, next)) = stack.pop() {
+                let calls = lowered
+                    .get(symbol)
+                    .map(|(_, calls)| calls.as_slice())
+                    .unwrap_or(&[]);
+                match calls.get(next) {
+                    Some(callee) => {
+                        stack.push((symbol, next + 1));
+                        if visited.insert(callee.clone()) {
+                            stack.push((callee.as_str(), 0));
+                        }
+                    }
+                    None => order.push(symbol.to_owned()),
+                }
+            }
+        }
+        let mut functions: Vec<Function> = self
+            .helpers
+            .iter()
+            .map(|helper| helper.function(self.span(), self.owner.symbol()))
+            .collect();
+        for symbol in order {
+            if let Some((function, _)) = lowered.remove(&symbol) {
+                functions.push(function);
+            }
+        }
+
+        Ok(functions)
     }
 
     /// The GPU function `symbol` with the symbols it calls.
@@ -725,6 +762,12 @@ impl<'p> ShaderLowering<'p> {
                 }
                 Expr::construct(wgsl, lowered, span)
             }
+            ir::ExprKind::StorageRead {
+                input,
+                name,
+                capacity,
+                index,
+            } => self.storage_read(body, *input, name, *capacity, index, ty, span)?,
             ir::ExprKind::Param { param, name } => self.param(*param, name, ty, span)?,
             ir::ExprKind::Descriptor { schema, .. } => {
                 return Err(format!("the descriptor '{schema}' in GPU code"));
@@ -778,16 +821,18 @@ impl<'p> ShaderLowering<'p> {
     fn param(&mut self, index: u32, name: &str, ty: &str, span: Span) -> Result<Expr, Defect> {
         // A texture or sampler is its own global, not a member of the block.
         if matches!(ty, "texture" | "sampler") {
-            let resource = plan::resources(self.material)
+            let ShaderOwner::Material(material) = self.owner else {
+                return Err("resource param in compute".into());
+            };
+            let resource = plan::resources(material)
                 .into_iter()
                 .find(|r| r.name == name)
                 .ok_or_else(|| format!("the resource param '{name}' is not a binding"))?;
             return Ok(Expr::global(&resource_global(&resource, self.span()), span));
         }
         let record = self
-            .material
-            .layout
-            .as_ref()
+            .owner
+            .layout()
             .ok_or_else(|| format!("the param '{name}' of a material without a block"))?;
         let LayoutNode::Struct {
             name: block_name,
@@ -826,7 +871,7 @@ impl<'p> ShaderLowering<'p> {
     ) -> Result<Expr, Defect> {
         match parse(base_ty) {
             // `MtekSurfaceInput` members are named like the Mtek fields.
-            Some(MtekType::SurfaceInput | MtekType::VertexInput) => {
+            Some(MtekType::SurfaceInput | MtekType::VertexInput | MtekType::ComputeInput) => {
                 let field_ty = self.types.value_type(ty)?;
                 Ok(base.field(field, field_ty, span))
             }

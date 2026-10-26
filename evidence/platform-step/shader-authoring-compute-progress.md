@@ -86,7 +86,13 @@ Further tooling checks and current source hashes belong in
 
 ## Required next work
 
-Connect checked declarations to kernel lowering, manifest packaging, runtime
+Checked declarations now connect to typed IR and kernel WGSL in the
+[compute lowering checkpoint](shader-authoring/compute-lowering-2026-10-26/checkpoint.md).
+The editor indentation failure described above is historical and fixed by that
+checkpoint. Public analysis/build still emits E4901. A separate planner guard
+also refuses compute packaging, so development IR cannot silently omit kernels.
+
+Connect lowered kernels to manifest packaging, runtime
 dispatch and inspection. Implement the accepted host ownership/recovery contract,
 bounded dispatch/device-limit validation, upload/readback,
 ordering/synchronization, disposal, replacement and device recovery. Run an actual

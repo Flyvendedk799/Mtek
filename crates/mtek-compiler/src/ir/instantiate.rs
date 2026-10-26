@@ -753,6 +753,9 @@ impl Substitution<'_> {
     /// entity 0 is the instance.
     fn expr(&self, expr: &Expr) -> Result<Expr> {
         let kind = match &expr.kind {
+            ExprKind::StorageRead { .. } => {
+                return Err("compute storage read in a prefab body".into());
+            }
             ExprKind::Param { name, .. } => {
                 let given = self
                     .params

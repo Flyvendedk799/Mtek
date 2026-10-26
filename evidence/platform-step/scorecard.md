@@ -72,8 +72,11 @@ layouts. Source declarations/resources/kernels now parse and type-check, with GP
 effects and bounded workgroups. E4901 still blocks runnable packaging; kernel
 lowering, manifest/runtime dispatch, lifecycle and end-to-end evidence remain required.
 Heavy compiler/GPU validation remains deferred during the user's heavy work.
-Editor follow-up: structural auto-indent does not yet match `mtek fmt` for
-wrapped binary continuations; its corpus check remains a known failure.
+An [additional compute lowering/editor checkpoint](shader-authoring/compute-lowering-2026-10-26/checkpoint.md)
+connects checked declarations to typed IR and Naga-validated kernel WGSL, while
+retaining the public E4901 packaging gate. Editor continuation indentation now
+passes the formatter corpus, 81 unit tests and 11 real VS Code integration tests.
+Compute packaging, runtime dispatch and GPU acceptance remain unfinished.
 
 ## Request acceptance status
 

@@ -48,6 +48,7 @@ pub(super) enum MtekType {
     /// The stage input record.
     SurfaceInput,
     VertexInput,
+    ComputeInput,
 }
 
 /// Parses an IR type spelling. Arrays nest at most 256 levels (`E3032`).
@@ -65,6 +66,7 @@ pub(super) fn parse(ty: &str) -> Option<MtekType> {
         "mat4" => MtekType::Mat4,
         SURFACE_INPUT => MtekType::SurfaceInput,
         "VertexInput" => MtekType::VertexInput,
+        "ComputeInput" => MtekType::ComputeInput,
         _ => {
             if let Some((element, length)) = split_array(ty) {
                 MtekType::Array {
@@ -155,6 +157,7 @@ impl<'p> TypeMapper<'p> {
             MtekType::Mat4 => ShaderType::Mat4,
             MtekType::SurfaceInput => ShaderType::named(SURFACE_INPUT_STRUCT),
             MtekType::VertexInput => ShaderType::named("MtekVertexInput"),
+            MtekType::ComputeInput => ShaderType::named("MtekComputeInput"),
             MtekType::Array { .. } | MtekType::Struct(_) => self.laid_out(ty, &parsed)?.0,
         })
     }
@@ -267,6 +270,9 @@ impl<'p> TypeMapper<'p> {
                 LayoutType::new_struct(symbol.clone(), members)
             }
             MtekType::SurfaceInput => surface_input_layout(),
+            MtekType::ComputeInput => {
+                return Err("ComputeInput is an invocation value, not a storable type".into());
+            }
             MtekType::VertexInput => LayoutType::new_struct(
                 "MtekVertexInput",
                 vec![

@@ -108,6 +108,75 @@ pub fn to_human(program: &Program, sources: &SourceMap) -> String {
                 Item::Struct(item) => out.structure(2, item),
                 Item::Function(function) => out.function(2, function),
                 Item::Material(material) => out.material_item(2, material),
+                Item::Compute(compute) => {
+                    out.line(
+                        2,
+                        format!(
+                            "compute {} [{}] workgroup {:?} {}",
+                            compute.name,
+                            compute.symbol,
+                            compute.workgroup_size,
+                            out.location(compute.span)
+                        ),
+                    );
+                    for (index, input) in compute.inputs.iter().enumerate() {
+                        out.line(
+                            3,
+                            format!(
+                                "input #{index} {}: array<{}, {}> ({} bytes)",
+                                input.name,
+                                input.element,
+                                input.capacity,
+                                input.layout.size()
+                            ),
+                        );
+                    }
+                    out.line(
+                        3,
+                        format!(
+                            "output {}: array<{}, {}> ({} bytes)",
+                            compute.output.name,
+                            compute.output.element,
+                            compute.output.capacity,
+                            compute.output.layout.size()
+                        ),
+                    );
+                    for (index, param) in compute.params.iter().enumerate() {
+                        let default = param
+                            .default
+                            .as_ref()
+                            .map_or_else(String::new, |value| format!(" = {value}"));
+                        out.line(
+                            3,
+                            format!(
+                                "param #{index} {}: {}{default} {}",
+                                param.name,
+                                param.ty,
+                                out.location(param.span)
+                            ),
+                        );
+                    }
+                    if let Some(layout) = &compute.layout {
+                        out.line(
+                            3,
+                            format!(
+                                "block {} {} (size {}, align {})",
+                                layout.id, layout.wgsl_struct, layout.size, layout.align
+                            ),
+                        );
+                    }
+                    out.line(
+                        3,
+                        format!(
+                            "kernel -> {} [{}] {}",
+                            compute.kernel.result,
+                            compute.kernel.symbol,
+                            out.location(compute.kernel.span)
+                        ),
+                    );
+                    out.locals(4, &compute.kernel.locals);
+                    out.block(4, &compute.kernel.body, &compute.kernel.locals);
+                }
                 Item::Prefab(prefab) => out.prefab(2, prefab),
             }
         }
@@ -881,6 +950,15 @@ fn expr_text(expr: &Expr) -> String {
         }
         ExprKind::Field { base, field, .. } => format!("{}.{field}", expr_text(base)),
         ExprKind::Index { base, index } => format!("{}[{}]", expr_text(base), expr_text(index)),
+        ExprKind::StorageRead {
+            input,
+            name,
+            capacity,
+            index,
+        } => format!(
+            "input {name}#{input}[clamp({}, {capacity})]",
+            expr_text(index)
+        ),
         ExprKind::Array { elements } => format!("[{}]", list(elements)),
         ExprKind::Struct { fields } => format!("{} {{ {} }}", expr.ty, named(fields)),
         ExprKind::Descriptor { schema, fields } => format!("{schema} {{ {} }}", named(fields)),

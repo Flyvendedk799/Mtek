@@ -275,6 +275,28 @@ test("`Mtek: Restart Language Server` ends the server with exit code 0 and start
   await waitFor("the diagnostics of the new server", () => vscode.languages.getDiagnostics(main.uri).length === 2 || undefined);
 });
 
+test("Enter indents expression continuations and restores statement and argument indentation", async () => {
+  const cases = [
+    ["fn demo() {\n    return input.index", "", 8],
+    ["fn demo() {\n    return input.index\n        + input.global_x", "", 8],
+    ["fn demo() {\n    return input.index\n        + input.global_x;", "", 4],
+    ["fn demo() {\n    return color.linear(\n        sample(image, filter, uv).xyz", "", 12],
+    ["fn demo() {\n    return color.linear(\n        sample(image, filter, uv).xyz\n            * gain,", "", 8],
+    ["fn demo() {\n    // expression", "", 4],
+    ["fn demo() {\n    let value = 1.0;", "", 4],
+  ] as const;
+  for (const [before, after, spaces] of cases) {
+    const document = await vscode.workspace.openTextDocument({ language: "mtek", content: before + after });
+    const editor = await vscode.window.showTextDocument(document);
+    editor.options = { insertSpaces: true, tabSize: 4 };
+    const cursor = document.positionAt(before.length);
+    editor.selection = new vscode.Selection(cursor, cursor);
+    await vscode.commands.executeCommand("workbench.action.focusActiveEditorGroup");
+    await vscode.commands.executeCommand("type", { text: "\n" });
+    assert.equal(document.getText(), `${before}\n${" ".repeat(spaces)}${after}`, before);
+  }
+});
+
 test("a missing executable is an error message, not a silent failure, and fixing the setting recovers", async () => {
   const configuration = vscode.workspace.getConfiguration("mtek");
   const inspected = configuration.inspect<string>("server.path");

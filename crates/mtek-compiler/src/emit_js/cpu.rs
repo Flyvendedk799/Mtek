@@ -1304,6 +1304,9 @@ impl FnLowering<'_, '_> {
             }
             // Material params exist only in stage bodies, which are never CPU code; a prefab
             // param is read from the instance.
+            ir::ExprKind::StorageRead { .. } => {
+                return Err("compute storage read in CPU code".into());
+            }
             ir::ExprKind::Param { name, .. } => match self.params {
                 ParamReads::Init => Expr::ident("params").member(name),
                 ParamReads::SelfParams => Expr::ident("self").member("params").member(name),
@@ -1534,6 +1537,7 @@ mod tests {
                     expr(base, out);
                     expr(index, out);
                 }
+                ir::ExprKind::StorageRead { index, .. } => expr(index, out),
                 ir::ExprKind::Array { elements } => elements.iter().for_each(|a| expr(a, out)),
                 ir::ExprKind::Param { .. } => {}
                 ir::ExprKind::BodyCommand { target, args, .. } => {

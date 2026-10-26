@@ -34,12 +34,12 @@ mod tests;
 
 pub use model::{
     Behavior, BehaviorKind, Binding, BindingDep, BindingTarget, Block, Body, BodyDesc, BodyTarget,
-    Branch, Camera, Collider, ColliderDesc, Const, Entity, Expr, ExprKind, Field, Function, Item,
-    Light, LightKind, LocalItem, LocalKind, MatchArm, MaterialInstanceDesc, MaterialItem,
-    MaterialParamItem, Mesh, MeshDesc, Module, NamedExpr, NamedValue, Origin, Owner, Param,
-    Particles, Place, PlaceRoot, PlaceStep, PrefabInstance, PrefabItem, PrefabParamItem, Program,
-    Projection, ProjectionDesc, Scene, SceneFields, Source, StageItem, State, Stmt,
-    StructFieldItem, StructItem, Symbol, UpdateClass, Value,
+    Branch, Camera, Collider, ColliderDesc, ComputeBufferItem, ComputeItem, Const, Entity, Expr,
+    ExprKind, Field, Function, Item, Light, LightKind, LocalItem, LocalKind, MatchArm,
+    MaterialInstanceDesc, MaterialItem, MaterialParamItem, Mesh, MeshDesc, Module, NamedExpr,
+    NamedValue, Origin, Owner, Param, Particles, Place, PlaceRoot, PlaceStep, PrefabInstance,
+    PrefabItem, PrefabParamItem, Program, Projection, ProjectionDesc, Scene, SceneFields, Source,
+    StageItem, State, Stmt, StructFieldItem, StructItem, Symbol, UpdateClass, Value,
 };
 pub use render::{to_human, to_json};
 

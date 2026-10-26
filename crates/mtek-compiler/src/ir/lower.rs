@@ -293,11 +293,9 @@ fn lower_module(
     let mut marks = Vec::new();
     for item in &module.items {
         match &item.kind {
-            ItemKind::Compute(_) => {
-                return Err(
-                    "source compute cannot reach IR lowering before its build gate is implemented"
-                        .into(),
-                );
+            ItemKind::Compute(decl) => {
+                let symbol = Symbol::item(&path, &decl.name.name);
+                items.push(Item::Compute(lowering.compute(decl, symbol)?));
             }
             ItemKind::Const(decl) => {
                 let symbol = Symbol::item(&path, &decl.name.name);

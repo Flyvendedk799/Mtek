@@ -2,8 +2,8 @@
 //
 // The indentation rules are checked against what `mtek fmt` (decision 0070) writes: the sources
 // below are copied to a temporary directory, formatted by the real binary, and the indentation of
-// every line must be what the rules of the configuration give from the line before it, the way an
-// editor applies them when Enter is pressed and when a closing bracket is typed.
+// every line must be what the bracket and Enter rules give from the preceding lines, including
+// the text after a split and the adjustment when a closing bracket is typed.
 import { spawnSync } from "node:child_process";
 import { cpSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -21,7 +21,12 @@ interface LanguageConfiguration {
     decreaseIndentPattern: string;
     unIndentedLinePattern?: string;
   };
-  onEnterRules: { beforeText: string; action: { indent: string; appendText?: string } }[];
+  onEnterRules: {
+    beforeText: string;
+    afterText?: string;
+    previousLineText?: string;
+    action: { indent: string; appendText?: string };
+  }[];
   wordPattern: string;
 }
 
@@ -31,6 +36,18 @@ const configuration = JSON.parse(
 const manifest = JSON.parse(readFileSync(join(PACKAGE_ROOT, "package.json"), "utf8")) as {
   contributes: { configurationDefaults: Record<string, Record<string, unknown>> };
 };
+
+function enterDelta(before: string, after: string, previous: string): number | undefined {
+  const rule = configuration.onEnterRules.find(
+    (candidate) =>
+      new RegExp(candidate.beforeText).test(before) &&
+      (candidate.afterText === undefined || new RegExp(candidate.afterText).test(after)) &&
+      (candidate.previousLineText === undefined ||
+        new RegExp(candidate.previousLineText).test(previous)),
+  );
+  if (rule === undefined) return undefined;
+  return rule.action.indent === "indent" ? 1 : rule.action.indent === "outdent" ? -1 : 0;
+}
 
 describe("language-configuration.json", () => {
   it("has the comment forms of spec/language.md 1.5", () => {
@@ -66,6 +83,8 @@ describe("language-configuration.json", () => {
       decreaseIndentPattern,
       configuration.wordPattern,
       ...configuration.onEnterRules.map((rule) => rule.beforeText),
+      ...configuration.onEnterRules.flatMap((rule) => rule.previousLineText ?? []),
+      ...configuration.onEnterRules.flatMap((rule) => rule.afterText ?? []),
     ]) {
       expect(() => new RegExp(pattern), pattern).not.toThrow();
     }
@@ -88,6 +107,20 @@ describe("language-configuration.json", () => {
     expect(before.test("    //// banner")).toBe(false);
     expect(before.test("    // plain")).toBe(false);
     expect(rule?.action.appendText).toBe("/// ");
+  });
+
+  it("indents binary continuations once, including call arguments, and restores their enclosing level", () => {
+    expect(enterDelta("    return input.index", "", "fn index() {")).toBe(1);
+    expect(enterDelta("        sample(image, filter, uv).xyz", "* gain,", "    return color.linear(")).toBe(1);
+    expect(enterDelta("        + input.global_x", "", "    return input.index")).toBeUndefined();
+    expect(enterDelta("        + input.global_y;", "", "        + input.global_x")).toBe(-1);
+    expect(enterDelta("            * gain,", "1.0,", "        sample(image, filter, uv).xyz")).toBe(-1);
+    // A right delimiter already causes the editor's bracket rules to outdent.
+    expect(enterDelta("        color.linear(rgb, alpha)", ");", "    return mix(")).toBeUndefined();
+    expect(enterDelta("    let value = 1.0;", "", "")).toBeUndefined();
+    expect(enterDelta("    // expression", "", "")).toBeUndefined();
+    expect(enterDelta("    /* expression */", "", "")).toBeUndefined();
+    expect(enterDelta("    + value;", "", "    // comment")).toBeUndefined();
   });
 
   it("sets what `mtek fmt` writes as the defaults for .mtek files: 4 spaces, LF, final newline, no trailing space", () => {
@@ -166,7 +199,7 @@ describe("indentation rules against the canonical formatter", () => {
       // A signature with a comment between every token (a fixture of the parser) is wrapped by the
       // formatter at the comments, where no indentation rule of an editor can follow it.
       if (file.endsWith("comments_between_tokens.mtek")) continue;
-      let previous: { text: string; level: number } | undefined;
+      let previous: { text: string; level: number; before: string } | undefined;
       let inBlockComment = false;
       readFileSync(file, "utf8")
         .split("\n")
@@ -186,15 +219,16 @@ describe("indentation rules against the canonical formatter", () => {
           const level = spaces / 4;
           if (previous !== undefined) {
             checked += 1;
-            const expected =
-              previous.level + (increase.test(previous.text) ? 1 : 0) - (decrease.test(line) ? 1 : 0);
+            const delta = enterDelta(previous.text, line.trimStart(), previous.before)
+              ?? (increase.test(previous.text) ? 1 : 0);
+            const expected = previous.level + delta - (decrease.test(line) ? 1 : 0);
             if (expected !== level) {
               problems.push(
                 `${relative(directory, file)}:${index + 1}: expected ${expected}, canonical ${level}\n  ${previous.text}\n  ${line}`,
               );
             }
           }
-          previous = { text: line, level };
+          previous = { text: line, level, before: previous?.text ?? "" };
         });
     }
     expect(problems.slice(0, 10)).toEqual([]);

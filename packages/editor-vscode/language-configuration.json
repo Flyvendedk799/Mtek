@@ -31,6 +31,16 @@
     {
       "beforeText": "^\\s*///(?!/).*$",
       "action": { "indent": "none", "appendText": "/// " }
+    },
+    {
+      "beforeText": "^\\s*(?!\\s|//|/\\*|[+*/%<>=!&|^]|-(?!>))[^;{}]*[^\\s,;{}]\\s*$",
+      "afterText": "^(?:\\s*$|\\s*(?![\\s)\\]}]))",
+      "action": { "indent": "indent" }
+    },
+    {
+      "previousLineText": "^\\s*(?!\\s|//|/\\*)[^;{}]*[^\\s,;{}]\\s*$",
+      "beforeText": "^\\s*(?:[+*/%<>=!&|^]|-(?!>))[^;{}]*[;,]\\s*(?://.*)?$",
+      "action": { "indent": "outdent" }
     }
   ],
   "wordPattern": "#[0-9A-Fa-f]+|[0-9]+(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?|[A-Za-z_][A-Za-z0-9_]*"

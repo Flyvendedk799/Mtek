@@ -346,6 +346,9 @@ pub fn plan_program(program: &Program) -> Result<ResourcePlan, String> {
 /// # Errors
 /// As [`plan_program`].
 pub fn plan_scene(program: &Program, scene: &Scene) -> Result<ResourcePlan, String> {
+    if program.computes().next().is_some() {
+        return Err("compute packaging and runtime dispatch are not yet available".into());
+    }
     let mut meshes: Vec<MeshDesc> = Vec::new();
     let mut mesh_indices = BTreeMap::new();
     let mut entity_meshes = Vec::with_capacity(scene.entities.len());
@@ -569,6 +572,7 @@ fn spawned_prefabs(program: &Program, scene: &Scene) -> Vec<Symbol> {
                     expr(base, out);
                     expr(index, out);
                 }
+                K::StorageRead { index, .. } => expr(index, out),
                 K::Array { elements } => elements.iter().for_each(|a| expr(a, out)),
                 K::Struct { fields }
                 | K::Descriptor { fields, .. }

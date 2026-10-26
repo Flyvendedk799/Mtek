@@ -20,7 +20,7 @@ import { PROJECT_FILES } from "../src/integration/fixture.ts";
 
 /** The VS Code the suite is run on. Exact, so that a run is reproducible; the engine floor is ^1.91.0. */
 const PINNED_VSCODE = "1.142.0";
-const EXPECTED_TESTS = 10;
+const EXPECTED_TESTS = 11;
 
 const packageRoot = resolve(import.meta.dirname, "..");
 const repoRoot = resolve(packageRoot, "..", "..");

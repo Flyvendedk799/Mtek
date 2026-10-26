@@ -23,6 +23,8 @@ use crate::syntax::ast::{
 };
 use crate::types::{BodyTarget, CallKind, ConstValue, EffectLevel, FieldKind, FnRef, Ty, TyId};
 
+mod compute_item;
+
 /// What the lowering of a scene body needs to name entities and cameras: the static index of
 /// every entity declaration and the name of every camera. For a prefab body (decision 0062) the
 /// prefab is entity 0 (`self`) and `params` holds the position of each of its params.
@@ -1249,10 +1251,35 @@ impl FnLowering<'_, '_> {
                 }),
                 _ => return Err(self.defect("a field read this build does not lower")),
             },
-            AstExpr::Index { base, index } => make(ExprKind::Index {
-                base: boxed(base)?,
-                index: boxed(index)?,
-            }),
+            AstExpr::Index { base, index } => {
+                let mut root = base.as_ref();
+                while let AstExpr::Paren(inner) = &root.kind {
+                    root = inner;
+                }
+                let input = match self.lowering.resolution.res(root.id) {
+                    Some(Res::Def(def)) => types.computes().find_map(|(_, info)| {
+                        info.inputs
+                            .iter()
+                            .enumerate()
+                            .find(|(_, input)| input.def == def)
+                    }),
+                    _ => None,
+                };
+                if let Some((input, buffer)) = input {
+                    make(ExprKind::StorageRead {
+                        input: u32::try_from(input)
+                            .map_err(|_| self.defect("too many compute inputs"))?,
+                        name: buffer.name.clone(),
+                        capacity: buffer.capacity,
+                        index: boxed(index)?,
+                    })
+                } else {
+                    make(ExprKind::Index {
+                        base: boxed(base)?,
+                        index: boxed(index)?,
+                    })
+                }
+            }
             AstExpr::Array(items) => make(ExprKind::Array {
                 elements: list(items)?,
             }),

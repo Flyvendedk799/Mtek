@@ -98,6 +98,7 @@ impl Program {
                 | Item::Struct(_)
                 | Item::Function(_)
                 | Item::Material(_)
+                | Item::Compute(_)
                 | Item::Prefab(_) => None,
             })
     }
@@ -113,6 +114,7 @@ impl Program {
                 | Item::Struct(_)
                 | Item::Function(_)
                 | Item::Scene(_)
+                | Item::Compute(_)
                 | Item::Prefab(_) => None,
             })
     }
@@ -129,6 +131,18 @@ impl Program {
                 | Item::Function(_)
                 | Item::Scene(_)
                 | Item::Material(_) => None,
+                Item::Compute(_) => None,
+            })
+    }
+
+    /// Every checked compute program, in module and declaration order.
+    pub fn computes(&self) -> impl Iterator<Item = &ComputeItem> {
+        self.modules
+            .iter()
+            .flat_map(|module| &module.items)
+            .filter_map(|item| match item {
+                Item::Compute(compute) => Some(compute),
+                _ => None,
             })
     }
 }
@@ -164,6 +178,8 @@ pub enum Item {
     /// A user material: params, parameter block and fragment stage (M2-04,
     /// decision 0039).
     Material(MaterialItem),
+    /// A standalone compute declaration. Public builds remain gated until dispatch exists.
+    Compute(ComputeItem),
     /// A prefab: the template of one entity with its params (M5-01, decision 0062).
     Prefab(Box<PrefabItem>),
 }
@@ -263,6 +279,35 @@ pub struct MaterialParamItem {
     /// The folded default; `None` when every instance must supply the param.
     pub default: Option<Value>,
     /// The whole `param name: T = default;`.
+    #[serde(serialize_with = "span")]
+    pub span: Span,
+}
+
+/// A standalone compute program with explicit storage ownership and a typed kernel.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ComputeItem {
+    pub name: String,
+    pub symbol: Symbol,
+    pub params: Vec<MaterialParamItem>,
+    pub layout: Option<crate::layout::LayoutRecord>,
+    pub inputs: Vec<ComputeBufferItem>,
+    pub output: ComputeBufferItem,
+    pub workgroup_size: [u32; 3],
+    pub kernel: StageItem,
+    #[serde(serialize_with = "span")]
+    pub span: Span,
+}
+
+/// One fixed-capacity storage array, with the layout from which emission and writers derive.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ComputeBufferItem {
+    pub name: String,
+    #[serde(rename = "type")]
+    pub element: String,
+    pub capacity: u32,
+    pub layout: crate::layout::LayoutNode,
     #[serde(serialize_with = "span")]
     pub span: Span,
 }
@@ -690,6 +735,14 @@ pub enum ExprKind {
     },
     /// `base[index]` of an array or `mat4`; a run-time index is clamped.
     Index { base: Box<Expr>, index: Box<Expr> },
+    /// One indexed read from a compute input. The storage array itself is never a value.
+    /// Shader lowering clamps dynamic indices to `capacity - 1`.
+    StorageRead {
+        input: u32,
+        name: String,
+        capacity: u32,
+        index: Box<Expr>,
+    },
     /// An array literal.
     Array { elements: Vec<Expr> },
     /// A struct literal, its fields in declaration order (decision 0038).
