@@ -61,7 +61,7 @@ pub const DEFAULT_MAX_BYTES: usize = 30_000;
 
 /// The `diagnosticsGuide` text. A test checks that every field it names exists in
 /// `spec/diagnostic.schema.json`.
-pub const DIAGNOSTICS_GUIDE: &str = "`mtek check --format json` prints one JSON report; each diagnostic has code, severity, title, message, source (file, startByte, endByte, startLine, startColumn, endLine, endColumn), expected and actual (when relevant), related, notes, suggestedEdits and phase. Fix errors in report order, apply a suggestedEdit only when it is present (they are validated), and never delete the feature a diagnostic is about.";
+pub const DIAGNOSTICS_GUIDE: &str = "`mtek check --format json`: one report. Diagnostics: code, severity, title, message, source (file, startByte, endByte, startLine, startColumn, endLine, endColumn), expected/actual where relevant, related, notes, suggestedEdits, phase. Fix errors in report order; apply only supplied validated edits; never delete the requested feature.";
 
 /// What to export.
 #[derive(Clone, Debug, PartialEq, Eq)]

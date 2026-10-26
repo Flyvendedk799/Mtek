@@ -41,6 +41,9 @@ const ajv = new Ajv2020({
   strict: true,
   allowUnionTypes: true, // `type: ["string", "null"]` for nullable fields
   discriminator: true, // tagged unions (`kind` / `class`) give one precise error instead of one per branch
+  // Reuse validators for $defs instead of duplicating their bodies at every reference.
+  // The accepted schema and ordered failures stay the same; generated packages are smaller.
+  inlineRefs: false,
   unicode: false, // length and pattern checks on UTF-16 code units: no import of ajv/dist/runtime/ucs2length
   code: { source: true, esm: true },
 });

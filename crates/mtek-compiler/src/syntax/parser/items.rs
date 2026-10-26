@@ -53,6 +53,12 @@ impl Parser<'_> {
             self.bump();
         }
         let kind = match self.kind() {
+            TokenKind::Ident if self.text_of(self.span()) == "compute" => {
+                match self.compute_decl() {
+                    Some(decl) => ItemKind::Compute(decl),
+                    None => ItemKind::Error,
+                }
+            }
             TokenKind::KwImport => {
                 if export {
                     self.report_export_import(start);

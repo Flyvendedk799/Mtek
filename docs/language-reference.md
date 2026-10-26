@@ -346,9 +346,9 @@ CPU-only intrinsics in v0.1: `random() -> f32` in `[0, 1)` (seeded per applicati
 
 ### 11. What is not in v0.1
 
-Each of these is rejected with a diagnostic; `docs/limitations.md` gives the code of each. Only the reserved words (`E0013`), the bitwise operators (`E1901`) and the vertex and compute stages (`E4901`) have an unsupported-feature code of their own; the others are rejected by the general rule that names the construct (an unknown type is `E3003`, a numeric suffix or a hexadecimal literal `E0021`, `+` on strings `E3014`, and so on; decision 0102).
+Each of these is rejected with a diagnostic; `docs/limitations.md` gives the code of each. Only the reserved words (`E0013`), the bitwise operators (`E1901`) and compute stages (`E4901`) have an unsupported-feature code of their own; the others are rejected by the general rule that names the construct (an unknown type is `E3003`, a numeric suffix or a hexadecimal literal `E0021`, `+` on strings `E3014`, and so on; decision 0102).
 
-`loop` (write `while true`, §7.10); bitwise operators; integer/boolean vectors; `mat2`/`mat3`; `f16`/`f64`; numeric suffixes and hexadecimal literals; Unicode identifiers; closures and function values; generics; methods and `impl`; enum variants that carry data, explicit enum discriminants and conversions between enums and numbers (§5.7); optional/result types in the language; string concatenation (`+` on `string` is `E3014`; interpolation, §5.8, builds strings); recursion; compute and vertex stages; storage buffers; patterns other than an enum variant and `_` (no literal, binding, range or guard patterns, no destructuring, §6.11). The unsupported-feature codes are the `x9xx` codes of each range (`spec/diagnostics.md` §3).
+`loop` (write `while true`, §7.10); bitwise operators; integer/boolean vectors; `mat2`/`mat3`; `f16`/`f64`; numeric suffixes and hexadecimal literals; Unicode identifiers; closures and function values; generics; methods and `impl`; enum variants that carry data, explicit enum discriminants and conversions between enums and numbers (§5.7); optional/result types in the language; string concatenation (`+` on `string` is `E3014`; interpolation, §5.8, builds strings); recursion; compute stages; storage buffers; patterns other than an enum variant and `_` (no literal, binding, range or guard patterns, no destructuring, §6.11). The unsupported-feature codes are the `x9xx` codes of each range (`spec/diagnostics.md` §3).
 
 ## Part B. The standard library
 
@@ -358,8 +358,10 @@ Generated from [spec/stdlib-schema.json](../spec/stdlib-schema.json) (registry v
 
 | Type | Kind | GPU | Fields | Methods | Description |
 |---|---|---|---|---|---|
+| `ComputeInput` | record | yes | index: u32; global_x: u32; global_y: u32; global_z: u32; local_x: u32; local_y: u32; local_z: u32; group_x: u32; group_y: u32; group_z: u32; group_count_x: u32; group_count_y: u32; group_count_z: u32; local_index: u32 |  | Compute invocation IDs (dispatch unavailable). |
 | `PointerEvent` | record | no | position: vec2; button: i32 |  | A pointer event: `position` in normalised canvas coordinates (x right, y up, both in -1..1) and the `button` (0 primary, 1 middle, 2 secondary). |
-| `SurfaceInput` | record | yes | local_position: vec3; world_position: vec3; world_normal: vec3; uv: vec2 |  | The interpolated inputs of a material fragment stage. |
+| `SurfaceInput` | record | yes | local_position: vec3; world_position: vec3; world_normal: vec3; uv: vec2 |  | Interpolated fragment inputs. |
+| `VertexInput` | record | yes | position: vec3; normal: vec3; uv: vec2 |  | Skinned local vertex inputs. |
 | `array` | array | yes |  |  | The generic `array<T, N>`: a fixed-length array of `N` (1 to 65536) elements of type `T`. |
 | `bool` | scalar | yes |  |  | Truth value. |
 | `color` | color | yes |  |  | Linear-light RGBA with straight alpha; distinct from `vec4`. A literal `#rrggbb` is sRGB-encoded and converted; `color.linear(rgb, a)` takes linear components, `color.srgb(rgb, a)` sRGB ones. Fields `.r .g .b .a` and `.rgb`; no arithmetic. |
@@ -456,11 +458,13 @@ The fields of a `camera` scene object. Looks along its local -Z axis, or at `tar
 
 ##### `Entity`
 
-The fields of an entity or prefab body: a named node with a transform and optional components.
+Entity/prefab: a named transform with optional components.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
 | `body` | `body` | none | no | construction only |  | A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; requires `collider`. |
+| `bounds_center` | `vec3` | `vec3(0.0, 0.0, 0.0)` | no | writable, bindable | finite | Final deformed local sphere center; used when bounds_radius > 0. |
+| `bounds_radius` | `f32` | `0.0` | no | writable, bindable | ≥ 0, finite | Enclose every final local vertex/pose; 0 uses mesh/skin bounds, or unbounded authored vertices. |
 | `clip` | `string` | none | no | construction only |  | The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. It composes with the entity's own transform (decision 0174). |
 | `collider` | `collider` | none | no | construction only |  | A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`. |
 | `light` | `light` | none | no | construction only |  | A light component (`DirectionalLight`, `PointLight`). Its fields are writable and bindable as their schemas say. Named entities only. |
@@ -469,9 +473,9 @@ The fields of an entity or prefab body: a named node with a transform and option
 | `particles` | `emitter` | none | no | construction only |  | A particle emitter (decision 0155). Up to 64 particles live at once. They are drawn with this entity's mesh as camera-facing billboards, in the colour of its material. Without a mesh the particles are still counted. |
 | `position` | `vec3` | `vec3(0.0, 0.0, 0.0)` | no | writable, bindable |  | Position local to the parent, in metres. |
 | `rotation` | `quat` | `quat.identity()` | no | writable, bindable |  | Rotation local to the parent. |
-| `scale` | `vec3` | `vec3(1.0, 1.0, 1.0)` | no | writable, bindable | every component > 0, finite | Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body. |
+| `scale` | `vec3` | `vec3(1.0, 1.0, 1.0)` | no | writable, bindable | every component > 0, finite | Parent-local scale. Bodies require construction-only scale; dynamic/kinematic bodies require `vec3(1.0)`. |
 | `tag` | `string` | none | no | construction only |  | A group name (`"rock"`) that `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag` and `destroy_tagged` look the entity up by (decision 0150). A string literal of lowercase letters, digits and `_`. |
-| `visible` | `bool` | `true` | no | writable, bindable |  | Hides the mesh draw only; the entity's behaviour keeps running. |
+| `visible` | `bool` | `true` | no | writable, bindable |  | Hide the mesh; behavior keeps running. |
 
 ##### `Scene`
 
@@ -569,14 +573,25 @@ A perspective projection (right-handed, clip depth 0 to 1).
 
 ##### `Pbr`
 
-The documented PBR subset (metallic-roughness, no image-based lighting).
+Metallic-roughness PBR with optional scene shadows and environment lighting.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
 | `base_color` | `color` | `#ffffff` | no | writable, bindable |  | Linear base colour multiplied with the base colour texture. |
 | `base_color_sampler` | `sampler` | `sampler.linear_repeat()` | no | construction only |  | Sampler for the base colour texture. |
 | `base_color_texture` | `texture` | `texture.white()` | no | construction only |  | Base colour texture. |
+| `emissive` | `color` | `#000000` | no | writable, bindable |  | Linear emission before exposure. |
+| `emissive_sampler` | `sampler` | `sampler.linear_repeat()` | no | construction only |  | Sampler of the emissive map. |
+| `emissive_texture` | `texture` | `texture.white()` | no | construction only |  | sRGB emissive colour, multiplied by emissive. |
 | `metallic` | `f32` | `0.0` | no | writable, bindable |  | Metalness; clamped to 0..1 by the lighting model. |
+| `metallic_roughness_sampler` | `sampler` | `sampler.linear_repeat()` | no | construction only |  | Sampler of the metallic_roughness map. |
+| `metallic_roughness_texture` | `texture` | `texture.white()` | no | construction only |  | Linear green roughness and blue metallic factors. |
+| `normal_sampler` | `sampler` | `sampler.linear_repeat()` | no | construction only |  | Sampler of the normal map. |
+| `normal_scale` | `f32` | `0.0` | no | writable, bindable |  | Normal XY scale; zero suits the white fallback. GLB map default: one. |
+| `normal_texture` | `texture` | `texture.white()` | no | construction only |  | Linear tangent-space normal map; enable with normal_scale. |
+| `occlusion_sampler` | `sampler` | `sampler.linear_repeat()` | no | construction only |  | Sampler of the occlusion map. |
+| `occlusion_strength` | `f32` | `1.0` | no | writable, bindable |  | Indirect-light occlusion strength, clamped to 0..1. |
+| `occlusion_texture` | `texture` | `texture.white()` | no | construction only |  | Linear red indirect-light occlusion. |
 | `roughness` | `f32` | `0.5` | no | writable, bindable |  | Perceptual roughness; clamped to 0.045..1 by the lighting model. |
 
 ##### `Sprite`
@@ -778,7 +793,8 @@ Lighting functions for material fragment stages.
 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
-| `lighting.pbr` | function | `(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32) -> color` | gpu | no | The documented PBR subset evaluated for every light in the scene. |
+| `lighting.pbr` | function | `(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32) -> color` | gpu | no | PBR with scene lights, optional shadows and environment lighting. |
+| `lighting.pbr_mapped` | function | `(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32, normal_texel: vec3, normal_scale: f32, occlusion: f32, emissive: vec3) -> color` | gpu | no | Derivative normal, indirect occlusion, exposed emission; fragment initial straight-line code only. |
 
 #### `mat4`
 
@@ -809,9 +825,17 @@ Built-in sampler presets.
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
 | `sampler.linear_clamp` | function | `() -> sampler` | cpu | yes | Bilinear filtering, texture coordinates clamp to the edge. |
+| `sampler.linear_clamp_level0` | function | `() -> sampler` | cpu | yes | Base-level-only filtering. |
+| `sampler.linear_clamp_mip_nearest` | function | `() -> sampler` | cpu | yes | Explicit mip interpolation preset. |
 | `sampler.linear_repeat` | function | `() -> sampler` | cpu | yes | Bilinear filtering, texture coordinates wrap. |
+| `sampler.linear_repeat_level0` | function | `() -> sampler` | cpu | yes | Base-level-only filtering. |
+| `sampler.linear_repeat_mip_nearest` | function | `() -> sampler` | cpu | yes | Explicit mip interpolation preset. |
 | `sampler.nearest_clamp` | function | `() -> sampler` | cpu | yes | Nearest-texel filtering, texture coordinates clamp to the edge. |
+| `sampler.nearest_clamp_level0` | function | `() -> sampler` | cpu | yes | Base-level-only filtering. |
+| `sampler.nearest_clamp_mip_linear` | function | `() -> sampler` | cpu | yes | Explicit mip interpolation preset. |
 | `sampler.nearest_repeat` | function | `() -> sampler` | cpu | yes | Nearest-texel filtering, texture coordinates wrap. |
+| `sampler.nearest_repeat_level0` | function | `() -> sampler` | cpu | yes | Base-level-only filtering. |
+| `sampler.nearest_repeat_mip_linear` | function | `() -> sampler` | cpu | yes | Explicit mip interpolation preset. |
 
 #### `texture`
 
@@ -888,7 +912,8 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `reset` | `() -> ()` | cpu | no | yes | Next frame, restarts the scene. |
 | `resume` | `() -> ()` | cpu | no | yes | Undoes pause(). |
 | `round` | `(x: T) -> T` | both | yes | no | Nearest integer value, halves to even. |
-| `sample` | `(t: texture, s: sampler, uv: vec2) -> vec4` | gpu | no | no | Filtered texel of `t` at `uv`. `texture` and `sampler` parameters may be used only as direct arguments to `sample`. |
+| `sample` | `(t: texture, s: sampler, uv: vec2) -> vec4` | gpu | no | no | Level-zero texel of `t` at `uv`. Texture/sampler params are direct operands of `sample` or `sample_mip` only. |
+| `sample_mip` | `(t: texture, s: sampler, uv: vec2) -> vec4` | gpu | no | no | Implicit mip texel; fragment initial straight-line code only. Resource rules as for `sample`. |
 | `saturate` | `(x: T) -> T` | both | yes | no | Limits `x` to 0..1. |
 | `save` | `() -> ()` | cpu | no | yes | Writes the saved and setting state to storage. |
 | `screen_to_world` | `(point: vec2, z: f32) -> vec3` | cpu | no | no | Canvas NDC to the world Z plane `z`; parallel rays return NaN x/y. |
@@ -925,7 +950,7 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `angular_velocity` | `vec3` | Dynamic, Kinematic | Angular velocity as of the last completed tick. Read-only. |
 | `linear_velocity` | `vec3` | Dynamic, Kinematic | Linear velocity as of the last completed tick. Read-only. |
 
-## Part C. Features of this build (250)
+## Part C. Features of this build (262)
 
 The list below is `supported.features` of `mtek context`, printed by the compiler this document was generated with. It is derived by the compiler from its construct table and from the registry, never typed in. A feature is supported when a test that would fail without it passes in a recorded environment (`spec/testing.md`); `docs/coverage-matrix.md` shows which program or fixture exercises each one.
 
@@ -949,9 +974,9 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 `event:collision_enter` `event:collision_exit` `event:key_down` `event:key_up` `event:message` `event:pointer_down` `event:pointer_move` `event:pointer_up`
 
-### Functions (135)
+### Functions (145)
 
-`function:abs` `function:acos` `function:alive` `function:animation.copy_pose` `function:animation.crossed` `function:animation.duration` `function:animation.fade` `function:animation.finished` `function:animation.joint_position` `function:animation.joint_rotation` `function:animation.pause` `function:animation.play` `function:animation.playing` `function:animation.resume` `function:animation.seek` `function:animation.time` `function:animation.transition` `function:animation.weight` `function:asin` `function:asset.font` `function:asset.glb` `function:asset.linear_texture` `function:asset.sound` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:chance` `function:choose` `function:clamp` `function:clear_saved` `function:color.linear` `function:color.srgb` `function:cos` `function:count_tagged` `function:cross` `function:degrees` `function:destroy` `function:destroy_tagged` `function:distance` `function:dot` `function:easing.in_cubic` `function:easing.in_out_cubic` `function:easing.in_out_quad` `function:easing.in_out_sine` `function:easing.in_quad` `function:easing.out_back` `function:easing.out_bounce` `function:easing.out_cubic` `function:easing.out_elastic` `function:easing.out_quad` `function:exp` `function:exp2` `function:first_tagged` `function:floor` `function:fract` `function:gamepad.axis` `function:gamepad.button` `function:gamepad.connected` `function:go_to` `function:has_tag` `function:hud.button` `function:hud.pixel_font` `function:hud.rect` `function:hud.text` `function:inverse_sqrt` `function:is_key_down` `function:is_muted` `function:is_pointer_down` `function:key_pressed` `function:key_released` `function:length` `function:lighting.pbr` `function:load` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:nearest_tagged` `function:normalize` `function:overlap_boxes` `function:overlap_spheres` `function:particle_count` `function:pause` `function:paused` `function:play` `function:play_at` `function:play_music` `function:pointer_position` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:random_int` `function:random_range` `function:reflect` `function:reset` `function:resume` `function:round` `function:sample` `function:sampler.linear_clamp` `function:sampler.linear_repeat` `function:sampler.nearest_clamp` `function:sampler.nearest_repeat` `function:saturate` `function:save` `function:screen_to_world` `function:send` `function:set_camera` `function:set_muted` `function:set_volume` `function:shuffle` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:stop_music` `function:tagged` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc` `function:world_to_screen`
+`function:abs` `function:acos` `function:alive` `function:animation.copy_pose` `function:animation.crossed` `function:animation.duration` `function:animation.fade` `function:animation.finished` `function:animation.joint_position` `function:animation.joint_rotation` `function:animation.pause` `function:animation.play` `function:animation.playing` `function:animation.resume` `function:animation.seek` `function:animation.time` `function:animation.transition` `function:animation.weight` `function:asin` `function:asset.font` `function:asset.glb` `function:asset.linear_texture` `function:asset.sound` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:chance` `function:choose` `function:clamp` `function:clear_saved` `function:color.linear` `function:color.srgb` `function:cos` `function:count_tagged` `function:cross` `function:degrees` `function:destroy` `function:destroy_tagged` `function:distance` `function:dot` `function:easing.in_cubic` `function:easing.in_out_cubic` `function:easing.in_out_quad` `function:easing.in_out_sine` `function:easing.in_quad` `function:easing.out_back` `function:easing.out_bounce` `function:easing.out_cubic` `function:easing.out_elastic` `function:easing.out_quad` `function:exp` `function:exp2` `function:first_tagged` `function:floor` `function:fract` `function:gamepad.axis` `function:gamepad.button` `function:gamepad.connected` `function:go_to` `function:has_tag` `function:hud.button` `function:hud.pixel_font` `function:hud.rect` `function:hud.text` `function:inverse_sqrt` `function:is_key_down` `function:is_muted` `function:is_pointer_down` `function:key_pressed` `function:key_released` `function:length` `function:lighting.pbr` `function:lighting.pbr_mapped` `function:load` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:nearest_tagged` `function:normalize` `function:overlap_boxes` `function:overlap_spheres` `function:particle_count` `function:pause` `function:paused` `function:play` `function:play_at` `function:play_music` `function:pointer_position` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:random_int` `function:random_range` `function:reflect` `function:reset` `function:resume` `function:round` `function:sample` `function:sample_mip` `function:sampler.linear_clamp` `function:sampler.linear_clamp_level0` `function:sampler.linear_clamp_mip_nearest` `function:sampler.linear_repeat` `function:sampler.linear_repeat_level0` `function:sampler.linear_repeat_mip_nearest` `function:sampler.nearest_clamp` `function:sampler.nearest_clamp_level0` `function:sampler.nearest_clamp_mip_linear` `function:sampler.nearest_repeat` `function:sampler.nearest_repeat_level0` `function:sampler.nearest_repeat_mip_linear` `function:saturate` `function:save` `function:screen_to_world` `function:send` `function:set_camera` `function:set_muted` `function:set_volume` `function:shuffle` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:stop_music` `function:tagged` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc` `function:world_to_screen`
 
 ### Type methods (10)
 
@@ -969,9 +994,9 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 `schema:Box` `schema:BoxCollider` `schema:Camera` `schema:DirectionalLight` `schema:Dynamic` `schema:Emitter` `schema:Entity` `schema:Kinematic` `schema:Orthographic` `schema:Pbr` `schema:Perspective` `schema:Plane` `schema:PointLight` `schema:Scene` `schema:Sphere` `schema:SphereCollider` `schema:Sprite` `schema:Static` `schema:Unlit`
 
-### Types (22)
+### Types (24)
 
-`type:PointerEvent` `type:SurfaceInput` `type:array` `type:bool` `type:color` `type:entity_ref` `type:f32` `type:font` `type:glb_asset` `type:i32` `type:mat4` `type:material` `type:mesh` `type:quat` `type:sampler` `type:sound` `type:string` `type:texture` `type:u32` `type:vec2` `type:vec3` `type:vec4`
+`type:ComputeInput` `type:PointerEvent` `type:SurfaceInput` `type:VertexInput` `type:array` `type:bool` `type:color` `type:entity_ref` `type:f32` `type:font` `type:glb_asset` `type:i32` `type:mat4` `type:material` `type:mesh` `type:quat` `type:sampler` `type:sound` `type:string` `type:texture` `type:u32` `type:vec2` `type:vec3` `type:vec4`
 
 ### Namespace values (3)
 
@@ -979,7 +1004,7 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 What the build does **not** support is on [limitations.md](limitations.md); `supported.notSupported` of `mtek context` has the same list.
 
-## Part D. Diagnostics (245 codes)
+## Part D. Diagnostics (251 codes)
 
 Every diagnostic has a stable code: `E` for an error, `W` for a warning, then four digits; the first digit is the area. The full catalogue, the JSON form (`mtek check --format json`), the human rendering and the suggested edits are in [spec/diagnostics.md](../spec/diagnostics.md).
 
@@ -989,11 +1014,11 @@ Every diagnostic has a stable code: `E` for an error, `W` for a warning, then fo
 | `1xxx` | syntax | 11 |
 | `2xxx` | names, scopes, modules | 14 |
 | `3xxx` | types, values, constant evaluation | 35 |
-| `4xxx` | functions, effects, execution domains, material stages | 15 |
+| `4xxx` | functions, effects, execution domains, material stages | 20 |
 | `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 65 |
 | `6xxx` | GPU layout, target profile, generated-shader validation | 4 |
 | `7xxx` | assets | 36 |
-| `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 34 |
+| `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 35 |
 | `9xxx` | project, configuration, tooling, internal | 13 |
 
 Within each range the `x9xx` codes mean "specified as not supported in v0.1"; all of them are listed, with their reasons, on [limitations.md](limitations.md).

@@ -59,7 +59,7 @@ export interface PixelData {
 }
 
 /**
- * Measures the GPU time of the frame's render pass (`dev/gpu-timer.ts`, development builds only; the
+ * Measures shadow-pass begin through colour-pass end (`dev/gpu-timer.ts`, development builds only; the
  * implementation is not part of a release bundle, only this interface is).
  */
 export interface PassTimer {
@@ -293,7 +293,8 @@ export class Surface {
    * submits. Returns false and draws nothing when the canvas has no pixels (a zero-sized canvas is not an
    * error).
    */
-  render(clearColor: readonly [number, number, number, number], encode?: (pass: GPURenderPassEncoder) => void): boolean {
+  render(clearColor: readonly [number, number, number, number], encode?: (pass: GPURenderPassEncoder) => void,
+    before?: (encoder: GPUCommandEncoder, timestamps?: GPURenderPassTimestampWrites) => boolean): boolean {
     if (!this.renderable || this.depth === null) {
       this.skipped += 1;
       return false;
@@ -305,8 +306,10 @@ export class Surface {
     if(this.post===undefined && (this.options.postProcessing?.length??0)>0) this.post=new PostProcessor(this.options.registry,this.colorFormat,this.options.postProcessing!);
     const encoder = device.createCommandEncoder({ label: "mtek frame" });
     const timestampWrites = this.timer?.passTimestampWrites();
+    const began = before?.(encoder, timestampWrites) === true;
     const pass = encoder.beginRenderPass({
-      ...(timestampWrites === undefined ? {} : { timestampWrites }),
+      ...(timestampWrites === undefined ? {} : { timestampWrites: began
+        ? { querySet: timestampWrites.querySet, ...(timestampWrites.endOfPassWriteIndex === undefined ? {} : { endOfPassWriteIndex: timestampWrites.endOfPassWriteIndex }) } : timestampWrites }),
       colorAttachments: [
         {
           view: this.post?.input(this.widthPx,this.heightPx)??output,

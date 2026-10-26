@@ -101,6 +101,16 @@ function entriesOf(layout: unknown): unknown {
 }
 
 describe("BindingPlan", () => {
+  it("keeps authored vertex resources visible in both stages without reusing fragment-only layouts", () => {
+    const { plan, material } = setup();
+    const resources = [{ name: "height", kind: "texture" as const, binding: 1 }, { name: "filter", kind: "sampler" as const, binding: 2 }];
+    const layout = plan.material(material.layout, resources, true);
+    expect(entriesOf(layout)).toMatchObject([{ visibility: 3 }, { visibility: 3 }, { visibility: 3 }]);
+    expect(layout).not.toBe(plan.material(material.layout, resources));
+    expect(plan.material(null, [], true)).toBe(plan.material(null));
+    expect(plan.material(material.layout, resources, true)).toBe(layout);
+    expect((plan.pipelineLayout(material.layout, resources, false, true) as unknown as FakeResource).descriptor).toMatchObject({ bindGroupLayouts: [plan.frame, layout, plan.object] });
+  });
   it("follows spec/gpu-layout.md section 6: frame, material (or empty), object with a dynamic offset", () => {
     const { plan, material } = setup();
     expect(entriesOf(plan.frame)).toEqual([{ binding: 0, visibility: 0x3, buffer: { type: "uniform", hasDynamicOffset: false, minBindingSize: 288 } }]);

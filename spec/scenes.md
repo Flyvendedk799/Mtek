@@ -82,6 +82,14 @@ entity Cube {
 
 A `material` without a `mesh` is `E5020`. Unknown, duplicate and mistyped fields are `E5001`/`E5002`/`E3102`. All values inside `mesh`, `body`, `collider` and `particles` descriptors must be **constant expressions** (`E3090`) — they are construction-only data transported in the manifest.
 
+4.1.1 **Authored mesh bounds** (decision 0199). `bounds_center` and `bounds_radius`
+are writable/bindable fields in final deformed mesh-local coordinates. A positive
+radius promises an enclosure of all final vertices, including skinning and
+material displacement; update it with the deformation inputs or include every
+pose. Zero uses automatic mesh/skin bounds, or conservative camera visibility
+for authored vertex shaders. These bounds affect mesh culling and transparent
+sorting, not physics or particle billboards. See [decision 0199](decisions/0199-authored-deformation-bounds.md).
+
 4.2 **Names.** Entity names are `PascalCase` by convention and **unique within the scene**, including nested entities (`E2002`). A named entity is referenced by its bare name anywhere in the scene (`Cube.position`). Entity names share the scene scope with state and cameras.
 
 4.3 **Nesting is parenting.** An `entity` declared inside another entity is its child; the child's transform is relative to the parent (§12). Parenting is a transform relationship, not inheritance: children do not inherit fields, state or handlers. Cyclic parenting is impossible syntactically. Re-parenting at run time is not in v0.1.

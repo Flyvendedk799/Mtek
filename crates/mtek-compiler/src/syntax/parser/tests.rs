@@ -802,23 +802,20 @@ fn e1040_still_reports_what_is_wrong_inside_the_dropped_member() {
 }
 
 #[test]
-fn e4901_is_the_only_diagnostic_for_vertex_and_compute() {
+fn vertex_is_retained_and_compute_is_the_only_e4901_stage() {
     let src = "material M {
     param a: f32 = 1.0;
-    vertex(input: VertexInput) -> VertexOutput { return input; }
+    vertex(input: VertexInput) -> vec3 { return input.position; }
     compute() { }
     fragment(input: SurfaceInput) -> color { return #fff000; }
 }";
     let run = parse(src);
-    assert_eq!(
-        run.found(),
-        [(Code::E4901, "vertex"), (Code::E4901, "compute")]
-    );
+    assert_eq!(run.found(), [(Code::E4901, "compute")]);
     check_tree(&run);
-    // The stage that is fine is kept, the unsupported ones are `Error`s.
+    // Both authored stages are retained; unsupported compute is an Error.
     assert_eq!(
         run.dump(),
-        "(module (material M (param a (type f32) (lit float 1.0)) (error) (error) (stage fragment (params (param input (type SurfaceInput))) (ret (type color)) (block (return (lit color #fff000))))))"
+        "(module (material M (param a (type f32) (lit float 1.0)) (stage vertex (params (param input (type VertexInput))) (ret (type vec3)) (block (return (field (name input) position)))) (error) (stage fragment (params (param input (type SurfaceInput))) (ret (type color)) (block (return (lit color #fff000))))))"
     );
     // Elsewhere the words are reserved names.
     assert_eq!(diags("fn vertex() {}"), [d(Code::E0013, "vertex")]);
@@ -827,8 +824,8 @@ fn e4901_is_the_only_diagnostic_for_vertex_and_compute() {
 #[test]
 fn e4901_does_not_hide_mistakes_inside_the_stage() {
     assert_eq!(
-        diags("material M { vertex(i: V) { let = 1; } }"),
-        [d(Code::E4901, "vertex"), d(Code::E1001, "=")]
+        diags("material M { compute(i: V) { let = 1; } }"),
+        [d(Code::E4901, "compute"), d(Code::E1001, "=")]
     );
 }
 

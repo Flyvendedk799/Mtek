@@ -131,7 +131,8 @@ pub struct GameScene {
 
 impl Manifest {
     /// The manifest as pretty JSON (two-space indentation, keys in declaration order) with a
-    /// final line break: the bytes of `program.manifest.json`.
+    /// final line break: the development/test form of `program.manifest.json`.
+    /// Release/preview packages omit insignificant whitespace (decision 0194).
     #[must_use]
     pub fn to_json(&self) -> String {
         // Serialising plain data with string keys cannot fail.
@@ -403,6 +404,10 @@ pub struct LayoutMember {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Shader {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lighting: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vertex_deformation: Option<u32>,
     pub hash: String,
     pub url: String,
     pub map: String,
@@ -850,6 +855,10 @@ pub struct Binding {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "lowercase")]
 pub enum BindingTarget {
+    Bounds {
+        entity: u32,
+        field: String,
+    },
     Transform {
         entity: u32,
         field: String,

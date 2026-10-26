@@ -9,10 +9,11 @@
 //!   (`E4032`). Params are checked in the dependency order of the constants
 //!   (`consteval.rs`): a material after the constants and structs its params
 //!   name, a constant after the materials its descriptor literals name.
-//! * **The stage function** (section 3). Exactly one, `fragment(name:
-//!   SurfaceInput) -> color` (`E4020` without one, `E4021` for another name
-//!   or signature, `E2002` for a second one; `vertex` and `compute` are the
-//!   parser's `E4901`). Its body is checked by the statement checker of
+//! * **Stage functions** (section 3, decision 0197). One required
+//!   `fragment(name: SurfaceInput) -> color`, one optional
+//!   `vertex(name: VertexInput) -> vec3`; `E4020` without fragment,
+//!   `E4021` for an invalid signature, `E2002` for a duplicate stage.
+//!   Compute remains the parser's `E4901`. Its body is checked by the statement checker of
 //!   `body.rs` with the params as read-only values in scope; the
 //!   `SurfaceInput` fields it reads are recorded, and a body that uses the
 //!   input other than by reading one of its fields reads all of them. The
@@ -56,7 +57,7 @@ pub const MAX_MATERIAL_PARAMS: usize = 64;
 
 /// The most textures and samplers one material may bind (`spec/gpu-layout.md` section 8.3,
 /// `E6002`).
-pub const MAX_MATERIAL_RESOURCES: usize = 8;
+pub const MAX_MATERIAL_RESOURCES: usize = 16;
 
 /// The one stage function of a v0.1 material.
 const FRAGMENT: &str = "fragment";
@@ -244,6 +245,7 @@ impl<'a> Checker<'a> {
                 span: decl.span,
                 params,
                 fragment: None,
+                vertex: None,
             },
         );
     }
@@ -375,61 +377,97 @@ impl<'a> Checker<'a> {
             })
             .collect();
         let material = decl.name.name.clone();
-        let Some(first) = stages.first() else {
+        if stages.is_empty() || stages.iter().all(|stage| stage.name.name == "vertex") {
             self.sink.push(
-                Diagnostic::new(
-                    Code::E4020,
-                    format!("Material '{material}' has no fragment stage."),
-                )
-                .at(decl.name.span)
-                .note("a material has exactly one stage function, `fragment`; the compiler supplies the vertex stage")
-                .help("add `fragment(input: SurfaceInput) -> color { … }`"),
+                Diagnostic::new(Code::E4020, format!("Material '{material}' has no fragment stage."))
+                    .at(decl.name.span)
+                    .note("a material requires exactly one `fragment` stage and may declare one `vertex` stage")
+                    .help("add `fragment(input: SurfaceInput) -> color { … }`"),
             );
-            return;
-        };
+        }
         let mut fragment = None;
-        for (index, stage) in stages.iter().enumerate() {
-            if index > 0 {
+        let mut vertex = None;
+        let mut declared = std::collections::BTreeMap::new();
+        for stage in stages {
+            let is_vertex = stage.name.name == "vertex";
+            if let Some(&first) = declared.get(stage.name.name.as_str()) {
                 self.sink.push(
-                    Diagnostic::new(
-                        Code::E2002,
-                        format!(
-                            "Duplicate stage function '{}': material '{material}' already has its stage function.",
-                            stage.name.name
-                        ),
-                    )
-                    .at(stage.name.span)
-                    .related(first.name.span, "the stage function is declared here")
-                    .note("a material has exactly one stage function, `fragment`"),
+                    Diagnostic::new(Code::E2002, format!(
+                        "Duplicate stage function '{}': material '{material}' already has this stage function.", stage.name.name))
+                        .at(stage.name.span).related(first, "the stage function is declared here")
+                        .note("a material has one `fragment` stage and at most one `vertex` stage"),
                 );
-            } else if stage.name.name != FRAGMENT {
+            } else if stage.name.name != FRAGMENT && !is_vertex {
                 let mut diagnostic = Diagnostic::new(
                     Code::E4021,
                     format!(
-                        "Unknown stage function '{}': the stage function of a material is `fragment`.",
+                        "Unknown stage function '{}': a material stage is `fragment` or `vertex`.",
                         stage.name.name
                     ),
                 )
                 .at(stage.name.span)
-                .note("custom vertex and compute stages are planned for v0.2");
+                .note("custom compute stages remain planned");
                 if (1..=2).contains(&edit_distance(&stage.name.name, FRAGMENT)) {
                     diagnostic = diagnostic.help(format!("did you mean '{FRAGMENT}'?"));
                 }
                 self.sink.push(diagnostic);
             }
+            declared
+                .entry(stage.name.name.as_str())
+                .or_insert(stage.name.span);
             let info = self.stage(&material, stage);
-            if index == 0 {
-                fragment = Some(info);
+            let target = if is_vertex {
+                &mut vertex
+            } else {
+                &mut fragment
+            };
+            if target.is_none() {
+                *target = Some(info);
+            }
+        }
+        if let Some(fragment) = &fragment
+            && let Some(varying) = fragment.varying
+        {
+            if vertex
+                .as_ref()
+                .is_none_or(|vertex| vertex.result != varying)
+            {
+                self.sink.push(Diagnostic::new(Code::E4021,
+                    "The fragment payload type must exactly match the authored vertex stage's output struct.")
+                    .at(fragment.name_span));
+            } else if let Some(output) = self.out.interner.struct_def(varying) {
+                let count = output.fields.len() + fragment.surface_inputs.len();
+                if count > 16 {
+                    self.sink.push(Diagnostic::new(Code::E6003, format!(
+                        "The material requires {count} interpolated variables; the supported limit is 16 (surface inputs plus payload fields)."))
+                        .at(fragment.name_span).help("remove payload fields or unused SurfaceInput reads"));
+                }
             }
         }
         if let Some(info) = self.out.materials.get_mut(&def) {
             info.fragment = fragment;
+            info.vertex = vertex;
         }
     }
 
     /// Check one stage function: its signature (`E4021`) and its body.
     fn stage(&mut self, material: &str, stage: &StageFn) -> StageInfo {
-        let surface_ty = self.out.interner.prelude_type(SURFACE_INPUT);
+        let is_vertex = stage.name.name == "vertex";
+        let kind = if is_vertex { "vertex" } else { "fragment" };
+        let input_type = if is_vertex {
+            "VertexInput"
+        } else {
+            SURFACE_INPUT
+        };
+        let result_ty = if is_vertex { TyId::VEC3 } else { TyId::COLOR };
+        let result_name = if is_vertex { "vec3" } else { "color" };
+        let result_description = if is_vertex {
+            "vec3 or a vertex output struct"
+        } else {
+            "color"
+        };
+        let signature = format!("{kind}(input: {input_type}) -> {result_name}");
+        let surface_ty = self.out.interner.prelude_type(input_type);
         let mut surface = None;
         let mut param_types = Vec::with_capacity(stage.params.len());
         for param in &stage.params {
@@ -451,55 +489,55 @@ impl<'a> Checker<'a> {
                 .map_or(stage.name.span.end, |p| p.span.end.saturating_add(1))
                 .min(stage.body.span.start.max(stage.name.span.end)),
         );
-        match (stage.params.as_slice(), param_types.as_slice()) {
-            ([param], [ty]) => {
-                if Some(*ty) != surface_ty && !self.out.interner.is_error(*ty) {
-                    let shown = self.display(*ty);
-                    self.sink.push(
-                        Diagnostic::new(
-                            Code::E4021,
-                            format!(
-                                "The parameter of the fragment stage of material '{material}' must have type SurfaceInput, but '{}' has type {shown}.",
-                                param.name.name
-                            ),
-                        )
-                        .at(param.ty.span)
-                        .expected(SURFACE_INPUT)
-                        .actual(shown)
-                        .help("write `fragment(input: SurfaceInput) -> color`"),
-                    );
-                }
+        let valid_count = stage.params.len() == 1 || (!is_vertex && stage.params.len() == 2);
+        if valid_count {
+            let param = &stage.params[0];
+            let ty = param_types[0];
+            if Some(ty) != surface_ty && !self.out.interner.is_error(ty) {
+                let shown = self.display(ty);
+                self.sink.push(Diagnostic::new(Code::E4021, format!(
+                    "The parameter of the {kind} stage of material '{material}' must have type {input_type}, but '{}' has type {shown}.", param.name.name))
+                    .at(param.ty.span).expected(input_type).actual(shown).help(format!("write `{signature}`")));
             }
-            (params, _) => {
-                self.sink.push(
-                    Diagnostic::new(
-                        Code::E4021,
-                        format!(
-                            "The fragment stage of material '{material}' takes exactly one parameter, of type SurfaceInput, but it declares {}.",
-                            params.len()
-                        ),
-                    )
-                    .at(header)
-                    .help("write `fragment(input: SurfaceInput) -> color`"),
-                );
-            }
+        } else {
+            self.sink.push(Diagnostic::new(Code::E4021, format!(
+                "The {kind} stage of material '{material}' has an invalid parameter count ({}); vertex takes one VertexInput, fragment takes SurfaceInput and an optional matching vertex-output payload.", stage.params.len()))
+                .at(header).help(format!("write `{signature}`")));
         }
+        let varying = if !is_vertex && param_types.len() == 2 {
+            let ty = param_types[1];
+            if matches!(self.out.interner.get(ty), Ty::Struct(_)) {
+                Some(ty)
+            } else {
+                if !self.out.interner.is_error(ty) {
+                    self.sink.push(Diagnostic::new(Code::E4021,
+                        "The second fragment parameter must be the vertex stage's output struct.")
+                        .at(stage.params[1].ty.span));
+                }
+                None
+            }
+        } else {
+            None
+        };
         let ret = match &stage.ret {
             Some(ret) => {
                 let ty = self.annotation(ret);
-                if ty != TyId::COLOR && !self.out.interner.is_error(ty) {
+                if ty != result_ty
+                    && !(is_vertex && self.valid_vertex_output(ty, ret.span))
+                    && !self.out.interner.is_error(ty)
+                {
                     let shown = self.display(ty);
                     self.sink.push(
                         Diagnostic::new(
                             Code::E4021,
                             format!(
-                                "The fragment stage of material '{material}' must return color, but it is declared to return {shown}."
+                                "The {kind} stage of material '{material}' must return {result_description}, but it is declared to return {shown}."
                             ),
                         )
                         .at(ret.span)
-                        .expected("color")
+                        .expected(result_description)
                         .actual(shown)
-                        .help("write `-> color`; the alpha of the result is ignored in v0.1"),
+                        .help(format!("write `-> {result_name}`")),
                     );
                 }
                 ty
@@ -509,26 +547,28 @@ impl<'a> Checker<'a> {
                     Diagnostic::new(
                         Code::E4021,
                         format!(
-                            "The fragment stage of material '{material}' must return color, but it declares no result type."
+                            "The {kind} stage of material '{material}' must return {result_description}, but it declares no result type."
                         ),
                     )
                     .at(header)
-                    .help("add `-> color` after the parameter list"),
+                    .help(format!("add `-> {result_name}` after the parameter list")),
                 );
-                TyId::COLOR
+                result_ty
             }
         };
         self.start_body(
-            format!("The fragment stage of material '{material}'"),
+            format!("The {kind} stage of material '{material}'"),
             stage.name.name.clone(),
             ret,
             Some(StageState {
+                input_type,
                 material: material.to_owned(),
                 surface,
                 surface_uses: 0,
                 surface_field_reads: 0,
                 surface_reads: BTreeSet::new(),
                 sample_operands: BTreeSet::new(),
+                derivatives_allowed: !is_vertex,
             }),
         );
         if let Some(body) = &mut self.body {
@@ -546,6 +586,8 @@ impl<'a> Checker<'a> {
             None => (BodyFacts::default(), Vec::new()),
         };
         StageInfo {
+            result: ret,
+            varying,
             name_span: stage.name.span,
             span: stage.span,
             surface,
@@ -554,10 +596,48 @@ impl<'a> Checker<'a> {
         }
     }
 
+    /// Validate the geometry contract and the directly interpolatable payload fields.
+    fn valid_vertex_output(&mut self, ty: TyId, span: Span) -> bool {
+        let Some(output) = self.out.interner.struct_def(ty) else {
+            return false;
+        };
+        if output.broken {
+            return true;
+        }
+        let fields = output.fields.clone();
+        if output.field("position").is_none() {
+            self.sink.push(Diagnostic::new(Code::E4021,
+                "A vertex output struct requires a `position: vec3` field in mesh-local coordinates.").at(span));
+        }
+        for (name, field_ty) in fields {
+            let valid = match name.as_str() {
+                "position" | "normal" => field_ty == TyId::VEC3,
+                "uv" => field_ty == TyId::VEC2,
+                _ => matches!(
+                    self.out.interner.get(field_ty),
+                    Ty::Bool
+                        | Ty::I32
+                        | Ty::U32
+                        | Ty::F32
+                        | Ty::Vec2
+                        | Ty::Vec3
+                        | Ty::Vec4
+                        | Ty::Color
+                        | Ty::Quat
+                ),
+            };
+            if !valid {
+                self.sink.push(Diagnostic::new(Code::E4021, format!(
+                    "Vertex output field '{name}' has unsupported type {}; position/normal require vec3, uv requires vec2, and payload fields are scalar or vector values.", self.display(field_ty))).at(span));
+            }
+        }
+        true
+    }
+
     /// The `SurfaceInput` fields a stage reads, in registry order: every
     /// field when the body uses the input other than by reading a field.
     fn surface_inputs(&self, stage: &StageState) -> Vec<&'static str> {
-        let Some(record) = self.registry.type_def(SURFACE_INPUT) else {
+        let Some(record) = self.registry.type_def(stage.input_type) else {
             return Vec::new();
         };
         let all = stage.surface_uses > stage.surface_field_reads;
@@ -644,7 +724,7 @@ impl<'a> Checker<'a> {
     /// exactly `world_position` and `world_normal` of it (decision 0057): the call is the one
     /// use of the parameter other than a field read that does not make the stage read them all,
     /// so the vertex interface of `Pbr` carries what the lighting model needs and nothing more.
-    pub(super) fn note_lighting_surface(&mut self, args: &[Expr]) {
+    pub(super) fn note_lighting_surface(&mut self, args: &[Expr], mapped: bool) {
         let Some(first) = args.first() else {
             return;
         };
@@ -666,7 +746,10 @@ impl<'a> Checker<'a> {
             .fields
             .iter()
             .enumerate()
-            .filter(|(_, field)| matches!(field.name, "world_position" | "world_normal"))
+            .filter(|(_, field)| {
+                matches!(field.name, "world_position" | "world_normal")
+                    || (mapped && field.name == "uv")
+            })
             .map(|(index, _)| index)
             .collect();
         if let Some(stage) = self.body.as_mut().and_then(|b| b.stage.as_mut()) {
@@ -688,6 +771,26 @@ impl<'a> Checker<'a> {
             stage
                 .sample_operands
                 .extend(args.iter().take(2).map(|arg| strip_parens(arg).id));
+        }
+    }
+
+    pub(super) fn end_derivative_prefix(&mut self) {
+        if let Some(stage) = self.body.as_mut().and_then(|body| body.stage.as_mut()) {
+            stage.derivatives_allowed = false;
+        }
+    }
+
+    pub(super) fn check_derivative_call(&mut self, span: Span, name: &str) {
+        if !self
+            .body
+            .as_ref()
+            .and_then(|body| body.stage.as_ref())
+            .is_some_and(|stage| stage.derivatives_allowed)
+        {
+            self.report(Diagnostic::new(Code::E4042,
+                format!("`{name}` requires the unconditional prefix of a fragment stage."))
+                .at(span)
+                .help("evaluate it before any branch, loop, nested block or short-circuit expression, then use its value in conditional code; `sample` reads level zero and is valid in conditional code"));
         }
     }
 
@@ -723,6 +826,24 @@ impl<'a> Checker<'a> {
     /// `E4040` for a read of the constant `id` of type `ty` in a stage when
     /// the type exists only on the CPU (a handle or a descriptor).
     pub(super) fn note_stage_capture(&mut self, expr: &Expr, id: DefId, ty: TyId) {
+        if self
+            .body
+            .as_ref()
+            .and_then(|b| b.stage.as_ref())
+            .is_some_and(|s| s.input_type == "ComputeInput")
+        {
+            if !self.is_error(ty) && !self.gpu_representable(ty) {
+                self.report(
+                    Diagnostic::new(
+                        Code::E4040,
+                        "A compute kernel cannot capture a CPU-only constant.",
+                    )
+                    .at(expr.span)
+                    .help("pass values through compute parameters or input buffers"),
+                );
+            }
+            return;
+        }
         let Some(material) = self
             .body
             .as_ref()
@@ -760,6 +881,14 @@ impl<'a> Checker<'a> {
 
     /// `E4040` for a call of the `cpu fn` `id` in a stage.
     pub(super) fn note_stage_cpu_call(&mut self, expr: &Expr, id: DefId, name: &str) {
+        if let Some(stage) = self.body.as_ref().and_then(|b| b.stage.as_ref())
+            && stage.input_type == "ComputeInput"
+        {
+            self.report(Diagnostic::new(Code::E4040,
+                format!("The kernel of compute program '{}' calls the `cpu fn` '{name}'; kernels may call only GPU-compatible `fn`s.", stage.material))
+                .at(expr.span));
+            return;
+        }
         let Some(material) = self
             .body
             .as_ref()
@@ -785,6 +914,14 @@ impl<'a> Checker<'a> {
     /// than 1.0: a constant colour, or a colour constructor with a constant
     /// alpha argument.
     pub(super) fn returned_alpha(&mut self, value: &Expr) {
+        if self
+            .body
+            .as_ref()
+            .and_then(|b| b.stage.as_ref())
+            .is_some_and(|s| s.input_type == "ComputeInput")
+        {
+            return;
+        }
         let Some(material) = self
             .body
             .as_ref()

@@ -59,6 +59,7 @@ export const CONTEXT_MEMBERS = [
   "cam",
   "frame",
   "setTransform",
+  "setBounds",
   "setVisible",
   "setParam",
   "setMaterial",
@@ -156,6 +157,9 @@ export interface EntityRecord {
   rotation: Quat;
   scale: Vec3;
   visible: boolean;
+  /** Final deformed mesh-local sphere. Radius zero selects automatic/unbounded behavior. */
+  bounds_center: Vec3;
+  bounds_radius: number;
   /** Entity state: every declared name, at its zero value until `init`; generated code writes it directly. */
   readonly state: Record<string, unknown>;
   /** Prefab params; static entities have none. */
@@ -449,6 +453,8 @@ export class World {
           rotation: IDENTITY,
           scale: UNIT_SCALE,
           visible: true,
+          bounds_center: ORIGIN,
+          bounds_radius: 0,
           state: stateObject(this.manifest.scene.entities[entity.index]?.state ?? []),
           params: Object.freeze({}),
           mat: params === undefined ? null : { p: Object.fromEntries(params.map((param) => [param.name, zeroValue(param.type)])) },
@@ -556,6 +562,9 @@ export class World {
       e: this.entities,
       setTransform: (entity: unknown, field: unknown, value: unknown): void => {
         this.setTransform(entity, field, value);
+      },
+      setBounds: (entity: unknown, field: unknown, value: unknown): void => {
+        this.setBounds(entity, field, value);
       },
       setVisible: (entity: unknown, value: unknown): void => {
         this.setVisible(entity, value);
@@ -744,8 +753,13 @@ export class World {
 
   /** Samples every playing clip forward by `delta` seconds (decision 0156). Pause skips phase 3, so clips pause too. */
   advanceClips(delta: number): void {
+    // Host extensions can move actors before this phase; distance policies use those transforms.
+    this.propagate();
     this.clips.advance(delta, (slot, channel, value) => {
       this.writeChannel(slot, channel, value);
+    }, (slot) => {
+      const matrix = this.worlds[slot], camera = this.camera.position;
+      return matrix === undefined ? 0 : Math.hypot(matrix[12]! - camera.x, matrix[13]! - camera.y, matrix[14]! - camera.z);
     });
   }
 
@@ -785,6 +799,10 @@ export class World {
   particleDraws(): readonly ParticleDraw[] {
     return this.particles.draws();
   }
+
+  private boundsRevision = 0;
+  /** Changes to local authored bounds invalidate culling even without a matrix change. */
+  get boundsVersion(): number { return this.boundsRevision; }
 
   /** Incremented by every `setVisible` that changed a value: the draw list depends on it. */
   get visibilityVersion(): number {
@@ -973,6 +991,8 @@ export class World {
       rotation: IDENTITY,
       scale: UNIT_SCALE,
       visible: true,
+      bounds_center: ORIGIN,
+      bounds_radius: 0,
       state: stateObject(prefab.resolved.state),
       params,
       mat: material === undefined ? null : { p: Object.fromEntries(material.map((param) => [param.name, zeroValue(param.type)])) },
@@ -1083,6 +1103,29 @@ export class World {
     }
     this.transformDirty[index] = 1;
     this.transformsPending = true;
+  }
+
+  private setBounds(entity: unknown, field: unknown, value: unknown): void {
+    const index = this.indexOf(entity, "setBounds"), record = this.records[index];
+    if (record === undefined) return;
+    if (field !== "bounds_center" && field !== "bounds_radius") throw new RuntimeInternalError(`ctx.setBounds got the field ${describeValue(field)}; expected bounds_center or bounds_radius.`);
+    if (field === "bounds_center" ? !isVec3(value) : typeof value !== "number") throw new RuntimeInternalError(`ctx.setBounds got an invalid type for ${field}.`);
+    const valid = field === "bounds_center" ? isFiniteVec3(value as Vec3) : Number.isFinite(value) && (value as number) >= 0;
+    if (!valid) {
+      this.report(makeRuntimeDiagnostic("E8091", {
+        phase: this.phase, source: this.entitySource(index),
+        message: `Invalid ${field} written to entity '${this.resolvedBySlot[index]?.name ?? String(index)}': bounds must be finite and the radius nonnegative. The write is ignored.`,
+      }));
+      return;
+    }
+    if (field === "bounds_center") {
+      if (sameVec3(record.bounds_center, value as Vec3)) return;
+      record.bounds_center = Object.freeze({ ...value as Vec3 });
+    } else {
+      if (record.bounds_radius === value) return;
+      record.bounds_radius = value as number;
+    }
+    this.boundsRevision++;
   }
 
   private setVisible(entity: unknown, value: unknown): void {
@@ -1373,6 +1416,12 @@ export class World {
   }
 
   skinPlayer(slot: number): SkeletonPlayer | undefined { return this.clips.skin(slot); }
+  shareAnimation(source: number, targets: readonly number[]): void {
+    if (this.clips.share(source,targets)) this.visibility++;
+  }
+  detachAnimation(slot: number): SkeletonPlayer {
+    const player = this.clips.detach(slot); this.visibility++; return player;
+  }
 
   private trackMotion(slot: number, resolved: ResolvedEntity, spawned = false): void {
     if (resolved.particles !== undefined) {

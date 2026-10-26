@@ -206,6 +206,16 @@ const source: MtekSkin = {
       ],
     },
     {
+      name: "run",
+      duration: 1,
+      channels: [
+        rotation(10, [0, 0.7, 0, -0.7, 0]),
+        rotation(13, [0, -0.7, 0, 0.7, 0]),
+        rotation(11, [0, 0.9, 0, 0.15, 0]),
+        rotation(14, [0, 0.15, 0, 0.9, 0]),
+      ].map(channel => ({ ...channel, times: channel.times.map(time => time / 2) })),
+    },
+    {
       name: "action",
       duration: 2,
       channels: [
@@ -219,7 +229,7 @@ const mapped = retargetSkin(
   source,
   second.skin,
   Object.fromEntries(names.map((n) => [n, n])),
-  1.25,
+  { translationScale: 1.25, rotationSpace: "world" },
 );
 const actors = [
   {
@@ -239,6 +249,9 @@ const actors = [
     }),
   },
 ];
+for (const actor of actors) actor.controller.setLocomotion({
+  samples: [{ clip: "walk", threshold: 0 }, { clip: "run", threshold: 1 }], parameter: 0.3,
+});
 const helpers: THREE.SkeletonHelper[] = [],
   props: THREE.Mesh[] = [];
 actors.forEach((actor, i) => {
@@ -280,6 +293,7 @@ actors.forEach((actor, i) => {
 });
 const input = (id: string) => document.getElementById(id) as HTMLInputElement;
 function configure(controller: AnimationController, scale: number): void {
+  controller.setLocomotionParameter(Number(input("speed").value));
   controller.setLayer("upper", {
     clip: "action",
     weight: Number(input("action").value),
@@ -295,6 +309,8 @@ function configure(controller: AnimationController, scale: number): void {
           0.1 * scale,
         ],
         iterations: 24,
+        rotation: [0,0,0,1],
+        limits: { [side + "Knee"]: { axis: [1,0,0], min: 0, max: 2.4 } },
       });
     else controller.player.ik.remove(side + "Foot");
     if (input("grip").checked)
@@ -306,6 +322,7 @@ function configure(controller: AnimationController, scale: number): void {
           0.8 * scale,
         ],
         iterations: 24,
+        rotation: [0,0,0,1],
       });
     else controller.player.ik.remove(side + "Grip");
   }
@@ -313,9 +330,8 @@ function configure(controller: AnimationController, scale: number): void {
 for (const element of document.querySelectorAll("input"))
   element.addEventListener("input", () => {
     for (const a of actors) configure(a.controller, a.scale);
-    actors[1]!.controller.setUpdateInterval(
-      input("throttle").checked ? 1 / 15 : 0,
-    );
+    actors[1]!.controller.setUpdatePolicy(input("throttle").checked
+      ? [{distance:0,interval:0},{distance:9,interval:1/15},{distance:16,interval:1/8}] : undefined);
     helpers.forEach((h) => {
       h.visible = input("skeleton").checked;
     });
@@ -325,10 +341,10 @@ let previous = performance.now();
 const samples: number[] = [];
 renderer.setAnimationLoop(() => {
   const now = performance.now(),
-    dt = Math.min((now - previous) / 1000, 0.1);
+    dt = input("pause").checked ? 0 : Math.min((now - previous) / 1000, 0.1);
   previous = now;
   const start = performance.now();
-  actors.forEach((a) => a.controller.update(dt));
+  actors.forEach((a) => a.controller.update(dt,false,camera.position.distanceTo(a.mesh.position)));
   props.forEach((p) => {
     p.visible = input("grip").checked;
   });
@@ -348,6 +364,10 @@ renderer.setAnimationLoop(() => {
   document.getElementById("stats")!.textContent =
     `Pose CPU p95: ${[...samples].sort((a, b) => a - b)[Math.max(0, Math.ceil(samples.length * 0.95) - 1)]!.toFixed(2)} ms · ${String(actors.length)} rigs`;
 });
+Object.assign(window,{__mtekAnimationDemo: {
+  snapshot: () => actors.map(actor => ({ phase: actor.controller.player.locomotion.phase, parameter: actor.controller.player.locomotion.parameter,
+    hand: actor.controller.player.jointPosition("leftHand"), handRotation: actor.controller.player.jointRotation("leftHand"), revision: actor.controller.player.revision })),
+}});
 addEventListener("pagehide", () => {
   renderer.setAnimationLoop(null);
   actors.forEach((a) => {a.controller.dispose();a.mesh.skeleton.dispose();});

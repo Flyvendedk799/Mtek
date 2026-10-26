@@ -35,7 +35,7 @@ image assets/9c39f834fcfae0c6.png (76 bytes, srgb)
   from         image 0 of models/chair.glb
   declared at  src/main.mtek:3:25-3:46
   preprocessing
-    mipmaps not generated
+    mipmaps generated at runtime
 
 image assets/bcc399594511a2c0.png (83 bytes, srgb)
   sha256       f1e07690183a7b46227dec468aaa073b988c43a8c7ae52ef27d4986356eae2cb

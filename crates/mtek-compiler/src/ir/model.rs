@@ -245,6 +245,8 @@ pub struct MaterialItem {
     /// by `layout::compute`; `None` for a material without params.
     pub layout: Option<crate::layout::LayoutRecord>,
     pub fragment: StageItem,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vertex: Option<StageItem>,
     /// The whole declaration, `material Name { … }`.
     #[serde(serialize_with = "span")]
     pub span: Span,
@@ -265,9 +267,8 @@ pub struct MaterialParamItem {
     pub span: Span,
 }
 
-/// The fragment stage of a material with its typed body. Material params
-/// appear in it as [`ExprKind::Param`]; the `SurfaceInput` parameter is the
-/// first local.
+/// A material stage with its typed body. Material params appear as
+/// [`ExprKind::Param`]; its SurfaceInput or VertexInput parameter is the first local.
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StageItem {
@@ -279,7 +280,7 @@ pub struct StageItem {
     /// generated vertex stage outputs, and meshes must provide, only those
     /// (`spec/materials.md` section 3.1).
     pub surface_inputs: Vec<&'static str>,
-    /// The result type (`color`).
+    /// The result type (`color` for fragment, `vec3` for vertex).
     pub result: String,
     /// The `SurfaceInput` parameter, then the locals in declaration order.
     pub locals: Vec<LocalItem>,
@@ -888,6 +889,10 @@ pub struct Binding {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum BindingTarget {
+    Bounds {
+        entity: u32,
+        field: String,
+    },
     Transform {
         entity: u32,
         field: String,
@@ -1172,6 +1177,11 @@ pub struct Entity {
     pub scale: Field,
     /// Whether the mesh is drawn (`bool`).
     pub visible: Field,
+    /// Explicit final mesh-local bounds; omitted fields use runtime defaults.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bounds_center: Option<Field>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bounds_radius: Option<Field>,
     /// The mesh, if the entity draws one.
     pub mesh: Option<Mesh>,
     /// The material instance; present exactly when `mesh` is.

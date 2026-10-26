@@ -1,0 +1,168 @@
+{
+  "uv": "degenerate",
+  "records": [
+    {
+      "label": "all channels",
+      "actual": [
+        71,
+        24,
+        70
+      ],
+      "expected": [
+        71,
+        24,
+        70
+      ]
+    },
+    {
+      "label": "geometric normal",
+      "actual": [
+        71,
+        24,
+        70
+      ],
+      "expected": [
+        71,
+        24,
+        70
+      ]
+    },
+    {
+      "label": "ambient without occlusion",
+      "actual": [
+        60,
+        24,
+        80
+      ],
+      "expected": [
+        60,
+        24,
+        79
+      ]
+    },
+    {
+      "label": "ambient with occlusion",
+      "actual": [
+        42,
+        15,
+        56
+      ],
+      "expected": [
+        42,
+        15,
+        56
+      ]
+    },
+    {
+      "label": "direct light with occlusion",
+      "actual": [
+        0,
+        0,
+        0
+      ],
+      "expected": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "label": "direct light without occlusion",
+      "actual": [
+        0,
+        0,
+        0
+      ],
+      "expected": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "label": "emissive only",
+      "actual": [
+        101,
+        39,
+        91
+      ],
+      "expected": [
+        101,
+        39,
+        91
+      ]
+    }
+  ],
+  "counters": {
+    "buffersAllocated": 9,
+    "texturesAllocated": 8,
+    "pipelinesCreated": 1,
+    "shaderModulesCreated": 1,
+    "bindGroupsCreated": 4,
+    "uploads": 11,
+    "uploadBytes": 872,
+    "liveBuffers": 8,
+    "liveTextures": 8,
+    "liveSamplers": 3,
+    "liveShaderModules": 1,
+    "livePipelines": 1,
+    "liveBindGroups": 4,
+    "liveListeners": 9,
+    "frameTimeMs": 2.7999999998137355,
+    "cpuUpdateMs": 1,
+    "renderPrepMs": 1.7999999998137355,
+    "gpuTimeAvailable": 0,
+    "drawCalls": 1,
+    "drawCallsTotal": 1,
+    "failedMaterials": 0,
+    "instancedDraws": 0,
+    "instancedDrawsTotal": 0,
+    "culledObjects": 0,
+    "culledObjectsTotal": 0,
+    "rebatchesTotal": 1,
+    "sharedParamBlocks": 0,
+    "ownedParamBlocks": 1,
+    "discardedSteps": 0,
+    "liveEntities": 2,
+    "pendingSpawns": 0,
+    "pendingRemovals": 0,
+    "entitySlots": 2,
+    "entitiesSpawned": 0,
+    "entitiesDestroyed": 0,
+    "physicsBodies": 0,
+    "physicsColliders": 0,
+    "physicsSteps": 0,
+    "physicsFrozenBodies": 0,
+    "framesRendered": 1,
+    "framesSkipped": 0,
+    "deviceLosses": 0,
+    "deviceRecoveries": 0,
+    "recoveryAttempts": 0
+  },
+  "assets": [
+    {
+      "url": "assets/470457ffeff62be6.bin",
+      "kind": "mesh-data",
+      "state": "ready",
+      "bytes": 140
+    },
+    {
+      "url": "assets/45f8bd6e8e5c5cdc.png",
+      "kind": "image",
+      "state": "ready",
+      "bytes": 70
+    },
+    {
+      "url": "assets/cbc7f14b79387de5.png",
+      "kind": "image",
+      "state": "ready",
+      "bytes": 70
+    },
+    {
+      "url": "assets/d340457c6b972e4d.png",
+      "kind": "image",
+      "state": "ready",
+      "bytes": 70
+    }
+  ]
+}

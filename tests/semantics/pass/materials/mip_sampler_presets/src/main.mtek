@@ -1,0 +1,24 @@
+// Every core sampler variant is a real material resource and is sampled.
+material FilterChoices {
+    param image: texture = texture.white();
+    param s0: sampler = sampler.linear_repeat_level0();
+    param s1: sampler = sampler.linear_clamp_level0();
+    param s2: sampler = sampler.nearest_repeat_level0();
+    param s3: sampler = sampler.nearest_clamp_level0();
+    param s4: sampler = sampler.linear_repeat_mip_nearest();
+    param s5: sampler = sampler.linear_clamp_mip_nearest();
+    param s6: sampler = sampler.nearest_repeat_mip_linear();
+    param s7: sampler = sampler.nearest_clamp_mip_linear();
+    fragment(input: SurfaceInput) -> color {
+        let c0 = sample_mip(image, s0, input.uv);
+        let c1 = sample_mip(image, s1, input.uv);
+        let c2 = sample_mip(image, s2, input.uv);
+        let c3 = sample_mip(image, s3, input.uv);
+        let c4 = sample_mip(image, s4, input.uv);
+        let c5 = sample_mip(image, s5, input.uv);
+        let c6 = sample_mip(image, s6, input.uv);
+        let c7 = sample_mip(image, s7, input.uv);
+        return color.linear((c0 + c1 + c2 + c3 + c4 + c5 + c6 + c7).xyz * 0.125, 1.0);
+    }
+}
+scene Demo { camera Main {} entity Part { mesh: Box {}; material: FilterChoices {}; } }

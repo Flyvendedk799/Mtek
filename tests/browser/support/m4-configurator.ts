@@ -4,7 +4,7 @@
 //   .out/m4-configurator/site/host/    the example's host page, copied next to dist/ so that its `../dist/app.js` resolves
 //   .out/m4-configurator/repeated/     `mtek build --mode test` of the repeated-object variant: the example with `src/main.mtek`
 //                                      replaced by the generated scene of configurator-scene.ts (80 copies of the chair's meshes)
-// A build that fails fails the whole run with the CLI's report. The variants that must NOT build (a GLB with a normal texture, a
+// A build that fails fails the whole run with the CLI's report. The variants that must NOT build (a normal map on UV set 1, a
 // GLB that requires an extension) are made inside the spec that checks them, with `buildBrokenVariant`.
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";

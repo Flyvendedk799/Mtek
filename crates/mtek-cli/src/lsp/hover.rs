@@ -250,6 +250,15 @@ pub(super) fn decl_signature(view: &ModuleView<'_>, def: &Def) -> Option<String>
                 _ => format!("param {name}"),
             }
         }
+        DefKind::Compute => format!("compute {name} (packaging/dispatch unavailable)"),
+        DefKind::InputBuffer | DefKind::OutputBuffer => {
+            let word = if def.kind == DefKind::InputBuffer {
+                "input"
+            } else {
+                "output"
+            };
+            format!("{word} {name}: {}", ty(types.local_ty(def.id)?))
+        }
         DefKind::FnParam => format!("{name}: {}", ty(types.local_ty(def.id)?)),
         DefKind::Local { mutable } => {
             let keyword = if mutable { "var" } else { "let" };

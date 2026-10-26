@@ -1,0 +1,10 @@
+{
+  "extends": "../../packages/runtime-web/tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "characters-probe.ts",
+    "mixed-sampler-probe.ts"
+  ]
+}

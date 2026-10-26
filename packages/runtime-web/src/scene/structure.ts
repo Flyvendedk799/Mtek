@@ -538,7 +538,7 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
       const problem =
         binding.id !== position
           ? `carries id ${String(binding.id)}`
-          : (target.kind === "transform" || target.kind === "visible") && target.entity !== 0
+          : (target.kind === "transform" || target.kind === "visible" || target.kind === "bounds") && target.entity !== 0
             ? `targets entity ${String(target.entity)}, but a prefab binds only its instance (entity 0)`
             : target.kind === "param" && (target.instance !== 0 || material === null)
               ? "targets a material instance the prefab does not have"

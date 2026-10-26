@@ -266,9 +266,31 @@ export function generateGrammar(source: GrammarSource, builtins: Builtins): TmGr
   });
 
   // --- keywords and the names they declare ------------------------------------------------------
+  // Source compute declarations are parsed/checked, while executable packaging
+  // remains E4901. The word remains illegal when used as an ordinary name.
+  add("checked-compute-declaration", {
+    match: `(?:^|(?<=[{};]))\\s*(?:(export)\\s+)?(compute)\\s+(?!${words(source.reserved)}${END})(${IDENT})${END}(?!\\s*\\()`,
+    captures: {
+      "1": { name: `storage.modifier.${LANG}` },
+      "2": { name: `keyword.other.declaration.${LANG}` },
+      "3": { name: `entity.name.type.compute.${LANG}` },
+    },
+  });
+  add("checked-compute-resource", {
+    match: `(?:^|(?<=[{};]))\\s*(input|output)\\s+(?!${words(source.reserved)}${END})(${IDENT})(?=\\s*:)`,
+    captures: {
+      "1": { name: `keyword.other.declaration.${LANG}` },
+      "2": { name: `variable.other.declaration.${LANG}` },
+    },
+  });
+  // `vertex` stays reserved as an ordinary name, but is accepted at a material member boundary.
+  add("authored-vertex-stage", {
+    match: "(?:^|(?<=[{};]))\\s*(vertex)\\s*(?=\\()",
+    captures: { "1": { name: `entity.name.function.stage.${LANG}` } },
+  });
   add("reserved", {
-    // Reserved for a future version (E0013): rejected wherever a name is expected, and there is no
-    // syntax of v0.1 that uses them otherwise.
+    // Reserved as ordinary names (E0013); the contextual stage/compute forms
+    // above take precedence at their declaration positions.
     name: `invalid.illegal.reserved-word.${LANG}`,
     match: `(?<![A-Za-z0-9_])${words(source.reserved)}${END}`,
   });

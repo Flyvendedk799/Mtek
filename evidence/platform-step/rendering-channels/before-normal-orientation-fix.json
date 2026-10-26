@@ -1,0 +1,1798 @@
+{
+  "config": {
+    "argv": [
+      "<external>",
+      "node_modules/@playwright/test/cli.js",
+      "test",
+      "specs/m4/pbr-maps.spec.ts",
+      "specs/m4/pbr.spec.ts",
+      "specs/animation/rendering.spec.ts",
+      "specs/m4/configurator-variants.spec.ts",
+      "--project=hardware",
+      "--project=software"
+    ],
+    "configFile": "tests/browser/playwright.config.ts",
+    "rootDir": "tests/browser/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "tests/browser/support/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "hardware",
+        "name": "hardware",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "software",
+        "name": "software",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "benchmarks",
+        "name": "benchmarks",
+        "testDir": "benchmarks",
+        "testIgnore": [],
+        "testMatch": [
+          "tasks/*/baseline-tests/*.spec.ts",
+          "holdout/*/baseline-tests/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<results>/test-results.json"
+        }
+      ],
+      [
+        "tests/browser/support/not-run-reporter.ts",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "animation\\rendering.spec.ts",
+      "file": "animation/rendering.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "minified sampling selects mip levels while base-only glTF samplers retain level zero",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 607,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-25T19:03:01.547Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "234191fcaf5c0610dcb9-62db090c7e1076866858",
+          "file": "animation/rendering.spec.ts",
+          "line": 11,
+          "column": 1
+        },
+        {
+          "title": "mounted post effects survive device recovery and reject invalid WGSL",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 679,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-25T19:03:03.667Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "234191fcaf5c0610dcb9-2be81da53e0e43c83094",
+          "file": "animation/rendering.spec.ts",
+          "line": 26,
+          "column": 1
+        },
+        {
+          "title": "linear-light NPOT mipmaps and ordered post effects run without leaked resources",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 333,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-25T19:03:04.361Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "234191fcaf5c0610dcb9-6c3a9bbce9521f20d5a5",
+          "file": "animation/rendering.spec.ts",
+          "line": 118,
+          "column": 1
+        },
+        {
+          "title": "minified sampling selects mip levels while base-only glTF samplers retain level zero",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "software",
+              "projectName": "software",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 404,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-25T19:03:23.629Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "234191fcaf5c0610dcb9-7f03d4a6e16f48ab7dcc",
+          "file": "animation/rendering.spec.ts",
+          "line": 11,
+          "column": 1
+        },
+        {
+          "title": "mounted post effects survive device recovery and reject invalid WGSL",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "software",
+              "projectName": "software",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 329,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-25T19:03:24.959Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "234191fcaf5c0610dcb9-beefd752f1d97b648d10",
+          "file": "animation/rendering.spec.ts",
+          "line": 26,
+          "column": 1
+        },
+        {
+          "title": "linear-light NPOT mipmaps and ordered post effects run without leaked resources",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "software",
+              "projectName": "software",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 310,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-25T19:03:25.302Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "234191fcaf5c0610dcb9-fc0bfc704b170d8fc8f9",
+          "file": "animation/rendering.spec.ts",
+          "line": 118,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "m4\\configurator-variants.spec.ts",
+      "file": "m4/configurator-variants.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "an unsupported required asset feature fails explicitly, at compile time (M4-10)",
+          "file": "m4/configurator-variants.spec.ts",
+          "line": 48,
+          "column": 6,
+          "specs": [
+            {
+              "title": "the unmodified example passes check with 0 errors and 0 warnings",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 226,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:04.751Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-b8754e50b0a4a673adec",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 54,
+              "column": 3
+            },
+            {
+              "title": "the example with a normal texture on UV set 1 in its GLB: check and build fail with MTEK-E7009, the message names the feature, nothing is built",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 511,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:05.004Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-4dbf35dea030d6b4809c",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 63,
+              "column": 5
+            },
+            {
+              "title": "the human-readable report of MTEK-E7009 also names the feature",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 585,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:05.524Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-57c16e0e2920ac58234f",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 81,
+              "column": 5
+            },
+            {
+              "title": "the example with a required extension in its GLB: check and build fail with MTEK-E7004, the message names the feature, nothing is built",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 458,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:06.119Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-0f9ef979ff49fbd53bee",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 63,
+              "column": 5
+            },
+            {
+              "title": "the human-readable report of MTEK-E7004 also names the feature",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 629,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:06.589Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-a79f32aba5fe4f011207",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 81,
+              "column": 5
+            },
+            {
+              "title": "the unmodified example passes check with 0 errors and 0 warnings",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 222,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:25.667Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-43f5b99658fcb9477241",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 54,
+              "column": 3
+            },
+            {
+              "title": "the example with a normal texture on UV set 1 in its GLB: check and build fail with MTEK-E7009, the message names the feature, nothing is built",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 437,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:25.900Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-07f9ad1b8c58dda0d29d",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 63,
+              "column": 5
+            },
+            {
+              "title": "the human-readable report of MTEK-E7009 also names the feature",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 776,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:26.350Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-d7f735d07200bd426a01",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 81,
+              "column": 5
+            },
+            {
+              "title": "the example with a required extension in its GLB: check and build fail with MTEK-E7004, the message names the feature, nothing is built",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 427,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:27.135Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-fa9af798c567a0b9a90b",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 63,
+              "column": 5
+            },
+            {
+              "title": "the human-readable report of MTEK-E7004 also names the feature",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 664,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:27.575Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-8abd678dc686736a2f8e",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 81,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "a repeated-object scene shows the instancing path in counters and in equal output (M4-10)",
+          "file": "m4/configurator-variants.spec.ts",
+          "line": 100,
+          "column": 6,
+          "specs": [
+            {
+              "title": "80 copies need 5 draw calls instead of 80 and look the same, and both pictures are the oracle's",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [
+                    {
+                      "type": "m4-configurator-instancing",
+                      "description": "80 copies: drawCalls 80 -> 5, instancedDraws 4; instanced vs individual: max channel difference 0/255, 0 of 172800 pixels differ; against the oracle (162896 pixels, 80 entities): instanced max 1/255, individual max 1/255"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5378,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:07.227Z",
+                      "annotations": [
+                        {
+                          "type": "m4-configurator-instancing",
+                          "description": "80 copies: drawCalls 80 -> 5, instancedDraws 4; instanced vs individual: max channel difference 0/255, 0 of 172800 pixels differ; against the oracle (162896 pixels, 80 entities): instanced max 1/255, individual max 1/255"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-61b77007b5045bb8a354",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 105,
+              "column": 3
+            },
+            {
+              "title": "80 copies need 5 draw calls instead of 80 and look the same, and both pictures are the oracle's",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [
+                    {
+                      "type": "m4-configurator-instancing",
+                      "description": "80 copies: drawCalls 80 -> 5, instancedDraws 4; instanced vs individual: max channel difference 0/255, 0 of 172800 pixels differ; against the oracle (162896 pixels, 80 entities): instanced max 1/255, individual max 1/255"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5664,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:28.250Z",
+                      "annotations": [
+                        {
+                          "type": "m4-configurator-instancing",
+                          "description": "80 copies: drawCalls 80 -> 5, instancedDraws 4; instanced vs individual: max channel difference 0/255, 0 of 172800 pixels differ; against the oracle (162896 pixels, 80 entities): instanced max 1/255, individual max 1/255"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fa73b167982b4b77fcb8-94cfacb314665d6de6b9",
+              "file": "m4/configurator-variants.spec.ts",
+              "line": 105,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "m4\\pbr-maps.spec.ts",
+      "file": "m4/pbr-maps.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "GLB PBR maps: regular UVs, factors, colour spaces and indirect-only occlusion",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 465,
+                  "error": {
+                    "message": "Error: all channels, channel 2: 71,24,71 vs 69,23,66\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m3\u001b[39m\nReceived:    \u001b[31m5\u001b[39m",
+                    "stack": "Error: all channels, channel 2: 71,24,71 vs 69,23,66\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m3\u001b[39m\nReceived:    \u001b[31m5\u001b[39m\n    at tests/browser/specs/m4/pbr-maps.spec.ts:41:140",
+                    "location": {
+                      "file": "tests/browser/specs/m4/pbr-maps.spec.ts",
+                      "column": 140,
+                      "line": 41
+                    },
+                    "snippet": "  39 |       const expected = linearRgbToSrgb8(radiance.map((x, c) => x + scenario.emission[c]! * texel[c]!) as unknown as Vec3);\n  40 |       const offset = (32 * 65 + 32) * 4, actual = Array.from(shot.data.slice(offset, offset + 3));\n> 41 |       for (let c = 0; c < 3; c++) expect(Math.abs(actual[c]! - expected[c]!), `${scenario.label}, channel ${c}: ${actual} vs ${expected}`).toBeLessThanOrEqual(3);\n     |                                                                                                                                            ^\n  42 |       records.push({ label: scenario.label, actual, expected });\n  43 |     }\n  44 |     expect(records[4]!.actual).toEqual(records[5]!.actual);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "tests/browser/specs/m4/pbr-maps.spec.ts",
+                        "column": 140,
+                        "line": 41
+                      },
+                      "message": "Error: all channels, channel 2: 71,24,71 vs 69,23,66\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m3\u001b[39m\nReceived:    \u001b[31m5\u001b[39m\n\n  39 |       const expected = linearRgbToSrgb8(radiance.map((x, c) => x + scenario.emission[c]! * texel[c]!) as unknown as Vec3);\n  40 |       const offset = (32 * 65 + 32) * 4, actual = Array.from(shot.data.slice(offset, offset + 3));\n> 41 |       for (let c = 0; c < 3; c++) expect(Math.abs(actual[c]! - expected[c]!), `${scenario.label}, channel ${c}: ${actual} vs ${expected}`).toBeLessThanOrEqual(3);\n     |                                                                                                                                            ^\n  42 |       records.push({ label: scenario.label, actual, expected });\n  43 |     }\n  44 |     expect(records[4]!.actual).toEqual(records[5]!.actual);\n    at tests/browser/specs/m4/pbr-maps.spec.ts:41:140"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-25T19:03:12.639Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/m4-pbr-maps-GLB-PBR-maps-r-0fc19-and-indirect-only-occlusion-hardware/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "tests/browser/specs/m4/pbr-maps.spec.ts",
+                    "column": 140,
+                    "line": 41
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "0de3d68aa32312650113-a8d141c4825b2b9730d7",
+          "file": "m4/pbr-maps.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "GLB PBR maps: mirrored UVs, factors, colour spaces and indirect-only occlusion",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 524,
+                  "error": {
+                    "message": "Error: all channels, channel 2: 69,23,66 vs 71,24,71\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m3\u001b[39m\nReceived:    \u001b[31m5\u001b[39m",
+                    "stack": "Error: all channels, channel 2: 69,23,66 vs 71,24,71\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m3\u001b[39m\nReceived:    \u001b[31m5\u001b[39m\n    at tests/browser/specs/m4/pbr-maps.spec.ts:41:140",
+                    "location": {
+                      "file": "tests/browser/specs/m4/pbr-maps.spec.ts",
+                      "column": 140,
+                      "line": 41
+                    },
+                    "snippet": "  39 |       const expected = linearRgbToSrgb8(radiance.map((x, c) => x + scenario.emission[c]! * texel[c]!) as unknown as Vec3);\n  40 |       const offset = (32 * 65 + 32) * 4, actual = Array.from(shot.data.slice(offset, offset + 3));\n> 41 |       for (let c = 0; c < 3; c++) expect(Math.abs(actual[c]! - expected[c]!), `${scenario.label}, channel ${c}: ${actual} vs ${expected}`).toBeLessThanOrEqual(3);\n     |                                                                                                                                            ^\n  42 |       records.push({ label: scenario.label, actual, expected });\n  43 |     }\n  44 |     expect(records[4]!.actual).toEqual(records[5]!.actual);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "tests/browser/specs/m4/pbr-maps.spec.ts",
+                        "column": 140,
+                        "line": 41
+                      },
+                      "message": "Error: all channels, channel 2: 69,23,66 vs 71,24,71\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m3\u001b[39m\nReceived:    \u001b[31m5\u001b[39m\n\n  39 |       const expected = linearRgbToSrgb8(radiance.map((x, c) => x + scenario.emission[c]! * texel[c]!) as unknown as Vec3);\n  40 |       const offset = (32 * 65 + 32) * 4, actual = Array.from(shot.data.slice(offset, offset + 3));\n> 41 |       for (let c = 0; c < 3; c++) expect(Math.abs(actual[c]! - expected[c]!), `${scenario.label}, channel ${c}: ${actual} vs ${expected}`).toBeLessThanOrEqual(3);\n     |                                                                                                                                            ^\n  42 |       records.push({ label: scenario.label, actual, expected });\n  43 |     }\n  44 |     expect(records[4]!.actual).toEqual(records[5]!.actual);\n    at tests/browser/specs/m4/pbr-maps.spec.ts:41:140"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-25T19:03:13.809Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/m4-pbr-maps-GLB-PBR-maps-m-abafd-and-indirect-only-occlusion-hardware/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "tests/browser/specs/m4/pbr-maps.spec.ts",
+                    "column": 140,
+                    "line": 41
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "0de3d68aa32312650113-7a12cfb0ab84ee2f445d",
+          "file": "m4/pbr-maps.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "GLB PBR maps: degenerate UVs, factors, colour spaces and indirect-only occlusion",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 727,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-25T19:03:16.532Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0de3d68aa32312650113-051d75b3550c8f2d09c6",
+          "file": "m4/pbr-maps.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "GLB PBR maps: regular UVs, factors, colour spaces and indirect-only occlusion",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "software",
+              "projectName": "software",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 477,
+                  "error": {
+                    "message": "Error: all channels, channel 2: 71,24,71 vs 69,23,66\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m3\u001b[39m\nReceived:    \u001b[31m5\u001b[39m",
+                    "stack": "Error: all channels, channel 2: 71,24,71 vs 69,23,66\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m3\u001b[39m\nReceived:    \u001b[31m5\u001b[39m\n    at tests/browser/specs/m4/pbr-maps.spec.ts:41:140",
+                    "location": {
+                      "file": "tests/browser/specs/m4/pbr-maps.spec.ts",
+                      "column": 140,
+                      "line": 41
+                    },
+                    "snippet": "  39 |       const expected = linearRgbToSrgb8(radiance.map((x, c) => x + scenario.emission[c]! * texel[c]!) as unknown as Vec3);\n  40 |       const offset = (32 * 65 + 32) * 4, actual = Array.from(shot.data.slice(offset, offset + 3));\n> 41 |       for (let c = 0; c < 3; c++) expect(Math.abs(actual[c]! - expected[c]!), `${scenario.label}, channel ${c}: ${actual} vs ${expected}`).toBeLessThanOrEqual(3);\n     |                                                                                                                                            ^\n  42 |       records.push({ label: scenario.label, actual, expected });\n  43 |     }\n  44 |     expect(records[4]!.actual).toEqual(records[5]!.actual);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "tests/browser/specs/m4/pbr-maps.spec.ts",
+                        "column": 140,
+                        "line": 41
+                      },
+                      "message": "Error: all channels, channel 2: 71,24,71 vs 69,23,66\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m3\u001b[39m\nReceived:    \u001b[31m5\u001b[39m\n\n  39 |       const expected = linearRgbToSrgb8(radiance.map((x, c) => x + scenario.emission[c]! * texel[c]!) as unknown as Vec3);\n  40 |       const offset = (32 * 65 + 32) * 4, actual = Array.from(shot.data.slice(offset, offset + 3));\n> 41 |       for (let c = 0; c < 3; c++) expect(Math.abs(actual[c]! - expected[c]!), `${scenario.label}, channel ${c}: ${actual} vs ${expected}`).toBeLessThanOrEqual(3);\n     |                                                                                                                                            ^\n  42 |       records.push({ label: scenario.label, actual, expected });\n  43 |     }\n  44 |     expect(records[4]!.actual).toEqual(records[5]!.actual);\n    at tests/browser/specs/m4/pbr-maps.spec.ts:41:140"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-25T19:03:33.957Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/m4-pbr-maps-GLB-PBR-maps-r-0fc19-and-indirect-only-occlusion-software/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "tests/browser/specs/m4/pbr-maps.spec.ts",
+                    "column": 140,
+                    "line": 41
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "0de3d68aa32312650113-8c884238c8cf613253e6",
+          "file": "m4/pbr-maps.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "GLB PBR maps: mirrored UVs, factors, colour spaces and indirect-only occlusion",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "software",
+              "projectName": "software",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 479,
+                  "error": {
+                    "message": "Error: all channels, channel 2: 69,23,66 vs 71,24,71\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m3\u001b[39m\nReceived:    \u001b[31m5\u001b[39m",
+                    "stack": "Error: all channels, channel 2: 69,23,66 vs 71,24,71\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m3\u001b[39m\nReceived:    \u001b[31m5\u001b[39m\n    at tests/browser/specs/m4/pbr-maps.spec.ts:41:140",
+                    "location": {
+                      "file": "tests/browser/specs/m4/pbr-maps.spec.ts",
+                      "column": 140,
+                      "line": 41
+                    },
+                    "snippet": "  39 |       const expected = linearRgbToSrgb8(radiance.map((x, c) => x + scenario.emission[c]! * texel[c]!) as unknown as Vec3);\n  40 |       const offset = (32 * 65 + 32) * 4, actual = Array.from(shot.data.slice(offset, offset + 3));\n> 41 |       for (let c = 0; c < 3; c++) expect(Math.abs(actual[c]! - expected[c]!), `${scenario.label}, channel ${c}: ${actual} vs ${expected}`).toBeLessThanOrEqual(3);\n     |                                                                                                                                            ^\n  42 |       records.push({ label: scenario.label, actual, expected });\n  43 |     }\n  44 |     expect(records[4]!.actual).toEqual(records[5]!.actual);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "tests/browser/specs/m4/pbr-maps.spec.ts",
+                        "column": 140,
+                        "line": 41
+                      },
+                      "message": "Error: all channels, channel 2: 69,23,66 vs 71,24,71\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m3\u001b[39m\nReceived:    \u001b[31m5\u001b[39m\n\n  39 |       const expected = linearRgbToSrgb8(radiance.map((x, c) => x + scenario.emission[c]! * texel[c]!) as unknown as Vec3);\n  40 |       const offset = (32 * 65 + 32) * 4, actual = Array.from(shot.data.slice(offset, offset + 3));\n> 41 |       for (let c = 0; c < 3; c++) expect(Math.abs(actual[c]! - expected[c]!), `${scenario.label}, channel ${c}: ${actual} vs ${expected}`).toBeLessThanOrEqual(3);\n     |                                                                                                                                            ^\n  42 |       records.push({ label: scenario.label, actual, expected });\n  43 |     }\n  44 |     expect(records[4]!.actual).toEqual(records[5]!.actual);\n    at tests/browser/specs/m4/pbr-maps.spec.ts:41:140"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-25T19:03:35.178Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/m4-pbr-maps-GLB-PBR-maps-m-abafd-and-indirect-only-occlusion-software/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "tests/browser/specs/m4/pbr-maps.spec.ts",
+                    "column": 140,
+                    "line": 41
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "0de3d68aa32312650113-6ad815b0694efe4485cf",
+          "file": "m4/pbr-maps.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "GLB PBR maps: degenerate UVs, factors, colour spaces and indirect-only occlusion",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "software",
+              "projectName": "software",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 483,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-25T19:03:37.409Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0de3d68aa32312650113-e0bb7b22d24f6b66decd",
+          "file": "m4/pbr-maps.spec.ts",
+          "line": 18,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "m4\\pbr.spec.ts",
+      "file": "m4/pbr.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "the PBR material against the CPU oracle (M4-03)",
+          "file": "m4/pbr.spec.ts",
+          "line": 231,
+          "column": 6,
+          "specs": [
+            {
+              "title": "the chosen pixels all see the sphere and the camera geometry matches the fixture",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 16,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:19.037Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-254a934dcaba697945b8",
+              "file": "m4/pbr.spec.ts",
+              "line": 232,
+              "column": 3
+            },
+            {
+              "title": "the directional light for metallic 0 and 1 and roughness 0.2 and 0.8",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "sun, metallic 0, roughness 0.2: max error 1/255 (pixel 108,73 channel 1: GPU 171, oracle 170 (linear 0.40439)); sun, metallic 0, roughness 0.8: max error 1/255 (pixel 135,175 channel 1: GPU 140, oracle 141 (linear 0.26459)); sun, metallic 1, roughness 0.2: max error 1/255 (pixel 108,73 channel 1: GPU 7, oracle 6 (linear 0.00197)); sun, metallic 1, roughness 0.8: max error 1/255 (pixel 151,105 channel 0: GPU 197, oracle 196 (linear 0.55512))"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 612,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:19.075Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "sun, metallic 0, roughness 0.2: max error 1/255 (pixel 108,73 channel 1: GPU 171, oracle 170 (linear 0.40439)); sun, metallic 0, roughness 0.8: max error 1/255 (pixel 135,175 channel 1: GPU 140, oracle 141 (linear 0.26459)); sun, metallic 1, roughness 0.2: max error 1/255 (pixel 108,73 channel 1: GPU 7, oracle 6 (linear 0.00197)); sun, metallic 1, roughness 0.8: max error 1/255 (pixel 151,105 channel 0: GPU 197, oracle 196 (linear 0.55512))"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-8f6b47a8a4b760cbb0fe",
+              "file": "m4/pbr.spec.ts",
+              "line": 247,
+              "column": 3
+            },
+            {
+              "title": "a point light with a range: inside the window, across its edge and outside it",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "lamp inside the window, dielectric: max error 1/255 (pixel 163,105 channel 2: GPU 152, oracle 151 (linear 0.31171)); lamp inside the window, metal: max error 1/255 (pixel 160,88 channel 1: GPU 231, oracle 232 (linear 0.80351)); lamp across the window edge, dielectric: max error 1/255 (pixel 128,128 channel 2: GPU 36, oracle 35 (linear 0.01722)); lamp outside the window: max error 0/255 (exact)"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 605,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:19.708Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "lamp inside the window, dielectric: max error 1/255 (pixel 163,105 channel 2: GPU 152, oracle 151 (linear 0.31171)); lamp inside the window, metal: max error 1/255 (pixel 160,88 channel 1: GPU 231, oracle 232 (linear 0.80351)); lamp across the window edge, dielectric: max error 1/255 (pixel 128,128 channel 2: GPU 36, oracle 35 (linear 0.01722)); lamp outside the window: max error 0/255 (exact)"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-46c3359970094e3fd668",
+              "file": "m4/pbr.spec.ts",
+              "line": 270,
+              "column": 3
+            },
+            {
+              "title": "a point light without a range falls off with the square of the distance",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "free lamp, metallic 0.3, roughness 0.4: max error 1/255 (pixel 151,105 channel 2: GPU 73, oracle 74 (linear 0.06758)); free lamp far away: max error 1/255 (pixel 155,101 channel 0: GPU 119, oracle 118 (linear 0.18264))"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 531,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:20.327Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "free lamp, metallic 0.3, roughness 0.4: max error 1/255 (pixel 151,105 channel 2: GPU 73, oracle 74 (linear 0.06758)); free lamp far away: max error 1/255 (pixel 155,101 channel 0: GPU 119, oracle 118 (linear 0.18264))"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-08f6a7fad85349223cb7",
+              "file": "m4/pbr.spec.ts",
+              "line": 308,
+              "column": 3
+            },
+            {
+              "title": "ambient light only: (1 − metallic) times base colour times the ambient colour, independent of roughness",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "ambient, dielectric, rough 0.8: max error 0/255 (exact); ambient, metal, rough 0.2: max error 0/255 (exact); ambient, black base: max error 0/255 (exact)"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 556,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:20.874Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "ambient, dielectric, rough 0.8: max error 0/255 (exact); ambient, metal, rough 0.2: max error 0/255 (exact); ambient, black base: max error 0/255 (exact)"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-0d8aa8ceec0457001ae4",
+              "file": "m4/pbr.spec.ts",
+              "line": 327,
+              "column": 3
+            },
+            {
+              "title": "all three lights together, with a coloured sun",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "three lights, metallic 0.5, roughness 0.35: max error 1/255 (pixel 128,128 channel 2: GPU 134, oracle 133 (linear 0.23646))"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 444,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:21.443Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "three lights, metallic 0.5, roughness 0.35: max error 1/255 (pixel 128,128 channel 2: GPU 134, oracle 133 (linear 0.23646))"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-06d6b55e60f4ddd95e85",
+              "file": "m4/pbr.spec.ts",
+              "line": 356,
+              "column": 3
+            },
+            {
+              "title": "saturation: a very bright light clips and nothing is tone mapped",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "saturating sun, warm base: max error 1/255 (pixel 100,190 channel 1: GPU 59, oracle 60 (linear 0.04447)); blinding sun: max error 0/255; clipped pixels 8, all-white pixels 16"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 507,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:21.899Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "saturating sun, warm base: max error 1/255 (pixel 100,190 channel 1: GPU 59, oracle 60 (linear 0.04447)); blinding sun: max error 0/255; clipped pixels 8, all-white pixels 16"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-d9677e96427a7824aa81",
+              "file": "m4/pbr.spec.ts",
+              "line": 374,
+              "column": 3
+            },
+            {
+              "title": "no resource is created after mount while the cases change every input",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 460,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:22.417Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-93cd8fbaae5242e2f010",
+              "file": "m4/pbr.spec.ts",
+              "line": 402,
+              "column": 3
+            },
+            {
+              "title": "the chosen pixels all see the sphere and the camera geometry matches the fixture",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 7,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:39.050Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-6d550b2ed8c8d70b3646",
+              "file": "m4/pbr.spec.ts",
+              "line": 232,
+              "column": 3
+            },
+            {
+              "title": "the directional light for metallic 0 and 1 and roughness 0.2 and 0.8",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "sun, metallic 0, roughness 0.2: max error 0/255 (exact); sun, metallic 0, roughness 0.8: max error 1/255 (pixel 100,190 channel 1: GPU 70, oracle 71 (linear 0.06216)); sun, metallic 1, roughness 0.2: max error 1/255 (pixel 139,105 channel 1: GPU 182, oracle 181 (linear 0.46377)); sun, metallic 1, roughness 0.8: max error 0/255 (exact)"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 431,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:39.067Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "sun, metallic 0, roughness 0.2: max error 0/255 (exact); sun, metallic 0, roughness 0.8: max error 1/255 (pixel 100,190 channel 1: GPU 70, oracle 71 (linear 0.06216)); sun, metallic 1, roughness 0.2: max error 1/255 (pixel 139,105 channel 1: GPU 182, oracle 181 (linear 0.46377)); sun, metallic 1, roughness 0.8: max error 0/255 (exact)"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-bd34bdbfa5191aaf61cf",
+              "file": "m4/pbr.spec.ts",
+              "line": 247,
+              "column": 3
+            },
+            {
+              "title": "a point light with a range: inside the window, across its edge and outside it",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "lamp inside the window, dielectric: max error 1/255 (pixel 155,101 channel 0: GPU 195, oracle 196 (linear 0.54896)); lamp inside the window, metal: max error 1/255 (pixel 151,105 channel 1: GPU 237, oracle 238 (linear 0.85133)); lamp across the window edge, dielectric: max error 0/255 (exact); lamp outside the window: max error 0/255 (exact)"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 460,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:39.510Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "lamp inside the window, dielectric: max error 1/255 (pixel 155,101 channel 0: GPU 195, oracle 196 (linear 0.54896)); lamp inside the window, metal: max error 1/255 (pixel 151,105 channel 1: GPU 237, oracle 238 (linear 0.85133)); lamp across the window edge, dielectric: max error 0/255 (exact); lamp outside the window: max error 0/255 (exact)"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-4efda709ad067cf5381b",
+              "file": "m4/pbr.spec.ts",
+              "line": 270,
+              "column": 3
+            },
+            {
+              "title": "a point light without a range falls off with the square of the distance",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "free lamp, metallic 0.3, roughness 0.4: max error 1/255 (pixel 100,190 channel 0: GPU 88, oracle 89 (linear 0.09876)); free lamp far away: max error 0/255 (exact)"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 394,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:39.980Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "free lamp, metallic 0.3, roughness 0.4: max error 1/255 (pixel 100,190 channel 0: GPU 88, oracle 89 (linear 0.09876)); free lamp far away: max error 0/255 (exact)"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-fe350e88c75c498c6170",
+              "file": "m4/pbr.spec.ts",
+              "line": 308,
+              "column": 3
+            },
+            {
+              "title": "ambient light only: (1 − metallic) times base colour times the ambient colour, independent of roughness",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "ambient, dielectric, rough 0.8: max error 0/255 (exact); ambient, metal, rough 0.2: max error 0/255 (exact); ambient, black base: max error 0/255 (exact)"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 493,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:40.384Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "ambient, dielectric, rough 0.8: max error 0/255 (exact); ambient, metal, rough 0.2: max error 0/255 (exact); ambient, black base: max error 0/255 (exact)"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-9f00e00bf711007613df",
+              "file": "m4/pbr.spec.ts",
+              "line": 327,
+              "column": 3
+            },
+            {
+              "title": "all three lights together, with a coloured sun",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "three lights, metallic 0.5, roughness 0.35: max error 1/255 (pixel 163,105 channel 2: GPU 221, oracle 220 (linear 0.71868))"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 359,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:40.890Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "three lights, metallic 0.5, roughness 0.35: max error 1/255 (pixel 163,105 channel 2: GPU 221, oracle 220 (linear 0.71868))"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-5019f0f571f438f08998",
+              "file": "m4/pbr.spec.ts",
+              "line": 356,
+              "column": 3
+            },
+            {
+              "title": "saturation: a very bright light clips and nothing is tone mapped",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "saturating sun, warm base: max error 1/255 (pixel 100,190 channel 1: GPU 59, oracle 60 (linear 0.04447)); blinding sun: max error 0/255; clipped pixels 8, all-white pixels 16"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 410,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:41.261Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "saturating sun, warm base: max error 1/255 (pixel 100,190 channel 1: GPU 59, oracle 60 (linear 0.04447)); blinding sun: max error 0/255; clipped pixels 8, all-white pixels 16"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-f29172de5389cc75bc77",
+              "file": "m4/pbr.spec.ts",
+              "line": 374,
+              "column": 3
+            },
+            {
+              "title": "no resource is created after mount while the cases change every input",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 379,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-25T19:03:41.682Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-c3b507d31950c6c62054",
+              "file": "m4/pbr.spec.ts",
+              "line": 402,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-25T19:02:37.068Z",
+    "duration": 65219.80299999999,
+    "expected": 36,
+    "skipped": 0,
+    "unexpected": 4,
+    "flaky": 0
+  }
+}

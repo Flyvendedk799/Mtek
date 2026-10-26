@@ -1,0 +1,14 @@
+{
+  "recordedAt": "2026-10-25T23:52:58.462Z",
+  "collection": "Supplemental read-only host snapshot taken during the measured suite; frequencies and free memory are intentionally omitted because they vary.",
+  "cpuModels": [
+    "13th Gen Intel(R) Core(TM) i5-13600K"
+  ],
+  "logicalProcessors": 20,
+  "physicalMemoryBytes": 34028437504,
+  "workloadTarget": {
+    "width": 640,
+    "height": 360
+  },
+  "environmentProbeTargetNote": "environment.json renderTargetSize describes the separate 128x128 capability probe."
+}

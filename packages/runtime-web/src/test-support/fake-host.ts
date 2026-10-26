@@ -1110,6 +1110,7 @@ export interface InitContext {
   readonly e: readonly object[];
   setCamera(field: string, value: unknown): void;
   setTransform(entity: object | undefined, field: string, value: unknown): void;
+  setBounds(entity: object | undefined, field: string, value: unknown): void;
   setVisible(entity: object | undefined, value: boolean): void;
   setParam(entity: object | undefined, name: string, value: unknown): void;
   setLight(entity: object | undefined, field: string, value: unknown): void;

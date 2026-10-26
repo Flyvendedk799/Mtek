@@ -4,9 +4,9 @@
     "file": "src/main.mtek",
     "startByte": 20,
     "endByte": 27,
-    "message": "Unknown stage function 'fragmnt': the stage function of a material is `fragment`.",
+    "message": "Unknown stage function 'fragmnt': a material stage is `fragment` or `vertex`.",
     "notes": [
-      "custom vertex and compute stages are planned for v0.2",
+      "custom compute stages remain planned",
       "help: did you mean 'fragment'?"
     ]
   }

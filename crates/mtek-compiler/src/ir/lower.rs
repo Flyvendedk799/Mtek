@@ -54,11 +54,13 @@ pub(super) const CAMERA_FIELDS: [&str; 6] = [
     "exposure",
 ];
 /// The entity fields lowered into [`Entity`].
-pub(super) const ENTITY_FIELDS: [&str; 12] = [
+pub(super) const ENTITY_FIELDS: [&str; 14] = [
     "position",
     "rotation",
     "scale",
     "visible",
+    "bounds_center",
+    "bounds_radius",
     "mesh",
     "material",
     "light",
@@ -291,6 +293,12 @@ fn lower_module(
     let mut marks = Vec::new();
     for item in &module.items {
         match &item.kind {
+            ItemKind::Compute(_) => {
+                return Err(
+                    "source compute cannot reach IR lowering before its build gate is implemented"
+                        .into(),
+                );
+            }
             ItemKind::Const(decl) => {
                 let symbol = Symbol::item(&path, &decl.name.name);
                 items.push(Item::Const(lowering.constant(decl, symbol)?));
@@ -847,6 +855,8 @@ impl Lowering<'_> {
             rotation: required(self.types, &what, fields, "rotation", checked.span)?,
             scale: required(self.types, &what, fields, "scale", checked.span)?,
             visible: required(self.types, &what, fields, "visible", checked.span)?,
+            bounds_center: written(self.types, &what, fields, "bounds_center", checked.span)?,
+            bounds_radius: written(self.types, &what, fields, "bounds_radius", checked.span)?,
             mesh,
             material,
             light,
@@ -941,6 +951,21 @@ fn required(
     owner: Span,
 ) -> Result<Field, Defect> {
     lower_field(types, what, find(what, fields, name)?, owner)
+}
+
+/// A runtime-defaulted field: retain only an explicit declaration.
+fn written(
+    types: &Typeck,
+    what: &str,
+    fields: &[CheckedField],
+    name: &str,
+    owner: Span,
+) -> Result<Option<Field>, Defect> {
+    fields
+        .iter()
+        .find(|f| f.name == name && matches!(f.origin, crate::types::FieldOrigin::Written { .. }))
+        .map(|field| lower_field(types, what, field, owner))
+        .transpose()
 }
 
 /// A field without a default: present only when written.

@@ -1,0 +1,87 @@
+// A source-authored local translation. Translation preserves the mesh normals.
+// The original mesh origins lie outside the camera, so original bounds cannot cull these draws.
+material Shifted {
+    param offset: vec3 = vec3(-10.0, 0.0, 0.0);
+    param height: texture = texture.white();
+    param height_sampler: sampler = sampler.linear_repeat();
+
+    vertex(input: VertexInput) -> vec3 {
+        // This level-zero texture read also exercises vertex-visible resource bindings.
+        let height_delta = sample(height, height_sampler, input.uv).x - 1.0;
+        return input.position + offset + vec3(0.0, height_delta, 0.0);
+    }
+
+    fragment(input: SurfaceInput) -> color {
+        return lighting.pbr(input, #ffffff, 0.0, 0.5);
+    }
+}
+
+material Reference {
+    fragment(input: SurfaceInput) -> color {
+        return lighting.pbr(input, #ffffff, 0.0, 0.5);
+    }
+}
+
+scene Demo {
+    clear_color: #000000;
+    ambient_intensity: 0.02;
+    state shift_x: f32 = -10.0;
+    state shift_y: f32 = 1.1;
+    state authored: bool = true;
+    state reference: bool = false;
+    state crowd: bool = false;
+
+    camera Main {
+        position: vec3(0.0, 8.0, 0.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 8.0; near: 0.1; far: 30.0 };
+        exposure: -0.2630344;
+    }
+    entity Sun {
+        rotation: quat.euler(-0.7, 1.5707963, 0.0);
+        light: DirectionalLight { intensity: 3.0 };
+    }
+    entity Floor {
+        mesh: Plane { size: vec2(20.0, 20.0) };
+        material: Pbr { base_color: #b0b0b0; roughness: 0.8 };
+    }
+    entity Moving {
+        position: vec3(10.0, 0.0, 0.0);
+        visible: bind(authored && !crowd);
+        mesh: Box { size: vec3(1.0) };
+        material: Shifted { offset: bind(vec3(shift_x, shift_y, 0.0)) };
+    }
+    entity MovingReference {
+        rotation: bind(quat.identity());
+        position: bind(vec3(10.0 + shift_x, shift_y, 0.0));
+        visible: bind(reference && !crowd);
+        mesh: Box { size: vec3(1.0) };
+        material: Reference {};
+    }
+    entity CrowdA {
+        position: vec3(10.0, 1.1, 0.0);
+        visible: bind(authored && crowd);
+        mesh: Box { size: vec3(1.0) };
+        material: Shifted {};
+    }
+    entity CrowdB {
+        position: vec3(12.0, 1.1, 0.0);
+        visible: bind(authored && crowd);
+        mesh: Box { size: vec3(1.0) };
+        material: Shifted {};
+    }
+    entity ReferenceA {
+        rotation: bind(quat.identity());
+        position: vec3(0.0, 1.1, 0.0);
+        visible: bind(reference && crowd);
+        mesh: Box { size: vec3(1.0) };
+        material: Reference {};
+    }
+    entity ReferenceB {
+        rotation: bind(quat.identity());
+        position: vec3(2.0, 1.1, 0.0);
+        visible: bind(reference && crowd);
+        mesh: Box { size: vec3(1.0) };
+        material: Reference {};
+    }
+}

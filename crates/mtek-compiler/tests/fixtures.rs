@@ -97,7 +97,13 @@ fn fixture_names(dir: &str, extension: &str) -> Vec<String> {
 /// Compare `actual` with the file at `path`, or write it when blessing.
 fn check_golden(path: &Path, actual: &str) {
     if blessing() {
-        fs::write(path, actual).unwrap();
+        if fs::read_to_string(path).ok().as_deref() != Some(actual) {
+            // Replace the file: Windows may still map the old fixture while
+            // another test/tool reads it, making an in-place truncate fail.
+            let temporary = path.with_extension("json.tmp");
+            fs::write(&temporary, actual).unwrap();
+            fs::rename(&temporary, path).unwrap();
+        }
         return;
     }
     let expected = fs::read_to_string(path).unwrap_or_else(|e| {
@@ -276,7 +282,11 @@ fn diagnostics_json(file_name: &str, parsed: &Parsed) -> String {
 /// them.
 fn check_diagnostics(path: &Path, actual: &str) {
     if blessing() {
-        fs::write(path, actual).unwrap();
+        if fs::read_to_string(path).ok().as_deref() != Some(actual) {
+            let temporary = path.with_extension("json.tmp");
+            fs::write(&temporary, actual).unwrap();
+            fs::rename(&temporary, path).unwrap();
+        }
         return;
     }
     let expected_text = fs::read_to_string(path).unwrap_or_else(|e| {

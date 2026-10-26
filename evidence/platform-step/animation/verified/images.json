@@ -1,0 +1,14 @@
+[
+  {
+    "project": "hardware",
+    "file": "locomotion-demo-hardware.png",
+    "bytes": 50365,
+    "sha256": "6292319dfff66b11433b0ea5d9b8ec61a4cee780af0458f1645a687ef1d2fb2d"
+  },
+  {
+    "project": "software",
+    "file": "locomotion-demo-software.png",
+    "bytes": 50420,
+    "sha256": "9e489bb5138b0fb55eed30f2aa41273c2657f903250d323c550598cc3f8fb3d0"
+  }
+]

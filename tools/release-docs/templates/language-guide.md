@@ -4,7 +4,7 @@
 
 - Generated from `tools/release-docs/templates/language-guide.md`; `npm run check:release` fails when this file is stale or larger than 16 384 bytes (decision 0118).
 - Language {{language-version}}. Compiler: {{compiler-version-line}}.
-- One rule, one correct pattern. The reasons, longer examples and the common mistakes with their diagnostic codes are on the [concept pages](README.md#concepts). Lists of names and defaults are read from the registry. Every code block is compiled by the tests; a block marked `wrap=` is the inside of a scene that has a camera.
+- Names and defaults come from the registry. Code blocks are compiled; `wrap=` means a scene body with a camera. See [concept pages](README.md#concepts) for explanations and diagnostics.
 
 ## 1. Program shape
 
@@ -204,7 +204,7 @@ scene Demo {
 }
 ```
 
-- `*` marks fields fixed at construction. {{field-list Pbr}} {{field-list Unlit}} Meshes: {{schemas mesh}}. A model: `const M = asset.glb("../m.glb");`, then `M.mesh("Name")`, `M.material("Name")`, `M.node_position("Name")`; the names are checked (`MTEK-E7024`).
+- `*` marks fields fixed at construction. `Pbr` supplies base colour, metallic/roughness, normal, occlusion and emissive maps; [parameters and defaults](concepts/materials-and-shaders.md). {{field-list Unlit}} Meshes: {{schemas mesh}}. A model: `const M = asset.glb("../m.glb");`, then `M.mesh("Name")`, `M.material("Name")`, `M.node_position("Name")`; the names are checked (`MTEK-E7024`).
 - Shader code: constant loop bounds, no strings, no CPU intrinsics (`MTEK-E4010` to `MTEK-E4012`); `sample` is GPU-only (`MTEK-E4013`).
 
 ## 9. Physics

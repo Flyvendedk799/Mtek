@@ -8,6 +8,7 @@
   "packageManager": "npm@11.16.0",
   "workspaces": [
     "packages/runtime-web",
+    "packages/inspector",
     "packages/physics-rapier",
     "packages/editor-vscode",
     "tests/browser",
@@ -17,7 +18,8 @@
     "benchmarks/runtime",
     "tools/ai-eval",
     "tools/coverage-matrix",
-    "tools/release-docs"
+    "tools/release-docs",
+    "tools/asset-audit"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present && cargo build -p mtek-cli --locked",
@@ -38,7 +40,8 @@
     "test:browser:hardware": "npm run build && npm run test:hardware -w @mtek/browser-tests --",
     "test": "npm run check && cargo test --workspace --locked && npm run test:unit && npm run check:coverage && npm run check:release && npm run check:baseline && npm run test:browser",
     "check:baseline": "node scripts/gen-m7-baseline.mjs --check",
-    "check:budgets": "node scripts/game-budgets.mjs size"
+    "check:budgets": "node scripts/game-budgets.mjs size",
+    "audit:assets": "npm run audit -w @mtek/asset-audit --"
   },
   "allowScripts": {
     "esbuild": false,

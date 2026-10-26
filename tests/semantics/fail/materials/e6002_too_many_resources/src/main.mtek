@@ -1,4 +1,4 @@
-// Nine textures and samplers: one more than a material binds (E6002), at the ninth.
+// Seventeen resources: E6002 is reported at the seventeenth.
 material Atlas {
     param t0: texture = texture.white();
     param s0: sampler = sampler.linear_repeat();
@@ -9,6 +9,14 @@ material Atlas {
     param t3: texture = texture.white();
     param s3: sampler = sampler.linear_repeat();
     param t4: texture = texture.white();
+    param s4: sampler = sampler.linear_repeat();
+    param t5: texture = texture.white();
+    param s5: sampler = sampler.linear_repeat();
+    param t6: texture = texture.white();
+    param s6: sampler = sampler.linear_repeat();
+    param t7: texture = texture.white();
+    param s7: sampler = sampler.linear_repeat();
+    param t8: texture = texture.white();
     fragment(input: SurfaceInput) -> color {
         let a = sample(t0, s0, input.uv) + sample(t1, s1, input.uv);
         let b = sample(t2, s2, input.uv) + sample(t3, s3, input.uv);

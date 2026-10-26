@@ -4,6 +4,11 @@ Status: accepted. Extends 0191/0192 and the host API without changing runtime AB
 or the accepted Mtek source language. This is an implementation increment toward
 the platform step; it does not declare the entire platform roadmap complete.
 
+[Decision 0196](0196-animation-blends-and-crowds.md) subsequently adds synchronized
+locomotion, mounted distance policies, orientation/hinge constraints, retarget
+frames and explicit shared-pose crowd instancing. The limits below describe this
+earlier increment; use 0196 for those extended animation capabilities.
+
 The CLI browser runner now accepts Node 22.18+, Node 23.6+ and Node 24+ instead
 of incorrectly rejecting all Node 22 installations. Version boundary tests and
 the npm engine range follow [Node's type-stripping history](https://nodejs.org/api/typescript.html).

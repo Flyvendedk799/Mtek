@@ -1,0 +1,12 @@
+[project]
+name = "fixture"
+language = "0.1"
+
+[host.inputs]
+sun = "Mapped.sun"
+base_factor = "Mapped.base_factor"
+normal_scale = "Mapped.normal_scale"
+ao_strength = "Mapped.ao_strength"
+metal = "Mapped.metal"
+rough = "Mapped.rough"
+emission = "Mapped.emission"

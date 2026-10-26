@@ -91,7 +91,10 @@ fn assert_valid(output: &ContextOutput) {
 fn assert_golden(name: &str, text: &str) {
     let path = repo("tests/context/golden").join(name);
     if std::env::var_os("MTEK_BLESS").is_some_and(|v| v == "1") {
-        fs::write(&path, text).unwrap();
+        // Replace rather than truncate: desktop editors can retain mapped golden files on Windows.
+        let temporary = path.with_extension("json.tmp");
+        fs::write(&temporary, text).unwrap();
+        fs::rename(&temporary, &path).unwrap();
         return;
     }
     let expected = fs::read_to_string(&path).unwrap_or_else(|e| {
@@ -754,6 +757,24 @@ fn a_cold_start_context_is_deterministic() {
     assert_eq!(ok("").text, reference.text);
     assert!(reference.text.lines().all(|line| line == line.trim_end()));
     assert!(!reference.text.contains('\r'));
+}
+
+#[test]
+fn cold_start_compaction_preserves_every_value_even_after_reference_truncation() {
+    for budget in [DEFAULT_MAX_BYTES, 12_000, 9_000] {
+        let output = run(&project(""), budget).unwrap();
+        if budget == 9_000 {
+            assert!(output.context.reference.is_empty());
+        }
+        assert_eq!(output.text.lines().count(), 1);
+        assert!(output.text.ends_with('\n'));
+        assert_eq!(
+            serde_json::from_str::<Value>(&output.text).unwrap(),
+            serde_json::to_value(&output.context).unwrap()
+        );
+    }
+    let warm = ok("scene Demo { camera Main {} entity Cube { mesh: Box {}; } }");
+    assert!(warm.text.lines().count() > 1);
 }
 
 // ---------------------------------------------------------------------------

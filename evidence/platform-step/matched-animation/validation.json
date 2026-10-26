@@ -1,0 +1,95 @@
+{
+  "recordedAt": "2026-10-26T00:26:52.803589+00:00",
+  "checks": {
+    "types": {
+      "status": "passed",
+      "sha256": "039f7165a7677f38e1f0f1b27dd8ce582a96d71584cd10c004a55133ef28d147"
+    },
+    "lint": {
+      "status": "passed",
+      "sha256": "095e3687edbbd762a24054abe7f6ee768f9d88b4f0f504e1177e8528699bffa9"
+    },
+    "unit-all": {
+      "status": "passed",
+      "sha256": "4fe3b16503898482cffe8fabd0fe9ce94562edc66ee59b8e87f395b0dcdee88d"
+    },
+    "root-types": {
+      "status": "passed",
+      "sha256": "01f6430d6aab21fe09e1d87d60e2e6c5530dea4017c6fe9e46b5e3f2c7eab9f3"
+    },
+    "naming": {
+      "status": "passed",
+      "sha256": "3a3ae29b80bd7a02b5a99851880fdb6b4b64dfd19e33c0bb34c940004424138d"
+    },
+    "assets": {
+      "status": "passed",
+      "sha256": "8f79649891f1f151ad6737ab16ba77b495800e173fa38965cfc24ab52da94e53"
+    },
+    "prebuilt": {
+      "status": "passed",
+      "sha256": "8fe8655068ac6c8f162d282d8e1c2a192850296bb6d09d0074fe13324d4f60b2"
+    },
+    "frozenDefinitions": {
+      "status": "passed"
+    },
+    "gitDiffWhitespace": {
+      "status": "passed"
+    }
+  },
+  "benchmarkUnitTests": 120,
+  "benchmarkUnitFiles": 13,
+  "functionalSmoke": {
+    "status": "passed",
+    "completed": 90,
+    "performanceEligible": false,
+    "directory": "correctness-smoke-2026-10-26",
+    "servedArtifactsByteIdenticalAfterWaitPolicyFix": true
+  },
+  "measuredMatrix": {
+    "status": "passed",
+    "completed": 210,
+    "required": 210,
+    "rejectedAttempts": 1,
+    "directory": "verified-2026-10-26",
+    "definitions": "0897d7e5d5e7aa19ccf6cd49faf640e4001762b10faa9baa24e2db23590d0c6a",
+    "reportRegeneration": "passed",
+    "cpuBeforeLimitPercent": 30,
+    "cpuDuringLimitPercent": 50,
+    "maximumAcceptedCpuBeforePercent": 28.029959146618246,
+    "maximumAcceptedCpuDuringPercent": 37.68061408789885,
+    "totalRecordedWaitForQuietMs": 65774,
+    "primaryJointErrorMaxMetres": 6.366267500744327e-07,
+    "primaryDifferingPixelsTotal": 1,
+    "cameraEdgeGatesPassed": true,
+    "trackedBufferAndTextureBytesAfterDisposal": 0,
+    "executionContext": "Interactive workstation with small side tasks; accepted passes obey the frozen load gates. This is one desktop host, not a hardware-tier or isolated-lab claim."
+  },
+  "earlierInterruptedRuns": [
+    {
+      "directory": "interrupted-2026-10-26",
+      "completed": 144,
+      "error": "Host stayed busy; refusing to publish a disturbed pass",
+      "performanceEligible": false
+    },
+    {
+      "directory": "interrupted-quiet-2026-10-26",
+      "completed": 107,
+      "error": "Host stayed busy; refusing to publish a disturbed pass",
+      "performanceEligible": false
+    }
+  ],
+  "demo": {
+    "status": "passed",
+    "models": [
+      "Fox",
+      "CesiumMan"
+    ],
+    "allOriginalClipsChecked": true,
+    "browserErrors": 0,
+    "mtekDiagnostics": 0,
+    "inAppPausedScreenshot": "demo/in-app.png"
+  },
+  "frozenAiArchiveChanges": 0,
+  "legacyRuntimeDefinitionsHash": "eb4cc9428208b5eaa47656305d55721d19ebb8b9cc672a98a422a7f546c086e1",
+  "imageCount": 51
+}

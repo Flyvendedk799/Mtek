@@ -635,6 +635,26 @@ fn field_statements(
             },
         ));
     }
+    for (name, field) in [
+        ("bounds_center", &entity.bounds_center),
+        ("bounds_radius", &entity.bounds_radius),
+    ] {
+        if let Some(field) = field {
+            computed |= matches!(field.source, Source::Expr(_));
+            if let Some(value) = value_of(&field.source)? {
+                sets.push((
+                    field.span.start,
+                    Stmt::Expr {
+                        expr: ctx_call(
+                            "setBounds",
+                            vec![Expr::ident(record), Expr::string(name), value],
+                        ),
+                        span: Some(field.span),
+                    },
+                ));
+            }
+        }
+    }
     computed |= matches!(entity.visible.source, Source::Expr(_));
     if let Some(visible) = value_of(&entity.visible.source)? {
         sets.push((

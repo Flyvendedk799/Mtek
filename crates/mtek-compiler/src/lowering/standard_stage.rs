@@ -206,12 +206,62 @@ pub fn vertex_attributes(inputs: &BTreeSet<SurfaceField>) -> Vec<VertexAttribute
 /// the parameter when the material reads no `SurfaceInput` field).
 #[derive(Debug, Clone, PartialEq)]
 pub struct FragmentBody {
+    pub varying_param: Option<Name>,
     /// The name of the `SurfaceInput` parameter.
     pub surface_param: Name,
     pub body: Vec<Statement>,
     /// The symbol of the stage (`std/materials.mtek::Unlit.fragment`).
     pub symbol: String,
     pub span: Span,
+}
+
+/// Authored local-position function. Input attributes are retained independently of fragment varyings.
+#[derive(Debug, Clone, PartialEq)]
+pub struct VertexBody {
+    pub result: ShaderType,
+    pub fields: Vec<VertexField>,
+    pub input_param: Name,
+    pub inputs: Vec<&'static str>,
+    pub body: Vec<Statement>,
+    pub symbol: String,
+    pub span: Span,
+}
+
+/// A stored member of the nominal vertex output; bool fields are encoded as u32.
+#[derive(Debug, Clone, PartialEq)]
+pub struct VertexField {
+    pub source_type: String,
+    pub name: String,
+    pub member: String,
+    pub ty: ShaderType,
+}
+
+impl VertexField {
+    fn flat(&self) -> bool {
+        matches!(self.ty, ShaderType::I32 | ShaderType::U32) || self.source_type == "quat"
+    }
+}
+
+pub(super) fn vertex_input_struct(span: Span) -> StructDecl {
+    StructDecl {
+        name: "MtekVertexInput".to_owned(),
+        members: [
+            VertexAttribute::Position,
+            VertexAttribute::Normal,
+            VertexAttribute::Uv,
+        ]
+        .into_iter()
+        .map(|attribute| StructMember {
+            name: attribute.name().to_owned(),
+            ty: attribute.ty(),
+            align: None,
+            size: None,
+            binding: None,
+            span,
+        })
+        .collect(),
+        span,
+    }
 }
 
 /// What the standard stage needs to know about a material.
@@ -228,6 +278,7 @@ pub struct MaterialDescription {
     /// The texture and sampler globals, group 1 from binding 1 in param declaration order.
     pub resources: Vec<GlobalDecl>,
     pub fragment: FragmentBody,
+    pub vertex: Option<VertexBody>,
     /// Further struct declarations the fragment body and its callees use (user structs and
     /// padded-element wrappers), each before its first use; declared after the param
     /// block's structs, skipping any the module already declares.
@@ -238,9 +289,44 @@ pub struct MaterialDescription {
     pub functions: Vec<Function>,
 }
 
+impl MaterialDescription {
+    fn varying_fields(&self) -> &[VertexField] {
+        if self.fragment.varying_param.is_some() {
+            self.vertex
+                .as_ref()
+                .map_or(&[], |vertex| vertex.fields.as_slice())
+        } else {
+            &[]
+        }
+    }
+}
+
+fn varying_location(inputs: &[SurfaceField], index: usize) -> u32 {
+    (0..16)
+        .filter(|location| {
+            !inputs
+                .iter()
+                .any(|field| field.varying_location() == *location)
+        })
+        .nth(index)
+        .unwrap_or(16)
+}
+
+/// Authored varying metadata for shader inspection; emitted from the same binding plan as WGSL.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VertexVarying {
+    pub name: String,
+    pub source_type: String,
+    pub location: u32,
+    pub wgsl_type: String,
+    pub interpolation: &'static str,
+}
+
 /// A material's complete shader module and the facts the packager and the runtime need.
 #[derive(Debug, Clone, PartialEq)]
 pub struct MaterialShader {
+    pub varyings: Vec<VertexVarying>,
     pub module: ShaderModule,
     /// Present vertex attributes in vertex-buffer slot order.
     pub vertex_attributes: Vec<VertexAttribute>,
@@ -313,7 +399,22 @@ pub fn build_standard_stage(material: &MaterialDescription) -> Result<MaterialSh
     let span = material.declaration;
     let symbol = material.symbol.as_str();
     let inputs: Vec<SurfaceField> = material.surface_inputs.iter().copied().collect();
-    let attributes = vertex_attributes(&material.surface_inputs);
+    let mut attributes = vertex_attributes(&material.surface_inputs);
+    if let Some(vertex) = &material.vertex {
+        attributes.retain(|attribute| {
+            !vertex
+                .fields
+                .iter()
+                .any(|field| field.name == attribute.name())
+                || *attribute == VertexAttribute::Position
+        });
+        for attribute in [VertexAttribute::Normal, VertexAttribute::Uv] {
+            if vertex.inputs.contains(&attribute.name()) && !attributes.contains(&attribute) {
+                attributes.push(attribute);
+            }
+        }
+        attributes.sort();
+    }
 
     let frame_record = compute(&mtek_frame(), "builtin:frame", "MtekFrame")?;
     let object_record = compute(&mtek_object(), "builtin:object", "MtekObject")?;
@@ -329,7 +430,14 @@ pub fn build_standard_stage(material: &MaterialDescription) -> Result<MaterialSh
         }
     }
     module.declare_block(&object_record, span);
-    module.structs.push(vertex_output_struct(&inputs, span));
+    if material.vertex.is_some() && !module.structs.iter().any(|s| s.name == "MtekVertexInput") {
+        module.structs.push(vertex_input_struct(span));
+    }
+    module.structs.push(vertex_output_struct(
+        &inputs,
+        material.varying_fields(),
+        span,
+    ));
     if !inputs.is_empty()
         && !module
             .structs
@@ -349,6 +457,25 @@ pub fn build_standard_stage(material: &MaterialDescription) -> Result<MaterialSh
     module.globals.push(object.clone());
 
     module.functions.extend(material.functions.iter().cloned());
+    if let Some(vertex) = &material.vertex {
+        module.functions.push(Function {
+            name: Name::generated("vertex"),
+            stage: None,
+            params: vec![FunctionParam {
+                name: vertex.input_param.clone(),
+                ty: ShaderType::named("MtekVertexInput"),
+                binding: None,
+                span: vertex.span,
+            }],
+            result: Some(FunctionResult {
+                ty: vertex.result.clone(),
+                binding: None,
+            }),
+            body: vertex.body.clone(),
+            symbol: vertex.symbol.clone(),
+            span: vertex.span,
+        });
+    }
     module
         .functions
         .push(fragment_function(material, !inputs.is_empty()));
@@ -358,14 +485,30 @@ pub fn build_standard_stage(material: &MaterialDescription) -> Result<MaterialSh
             &object,
             &attributes,
             &inputs,
+            material.vertex.as_ref(),
             instanced,
-            symbol,
-            span,
+            material,
         ));
     }
-    module.functions.push(fragment_entry(&inputs, symbol, span));
+    module.functions.push(fragment_entry(&inputs, material));
 
     Ok(MaterialShader {
+        varyings: material
+            .varying_fields()
+            .iter()
+            .enumerate()
+            .map(|(index, field)| VertexVarying {
+                name: field.name.clone(),
+                source_type: field.source_type.clone(),
+                location: varying_location(&inputs, index),
+                wgsl_type: crate::emit_wgsl::printer::type_text(&field.ty),
+                interpolation: if field.flat() {
+                    "flat"
+                } else {
+                    "perspective-center"
+                },
+            })
+            .collect(),
         module,
         vertex_attributes: attributes,
         surface_inputs: inputs,
@@ -385,7 +528,7 @@ fn io_member(name: &str, ty: ShaderType, binding: IoBinding, span: Span) -> Stru
 }
 
 /// `struct MtekVertexOutput { @builtin(position) clip_position, @location(k) <field> }`.
-fn vertex_output_struct(inputs: &[SurfaceField], span: Span) -> StructDecl {
+fn vertex_output_struct(inputs: &[SurfaceField], custom: &[VertexField], span: Span) -> StructDecl {
     let mut members = vec![io_member(
         "clip_position",
         ShaderType::VEC4,
@@ -397,6 +540,19 @@ fn vertex_output_struct(inputs: &[SurfaceField], span: Span) -> StructDecl {
             field.name(),
             field.ty(),
             IoBinding::Location(field.varying_location()),
+            span,
+        )
+    }));
+    members.extend(custom.iter().enumerate().map(|(index, field)| {
+        let location = varying_location(inputs, index);
+        io_member(
+            &format!("payload_{index}"),
+            field.ty.clone(),
+            if field.flat() {
+                IoBinding::FlatLocation(location)
+            } else {
+                IoBinding::Location(location)
+            },
             span,
         )
     }));
@@ -429,7 +585,7 @@ pub(super) fn surface_input_struct(inputs: &[SurfaceField], span: Span) -> Struc
 /// `fn mtek_fragment([surface: MtekSurfaceInput]) -> vec4<f32> { body }`.
 fn fragment_function(material: &MaterialDescription, takes_surface: bool) -> Function {
     let fragment = &material.fragment;
-    let params = if takes_surface {
+    let mut params = if takes_surface {
         vec![FunctionParam {
             name: fragment.surface_param.clone(),
             ty: ShaderType::named(SURFACE_INPUT_STRUCT),
@@ -439,6 +595,14 @@ fn fragment_function(material: &MaterialDescription, takes_surface: bool) -> Fun
     } else {
         Vec::new()
     };
+    if let (Some(name), Some(vertex)) = (&fragment.varying_param, &material.vertex) {
+        params.push(FunctionParam {
+            name: name.clone(),
+            ty: vertex.result.clone(),
+            binding: None,
+            span: fragment.span,
+        });
+    }
     Function {
         name: Name::generated("fragment"),
         stage: None,
@@ -469,10 +633,12 @@ fn vertex_entry(
     object: &GlobalDecl,
     attributes: &[VertexAttribute],
     inputs: &[SurfaceField],
+    vertex: Option<&VertexBody>,
     instanced: bool,
-    symbol: &str,
-    span: Span,
+    material: &MaterialDescription,
 ) -> Function {
+    let symbol = material.symbol.as_str();
+    let span = material.declaration;
     let attribute = |a: VertexAttribute| Expr::local(a.param_name(), a.ty(), span);
     // `mtek_object.<member>`, or `mat4x4<f32>(mtek_<which>_c0, .., mtek_<which>_c3)`.
     let matrix = |member: &str, which: &str| {
@@ -494,25 +660,75 @@ fn vertex_entry(
     let world_normal_name = Name::generated("world_normal");
     let world = || Expr::local(world_name.clone(), ShaderType::VEC4, span);
 
-    // let mtek_world = mtek_object.model * vec4<f32>(mtek_position, 1.0);
-    let mut body = vec![Statement::Let {
+    let mut body = Vec::new();
+    let deformed = if let Some(vertex) = vertex {
+        let args = [
+            VertexAttribute::Position,
+            VertexAttribute::Normal,
+            VertexAttribute::Uv,
+        ]
+        .into_iter()
+        .map(|a| {
+            if attributes.contains(&a) {
+                attribute(a)
+            } else {
+                Expr::construct(a.ty(), vec![Expr::f32(FiniteF32::ZERO, span)], span)
+            }
+        })
+        .collect();
+        let name = Name::generated(if vertex.fields.is_empty() {
+            "deformed_position"
+        } else {
+            "deformed_vertex"
+        });
+        body.push(Statement::Let {
+            name: name.clone(),
+            value: Expr::call(
+                Name::generated("vertex"),
+                vec![Expr::construct(
+                    ShaderType::named("MtekVertexInput"),
+                    args,
+                    span,
+                )],
+                vertex.result.clone(),
+                span,
+            ),
+            span,
+        });
+        Some(Expr::local(name, vertex.result.clone(), span))
+    } else {
+        None
+    };
+    let output = |name: &str, fallback: VertexAttribute| {
+        if let (Some(vertex), Some(value)) = (vertex, &deformed) {
+            if vertex.fields.is_empty() && name == "position" {
+                return value.clone();
+            }
+            if let Some(field) = vertex.fields.iter().find(|field| field.name == name) {
+                return value.clone().field(&field.member, field.ty.clone(), span);
+            }
+        }
+        attribute(fallback)
+    };
+    let position = output("position", VertexAttribute::Position);
+    let normal = output("normal", VertexAttribute::Normal);
+    let uv = output("uv", VertexAttribute::Uv);
+    // Model/camera transforms always follow authored local deformation.
+    body.push(Statement::Let {
         name: world_name.clone(),
         value: Expr::binary(
             BinaryOp::Multiply,
             matrix("model", "model"),
             Expr::construct(
                 ShaderType::VEC4,
-                vec![
-                    attribute(VertexAttribute::Position),
-                    Expr::f32(FiniteF32::ONE, span),
-                ],
+                vec![position.clone(), Expr::f32(FiniteF32::ONE, span)],
                 span,
             ),
             ShaderType::VEC4,
             span,
         ),
         span,
-    }];
+    });
     if inputs.contains(&SurfaceField::WorldNormal) {
         // let mtek_world_normal =
         //     normalize((mtek_object.normal_matrix * vec4<f32>(mtek_normal, 0.0)).xyz);
@@ -523,10 +739,7 @@ fn vertex_entry(
                 matrix("normal_matrix", "normal"),
                 Expr::construct(
                     ShaderType::VEC4,
-                    vec![
-                        attribute(VertexAttribute::Normal),
-                        Expr::f32(FiniteF32::ZERO, span),
-                    ],
+                    vec![normal, Expr::f32(FiniteF32::ZERO, span)],
                     span,
                 ),
                 ShaderType::VEC4,
@@ -548,11 +761,19 @@ fn vertex_entry(
     );
     let mut fields = vec![clip];
     fields.extend(inputs.iter().map(|field| match field {
-        SurfaceField::LocalPosition => attribute(VertexAttribute::Position),
+        SurfaceField::LocalPosition => position.clone(),
         SurfaceField::WorldPosition => world().swizzle(&XYZ, span),
         SurfaceField::WorldNormal => Expr::local(world_normal_name.clone(), ShaderType::VEC3, span),
-        SurfaceField::Uv => attribute(VertexAttribute::Uv),
+        SurfaceField::Uv => uv.clone(),
     }));
+    if let Some(value) = &deformed {
+        fields.extend(
+            material
+                .varying_fields()
+                .iter()
+                .map(|field| value.clone().field(&field.member, field.ty.clone(), span)),
+        );
+    }
     body.push(Statement::Return {
         value: Some(Expr::construct(
             ShaderType::named(VERTEX_OUTPUT_STRUCT),
@@ -599,20 +820,24 @@ fn vertex_entry(
 }
 
 /// `mtek_fs`: the fragment wrapper.
-fn fragment_entry(inputs: &[SurfaceField], symbol: &str, span: Span) -> Function {
+fn fragment_entry(inputs: &[SurfaceField], material: &MaterialDescription) -> Function {
+    let symbol = material.symbol.as_str();
+    let span = material.declaration;
     let input_name = Name::generated("in");
     let surface_name = Name::generated("surface");
     let color_name = Name::generated("color");
     let mut body = Vec::new();
     let mut params = Vec::new();
     let mut call_args = Vec::new();
-    if !inputs.is_empty() {
+    if !inputs.is_empty() || material.fragment.varying_param.is_some() {
         params.push(FunctionParam {
             name: input_name.clone(),
             ty: ShaderType::named(VERTEX_OUTPUT_STRUCT),
             binding: None,
             span,
         });
+    }
+    if !inputs.is_empty() {
         // let mtek_surface = MtekSurfaceInput(mtek_in.<field>, ..);
         let fields = inputs
             .iter()
@@ -640,6 +865,24 @@ fn fragment_entry(inputs: &[SurfaceField], symbol: &str, span: Span) -> Function
             ShaderType::named(SURFACE_INPUT_STRUCT),
             span,
         ));
+    }
+    if material.fragment.varying_param.is_some()
+        && let Some(vertex) = &material.vertex
+    {
+        let fields = material
+            .varying_fields()
+            .iter()
+            .enumerate()
+            .map(|(index, field)| {
+                Expr::local(
+                    input_name.clone(),
+                    ShaderType::named(VERTEX_OUTPUT_STRUCT),
+                    span,
+                )
+                .field(format!("payload_{index}"), field.ty.clone(), span)
+            })
+            .collect();
+        call_args.push(Expr::construct(vertex.result.clone(), fields, span));
     }
     // let mtek_color = mtek_fragment(..);
     body.push(Statement::Let {
@@ -733,7 +976,9 @@ mod tests {
             surface_inputs: inputs.iter().copied().collect(),
             params,
             resources: Vec::new(),
+            vertex: None,
             fragment: FragmentBody {
+                varying_param: None,
                 surface_param: surface,
                 body,
                 symbol: format!("{SYMBOL}.fragment"),

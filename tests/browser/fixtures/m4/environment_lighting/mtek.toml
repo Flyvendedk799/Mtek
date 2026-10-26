@@ -1,0 +1,7 @@
+[project]
+name = "environment-lighting"
+language = "0.1"
+
+[host.inputs]
+metal = "Demo.metal"
+rough = "Demo.rough"

@@ -1,0 +1,22 @@
+
+> @mtek/runtime-web@0.1.0-dev build
+> npm run gen && node scripts/build.mjs
+
+
+> @mtek/runtime-web@0.1.0-dev gen
+> node ../../scripts/gen-manifest-validator.mjs
+
+
+  dist\runtime.js      1.0mb
+  dist\runtime.js.map  2.1mb
+
+Done in 51ms
+
+  dist\runtime.dev.js      1.1mb
+  dist\runtime.dev.js.map  2.1mb
+
+Done in 39ms
+
+  dist\runtime.min.js  658.0kb
+
+Done in 31ms

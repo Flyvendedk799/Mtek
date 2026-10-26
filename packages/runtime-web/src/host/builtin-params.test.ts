@@ -112,7 +112,10 @@ describe("the params of the built-in materials, on the compiler's builtin_params
     const classes = (entity: string) =>
       Object.fromEntries((manifest.scene.materialInstances[instanceOf(manifest, entity)]?.params ?? []).map((param) => [param.name, param.class]));
     expect(classes("Badge")).toEqual({ color: "imperative" });
-    expect(classes("Ball")).toEqual({ base_color: "initial", metallic: "bound", roughness: "imperative", base_color_texture: "resource", base_color_sampler: "resource" });
+    expect(classes("Ball")).toEqual({ base_color: "initial", metallic: "bound", roughness: "imperative", base_color_texture: "resource", base_color_sampler: "resource",
+      metallic_roughness_texture: "resource", metallic_roughness_sampler: "resource", normal_texture: "resource", normal_sampler: "resource",
+      occlusion_texture: "resource", occlusion_sampler: "resource", emissive_texture: "resource", emissive_sampler: "resource",
+      normal_scale: "initial", occlusion_strength: "initial", emissive: "initial" });
     // The default `Unlit {}` of a mesh: written by a handler of the scene, or never.
     expect(classes("Plain")).toEqual({ color: "imperative" });
     expect(classes("Marker")).toEqual({ color: "initial" });

@@ -1,0 +1,1843 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-26T02:01:41.902Z",
+  "mode": "corpus-expectations",
+  "status": "passed",
+  "compiler": {
+    "available": true,
+    "file": "mtek.exe",
+    "sha256": "8360bc732851cf94b47cedbb61b48255a2ff6009522f9432796542ce8c6e47b1",
+    "version": "mtek 0.1.0-dev (language 0.1, runtime ABI 1)"
+  },
+  "compilerUnchanged": true,
+  "corpus": {
+    "file": "corpus.json",
+    "sha256": "099b5dcfa84c0c8005948b9e1a3308a374595b5072384560eca6904a99dbb60e"
+  },
+  "policy": {
+    "serial": true,
+    "compilerThreads": 1,
+    "compilerTimeoutMs": 10000,
+    "buildCompiler": false,
+    "externalResourceFetch": false,
+    "convertSources": false,
+    "gpuWork": false,
+    "limits": {
+      "fileBytes": 67108864,
+      "jsonBytes": 16777216,
+      "entries": 64,
+      "probesPerEntry": 128
+    },
+    "scope": "declaration import plus only the explicitly requested mesh/material/clip checks"
+  },
+  "results": [
+    {
+      "id": "fox-original",
+      "file": "../../benchmarks/runtime/animation/assets/Fox/Fox.glb",
+      "sha256": "d97044e701822bac5a62696459b27d7b375aada5de8574ed4362edbba94771f7",
+      "bytes": 162852,
+      "inventory": {
+        "scope": "metadata inventory, not validation or rendering evidence",
+        "meshes": 1,
+        "primitives": 1,
+        "nodes": 26,
+        "skins": 1,
+        "joints": 24,
+        "animations": 3,
+        "materials": 1,
+        "images": 1,
+        "morphPrimitives": 0,
+        "sparseAccessors": 0,
+        "externalReferences": 0,
+        "attributes": [
+          "JOINTS_0",
+          "POSITION",
+          "TEXCOORD_0",
+          "WEIGHTS_0"
+        ],
+        "interpolations": [
+          "LINEAR"
+        ],
+        "extensionsUsed": [],
+        "extensionsRequired": []
+      },
+      "inventoryError": null,
+      "inputUnchanged": true,
+      "import": {
+        "status": "passed",
+        "codes": [],
+        "diagnostics": [],
+        "raw": {
+          "schemaVersion": 1,
+          "tool": "mtek",
+          "compilerVersion": "0.1.0-dev",
+          "languageVersion": "0.1",
+          "project": "asset-audit",
+          "diagnostics": [],
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "notes": 0,
+            "suppressed": 0
+          }
+        },
+        "exitCode": 0
+      },
+      "probes": [
+        {
+          "id": "survey",
+          "status": "passed",
+          "check": {
+            "status": "passed",
+            "codes": [],
+            "diagnostics": [],
+            "raw": {
+              "schemaVersion": 1,
+              "tool": "mtek",
+              "compilerVersion": "0.1.0-dev",
+              "languageVersion": "0.1",
+              "project": "asset-audit",
+              "diagnostics": [],
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "notes": 0,
+                "suppressed": 0
+              }
+            },
+            "exitCode": 0
+          }
+        },
+        {
+          "id": "walk",
+          "status": "passed",
+          "check": {
+            "status": "passed",
+            "codes": [],
+            "diagnostics": [],
+            "raw": {
+              "schemaVersion": 1,
+              "tool": "mtek",
+              "compilerVersion": "0.1.0-dev",
+              "languageVersion": "0.1",
+              "project": "asset-audit",
+              "diagnostics": [],
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "notes": 0,
+                "suppressed": 0
+              }
+            },
+            "exitCode": 0
+          }
+        },
+        {
+          "id": "run",
+          "status": "passed",
+          "check": {
+            "status": "passed",
+            "codes": [],
+            "diagnostics": [],
+            "raw": {
+              "schemaVersion": 1,
+              "tool": "mtek",
+              "compilerVersion": "0.1.0-dev",
+              "languageVersion": "0.1",
+              "project": "asset-audit",
+              "diagnostics": [],
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "notes": 0,
+                "suppressed": 0
+              }
+            },
+            "exitCode": 0
+          }
+        }
+      ],
+      "expectationsMatched": true,
+      "notes": [
+        "No build, packaged-byte budget, rendered pixels or runtime/device validation was performed."
+      ],
+      "provenance": "KhronosGroup/glTF-Sample-Assets @ 8f492390ddc7a2ae221a1369ef560589cf8c70fb; original Fox authors/licenses in benchmarks/runtime/animation/assets/Fox/"
+    },
+    {
+      "id": "cesium-man-original",
+      "file": "../../benchmarks/runtime/animation/assets/CesiumMan/CesiumMan.glb",
+      "sha256": "b7001eaeea8254bd44773bcd247e78696d94169388fbb2a1800fc69434e777d9",
+      "bytes": 438044,
+      "inventory": {
+        "scope": "metadata inventory, not validation or rendering evidence",
+        "meshes": 1,
+        "primitives": 1,
+        "nodes": 22,
+        "skins": 1,
+        "joints": 19,
+        "animations": 1,
+        "materials": 1,
+        "images": 1,
+        "morphPrimitives": 0,
+        "sparseAccessors": 0,
+        "externalReferences": 0,
+        "attributes": [
+          "JOINTS_0",
+          "NORMAL",
+          "POSITION",
+          "TEXCOORD_0",
+          "WEIGHTS_0"
+        ],
+        "interpolations": [
+          "LINEAR"
+        ],
+        "extensionsUsed": [],
+        "extensionsRequired": []
+      },
+      "inventoryError": null,
+      "inputUnchanged": true,
+      "import": {
+        "status": "rejected",
+        "codes": [
+          "MTEK-E7018"
+        ],
+        "diagnostics": [
+          {
+            "schemaVersion": 1,
+            "code": "MTEK-E7018",
+            "severity": "error",
+            "title": "unsupported sampler mode",
+            "message": "The sampler at samplers[0] filters magnification LINEAR and minification NEAREST; the sampler presets use one filter for both.",
+            "source": {
+              "file": "src/main.mtek",
+              "startByte": 24,
+              "endByte": 45,
+              "startLine": 1,
+              "startColumn": 25,
+              "endLine": 1,
+              "endColumn": 46
+            },
+            "related": [],
+            "notes": [
+              "the problem is in the file 'models/model.glb'"
+            ],
+            "suggestedEdits": [],
+            "phase": "check",
+            "docs": "spec/diagnostics.md#mtek-e7018"
+          }
+        ],
+        "raw": {
+          "schemaVersion": 1,
+          "tool": "mtek",
+          "compilerVersion": "0.1.0-dev",
+          "languageVersion": "0.1",
+          "project": "asset-audit",
+          "diagnostics": [
+            {
+              "schemaVersion": 1,
+              "code": "MTEK-E7018",
+              "severity": "error",
+              "title": "unsupported sampler mode",
+              "message": "The sampler at samplers[0] filters magnification LINEAR and minification NEAREST; the sampler presets use one filter for both.",
+              "source": {
+                "file": "src/main.mtek",
+                "startByte": 24,
+                "endByte": 45,
+                "startLine": 1,
+                "startColumn": 25,
+                "endLine": 1,
+                "endColumn": 46
+              },
+              "related": [],
+              "notes": [
+                "the problem is in the file 'models/model.glb'"
+              ],
+              "suggestedEdits": [],
+              "phase": "check",
+              "docs": "spec/diagnostics.md#mtek-e7018"
+            }
+          ],
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "notes": 0,
+            "suppressed": 0
+          }
+        },
+        "exitCode": 1
+      },
+      "probes": [],
+      "expectationsMatched": true,
+      "notes": [
+        "No mesh/material/clip use was requested. Import success alone is not full asset compatibility.",
+        "No build, packaged-byte budget, rendered pixels or runtime/device validation was performed."
+      ],
+      "provenance": "KhronosGroup/glTF-Sample-Assets @ 8f492390ddc7a2ae221a1369ef560589cf8c70fb; Cesium CC BY 4.0 and retained mark notice"
+    },
+    {
+      "id": "pbr-all-maps",
+      "file": "../../tests/assets/pass/pbr_all_maps/models/model.glb",
+      "sha256": "61022506daffb2226c4f21f9327d6f2d77222506446e5dda53c32e44abea73ae",
+      "bytes": 1668,
+      "inventory": {
+        "scope": "metadata inventory, not validation or rendering evidence",
+        "meshes": 1,
+        "primitives": 1,
+        "nodes": 1,
+        "skins": 0,
+        "joints": 0,
+        "animations": 0,
+        "materials": 1,
+        "images": 2,
+        "morphPrimitives": 0,
+        "sparseAccessors": 0,
+        "externalReferences": 0,
+        "attributes": [
+          "NORMAL",
+          "POSITION",
+          "TEXCOORD_0"
+        ],
+        "interpolations": [],
+        "extensionsUsed": [],
+        "extensionsRequired": []
+      },
+      "inventoryError": null,
+      "inputUnchanged": true,
+      "import": {
+        "status": "passed",
+        "codes": [],
+        "diagnostics": [],
+        "raw": {
+          "schemaVersion": 1,
+          "tool": "mtek",
+          "compilerVersion": "0.1.0-dev",
+          "languageVersion": "0.1",
+          "project": "asset-audit",
+          "diagnostics": [],
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "notes": 0,
+            "suppressed": 0
+          }
+        },
+        "exitCode": 0
+      },
+      "probes": [
+        {
+          "id": "mesh-and-material",
+          "status": "passed",
+          "check": {
+            "status": "passed",
+            "codes": [],
+            "diagnostics": [],
+            "raw": {
+              "schemaVersion": 1,
+              "tool": "mtek",
+              "compilerVersion": "0.1.0-dev",
+              "languageVersion": "0.1",
+              "project": "asset-audit",
+              "diagnostics": [],
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "notes": 0,
+                "suppressed": 0
+              }
+            },
+            "exitCode": 0
+          }
+        }
+      ],
+      "expectationsMatched": true,
+      "notes": [
+        "No build, packaged-byte budget, rendered pixels or runtime/device validation was performed."
+      ],
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs"
+    },
+    {
+      "id": "emissive-factor",
+      "file": "../../tests/assets/pass/pbr_emissive_factor/models/model.glb",
+      "sha256": "d9ca23883f0a0f01bf5d40be2bbe71b96608fabe009e23ac5d78703aa68bf4db",
+      "bytes": 1032,
+      "inventory": {
+        "scope": "metadata inventory, not validation or rendering evidence",
+        "meshes": 1,
+        "primitives": 1,
+        "nodes": 1,
+        "skins": 0,
+        "joints": 0,
+        "animations": 0,
+        "materials": 1,
+        "images": 0,
+        "morphPrimitives": 0,
+        "sparseAccessors": 0,
+        "externalReferences": 0,
+        "attributes": [
+          "NORMAL",
+          "POSITION",
+          "TEXCOORD_0"
+        ],
+        "interpolations": [],
+        "extensionsUsed": [],
+        "extensionsRequired": []
+      },
+      "inventoryError": null,
+      "inputUnchanged": true,
+      "import": {
+        "status": "passed",
+        "codes": [],
+        "diagnostics": [],
+        "raw": {
+          "schemaVersion": 1,
+          "tool": "mtek",
+          "compilerVersion": "0.1.0-dev",
+          "languageVersion": "0.1",
+          "project": "asset-audit",
+          "diagnostics": [],
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "notes": 0,
+            "suppressed": 0
+          }
+        },
+        "exitCode": 0
+      },
+      "probes": [
+        {
+          "id": "mesh-and-material",
+          "status": "passed",
+          "check": {
+            "status": "passed",
+            "codes": [],
+            "diagnostics": [],
+            "raw": {
+              "schemaVersion": 1,
+              "tool": "mtek",
+              "compilerVersion": "0.1.0-dev",
+              "languageVersion": "0.1",
+              "project": "asset-audit",
+              "diagnostics": [],
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "notes": 0,
+                "suppressed": 0
+              }
+            },
+            "exitCode": 0
+          }
+        }
+      ],
+      "expectationsMatched": true,
+      "notes": [
+        "No build, packaged-byte budget, rendered pixels or runtime/device validation was performed."
+      ],
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs"
+    },
+    {
+      "id": "normal-map",
+      "file": "../../tests/assets/pass/pbr_normal_texture/models/model.glb",
+      "sha256": "aa2c238eb5c376e5f7e8af337a5f4a81b02ae14eb248c9fddf36764b5be3e012",
+      "bytes": 1232,
+      "inventory": {
+        "scope": "metadata inventory, not validation or rendering evidence",
+        "meshes": 1,
+        "primitives": 1,
+        "nodes": 1,
+        "skins": 0,
+        "joints": 0,
+        "animations": 0,
+        "materials": 1,
+        "images": 1,
+        "morphPrimitives": 0,
+        "sparseAccessors": 0,
+        "externalReferences": 0,
+        "attributes": [
+          "NORMAL",
+          "POSITION",
+          "TEXCOORD_0"
+        ],
+        "interpolations": [],
+        "extensionsUsed": [],
+        "extensionsRequired": []
+      },
+      "inventoryError": null,
+      "inputUnchanged": true,
+      "import": {
+        "status": "passed",
+        "codes": [],
+        "diagnostics": [],
+        "raw": {
+          "schemaVersion": 1,
+          "tool": "mtek",
+          "compilerVersion": "0.1.0-dev",
+          "languageVersion": "0.1",
+          "project": "asset-audit",
+          "diagnostics": [],
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "notes": 0,
+            "suppressed": 0
+          }
+        },
+        "exitCode": 0
+      },
+      "probes": [
+        {
+          "id": "mesh-and-material",
+          "status": "passed",
+          "check": {
+            "status": "passed",
+            "codes": [],
+            "diagnostics": [],
+            "raw": {
+              "schemaVersion": 1,
+              "tool": "mtek",
+              "compilerVersion": "0.1.0-dev",
+              "languageVersion": "0.1",
+              "project": "asset-audit",
+              "diagnostics": [],
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "notes": 0,
+                "suppressed": 0
+              }
+            },
+            "exitCode": 0
+          }
+        }
+      ],
+      "expectationsMatched": true,
+      "notes": [
+        "No build, packaged-byte budget, rendered pixels or runtime/device validation was performed."
+      ],
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs"
+    },
+    {
+      "id": "linear-animation",
+      "file": "../../tests/assets/pass/animated_clip/models/model.glb",
+      "sha256": "3bba29147952abb3a355373178b86a9d2b3350d20a94980c77fc6fe27121ad00",
+      "bytes": 1392,
+      "inventory": {
+        "scope": "metadata inventory, not validation or rendering evidence",
+        "meshes": 1,
+        "primitives": 1,
+        "nodes": 1,
+        "skins": 0,
+        "joints": 0,
+        "animations": 1,
+        "materials": 1,
+        "images": 0,
+        "morphPrimitives": 0,
+        "sparseAccessors": 0,
+        "externalReferences": 0,
+        "attributes": [
+          "NORMAL",
+          "POSITION",
+          "TEXCOORD_0"
+        ],
+        "interpolations": [
+          "LINEAR"
+        ],
+        "extensionsUsed": [],
+        "extensionsRequired": []
+      },
+      "inventoryError": null,
+      "inputUnchanged": true,
+      "import": {
+        "status": "passed",
+        "codes": [],
+        "diagnostics": [],
+        "raw": {
+          "schemaVersion": 1,
+          "tool": "mtek",
+          "compilerVersion": "0.1.0-dev",
+          "languageVersion": "0.1",
+          "project": "asset-audit",
+          "diagnostics": [],
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "notes": 0,
+            "suppressed": 0
+          }
+        },
+        "exitCode": 0
+      },
+      "probes": [
+        {
+          "id": "clip",
+          "status": "passed",
+          "check": {
+            "status": "passed",
+            "codes": [],
+            "diagnostics": [],
+            "raw": {
+              "schemaVersion": 1,
+              "tool": "mtek",
+              "compilerVersion": "0.1.0-dev",
+              "languageVersion": "0.1",
+              "project": "asset-audit",
+              "diagnostics": [],
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "notes": 0,
+                "suppressed": 0
+              }
+            },
+            "exitCode": 0
+          }
+        }
+      ],
+      "expectationsMatched": true,
+      "notes": [
+        "No build, packaged-byte budget, rendered pixels or runtime/device validation was performed."
+      ],
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs"
+    },
+    {
+      "id": "cubic-animation-use",
+      "file": "../../tests/assets/pass/animation_unused_cubic/models/model.glb",
+      "sha256": "b7e22e72013cc73b6b8475ebf110f63f311366f7efb52582c36cd40ab8331917",
+      "bytes": 1488,
+      "inventory": {
+        "scope": "metadata inventory, not validation or rendering evidence",
+        "meshes": 1,
+        "primitives": 1,
+        "nodes": 1,
+        "skins": 0,
+        "joints": 0,
+        "animations": 1,
+        "materials": 1,
+        "images": 0,
+        "morphPrimitives": 0,
+        "sparseAccessors": 0,
+        "externalReferences": 0,
+        "attributes": [
+          "NORMAL",
+          "POSITION",
+          "TEXCOORD_0"
+        ],
+        "interpolations": [
+          "CUBICSPLINE"
+        ],
+        "extensionsUsed": [],
+        "extensionsRequired": []
+      },
+      "inventoryError": null,
+      "inputUnchanged": true,
+      "import": {
+        "status": "passed",
+        "codes": [],
+        "diagnostics": [],
+        "raw": {
+          "schemaVersion": 1,
+          "tool": "mtek",
+          "compilerVersion": "0.1.0-dev",
+          "languageVersion": "0.1",
+          "project": "asset-audit",
+          "diagnostics": [],
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "notes": 0,
+            "suppressed": 0
+          }
+        },
+        "exitCode": 0
+      },
+      "probes": [
+        {
+          "id": "cubic-clip",
+          "status": "rejected",
+          "check": {
+            "status": "rejected",
+            "codes": [
+              "MTEK-E5016"
+            ],
+            "diagnostics": [
+              {
+                "schemaVersion": 1,
+                "code": "MTEK-E5016",
+                "severity": "error",
+                "title": "clip cannot play",
+                "message": "The clip 'animation_0' cannot play on the mesh 'Tri' of 'models/model.glb'.",
+                "source": {
+                  "file": "src/main.mtek",
+                  "startByte": 140,
+                  "endByte": 160,
+                  "startLine": 6,
+                  "startColumn": 9,
+                  "endLine": 6,
+                  "endColumn": 29
+                },
+                "related": [],
+                "notes": [
+                  "help: 'models/model.glb' has no animation a clip can play"
+                ],
+                "suggestedEdits": [],
+                "phase": "check",
+                "docs": "spec/diagnostics.md#mtek-e5016"
+              }
+            ],
+            "raw": {
+              "schemaVersion": 1,
+              "tool": "mtek",
+              "compilerVersion": "0.1.0-dev",
+              "languageVersion": "0.1",
+              "project": "asset-audit",
+              "diagnostics": [
+                {
+                  "schemaVersion": 1,
+                  "code": "MTEK-E5016",
+                  "severity": "error",
+                  "title": "clip cannot play",
+                  "message": "The clip 'animation_0' cannot play on the mesh 'Tri' of 'models/model.glb'.",
+                  "source": {
+                    "file": "src/main.mtek",
+                    "startByte": 140,
+                    "endByte": 160,
+                    "startLine": 6,
+                    "startColumn": 9,
+                    "endLine": 6,
+                    "endColumn": 29
+                  },
+                  "related": [],
+                  "notes": [
+                    "help: 'models/model.glb' has no animation a clip can play"
+                  ],
+                  "suggestedEdits": [],
+                  "phase": "check",
+                  "docs": "spec/diagnostics.md#mtek-e5016"
+                }
+              ],
+              "summary": {
+                "errors": 1,
+                "warnings": 0,
+                "notes": 0,
+                "suppressed": 0
+              }
+            },
+            "exitCode": 1
+          }
+        }
+      ],
+      "expectationsMatched": true,
+      "notes": [
+        "No build, packaged-byte budget, rendered pixels or runtime/device validation was performed."
+      ],
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs"
+    },
+    {
+      "id": "multiple-primitives",
+      "file": "../../tests/assets/fail/e7012_several_primitives/models/chair.glb",
+      "sha256": "b4cdc64a8f322599fdb414b80c592a3b176ce1abca60aa91eb2713f8b73a65d4",
+      "bytes": 4260,
+      "inventory": {
+        "scope": "metadata inventory, not validation or rendering evidence",
+        "meshes": 5,
+        "primitives": 6,
+        "nodes": 4,
+        "skins": 0,
+        "joints": 0,
+        "animations": 0,
+        "materials": 3,
+        "images": 2,
+        "morphPrimitives": 0,
+        "sparseAccessors": 0,
+        "externalReferences": 0,
+        "attributes": [
+          "NORMAL",
+          "POSITION",
+          "TEXCOORD_0"
+        ],
+        "interpolations": [],
+        "extensionsUsed": [],
+        "extensionsRequired": []
+      },
+      "inventoryError": null,
+      "inputUnchanged": true,
+      "import": {
+        "status": "passed",
+        "codes": [],
+        "diagnostics": [],
+        "raw": {
+          "schemaVersion": 1,
+          "tool": "mtek",
+          "compilerVersion": "0.1.0-dev",
+          "languageVersion": "0.1",
+          "project": "asset-audit",
+          "diagnostics": [],
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "notes": 0,
+            "suppressed": 0
+          }
+        },
+        "exitCode": 0
+      },
+      "probes": [
+        {
+          "id": "ambiguous-mesh",
+          "status": "rejected",
+          "check": {
+            "status": "rejected",
+            "codes": [
+              "MTEK-E7012"
+            ],
+            "diagnostics": [
+              {
+                "schemaVersion": 1,
+                "code": "MTEK-E7012",
+                "severity": "error",
+                "title": "mesh has several primitives",
+                "message": "The mesh 'Twin' of 'models/model.glb' has 2 primitives; `.mesh` needs exactly one.",
+                "source": {
+                  "file": "src/main.mtek",
+                  "startByte": 124,
+                  "endByte": 130,
+                  "startLine": 5,
+                  "startColumn": 26,
+                  "endLine": 5,
+                  "endColumn": 32
+                },
+                "related": [],
+                "notes": [
+                  "a glTF primitive has one material; v0.1 draws each primitive as its own entity",
+                  "help: pick one with `.primitive(\"Twin\", 0)` to `.primitive(\"Twin\", 1)`"
+                ],
+                "suggestedEdits": [],
+                "phase": "check",
+                "docs": "spec/diagnostics.md#mtek-e7012"
+              }
+            ],
+            "raw": {
+              "schemaVersion": 1,
+              "tool": "mtek",
+              "compilerVersion": "0.1.0-dev",
+              "languageVersion": "0.1",
+              "project": "asset-audit",
+              "diagnostics": [
+                {
+                  "schemaVersion": 1,
+                  "code": "MTEK-E7012",
+                  "severity": "error",
+                  "title": "mesh has several primitives",
+                  "message": "The mesh 'Twin' of 'models/model.glb' has 2 primitives; `.mesh` needs exactly one.",
+                  "source": {
+                    "file": "src/main.mtek",
+                    "startByte": 124,
+                    "endByte": 130,
+                    "startLine": 5,
+                    "startColumn": 26,
+                    "endLine": 5,
+                    "endColumn": 32
+                  },
+                  "related": [],
+                  "notes": [
+                    "a glTF primitive has one material; v0.1 draws each primitive as its own entity",
+                    "help: pick one with `.primitive(\"Twin\", 0)` to `.primitive(\"Twin\", 1)`"
+                  ],
+                  "suggestedEdits": [],
+                  "phase": "check",
+                  "docs": "spec/diagnostics.md#mtek-e7012"
+                }
+              ],
+              "summary": {
+                "errors": 1,
+                "warnings": 0,
+                "notes": 0,
+                "suppressed": 0
+              }
+            },
+            "exitCode": 1
+          }
+        },
+        {
+          "id": "explicit-primitive",
+          "status": "passed",
+          "check": {
+            "status": "passed",
+            "codes": [],
+            "diagnostics": [],
+            "raw": {
+              "schemaVersion": 1,
+              "tool": "mtek",
+              "compilerVersion": "0.1.0-dev",
+              "languageVersion": "0.1",
+              "project": "asset-audit",
+              "diagnostics": [],
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "notes": 0,
+                "suppressed": 0
+              }
+            },
+            "exitCode": 0
+          }
+        }
+      ],
+      "expectationsMatched": true,
+      "notes": [
+        "No build, packaged-byte budget, rendered pixels or runtime/device validation was performed."
+      ],
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs"
+    },
+    {
+      "id": "morph-targets",
+      "file": "../../tests/assets/fail/e7008_morph_targets/models/model.glb",
+      "sha256": "b4dedbc4f799daf2c7bb0898de9d909aecf77f475596b4e9ac249d11bdd6c433",
+      "bytes": 1192,
+      "inventory": {
+        "scope": "metadata inventory, not validation or rendering evidence",
+        "meshes": 1,
+        "primitives": 1,
+        "nodes": 1,
+        "skins": 0,
+        "joints": 0,
+        "animations": 0,
+        "materials": 1,
+        "images": 0,
+        "morphPrimitives": 1,
+        "sparseAccessors": 0,
+        "externalReferences": 0,
+        "attributes": [
+          "NORMAL",
+          "POSITION",
+          "TEXCOORD_0"
+        ],
+        "interpolations": [],
+        "extensionsUsed": [],
+        "extensionsRequired": []
+      },
+      "inventoryError": null,
+      "inputUnchanged": true,
+      "import": {
+        "status": "rejected",
+        "codes": [
+          "MTEK-E7008"
+        ],
+        "diagnostics": [
+          {
+            "schemaVersion": 1,
+            "code": "MTEK-E7008",
+            "severity": "error",
+            "title": "skinning or morph targets",
+            "message": "The mesh 'Tri' (meshes[0]) has default morph target weights; the profile does not support morph targets.",
+            "source": {
+              "file": "src/main.mtek",
+              "startByte": 24,
+              "endByte": 45,
+              "startLine": 1,
+              "startColumn": 25,
+              "endLine": 1,
+              "endColumn": 46
+            },
+            "related": [],
+            "notes": [
+              "the problem is in the file 'models/model.glb'"
+            ],
+            "suggestedEdits": [],
+            "phase": "check",
+            "docs": "spec/diagnostics.md#mtek-e7008"
+          },
+          {
+            "schemaVersion": 1,
+            "code": "MTEK-E7008",
+            "severity": "error",
+            "title": "skinning or morph targets",
+            "message": "The mesh 'Tri' (meshes[0]), primitive 0 has morph targets; the profile does not support them.",
+            "source": {
+              "file": "src/main.mtek",
+              "startByte": 24,
+              "endByte": 45,
+              "startLine": 1,
+              "startColumn": 25,
+              "endLine": 1,
+              "endColumn": 46
+            },
+            "related": [],
+            "notes": [
+              "the problem is in the file 'models/model.glb'"
+            ],
+            "suggestedEdits": [],
+            "phase": "check",
+            "docs": "spec/diagnostics.md#mtek-e7008"
+          }
+        ],
+        "raw": {
+          "schemaVersion": 1,
+          "tool": "mtek",
+          "compilerVersion": "0.1.0-dev",
+          "languageVersion": "0.1",
+          "project": "asset-audit",
+          "diagnostics": [
+            {
+              "schemaVersion": 1,
+              "code": "MTEK-E7008",
+              "severity": "error",
+              "title": "skinning or morph targets",
+              "message": "The mesh 'Tri' (meshes[0]) has default morph target weights; the profile does not support morph targets.",
+              "source": {
+                "file": "src/main.mtek",
+                "startByte": 24,
+                "endByte": 45,
+                "startLine": 1,
+                "startColumn": 25,
+                "endLine": 1,
+                "endColumn": 46
+              },
+              "related": [],
+              "notes": [
+                "the problem is in the file 'models/model.glb'"
+              ],
+              "suggestedEdits": [],
+              "phase": "check",
+              "docs": "spec/diagnostics.md#mtek-e7008"
+            },
+            {
+              "schemaVersion": 1,
+              "code": "MTEK-E7008",
+              "severity": "error",
+              "title": "skinning or morph targets",
+              "message": "The mesh 'Tri' (meshes[0]), primitive 0 has morph targets; the profile does not support them.",
+              "source": {
+                "file": "src/main.mtek",
+                "startByte": 24,
+                "endByte": 45,
+                "startLine": 1,
+                "startColumn": 25,
+                "endLine": 1,
+                "endColumn": 46
+              },
+              "related": [],
+              "notes": [
+                "the problem is in the file 'models/model.glb'"
+              ],
+              "suggestedEdits": [],
+              "phase": "check",
+              "docs": "spec/diagnostics.md#mtek-e7008"
+            }
+          ],
+          "summary": {
+            "errors": 2,
+            "warnings": 0,
+            "notes": 0,
+            "suppressed": 0
+          }
+        },
+        "exitCode": 1
+      },
+      "probes": [],
+      "expectationsMatched": true,
+      "notes": [
+        "No mesh/material/clip use was requested. Import success alone is not full asset compatibility.",
+        "No build, packaged-byte budget, rendered pixels or runtime/device validation was performed."
+      ],
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs"
+    },
+    {
+      "id": "sparse-accessor",
+      "file": "../../tests/assets/fail/e7011_sparse_accessor/models/model.glb",
+      "sha256": "9f70b89031dc91b779c34dc9da0cb0f9211162d1f4a7f5bfeedcc82c215c171c",
+      "bytes": 1348,
+      "inventory": {
+        "scope": "metadata inventory, not validation or rendering evidence",
+        "meshes": 1,
+        "primitives": 1,
+        "nodes": 1,
+        "skins": 0,
+        "joints": 0,
+        "animations": 0,
+        "materials": 1,
+        "images": 0,
+        "morphPrimitives": 0,
+        "sparseAccessors": 1,
+        "externalReferences": 0,
+        "attributes": [
+          "NORMAL",
+          "POSITION",
+          "TEXCOORD_0"
+        ],
+        "interpolations": [],
+        "extensionsUsed": [],
+        "extensionsRequired": []
+      },
+      "inventoryError": null,
+      "inputUnchanged": true,
+      "import": {
+        "status": "rejected",
+        "codes": [
+          "MTEK-E7011"
+        ],
+        "diagnostics": [
+          {
+            "schemaVersion": 1,
+            "code": "MTEK-E7011",
+            "severity": "error",
+            "title": "sparse accessor",
+            "message": "The accessor accessors[4] is sparse; the profile does not support sparse accessors.",
+            "source": {
+              "file": "src/main.mtek",
+              "startByte": 24,
+              "endByte": 45,
+              "startLine": 1,
+              "startColumn": 25,
+              "endLine": 1,
+              "endColumn": 46
+            },
+            "related": [],
+            "notes": [
+              "the problem is in the file 'models/model.glb'",
+              "help: re-export the model without sparse accessors (for example without morph targets)"
+            ],
+            "suggestedEdits": [],
+            "phase": "check",
+            "docs": "spec/diagnostics.md#mtek-e7011"
+          }
+        ],
+        "raw": {
+          "schemaVersion": 1,
+          "tool": "mtek",
+          "compilerVersion": "0.1.0-dev",
+          "languageVersion": "0.1",
+          "project": "asset-audit",
+          "diagnostics": [
+            {
+              "schemaVersion": 1,
+              "code": "MTEK-E7011",
+              "severity": "error",
+              "title": "sparse accessor",
+              "message": "The accessor accessors[4] is sparse; the profile does not support sparse accessors.",
+              "source": {
+                "file": "src/main.mtek",
+                "startByte": 24,
+                "endByte": 45,
+                "startLine": 1,
+                "startColumn": 25,
+                "endLine": 1,
+                "endColumn": 46
+              },
+              "related": [],
+              "notes": [
+                "the problem is in the file 'models/model.glb'",
+                "help: re-export the model without sparse accessors (for example without morph targets)"
+              ],
+              "suggestedEdits": [],
+              "phase": "check",
+              "docs": "spec/diagnostics.md#mtek-e7011"
+            }
+          ],
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "notes": 0,
+            "suppressed": 0
+          }
+        },
+        "exitCode": 1
+      },
+      "probes": [],
+      "expectationsMatched": true,
+      "notes": [
+        "No mesh/material/clip use was requested. Import success alone is not full asset compatibility.",
+        "No build, packaged-byte budget, rendered pixels or runtime/device validation was performed."
+      ],
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs"
+    },
+    {
+      "id": "used-extension",
+      "file": "../../tests/assets/fail/e7005_used_extension/models/model.glb",
+      "sha256": "328379bf2f85e8c4534a79d2ebd5df7a604f458172edcee5cf8278324e93759c",
+      "bytes": 1084,
+      "inventory": {
+        "scope": "metadata inventory, not validation or rendering evidence",
+        "meshes": 1,
+        "primitives": 1,
+        "nodes": 1,
+        "skins": 0,
+        "joints": 0,
+        "animations": 0,
+        "materials": 1,
+        "images": 0,
+        "morphPrimitives": 0,
+        "sparseAccessors": 0,
+        "externalReferences": 0,
+        "attributes": [
+          "NORMAL",
+          "POSITION",
+          "TEXCOORD_0"
+        ],
+        "interpolations": [],
+        "extensionsUsed": [
+          "KHR_materials_unlit"
+        ],
+        "extensionsRequired": []
+      },
+      "inventoryError": null,
+      "inputUnchanged": true,
+      "import": {
+        "status": "rejected",
+        "codes": [
+          "MTEK-E7005"
+        ],
+        "diagnostics": [
+          {
+            "schemaVersion": 1,
+            "code": "MTEK-E7005",
+            "severity": "error",
+            "title": "used extension",
+            "message": "The file uses the glTF extensions KHR_materials_unlit; the v0.1 profile supports none.",
+            "source": {
+              "file": "src/main.mtek",
+              "startByte": 24,
+              "endByte": 45,
+              "startLine": 1,
+              "startColumn": 25,
+              "endLine": 1,
+              "endColumn": 46
+            },
+            "related": [],
+            "notes": [
+              "the problem is in the file 'models/model.glb'",
+              "first use: 'KHR_materials_unlit' at materials[0].extensions",
+              "help: re-export the model without extensions"
+            ],
+            "suggestedEdits": [],
+            "phase": "check",
+            "docs": "spec/diagnostics.md#mtek-e7005"
+          }
+        ],
+        "raw": {
+          "schemaVersion": 1,
+          "tool": "mtek",
+          "compilerVersion": "0.1.0-dev",
+          "languageVersion": "0.1",
+          "project": "asset-audit",
+          "diagnostics": [
+            {
+              "schemaVersion": 1,
+              "code": "MTEK-E7005",
+              "severity": "error",
+              "title": "used extension",
+              "message": "The file uses the glTF extensions KHR_materials_unlit; the v0.1 profile supports none.",
+              "source": {
+                "file": "src/main.mtek",
+                "startByte": 24,
+                "endByte": 45,
+                "startLine": 1,
+                "startColumn": 25,
+                "endLine": 1,
+                "endColumn": 46
+              },
+              "related": [],
+              "notes": [
+                "the problem is in the file 'models/model.glb'",
+                "first use: 'KHR_materials_unlit' at materials[0].extensions",
+                "help: re-export the model without extensions"
+              ],
+              "suggestedEdits": [],
+              "phase": "check",
+              "docs": "spec/diagnostics.md#mtek-e7005"
+            }
+          ],
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "notes": 0,
+            "suppressed": 0
+          }
+        },
+        "exitCode": 1
+      },
+      "probes": [],
+      "expectationsMatched": true,
+      "notes": [
+        "No mesh/material/clip use was requested. Import success alone is not full asset compatibility.",
+        "No build, packaged-byte budget, rendered pixels or runtime/device validation was performed."
+      ],
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs"
+    },
+    {
+      "id": "required-extensions",
+      "file": "../../tests/assets/fail/e7004_required_extension/models/model.glb",
+      "sha256": "d49a84514cfcc1fedf765b9a9f4504820813d5f44e3d8fc9849deffa28d742dd",
+      "bytes": 1128,
+      "inventory": {
+        "scope": "metadata inventory, not validation or rendering evidence",
+        "meshes": 1,
+        "primitives": 1,
+        "nodes": 1,
+        "skins": 0,
+        "joints": 0,
+        "animations": 0,
+        "materials": 1,
+        "images": 0,
+        "morphPrimitives": 0,
+        "sparseAccessors": 0,
+        "externalReferences": 0,
+        "attributes": [
+          "NORMAL",
+          "POSITION",
+          "TEXCOORD_0"
+        ],
+        "interpolations": [],
+        "extensionsUsed": [
+          "KHR_draco_mesh_compression",
+          "EXT_meshopt_compression"
+        ],
+        "extensionsRequired": [
+          "KHR_draco_mesh_compression"
+        ]
+      },
+      "inventoryError": null,
+      "inputUnchanged": true,
+      "import": {
+        "status": "rejected",
+        "codes": [
+          "MTEK-E7004",
+          "MTEK-E7005"
+        ],
+        "diagnostics": [
+          {
+            "schemaVersion": 1,
+            "code": "MTEK-E7004",
+            "severity": "error",
+            "title": "required extension",
+            "message": "The file requires the glTF extensions KHR_draco_mesh_compression; the v0.1 profile supports none.",
+            "source": {
+              "file": "src/main.mtek",
+              "startByte": 24,
+              "endByte": 45,
+              "startLine": 1,
+              "startColumn": 25,
+              "endLine": 1,
+              "endColumn": 46
+            },
+            "related": [],
+            "notes": [
+              "the problem is in the file 'models/model.glb'",
+              "help: re-export the model without extensions (for example without Draco or meshopt compression)"
+            ],
+            "suggestedEdits": [],
+            "phase": "check",
+            "docs": "spec/diagnostics.md#mtek-e7004"
+          },
+          {
+            "schemaVersion": 1,
+            "code": "MTEK-E7005",
+            "severity": "error",
+            "title": "used extension",
+            "message": "The file uses the glTF extensions EXT_meshopt_compression; the v0.1 profile supports none.",
+            "source": {
+              "file": "src/main.mtek",
+              "startByte": 24,
+              "endByte": 45,
+              "startLine": 1,
+              "startColumn": 25,
+              "endLine": 1,
+              "endColumn": 46
+            },
+            "related": [],
+            "notes": [
+              "the problem is in the file 'models/model.glb'",
+              "help: re-export the model without extensions"
+            ],
+            "suggestedEdits": [],
+            "phase": "check",
+            "docs": "spec/diagnostics.md#mtek-e7005"
+          }
+        ],
+        "raw": {
+          "schemaVersion": 1,
+          "tool": "mtek",
+          "compilerVersion": "0.1.0-dev",
+          "languageVersion": "0.1",
+          "project": "asset-audit",
+          "diagnostics": [
+            {
+              "schemaVersion": 1,
+              "code": "MTEK-E7004",
+              "severity": "error",
+              "title": "required extension",
+              "message": "The file requires the glTF extensions KHR_draco_mesh_compression; the v0.1 profile supports none.",
+              "source": {
+                "file": "src/main.mtek",
+                "startByte": 24,
+                "endByte": 45,
+                "startLine": 1,
+                "startColumn": 25,
+                "endLine": 1,
+                "endColumn": 46
+              },
+              "related": [],
+              "notes": [
+                "the problem is in the file 'models/model.glb'",
+                "help: re-export the model without extensions (for example without Draco or meshopt compression)"
+              ],
+              "suggestedEdits": [],
+              "phase": "check",
+              "docs": "spec/diagnostics.md#mtek-e7004"
+            },
+            {
+              "schemaVersion": 1,
+              "code": "MTEK-E7005",
+              "severity": "error",
+              "title": "used extension",
+              "message": "The file uses the glTF extensions EXT_meshopt_compression; the v0.1 profile supports none.",
+              "source": {
+                "file": "src/main.mtek",
+                "startByte": 24,
+                "endByte": 45,
+                "startLine": 1,
+                "startColumn": 25,
+                "endLine": 1,
+                "endColumn": 46
+              },
+              "related": [],
+              "notes": [
+                "the problem is in the file 'models/model.glb'",
+                "help: re-export the model without extensions"
+              ],
+              "suggestedEdits": [],
+              "phase": "check",
+              "docs": "spec/diagnostics.md#mtek-e7005"
+            }
+          ],
+          "summary": {
+            "errors": 2,
+            "warnings": 0,
+            "notes": 0,
+            "suppressed": 0
+          }
+        },
+        "exitCode": 1
+      },
+      "probes": [],
+      "expectationsMatched": true,
+      "notes": [
+        "No mesh/material/clip use was requested. Import success alone is not full asset compatibility.",
+        "No build, packaged-byte budget, rendered pixels or runtime/device validation was performed."
+      ],
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs"
+    },
+    {
+      "id": "external-buffer",
+      "file": "../../tests/assets/fail/e7003_external_buffer/models/model.glb",
+      "sha256": "55555fe58307d111c16cdd3600d03b5b5c0e64dd5a28e116d2d657b76d739a4b",
+      "bytes": 1020,
+      "inventory": {
+        "scope": "metadata inventory, not validation or rendering evidence",
+        "meshes": 1,
+        "primitives": 1,
+        "nodes": 1,
+        "skins": 0,
+        "joints": 0,
+        "animations": 0,
+        "materials": 1,
+        "images": 0,
+        "morphPrimitives": 0,
+        "sparseAccessors": 0,
+        "externalReferences": 1,
+        "attributes": [
+          "NORMAL",
+          "POSITION",
+          "TEXCOORD_0"
+        ],
+        "interpolations": [],
+        "extensionsUsed": [],
+        "extensionsRequired": []
+      },
+      "inventoryError": null,
+      "inputUnchanged": true,
+      "import": {
+        "status": "rejected",
+        "codes": [
+          "MTEK-E7003"
+        ],
+        "diagnostics": [
+          {
+            "schemaVersion": 1,
+            "code": "MTEK-E7003",
+            "severity": "error",
+            "title": "external or data URI",
+            "message": "Buffer 0 is an external file; the profile reads only the BIN chunk of a `.glb`.",
+            "source": {
+              "file": "src/main.mtek",
+              "startByte": 24,
+              "endByte": 45,
+              "startLine": 1,
+              "startColumn": 25,
+              "endLine": 1,
+              "endColumn": 46
+            },
+            "related": [],
+            "notes": [
+              "the problem is in the file 'models/model.glb'",
+              "help: export a single binary `.glb` with the data embedded"
+            ],
+            "suggestedEdits": [],
+            "phase": "check",
+            "docs": "spec/diagnostics.md#mtek-e7003"
+          }
+        ],
+        "raw": {
+          "schemaVersion": 1,
+          "tool": "mtek",
+          "compilerVersion": "0.1.0-dev",
+          "languageVersion": "0.1",
+          "project": "asset-audit",
+          "diagnostics": [
+            {
+              "schemaVersion": 1,
+              "code": "MTEK-E7003",
+              "severity": "error",
+              "title": "external or data URI",
+              "message": "Buffer 0 is an external file; the profile reads only the BIN chunk of a `.glb`.",
+              "source": {
+                "file": "src/main.mtek",
+                "startByte": 24,
+                "endByte": 45,
+                "startLine": 1,
+                "startColumn": 25,
+                "endLine": 1,
+                "endColumn": 46
+              },
+              "related": [],
+              "notes": [
+                "the problem is in the file 'models/model.glb'",
+                "help: export a single binary `.glb` with the data embedded"
+              ],
+              "suggestedEdits": [],
+              "phase": "check",
+              "docs": "spec/diagnostics.md#mtek-e7003"
+            }
+          ],
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "notes": 0,
+            "suppressed": 0
+          }
+        },
+        "exitCode": 1
+      },
+      "probes": [],
+      "expectationsMatched": true,
+      "notes": [
+        "No mesh/material/clip use was requested. Import success alone is not full asset compatibility.",
+        "No build, packaged-byte budget, rendered pixels or runtime/device validation was performed."
+      ],
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs"
+    },
+    {
+      "id": "data-uri",
+      "file": "../../tests/assets/fail/e7003_data_uri_buffer/models/model.glb",
+      "sha256": "629c580d486eded398b1622a8543c9d4a9944113b9a7794a958e3e063bff7b09",
+      "bytes": 1052,
+      "inventory": {
+        "scope": "metadata inventory, not validation or rendering evidence",
+        "meshes": 1,
+        "primitives": 1,
+        "nodes": 1,
+        "skins": 0,
+        "joints": 0,
+        "animations": 0,
+        "materials": 1,
+        "images": 0,
+        "morphPrimitives": 0,
+        "sparseAccessors": 0,
+        "externalReferences": 1,
+        "attributes": [
+          "NORMAL",
+          "POSITION",
+          "TEXCOORD_0"
+        ],
+        "interpolations": [],
+        "extensionsUsed": [],
+        "extensionsRequired": []
+      },
+      "inventoryError": null,
+      "inputUnchanged": true,
+      "import": {
+        "status": "rejected",
+        "codes": [
+          "MTEK-E7003"
+        ],
+        "diagnostics": [
+          {
+            "schemaVersion": 1,
+            "code": "MTEK-E7003",
+            "severity": "error",
+            "title": "external or data URI",
+            "message": "Buffer 0 is a data URI; the profile reads only the BIN chunk of a `.glb`.",
+            "source": {
+              "file": "src/main.mtek",
+              "startByte": 24,
+              "endByte": 45,
+              "startLine": 1,
+              "startColumn": 25,
+              "endLine": 1,
+              "endColumn": 46
+            },
+            "related": [],
+            "notes": [
+              "the problem is in the file 'models/model.glb'",
+              "help: export a single binary `.glb` with the data embedded"
+            ],
+            "suggestedEdits": [],
+            "phase": "check",
+            "docs": "spec/diagnostics.md#mtek-e7003"
+          }
+        ],
+        "raw": {
+          "schemaVersion": 1,
+          "tool": "mtek",
+          "compilerVersion": "0.1.0-dev",
+          "languageVersion": "0.1",
+          "project": "asset-audit",
+          "diagnostics": [
+            {
+              "schemaVersion": 1,
+              "code": "MTEK-E7003",
+              "severity": "error",
+              "title": "external or data URI",
+              "message": "Buffer 0 is a data URI; the profile reads only the BIN chunk of a `.glb`.",
+              "source": {
+                "file": "src/main.mtek",
+                "startByte": 24,
+                "endByte": 45,
+                "startLine": 1,
+                "startColumn": 25,
+                "endLine": 1,
+                "endColumn": 46
+              },
+              "related": [],
+              "notes": [
+                "the problem is in the file 'models/model.glb'",
+                "help: export a single binary `.glb` with the data embedded"
+              ],
+              "suggestedEdits": [],
+              "phase": "check",
+              "docs": "spec/diagnostics.md#mtek-e7003"
+            }
+          ],
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "notes": 0,
+            "suppressed": 0
+          }
+        },
+        "exitCode": 1
+      },
+      "probes": [],
+      "expectationsMatched": true,
+      "notes": [
+        "No mesh/material/clip use was requested. Import success alone is not full asset compatibility.",
+        "No build, packaged-byte budget, rendered pixels or runtime/device validation was performed."
+      ],
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs"
+    },
+    {
+      "id": "mixed-filters",
+      "file": "../../tests/assets/fail/e7018_filters_differ/models/model.glb",
+      "sha256": "7f4e22162a7e4e5c1cb9dab848b4c51178804d01f8321ff471eb7f329dc6ac68",
+      "bytes": 1296,
+      "inventory": {
+        "scope": "metadata inventory, not validation or rendering evidence",
+        "meshes": 1,
+        "primitives": 1,
+        "nodes": 1,
+        "skins": 0,
+        "joints": 0,
+        "animations": 0,
+        "materials": 1,
+        "images": 1,
+        "morphPrimitives": 0,
+        "sparseAccessors": 0,
+        "externalReferences": 0,
+        "attributes": [
+          "NORMAL",
+          "POSITION",
+          "TEXCOORD_0"
+        ],
+        "interpolations": [],
+        "extensionsUsed": [],
+        "extensionsRequired": []
+      },
+      "inventoryError": null,
+      "inputUnchanged": true,
+      "import": {
+        "status": "rejected",
+        "codes": [
+          "MTEK-E7018"
+        ],
+        "diagnostics": [
+          {
+            "schemaVersion": 1,
+            "code": "MTEK-E7018",
+            "severity": "error",
+            "title": "unsupported sampler mode",
+            "message": "The sampler at samplers[0] filters magnification NEAREST and minification LINEAR; the sampler presets use one filter for both.",
+            "source": {
+              "file": "src/main.mtek",
+              "startByte": 24,
+              "endByte": 45,
+              "startLine": 1,
+              "startColumn": 25,
+              "endLine": 1,
+              "endColumn": 46
+            },
+            "related": [],
+            "notes": [
+              "the problem is in the file 'models/model.glb'"
+            ],
+            "suggestedEdits": [],
+            "phase": "check",
+            "docs": "spec/diagnostics.md#mtek-e7018"
+          }
+        ],
+        "raw": {
+          "schemaVersion": 1,
+          "tool": "mtek",
+          "compilerVersion": "0.1.0-dev",
+          "languageVersion": "0.1",
+          "project": "asset-audit",
+          "diagnostics": [
+            {
+              "schemaVersion": 1,
+              "code": "MTEK-E7018",
+              "severity": "error",
+              "title": "unsupported sampler mode",
+              "message": "The sampler at samplers[0] filters magnification NEAREST and minification LINEAR; the sampler presets use one filter for both.",
+              "source": {
+                "file": "src/main.mtek",
+                "startByte": 24,
+                "endByte": 45,
+                "startLine": 1,
+                "startColumn": 25,
+                "endLine": 1,
+                "endColumn": 46
+              },
+              "related": [],
+              "notes": [
+                "the problem is in the file 'models/model.glb'"
+              ],
+              "suggestedEdits": [],
+              "phase": "check",
+              "docs": "spec/diagnostics.md#mtek-e7018"
+            }
+          ],
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "notes": 0,
+            "suppressed": 0
+          }
+        },
+        "exitCode": 1
+      },
+      "probes": [],
+      "expectationsMatched": true,
+      "notes": [
+        "No mesh/material/clip use was requested. Import success alone is not full asset compatibility.",
+        "No build, packaged-byte budget, rendered pixels or runtime/device validation was performed."
+      ],
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs"
+    },
+    {
+      "id": "truncated-header",
+      "file": "../../tests/assets/fail/e7001_truncated_header/models/model.glb",
+      "sha256": "e6e4bd92d32681560de2f20faf66a01732f43bfd862f2bf4ac7c86b6faed14e1",
+      "bytes": 9,
+      "inventory": null,
+      "inventoryError": "Not a GLB 2 container",
+      "inputUnchanged": true,
+      "import": {
+        "status": "rejected",
+        "codes": [
+          "MTEK-E7001"
+        ],
+        "diagnostics": [
+          {
+            "schemaVersion": 1,
+            "code": "MTEK-E7001",
+            "severity": "error",
+            "title": "unsupported container",
+            "message": "The file is 9 bytes; a binary glTF starts with a 12-byte header.",
+            "source": {
+              "file": "src/main.mtek",
+              "startByte": 24,
+              "endByte": 45,
+              "startLine": 1,
+              "startColumn": 25,
+              "endLine": 1,
+              "endColumn": 46
+            },
+            "related": [],
+            "notes": [
+              "the problem is in the file 'models/model.glb'"
+            ],
+            "suggestedEdits": [],
+            "phase": "check",
+            "docs": "spec/diagnostics.md#mtek-e7001"
+          }
+        ],
+        "raw": {
+          "schemaVersion": 1,
+          "tool": "mtek",
+          "compilerVersion": "0.1.0-dev",
+          "languageVersion": "0.1",
+          "project": "asset-audit",
+          "diagnostics": [
+            {
+              "schemaVersion": 1,
+              "code": "MTEK-E7001",
+              "severity": "error",
+              "title": "unsupported container",
+              "message": "The file is 9 bytes; a binary glTF starts with a 12-byte header.",
+              "source": {
+                "file": "src/main.mtek",
+                "startByte": 24,
+                "endByte": 45,
+                "startLine": 1,
+                "startColumn": 25,
+                "endLine": 1,
+                "endColumn": 46
+              },
+              "related": [],
+              "notes": [
+                "the problem is in the file 'models/model.glb'"
+              ],
+              "suggestedEdits": [],
+              "phase": "check",
+              "docs": "spec/diagnostics.md#mtek-e7001"
+            }
+          ],
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "notes": 0,
+            "suppressed": 0
+          }
+        },
+        "exitCode": 1
+      },
+      "probes": [],
+      "expectationsMatched": true,
+      "notes": [
+        "No mesh/material/clip use was requested. Import success alone is not full asset compatibility.",
+        "No build, packaged-byte budget, rendered pixels or runtime/device validation was performed."
+      ],
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs"
+    }
+  ]
+}

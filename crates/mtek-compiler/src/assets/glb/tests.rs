@@ -477,6 +477,37 @@ fn the_texture_dimension_limit_is_configurable() {
     assert!(issues[0].message.contains("over the limit of 32 per side"));
 }
 
+#[test]
+fn core_material_maps_preserve_channels_factors_and_sampler_choices() {
+    let (mut json, bin) = with_image(&png_header(2, 2), "image/png");
+    json["materials"][0]["pbrMetallicRoughness"]["metallicRoughnessTexture"] = json!({"index": 0});
+    json["materials"][0]["normalTexture"] = json!({"index": 0, "scale": 0.7});
+    json["materials"][0]["occlusionTexture"] = json!({"index": 0, "strength": 0.25});
+    json["materials"][0]["emissiveTexture"] = json!({"index": 0});
+    json["materials"][0]["emissiveFactor"] = json!([0.1, 0.2, 0.3]);
+    let file = read(&json, &bin).unwrap();
+    let maps = &file.materials[0].maps;
+    for map in [
+        maps.metallic_roughness,
+        maps.normal,
+        maps.occlusion,
+        maps.emissive,
+    ] {
+        assert_eq!(map.unwrap().image, 0);
+        assert_eq!(map.unwrap().sampler, SamplerChoice::DEFAULT);
+    }
+    assert_eq!((maps.normal_scale, maps.occlusion_strength), (0.7, 0.25));
+    assert_eq!(maps.emissive_factor, [0.1, 0.2, 0.3]);
+    // Each supported slot validates its own UV set instead of silently reading UV0.
+    for slot in ["normalTexture", "occlusionTexture", "emissiveTexture"] {
+        let mut bad = json.clone();
+        bad["materials"][0][slot]["texCoord"] = json!(1);
+        assert_eq!(codes(&read(&bad, &bin)), ["E7009"], "{slot}");
+    }
+    json["materials"][0]["pbrMetallicRoughness"]["metallicRoughnessTexture"]["texCoord"] = json!(1);
+    assert_eq!(codes(&read(&json, &bin)), ["E7009"]);
+}
+
 fn sampler_choice(sampler: Value) -> Result<SamplerChoice, Vec<Issue>> {
     let (mut json, bin) = with_image(&png_header(2, 2), "image/png");
     json["samplers"] = json!([sampler]);
@@ -494,18 +525,18 @@ fn samplers_map_to_presets() {
     );
     assert_eq!(
         SamplerChoice::DEFAULT.builtin().name(),
-        "sampler.linear_repeat"
+        "sampler.linear_repeat_level0"
     );
     let cases = [
-        (json!({}), "sampler.linear_repeat", false),
+        (json!({}), "sampler.linear_repeat_level0", false),
         (
             json!({ "wrapS": 33071, "wrapT": 33071 }),
-            "sampler.linear_clamp",
+            "sampler.linear_clamp_level0",
             false,
         ),
         (
             json!({ "magFilter": 9728, "minFilter": 9728 }),
-            "sampler.nearest_repeat",
+            "sampler.nearest_repeat_level0",
             false,
         ),
         (
@@ -518,11 +549,25 @@ fn samplers_map_to_presets() {
             "sampler.linear_repeat",
             true,
         ),
-        (json!({ "minFilter": 9729 }), "sampler.linear_repeat", false),
+        (
+            json!({ "minFilter": 9729 }),
+            "sampler.linear_repeat_level0",
+            false,
+        ),
         (
             json!({ "magFilter": 9728 }),
-            "sampler.nearest_repeat",
+            "sampler.nearest_repeat_level0",
             false,
+        ),
+        (
+            json!({ "minFilter": 9985 }),
+            "sampler.linear_repeat_mip_nearest",
+            true,
+        ),
+        (
+            json!({ "minFilter": 9986 }),
+            "sampler.nearest_repeat_mip_linear",
+            true,
         ),
     ];
     for (sampler, preset, mipmapped) in cases {
@@ -594,4 +639,47 @@ fn unreferenced_cameras_extras_and_unused_data_are_not_inspected() {
     json["asset"]["generator"] = json!("some exporter");
     json["scenes"][0]["name"] = json!("Main");
     assert!(read(&json, &bin).is_ok());
+}
+
+#[test]
+fn imported_samplers_preserve_independent_min_mag_and_mip_filters() {
+    for (mag, mag_nearest) in [(9728, true), (9729, false)] {
+        for (min, min_nearest, mip) in [
+            (9728, true, None),
+            (9729, false, None),
+            (9984, true, Some(false)),
+            (9985, false, Some(false)),
+            (9986, true, Some(true)),
+            (9987, false, Some(true)),
+        ] {
+            for (wrap, clamp) in [(10497, false), (33071, true)] {
+                let choice = sampler_choice(
+                    json!({"magFilter":mag,"minFilter":min,"wrapS":wrap,"wrapT":wrap}),
+                )
+                .unwrap();
+                assert_eq!(
+                    (choice.nearest_mag, choice.nearest, choice.clamp),
+                    (mag_nearest, min_nearest, clamp)
+                );
+                assert_eq!(
+                    (choice.mipmapped, choice.mip_linear),
+                    (mip.is_some(), mip.unwrap_or(false))
+                );
+                if mag_nearest != min_nearest {
+                    let expected = format!(
+                        "sampler.mag_{}_min_{}_{}_{}",
+                        if mag_nearest { "nearest" } else { "linear" },
+                        if min_nearest { "nearest" } else { "linear" },
+                        if clamp { "clamp" } else { "repeat" },
+                        match mip {
+                            None => "level0",
+                            Some(false) => "mip_nearest",
+                            Some(true) => "mip_linear",
+                        }
+                    );
+                    assert_eq!(choice.builtin().name(), expected);
+                }
+            }
+        }
+    }
 }

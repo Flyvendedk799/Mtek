@@ -1,0 +1,809 @@
+{
+  "format": "mtek-matched-animation-summary/1",
+  "definitions": {
+    "hash": "0897d7e5d5e7aa19ccf6cd49faf640e4001762b10faa9baa24e2db23590d0c6a",
+    "files": {
+      "adapters.ts": "7528d43c27c041559f7e8baa1a8a1904d44fe1e63a05df1d71e628577fdb0a7e",
+      "assets/provenance.json": "771fde9b00ce9e12878d5b976caa834fd2ca0e89ebcd9ac5530fd5bc5d8ab0fd",
+      "demo.html": "bf278e35258b5546d1a615fd4f7876d1ff60bb1d3b248c32a6097817a1a7c1a3",
+      "demo.ts": "fcdf1f9e9e43b710b49b4b143bb956f51aeed343a6f1bf7cd3a4a850df3b4ad0",
+      "freeze.ts": "6f7e6bb57c614de0d29ea5af230242edd403c145842d5ee581110bd32ff6e61c",
+      "gpu-timer.ts": "36e880c32b8b11293a61151247ff3fed45cd4bed78bbb5a6a1a499bc4f98a956",
+      "layout.ts": "7d146686e4058675e4059992564c6a06b2077811d42299e19317e094e5567976",
+      "load-policy.ts": "ce4461d623972d1fefdadbb3085e378873ee8c66504b6543cdadde846532e1f3",
+      "mtek-adapter.ts": "2d12b1a02672d08fe404defbf0c77c567a558a38b1eab2d7a62e10add3550fb6",
+      "page.ts": "53d5eb7c04309188af279d24f00e5f98a99492466a9ba4bacc3946fc1364ddfc",
+      "prepare.ts": "7527a8612042f030ec3394f64c0657a79799543cc2d4b554cc7581c4145ba3d8",
+      "protocol.json": "c5535111e32e64e9add6a0cf8c60f49f203909e9b92e3b4790c6aee30b29595b",
+      "report.ts": "9d319d2eec1fdf96de5b1064c2f3f8efc5dc27941c446a4582857d4aff481bb0",
+      "run.ts": "55915c9efff5b5aef340411c1221bb9791f2ce70f8781f5102ba05972c615870",
+      "serve.ts": "1ae861716f85d2f437a665b59e3870b6b50f3bbc1eccc3e68b7f8d5674f44355",
+      "three-adapter.ts": "b7ed39018db1db407879f925cc83157bed5527afb15b5af51edb62559e8be3d5",
+      "types.ts": "bcee4b65f185a7e24541706175127a1ab70de6296cc7ae042b642b5d91f07404",
+      "verify-demo.ts": "692ae40bb4d916789dbad72c31d70541bb3d1c7d4b35b5b346c98cf313f62906"
+    }
+  },
+  "run": "evidence/platform-step/matched-animation/verified-2026-10-26",
+  "rows": [
+    {
+      "model": "Fox",
+      "actors": 1,
+      "engine": "mtek",
+      "verticesPerActor": 1728,
+      "jointsPerActor": 24,
+      "cpuP95Ms": {
+        "runs": [
+          0.2850000001490116,
+          0.32499999925494194,
+          0.23499999940395355
+        ],
+        "median": 0.2850000001490116
+      },
+      "gpuPassSumP95Ms": {
+        "runs": [
+          0.00576,
+          0.00576,
+          0.00604
+        ],
+        "median": 0.00576
+      },
+      "rafIntervalP95Ms": {
+        "runs": [
+          3.3899999999999864,
+          3.384999999999991,
+          3.3999999999999773
+        ],
+        "median": 3.3899999999999864
+      },
+      "allWriteBufferBytesPerFrame": [
+        1536,
+        1536,
+        1536
+      ],
+      "drawCallsPerFrame": [
+        1,
+        1,
+        1
+      ],
+      "liveGpuBufferBytes": [
+        158080,
+        158080,
+        158080
+      ],
+      "liveJsHeapUsedBytes": [
+        3504952,
+        3504992,
+        3504688
+      ],
+      "liveJsBackingStorageBytes": [
+        789918,
+        789918,
+        789918
+      ],
+      "afterDisposeJsHeapBytes": [
+        3060428,
+        3060428,
+        3060340
+      ],
+      "clock": {
+        "crossOriginIsolated": true,
+        "observedQuantumMs": 0.004999998956918716
+      }
+    },
+    {
+      "model": "Fox",
+      "actors": 1,
+      "engine": "three",
+      "verticesPerActor": 1728,
+      "jointsPerActor": 24,
+      "cpuP95Ms": {
+        "runs": [
+          0.18500000052154064,
+          0.2700000014156103,
+          0.23000000044703484
+        ],
+        "median": 0.23000000044703484
+      },
+      "gpuPassSumP95Ms": {
+        "runs": [
+          0.00492,
+          0.0048,
+          0.0048
+        ],
+        "median": 0.0048
+      },
+      "rafIntervalP95Ms": {
+        "runs": [
+          3.4050000000000864,
+          3.419999999999959,
+          3.4049999999999727
+        ],
+        "median": 3.4050000000000864
+      },
+      "allWriteBufferBytesPerFrame": [
+        1536,
+        1536,
+        1536
+      ],
+      "drawCallsPerFrame": [
+        1,
+        1,
+        1
+      ],
+      "liveGpuBufferBytes": [
+        77904,
+        77904,
+        77904
+      ],
+      "liveJsHeapUsedBytes": [
+        5138368,
+        5138532,
+        5138536
+      ],
+      "liveJsBackingStorageBytes": [
+        2913610,
+        2913610,
+        2913610
+      ],
+      "afterDisposeJsHeapBytes": [
+        4982240,
+        4982404,
+        4982528
+      ],
+      "clock": {
+        "crossOriginIsolated": true,
+        "observedQuantumMs": 0.004999998956918716
+      }
+    },
+    {
+      "model": "Fox",
+      "actors": 10,
+      "engine": "mtek",
+      "verticesPerActor": 1728,
+      "jointsPerActor": 24,
+      "cpuP95Ms": {
+        "runs": [
+          0.48000000044703484,
+          0.5150000005960464,
+          0.4950000010430813
+        ],
+        "median": 0.4950000010430813
+      },
+      "gpuPassSumP95Ms": {
+        "runs": [
+          0.02216,
+          0.02216,
+          0.02216
+        ],
+        "median": 0.02216
+      },
+      "rafIntervalP95Ms": {
+        "runs": [
+          3.3999999999999773,
+          3.400000000000091,
+          3.394999999999982
+        ],
+        "median": 3.3999999999999773
+      },
+      "allWriteBufferBytesPerFrame": [
+        15360,
+        15360,
+        15360
+      ],
+      "drawCallsPerFrame": [
+        10,
+        10,
+        10
+      ],
+      "liveGpuBufferBytes": [
+        551040,
+        551040,
+        551040
+      ],
+      "liveJsHeapUsedBytes": [
+        4058704,
+        4058568,
+        4058528
+      ],
+      "liveJsBackingStorageBytes": [
+        909590,
+        909590,
+        909590
+      ],
+      "afterDisposeJsHeapBytes": [
+        3287328,
+        3287112,
+        3287152
+      ],
+      "clock": {
+        "crossOriginIsolated": true,
+        "observedQuantumMs": 0.004999998956918716
+      }
+    },
+    {
+      "model": "Fox",
+      "actors": 10,
+      "engine": "three",
+      "verticesPerActor": 1728,
+      "jointsPerActor": 24,
+      "cpuP95Ms": {
+        "runs": [
+          0.375,
+          0.35999999940395355,
+          0.3650000002235174
+        ],
+        "median": 0.3650000002235174
+      },
+      "gpuPassSumP95Ms": {
+        "runs": [
+          0.00552,
+          0.00552,
+          0.00552
+        ],
+        "median": 0.00552
+      },
+      "rafIntervalP95Ms": {
+        "runs": [
+          3.419999999999959,
+          3.4050000000000864,
+          3.4049999999999727
+        ],
+        "median": 3.4050000000000864
+      },
+      "allWriteBufferBytesPerFrame": [
+        15360,
+        15360,
+        15360
+      ],
+      "drawCallsPerFrame": [
+        10,
+        10,
+        10
+      ],
+      "liveGpuBufferBytes": [
+        93600,
+        93600,
+        93600
+      ],
+      "liveJsHeapUsedBytes": [
+        5884344,
+        5884344,
+        5884236
+      ],
+      "liveJsBackingStorageBytes": [
+        2964946,
+        2964946,
+        2964946
+      ],
+      "afterDisposeJsHeapBytes": [
+        5500104,
+        5500104,
+        5500104
+      ],
+      "clock": {
+        "crossOriginIsolated": true,
+        "observedQuantumMs": 0.004999998956918716
+      }
+    },
+    {
+      "model": "Fox",
+      "actors": 50,
+      "engine": "mtek",
+      "verticesPerActor": 1728,
+      "jointsPerActor": 24,
+      "cpuP95Ms": {
+        "runs": [
+          1.2349999994039536,
+          1.2850000001490116,
+          1.2749999985098839
+        ],
+        "median": 1.2749999985098839
+      },
+      "gpuPassSumP95Ms": {
+        "runs": [
+          0.0946,
+          0.0946,
+          0.0946
+        ],
+        "median": 0.0946
+      },
+      "rafIntervalP95Ms": {
+        "runs": [
+          3.4500000000000455,
+          3.4600000000000364,
+          3.4050000000000864
+        ],
+        "median": 3.4500000000000455
+      },
+      "allWriteBufferBytesPerFrame": [
+        76800,
+        76800,
+        76800
+      ],
+      "drawCallsPerFrame": [
+        50,
+        50,
+        50
+      ],
+      "liveGpuBufferBytes": [
+        2296960,
+        2296960,
+        2296960
+      ],
+      "liveJsHeapUsedBytes": [
+        5188956,
+        5188896,
+        5188964
+      ],
+      "liveJsBackingStorageBytes": [
+        1440926,
+        1440926,
+        1440926
+      ],
+      "afterDisposeJsHeapBytes": [
+        3339628,
+        3339552,
+        3339660
+      ],
+      "clock": {
+        "crossOriginIsolated": true,
+        "observedQuantumMs": 0.004999998956918716
+      }
+    },
+    {
+      "model": "Fox",
+      "actors": 50,
+      "engine": "three",
+      "verticesPerActor": 1728,
+      "jointsPerActor": 24,
+      "cpuP95Ms": {
+        "runs": [
+          0.7149999998509884,
+          0.7349999994039536,
+          0.7200000006705523
+        ],
+        "median": 0.7200000006705523
+      },
+      "gpuPassSumP95Ms": {
+        "runs": [
+          0.00828,
+          0.0084,
+          0.00832
+        ],
+        "median": 0.00832
+      },
+      "rafIntervalP95Ms": {
+        "runs": [
+          3.449999999999932,
+          3.480000000000018,
+          3.3850000000001046
+        ],
+        "median": 3.449999999999932
+      },
+      "allWriteBufferBytesPerFrame": [
+        76800,
+        76800,
+        76800
+      ],
+      "drawCallsPerFrame": [
+        50,
+        50,
+        50
+      ],
+      "liveGpuBufferBytes": [
+        163360,
+        163360,
+        163360
+      ],
+      "liveJsHeapUsedBytes": [
+        8055496,
+        8058856,
+        8057760
+      ],
+      "liveJsBackingStorageBytes": [
+        3193106,
+        3193106,
+        3193106
+      ],
+      "afterDisposeJsHeapBytes": [
+        7145948,
+        7145948,
+        7148224
+      ],
+      "clock": {
+        "crossOriginIsolated": true,
+        "observedQuantumMs": 0.004999998956918716
+      }
+    },
+    {
+      "model": "CesiumMan",
+      "actors": 1,
+      "engine": "mtek",
+      "verticesPerActor": 3273,
+      "jointsPerActor": 19,
+      "cpuP95Ms": {
+        "runs": [
+          0.17999999970197678,
+          0.19999999925494194,
+          0.1600000001490116
+        ],
+        "median": 0.17999999970197678
+      },
+      "gpuPassSumP95Ms": {
+        "runs": [
+          0.00656,
+          0.00656,
+          0.00656
+        ],
+        "median": 0.00656
+      },
+      "rafIntervalP95Ms": {
+        "runs": [
+          3.3999999999999773,
+          3.4599999999999227,
+          3.394999999999982
+        ],
+        "median": 3.3999999999999773
+      },
+      "allWriteBufferBytesPerFrame": [
+        1216,
+        1216,
+        1216
+      ],
+      "drawCallsPerFrame": [
+        1,
+        1,
+        1
+      ],
+      "liveGpuBufferBytes": [
+        318296,
+        318296,
+        318296
+      ],
+      "liveJsHeapUsedBytes": [
+        3644032,
+        3643856,
+        3644004
+      ],
+      "liveJsBackingStorageBytes": [
+        940336,
+        940336,
+        940336
+      ],
+      "afterDisposeJsHeapBytes": [
+        3053252,
+        3053000,
+        3053244
+      ],
+      "clock": {
+        "crossOriginIsolated": true,
+        "observedQuantumMs": 0.004999998956918716
+      }
+    },
+    {
+      "model": "CesiumMan",
+      "actors": 1,
+      "engine": "three",
+      "verticesPerActor": 3273,
+      "jointsPerActor": 19,
+      "cpuP95Ms": {
+        "runs": [
+          0.13000000081956387,
+          0.18500000052154064,
+          0.13000000081956387
+        ],
+        "median": 0.13000000081956387
+      },
+      "gpuPassSumP95Ms": {
+        "runs": [
+          0.00556,
+          0.00556,
+          0.0056
+        ],
+        "median": 0.00556
+      },
+      "rafIntervalP95Ms": {
+        "runs": [
+          3.3999999999999773,
+          3.490000000000009,
+          3.3899999999999864
+        ],
+        "median": 3.3999999999999773
+      },
+      "allWriteBufferBytesPerFrame": [
+        1216,
+        1216,
+        1216
+      ],
+      "drawCallsPerFrame": [
+        1,
+        1,
+        1
+      ],
+      "liveGpuBufferBytes": [
+        240904,
+        240904,
+        240904
+      ],
+      "liveJsHeapUsedBytes": [
+        5177512,
+        5179660,
+        5179860
+      ],
+      "liveJsBackingStorageBytes": [
+        3406821,
+        3406821,
+        3406821
+      ],
+      "afterDisposeJsHeapBytes": [
+        4998912,
+        5001060,
+        5001260
+      ],
+      "clock": {
+        "crossOriginIsolated": true,
+        "observedQuantumMs": 0.004999998956918716
+      }
+    },
+    {
+      "model": "CesiumMan",
+      "actors": 10,
+      "engine": "mtek",
+      "verticesPerActor": 3273,
+      "jointsPerActor": 19,
+      "cpuP95Ms": {
+        "runs": [
+          0.34000000171363354,
+          0.3799999989569187,
+          0.3650000002235174
+        ],
+        "median": 0.3650000002235174
+      },
+      "gpuPassSumP95Ms": {
+        "runs": [
+          0.02472,
+          0.0246,
+          0.0246
+        ],
+        "median": 0.0246
+      },
+      "rafIntervalP95Ms": {
+        "runs": [
+          3.3999999999999773,
+          3.4500000000000455,
+          3.4700000000000273
+        ],
+        "median": 3.4500000000000455
+      },
+      "allWriteBufferBytesPerFrame": [
+        12160,
+        12160,
+        12160
+      ],
+      "drawCallsPerFrame": [
+        10,
+        10,
+        10
+      ],
+      "liveGpuBufferBytes": [
+        1042096,
+        1042096,
+        1042096
+      ],
+      "liveJsHeapUsedBytes": [
+        4167028,
+        4167000,
+        4166968
+      ],
+      "liveJsBackingStorageBytes": [
+        1042836,
+        1042836,
+        1042836
+      ],
+      "afterDisposeJsHeapBytes": [
+        3279336,
+        3279276,
+        3279276
+      ],
+      "clock": {
+        "crossOriginIsolated": true,
+        "observedQuantumMs": 0.004999998956918716
+      }
+    },
+    {
+      "model": "CesiumMan",
+      "actors": 10,
+      "engine": "three",
+      "verticesPerActor": 3273,
+      "jointsPerActor": 19,
+      "cpuP95Ms": {
+        "runs": [
+          0.23000000044703484,
+          0.2800000011920929,
+          0.2700000014156103
+        ],
+        "median": 0.2700000014156103
+      },
+      "gpuPassSumP95Ms": {
+        "runs": [
+          0.00872,
+          0.00884,
+          0.0088
+        ],
+        "median": 0.0088
+      },
+      "rafIntervalP95Ms": {
+        "runs": [
+          3.3899999999999864,
+          3.3900000000001,
+          3.4500000000000455
+        ],
+        "median": 3.3900000000001
+      },
+      "allWriteBufferBytesPerFrame": [
+        12160,
+        12160,
+        12160
+      ],
+      "drawCallsPerFrame": [
+        10,
+        10,
+        10
+      ],
+      "liveGpuBufferBytes": [
+        253720,
+        253720,
+        253720
+      ],
+      "liveJsHeapUsedBytes": [
+        6022132,
+        6018636,
+        6017248
+      ],
+      "liveJsBackingStorageBytes": [
+        3493509,
+        3493509,
+        3493509
+      ],
+      "afterDisposeJsHeapBytes": [
+        5470884,
+        5468100,
+        5467788
+      ],
+      "clock": {
+        "crossOriginIsolated": true,
+        "observedQuantumMs": 0.004999998956918716
+      }
+    },
+    {
+      "model": "CesiumMan",
+      "actors": 50,
+      "engine": "mtek",
+      "verticesPerActor": 3273,
+      "jointsPerActor": 19,
+      "cpuP95Ms": {
+        "runs": [
+          1.1699999999254942,
+          1.1600000001490116,
+          1.1950000002980232
+        ],
+        "median": 1.1699999999254942
+      },
+      "gpuPassSumP95Ms": {
+        "runs": [
+          0.10692,
+          0.10668,
+          0.10676
+        ],
+        "median": 0.10676
+      },
+      "rafIntervalP95Ms": {
+        "runs": [
+          3.3900000000001,
+          3.4650000000001455,
+          3.4049999999999727
+        ],
+        "median": 3.4049999999999727
+      },
+      "allWriteBufferBytesPerFrame": [
+        60800,
+        60800,
+        60800
+      ],
+      "drawCallsPerFrame": [
+        50,
+        50,
+        50
+      ],
+      "liveGpuBufferBytes": [
+        4258416,
+        4258416,
+        4258416
+      ],
+      "liveJsHeapUsedBytes": [
+        5171884,
+        5171856,
+        5172584
+      ],
+      "liveJsBackingStorageBytes": [
+        1497852,
+        1497852,
+        1497852
+      ],
+      "afterDisposeJsHeapBytes": [
+        3333264,
+        3333204,
+        3334648
+      ],
+      "clock": {
+        "crossOriginIsolated": true,
+        "observedQuantumMs": 0.004999998956918716
+      }
+    },
+    {
+      "model": "CesiumMan",
+      "actors": 50,
+      "engine": "three",
+      "verticesPerActor": 3273,
+      "jointsPerActor": 19,
+      "cpuP95Ms": {
+        "runs": [
+          0.775000000372529,
+          0.7700000014156103,
+          0.7000000011175871
+        ],
+        "median": 0.7700000014156103
+      },
+      "gpuPassSumP95Ms": {
+        "runs": [
+          0.0218,
+          0.02184,
+          0.02176
+        ],
+        "median": 0.0218
+      },
+      "rafIntervalP95Ms": {
+        "runs": [
+          3.394999999999982,
+          3.4549999999999272,
+          3.3999999999999773
+        ],
+        "median": 3.3999999999999773
+      },
+      "allWriteBufferBytesPerFrame": [
+        60800,
+        60800,
+        60800
+      ],
+      "drawCallsPerFrame": [
+        50,
+        50,
+        50
+      ],
+      "liveGpuBufferBytes": [
+        310680,
+        310680,
+        310680
+      ],
+      "liveJsHeapUsedBytes": [
+        8550208,
+        8551732,
+        8550268
+      ],
+      "liveJsBackingStorageBytes": [
+        3878789,
+        3878789,
+        3878789
+      ],
+      "afterDisposeJsHeapBytes": [
+        6886064,
+        6888440,
+        6886100
+      ],
+      "clock": {
+        "crossOriginIsolated": true,
+        "observedQuantumMs": 0.004999998956918716
+      }
+    }
+  ]
+}

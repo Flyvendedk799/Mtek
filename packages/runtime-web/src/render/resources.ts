@@ -1,14 +1,14 @@
 /**
  * Built-in textures and samplers (`spec/materials.md` section 5, `spec/gpu-layout.md` section 6,
  * decision 0054): the GPU objects behind `texture.white()`, `texture.black()` and the four
- * `sampler.*` presets of a program's material instances.
+ * `sampler.*` presets and their mip variants of a program's material instances.
  *
  *  - A built-in texture is 1x1, opaque, `rgba8unorm-srgb` (colour textures are created with an `-srgb`
  *    format, so `sample` returns linear values), one mip level, `TEXTURE_BINDING | COPY_DST`, filled with
  *    one `writeTexture`. `texture.white()` is `(255, 255, 255, 255)`, `texture.black()` `(0, 0, 0, 255)`.
  *  - A sampler preset is a filtering sampler: `linear_*` use linear magnification and minification,
  *    `nearest_*` nearest; `*_repeat` wrap and `*_clamp` clamp to the edge in both directions. There is a
- *    single mip level in v0.1, so the mip filter is never observable.
+ *    single mip level for built-in textures; asset chains use the preset's mip filter.
  *  - Every object is created at most once per scene, on first use, through the resource registry
  *    (`texturesAllocated`, `liveTextures`, `liveSamplers`), shared by every instance that names it and
  *    released with the scene.
@@ -34,10 +34,30 @@ const TEXTURE_FORMATS = { srgb: "rgba8unorm-srgb", linear: "rgba8unorm" } as con
 
 /** The descriptors of the sampler presets, by the manifest's name. */
 export const SAMPLER_PRESETS: Readonly<Record<string, GPUSamplerDescriptor>> = {
+  "sampler.mag_linear_min_nearest_repeat_level0": { magFilter: "linear", minFilter: "nearest", mipmapFilter: "nearest", addressModeU: "repeat", addressModeV: "repeat", lodMaxClamp: 0 },
+  "sampler.mag_linear_min_nearest_repeat_mip_nearest": { magFilter: "linear", minFilter: "nearest", mipmapFilter: "nearest", addressModeU: "repeat", addressModeV: "repeat" },
+  "sampler.mag_linear_min_nearest_repeat_mip_linear": { magFilter: "linear", minFilter: "nearest", mipmapFilter: "linear", addressModeU: "repeat", addressModeV: "repeat" },
+  "sampler.mag_linear_min_nearest_clamp_level0": { magFilter: "linear", minFilter: "nearest", mipmapFilter: "nearest", addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge", lodMaxClamp: 0 },
+  "sampler.mag_linear_min_nearest_clamp_mip_nearest": { magFilter: "linear", minFilter: "nearest", mipmapFilter: "nearest", addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge" },
+  "sampler.mag_linear_min_nearest_clamp_mip_linear": { magFilter: "linear", minFilter: "nearest", mipmapFilter: "linear", addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge" },
+  "sampler.mag_nearest_min_linear_repeat_level0": { magFilter: "nearest", minFilter: "linear", mipmapFilter: "nearest", addressModeU: "repeat", addressModeV: "repeat", lodMaxClamp: 0 },
+  "sampler.mag_nearest_min_linear_repeat_mip_nearest": { magFilter: "nearest", minFilter: "linear", mipmapFilter: "nearest", addressModeU: "repeat", addressModeV: "repeat" },
+  "sampler.mag_nearest_min_linear_repeat_mip_linear": { magFilter: "nearest", minFilter: "linear", mipmapFilter: "linear", addressModeU: "repeat", addressModeV: "repeat" },
+  "sampler.mag_nearest_min_linear_clamp_level0": { magFilter: "nearest", minFilter: "linear", mipmapFilter: "nearest", addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge", lodMaxClamp: 0 },
+  "sampler.mag_nearest_min_linear_clamp_mip_nearest": { magFilter: "nearest", minFilter: "linear", mipmapFilter: "nearest", addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge" },
+  "sampler.mag_nearest_min_linear_clamp_mip_linear": { magFilter: "nearest", minFilter: "linear", mipmapFilter: "linear", addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge" },
   "sampler.linear_repeat": { magFilter: "linear", minFilter: "linear", mipmapFilter: "linear", addressModeU: "repeat", addressModeV: "repeat" },
   "sampler.linear_clamp": { magFilter: "linear", minFilter: "linear", mipmapFilter: "linear", addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge" },
   "sampler.nearest_repeat": { magFilter: "nearest", minFilter: "nearest", mipmapFilter: "nearest", addressModeU: "repeat", addressModeV: "repeat" },
   "sampler.nearest_clamp": { magFilter: "nearest", minFilter: "nearest", mipmapFilter: "nearest", addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge" },
+  "sampler.linear_repeat_level0": { magFilter: "linear", minFilter: "linear", mipmapFilter: "linear", addressModeU: "repeat", addressModeV: "repeat", lodMaxClamp: 0 },
+  "sampler.linear_repeat_mip_nearest": { magFilter: "linear", minFilter: "linear", mipmapFilter: "nearest", addressModeU: "repeat", addressModeV: "repeat" },
+  "sampler.linear_clamp_level0": { magFilter: "linear", minFilter: "linear", mipmapFilter: "linear", addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge", lodMaxClamp: 0 },
+  "sampler.linear_clamp_mip_nearest": { magFilter: "linear", minFilter: "linear", mipmapFilter: "nearest", addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge" },
+  "sampler.nearest_repeat_level0": { magFilter: "nearest", minFilter: "nearest", mipmapFilter: "nearest", addressModeU: "repeat", addressModeV: "repeat", lodMaxClamp: 0 },
+  "sampler.nearest_repeat_mip_linear": { magFilter: "nearest", minFilter: "nearest", mipmapFilter: "linear", addressModeU: "repeat", addressModeV: "repeat" },
+  "sampler.nearest_clamp_level0": { magFilter: "nearest", minFilter: "nearest", mipmapFilter: "nearest", addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge", lodMaxClamp: 0 },
+  "sampler.nearest_clamp_mip_linear": { magFilter: "nearest", minFilter: "nearest", mipmapFilter: "linear", addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge" },
 };
 
 /** The pixels of the built-in textures: one opaque RGBA8 texel. */
@@ -84,7 +104,7 @@ export function checkTestTextures(overrides: TextureOverrides): ReadonlyMap<stri
  * The textures made from the image files of the `assets` table (`spec/assets.md` section 5, decision 0060): one
  * `rgba8unorm-srgb` (`srgb`) or `rgba8unorm` (`linear`) texture per file, created on first use through the
  * registry and filled by `copyExternalImageToTexture` from the decoded bitmap. `copyExternalImageToTexture`
- * requires `COPY_DST | RENDER_ATTACHMENT` besides `TEXTURE_BINDING`. One mip level in v0.1. The bitmaps belong to
+ * requires `COPY_DST | RENDER_ATTACHMENT` besides `TEXTURE_BINDING`. A mip generator fills the chain when present. The bitmaps belong to
  * the caller (`startScene` closes none; mount, recovery and reload close theirs after the scene started).
  */
 export class AssetTextures {

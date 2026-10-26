@@ -2,10 +2,26 @@ import { build } from "esbuild";
 import { fileURLToPath } from "node:url";
 import { test, expect } from "../../support/fixtures.ts";
 import type { runRenderingProbe } from "../../support/rendering-probe.ts";
+import type { runMipSamplingProbe } from "../../support/mip-sampling-probe.ts";
 import type {
   MtekApp,
   MtekMountOptions,
 } from "../../../../packages/runtime-web/src/host/types.js";
+
+test("minified sampling selects mip levels while base-only glTF samplers retain level zero", async ({ page, gpu }) => {
+  expect(gpu.available).toBe(true);
+  const bundle = await build({ entryPoints: [fileURLToPath(new URL("../../support/mip-sampling-probe.ts", import.meta.url))], bundle: true,
+    write: false, format: "iife", globalName: "mipProbe", target: "es2022" });
+  await page.goto("/env.html");
+  await page.addScriptTag({ content: bundle.outputFiles[0]!.text });
+  const result = await page.evaluate(() => (window as unknown as { mipProbe: { runMipSamplingProbe: typeof runMipSamplingProbe } }).mipProbe.runMipSamplingProbe());
+  expect(result.error).toBeNull();
+  expect(result.live).toBe(0);
+  for (const index of [0, 2]) {
+    expect(result.pixels[index]).toEqual([0, 0, 0, 255]);
+    for (const channel of result.pixels[index + 1]!.slice(0, 3)) expect(Math.abs(channel - 128)).toBeLessThanOrEqual(1);
+  }
+});
 
 test("mounted post effects survive device recovery and reject invalid WGSL", async ({
   page,

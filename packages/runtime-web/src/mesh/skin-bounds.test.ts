@@ -1,8 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { identity } from "../math/mat4.js";
+import { fromRotationTranslationScale, identity, multiply } from "../math/mat4.js";
 import { animatedSkin } from "../test-support/animated-skin.js";
 import { deformSkin } from "./skinning.js";
-import { SkinBounds } from "./skin-bounds.js";
+import { SkinBounds, skinWorldScale } from "./skin-bounds.js";
+
+it("expands authored spheres conservatively under inherited nonuniform scale and shear", () => {
+  const zero = { x: 0, y: 0, z: 0 }, one = { x: 1, y: 1, z: 1 };
+  const parent = fromRotationTranslationScale({ x: 0, y: 0, z: 0, w: 1 }, zero, { x: 6, y: 0.2, z: 1 });
+  const child = fromRotationTranslationScale({ x: 0, y: 0, z: Math.sin(Math.PI / 8), w: Math.cos(Math.PI / 8) }, zero, one);
+  const model = multiply(parent, child), expansion = skinWorldScale(model);
+  const longestColumn = Math.max(...[0, 4, 8].map(i => Math.hypot(model[i]!, model[i + 1]!, model[i + 2]!)));
+  let observed = 0;
+  for (let azimuth = 0; azimuth < 64; azimuth++) for (let elevation = -4; elevation <= 4; elevation++) {
+    const a = azimuth * Math.PI / 32, e = elevation * Math.PI / 8;
+    const x = Math.cos(a) * Math.cos(e), y = Math.sin(a) * Math.cos(e), z = Math.sin(e);
+    const length = Math.hypot(model[0]! * x + model[4]! * y + model[8]! * z, model[1]! * x + model[5]! * y + model[9]! * z, model[2]! * x + model[6]! * y + model[10]! * z);
+    expect(length).toBeLessThanOrEqual(expansion + 1e-10);
+    observed = Math.max(observed, length);
+  }
+  expect(observed).toBeGreaterThan(longestColumn + 1); // Basis-column scaling alone would cull too aggressively.
+});
 
 describe("conservative animated bounds", () => {
   it("encloses deformed vertices under weighted translations, rotations, scale, shear and weight tolerance", () => {

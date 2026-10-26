@@ -17,11 +17,11 @@ use crate::stdlib::{
     Domain, Milestone, NamespaceMember, PreludeNameKind, Registry, SchemaCategory, registry,
 };
 use crate::syntax::ast::{
-    ArmBody, ArrayLength, ArrayLengthKind, Block, ConstDecl, DescField, ElseBranch, EntityDecl,
-    EntityMember, EnumDecl, Expr, ExprKind, FieldInit, FieldValue, FnDecl, ForIter, Handler,
-    HandlerArg, Ident, IfStmt, InterpPart, Item, ItemKind, LifecycleFn, MatchArm, MaterialDecl,
-    MaterialMember, Module, NodeId, Param, ParamDecl, PatternKind, PrefabDecl, SceneDecl,
-    SceneMember, SceneObject, Stmt, StructDecl, Type, TypeKind,
+    ArmBody, ArrayLength, ArrayLengthKind, Block, ComputeDecl, ComputeMember, ConstDecl, DescField,
+    ElseBranch, EntityDecl, EntityMember, EnumDecl, Expr, ExprKind, FieldInit, FieldValue, FnDecl,
+    ForIter, Handler, HandlerArg, Ident, IfStmt, InterpPart, Item, ItemKind, LifecycleFn, MatchArm,
+    MaterialDecl, MaterialMember, Module, NodeId, Param, ParamDecl, PatternKind, PrefabDecl,
+    SceneDecl, SceneMember, SceneObject, Stmt, StructDecl, Type, TypeKind,
 };
 
 /// The reserved identifier (`spec/language.md` 2.1, `E0012`).
@@ -41,6 +41,7 @@ enum ScopeKind {
     Entity,
     Prefab,
     Material,
+    Compute,
     Params,
     Block,
 }
@@ -53,6 +54,7 @@ impl ScopeKind {
             ScopeKind::Entity => "entity",
             ScopeKind::Prefab => "prefab",
             ScopeKind::Material => "material",
+            ScopeKind::Compute => "compute program",
             ScopeKind::Params => "parameter list",
             ScopeKind::Block => "block",
         }
@@ -96,6 +98,7 @@ pub(super) struct Resolver<'a> {
     /// The material whose stage function is being resolved: names that
     /// stage code can never read there are captures (`E4040`).
     stage_material: Option<String>,
+    stage_compute: bool,
     /// The names of the scene state, scene objects and entities of every
     /// scene of the module, with a noun for messages: a stage that names
     /// one captures it (`E4040`, `spec/materials.md` section 3).
@@ -129,6 +132,7 @@ impl<'a> Resolver<'a> {
             self_def: None,
             body_base: 0,
             stage_material: None,
+            stage_compute: false,
             scene_names: BTreeMap::new(),
             prelude: false,
         }
@@ -717,6 +721,17 @@ impl<'a> Resolver<'a> {
     /// section 3): `what` is "the entity 'Cube'", "`frame.time`".
     fn report_capture(&mut self, what: &str, span: Span) {
         let material = self.stage_material.clone().unwrap_or_default();
+        if self.stage_compute {
+            self.sink.push(
+                Diagnostic::new(
+                    Code::E4040,
+                    format!("The kernel of compute program '{material}' cannot read {what}."),
+                )
+                .at(span)
+                .help("pass CPU values through compute parameters or input buffers"),
+            );
+            return;
+        }
         self.sink.push(
             Diagnostic::new(
                 Code::E4040,
@@ -753,6 +768,9 @@ impl<'a> Resolver<'a> {
             ItemKind::Material(decl) => {
                 self.declare(DefKind::Material, &decl.name, decl.id, None);
             }
+            ItemKind::Compute(decl) => {
+                self.declare(DefKind::Compute, &decl.name, decl.id, None);
+            }
             ItemKind::Prefab(decl) => {
                 self.declare(DefKind::Prefab, &decl.name, decl.id, None);
             }
@@ -765,6 +783,12 @@ impl<'a> Resolver<'a> {
 
     fn item(&mut self, item: &Item) {
         let construct = match &item.kind {
+            // Source checking remains behind E4901 until packaging/dispatch is
+            // implemented. Do not advertise an implemented construct gate yet.
+            ItemKind::Compute(decl) => {
+                self.compute(decl);
+                return;
+            }
             ItemKind::Import(_) => Construct::Import,
             ItemKind::Const(_) => Construct::ConstItem,
             ItemKind::Fn(decl) if decl.cpu => Construct::CpuFn,
@@ -786,7 +810,7 @@ impl<'a> Resolver<'a> {
         }
         let entered = self.enter(construct, item.span);
         match &item.kind {
-            ItemKind::Import(_) | ItemKind::Error => {}
+            ItemKind::Import(_) | ItemKind::Compute(_) | ItemKind::Error => {}
             ItemKind::Const(decl) => self.const_body(decl),
             ItemKind::Fn(decl) => self.function(decl),
             ItemKind::Struct(decl) => self.structure(decl),
@@ -900,6 +924,53 @@ impl<'a> Resolver<'a> {
         if let Some(default) = &param.default {
             self.expr(default);
         }
+    }
+
+    fn compute(&mut self, decl: &ComputeDecl) {
+        let owner = self.out.def_of(decl.id);
+        let saved_self = self.self_def.take();
+        self.push(ScopeKind::Compute);
+        for member in &decl.members {
+            match member {
+                ComputeMember::Param(param) => {
+                    self.declare(DefKind::Param, &param.name, param.id, owner);
+                }
+                ComputeMember::Input(buffer) => {
+                    self.declare(DefKind::InputBuffer, &buffer.name, buffer.id, owner);
+                }
+                ComputeMember::Output(buffer) => {
+                    self.declare(DefKind::OutputBuffer, &buffer.name, buffer.id, owner);
+                }
+                _ => {}
+            }
+        }
+        for member in &decl.members {
+            match member {
+                ComputeMember::Param(param) => self.param_body(param),
+                ComputeMember::Input(buffer) | ComputeMember::Output(buffer) => self.ty(&buffer.ty),
+                ComputeMember::Workgroup(field) => {
+                    self.set_res(field.name.id, Res::Field);
+                    self.field_value(&field.value);
+                }
+                ComputeMember::Stage(stage) => {
+                    self.set_res(stage.name.id, Res::Field);
+                    self.push(ScopeKind::Params);
+                    self.params(&stage.params, owner);
+                    if let Some(ret) = &stage.ret {
+                        self.ty(ret);
+                    }
+                    let saved = self.stage_material.replace(decl.name.name.clone());
+                    let saved_compute = std::mem::replace(&mut self.stage_compute, true);
+                    self.block(&stage.body);
+                    self.stage_material = saved;
+                    self.stage_compute = saved_compute;
+                    self.pop();
+                }
+                ComputeMember::Error(_) => {}
+            }
+        }
+        self.pop();
+        self.self_def = saved_self;
     }
 
     // ----- scenes, entities, prefabs ----------------------------------------

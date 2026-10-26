@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mtek · production character comparison</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101820;color:#e3edf4;font:15px/1.55 system-ui}main{max-width:1400px;margin:auto;padding:32px}h1{font-size:30px;margin:0}p{color:#aebfc9}header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:24px 0}button,select{background:#20333f;color:inherit;border:1px solid #49616f;border-radius:6px;padding:9px 14px;font:inherit}button{cursor:pointer}.panels{display:grid;grid-template-columns:1fr 1fr;gap:20px}article{min-width:0;border:1px solid #344e5d;border-radius:10px;overflow:hidden}h2{font-size:16px;margin:0;padding:12px 16px;background:#1b2b35}output{display:block;min-height:28px;color:#7ed7b6}footer{margin-top:24px;color:#aebfc9;font-size:13px}a{color:#8bcaeb}@media(max-width:800px){.panels{grid-template-columns:1fr}main{padding:20px}}
+</style>
+<main><h1>Real characters. Two rendering paths.</h1>
+<p>Externally authored glTF characters animated and rendered by Mtek and Three.js. Choose a clip or pause to inspect a pose.</p>
+<header><label>Character <select id="model"></select></label><label>Clip <select id="clip"></select></label><button id="pause">Pause</button><button id="reset">Reset cycle</button></header>
+<output id="status">Preparing…</output><div class="panels"><article id="mtek"><h2>Mtek · WebGPU compute skinning</h2></article><article id="three"><h2>Three.js r186 · WebGPU skinning</h2></article></div>
+<footer><p>This interactive view is a correctness demonstration. Published measurements use isolated pages, flat materials and independent actors; this side-by-side view is not a performance benchmark.</p>
+<p>Both demonstrations explicitly replace source materials with unlit base-color sampling. Cesium Man’s original mixed min/mag sampler is outside Mtek’s current import profile. Geometry, nodes, skinning and animation data are unchanged.</p>
+<p>Fox: model by PixelMannen (CC0); rigging and animation by tomkranis, glTF conversion by AsoboStudio and scurest (CC BY 4.0). Cesium Man: Cesium (CC BY 4.0). Cesium trademarks remain their owners’. <a href="https://github.com/KhronosGroup/glTF-Sample-Assets/tree/8f492390ddc7a2ae221a1369ef560589cf8c70fb/Models/Fox">Fox source</a> · <a href="https://github.com/KhronosGroup/glTF-Sample-Assets/tree/8f492390ddc7a2ae221a1369ef560589cf8c70fb/Models/CesiumMan">Cesium Man source</a> · <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></p></footer></main><script type="module" src="./demo.js"></script></html>

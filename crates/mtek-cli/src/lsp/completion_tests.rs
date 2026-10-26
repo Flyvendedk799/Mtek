@@ -246,7 +246,7 @@ fn members_of_an_entity_body_and_of_a_scene_body() {
 #[test]
 fn material_and_item_level_keywords() {
     let c = at("param phase: f32 = 0.0;", "\u{a7}");
-    assert_has(&c, &["param", "fragment"]);
+    assert_has(&c, &["param", "fragment", "vertex"]);
     let c = at("const SPEED: f32 = 0.7;", "\u{a7}");
     assert_has(
         &c,
@@ -334,7 +334,17 @@ fn types_in_a_type_position() {
         "let angle = double(speed) * dt;",
         "let angle: \u{a7} = 1.0;",
     );
-    assert_has(&c, &["f32", "vec3", "color", "SurfaceInput", "Light"]);
+    assert_has(
+        &c,
+        &[
+            "f32",
+            "vec3",
+            "color",
+            "SurfaceInput",
+            "VertexInput",
+            "Light",
+        ],
+    );
     assert_lacks(&c, &["sin", "speed", "double", "Key"]);
 }
 
@@ -580,4 +590,12 @@ fn the_properties_and_commands_of_a_body_depend_on_its_kind() {
     let c = completion(call, "spawn(Crate { \u{a7} });");
     assert_has(&c, &["origin"]);
     assert_lacks(&c, &["position"]);
+}
+
+#[test]
+fn authored_bounds_are_offered_on_entity_bodies_and_named_entity_values() {
+    let fields = at("state hits: i32 = 0;", "§");
+    assert_has(&fields, &["bounds_center", "bounds_radius"]);
+    let values = at("self.rotation", "self.§rotation");
+    assert_has(&values, &["bounds_center", "bounds_radius"]);
 }

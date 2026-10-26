@@ -1,0 +1,77 @@
+{
+  "recordedAt": "2026-10-26T02:19:55.694096+00:00",
+  "status": "passed within recorded import/use scope",
+  "unitTests": 11,
+  "workers": 1,
+  "corpusInputs": 16,
+  "compilerChecks": 26,
+  "importResults": {
+    "passed": 7,
+    "expectedRejections": 9
+  },
+  "usageResults": {
+    "passed": 8,
+    "expectedRejections": 2
+  },
+  "allExpectationsMatched": true,
+  "allSourceInputsUnchanged": true,
+  "compilerBinaryUnchanged": true,
+  "checks": {
+    "install": {
+      "status": "passed",
+      "file": "validation/install.txt",
+      "sha256": "a941066d38162d18c88ea4b096d8cf11d19b0d46b973f6d916e2f9b8794e1f36"
+    },
+    "types": {
+      "status": "passed",
+      "file": "validation/types.txt",
+      "sha256": "ed0f1af13f74377fe7a94e16888dbe1feed6134c87510ea51e6c61a3839f7e5a"
+    },
+    "lint": {
+      "status": "passed",
+      "file": "validation/lint.txt",
+      "sha256": "7b22b80e2b641970799146e8a2194418727ac149b8187e22e0887ca223091fd9"
+    },
+    "unit": {
+      "status": "passed",
+      "file": "validation/unit.txt",
+      "sha256": "66468414c46c1504d9fd7fda2aee77820604b1eea30669bbb373115b95e49654"
+    },
+    "corpus": {
+      "status": "passed",
+      "file": "validation/corpus.txt",
+      "sha256": "b9750d2c8f6fb05b0bc24f6e59c6f9e6eeca8f0576e19515ab63e7e8bd43586e"
+    },
+    "cli-positive": {
+      "status": "passed",
+      "file": "validation/cli-positive.txt",
+      "sha256": "3cab10bbe5efdc4703b84ee6f8d6e127c1832638ee85fc3c0316df93b7625360"
+    },
+    "cli-incomplete": {
+      "status": "expected incomplete exit 1",
+      "file": "validation/cli-incomplete.txt",
+      "sha256": "c5785300d0f9a7290fe8ac5e84f23edbda3864e278b284c125aabfcb1100e8a7"
+    },
+    "prebuilt": {
+      "status": "passed",
+      "file": "validation/prebuilt.txt",
+      "sha256": "d3b6f7cf3dd4beccc5e5d0e3c0800fb1976e7f49df3846b1293b119ac7551712"
+    }
+  },
+  "cargoBuilds": 0,
+  "gpuRuns": 0,
+  "performanceBenchmarks": 0,
+  "deferred": [
+    "animation performance optimization remains planned",
+    "heavy compiler/GPU/performance validation"
+  ],
+  "shaderAuthoring": {
+    "status": "added to current plan and scorecard, not implemented",
+    "plan": "../shader-authoring-plan.md"
+  },
+  "frozenAiArchiveChanges": 0,
+  "notes": "Corpus-expectation success includes known rejections and does not imply all assets or all uses are compatible.",
+  "markdownRegeneration": "passed",
+  "matchedAnimationReportRegeneration": "passed",
+  "runtimeArtifactsChanged": false
+}

@@ -4,6 +4,7 @@ import type { MtekManifest } from "../abi/manifest-types.js";
 import { makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
 import type { MountedApp } from "../host/app.js";
 import { mountMtekWith } from "../host/mount.js";
+import type { ExtensionContext } from "../host/extensions.js";
 import type { MtekApp, MtekDebug, MtekMountOptions } from "../host/types.js";
 import { fromRotationTranslationScale, lookAt, multiply, normalMatrix, perspective, translation, type Mat4 } from "../math/mat4.js";
 import { checkProgram } from "../scene/program.js";
@@ -66,6 +67,90 @@ function lastDraws(host: FakeHost): readonly FakeDrawRecord[] {
   if (pass === undefined) throw new Error("no render pass");
   return pass.draws;
 }
+
+it("retains authored vertex draws when the original mesh sphere is outside the camera", async () => {
+  for (const deformed of [false, true]) {
+    const { host, app, debug, reported } = await mountScene({
+      edit: json => { if (deformed) ((json["shaders"] as Json[])[0] as Json)["vertexDeformation"] = 1; },
+      init: context => {
+        minimalSceneInit(context);
+        const ctx = context as InitContext;
+        ctx.setTransform(ctx.e[0], "position", { x: 100000, y: 0, z: 0 });
+      },
+    });
+    debug.step(1, 1 / 60);
+    expect(debug.counters()["culledObjects"]).toBe(deformed ? 0 : 1);
+    expect(lastDraws(host)).toHaveLength(deformed ? 1 : 0);
+    expect(reported).toEqual([]);
+    app.dispose();
+    expect(debug.counters()["liveBuffers"]).toBe(0);
+  }
+});
+
+it("uses explicit deformed bounds and invalidates culling when only those bounds change", async () => {
+  let ctx: InitContext;
+  const { host, app, debug, reported } = await mountScene({
+    edit: json => { ((json["shaders"] as Json[])[0] as Json)["vertexDeformation"] = 1; },
+    init: context => {
+      minimalSceneInit(context); ctx = context as InitContext;
+      ctx.setTransform(ctx.e[0], "position", { x: 1000, y: 0, z: 0 });
+      ctx.setBounds(ctx.e[0], "bounds_center", { x: -1000, y: 0, z: 0 });
+      ctx.setBounds(ctx.e[0], "bounds_radius", 1);
+    },
+  });
+  const check = (culled: number): void => {
+    debug.step(1, 1 / 60);
+    expect(debug.counters()["culledObjects"]).toBe(culled);
+    expect(lastDraws(host)).toHaveLength(1 - culled);
+  };
+  check(0);
+  ctx!.setBounds(ctx!.e[0], "bounds_center", { x: 0, y: 0, z: 0 }); check(1);
+  ctx!.setBounds(ctx!.e[0], "bounds_radius", 0); check(0); // Conservative authored fallback.
+  ctx!.setBounds(ctx!.e[0], "bounds_radius", 1); check(1);
+  const center = { x: -1000, y: 0, z: 0 };
+  ctx!.setBounds(ctx!.e[0], "bounds_center", center);
+  center.x = 1000; check(0); // Writes copy values; caller mutation cannot bypass tracking.
+  for (const radius of [-1, NaN, Infinity]) ctx!.setBounds(ctx!.e[0], "bounds_radius", radius);
+  ctx!.setBounds(ctx!.e[0], "bounds_center", { x: Infinity, y: 0, z: 0 }); check(0);
+  // Mounted diagnostics deduplicate repeated codes; every invalid value must preserve the previous sphere.
+  expect(reported.map(d => d.code)).toEqual(["MTEK-E8091"]);
+  expect((ctx!.e[0] as EntityRecord).bounds_radius).toBe(1);
+  expect((ctx!.e[0] as EntityRecord).bounds_center).toEqual({ x: -1000, y: 0, z: 0 });
+  expect(() => ctx!.setBounds(ctx!.e[0], "radius", 1)).toThrow(RuntimeInternalError);
+  app.dispose();
+  expect(debug.counters()["liveBuffers"]).toBe(0);
+});
+
+it("restores ordinary mesh bounds after clearing an explicit sphere without a transform change", async () => {
+  let ctx: InitContext;
+  const { app, debug } = await mountScene({ init: context => {
+    minimalSceneInit(context); ctx = context as InitContext;
+    ctx.setBounds(ctx.e[0], "bounds_center", { x: 1000, y: 0, z: 0 });
+    ctx.setBounds(ctx.e[0], "bounds_radius", 1);
+  } });
+  debug.step(1, 1 / 60); expect(debug.counters()["culledObjects"]).toBe(1);
+  ctx!.setBounds(ctx!.e[0], "bounds_radius", 0);
+  debug.step(1, 1 / 60); expect(debug.counters()["culledObjects"]).toBe(0);
+  app.dispose();
+});
+
+it("exposes copied authored bounds through the public scene snapshot", async () => {
+  let access: ExtensionContext;
+  const { app } = await mountScene({
+    init: context => {
+      minimalSceneInit(context);
+      const ctx = context as InitContext;
+      ctx.setBounds(ctx.e[0], "bounds_center", { x: 0, y: 0, z: -1 });
+      ctx.setBounds(ctx.e[0], "bounds_radius", 2);
+    },
+    options: { test: { manualClock: true }, extensions: [{ id: "bounds-inspection", apiVersion: 1, setup: context => { access = context; } }] },
+  });
+  const snapshot = access!.readTransforms()[0]!;
+  expect(snapshot.bounds).toEqual({ center: { x: 0, y: 0, z: -1 }, radius: 2 });
+  Object.assign(snapshot.bounds!.center, { z: -1000 });
+  expect(access!.readTransforms()[0]!.bounds!.center.z).toBe(-1);
+  app.dispose();
+});
 
 describe("compareDraws (the draw-list order of spec/runtime-abi.md section 8.4)", () => {
   const key = (pipelineKey: string, instance: number, mesh: number, entity: number): DrawSortKey => ({ pipelineKey, instance, mesh, entity, order: entity });
@@ -532,6 +617,25 @@ async function mountTwoMaterials(init?: (ctx: object) => void): Promise<Mounted>
     ...(init === undefined ? {} : { init }),
   });
 }
+
+it("sorts translucent draws by authored centers and updates order without moving object transforms", async () => {
+  let ctx: InitContext;
+  const { host, app, debug } = await mountTwoMaterials(context => {
+    minimalSceneInit(context); ctx = context as InitContext;
+    ctx.setCamera("position", { x: 0, y: 0, z: 10 });
+    ctx.setCamera("target", { x: 0, y: 0, z: 0 });
+    for (const [index, z] of [-2, 2, 0, -1, 1].entries()) {
+      ctx.setParam(ctx.e[index], "color", { r: 1, g: 1, b: 1, a: 0.5 });
+      ctx.setBounds(ctx.e[index], "bounds_center", { x: 0, y: 0, z });
+      ctx.setBounds(ctx.e[index], "bounds_radius", 1);
+    }
+  });
+  const order = (): number[] => lastDraws(host).map(draw => (draw.dynamicOffsets[2]?.[0] ?? -1) / 256);
+  debug.step(1, 1 / 60); expect(order()).toEqual([0, 3, 2, 4, 1]);
+  ctx!.setBounds(ctx!.e[0], "bounds_center", { x: 0, y: 0, z: 3 });
+  debug.step(1, 1 / 60); expect(order()).toEqual([3, 2, 4, 1, 0]);
+  app.dispose();
+});
 
 describe("debug.setParam (the M2 gate hook, spec/runtime-abi.md section 10.2)", () => {
   it("writes one instance through the generated writer, uploads it next frame and creates nothing", async () => {

@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E6002",
+    "file": "src/main.mtek",
+    "startByte": 48,
+    "endByte": 51,
+    "message": "Lit material 'Lit' declares 0 textures and 15 samplers; scene lighting reserves three textures and two samplers of the default per-stage limits.",
+    "notes": [
+      "help: use at most 13 texture and 14 sampler parameters in lit materials, and at most 16 resource parameters combined"
+    ]
+  }
+]

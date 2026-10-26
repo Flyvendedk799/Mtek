@@ -8,7 +8,7 @@ Lights in Mtek use physical units, and the camera has an exposure, as a photogra
 
 1. **Units.** Distances are metres, time is seconds, angles are radians, mass is kilograms. A `DirectionalLight` has an `intensity` in **lux** (illuminance, lumens per square metre). A `PointLight` has an `intensity` in **candela** (luminous intensity) and falls off with the square of the distance.
 2. **Directional lights** shine along the entity's local `-Z` axis, wherever the entity is. Aim one by rotating the entity: `rotation: quat.euler(-0.9, 0.4, 0.0)` tilts it down by 0.9 radians and turns it by 0.4. **Point lights** shine in all directions from the entity's position; `range` is the distance at which the light has faded to nothing, and `0` means unlimited.
-3. **Where lights go.** A light is a field of a *named* entity of a scene (`light: PointLight { ... }`). A prefab cannot declare one (`MTEK-E5110`), and a scene has at most 4 lights (`MTEK-E5111`). There are no shadows. `color` and `intensity` can be assigned in handlers and bound; `range` is fixed at construction.
+3. **Where lights go.** A light is a field of a *named* entity of a scene (`light: PointLight { ... }`). A prefab cannot declare one (`MTEK-E5110`), and a scene has at most 4 lights (`MTEK-E5111`). Host rendering options can enable one directional shadow map; point and cascaded shadows are unsupported. `color` and `intensity` can be assigned in handlers and bound; `range` is fixed at construction.
 4. **Only lit materials react to light.** `Pbr` and any material whose `fragment` calls `lighting.pbr` are lit. `Unlit` and other materials write the colour they compute, whatever lights and exposure there are.
 5. **Exposure.** Every camera has `exposure`, an EV100 value (the exposure value of a camera at ISO 100). Lit materials multiply their result by the *exposure scale* `1 / (1.2 * 2^EV100)`; one EV more halves the brightness. The default is `-1.9145305`, which makes the scale pi and a white diffuse surface under a 1 lux directional light come out as 1.0. Real-world values work as on a camera. `exposure` is a constant: it cannot be bound or assigned.
 6. **Choosing an exposure.** If `E` lux should map a white diffuse surface to full brightness, set `exposure` to `log2(E / (1.2 * pi))`. For 500 lux (an office) that is about 7.1, for 15 lux (a room with one small lamp) about 2.0, for 100 000 lux (a sunny day) about 14.7. A surface that is not white, or not facing the light, is darker by its albedo and by the cosine of the angle.
@@ -16,6 +16,15 @@ Lights in Mtek use physical units, and the camera has an exposure, as a photogra
 8. **There is no tone mapping.** Lit results above 1.0 clip to white. A very bright light is visible as a saturated area, not as an error.
 9. **Colour spaces.** A `color` is linear. A colour literal `#rrggbb` is sRGB and is converted exactly when the program is compiled; `color.srgb(vec3, a)` converts sRGB components at run time and `color.linear(vec3, a)` takes linear components. The image is written through an sRGB view, so the display encoding is applied once, at the end. An `Unlit` colour therefore appears on the screen as the colour you wrote. Textures are decoded as sRGB unless declared with `asset.linear_texture` (see [Textures, samplers and assets](textures-samplers-and-assets.md)).
 10. **Colour alpha.** A `color` parameter of a material takes any alpha. Below 1 the draw is translucent: it is drawn after the opaque draws, back to front, and blends with what is behind it (decision 0138). A constant alpha returned by a fragment stage only blends while the draw is translucent (`MTEK-W5101`).
+
+Hosts can configure `rendering.shadows` with a directional entity name, volume and
+quality, and `rendering.environment` with a linear HDR panorama, intensity and yaw.
+Environment lighting supplies diffuse illumination and roughness-filtered specular
+reflections, including on metals. It is separate from the scene's constant ambient
+term. Mapped occlusion attenuates ambient and environment light, while shadows
+attenuate only their selected directional light. Exposure still applies once,
+and output still clips above one. The complete API, defaults, colour assumptions
+and supported ranges are in [decision 0195](../../spec/decisions/0195-shadows-and-environment-lighting.md).
 
 The fields of the objects involved, as the compiler knows them:
 

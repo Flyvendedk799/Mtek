@@ -1,0 +1,26 @@
+[
+  {
+    "code": "MTEK-E4021",
+    "file": "src/main.mtek",
+    "startByte": 119,
+    "endByte": 131,
+    "message": "The parameter of the vertex stage of material 'Wobble' must have type VertexInput, but 'input' has type SurfaceInput.",
+    "expected": "VertexInput",
+    "actual": "SurfaceInput",
+    "notes": [
+      "help: write `vertex(input: VertexInput) -> vec3`"
+    ]
+  },
+  {
+    "code": "MTEK-E4021",
+    "file": "src/main.mtek",
+    "startByte": 136,
+    "endByte": 141,
+    "message": "The vertex stage of material 'Wobble' must return vec3 or a vertex output struct, but it is declared to return color.",
+    "expected": "vec3 or a vertex output struct",
+    "actual": "color",
+    "notes": [
+      "help: write `-> vec3`"
+    ]
+  }
+]

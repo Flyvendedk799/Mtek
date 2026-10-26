@@ -837,10 +837,18 @@ function withTextures(m, count) {
   const image = m.image(CHECKER, "image/png");
   m.json.textures = Array.from({ length: count }, () => ({ source: image }));
 }
-fail("e7016_normal_texture", (() => {
+project("pass/pbr_normal_texture", (() => {
   const m = tri();
   withTextures(m, 1);
   material0(m).normalTexture = { index: 0 };
+  return m.glb();
+})(), { main: `const MODEL = asset.glb("../models/model.glb");
+scene Demo { camera Main {} entity Part { mesh: MODEL.mesh("Tri"); material: MODEL.material("Plain"); } }
+` });
+fail("e7009_normal_uv_set", (() => {
+  const m = tri();
+  withTextures(m, 1);
+  material0(m).normalTexture = { index: 0, texCoord: 1 };
   return m.glb();
 })());
 fail("e7016_double_sided", (() => {
@@ -848,11 +856,13 @@ fail("e7016_double_sided", (() => {
   material0(m).doubleSided = true;
   return m.glb();
 })());
-fail("e7016_emissive_factor", (() => {
+project("pass/pbr_emissive_factor", (() => {
   const m = tri();
   material0(m).emissiveFactor = [1, 0.5, 0];
   return m.glb();
-})());
+})(), { main: `const MODEL = asset.glb("../models/model.glb");
+scene Demo { camera Main {} entity Part { mesh: MODEL.mesh("Tri"); material: MODEL.material("Plain"); } }
+` });
 fail("e7016_several_features", (() => {
   const m = tri();
   withTextures(m, 4);
@@ -870,6 +880,68 @@ fail("e7009_texcoord_1_texture", (() => {
   material0(m).pbrMetallicRoughness.baseColorTexture = { index: 0, texCoord: 1 };
   return m.glb();
 })());
+
+// Core channel corpus: one image reused as colour and as data must yield distinct
+// colour-space assets, while MR and AO share the same linear upload.
+function mappedMaterialModel(uvKind = "regular") {
+  const m = new Model();
+  const attributes = {
+    POSITION: m.positions([-1,-1,0, 1,-1,0, -1,1,0, 1,1,0]),
+    NORMAL: m.vec3s([0,0,1, 0,0,1, 0,0,1, 0,0,1]),
+    TEXCOORD_0: m.vec2s(uvKind === "degenerate" ? [0,0,0,0,0,0,0,0] :
+      uvKind === "mirrored" ? [1,0,0,0,1,1,0,1] : [0,0,1,0,0,1,1,1]),
+  };
+  const data = m.image(png(1,1,[[128,64,192,255]]), "image/png");
+  const normal = m.image(png(1,1,[[218,128,218,255]]), "image/png");
+  m.json.textures = [{source: data}, {source: normal}];
+  m.json.materials.push({name: "Mapped", pbrMetallicRoughness: {
+    baseColorFactor: [0.7,0.6,0.5,1], metallicFactor: 0.6, roughnessFactor: 0.8,
+    baseColorTexture: {index:0}, metallicRoughnessTexture: {index:0},
+  }, normalTexture: {index:1}, occlusionTexture: {index:0,strength:0.75},
+  emissiveTexture: {index:0}, emissiveFactor: [0.2,0.1,0.05]});
+  const mesh = m.mesh("Quad", [{attributes,indices:m.indices16([0,1,2,2,1,3]),material:0}]);
+  m.node({name:"Quad",mesh},true);
+  return m.glb();
+}
+const mappedMain = `const MODEL = asset.glb("../models/model.glb");
+scene Mapped {
+    clear_color: #000000;
+    ambient_color: #ffffff;
+    ambient_intensity: 0.3;
+    state sun: f32 = 0.2;
+    state base_factor: vec3 = vec3(0.7,0.6,0.5);
+    state normal_scale: f32 = 1.0;
+    state ao_strength: f32 = 0.75;
+    state metal: f32 = 0.6;
+    state rough: f32 = 0.8;
+    state emission: vec3 = vec3(0.2,0.1,0.05);
+    camera Main { position: vec3(0.0,0.0,2.0); target: vec3(0.0); projection: Orthographic {height:2.0}; exposure: -0.2630344; }
+    entity Sun { rotation: quat.euler(0.0,-0.6,0.0); light: DirectionalLight { color: #ffffff; intensity: bind(sun) }; }
+    entity Part { mesh: MODEL.mesh("Quad"); material: MODEL.material("Mapped"); }
+    update(dt: f32) {
+        Part.material.base_color = color.linear(base_factor,1.0);
+        Part.material.normal_scale = normal_scale;
+        Part.material.occlusion_strength = ao_strength;
+        Part.material.metallic = metal;
+        Part.material.roughness = rough;
+        Part.material.emissive = color.linear(emission,1.0);
+    }
+}
+`;
+const mappedToml = `${TOML}
+[host.inputs]
+sun = "Mapped.sun"
+base_factor = "Mapped.base_factor"
+normal_scale = "Mapped.normal_scale"
+ao_strength = "Mapped.ao_strength"
+metal = "Mapped.metal"
+rough = "Mapped.rough"
+emission = "Mapped.emission"
+`;
+for (const kind of ["regular","mirrored","degenerate"]) {
+  project(`../browser/fixtures/m4/pbr_maps_${kind}`, mappedMaterialModel(kind), {main:mappedMain,toml:mappedToml});
+}
+project("pass/pbr_all_maps", mappedMaterialModel(), {main:mappedMain,toml:mappedToml});
 
 // ----- row 9: images ---------------------------------------------------------
 
@@ -940,13 +1012,22 @@ fail("e7018_wrap_modes_differ", (() => {
   m.json.textures[0].sampler = 0;
   return m.glb();
 })());
-fail("e7018_filters_differ", (() => {
+project("pass/mixed_filters", (() => {
   const m = tri();
   withImage(m, CHECKER, "image/png");
   m.json.samplers = [{ magFilter: 9728, minFilter: 9729 }];
   m.json.textures[0].sampler = 0;
   return m.glb();
-})());
+})(), { main: `const MODEL = asset.glb("../models/model.glb");
+
+scene Demo {
+    camera Main {}
+    entity Part {
+        mesh: MODEL.mesh("Tri");
+        material: MODEL.material("Plain");
+    }
+}
+` });
 
 // ----- row 11: node transforms (reported by the accessors) --------------------
 
@@ -1274,6 +1355,33 @@ textureProject("e7002_texture_file_too_large", bigPng(2000, 2000), `${TOML}\n[as
 // (the browser cannot decode it): the mount must fail with E7031.
 
 const BROWSER_FIXTURES = "../browser/fixtures/m4";
+
+// A one-joint animated quad: an off-camera skin must still deform for the shadow pass.
+function shadowSkinModel() {
+  const m = new Model();
+  const attributes = {
+    POSITION: m.positions([-0.5, 0, -0.5, -0.5, 0, 0.5, 0.5, 0, 0.5, 0.5, 0, -0.5]),
+    NORMAL: m.vec3s([0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0]),
+    TEXCOORD_0: m.vec2s([0, 0, 0, 1, 1, 1, 1, 0]),
+    JOINTS_0: m.accessor(u8(...Array(16).fill(0)), { componentType: UNSIGNED_BYTE, type: "VEC4", count: 4 }),
+    WEIGHTS_0: m.accessor(f32(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0), { componentType: FLOAT, type: "VEC4", count: 4 }),
+  };
+  m.json.meshes.push({ name: "Caster", primitives: [{ attributes, indices: m.indices16([0, 1, 2, 0, 2, 3]) }] });
+  m.node({ name: "Mesh", mesh: 0, skin: 0 }); m.node({ name: "Joint" });
+  m.json.skins = [{ joints: [1], skeleton: 1 }];
+  const time = m.accessor(f32(0, 1), { componentType: FLOAT, type: "SCALAR", count: 2, min: [0], max: [1] });
+  m.json.animations = [{ name: "Slide", samplers: [{ input: time, output: m.vec3s([0, 0, 0, 1.4, 0, 0]), interpolation: "LINEAR" }],
+    channels: [{ sampler: 0, target: { node: 1, path: "translation" } }] }];
+  return m.glb();
+}
+put(`${BROWSER_FIXTURES}/shadow_skin/models/caster.glb`, shadowSkinModel());
+put(`${BROWSER_FIXTURES}/animation_crowd/models/caster.glb`, shadowSkinModel());
+for (const [name, source, files] of [
+  ["lit_texture_boundary", "lit_resource_boundary", ["mtek.toml", "src/main.mtek"]],
+  ["lit_sampler_boundary", "lit_sampler_boundary", ["mtek.toml", "src/main.mtek", "src/shade.mtek"]],
+]) {
+  for (const file of files) put(`${BROWSER_FIXTURES}/${name}/${file}`, readFileSync(join(root, "../semantics/pass/materials", source, file)));
+}
 const MASK_TEXELS = [
   [255, 255, 255, 255],
   [128, 128, 128, 255],
@@ -1551,7 +1659,7 @@ const box = (sx, sy, sz, center) => prism({ bottom: [sx / 2, sz / 2], top: [sx /
 
 /**
  * The chair. `variant` breaks exactly one row of the profile (spec/assets.md section 3): "normal_texture" gives the Fabric
- * material a normal texture (E7016), "required_extension" declares an extension the file requires (E7004).
+ * material a normal texture on UV set 1 (E7009), "required_extension" declares an extension the file requires (E7004).
  */
 function chairModel(variant = null) {
   const m = new Model();
@@ -1591,7 +1699,7 @@ function chairModel(variant = null) {
   if (variant === "normal_texture") {
     const image = m.image(CHECKER, "image/png");
     m.json.textures = [{ source: image }];
-    m.json.materials[FABRIC].normalTexture = { index: 0 };
+    m.json.materials[FABRIC].normalTexture = { index: 0, texCoord: 1 };
   } else if (variant === "required_extension") {
     m.json.extensionsUsed = ["KHR_draco_mesh_compression"];
     m.json.extensionsRequired = ["KHR_draco_mesh_compression"];

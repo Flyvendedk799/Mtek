@@ -273,6 +273,7 @@ pub fn check_program(
     graph.cpu_rules(&cpu, &mut pending);
     graph.initialiser_rules(&initialisers, &mut pending);
     graph.report(pending, &dist, &gpu, &cpu, &initialisers, sink);
+    graph.lighting_resources(units, sink);
 
     let mut functions = BTreeMap::new();
     for (index, node) in graph.nodes.iter().enumerate() {
@@ -301,6 +302,61 @@ struct Graph<'a> {
 }
 
 impl<'a> Graph<'a> {
+    /// Propagate scene lighting through the call graph once, including imported helpers.
+    /// Group 3 reserves three textures and two samplers of the default fragment-stage limits.
+    fn lighting_resources(&self, units: &[ProgramUnit<'_>], sink: &mut Diagnostics) {
+        let mut callers = vec![Vec::new(); self.nodes.len()];
+        let mut lit = vec![false; self.nodes.len()];
+        let mut queue = VecDeque::new();
+        for (index, node) in self.nodes.iter().enumerate() {
+            for target in node.targets.iter().flatten() {
+                callers[*target].push(index);
+            }
+            if node.facts.calls.iter().any(|call| matches!(&call.callee, Callee::Builtin(b) if matches!(b.name.as_str(), "lighting.pbr" | "lighting.pbr_mapped"))) {
+                lit[index] = true; queue.push_back(index);
+            }
+        }
+        while let Some(index) = queue.pop_front() {
+            for &caller in &callers[index] {
+                if !lit[caller] {
+                    lit[caller] = true;
+                    queue.push_back(caller);
+                }
+            }
+        }
+        let roots: BTreeSet<_> = self
+            .nodes
+            .iter()
+            .enumerate()
+            .filter(|(i, node)| lit[*i] && node.kind == Kind::GpuRoot)
+            .map(|(_, node)| (node.module, node.span.start))
+            .collect();
+        for unit in units {
+            for (_, material) in unit.types.materials() {
+                let Some(stage) = &material.fragment else {
+                    continue;
+                };
+                if !roots.contains(&(unit.id, stage.name_span.start)) {
+                    continue;
+                }
+                let textures = material
+                    .params
+                    .iter()
+                    .filter(|p| p.ty == super::TyId::TEXTURE)
+                    .count();
+                let samplers = material
+                    .params
+                    .iter()
+                    .filter(|p| p.ty == super::TyId::SAMPLER)
+                    .count();
+                if textures > 13 || samplers > 14 {
+                    sink.push(Diagnostic::new(Code::E6002, format!("Lit material '{}' declares {textures} textures and {samplers} samplers; scene lighting reserves three textures and two samplers of the default per-stage limits.", material.name))
+                    .at(material.name_span).help("use at most 13 texture and 14 sampler parameters in lit materials, and at most 16 resource parameters combined"));
+                }
+            }
+        }
+    }
+
     fn new(units: &[ProgramUnit<'a>], roots: &'a Roots) -> Self {
         let mut nodes = Vec::new();
         let mut index = BTreeMap::new();

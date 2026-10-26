@@ -1,0 +1,121 @@
+{
+  "date": "2026-10-26",
+  "scope": "Authored finite bounds for the active shader-authoring track; full vertex/compute acceptance and the platform roadmap remain incomplete.",
+  "compiler": {
+    "unitTestsPassed": 918,
+    "integrationTestsPassed": 150,
+    "integrationSuites": {
+      "build": 36,
+      "context": 34,
+      "context_cold_start": 16,
+      "diagnostics_audit": 10,
+      "fixtures": 23,
+      "stdlib_registry": 25,
+      "stdlib_schema": 6
+    }
+  },
+  "runtimeTestsPassed": 229,
+  "runtimeTestFiles": [
+    "render/renderer.test.ts",
+    "scene/dynamic.test.ts",
+    "host/extensions.test.ts",
+    "abi/abi.test.ts",
+    "runtime-dts.test.ts",
+    "mesh/skin-bounds.test.ts"
+  ],
+  "inspectorTestsPassed": 12,
+  "lspCompletionTestsPassed": 23,
+  "gpu": [
+    {
+      "backend": "hardware",
+      "record": "attempt-2/hardware.json",
+      "sha256": "ff49094f30daa9abb6abc257933644dc65d135cdbff2399ce020091e6c757a47",
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-3",
+        "device": "0x744c",
+        "description": "AMD Radeon RX 7900 XTX",
+        "isFallbackAdapter": false
+      },
+      "browser": "153.0.8010.12",
+      "imageCasesPassed": 12,
+      "boundsTransitionsPassed": 20,
+      "recoveryCasesPassed": 4,
+      "replacementsPassed": 24,
+      "maximumPixelError": 0,
+      "replacementResourceCountsStableAfterWarmup": true,
+      "zeroTrackedGpuResourcesAndListenersAfterDisposal": true
+    },
+    {
+      "backend": "software",
+      "record": "attempt-2/software.json",
+      "sha256": "7f826585ac531552b096a15d0912ee2ccf059d5aa18263ba5e6f065e0ccd5cfe",
+      "adapter": {
+        "vendor": "google",
+        "architecture": "swiftshader",
+        "device": "0xc0de",
+        "description": "SwiftShader Device (Subzero)",
+        "isFallbackAdapter": true
+      },
+      "browser": "153.0.8010.12",
+      "imageCasesPassed": 12,
+      "boundsTransitionsPassed": 20,
+      "recoveryCasesPassed": 4,
+      "replacementsPassed": 24,
+      "maximumPixelError": 0,
+      "replacementResourceCountsStableAfterWarmup": true,
+      "zeroTrackedGpuResourcesAndListenersAfterDisposal": true
+    }
+  ],
+  "inspection": "inspect-ir.json",
+  "packageBudgets": "budgets.json",
+  "exampleFolderGrowthBytesAgainstVertexIncrement": 5253,
+  "budgetLimitsChanged": false,
+  "checksPassed": [
+    "TypeScript project build",
+    "workspace lint; runtime lint repeated after the final numerical test",
+    "compiler/CLI Clippy --all-targets --locked -j 2 -- -D warnings",
+    "cargo fmt --check",
+    "git diff --check",
+    "coverage generation: 404 features, 218 positive fixtures, 247 diagnostics",
+    "release docs: 261 context features, 247 diagnostics, ABI 1/language 0.1 comparisons",
+    "prebuilt runtime consistency against sources and dist",
+    "Fresh CLI recompilation reproduces every output hash retained in the accepted hardware/software records"
+  ],
+  "context": {
+    "emptyBytes": 28958,
+    "defaultLimitBytes": 30000,
+    "minimumProjectReserveBytes": 1000,
+    "truncated": false
+  },
+  "resourcePolicy": {
+    "cargoJobs": 2,
+    "testThreads": 2,
+    "vitestWorkers": 1,
+    "coverageCompilerProbes": 1,
+    "imageWidth": 97,
+    "imageHeight": 97,
+    "sustainedPerformanceRuns": false,
+    "animationOptimization": false
+  },
+  "remaining": [
+    "Combined skinned/deformed production-character and recovery correctness",
+    "Wider physical-device evidence",
+    "World-space diagnostic bounds overlays",
+    "Mtek-authored compute resources, dispatch/workgroups, synchronization, lifetime, examples and validation",
+    "Remaining full scorecard work, including deferred animation optimization and sustained CPU/GPU performance validation"
+  ],
+  "retainedFailures": [
+    {
+      "record": "attempt-1/hardware.json",
+      "reason": "Verifier omitted a browser-evaluation argument; corrected in the verifier, without a runtime change."
+    }
+  ],
+  "limitations": [
+    "Authored spheres are an enclosure promise; the compiler does not prove arbitrary shader geometry lies inside.",
+    "Positive bounds cover final local vertices after skinning and vertex deformation, including all active poses and displacement.",
+    "Replacement resets bounds through new initialization/bindings; imperative bounds are not carried to a potentially different shader.",
+    "One physical Radeon RX 7900 XTX desktop; SwiftShader is on the same host.",
+    "Three short replacement cycles per configuration include one cache warm-up; no long-session unloading claim."
+  ]
+}

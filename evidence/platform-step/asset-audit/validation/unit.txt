@@ -1,0 +1,13 @@
+
+> @mtek/asset-audit@0.1.0-dev test:unit
+> vitest run --maxWorkers=1
+
+
+ RUN  v5.0.3 <workspace>/tools/asset-audit
+
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  03:15:10
+   Duration  344ms (tests 45%, import 30%, transform 23%, worker 2%)
+

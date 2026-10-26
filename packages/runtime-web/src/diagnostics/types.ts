@@ -97,6 +97,7 @@ export const RUNTIME_DIAGNOSTIC_CATALOGUE = {
   W8070: "scene restarted on reload",
   E8080: "execution budget exceeded",
   E8090: "invalid scale value",
+  E8091: "invalid authored bounds",
   E8100: "non-opaque color value",
   E8101: "command not valid for the target's body kind",
   E8102: "physics module failed to load",

@@ -1,0 +1,415 @@
+const MODEL = asset.glb("../models/caster.glb");
+
+scene Demo {
+    clear_color: #000000;
+    ambient_intensity: 0.3;
+
+    state count: i32 = 50;
+
+    camera Main {
+        position: vec3(0.0, 20.0, 0.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 20.0; near: 0.1; far: 40.0 };
+        exposure: -0.2630344;
+    }
+
+    entity Actor00 {
+        visible: bind(count > 0);
+        position: vec3(-7.2, 0.0, -3.2);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor01 {
+        visible: bind(count > 1);
+        position: vec3(-5.6, 0.0, -3.2);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor02 {
+        visible: bind(count > 2);
+        position: vec3(-4.0, 0.0, -3.2);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor03 {
+        visible: bind(count > 3);
+        position: vec3(-2.4, 0.0, -3.2);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor04 {
+        visible: bind(count > 4);
+        position: vec3(-0.8, 0.0, -3.2);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor05 {
+        visible: bind(count > 5);
+        position: vec3(0.8, 0.0, -3.2);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor06 {
+        visible: bind(count > 6);
+        position: vec3(2.4, 0.0, -3.2);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor07 {
+        visible: bind(count > 7);
+        position: vec3(4.0, 0.0, -3.2);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor08 {
+        visible: bind(count > 8);
+        position: vec3(5.6, 0.0, -3.2);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor09 {
+        visible: bind(count > 9);
+        position: vec3(7.2, 0.0, -3.2);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor10 {
+        visible: bind(count > 10);
+        position: vec3(-7.2, 0.0, -1.6);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor11 {
+        visible: bind(count > 11);
+        position: vec3(-5.6, 0.0, -1.6);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor12 {
+        visible: bind(count > 12);
+        position: vec3(-4.0, 0.0, -1.6);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor13 {
+        visible: bind(count > 13);
+        position: vec3(-2.4, 0.0, -1.6);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor14 {
+        visible: bind(count > 14);
+        position: vec3(-0.8, 0.0, -1.6);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor15 {
+        visible: bind(count > 15);
+        position: vec3(0.8, 0.0, -1.6);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor16 {
+        visible: bind(count > 16);
+        position: vec3(2.4, 0.0, -1.6);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor17 {
+        visible: bind(count > 17);
+        position: vec3(4.0, 0.0, -1.6);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor18 {
+        visible: bind(count > 18);
+        position: vec3(5.6, 0.0, -1.6);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor19 {
+        visible: bind(count > 19);
+        position: vec3(7.2, 0.0, -1.6);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor20 {
+        visible: bind(count > 20);
+        position: vec3(-7.2, 0.0, 0.0);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor21 {
+        visible: bind(count > 21);
+        position: vec3(-5.6, 0.0, 0.0);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor22 {
+        visible: bind(count > 22);
+        position: vec3(-4.0, 0.0, 0.0);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor23 {
+        visible: bind(count > 23);
+        position: vec3(-2.4, 0.0, 0.0);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor24 {
+        visible: bind(count > 24);
+        position: vec3(-0.8, 0.0, 0.0);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor25 {
+        visible: bind(count > 25);
+        position: vec3(0.8, 0.0, 0.0);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor26 {
+        visible: bind(count > 26);
+        position: vec3(2.4, 0.0, 0.0);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor27 {
+        visible: bind(count > 27);
+        position: vec3(4.0, 0.0, 0.0);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor28 {
+        visible: bind(count > 28);
+        position: vec3(5.6, 0.0, 0.0);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor29 {
+        visible: bind(count > 29);
+        position: vec3(7.2, 0.0, 0.0);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor30 {
+        visible: bind(count > 30);
+        position: vec3(-7.2, 0.0, 1.6);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor31 {
+        visible: bind(count > 31);
+        position: vec3(-5.6, 0.0, 1.6);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor32 {
+        visible: bind(count > 32);
+        position: vec3(-4.0, 0.0, 1.6);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor33 {
+        visible: bind(count > 33);
+        position: vec3(-2.4, 0.0, 1.6);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor34 {
+        visible: bind(count > 34);
+        position: vec3(-0.8, 0.0, 1.6);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor35 {
+        visible: bind(count > 35);
+        position: vec3(0.8, 0.0, 1.6);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor36 {
+        visible: bind(count > 36);
+        position: vec3(2.4, 0.0, 1.6);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor37 {
+        visible: bind(count > 37);
+        position: vec3(4.0, 0.0, 1.6);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor38 {
+        visible: bind(count > 38);
+        position: vec3(5.6, 0.0, 1.6);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor39 {
+        visible: bind(count > 39);
+        position: vec3(7.2, 0.0, 1.6);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor40 {
+        visible: bind(count > 40);
+        position: vec3(-7.2, 0.0, 3.2);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor41 {
+        visible: bind(count > 41);
+        position: vec3(-5.6, 0.0, 3.2);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor42 {
+        visible: bind(count > 42);
+        position: vec3(-4.0, 0.0, 3.2);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor43 {
+        visible: bind(count > 43);
+        position: vec3(-2.4, 0.0, 3.2);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor44 {
+        visible: bind(count > 44);
+        position: vec3(-0.8, 0.0, 3.2);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor45 {
+        visible: bind(count > 45);
+        position: vec3(0.8, 0.0, 3.2);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor46 {
+        visible: bind(count > 46);
+        position: vec3(2.4, 0.0, 3.2);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor47 {
+        visible: bind(count > 47);
+        position: vec3(4.0, 0.0, 3.2);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor48 {
+        visible: bind(count > 48);
+        position: vec3(5.6, 0.0, 3.2);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+
+    entity Actor49 {
+        visible: bind(count > 49);
+        position: vec3(7.2, 0.0, 3.2);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr { base_color: #5ad8b8; roughness: 0.7 };
+    }
+}

@@ -9,9 +9,27 @@ export material Pbr {
     param roughness: f32 = 0.5;
     param base_color_texture: texture = texture.white();
     param base_color_sampler: sampler = sampler.linear_repeat();
+    param metallic_roughness_texture: texture = texture.white();
+    param metallic_roughness_sampler: sampler = sampler.linear_repeat();
+    param normal_texture: texture = texture.white();
+    param normal_sampler: sampler = sampler.linear_repeat();
+    param occlusion_texture: texture = texture.white();
+    param occlusion_sampler: sampler = sampler.linear_repeat();
+    param emissive_texture: texture = texture.white();
+    param emissive_sampler: sampler = sampler.linear_repeat();
+    // Zero disables normal mapping for the neutral white fallback. GLB imports set
+    // this to the file's normalTexture.scale (default 1) when a normal map exists.
+    param normal_scale: f32 = 0.0;
+    param occlusion_strength: f32 = 1.0;
+    param emissive: color = #000000;
     fragment(surface: SurfaceInput) -> color {
-        let texel = sample(base_color_texture, base_color_sampler, surface.uv);
+        let texel = sample_mip(base_color_texture, base_color_sampler, surface.uv);
         let albedo = color.linear(base_color.rgb * texel.xyz, 1.0);
-        return lighting.pbr(surface, albedo, metallic, roughness);
+        let mr = sample_mip(metallic_roughness_texture, metallic_roughness_sampler, surface.uv);
+        let normal = sample_mip(normal_texture, normal_sampler, surface.uv).xyz;
+        let ao = sample_mip(occlusion_texture, occlusion_sampler, surface.uv).x;
+        let emissive_texel = sample_mip(emissive_texture, emissive_sampler, surface.uv).xyz;
+        let emission = emissive.rgb * emissive_texel;
+        return lighting.pbr_mapped(surface, albedo, metallic * mr.z, roughness * mr.y, normal, normal_scale, 1.0 + clamp(occlusion_strength, 0.0, 1.0) * (ao - 1.0), emission);
     }
 }

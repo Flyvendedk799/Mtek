@@ -1,0 +1,51 @@
+{
+  "format": "mtek-size-report/1",
+  "examples": {
+    "arcade-audio": {
+      "folderBytes": 812943,
+      "zipBytes": 814745
+    },
+    "hud-score": {
+      "folderBytes": 777453,
+      "zipBytes": 778579
+    },
+    "lane-runner": {
+      "folderBytes": 777247,
+      "zipBytes": 779055
+    },
+    "material-configurator": {
+      "folderBytes": 845138,
+      "zipBytes": 846680
+    },
+    "modular-scene": {
+      "folderBytes": 743063,
+      "zipBytes": 744189
+    },
+    "physics-playground": {
+      "folderBytes": 5205095,
+      "zipBytes": 5206637
+    },
+    "product-configurator": {
+      "folderBytes": 821589,
+      "zipBytes": 822715
+    },
+    "pulse-cube": {
+      "folderBytes": 728982,
+      "zipBytes": 730108
+    },
+    "small-game": {
+      "folderBytes": 747556,
+      "zipBytes": 749014
+    },
+    "sprite-pop": {
+      "folderBytes": 746011,
+      "zipBytes": 747267
+    },
+    "stage-show": {
+      "folderBytes": 729278,
+      "zipBytes": 730534
+    }
+  },
+  "problems": [],
+  "policy": "Serial existing CLI processes; size limits unchanged; scratch outputs retained under target."
+}

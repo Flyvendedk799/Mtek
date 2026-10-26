@@ -1,0 +1,121 @@
+// Original pinned Khronos sample assets; attribution is in the character README.
+const FOX = asset.glb("../models/Fox.glb");
+const MAN = asset.glb("../models/CesiumMan.glb");
+
+struct DeformedVertex { position: vec3; normal: vec3; uv: vec2; mask: f32; }
+material Shape {
+    param offset: vec3;
+    param stretch: vec3 = vec3(1.0);
+    param image: texture;
+    param filter: sampler = sampler.linear_repeat();
+    vertex(input: VertexInput) -> DeformedVertex {
+        return DeformedVertex {
+            position: input.position * stretch + offset;
+            normal: normalize(input.normal / stretch);
+            uv: vec2(input.uv.y, 1.0 - input.uv.x);
+            mask: input.uv.x;
+        };
+    }
+    fragment(surface: SurfaceInput, data: DeformedVertex) -> color {
+        let rgb = sample(image, filter, surface.uv).xyz * (0.5 + 0.5 * data.mask);
+        return lighting.pbr(surface, color.linear(rgb, 1.0), 0.0, 0.7);
+    }
+}
+material Reference {
+    param image: texture;
+    param filter: sampler = sampler.linear_repeat();
+    fragment(surface: SurfaceInput) -> color {
+        let rgb = sample(image, filter, vec2(surface.uv.y, 1.0 - surface.uv.x)).xyz * (0.5 + 0.5 * surface.uv.x);
+        return lighting.pbr(surface, color.linear(rgb, 1.0), 0.0, 0.7);
+    }
+}
+// Fox has no authored normals. Keep it textured/unlit rather than inventing data.
+struct UVVertex { position: vec3; uv: vec2; mask: f32; }
+material FoxShape {
+    param offset: vec3;
+    param stretch: vec3 = vec3(1.0);
+    param image: texture;
+    param filter: sampler = sampler.linear_repeat();
+    vertex(input: VertexInput) -> UVVertex {
+        return UVVertex { position: input.position * stretch + offset; uv: vec2(input.uv.y, 1.0 - input.uv.x); mask: input.uv.x };
+    }
+    fragment(surface: SurfaceInput, data: UVVertex) -> color {
+        return color.linear(sample(image, filter, surface.uv).xyz * (0.5 + 0.5 * data.mask), 1.0);
+    }
+}
+material FoxSurface {
+    param image: texture;
+    param filter: sampler = sampler.linear_repeat();
+    fragment(surface: SurfaceInput) -> color {
+        return color.linear(sample(image, filter, vec2(surface.uv.y, 1.0 - surface.uv.x)).xyz * (0.5 + 0.5 * surface.uv.x), 1.0);
+    }
+}
+scene Demo {
+    clear_color: #000000;
+    ambient_intensity: 0.08;
+    state original: bool = false;
+    state character: i32 = 0;
+    state authored: bool = true;
+    state reference: bool = false;
+    state shift_x: f32 = -10.0;
+    state shift_y: f32 = 0.5;
+    state shape: vec3 = vec3(1.0);
+    state bound_radius: f32 = 1.0;
+    camera Main {
+        position: vec3(4.0, 4.0, 6.0);
+        target: vec3(0.0, 1.0, 0.0);
+        projection: Orthographic { height: 7.0; near: 0.1; far: 50.0 };
+        exposure: -0.2630344;
+    }
+    entity Sun {
+        rotation: quat.euler(-0.7, 1.5707963, 0.0);
+        light: DirectionalLight { intensity: 3.0 };
+    }
+    entity Floor {
+        mesh: Plane { size: vec2(20.0) };
+        material: Pbr { base_color: #b0b0b0; roughness: 0.8 };
+    }
+    entity Fox {
+        position: vec3(10.0, 0.0, 0.0);
+        scale: vec3(0.015625);
+        bounds_center: bind(vec3(shift_x * 64.0, shift_y * 64.0, 0.0) + vec3(0.0, 30.0, 0.0) * shape);
+        bounds_radius: bind(200.0 * max(shape.x, max(shape.y, shape.z)) * bound_radius);
+        visible: bind(authored && character == 0);
+        mesh: FOX.mesh("fox1");
+        material: FoxShape { offset: bind(vec3(shift_x * 64.0, shift_y * 64.0, 0.0)); stretch: bind(shape); image: FOX.material_texture("fox_material") };
+    }
+    entity FoxReference {
+        position: bind(vec3(10.0 + shift_x, shift_y, 0.0));
+        scale: bind(shape * 0.015625);
+        visible: bind(reference && character == 0);
+        mesh: FOX.mesh("fox1");
+        material: FoxSurface { image: FOX.material_texture("fox_material") };
+    }
+    entity Man {
+        position: vec3(10.0, 0.0, 0.0);
+        rotation: quat.euler(-1.5707963, 0.0, 0.0);
+        scale: vec3(2.0);
+        bounds_center: bind(vec3(shift_x * 0.5, 0.0, shift_y * 0.5) + vec3(0.0, 0.0, 0.75) * shape);
+        bounds_radius: bind(2.0 * max(shape.x, max(shape.y, shape.z)) * bound_radius);
+        visible: bind(authored && character == 1);
+        mesh: MAN.mesh("Cesium_Man");
+        material: Shape { offset: bind(vec3(shift_x * 0.5, 0.0, shift_y * 0.5)); stretch: bind(shape); image: MAN.material_texture("Cesium_Man-effect") };
+    }
+    entity ManReference {
+        rotation: quat.euler(-1.5707963, 0.0, 0.0);
+        position: bind(vec3(10.0 + shift_x, shift_y, 0.0));
+        scale: bind(shape * 2.0);
+        visible: bind(reference && character == 1);
+        mesh: MAN.mesh("Cesium_Man");
+        material: Reference { image: MAN.material_texture("Cesium_Man-effect") };
+    }
+    entity ManOriginal {
+        rotation: quat.euler(-1.5707963, 0.0, 0.0);
+        position: bind(vec3(10.0 + shift_x, shift_y, 0.0));
+        scale: bind(shape * 2.0);
+        visible: bind(original && character == 1);
+        mesh: MAN.mesh("Cesium_Man");
+        material: MAN.material("Cesium_Man-effect");
+    }
+
+}

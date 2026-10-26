@@ -1,0 +1,24 @@
+// covers: [S: vertex-payload-limit]
+struct Payload { position: vec3;
+    f0: f32;
+    f1: f32;
+    f2: f32;
+    f3: f32;
+    f4: f32;
+    f5: f32;
+    f6: f32;
+    f7: f32;
+    f8: f32;
+    f9: f32;
+    f10: f32;
+    f11: f32;
+    f12: f32;
+    f13: f32;
+    f14: f32;
+    f15: f32;
+}
+material TooMany {
+    vertex(input: VertexInput) -> Payload { return Payload { position: input.position; f0: 0.5; f1: 0.5; f2: 0.5; f3: 0.5; f4: 0.5; f5: 0.5; f6: 0.5; f7: 0.5; f8: 0.5; f9: 0.5; f10: 0.5; f11: 0.5; f12: 0.5; f13: 0.5; f14: 0.5; f15: 0.5; }; }
+    fragment(surface: SurfaceInput, payload: Payload) -> color { return #ffffff; }
+}
+scene Demo { camera Main {} }

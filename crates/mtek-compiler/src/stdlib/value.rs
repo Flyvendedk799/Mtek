@@ -101,10 +101,24 @@ impl BuiltinTexture {
 /// The built-in sampler presets (`sampler.linear_repeat()` and friends).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BuiltinSampler {
+    /// Imported glTF min/mag combinations; source presets retain their established names.
+    Mixed {
+        nearest_mag: bool,
+        clamp: bool,
+        mip: Option<bool>,
+    },
     LinearRepeat,
     LinearClamp,
     NearestRepeat,
     NearestClamp,
+    LinearRepeatLevel0,
+    LinearRepeatMipNearest,
+    LinearClampLevel0,
+    LinearClampMipNearest,
+    NearestRepeatLevel0,
+    NearestRepeatMipLinear,
+    NearestClampLevel0,
+    NearestClampMipLinear,
 }
 
 impl BuiltinSampler {
@@ -112,10 +126,36 @@ impl BuiltinSampler {
     #[must_use]
     pub const fn name(self) -> &'static str {
         match self {
+            BuiltinSampler::Mixed {
+                nearest_mag,
+                clamp,
+                mip,
+            } => match (nearest_mag, clamp, mip) {
+                (false, false, None) => "sampler.mag_linear_min_nearest_repeat_level0",
+                (false, false, Some(false)) => "sampler.mag_linear_min_nearest_repeat_mip_nearest",
+                (false, false, Some(true)) => "sampler.mag_linear_min_nearest_repeat_mip_linear",
+                (false, true, None) => "sampler.mag_linear_min_nearest_clamp_level0",
+                (false, true, Some(false)) => "sampler.mag_linear_min_nearest_clamp_mip_nearest",
+                (false, true, Some(true)) => "sampler.mag_linear_min_nearest_clamp_mip_linear",
+                (true, false, None) => "sampler.mag_nearest_min_linear_repeat_level0",
+                (true, false, Some(false)) => "sampler.mag_nearest_min_linear_repeat_mip_nearest",
+                (true, false, Some(true)) => "sampler.mag_nearest_min_linear_repeat_mip_linear",
+                (true, true, None) => "sampler.mag_nearest_min_linear_clamp_level0",
+                (true, true, Some(false)) => "sampler.mag_nearest_min_linear_clamp_mip_nearest",
+                (true, true, Some(true)) => "sampler.mag_nearest_min_linear_clamp_mip_linear",
+            },
             BuiltinSampler::LinearRepeat => "sampler.linear_repeat",
             BuiltinSampler::LinearClamp => "sampler.linear_clamp",
             BuiltinSampler::NearestRepeat => "sampler.nearest_repeat",
             BuiltinSampler::NearestClamp => "sampler.nearest_clamp",
+            BuiltinSampler::LinearRepeatLevel0 => "sampler.linear_repeat_level0",
+            BuiltinSampler::LinearRepeatMipNearest => "sampler.linear_repeat_mip_nearest",
+            BuiltinSampler::LinearClampLevel0 => "sampler.linear_clamp_level0",
+            BuiltinSampler::LinearClampMipNearest => "sampler.linear_clamp_mip_nearest",
+            BuiltinSampler::NearestRepeatLevel0 => "sampler.nearest_repeat_level0",
+            BuiltinSampler::NearestRepeatMipLinear => "sampler.nearest_repeat_mip_linear",
+            BuiltinSampler::NearestClampLevel0 => "sampler.nearest_clamp_level0",
+            BuiltinSampler::NearestClampMipLinear => "sampler.nearest_clamp_mip_linear",
         }
     }
 }
@@ -179,16 +219,7 @@ impl ConstValue {
             ConstValue::QuatIdentity => "quat.identity()".to_owned(),
             ConstValue::Texture(BuiltinTexture::White) => "texture.white()".to_owned(),
             ConstValue::Texture(BuiltinTexture::Black) => "texture.black()".to_owned(),
-            ConstValue::Sampler(BuiltinSampler::LinearRepeat) => {
-                "sampler.linear_repeat()".to_owned()
-            }
-            ConstValue::Sampler(BuiltinSampler::LinearClamp) => "sampler.linear_clamp()".to_owned(),
-            ConstValue::Sampler(BuiltinSampler::NearestRepeat) => {
-                "sampler.nearest_repeat()".to_owned()
-            }
-            ConstValue::Sampler(BuiltinSampler::NearestClamp) => {
-                "sampler.nearest_clamp()".to_owned()
-            }
+            ConstValue::Sampler(value) => format!("{}()", value.name()),
             ConstValue::EmptyDescriptor(name) => format!("{name} {{}}"),
         }
     }

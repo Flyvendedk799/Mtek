@@ -185,7 +185,7 @@ impl Lowering<'_> {
             .members
             .iter()
             .find_map(|member| match member {
-                ast::MaterialMember::Stage(stage) => Some(stage),
+                ast::MaterialMember::Stage(stage) if stage.name.name == "fragment" => Some(stage),
                 _ => None,
             })
             .ok_or_else(|| format!("material '{name}' has no stage function"))?;
@@ -194,18 +194,51 @@ impl Lowering<'_> {
             name: format!("{name}.fragment"),
             locals: Vec::new(),
             index: BTreeMap::new(),
-            params: positions,
+            params: positions.clone(),
             scene: None,
         };
         for param in &stage.params {
             lowering.declare_node(param.id, &param.name, LocalKind::Param)?;
         }
         let body = lowering.block(&stage.body)?;
+        let vertex = if let Some(vertex_info) = &info.vertex {
+            let vertex = decl
+                .members
+                .iter()
+                .find_map(|member| match member {
+                    ast::MaterialMember::Stage(stage) if stage.name.name == "vertex" => Some(stage),
+                    _ => None,
+                })
+                .ok_or_else(|| format!("material '{name}' has no vertex syntax"))?;
+            let mut lowering = FnLowering {
+                lowering: self,
+                name: format!("{name}.vertex"),
+                locals: Vec::new(),
+                index: BTreeMap::new(),
+                params: positions,
+                scene: None,
+            };
+            for param in &vertex.params {
+                lowering.declare_node(param.id, &param.name, LocalKind::Param)?;
+            }
+            let body = lowering.block(&vertex.body)?;
+            Some(StageItem {
+                symbol: symbol.child("vertex"),
+                surface_inputs: vertex_info.surface_inputs.clone(),
+                result: self.type_name(vertex_info.result),
+                locals: lowering.locals,
+                body,
+                span: vertex.span,
+            })
+        } else {
+            None
+        };
         Ok(MaterialItem {
             name,
             symbol: symbol.clone(),
             params,
             layout,
+            vertex,
             fragment: StageItem {
                 symbol: symbol.child(&stage.name.name),
                 surface_inputs: stage_info.surface_inputs.clone(),
@@ -1514,6 +1547,11 @@ impl Lowering<'_> {
                     if let Some(name) = ctx.cameras.get(object) {
                         BindingTarget::Camera {
                             camera: name.clone(),
+                            field: field.clone(),
+                        }
+                    } else if matches!(field.as_str(), "bounds_center" | "bounds_radius") {
+                        BindingTarget::Bounds {
+                            entity: entity(*object)?,
                             field: field.clone(),
                         }
                     } else if field == "visible" {

@@ -186,7 +186,22 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Gpu,
             false,
             Milestone::M1,
-            "Filtered texel of `t` at `uv`. `texture` and `sampler` parameters may be used only as direct arguments to `sample`.",
+            "Level-zero texel of `t` at `uv`. Texture/sampler params are direct operands of `sample` or `sample_mip` only.",
+            vec![sig(
+                &[
+                    p("t", exact(TypeRef::Texture)),
+                    p("s", exact(TypeRef::Sampler)),
+                    p("uv", exact(TypeRef::Vec2)),
+                ],
+                exact(TypeRef::Vec4),
+            )],
+        ),
+        function(
+            "sample_mip",
+            Domain::Gpu,
+            false,
+            Milestone::M1,
+            "Implicit mip texel; fragment initial straight-line code only. Resource rules as for `sample`.",
             vec![sig(
                 &[
                     p("t", exact(TypeRef::Texture)),

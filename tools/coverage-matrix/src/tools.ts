@@ -92,6 +92,12 @@ export async function mapLimit<T, R>(items: readonly T[], limit: number, fn: (it
 }
 
 /** How many compiler processes to run at once. */
-export function concurrency(): number {
+export function concurrency(env: Readonly<Record<string, string | undefined>> = process.env): number {
+  const configured = env["MTEK_COVERAGE_JOBS"];
+  if (configured !== undefined) {
+    const count = Number(configured);
+    if (!Number.isInteger(count) || count < 1 || count > 8) throw new RangeError("MTEK_COVERAGE_JOBS must be an integer from 1 to 8");
+    return count;
+  }
   return Math.max(2, Math.min(8, cpus().length));
 }

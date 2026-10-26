@@ -1,0 +1,4412 @@
+{
+  "contract": "position-only vertex",
+  "backend": "hardware",
+  "launchArgs": [
+    "--enable-unsafe-webgpu",
+    "--ignore-gpu-blocklist",
+    "--enable-webgpu-developer-features"
+  ],
+  "startedAt": "2026-10-26T04:40:00.760Z",
+  "status": "passed",
+  "browser": "153.0.8010.12",
+  "adapter": {
+    "vendor": "amd",
+    "architecture": "rdna-3",
+    "device": "0x744c",
+    "description": "AMD Radeon RX 7900 XTX",
+    "isFallbackAdapter": false
+  },
+  "cases": [
+    {
+      "shadows": false,
+      "disableInstancing": false,
+      "crowd": false,
+      "x": -10,
+      "y": 1.1,
+      "angle": 0,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9409,
+      "geometryChangedPixels": 169,
+      "shadowChangedPixels": 0,
+      "authored": {
+        "buffersAllocated": 15,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 5,
+        "uploads": 15,
+        "uploadBytes": 3272,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 5,
+        "liveBindGroups": 5,
+        "liveListeners": 9,
+        "frameTimeMs": 2.699999999254942,
+        "cpuUpdateMs": 0.9000000022351742,
+        "renderPrepMs": 1.7999999970197678,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 2,
+        "drawCallsTotal": 2,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 1,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 1,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 16,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 6,
+        "uploads": 16,
+        "uploadBytes": 3400,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 5,
+        "liveBindGroups": 6,
+        "liveListeners": 9,
+        "frameTimeMs": 0.3999999985098839,
+        "cpuUpdateMs": 0.19999999925494194,
+        "renderPrepMs": 0.19999999925494194,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 2,
+        "drawCallsTotal": 4,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 2,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 2,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": false,
+      "disableInstancing": false,
+      "crowd": false,
+      "x": -9.5,
+      "y": 2,
+      "angle": -0.45,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9409,
+      "geometryChangedPixels": 169,
+      "shadowChangedPixels": 0,
+      "authored": {
+        "buffersAllocated": 18,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 6,
+        "uploads": 17,
+        "uploadBytes": 3416,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 5,
+        "liveBindGroups": 6,
+        "liveListeners": 9,
+        "frameTimeMs": 0.30000000074505806,
+        "cpuUpdateMs": 0.19999999925494194,
+        "renderPrepMs": 0.10000000149011612,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 2,
+        "drawCallsTotal": 7,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 4,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 4,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 19,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 6,
+        "uploads": 18,
+        "uploadBytes": 3544,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 5,
+        "liveBindGroups": 6,
+        "liveListeners": 9,
+        "frameTimeMs": 0.19999999925494194,
+        "cpuUpdateMs": 0.09999999776482582,
+        "renderPrepMs": 0.10000000149011612,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 2,
+        "drawCallsTotal": 9,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 5,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 5,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": false,
+      "disableInstancing": false,
+      "crowd": true,
+      "x": -10,
+      "y": 1.1,
+      "angle": 0.65,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9409,
+      "geometryChangedPixels": 325,
+      "shadowChangedPixels": 0,
+      "authored": {
+        "buffersAllocated": 21,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 7,
+        "uploads": 20,
+        "uploadBytes": 3816,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 5,
+        "liveBindGroups": 7,
+        "liveListeners": 9,
+        "frameTimeMs": 0.30000000074505806,
+        "cpuUpdateMs": 0.10000000149011612,
+        "renderPrepMs": 0.19999999925494194,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 2,
+        "drawCallsTotal": 12,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 1,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 7,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 7,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 22,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 7,
+        "uploads": 21,
+        "uploadBytes": 3948,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 5,
+        "liveBindGroups": 7,
+        "liveListeners": 9,
+        "frameTimeMs": 0.10000000149011612,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0.10000000149011612,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 2,
+        "drawCallsTotal": 14,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 2,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 8,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 8,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": false,
+      "disableInstancing": true,
+      "crowd": false,
+      "x": -10,
+      "y": 1.1,
+      "angle": 0,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9409,
+      "geometryChangedPixels": 169,
+      "shadowChangedPixels": 0,
+      "authored": {
+        "buffersAllocated": 14,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 3,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 5,
+        "uploads": 15,
+        "uploadBytes": 3272,
+        "liveBuffers": 13,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 3,
+        "liveBindGroups": 5,
+        "liveListeners": 9,
+        "frameTimeMs": 0.3999999985098839,
+        "cpuUpdateMs": 0.19999999925494194,
+        "renderPrepMs": 0.19999999925494194,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 2,
+        "drawCallsTotal": 2,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 1,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 1,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 15,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 3,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 6,
+        "uploads": 16,
+        "uploadBytes": 3400,
+        "liveBuffers": 13,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 3,
+        "liveBindGroups": 6,
+        "liveListeners": 9,
+        "frameTimeMs": 0.20000000298023224,
+        "cpuUpdateMs": 0.10000000149011612,
+        "renderPrepMs": 0.10000000149011612,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 2,
+        "drawCallsTotal": 4,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 2,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 2,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": false,
+      "disableInstancing": true,
+      "crowd": false,
+      "x": -9.5,
+      "y": 2,
+      "angle": -0.45,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9409,
+      "geometryChangedPixels": 169,
+      "shadowChangedPixels": 0,
+      "authored": {
+        "buffersAllocated": 17,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 3,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 6,
+        "uploads": 17,
+        "uploadBytes": 3416,
+        "liveBuffers": 13,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 3,
+        "liveBindGroups": 6,
+        "liveListeners": 9,
+        "frameTimeMs": 0,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 2,
+        "drawCallsTotal": 7,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 4,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 4,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 18,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 3,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 6,
+        "uploads": 18,
+        "uploadBytes": 3544,
+        "liveBuffers": 13,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 3,
+        "liveBindGroups": 6,
+        "liveListeners": 9,
+        "frameTimeMs": 0.09999999776482582,
+        "cpuUpdateMs": 0.09999999776482582,
+        "renderPrepMs": 0,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 2,
+        "drawCallsTotal": 9,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 5,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 5,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": false,
+      "disableInstancing": true,
+      "crowd": true,
+      "x": -10,
+      "y": 1.1,
+      "angle": 0.65,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9409,
+      "geometryChangedPixels": 325,
+      "shadowChangedPixels": 0,
+      "authored": {
+        "buffersAllocated": 20,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 3,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 7,
+        "uploads": 20,
+        "uploadBytes": 3944,
+        "liveBuffers": 13,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 3,
+        "liveBindGroups": 7,
+        "liveListeners": 9,
+        "frameTimeMs": 0.09999999776482582,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0.09999999776482582,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 3,
+        "drawCallsTotal": 13,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 7,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 7,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 21,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 3,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 7,
+        "uploads": 21,
+        "uploadBytes": 4328,
+        "liveBuffers": 13,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 3,
+        "liveBindGroups": 7,
+        "liveListeners": 9,
+        "frameTimeMs": 0.19999999925494194,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0.19999999925494194,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 3,
+        "drawCallsTotal": 16,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 8,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 8,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": true,
+      "disableInstancing": false,
+      "crowd": false,
+      "x": -10,
+      "y": 1.1,
+      "angle": 0,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9409,
+      "geometryChangedPixels": 468,
+      "shadowChangedPixels": 299,
+      "authored": {
+        "buffersAllocated": 16,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 7,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 7,
+        "uploads": 16,
+        "uploadBytes": 3336,
+        "liveBuffers": 15,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 7,
+        "liveBindGroups": 7,
+        "liveListeners": 9,
+        "frameTimeMs": 0.5,
+        "cpuUpdateMs": 0.10000000149011612,
+        "renderPrepMs": 0.3999999985098839,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 4,
+        "drawCallsTotal": 4,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 1,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 1,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 17,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 7,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 8,
+        "uploads": 17,
+        "uploadBytes": 3464,
+        "liveBuffers": 15,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 7,
+        "liveBindGroups": 8,
+        "liveListeners": 9,
+        "frameTimeMs": 0.19999999925494194,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0.19999999925494194,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 4,
+        "drawCallsTotal": 8,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 2,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 2,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": true,
+      "disableInstancing": false,
+      "crowd": false,
+      "x": -9.5,
+      "y": 2,
+      "angle": -0.45,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9409,
+      "geometryChangedPixels": 507,
+      "shadowChangedPixels": 338,
+      "authored": {
+        "buffersAllocated": 19,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 7,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 8,
+        "uploads": 18,
+        "uploadBytes": 3480,
+        "liveBuffers": 15,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 7,
+        "liveBindGroups": 8,
+        "liveListeners": 9,
+        "frameTimeMs": 0.20000000298023224,
+        "cpuUpdateMs": 0.10000000149011612,
+        "renderPrepMs": 0.10000000149011612,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 4,
+        "drawCallsTotal": 14,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 4,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 4,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 20,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 7,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 8,
+        "uploads": 19,
+        "uploadBytes": 3608,
+        "liveBuffers": 15,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 7,
+        "liveBindGroups": 8,
+        "liveListeners": 9,
+        "frameTimeMs": 0,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 4,
+        "drawCallsTotal": 18,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 5,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 5,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": true,
+      "disableInstancing": false,
+      "crowd": true,
+      "x": -10,
+      "y": 1.1,
+      "angle": 0.65,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9409,
+      "geometryChangedPixels": 780,
+      "shadowChangedPixels": 455,
+      "authored": {
+        "buffersAllocated": 22,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 7,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 9,
+        "uploads": 22,
+        "uploadBytes": 4264,
+        "liveBuffers": 15,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 7,
+        "liveBindGroups": 9,
+        "liveListeners": 9,
+        "frameTimeMs": 0.10000000149011612,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0.10000000149011612,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 5,
+        "drawCallsTotal": 25,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 1,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 7,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 7,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 23,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 7,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 9,
+        "uploads": 24,
+        "uploadBytes": 4780,
+        "liveBuffers": 15,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 7,
+        "liveBindGroups": 9,
+        "liveListeners": 9,
+        "frameTimeMs": 0.09999999776482582,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0.09999999776482582,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 5,
+        "drawCallsTotal": 30,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 2,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 8,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 8,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": true,
+      "disableInstancing": true,
+      "crowd": false,
+      "x": -10,
+      "y": 1.1,
+      "angle": 0,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9409,
+      "geometryChangedPixels": 468,
+      "shadowChangedPixels": 299,
+      "authored": {
+        "buffersAllocated": 15,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 7,
+        "uploads": 16,
+        "uploadBytes": 3336,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 5,
+        "liveBindGroups": 7,
+        "liveListeners": 9,
+        "frameTimeMs": 0.30000000074505806,
+        "cpuUpdateMs": 0.09999999776482582,
+        "renderPrepMs": 0.20000000298023224,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 4,
+        "drawCallsTotal": 4,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 1,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 1,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 16,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 8,
+        "uploads": 17,
+        "uploadBytes": 3464,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 5,
+        "liveBindGroups": 8,
+        "liveListeners": 9,
+        "frameTimeMs": 0.20000000298023224,
+        "cpuUpdateMs": 0.10000000149011612,
+        "renderPrepMs": 0.10000000149011612,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 4,
+        "drawCallsTotal": 8,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 2,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 2,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": true,
+      "disableInstancing": true,
+      "crowd": false,
+      "x": -9.5,
+      "y": 2,
+      "angle": -0.45,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9409,
+      "geometryChangedPixels": 507,
+      "shadowChangedPixels": 338,
+      "authored": {
+        "buffersAllocated": 18,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 8,
+        "uploads": 18,
+        "uploadBytes": 3480,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 5,
+        "liveBindGroups": 8,
+        "liveListeners": 9,
+        "frameTimeMs": 0.09999999776482582,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0.09999999776482582,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 4,
+        "drawCallsTotal": 14,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 4,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 4,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 19,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 8,
+        "uploads": 19,
+        "uploadBytes": 3608,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 5,
+        "liveBindGroups": 8,
+        "liveListeners": 9,
+        "frameTimeMs": 0.09999999776482582,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0.09999999776482582,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 4,
+        "drawCallsTotal": 18,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 5,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 5,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": true,
+      "disableInstancing": true,
+      "crowd": true,
+      "x": -10,
+      "y": 1.1,
+      "angle": 0.65,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9409,
+      "geometryChangedPixels": 780,
+      "shadowChangedPixels": 455,
+      "authored": {
+        "buffersAllocated": 21,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 9,
+        "uploads": 21,
+        "uploadBytes": 4008,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 5,
+        "liveBindGroups": 9,
+        "liveListeners": 9,
+        "frameTimeMs": 0.09999999776482582,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0.09999999776482582,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 6,
+        "drawCallsTotal": 26,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 7,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 7,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 22,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 9,
+        "uploads": 22,
+        "uploadBytes": 4392,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 5,
+        "liveBindGroups": 9,
+        "liveListeners": 9,
+        "frameTimeMs": 0.10000000149011612,
+        "cpuUpdateMs": 0.10000000149011612,
+        "renderPrepMs": 0,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 6,
+        "drawCallsTotal": 32,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 8,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 8,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    }
+  ],
+  "diagnostics": [],
+  "disposal": [
+    {
+      "buffersAllocated": 23,
+      "texturesAllocated": 6,
+      "pipelinesCreated": 5,
+      "shaderModulesCreated": 3,
+      "bindGroupsCreated": 7,
+      "uploads": 21,
+      "uploadBytes": 3948,
+      "liveBuffers": 0,
+      "liveTextures": 0,
+      "liveSamplers": 0,
+      "liveShaderModules": 0,
+      "livePipelines": 0,
+      "liveBindGroups": 0,
+      "liveListeners": 0,
+      "frameTimeMs": 0.19999999925494194,
+      "cpuUpdateMs": 0.10000000149011612,
+      "renderPrepMs": 0.09999999776482582,
+      "gpuTimeAvailable": 0,
+      "drawCalls": 1,
+      "drawCallsTotal": 15,
+      "failedMaterials": 0,
+      "instancedDraws": 0,
+      "instancedDrawsTotal": 2,
+      "culledObjects": 0,
+      "culledObjectsTotal": 0,
+      "rebatchesTotal": 9,
+      "sharedParamBlocks": 1,
+      "ownedParamBlocks": 2,
+      "discardedSteps": 0,
+      "liveEntities": 8,
+      "pendingSpawns": 0,
+      "pendingRemovals": 0,
+      "entitySlots": 8,
+      "entitiesSpawned": 0,
+      "entitiesDestroyed": 0,
+      "physicsBodies": 0,
+      "physicsColliders": 0,
+      "physicsSteps": 0,
+      "physicsFrozenBodies": 0,
+      "framesRendered": 9,
+      "framesSkipped": 0,
+      "deviceLosses": 0,
+      "deviceRecoveries": 0,
+      "recoveryAttempts": 0
+    },
+    {
+      "buffersAllocated": 22,
+      "texturesAllocated": 6,
+      "pipelinesCreated": 3,
+      "shaderModulesCreated": 3,
+      "bindGroupsCreated": 7,
+      "uploads": 21,
+      "uploadBytes": 4328,
+      "liveBuffers": 0,
+      "liveTextures": 0,
+      "liveSamplers": 0,
+      "liveShaderModules": 0,
+      "livePipelines": 0,
+      "liveBindGroups": 0,
+      "liveListeners": 0,
+      "frameTimeMs": 0.10000000149011612,
+      "cpuUpdateMs": 0,
+      "renderPrepMs": 0.10000000149011612,
+      "gpuTimeAvailable": 0,
+      "drawCalls": 1,
+      "drawCallsTotal": 17,
+      "failedMaterials": 0,
+      "instancedDraws": 0,
+      "instancedDrawsTotal": 0,
+      "culledObjects": 0,
+      "culledObjectsTotal": 0,
+      "rebatchesTotal": 9,
+      "sharedParamBlocks": 1,
+      "ownedParamBlocks": 2,
+      "discardedSteps": 0,
+      "liveEntities": 8,
+      "pendingSpawns": 0,
+      "pendingRemovals": 0,
+      "entitySlots": 8,
+      "entitiesSpawned": 0,
+      "entitiesDestroyed": 0,
+      "physicsBodies": 0,
+      "physicsColliders": 0,
+      "physicsSteps": 0,
+      "physicsFrozenBodies": 0,
+      "framesRendered": 9,
+      "framesSkipped": 0,
+      "deviceLosses": 0,
+      "deviceRecoveries": 0,
+      "recoveryAttempts": 0
+    },
+    {
+      "buffersAllocated": 24,
+      "texturesAllocated": 6,
+      "pipelinesCreated": 7,
+      "shaderModulesCreated": 4,
+      "bindGroupsCreated": 9,
+      "uploads": 24,
+      "uploadBytes": 4780,
+      "liveBuffers": 0,
+      "liveTextures": 0,
+      "liveSamplers": 0,
+      "liveShaderModules": 0,
+      "livePipelines": 0,
+      "liveBindGroups": 0,
+      "liveListeners": 0,
+      "frameTimeMs": 0.10000000149011612,
+      "cpuUpdateMs": 0,
+      "renderPrepMs": 0.10000000149011612,
+      "gpuTimeAvailable": 0,
+      "drawCalls": 2,
+      "drawCallsTotal": 32,
+      "failedMaterials": 0,
+      "instancedDraws": 0,
+      "instancedDrawsTotal": 2,
+      "culledObjects": 0,
+      "culledObjectsTotal": 0,
+      "rebatchesTotal": 9,
+      "sharedParamBlocks": 1,
+      "ownedParamBlocks": 2,
+      "discardedSteps": 0,
+      "liveEntities": 8,
+      "pendingSpawns": 0,
+      "pendingRemovals": 0,
+      "entitySlots": 8,
+      "entitiesSpawned": 0,
+      "entitiesDestroyed": 0,
+      "physicsBodies": 0,
+      "physicsColliders": 0,
+      "physicsSteps": 0,
+      "physicsFrozenBodies": 0,
+      "framesRendered": 9,
+      "framesSkipped": 0,
+      "deviceLosses": 0,
+      "deviceRecoveries": 0,
+      "recoveryAttempts": 0
+    },
+    {
+      "buffersAllocated": 23,
+      "texturesAllocated": 6,
+      "pipelinesCreated": 5,
+      "shaderModulesCreated": 4,
+      "bindGroupsCreated": 9,
+      "uploads": 22,
+      "uploadBytes": 4392,
+      "liveBuffers": 0,
+      "liveTextures": 0,
+      "liveSamplers": 0,
+      "liveShaderModules": 0,
+      "livePipelines": 0,
+      "liveBindGroups": 0,
+      "liveListeners": 0,
+      "frameTimeMs": 0.10000000149011612,
+      "cpuUpdateMs": 0,
+      "renderPrepMs": 0.10000000149011612,
+      "gpuTimeAvailable": 0,
+      "drawCalls": 2,
+      "drawCallsTotal": 34,
+      "failedMaterials": 0,
+      "instancedDraws": 0,
+      "instancedDrawsTotal": 0,
+      "culledObjects": 0,
+      "culledObjectsTotal": 0,
+      "rebatchesTotal": 9,
+      "sharedParamBlocks": 1,
+      "ownedParamBlocks": 2,
+      "discardedSteps": 0,
+      "liveEntities": 8,
+      "pendingSpawns": 0,
+      "pendingRemovals": 0,
+      "entitySlots": 8,
+      "entitiesSpawned": 0,
+      "entitiesDestroyed": 0,
+      "physicsBodies": 0,
+      "physicsColliders": 0,
+      "physicsSteps": 0,
+      "physicsFrozenBodies": 0,
+      "framesRendered": 9,
+      "framesSkipped": 0,
+      "deviceLosses": 0,
+      "deviceRecoveries": 0,
+      "recoveryAttempts": 0
+    }
+  ],
+  "recovery": [],
+  "replacements": [],
+  "errors": [],
+  "manifestSha256": "72a60f7d114c17b88fa7cf283a89a869f0cb0a40d008d1de3b2ae14b9602a271",
+  "manifest": {
+    "manifestSchema": 1,
+    "runtimeAbi": 1,
+    "languageVersion": "0.1",
+    "compilerVersion": "0.1.0-dev",
+    "buildId": "f9e004e86361f1524bff9a353329677522659a314fdb4fe9959488b49d5fc12f",
+    "targetProfile": "webgpu-core-2026",
+    "requiredCapabilities": {
+      "features": [],
+      "limits": {},
+      "wgslLanguageFeatures": []
+    },
+    "subsystems": {
+      "physics": false
+    },
+    "runtimeConfig": {
+      "fixedStep": 0.016666668,
+      "maxCatchUpSteps": 4,
+      "maxFrameDelta": 0.1,
+      "maxEntities": 16384,
+      "pauseWhenHidden": true
+    },
+    "entryScene": "Demo",
+    "sources": [
+      {
+        "id": 0,
+        "path": "src/main.mtek",
+        "sha256": "ee5d3d20089bd6c993ae38bb1146787a1bc13b1f77ddb06125e3df11f78675ea"
+      },
+      {
+        "id": 1,
+        "path": "std/materials.mtek",
+        "sha256": "563ebc87a40d50380b3fc94278f57d0b3140329cf1bdd5ff1567f1db53504cc0"
+      }
+    ],
+    "spans": [
+      {
+        "file": 0,
+        "start": 875,
+        "end": 2845,
+        "startLine": 25,
+        "startColumn": 1,
+        "endLine": 87,
+        "endColumn": 2
+      },
+      {
+        "file": 0,
+        "start": 947,
+        "end": 974,
+        "startLine": 28,
+        "startColumn": 5,
+        "endLine": 28,
+        "endColumn": 32
+      },
+      {
+        "file": 0,
+        "start": 979,
+        "end": 1004,
+        "startLine": 29,
+        "startColumn": 5,
+        "endLine": 29,
+        "endColumn": 30
+      },
+      {
+        "file": 0,
+        "start": 1009,
+        "end": 1037,
+        "startLine": 30,
+        "startColumn": 5,
+        "endLine": 30,
+        "endColumn": 33
+      },
+      {
+        "file": 0,
+        "start": 1042,
+        "end": 1072,
+        "startLine": 31,
+        "startColumn": 5,
+        "endLine": 31,
+        "endColumn": 35
+      },
+      {
+        "file": 0,
+        "start": 1077,
+        "end": 1103,
+        "startLine": 32,
+        "startColumn": 5,
+        "endLine": 32,
+        "endColumn": 31
+      },
+      {
+        "file": 0,
+        "start": 1109,
+        "end": 1306,
+        "startLine": 34,
+        "startColumn": 5,
+        "endLine": 39,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 1311,
+        "end": 1433,
+        "startLine": 40,
+        "startColumn": 5,
+        "endLine": 43,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 1438,
+        "end": 1569,
+        "startLine": 44,
+        "startColumn": 5,
+        "endLine": 47,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 1574,
+        "end": 1790,
+        "startLine": 48,
+        "startColumn": 5,
+        "endLine": 53,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 1795,
+        "end": 2041,
+        "startLine": 54,
+        "startColumn": 5,
+        "endLine": 60,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 2046,
+        "end": 2218,
+        "startLine": 61,
+        "startColumn": 5,
+        "endLine": 66,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 2223,
+        "end": 2395,
+        "startLine": 67,
+        "startColumn": 5,
+        "endLine": 72,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 2400,
+        "end": 2619,
+        "startLine": 73,
+        "startColumn": 5,
+        "endLine": 79,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 2624,
+        "end": 2843,
+        "startLine": 80,
+        "startColumn": 5,
+        "endLine": 86,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 745,
+        "end": 873,
+        "startLine": 19,
+        "startColumn": 1,
+        "endLine": 23,
+        "endColumn": 2
+      },
+      {
+        "file": 0,
+        "start": 177,
+        "end": 743,
+        "startLine": 3,
+        "startColumn": 1,
+        "endLine": 17,
+        "endColumn": 2
+      },
+      {
+        "file": 0,
+        "start": 200,
+        "end": 243,
+        "startLine": 4,
+        "startColumn": 5,
+        "endLine": 4,
+        "endColumn": 48
+      },
+      {
+        "file": 0,
+        "start": 248,
+        "end": 288,
+        "startLine": 5,
+        "startColumn": 5,
+        "endLine": 5,
+        "endColumn": 45
+      },
+      {
+        "file": 0,
+        "start": 293,
+        "end": 349,
+        "startLine": 6,
+        "startColumn": 5,
+        "endLine": 6,
+        "endColumn": 61
+      },
+      {
+        "file": 1,
+        "start": 379,
+        "end": 2177,
+        "startLine": 10,
+        "startColumn": 8,
+        "endLine": 39,
+        "endColumn": 2
+      },
+      {
+        "file": 1,
+        "start": 398,
+        "end": 432,
+        "startLine": 11,
+        "startColumn": 5,
+        "endLine": 11,
+        "endColumn": 39
+      },
+      {
+        "file": 1,
+        "start": 437,
+        "end": 463,
+        "startLine": 12,
+        "startColumn": 5,
+        "endLine": 12,
+        "endColumn": 31
+      },
+      {
+        "file": 1,
+        "start": 468,
+        "end": 495,
+        "startLine": 13,
+        "startColumn": 5,
+        "endLine": 13,
+        "endColumn": 32
+      },
+      {
+        "file": 1,
+        "start": 500,
+        "end": 552,
+        "startLine": 14,
+        "startColumn": 5,
+        "endLine": 14,
+        "endColumn": 57
+      },
+      {
+        "file": 1,
+        "start": 557,
+        "end": 617,
+        "startLine": 15,
+        "startColumn": 5,
+        "endLine": 15,
+        "endColumn": 65
+      },
+      {
+        "file": 1,
+        "start": 622,
+        "end": 682,
+        "startLine": 16,
+        "startColumn": 5,
+        "endLine": 16,
+        "endColumn": 65
+      },
+      {
+        "file": 1,
+        "start": 687,
+        "end": 755,
+        "startLine": 17,
+        "startColumn": 5,
+        "endLine": 17,
+        "endColumn": 73
+      },
+      {
+        "file": 1,
+        "start": 760,
+        "end": 808,
+        "startLine": 18,
+        "startColumn": 5,
+        "endLine": 18,
+        "endColumn": 53
+      },
+      {
+        "file": 1,
+        "start": 813,
+        "end": 869,
+        "startLine": 19,
+        "startColumn": 5,
+        "endLine": 19,
+        "endColumn": 61
+      },
+      {
+        "file": 1,
+        "start": 874,
+        "end": 925,
+        "startLine": 20,
+        "startColumn": 5,
+        "endLine": 20,
+        "endColumn": 56
+      },
+      {
+        "file": 1,
+        "start": 930,
+        "end": 989,
+        "startLine": 21,
+        "startColumn": 5,
+        "endLine": 21,
+        "endColumn": 64
+      },
+      {
+        "file": 1,
+        "start": 994,
+        "end": 1044,
+        "startLine": 22,
+        "startColumn": 5,
+        "endLine": 22,
+        "endColumn": 55
+      },
+      {
+        "file": 1,
+        "start": 1049,
+        "end": 1107,
+        "startLine": 23,
+        "startColumn": 5,
+        "endLine": 23,
+        "endColumn": 63
+      },
+      {
+        "file": 1,
+        "start": 1280,
+        "end": 1310,
+        "startLine": 26,
+        "startColumn": 5,
+        "endLine": 26,
+        "endColumn": 35
+      },
+      {
+        "file": 1,
+        "start": 1315,
+        "end": 1351,
+        "startLine": 27,
+        "startColumn": 5,
+        "endLine": 27,
+        "endColumn": 41
+      },
+      {
+        "file": 1,
+        "start": 1356,
+        "end": 1388,
+        "startLine": 28,
+        "startColumn": 5,
+        "endLine": 28,
+        "endColumn": 37
+      },
+      {
+        "file": 0,
+        "start": 770,
+        "end": 871,
+        "startLine": 20,
+        "startColumn": 5,
+        "endLine": 22,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 819,
+        "end": 865,
+        "startLine": 21,
+        "startColumn": 9,
+        "endLine": 21,
+        "endColumn": 55
+      },
+      {
+        "file": 0,
+        "start": 826,
+        "end": 864,
+        "startLine": 21,
+        "startColumn": 16,
+        "endLine": 21,
+        "endColumn": 54
+      },
+      {
+        "file": 0,
+        "start": 839,
+        "end": 844,
+        "startLine": 21,
+        "startColumn": 29,
+        "endLine": 21,
+        "endColumn": 34
+      },
+      {
+        "file": 0,
+        "start": 846,
+        "end": 853,
+        "startLine": 21,
+        "startColumn": 36,
+        "endLine": 21,
+        "endColumn": 43
+      },
+      {
+        "file": 0,
+        "start": 855,
+        "end": 858,
+        "startLine": 21,
+        "startColumn": 45,
+        "endLine": 21,
+        "endColumn": 48
+      },
+      {
+        "file": 0,
+        "start": 860,
+        "end": 863,
+        "startLine": 21,
+        "startColumn": 50,
+        "endLine": 21,
+        "endColumn": 53
+      },
+      {
+        "file": 0,
+        "start": 355,
+        "end": 634,
+        "startLine": 8,
+        "startColumn": 5,
+        "endLine": 12,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 489,
+        "end": 557,
+        "startLine": 10,
+        "startColumn": 9,
+        "endLine": 10,
+        "endColumn": 77
+      },
+      {
+        "file": 0,
+        "start": 508,
+        "end": 556,
+        "startLine": 10,
+        "startColumn": 28,
+        "endLine": 10,
+        "endColumn": 76
+      },
+      {
+        "file": 0,
+        "start": 508,
+        "end": 550,
+        "startLine": 10,
+        "startColumn": 28,
+        "endLine": 10,
+        "endColumn": 70
+      },
+      {
+        "file": 0,
+        "start": 508,
+        "end": 548,
+        "startLine": 10,
+        "startColumn": 28,
+        "endLine": 10,
+        "endColumn": 68
+      },
+      {
+        "file": 0,
+        "start": 515,
+        "end": 521,
+        "startLine": 10,
+        "startColumn": 35,
+        "endLine": 10,
+        "endColumn": 41
+      },
+      {
+        "file": 0,
+        "start": 523,
+        "end": 537,
+        "startLine": 10,
+        "startColumn": 43,
+        "endLine": 10,
+        "endColumn": 57
+      },
+      {
+        "file": 0,
+        "start": 539,
+        "end": 547,
+        "startLine": 10,
+        "startColumn": 59,
+        "endLine": 10,
+        "endColumn": 67
+      },
+      {
+        "file": 0,
+        "start": 539,
+        "end": 544,
+        "startLine": 10,
+        "startColumn": 59,
+        "endLine": 10,
+        "endColumn": 64
+      },
+      {
+        "file": 0,
+        "start": 553,
+        "end": 556,
+        "startLine": 10,
+        "startColumn": 73,
+        "endLine": 10,
+        "endColumn": 76
+      },
+      {
+        "file": 0,
+        "start": 566,
+        "end": 628,
+        "startLine": 11,
+        "startColumn": 9,
+        "endLine": 11,
+        "endColumn": 71
+      },
+      {
+        "file": 0,
+        "start": 573,
+        "end": 627,
+        "startLine": 11,
+        "startColumn": 16,
+        "endLine": 11,
+        "endColumn": 70
+      },
+      {
+        "file": 0,
+        "start": 573,
+        "end": 596,
+        "startLine": 11,
+        "startColumn": 16,
+        "endLine": 11,
+        "endColumn": 39
+      },
+      {
+        "file": 0,
+        "start": 573,
+        "end": 587,
+        "startLine": 11,
+        "startColumn": 16,
+        "endLine": 11,
+        "endColumn": 30
+      },
+      {
+        "file": 0,
+        "start": 573,
+        "end": 578,
+        "startLine": 11,
+        "startColumn": 16,
+        "endLine": 11,
+        "endColumn": 21
+      },
+      {
+        "file": 0,
+        "start": 590,
+        "end": 596,
+        "startLine": 11,
+        "startColumn": 33,
+        "endLine": 11,
+        "endColumn": 39
+      },
+      {
+        "file": 0,
+        "start": 599,
+        "end": 627,
+        "startLine": 11,
+        "startColumn": 42,
+        "endLine": 11,
+        "endColumn": 70
+      },
+      {
+        "file": 0,
+        "start": 604,
+        "end": 607,
+        "startLine": 11,
+        "startColumn": 47,
+        "endLine": 11,
+        "endColumn": 50
+      },
+      {
+        "file": 0,
+        "start": 609,
+        "end": 621,
+        "startLine": 11,
+        "startColumn": 52,
+        "endLine": 11,
+        "endColumn": 64
+      },
+      {
+        "file": 0,
+        "start": 623,
+        "end": 626,
+        "startLine": 11,
+        "startColumn": 66,
+        "endLine": 11,
+        "endColumn": 69
+      },
+      {
+        "file": 0,
+        "start": 640,
+        "end": 741,
+        "startLine": 14,
+        "startColumn": 5,
+        "endLine": 16,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 689,
+        "end": 735,
+        "startLine": 15,
+        "startColumn": 9,
+        "endLine": 15,
+        "endColumn": 55
+      },
+      {
+        "file": 0,
+        "start": 696,
+        "end": 734,
+        "startLine": 15,
+        "startColumn": 16,
+        "endLine": 15,
+        "endColumn": 54
+      },
+      {
+        "file": 0,
+        "start": 709,
+        "end": 714,
+        "startLine": 15,
+        "startColumn": 29,
+        "endLine": 15,
+        "endColumn": 34
+      },
+      {
+        "file": 0,
+        "start": 716,
+        "end": 723,
+        "startLine": 15,
+        "startColumn": 36,
+        "endLine": 15,
+        "endColumn": 43
+      },
+      {
+        "file": 0,
+        "start": 725,
+        "end": 728,
+        "startLine": 15,
+        "startColumn": 45,
+        "endLine": 15,
+        "endColumn": 48
+      },
+      {
+        "file": 0,
+        "start": 730,
+        "end": 733,
+        "startLine": 15,
+        "startColumn": 50,
+        "endLine": 15,
+        "endColumn": 53
+      },
+      {
+        "file": 1,
+        "start": 1393,
+        "end": 2175,
+        "startLine": 29,
+        "startColumn": 5,
+        "endLine": 38,
+        "endColumn": 6
+      },
+      {
+        "file": 1,
+        "start": 1444,
+        "end": 1519,
+        "startLine": 30,
+        "startColumn": 9,
+        "endLine": 30,
+        "endColumn": 84
+      },
+      {
+        "file": 1,
+        "start": 1456,
+        "end": 1518,
+        "startLine": 30,
+        "startColumn": 21,
+        "endLine": 30,
+        "endColumn": 83
+      },
+      {
+        "file": 1,
+        "start": 1467,
+        "end": 1485,
+        "startLine": 30,
+        "startColumn": 32,
+        "endLine": 30,
+        "endColumn": 50
+      },
+      {
+        "file": 1,
+        "start": 1487,
+        "end": 1505,
+        "startLine": 30,
+        "startColumn": 52,
+        "endLine": 30,
+        "endColumn": 70
+      },
+      {
+        "file": 1,
+        "start": 1507,
+        "end": 1517,
+        "startLine": 30,
+        "startColumn": 72,
+        "endLine": 30,
+        "endColumn": 82
+      },
+      {
+        "file": 1,
+        "start": 1507,
+        "end": 1514,
+        "startLine": 30,
+        "startColumn": 72,
+        "endLine": 30,
+        "endColumn": 79
+      },
+      {
+        "file": 1,
+        "start": 1528,
+        "end": 1587,
+        "startLine": 31,
+        "startColumn": 9,
+        "endLine": 31,
+        "endColumn": 68
+      },
+      {
+        "file": 1,
+        "start": 1541,
+        "end": 1586,
+        "startLine": 31,
+        "startColumn": 22,
+        "endLine": 31,
+        "endColumn": 67
+      },
+      {
+        "file": 1,
+        "start": 1554,
+        "end": 1580,
+        "startLine": 31,
+        "startColumn": 35,
+        "endLine": 31,
+        "endColumn": 61
+      },
+      {
+        "file": 1,
+        "start": 1554,
+        "end": 1568,
+        "startLine": 31,
+        "startColumn": 35,
+        "endLine": 31,
+        "endColumn": 49
+      },
+      {
+        "file": 1,
+        "start": 1554,
+        "end": 1564,
+        "startLine": 31,
+        "startColumn": 35,
+        "endLine": 31,
+        "endColumn": 45
+      },
+      {
+        "file": 1,
+        "start": 1571,
+        "end": 1580,
+        "startLine": 31,
+        "startColumn": 52,
+        "endLine": 31,
+        "endColumn": 61
+      },
+      {
+        "file": 1,
+        "start": 1571,
+        "end": 1576,
+        "startLine": 31,
+        "startColumn": 52,
+        "endLine": 31,
+        "endColumn": 57
+      },
+      {
+        "file": 1,
+        "start": 1582,
+        "end": 1585,
+        "startLine": 31,
+        "startColumn": 63,
+        "endLine": 31,
+        "endColumn": 66
+      },
+      {
+        "file": 1,
+        "start": 1596,
+        "end": 1684,
+        "startLine": 32,
+        "startColumn": 9,
+        "endLine": 32,
+        "endColumn": 97
+      },
+      {
+        "file": 1,
+        "start": 1605,
+        "end": 1683,
+        "startLine": 32,
+        "startColumn": 18,
+        "endLine": 32,
+        "endColumn": 96
+      },
+      {
+        "file": 1,
+        "start": 1616,
+        "end": 1642,
+        "startLine": 32,
+        "startColumn": 29,
+        "endLine": 32,
+        "endColumn": 55
+      },
+      {
+        "file": 1,
+        "start": 1644,
+        "end": 1670,
+        "startLine": 32,
+        "startColumn": 57,
+        "endLine": 32,
+        "endColumn": 83
+      },
+      {
+        "file": 1,
+        "start": 1672,
+        "end": 1682,
+        "startLine": 32,
+        "startColumn": 85,
+        "endLine": 32,
+        "endColumn": 95
+      },
+      {
+        "file": 1,
+        "start": 1672,
+        "end": 1679,
+        "startLine": 32,
+        "startColumn": 85,
+        "endLine": 32,
+        "endColumn": 92
+      },
+      {
+        "file": 1,
+        "start": 1693,
+        "end": 1765,
+        "startLine": 33,
+        "startColumn": 9,
+        "endLine": 33,
+        "endColumn": 81
+      },
+      {
+        "file": 1,
+        "start": 1706,
+        "end": 1764,
+        "startLine": 33,
+        "startColumn": 22,
+        "endLine": 33,
+        "endColumn": 80
+      },
+      {
+        "file": 1,
+        "start": 1706,
+        "end": 1760,
+        "startLine": 33,
+        "startColumn": 22,
+        "endLine": 33,
+        "endColumn": 76
+      },
+      {
+        "file": 1,
+        "start": 1717,
+        "end": 1731,
+        "startLine": 33,
+        "startColumn": 33,
+        "endLine": 33,
+        "endColumn": 47
+      },
+      {
+        "file": 1,
+        "start": 1733,
+        "end": 1747,
+        "startLine": 33,
+        "startColumn": 49,
+        "endLine": 33,
+        "endColumn": 63
+      },
+      {
+        "file": 1,
+        "start": 1749,
+        "end": 1759,
+        "startLine": 33,
+        "startColumn": 65,
+        "endLine": 33,
+        "endColumn": 75
+      },
+      {
+        "file": 1,
+        "start": 1749,
+        "end": 1756,
+        "startLine": 33,
+        "startColumn": 65,
+        "endLine": 33,
+        "endColumn": 72
+      },
+      {
+        "file": 1,
+        "start": 1774,
+        "end": 1846,
+        "startLine": 34,
+        "startColumn": 9,
+        "endLine": 34,
+        "endColumn": 81
+      },
+      {
+        "file": 1,
+        "start": 1783,
+        "end": 1845,
+        "startLine": 34,
+        "startColumn": 18,
+        "endLine": 34,
+        "endColumn": 80
+      },
+      {
+        "file": 1,
+        "start": 1783,
+        "end": 1843,
+        "startLine": 34,
+        "startColumn": 18,
+        "endLine": 34,
+        "endColumn": 78
+      },
+      {
+        "file": 1,
+        "start": 1794,
+        "end": 1811,
+        "startLine": 34,
+        "startColumn": 29,
+        "endLine": 34,
+        "endColumn": 46
+      },
+      {
+        "file": 1,
+        "start": 1813,
+        "end": 1830,
+        "startLine": 34,
+        "startColumn": 48,
+        "endLine": 34,
+        "endColumn": 65
+      },
+      {
+        "file": 1,
+        "start": 1832,
+        "end": 1842,
+        "startLine": 34,
+        "startColumn": 67,
+        "endLine": 34,
+        "endColumn": 77
+      },
+      {
+        "file": 1,
+        "start": 1832,
+        "end": 1839,
+        "startLine": 34,
+        "startColumn": 67,
+        "endLine": 34,
+        "endColumn": 74
+      },
+      {
+        "file": 1,
+        "start": 1855,
+        "end": 1939,
+        "startLine": 35,
+        "startColumn": 9,
+        "endLine": 35,
+        "endColumn": 93
+      },
+      {
+        "file": 1,
+        "start": 1876,
+        "end": 1938,
+        "startLine": 35,
+        "startColumn": 30,
+        "endLine": 35,
+        "endColumn": 92
+      },
+      {
+        "file": 1,
+        "start": 1876,
+        "end": 1934,
+        "startLine": 35,
+        "startColumn": 30,
+        "endLine": 35,
+        "endColumn": 88
+      },
+      {
+        "file": 1,
+        "start": 1887,
+        "end": 1903,
+        "startLine": 35,
+        "startColumn": 41,
+        "endLine": 35,
+        "endColumn": 57
+      },
+      {
+        "file": 1,
+        "start": 1905,
+        "end": 1921,
+        "startLine": 35,
+        "startColumn": 59,
+        "endLine": 35,
+        "endColumn": 75
+      },
+      {
+        "file": 1,
+        "start": 1923,
+        "end": 1933,
+        "startLine": 35,
+        "startColumn": 77,
+        "endLine": 35,
+        "endColumn": 87
+      },
+      {
+        "file": 1,
+        "start": 1923,
+        "end": 1930,
+        "startLine": 35,
+        "startColumn": 77,
+        "endLine": 35,
+        "endColumn": 84
+      },
+      {
+        "file": 1,
+        "start": 1948,
+        "end": 1993,
+        "startLine": 36,
+        "startColumn": 9,
+        "endLine": 36,
+        "endColumn": 54
+      },
+      {
+        "file": 1,
+        "start": 1963,
+        "end": 1992,
+        "startLine": 36,
+        "startColumn": 24,
+        "endLine": 36,
+        "endColumn": 53
+      },
+      {
+        "file": 1,
+        "start": 1963,
+        "end": 1975,
+        "startLine": 36,
+        "startColumn": 24,
+        "endLine": 36,
+        "endColumn": 36
+      },
+      {
+        "file": 1,
+        "start": 1963,
+        "end": 1971,
+        "startLine": 36,
+        "startColumn": 24,
+        "endLine": 36,
+        "endColumn": 32
+      },
+      {
+        "file": 1,
+        "start": 1978,
+        "end": 1992,
+        "startLine": 36,
+        "startColumn": 39,
+        "endLine": 36,
+        "endColumn": 53
+      },
+      {
+        "file": 1,
+        "start": 2002,
+        "end": 2169,
+        "startLine": 37,
+        "startColumn": 9,
+        "endLine": 37,
+        "endColumn": 176
+      },
+      {
+        "file": 1,
+        "start": 2009,
+        "end": 2168,
+        "startLine": 37,
+        "startColumn": 16,
+        "endLine": 37,
+        "endColumn": 175
+      },
+      {
+        "file": 1,
+        "start": 2029,
+        "end": 2036,
+        "startLine": 37,
+        "startColumn": 36,
+        "endLine": 37,
+        "endColumn": 43
+      },
+      {
+        "file": 1,
+        "start": 2038,
+        "end": 2044,
+        "startLine": 37,
+        "startColumn": 45,
+        "endLine": 37,
+        "endColumn": 51
+      },
+      {
+        "file": 1,
+        "start": 2046,
+        "end": 2061,
+        "startLine": 37,
+        "startColumn": 53,
+        "endLine": 37,
+        "endColumn": 68
+      },
+      {
+        "file": 1,
+        "start": 2046,
+        "end": 2054,
+        "startLine": 37,
+        "startColumn": 53,
+        "endLine": 37,
+        "endColumn": 61
+      },
+      {
+        "file": 1,
+        "start": 2057,
+        "end": 2061,
+        "startLine": 37,
+        "startColumn": 64,
+        "endLine": 37,
+        "endColumn": 68
+      },
+      {
+        "file": 1,
+        "start": 2057,
+        "end": 2059,
+        "startLine": 37,
+        "startColumn": 64,
+        "endLine": 37,
+        "endColumn": 66
+      },
+      {
+        "file": 1,
+        "start": 2063,
+        "end": 2079,
+        "startLine": 37,
+        "startColumn": 70,
+        "endLine": 37,
+        "endColumn": 86
+      },
+      {
+        "file": 1,
+        "start": 2063,
+        "end": 2072,
+        "startLine": 37,
+        "startColumn": 70,
+        "endLine": 37,
+        "endColumn": 79
+      },
+      {
+        "file": 1,
+        "start": 2075,
+        "end": 2079,
+        "startLine": 37,
+        "startColumn": 82,
+        "endLine": 37,
+        "endColumn": 86
+      },
+      {
+        "file": 1,
+        "start": 2075,
+        "end": 2077,
+        "startLine": 37,
+        "startColumn": 82,
+        "endLine": 37,
+        "endColumn": 84
+      },
+      {
+        "file": 1,
+        "start": 2081,
+        "end": 2087,
+        "startLine": 37,
+        "startColumn": 88,
+        "endLine": 37,
+        "endColumn": 94
+      },
+      {
+        "file": 1,
+        "start": 2089,
+        "end": 2101,
+        "startLine": 37,
+        "startColumn": 96,
+        "endLine": 37,
+        "endColumn": 108
+      },
+      {
+        "file": 1,
+        "start": 2103,
+        "end": 2157,
+        "startLine": 37,
+        "startColumn": 110,
+        "endLine": 37,
+        "endColumn": 164
+      },
+      {
+        "file": 1,
+        "start": 2103,
+        "end": 2106,
+        "startLine": 37,
+        "startColumn": 110,
+        "endLine": 37,
+        "endColumn": 113
+      },
+      {
+        "file": 1,
+        "start": 2109,
+        "end": 2157,
+        "startLine": 37,
+        "startColumn": 116,
+        "endLine": 37,
+        "endColumn": 164
+      },
+      {
+        "file": 1,
+        "start": 2109,
+        "end": 2144,
+        "startLine": 37,
+        "startColumn": 116,
+        "endLine": 37,
+        "endColumn": 151
+      },
+      {
+        "file": 1,
+        "start": 2115,
+        "end": 2133,
+        "startLine": 37,
+        "startColumn": 122,
+        "endLine": 37,
+        "endColumn": 140
+      },
+      {
+        "file": 1,
+        "start": 2135,
+        "end": 2138,
+        "startLine": 37,
+        "startColumn": 142,
+        "endLine": 37,
+        "endColumn": 145
+      },
+      {
+        "file": 1,
+        "start": 2140,
+        "end": 2143,
+        "startLine": 37,
+        "startColumn": 147,
+        "endLine": 37,
+        "endColumn": 150
+      },
+      {
+        "file": 1,
+        "start": 2148,
+        "end": 2156,
+        "startLine": 37,
+        "startColumn": 155,
+        "endLine": 37,
+        "endColumn": 163
+      },
+      {
+        "file": 1,
+        "start": 2148,
+        "end": 2150,
+        "startLine": 37,
+        "startColumn": 155,
+        "endLine": 37,
+        "endColumn": 157
+      },
+      {
+        "file": 1,
+        "start": 2153,
+        "end": 2156,
+        "startLine": 37,
+        "startColumn": 160,
+        "endLine": 37,
+        "endColumn": 163
+      },
+      {
+        "file": 1,
+        "start": 2159,
+        "end": 2167,
+        "startLine": 37,
+        "startColumn": 166,
+        "endLine": 37,
+        "endColumn": 174
+      },
+      {
+        "file": 0,
+        "start": 1647,
+        "end": 1671,
+        "startLine": 50,
+        "startColumn": 18,
+        "endLine": 50,
+        "endColumn": 42
+      },
+      {
+        "file": 0,
+        "start": 1748,
+        "end": 1781,
+        "startLine": 52,
+        "startColumn": 37,
+        "endLine": 52,
+        "endColumn": 70
+      },
+      {
+        "file": 0,
+        "start": 1838,
+        "end": 1859,
+        "startLine": 55,
+        "startColumn": 19,
+        "endLine": 55,
+        "endColumn": 40
+      },
+      {
+        "file": 0,
+        "start": 1879,
+        "end": 1919,
+        "startLine": 56,
+        "startColumn": 19,
+        "endLine": 56,
+        "endColumn": 59
+      },
+      {
+        "file": 0,
+        "start": 1938,
+        "end": 1963,
+        "startLine": 57,
+        "startColumn": 18,
+        "endLine": 57,
+        "endColumn": 43
+      },
+      {
+        "file": 0,
+        "start": 2119,
+        "end": 2142,
+        "startLine": 63,
+        "startColumn": 18,
+        "endLine": 63,
+        "endColumn": 41
+      },
+      {
+        "file": 0,
+        "start": 2296,
+        "end": 2319,
+        "startLine": 69,
+        "startColumn": 18,
+        "endLine": 69,
+        "endColumn": 41
+      },
+      {
+        "file": 0,
+        "start": 2438,
+        "end": 2459,
+        "startLine": 74,
+        "startColumn": 19,
+        "endLine": 74,
+        "endColumn": 40
+      },
+      {
+        "file": 0,
+        "start": 2517,
+        "end": 2541,
+        "startLine": 76,
+        "startColumn": 18,
+        "endLine": 76,
+        "endColumn": 42
+      },
+      {
+        "file": 0,
+        "start": 2662,
+        "end": 2683,
+        "startLine": 81,
+        "startColumn": 19,
+        "endLine": 81,
+        "endColumn": 40
+      },
+      {
+        "file": 0,
+        "start": 2741,
+        "end": 2765,
+        "startLine": 83,
+        "startColumn": 18,
+        "endLine": 83,
+        "endColumn": 42
+      }
+    ],
+    "symbols": [
+      {
+        "id": "src/main.mtek::Demo",
+        "kind": "scene",
+        "span": 0
+      },
+      {
+        "id": "src/main.mtek::Demo.shift_x",
+        "kind": "state",
+        "span": 1
+      },
+      {
+        "id": "src/main.mtek::Demo.shift_y",
+        "kind": "state",
+        "span": 2
+      },
+      {
+        "id": "src/main.mtek::Demo.authored",
+        "kind": "state",
+        "span": 3
+      },
+      {
+        "id": "src/main.mtek::Demo.reference",
+        "kind": "state",
+        "span": 4
+      },
+      {
+        "id": "src/main.mtek::Demo.crowd",
+        "kind": "state",
+        "span": 5
+      },
+      {
+        "id": "src/main.mtek::Demo.Main",
+        "kind": "camera",
+        "span": 6
+      },
+      {
+        "id": "src/main.mtek::Demo.Sun",
+        "kind": "entity",
+        "span": 7
+      },
+      {
+        "id": "src/main.mtek::Demo.Floor",
+        "kind": "entity",
+        "span": 8
+      },
+      {
+        "id": "src/main.mtek::Demo.Moving",
+        "kind": "entity",
+        "span": 9
+      },
+      {
+        "id": "src/main.mtek::Demo.MovingReference",
+        "kind": "entity",
+        "span": 10
+      },
+      {
+        "id": "src/main.mtek::Demo.CrowdA",
+        "kind": "entity",
+        "span": 11
+      },
+      {
+        "id": "src/main.mtek::Demo.CrowdB",
+        "kind": "entity",
+        "span": 12
+      },
+      {
+        "id": "src/main.mtek::Demo.ReferenceA",
+        "kind": "entity",
+        "span": 13
+      },
+      {
+        "id": "src/main.mtek::Demo.ReferenceB",
+        "kind": "entity",
+        "span": 14
+      },
+      {
+        "id": "src/main.mtek::Reference",
+        "kind": "material",
+        "span": 15
+      },
+      {
+        "id": "src/main.mtek::Shifted",
+        "kind": "material",
+        "span": 16
+      },
+      {
+        "id": "src/main.mtek::Shifted.offset",
+        "kind": "param",
+        "span": 17
+      },
+      {
+        "id": "src/main.mtek::Shifted.height",
+        "kind": "param",
+        "span": 18
+      },
+      {
+        "id": "src/main.mtek::Shifted.height_sampler",
+        "kind": "param",
+        "span": 19
+      },
+      {
+        "id": "std/materials.mtek::Pbr",
+        "kind": "material",
+        "span": 20
+      },
+      {
+        "id": "std/materials.mtek::Pbr.base_color",
+        "kind": "param",
+        "span": 21
+      },
+      {
+        "id": "std/materials.mtek::Pbr.metallic",
+        "kind": "param",
+        "span": 22
+      },
+      {
+        "id": "std/materials.mtek::Pbr.roughness",
+        "kind": "param",
+        "span": 23
+      },
+      {
+        "id": "std/materials.mtek::Pbr.base_color_texture",
+        "kind": "param",
+        "span": 24
+      },
+      {
+        "id": "std/materials.mtek::Pbr.base_color_sampler",
+        "kind": "param",
+        "span": 25
+      },
+      {
+        "id": "std/materials.mtek::Pbr.metallic_roughness_texture",
+        "kind": "param",
+        "span": 26
+      },
+      {
+        "id": "std/materials.mtek::Pbr.metallic_roughness_sampler",
+        "kind": "param",
+        "span": 27
+      },
+      {
+        "id": "std/materials.mtek::Pbr.normal_texture",
+        "kind": "param",
+        "span": 28
+      },
+      {
+        "id": "std/materials.mtek::Pbr.normal_sampler",
+        "kind": "param",
+        "span": 29
+      },
+      {
+        "id": "std/materials.mtek::Pbr.occlusion_texture",
+        "kind": "param",
+        "span": 30
+      },
+      {
+        "id": "std/materials.mtek::Pbr.occlusion_sampler",
+        "kind": "param",
+        "span": 31
+      },
+      {
+        "id": "std/materials.mtek::Pbr.emissive_texture",
+        "kind": "param",
+        "span": 32
+      },
+      {
+        "id": "std/materials.mtek::Pbr.emissive_sampler",
+        "kind": "param",
+        "span": 33
+      },
+      {
+        "id": "std/materials.mtek::Pbr.normal_scale",
+        "kind": "param",
+        "span": 34
+      },
+      {
+        "id": "std/materials.mtek::Pbr.occlusion_strength",
+        "kind": "param",
+        "span": 35
+      },
+      {
+        "id": "std/materials.mtek::Pbr.emissive",
+        "kind": "param",
+        "span": 36
+      }
+    ],
+    "layouts": [
+      {
+        "id": "builtin:frame",
+        "wgslStruct": "MtekFrame",
+        "size": 288,
+        "align": 16,
+        "root": {
+          "kind": "struct",
+          "offset": 0,
+          "size": 288,
+          "align": 16,
+          "members": [
+            {
+              "name": "view_proj",
+              "mtekType": "mat4",
+              "node": {
+                "kind": "matrix",
+                "offset": 0,
+                "size": 64,
+                "align": 16,
+                "columns": 4,
+                "rows": 4,
+                "columnStride": 16
+              }
+            },
+            {
+              "name": "camera_position",
+              "mtekType": "vec3",
+              "node": {
+                "kind": "vector",
+                "offset": 64,
+                "size": 12,
+                "align": 16,
+                "scalar": "f32",
+                "components": 3
+              }
+            },
+            {
+              "name": "light_count",
+              "mtekType": "u32",
+              "node": {
+                "kind": "scalar",
+                "offset": 76,
+                "size": 4,
+                "align": 4,
+                "scalar": "u32"
+              }
+            },
+            {
+              "name": "ambient",
+              "mtekType": "vec3",
+              "node": {
+                "kind": "vector",
+                "offset": 80,
+                "size": 12,
+                "align": 16,
+                "scalar": "f32",
+                "components": 3
+              }
+            },
+            {
+              "name": "exposure",
+              "mtekType": "f32",
+              "node": {
+                "kind": "scalar",
+                "offset": 92,
+                "size": 4,
+                "align": 4,
+                "scalar": "f32"
+              }
+            },
+            {
+              "name": "lights",
+              "mtekType": "array<MtekLight, 4>",
+              "node": {
+                "kind": "array",
+                "offset": 96,
+                "size": 192,
+                "align": 16,
+                "length": 4,
+                "stride": 48,
+                "padded": false,
+                "element": {
+                  "kind": "struct",
+                  "name": "MtekLight",
+                  "offset": 0,
+                  "size": 48,
+                  "align": 16,
+                  "members": [
+                    {
+                      "name": "color",
+                      "mtekType": "vec3",
+                      "node": {
+                        "kind": "vector",
+                        "offset": 0,
+                        "size": 12,
+                        "align": 16,
+                        "scalar": "f32",
+                        "components": 3
+                      }
+                    },
+                    {
+                      "name": "kind",
+                      "mtekType": "u32",
+                      "node": {
+                        "kind": "scalar",
+                        "offset": 12,
+                        "size": 4,
+                        "align": 4,
+                        "scalar": "u32"
+                      }
+                    },
+                    {
+                      "name": "position",
+                      "mtekType": "vec3",
+                      "node": {
+                        "kind": "vector",
+                        "offset": 16,
+                        "size": 12,
+                        "align": 16,
+                        "scalar": "f32",
+                        "components": 3
+                      }
+                    },
+                    {
+                      "name": "range",
+                      "mtekType": "f32",
+                      "node": {
+                        "kind": "scalar",
+                        "offset": 28,
+                        "size": 4,
+                        "align": 4,
+                        "scalar": "f32"
+                      }
+                    },
+                    {
+                      "name": "direction",
+                      "mtekType": "vec3",
+                      "node": {
+                        "kind": "vector",
+                        "offset": 32,
+                        "size": 12,
+                        "align": 16,
+                        "scalar": "f32",
+                        "components": 3
+                      }
+                    },
+                    {
+                      "name": "reserved",
+                      "mtekType": "f32",
+                      "node": {
+                        "kind": "scalar",
+                        "offset": 44,
+                        "size": 4,
+                        "align": 4,
+                        "scalar": "f32"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "builtin:object",
+        "wgslStruct": "MtekObject",
+        "size": 128,
+        "align": 16,
+        "root": {
+          "kind": "struct",
+          "offset": 0,
+          "size": 128,
+          "align": 16,
+          "members": [
+            {
+              "name": "model",
+              "mtekType": "mat4",
+              "node": {
+                "kind": "matrix",
+                "offset": 0,
+                "size": 64,
+                "align": 16,
+                "columns": 4,
+                "rows": 4,
+                "columnStride": 16
+              }
+            },
+            {
+              "name": "normal_matrix",
+              "mtekType": "mat4",
+              "node": {
+                "kind": "matrix",
+                "offset": 64,
+                "size": 64,
+                "align": 16,
+                "columns": 4,
+                "rows": 4,
+                "columnStride": 16
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "material:src/main.mtek::Shifted",
+        "wgslStruct": "MtekParams_e2cab98b_Shifted",
+        "size": 16,
+        "align": 16,
+        "root": {
+          "kind": "struct",
+          "offset": 0,
+          "size": 16,
+          "align": 16,
+          "members": [
+            {
+              "name": "offset",
+              "mtekType": "vec3",
+              "node": {
+                "kind": "vector",
+                "offset": 0,
+                "size": 12,
+                "align": 16,
+                "scalar": "f32",
+                "components": 3
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "material:std/materials.mtek::Pbr",
+        "wgslStruct": "MtekParams_2b212d15_Pbr",
+        "size": 48,
+        "align": 16,
+        "root": {
+          "kind": "struct",
+          "offset": 0,
+          "size": 48,
+          "align": 16,
+          "members": [
+            {
+              "name": "base_color",
+              "mtekType": "color",
+              "node": {
+                "kind": "vector",
+                "offset": 0,
+                "size": 16,
+                "align": 16,
+                "scalar": "f32",
+                "components": 4
+              }
+            },
+            {
+              "name": "metallic",
+              "mtekType": "f32",
+              "node": {
+                "kind": "scalar",
+                "offset": 16,
+                "size": 4,
+                "align": 4,
+                "scalar": "f32"
+              }
+            },
+            {
+              "name": "roughness",
+              "mtekType": "f32",
+              "node": {
+                "kind": "scalar",
+                "offset": 20,
+                "size": 4,
+                "align": 4,
+                "scalar": "f32"
+              }
+            },
+            {
+              "name": "normal_scale",
+              "mtekType": "f32",
+              "node": {
+                "kind": "scalar",
+                "offset": 24,
+                "size": 4,
+                "align": 4,
+                "scalar": "f32"
+              }
+            },
+            {
+              "name": "occlusion_strength",
+              "mtekType": "f32",
+              "node": {
+                "kind": "scalar",
+                "offset": 28,
+                "size": 4,
+                "align": 4,
+                "scalar": "f32"
+              }
+            },
+            {
+              "name": "emissive",
+              "mtekType": "color",
+              "node": {
+                "kind": "vector",
+                "offset": 32,
+                "size": 16,
+                "align": 16,
+                "scalar": "f32",
+                "components": 4
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "shaders": [
+      {
+        "lighting": 1,
+        "hash": "650f22f69a75e98e800aa56271b888692c3ad742c321dd9a419258d9d4b6c215",
+        "url": "shaders/650f22f69a75e98e.wgsl",
+        "map": "shaders/650f22f69a75e98e.mtek-map.json",
+        "material": "src/main.mtek::Reference",
+        "vertexEntry": "mtek_vs",
+        "instancedVertexEntry": "mtek_vs_instanced",
+        "fragmentEntry": "mtek_fs",
+        "vertexAttributes": [
+          "position",
+          "normal"
+        ],
+        "surfaceInputs": [
+          "world_position",
+          "world_normal"
+        ]
+      },
+      {
+        "lighting": 1,
+        "vertexDeformation": 1,
+        "hash": "db65f3751db90b4ce76e22bc0e0bd0884e804fbcdc6b30c2786c6cd1a0502c3c",
+        "url": "shaders/db65f3751db90b4c.wgsl",
+        "map": "shaders/db65f3751db90b4c.mtek-map.json",
+        "material": "src/main.mtek::Shifted",
+        "vertexEntry": "mtek_vs",
+        "instancedVertexEntry": "mtek_vs_instanced",
+        "fragmentEntry": "mtek_fs",
+        "vertexAttributes": [
+          "position",
+          "normal",
+          "uv"
+        ],
+        "surfaceInputs": [
+          "world_position",
+          "world_normal"
+        ]
+      },
+      {
+        "lighting": 1,
+        "hash": "cc306e7c4fdef230097df5347603306d53d7cb9c70ffad1a5af1fe7c60414277",
+        "url": "shaders/cc306e7c4fdef230.wgsl",
+        "map": "shaders/cc306e7c4fdef230.mtek-map.json",
+        "material": "std/materials.mtek::Pbr",
+        "vertexEntry": "mtek_vs",
+        "instancedVertexEntry": "mtek_vs_instanced",
+        "fragmentEntry": "mtek_fs",
+        "vertexAttributes": [
+          "position",
+          "normal",
+          "uv"
+        ],
+        "surfaceInputs": [
+          "world_position",
+          "world_normal",
+          "uv"
+        ]
+      }
+    ],
+    "materials": [
+      {
+        "id": "src/main.mtek::Reference",
+        "layout": null,
+        "shader": "650f22f69a75e98e800aa56271b888692c3ad742c321dd9a419258d9d4b6c215",
+        "resources": [],
+        "params": []
+      },
+      {
+        "id": "src/main.mtek::Shifted",
+        "layout": "material:src/main.mtek::Shifted",
+        "shader": "db65f3751db90b4ce76e22bc0e0bd0884e804fbcdc6b30c2786c6cd1a0502c3c",
+        "resources": [
+          {
+            "name": "height",
+            "kind": "texture",
+            "binding": 1
+          },
+          {
+            "name": "height_sampler",
+            "kind": "sampler",
+            "binding": 2
+          }
+        ],
+        "params": [
+          {
+            "name": "offset",
+            "type": "vec3",
+            "span": 17
+          },
+          {
+            "name": "height",
+            "type": "texture",
+            "span": 18
+          },
+          {
+            "name": "height_sampler",
+            "type": "sampler",
+            "span": 19
+          }
+        ]
+      },
+      {
+        "id": "std/materials.mtek::Pbr",
+        "layout": "material:std/materials.mtek::Pbr",
+        "shader": "cc306e7c4fdef230097df5347603306d53d7cb9c70ffad1a5af1fe7c60414277",
+        "resources": [
+          {
+            "name": "base_color_texture",
+            "kind": "texture",
+            "binding": 1
+          },
+          {
+            "name": "base_color_sampler",
+            "kind": "sampler",
+            "binding": 2
+          },
+          {
+            "name": "metallic_roughness_texture",
+            "kind": "texture",
+            "binding": 3
+          },
+          {
+            "name": "metallic_roughness_sampler",
+            "kind": "sampler",
+            "binding": 4
+          },
+          {
+            "name": "normal_texture",
+            "kind": "texture",
+            "binding": 5
+          },
+          {
+            "name": "normal_sampler",
+            "kind": "sampler",
+            "binding": 6
+          },
+          {
+            "name": "occlusion_texture",
+            "kind": "texture",
+            "binding": 7
+          },
+          {
+            "name": "occlusion_sampler",
+            "kind": "sampler",
+            "binding": 8
+          },
+          {
+            "name": "emissive_texture",
+            "kind": "texture",
+            "binding": 9
+          },
+          {
+            "name": "emissive_sampler",
+            "kind": "sampler",
+            "binding": 10
+          }
+        ],
+        "params": [
+          {
+            "name": "base_color",
+            "type": "color",
+            "span": 21
+          },
+          {
+            "name": "metallic",
+            "type": "f32",
+            "span": 22
+          },
+          {
+            "name": "roughness",
+            "type": "f32",
+            "span": 23
+          },
+          {
+            "name": "base_color_texture",
+            "type": "texture",
+            "span": 24
+          },
+          {
+            "name": "base_color_sampler",
+            "type": "sampler",
+            "span": 25
+          },
+          {
+            "name": "metallic_roughness_texture",
+            "type": "texture",
+            "span": 26
+          },
+          {
+            "name": "metallic_roughness_sampler",
+            "type": "sampler",
+            "span": 27
+          },
+          {
+            "name": "normal_texture",
+            "type": "texture",
+            "span": 28
+          },
+          {
+            "name": "normal_sampler",
+            "type": "sampler",
+            "span": 29
+          },
+          {
+            "name": "occlusion_texture",
+            "type": "texture",
+            "span": 30
+          },
+          {
+            "name": "occlusion_sampler",
+            "type": "sampler",
+            "span": 31
+          },
+          {
+            "name": "emissive_texture",
+            "type": "texture",
+            "span": 32
+          },
+          {
+            "name": "emissive_sampler",
+            "type": "sampler",
+            "span": 33
+          },
+          {
+            "name": "normal_scale",
+            "type": "f32",
+            "span": 34
+          },
+          {
+            "name": "occlusion_strength",
+            "type": "f32",
+            "span": 35
+          },
+          {
+            "name": "emissive",
+            "type": "color",
+            "span": 36
+          }
+        ]
+      }
+    ],
+    "meshes": [
+      {
+        "id": "mesh:0",
+        "kind": "plane",
+        "size": [
+          20,
+          20
+        ]
+      },
+      {
+        "id": "mesh:1",
+        "kind": "box",
+        "size": [
+          1,
+          1,
+          1
+        ]
+      }
+    ],
+    "assets": [],
+    "scene": {
+      "name": "Demo",
+      "symbol": "src/main.mtek::Demo",
+      "fields": {
+        "clearColor": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "ambientColor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "ambientIntensity": 0.02,
+        "gravity": [
+          0,
+          -9.81,
+          0
+        ]
+      },
+      "state": [
+        {
+          "name": "shift_x",
+          "type": "f32",
+          "symbol": "src/main.mtek::Demo.shift_x"
+        },
+        {
+          "name": "shift_y",
+          "type": "f32",
+          "symbol": "src/main.mtek::Demo.shift_y"
+        },
+        {
+          "name": "authored",
+          "type": "bool",
+          "symbol": "src/main.mtek::Demo.authored"
+        },
+        {
+          "name": "reference",
+          "type": "bool",
+          "symbol": "src/main.mtek::Demo.reference"
+        },
+        {
+          "name": "crowd",
+          "type": "bool",
+          "symbol": "src/main.mtek::Demo.crowd"
+        }
+      ],
+      "cameras": [
+        {
+          "name": "Main",
+          "symbol": "src/main.mtek::Demo.Main",
+          "projection": "orthographic",
+          "hasTarget": true,
+          "active": true,
+          "exposure": -0.2630344
+        }
+      ],
+      "entities": [
+        {
+          "index": 0,
+          "name": "Sun",
+          "symbol": "src/main.mtek::Demo.Sun",
+          "parent": null,
+          "mesh": null,
+          "material": null,
+          "light": 0,
+          "body": null,
+          "collider": null,
+          "state": [],
+          "update": false,
+          "fixedUpdate": false
+        },
+        {
+          "index": 1,
+          "name": "Floor",
+          "symbol": "src/main.mtek::Demo.Floor",
+          "parent": null,
+          "mesh": "mesh:0",
+          "material": {
+            "id": "std/materials.mtek::Pbr",
+            "instance": 0
+          },
+          "light": null,
+          "body": null,
+          "collider": null,
+          "state": [],
+          "update": false,
+          "fixedUpdate": false
+        },
+        {
+          "index": 2,
+          "name": "Moving",
+          "symbol": "src/main.mtek::Demo.Moving",
+          "parent": null,
+          "mesh": "mesh:1",
+          "material": {
+            "id": "src/main.mtek::Shifted",
+            "instance": 1
+          },
+          "light": null,
+          "body": null,
+          "collider": null,
+          "state": [],
+          "update": false,
+          "fixedUpdate": false
+        },
+        {
+          "index": 3,
+          "name": "MovingReference",
+          "symbol": "src/main.mtek::Demo.MovingReference",
+          "parent": null,
+          "mesh": "mesh:1",
+          "material": {
+            "id": "src/main.mtek::Reference",
+            "instance": 2
+          },
+          "light": null,
+          "body": null,
+          "collider": null,
+          "state": [],
+          "update": false,
+          "fixedUpdate": false
+        },
+        {
+          "index": 4,
+          "name": "CrowdA",
+          "symbol": "src/main.mtek::Demo.CrowdA",
+          "parent": null,
+          "mesh": "mesh:1",
+          "material": {
+            "id": "src/main.mtek::Shifted",
+            "instance": 3
+          },
+          "light": null,
+          "body": null,
+          "collider": null,
+          "state": [],
+          "update": false,
+          "fixedUpdate": false
+        },
+        {
+          "index": 5,
+          "name": "CrowdB",
+          "symbol": "src/main.mtek::Demo.CrowdB",
+          "parent": null,
+          "mesh": "mesh:1",
+          "material": {
+            "id": "src/main.mtek::Shifted",
+            "instance": 4
+          },
+          "light": null,
+          "body": null,
+          "collider": null,
+          "state": [],
+          "update": false,
+          "fixedUpdate": false
+        },
+        {
+          "index": 6,
+          "name": "ReferenceA",
+          "symbol": "src/main.mtek::Demo.ReferenceA",
+          "parent": null,
+          "mesh": "mesh:1",
+          "material": {
+            "id": "src/main.mtek::Reference",
+            "instance": 5
+          },
+          "light": null,
+          "body": null,
+          "collider": null,
+          "state": [],
+          "update": false,
+          "fixedUpdate": false
+        },
+        {
+          "index": 7,
+          "name": "ReferenceB",
+          "symbol": "src/main.mtek::Demo.ReferenceB",
+          "parent": null,
+          "mesh": "mesh:1",
+          "material": {
+            "id": "src/main.mtek::Reference",
+            "instance": 6
+          },
+          "light": null,
+          "body": null,
+          "collider": null,
+          "state": [],
+          "update": false,
+          "fixedUpdate": false
+        }
+      ],
+      "materialInstances": [
+        {
+          "index": 0,
+          "material": "std/materials.mtek::Pbr",
+          "entity": 1,
+          "params": [
+            {
+              "name": "base_color",
+              "class": "initial"
+            },
+            {
+              "name": "metallic",
+              "class": "initial"
+            },
+            {
+              "name": "roughness",
+              "class": "initial"
+            },
+            {
+              "name": "base_color_texture",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "texture.white"
+              }
+            },
+            {
+              "name": "base_color_sampler",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "sampler.linear_repeat"
+              }
+            },
+            {
+              "name": "metallic_roughness_texture",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "texture.white"
+              }
+            },
+            {
+              "name": "metallic_roughness_sampler",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "sampler.linear_repeat"
+              }
+            },
+            {
+              "name": "normal_texture",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "texture.white"
+              }
+            },
+            {
+              "name": "normal_sampler",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "sampler.linear_repeat"
+              }
+            },
+            {
+              "name": "occlusion_texture",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "texture.white"
+              }
+            },
+            {
+              "name": "occlusion_sampler",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "sampler.linear_repeat"
+              }
+            },
+            {
+              "name": "emissive_texture",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "texture.white"
+              }
+            },
+            {
+              "name": "emissive_sampler",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "sampler.linear_repeat"
+              }
+            },
+            {
+              "name": "normal_scale",
+              "class": "initial"
+            },
+            {
+              "name": "occlusion_strength",
+              "class": "initial"
+            },
+            {
+              "name": "emissive",
+              "class": "initial"
+            }
+          ],
+          "shareable": true
+        },
+        {
+          "index": 1,
+          "material": "src/main.mtek::Shifted",
+          "entity": 2,
+          "params": [
+            {
+              "name": "offset",
+              "class": "bound",
+              "binding": 1
+            },
+            {
+              "name": "height",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "texture.white"
+              }
+            },
+            {
+              "name": "height_sampler",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "sampler.linear_repeat"
+              }
+            }
+          ],
+          "shareable": false
+        },
+        {
+          "index": 2,
+          "material": "src/main.mtek::Reference",
+          "entity": 3,
+          "params": [],
+          "shareable": true
+        },
+        {
+          "index": 3,
+          "material": "src/main.mtek::Shifted",
+          "entity": 4,
+          "params": [
+            {
+              "name": "offset",
+              "class": "initial"
+            },
+            {
+              "name": "height",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "texture.white"
+              }
+            },
+            {
+              "name": "height_sampler",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "sampler.linear_repeat"
+              }
+            }
+          ],
+          "shareable": true
+        },
+        {
+          "index": 4,
+          "material": "src/main.mtek::Shifted",
+          "entity": 5,
+          "params": [
+            {
+              "name": "offset",
+              "class": "initial"
+            },
+            {
+              "name": "height",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "texture.white"
+              }
+            },
+            {
+              "name": "height_sampler",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "sampler.linear_repeat"
+              }
+            }
+          ],
+          "shareable": true
+        },
+        {
+          "index": 5,
+          "material": "src/main.mtek::Reference",
+          "entity": 6,
+          "params": [],
+          "shareable": true
+        },
+        {
+          "index": 6,
+          "material": "src/main.mtek::Reference",
+          "entity": 7,
+          "params": [],
+          "shareable": true
+        }
+      ],
+      "bindings": [
+        {
+          "id": 0,
+          "target": {
+            "kind": "visible",
+            "entity": 2
+          },
+          "deps": [
+            {
+              "kind": "state",
+              "name": "authored"
+            },
+            {
+              "kind": "state",
+              "name": "crowd"
+            }
+          ],
+          "order": 0,
+          "span": 143
+        },
+        {
+          "id": 1,
+          "target": {
+            "kind": "param",
+            "instance": 1,
+            "name": "offset"
+          },
+          "deps": [
+            {
+              "kind": "state",
+              "name": "shift_x"
+            },
+            {
+              "kind": "state",
+              "name": "shift_y"
+            }
+          ],
+          "order": 1,
+          "span": 144
+        },
+        {
+          "id": 2,
+          "target": {
+            "kind": "transform",
+            "entity": 3,
+            "field": "rotation"
+          },
+          "deps": [],
+          "order": 2,
+          "span": 145
+        },
+        {
+          "id": 3,
+          "target": {
+            "kind": "transform",
+            "entity": 3,
+            "field": "position"
+          },
+          "deps": [
+            {
+              "kind": "state",
+              "name": "shift_x"
+            },
+            {
+              "kind": "state",
+              "name": "shift_y"
+            }
+          ],
+          "order": 3,
+          "span": 146
+        },
+        {
+          "id": 4,
+          "target": {
+            "kind": "visible",
+            "entity": 3
+          },
+          "deps": [
+            {
+              "kind": "state",
+              "name": "reference"
+            },
+            {
+              "kind": "state",
+              "name": "crowd"
+            }
+          ],
+          "order": 4,
+          "span": 147
+        },
+        {
+          "id": 5,
+          "target": {
+            "kind": "visible",
+            "entity": 4
+          },
+          "deps": [
+            {
+              "kind": "state",
+              "name": "authored"
+            },
+            {
+              "kind": "state",
+              "name": "crowd"
+            }
+          ],
+          "order": 5,
+          "span": 148
+        },
+        {
+          "id": 6,
+          "target": {
+            "kind": "visible",
+            "entity": 5
+          },
+          "deps": [
+            {
+              "kind": "state",
+              "name": "authored"
+            },
+            {
+              "kind": "state",
+              "name": "crowd"
+            }
+          ],
+          "order": 6,
+          "span": 149
+        },
+        {
+          "id": 7,
+          "target": {
+            "kind": "transform",
+            "entity": 6,
+            "field": "rotation"
+          },
+          "deps": [],
+          "order": 7,
+          "span": 150
+        },
+        {
+          "id": 8,
+          "target": {
+            "kind": "visible",
+            "entity": 6
+          },
+          "deps": [
+            {
+              "kind": "state",
+              "name": "reference"
+            },
+            {
+              "kind": "state",
+              "name": "crowd"
+            }
+          ],
+          "order": 8,
+          "span": 151
+        },
+        {
+          "id": 9,
+          "target": {
+            "kind": "transform",
+            "entity": 7,
+            "field": "rotation"
+          },
+          "deps": [],
+          "order": 9,
+          "span": 152
+        },
+        {
+          "id": 10,
+          "target": {
+            "kind": "visible",
+            "entity": 7
+          },
+          "deps": [
+            {
+              "kind": "state",
+              "name": "reference"
+            },
+            {
+              "kind": "state",
+              "name": "crowd"
+            }
+          ],
+          "order": 10,
+          "span": 153
+        }
+      ],
+      "hostInputs": [
+        {
+          "name": "authored",
+          "target": {
+            "kind": "state",
+            "name": "authored"
+          },
+          "type": "bool",
+          "codec": "bool"
+        },
+        {
+          "name": "crowd",
+          "target": {
+            "kind": "state",
+            "name": "crowd"
+          },
+          "type": "bool",
+          "codec": "bool"
+        },
+        {
+          "name": "reference",
+          "target": {
+            "kind": "state",
+            "name": "reference"
+          },
+          "type": "bool",
+          "codec": "bool"
+        },
+        {
+          "name": "shift_x",
+          "target": {
+            "kind": "state",
+            "name": "shift_x"
+          },
+          "type": "f32",
+          "codec": "f32"
+        },
+        {
+          "name": "shift_y",
+          "target": {
+            "kind": "state",
+            "name": "shift_y"
+          },
+          "type": "f32",
+          "codec": "f32"
+        }
+      ],
+      "lights": [
+        {
+          "index": 0,
+          "entity": 0,
+          "kind": "directional",
+          "classes": {
+            "color": "initial",
+            "intensity": "initial"
+          }
+        }
+      ]
+    }
+  },
+  "files": [
+    {
+      "path": ".out/app.d.ts",
+      "bytes": 385,
+      "sha256": "8baee2d3be5405aeba2754c402c9a44f0c5d0129eefb417b72b6ae40487da255"
+    },
+    {
+      "path": ".out/app.js",
+      "bytes": 12272,
+      "sha256": "25ebae59115c53def14a9a3898158bff2ce8a96b8b7cf1b3ce562efe8fb8df0c"
+    },
+    {
+      "path": ".out/app.js.map",
+      "bytes": 816,
+      "sha256": "18e0452c54c118cf1ab437510eea129abf19377155969465a45ba015f62f55c0"
+    },
+    {
+      "path": ".out/index.html",
+      "bytes": 370,
+      "sha256": "8bccc6695de4571c88bc56f66494120d6d257935eb602a56a25b101124bbe792"
+    },
+    {
+      "path": ".out/program.manifest.json",
+      "bytes": 57698,
+      "sha256": "72a60f7d114c17b88fa7cf283a89a869f0cb0a40d008d1de3b2ae14b9602a271"
+    },
+    {
+      "path": ".out/runtime.08d16504a8759146.js",
+      "bytes": 1111776,
+      "sha256": "08d16504a8759146af7a282efd1694d529ed060649744804fcb11ee417f745a9"
+    },
+    {
+      "path": ".out/runtime.d.ts",
+      "bytes": 18257,
+      "sha256": "6ac0ef5819754f18961a2c1158c872b224796baccb15f5e3655413ae0d68ad60"
+    },
+    {
+      "path": ".out/shaders/650f22f69a75e98e.mtek-map.json",
+      "bytes": 23133,
+      "sha256": "98ae91f3fef630ea7677f4ba8a3ae28da477a74538a45f21d7cc8434821e91f0"
+    },
+    {
+      "path": ".out/shaders/650f22f69a75e98e.wgsl",
+      "bytes": 10289,
+      "sha256": "650f22f69a75e98e800aa56271b888692c3ad742c321dd9a419258d9d4b6c215"
+    },
+    {
+      "path": ".out/shaders/cc306e7c4fdef230.mtek-map.json",
+      "bytes": 40567,
+      "sha256": "b6f9a5bc0e9c2e2491fdee19a9872d7a252ce5beffecc021904ecc66927f4c06"
+    },
+    {
+      "path": ".out/shaders/cc306e7c4fdef230.wgsl",
+      "bytes": 13676,
+      "sha256": "cc306e7c4fdef230097df5347603306d53d7cb9c70ffad1a5af1fe7c60414277"
+    },
+    {
+      "path": ".out/shaders/db65f3751db90b4c.mtek-map.json",
+      "bytes": 28386,
+      "sha256": "c5d8fa7d999ea5550b15d39a75eb955f1d2f5f3b4915dcfb04c6fa0510af2293"
+    },
+    {
+      "path": ".out/shaders/db65f3751db90b4c.wgsl",
+      "bytes": 11219,
+      "sha256": "db65f3751db90b4ce76e22bc0e0bd0884e804fbcdc6b30c2786c6cd1a0502c3c"
+    }
+  ],
+  "sources": [
+    {
+      "path": "scene/src/main.mtek",
+      "bytes": 2846,
+      "sha256": "ee5d3d20089bd6c993ae38bb1146787a1bc13b1f77ddb06125e3df11f78675ea"
+    },
+    {
+      "path": "scene/mtek.toml",
+      "bytes": 197,
+      "sha256": "67248574270785ecb55e244d781e88ae0cca3e8cfec04006ee69937330bbca7a"
+    },
+    {
+      "path": "verify.mjs",
+      "bytes": 11881,
+      "sha256": "58c026f5d6cc4e060fdc2bd2bb3db23afed2c5269d0fb2c8b3c5a860f51012c4"
+    },
+    {
+      "path": "serve.mjs",
+      "bytes": 2061,
+      "sha256": "d80aa38f14a77cecac6169e05c107d111ed9af225de7c75ae452aa613a806643"
+    }
+  ],
+  "finishedAt": "2026-10-26T04:40:01.823Z"
+}

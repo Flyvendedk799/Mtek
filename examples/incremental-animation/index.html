@@ -26,6 +26,8 @@
             background: #1b2832ee;
             border: 1px solid #405360;
             border-radius: 12px;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
         }
         h1 {
             font-size: 23px;
@@ -57,6 +59,7 @@
             Mtek evaluates the poses. Three.js draws the scene. The taller
             character uses retargeted clips.
         </p>
+        <label>Walk / run blend <input id="speed" type="range" min="0" max="1" step=".01" value=".3" /></label>
         <label
             >Upper-body action
             <input
@@ -74,9 +77,9 @@
         <label><input id="grip" type="checkbox" /> Two-hand prop grip</label>
         <label><input id="skeleton" type="checkbox" /> Skeleton overlay</label>
         <label
-            ><input id="throttle" type="checkbox" /> Evaluate the tall rig at 15
-            Hz</label
+            ><input id="throttle" type="checkbox" /> Distance-based pose rate (blue)</label
         >
+        <label><input id="pause" type="checkbox" /> Pause animation</label>
         <p><output id="stats">Starting…</output></p>
         <p>Drag to orbit. Scroll to zoom.</p>
     </aside>

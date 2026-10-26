@@ -47,13 +47,15 @@ pub(super) struct AssetState {
 
 /// The `Pbr` instance of a glTF material: every parameter taken from the file.
 fn material_value(
+    file: &str,
     base_color: [f32; 4],
     metallic: f32,
     roughness: f32,
     texture: ConstValue,
     sampler: BuiltinSampler,
+    maps: crate::assets::GlbMaterialMaps,
 ) -> ConstValue {
-    ConstValue::Struct {
+    let mut value = ConstValue::Struct {
         name: "Pbr".to_owned(),
         fields: vec![
             ("base_color".to_owned(), ConstValue::Color(base_color)),
@@ -65,13 +67,48 @@ fn material_value(
                 ConstValue::Sampler(sampler),
             ),
         ],
+    };
+    if let ConstValue::Struct { fields, .. } = &mut value {
+        for (name, texture, space) in [
+            (
+                "metallic_roughness",
+                maps.metallic_roughness,
+                ImageSpace::Linear,
+            ),
+            ("normal", maps.normal, ImageSpace::Linear),
+            ("occlusion", maps.occlusion, ImageSpace::Linear),
+            ("emissive", maps.emissive, ImageSpace::Srgb),
+        ] {
+            let (texture, sampler) = texture_value(file, texture, space);
+            fields.push((format!("{name}_texture"), texture));
+            fields.push((format!("{name}_sampler"), ConstValue::Sampler(sampler)));
+        }
+        fields.push((
+            "normal_scale".to_owned(),
+            ConstValue::F32(maps.normal_scale),
+        ));
+        fields.push((
+            "occlusion_strength".to_owned(),
+            ConstValue::F32(maps.occlusion_strength),
+        ));
+        fields.push((
+            "emissive".to_owned(),
+            ConstValue::Color([
+                maps.emissive_factor[0],
+                maps.emissive_factor[1],
+                maps.emissive_factor[2],
+                1.0,
+            ]),
+        ));
     }
+    value
 }
 
 /// The texture constant of a glTF base colour texture, and the sampler it asks for.
 fn texture_value(
     file: &str,
     texture: Option<crate::assets::GlbTexture>,
+    space: ImageSpace,
 ) -> (ConstValue, BuiltinSampler) {
     match texture {
         Some(texture) => (
@@ -80,7 +117,7 @@ fn texture_value(
                     glb: file.to_owned(),
                     image: texture.image,
                 },
-                space: ImageSpace::Srgb,
+                space,
                 mipmapped: texture.sampler.mipmapped,
             }),
             texture.sampler.builtin(),
@@ -104,15 +141,18 @@ pub(super) fn accessed_value(file: &str, accessed: Accessed) -> ConstValue {
         Accessed::Scalar(v) => ConstValue::F32(v),
         Accessed::Vec3(v) => ConstValue::Vec3(v),
         Accessed::Quat(q) => ConstValue::Quat(q),
-        Accessed::Texture(texture) => texture_value(file, texture).0,
+        Accessed::Texture(texture) => texture_value(file, texture, ImageSpace::Srgb).0,
         Accessed::Material {
             base_color,
             metallic,
             roughness,
             texture,
+            maps,
         } => {
-            let (texture, sampler) = texture_value(file, texture);
-            material_value(base_color, metallic, roughness, texture, sampler)
+            let (texture, sampler) = texture_value(file, texture, ImageSpace::Srgb);
+            material_value(
+                file, base_color, metallic, roughness, texture, sampler, maps,
+            )
         }
     }
 }
@@ -265,7 +305,14 @@ impl Checker<'_> {
         let kind = CallKind::GlbAccessor {
             method: function.name,
         };
-        Some(self.function_call(expr, &full, function, args, kind, None))
+        let ty = self.function_call(expr, &full, function, args, kind, None);
+        // The accessor always creates this concrete built-in material. Retain its
+        // schema so host application code can edit the imported parameters by name.
+        Some(if function.name == "material" && ty != TyId::ERROR {
+            self.out.interner.intern(super::ty::Ty::Schema("Pbr"))
+        } else {
+            ty
+        })
     }
 
     /// Evaluate a recorded accessor call while folding.

@@ -1,0 +1,5 @@
+compute Broken {
+    output result: array<f32, 1>;
+    kernel(input: ComputeInput) -> f32 { return result[0]; }
+}
+scene Demo { camera Main {} }

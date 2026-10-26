@@ -25,9 +25,9 @@ pub mod skin;
 mod transform;
 
 pub use glb::{
-    GlbChannel, GlbChannelPath, GlbClip, GlbFile, GlbImage, GlbInterpolation, GlbMaterial, GlbMesh,
-    GlbNode, GlbPrimitive, GlbTexture, ImageFormat, IndexKind, IndexSource, LocalTransform,
-    SamplerChoice, Strided, read_glb,
+    GlbChannel, GlbChannelPath, GlbClip, GlbFile, GlbImage, GlbInterpolation, GlbMaterial,
+    GlbMaterialMaps, GlbMesh, GlbNode, GlbPrimitive, GlbTexture, ImageFormat, IndexKind,
+    IndexSource, LocalTransform, SamplerChoice, Strided, read_glb,
 };
 pub use host::{
     AssetHandle, AssetHost, AssetKind, AssetLoader, AssetStore, DeclaredFile, FontFile, ImageFile,

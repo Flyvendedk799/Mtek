@@ -15,10 +15,6 @@
       "reason": "Retired by decision 0138: a material colour param with an alpha below 1 makes the draw translucent, so no program can produce it; the catalogue keeps the code so that the number is not reused."
     },
     {
-      "code": "E6003",
-      "reason": "v0.1 has at most 4 inter-stage variables (spec/materials.md section 3.3) and no custom vertex stage (E4901), so the limit of 16 cannot be reached; custom vertex stages are v0.2."
-    },
-    {
       "code": "W0030",
       "reason": "The naming lint is not part of v0.1 (spec/language.md section 3.3 as amended by decision 0102; decision 0070 item 11): neither the compiler nor mtek fmt implements it, the catalogue keeps the code so that the number is not reused, and no program can produce it."
     }
@@ -225,6 +221,11 @@
       "code": "E8090",
       "reason": "A runtime code: an invalid scale written at run time, ignored.",
       "test": "packages/runtime-web/src/scene/world.test.ts"
+    },
+    {
+      "code": "E8091",
+      "reason": "A runtime code: non-finite authored bounds or a negative radius; the write is ignored.",
+      "test": "packages/runtime-web/src/render/renderer.test.ts"
     },
     {
       "code": "E8100",

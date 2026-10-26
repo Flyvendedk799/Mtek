@@ -437,16 +437,34 @@ fn stage_roots(program: &[ProgramUnit<'_>]) -> Vec<RootBody> {
     program
         .iter()
         .flat_map(|unit| {
-            unit.types.materials().filter_map(|(_, material)| {
-                let stage = material.fragment.as_ref()?;
+            let material_roots = unit.types.materials().flat_map(|(_, material)| {
+                [
+                    ("fragment", &material.fragment),
+                    ("vertex", &material.vertex),
+                ]
+                .into_iter()
+                .filter_map(|(kind, stage)| {
+                    let stage = stage.as_ref()?;
+                    Some(RootBody {
+                        module: unit.id,
+                        label: format!("the {kind} stage of material '{}'", material.name),
+                        span: stage.name_span,
+                        facts: stage.facts.clone(),
+                        initialiser: false,
+                    })
+                })
+            });
+            let compute_roots = unit.types.computes().filter_map(|(_, compute)| {
+                let stage = compute.kernel.as_ref()?;
                 Some(RootBody {
                     module: unit.id,
-                    label: format!("the fragment stage of material '{}'", material.name),
+                    label: format!("the kernel of compute program '{}'", compute.name),
                     span: stage.name_span,
                     facts: stage.facts.clone(),
                     initialiser: false,
                 })
-            })
+            });
+            material_roots.chain(compute_roots)
         })
         .collect()
 }

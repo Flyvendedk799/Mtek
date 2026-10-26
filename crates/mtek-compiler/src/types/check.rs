@@ -247,6 +247,8 @@ pub(super) struct Checker<'a> {
     pub(super) imported_fns: BTreeMap<DefId, FnSig>,
     /// The function body being checked.
     pub(super) body: Option<BodyState>,
+    /// Name nodes used directly as an input storage indexing operand.
+    pub(super) storage_index_operands: BTreeSet<NodeId>,
     /// Every material declaration of the module, by its `DefId`.
     pub(super) material_decls: BTreeMap<DefId, &'a MaterialDecl>,
     /// Materials whose params have been checked.
@@ -341,6 +343,7 @@ impl<'a> Checker<'a> {
             struct_literals: BTreeMap::new(),
             imported_fns: BTreeMap::new(),
             body: None,
+            storage_index_operands: BTreeSet::new(),
             material_decls: BTreeMap::new(),
             material_done: BTreeSet::new(),
             imported_materials: BTreeMap::new(),
@@ -443,6 +446,7 @@ impl<'a> Checker<'a> {
                 ItemKind::Material(decl) if construct_implemented(Construct::Material) => {
                     self.material_stages(decl);
                 }
+                ItemKind::Compute(decl) => self.compute_program(decl),
                 // Prefabs were checked above; imports have nothing to check here.
                 _ => {}
             }
@@ -476,6 +480,13 @@ impl<'a> Checker<'a> {
                 }
                 ItemKind::Material(decl) if construct_implemented(Construct::Material) => {
                     self.collect_material(decl);
+                }
+                ItemKind::Compute(decl) => {
+                    for member in &decl.members {
+                        if let crate::syntax::ast::ComputeMember::Stage(stage) = member {
+                            self.collect_block_constants(&stage.body);
+                        }
+                    }
                 }
                 ItemKind::Prefab(decl) if construct_implemented(Construct::Prefab) => {
                     self.collect_prefab_constants(decl);
@@ -1113,6 +1124,7 @@ impl<'a> Checker<'a> {
             | DefKind::Struct
             | DefKind::Enum
             | DefKind::Material
+            | DefKind::Compute
             | DefKind::Prefab => {
                 let (name, noun, span) = (def.name.clone(), def.kind.noun(), def.span);
                 self.report(
@@ -1125,6 +1137,29 @@ impl<'a> Checker<'a> {
                 TyId::ERROR
             }
             DefKind::Import => self.imported_value(expr, id),
+            DefKind::InputBuffer if self.storage_index_operands.contains(&expr.id) => {
+                self.out.locals.get(&id).copied().unwrap_or(TyId::ERROR)
+            }
+            DefKind::InputBuffer | DefKind::OutputBuffer => {
+                let help = if def.kind == DefKind::InputBuffer {
+                    "read an element with `buffer[index]`; input storage cannot be copied, passed, iterated or assigned as a whole buffer"
+                } else {
+                    "return one output element from `kernel`; the output buffer cannot be read or assigned directly"
+                };
+                self.report(
+                    Diagnostic::new(
+                        Code::E4052,
+                        format!(
+                            "The {} '{}' is not an ordinary value.",
+                            def.kind.noun(),
+                            def.name
+                        ),
+                    )
+                    .at(expr.span)
+                    .help(help),
+                );
+                TyId::ERROR
+            }
             // Parameters and locals of functions and stage functions, and the
             // params of materials, have the types their declarations gave
             // them (decisions 0038, 0039); those of constructs gated in this
@@ -1610,6 +1645,18 @@ impl<'a> Checker<'a> {
     /// a column of a `mat4`, with an `i32` or `u32` index. A constant index
     /// out of range is `E3030`, reported when the index is folded.
     fn index(&mut self, base: &Expr, index: &Expr) -> TyId {
+        let mut operand = base;
+        while let ExprKind::Paren(inner) = &operand.kind {
+            operand = inner;
+        }
+        if matches!(operand.kind, ExprKind::Name(_))
+            && self.res.res(operand.id).is_some_and(|res| {
+                matches!(res, Res::Def(def)
+                if self.res.def(def).is_some_and(|decl| decl.kind == DefKind::InputBuffer))
+            })
+        {
+            self.storage_index_operands.insert(operand.id);
+        }
         let base_ty = self.check(base, None);
         let index_ty = self.check(index, None);
         let index_ok = match self.out.interner.get(index_ty) {
@@ -1725,7 +1772,10 @@ impl<'a> Checker<'a> {
         let arith = match binary_class(op) {
             BinaryClass::Arith(arith) => arith,
             BinaryClass::Compare(compare) => return self.comparison(expr, compare, lhs, rhs),
-            BinaryClass::Logic(logic) => return self.logical(expr, logic, lhs, rhs),
+            BinaryClass::Logic(logic) => {
+                self.end_derivative_prefix();
+                return self.logical(expr, logic, lhs, rhs);
+            }
         };
         // `+`, `-` and `%` give their operands' type, so the expected type
         // flows into both; `*` and `/` mix types (`vec3 * f32`), so it does
@@ -1958,8 +2008,11 @@ impl<'a> Checker<'a> {
                         return TyId::ERROR;
                     }
                     self.record_builtin_call(expr.span, name.to_owned(), function);
-                    if name == "sample" {
+                    if matches!(name, "sample" | "sample_mip") {
                         self.note_sample_operands(args);
+                    }
+                    if name == "sample_mip" {
+                        self.check_derivative_call(expr.span, name);
                     }
                     let kind = CallKind::Intrinsic {
                         name: function.name,
@@ -2332,8 +2385,11 @@ impl<'a> Checker<'a> {
                 let name = format!("{namespace}.{member}");
                 self.record_builtin_call(expr.span, name.clone(), function);
                 let ty = self.function_call(expr, &name, function, args, kind, None);
-                if name == "lighting.pbr" {
-                    self.note_lighting_surface(args);
+                if matches!(name.as_str(), "lighting.pbr" | "lighting.pbr_mapped") {
+                    self.note_lighting_surface(args, name == "lighting.pbr_mapped");
+                }
+                if name == "lighting.pbr_mapped" {
+                    self.check_derivative_call(expr.span, &name);
                 }
                 if namespace == "hud" && ty != TyId::ERROR {
                     self.check_hud_args(member, args);

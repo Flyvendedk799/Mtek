@@ -19,6 +19,11 @@
 benchmarks/holdout/** text eol=lf
 benchmarks/results/ai/** linguist-vendored
 
+# Frozen definitions and captured evidence retain their hashed bytes, including
+# upstream license text and Windows command output captured with CRLF.
+benchmarks/runtime/animation/** -text
+evidence/platform-step/** -text
+
 # The prebuilt runtime (decision 0131): generated bundles, no text diffs.
 crates/mtek-cli/prebuilt/*.js -diff linguist-generated
 crates/mtek-cli/prebuilt/*.d.ts linguist-generated

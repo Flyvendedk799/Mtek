@@ -1,0 +1,4 @@
+
+> @mtek/inspector@0.1.0-dev check:example
+> tsc --noEmit -p ../../examples/scene-inspector/tsconfig.json
+

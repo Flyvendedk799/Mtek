@@ -43,6 +43,8 @@ use crate::lowering::shader_ir::{
 use crate::lowering::standard_stage::{SURFACE_INPUT_STRUCT, frame_global};
 use crate::source::Span;
 
+pub(super) mod scene_lighting;
+
 /// A generated helper function. The declaration order is the emission order: every
 /// helper comes after the helpers it calls.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -68,7 +70,11 @@ pub(super) enum Helper {
     /// `lighting.pbr`: the lighting model of `spec/materials.md` section 8 over the frame
     /// block's lights (decision 0057). It reads the module's `mtek_frame` and takes the
     /// `MtekSurfaceInput` struct, so it exists only in a module built by the standard stage.
+    ShadowVisibility,
+    EnvironmentLight,
     LightingPbr,
+    MappedNormal,
+    LightingPbrMapped,
 }
 
 /// The type of `dim` `f32` components: 1 is `f32`, 2 to 4 a vector.
@@ -147,6 +153,10 @@ impl Helper {
             } => format!("mix_{}_f32", dim_name(dim)),
             Helper::Normalize { dim } => format!("normalize_{}", dim_name(dim)),
             Helper::LightingPbr => "lighting_pbr".to_owned(),
+            Helper::ShadowVisibility => "shadow_visibility".to_owned(),
+            Helper::EnvironmentLight => "environment_light".to_owned(),
+            Helper::MappedNormal => "mapped_normal".to_owned(),
+            Helper::LightingPbrMapped => "lighting_pbr_mapped".to_owned(),
         })
     }
 
@@ -155,6 +165,12 @@ impl Helper {
         match self {
             Helper::ColorSrgb => &[Helper::SrgbChannel],
             Helper::QuatEuler => &[Helper::QuatMul, Helper::QuatAxisAngle],
+            Helper::LightingPbr => &[Helper::ShadowVisibility, Helper::EnvironmentLight],
+            Helper::LightingPbrMapped => &[
+                Helper::MappedNormal,
+                Helper::ShadowVisibility,
+                Helper::EnvironmentLight,
+            ],
             _ => &[],
         }
     }
@@ -162,15 +178,18 @@ impl Helper {
     /// The result type.
     pub fn result(self) -> ShaderType {
         match self {
-            Helper::SrgbChannel => ShaderType::F32,
+            Helper::SrgbChannel | Helper::ShadowVisibility => ShaderType::F32,
             Helper::Mix { dim, .. } | Helper::Normalize { dim } => float_type(dim),
-            Helper::QuatRotate => ShaderType::VEC3,
+            Helper::QuatRotate | Helper::MappedNormal | Helper::EnvironmentLight => {
+                ShaderType::VEC3
+            }
             Helper::Mat4Translation | Helper::Mat4Scale | Helper::Mat4Rotation => ShaderType::Mat4,
             Helper::ColorSrgb
             | Helper::QuatMul
             | Helper::QuatAxisAngle
             | Helper::QuatEuler
-            | Helper::LightingPbr => ShaderType::VEC4,
+            | Helper::LightingPbr
+            | Helper::LightingPbrMapped => ShaderType::VEC4,
         }
     }
 
@@ -234,6 +253,26 @@ impl Helper {
                 ),
             ),
             Helper::Normalize { dim } => (vec![("v", float_type(dim))], b.normalize(dim)),
+            Helper::ShadowVisibility => (
+                vec![
+                    ("position", ShaderType::VEC3),
+                    ("normal", ShaderType::VEC3),
+                    ("light_index", ShaderType::U32),
+                ],
+                b.shadow_visibility(),
+            ),
+            Helper::EnvironmentLight => (
+                vec![
+                    ("n", ShaderType::VEC3),
+                    ("v", ShaderType::VEC3),
+                    ("c", ShaderType::VEC3),
+                    ("m", ShaderType::F32),
+                    ("r", ShaderType::F32),
+                    ("f0", ShaderType::VEC3),
+                    ("nv", ShaderType::F32),
+                ],
+                b.environment_light(),
+            ),
             Helper::LightingPbr => (
                 vec![
                     ("surface", ShaderType::named(SURFACE_INPUT_STRUCT)),
@@ -241,7 +280,28 @@ impl Helper {
                     ("metallic", ShaderType::F32),
                     ("roughness", ShaderType::F32),
                 ],
-                b.lighting_pbr(),
+                b.lighting_pbr(false),
+            ),
+            Helper::MappedNormal => (
+                vec![
+                    ("surface", ShaderType::named(SURFACE_INPUT_STRUCT)),
+                    ("texel", ShaderType::VEC3),
+                    ("scale", ShaderType::F32),
+                ],
+                b.mapped_normal(),
+            ),
+            Helper::LightingPbrMapped => (
+                vec![
+                    ("surface", ShaderType::named(SURFACE_INPUT_STRUCT)),
+                    ("base_color", ShaderType::VEC4),
+                    ("metallic", ShaderType::F32),
+                    ("roughness", ShaderType::F32),
+                    ("normal_texel", ShaderType::VEC3),
+                    ("normal_scale", ShaderType::F32),
+                    ("occlusion", ShaderType::F32),
+                    ("emissive", ShaderType::VEC3),
+                ],
+                b.lighting_pbr(true),
             ),
         };
         Function {
@@ -563,7 +623,7 @@ impl Builder {
     ///
     /// `(1 - VH)^5` is `t2 * t2 * t` for `t = 1 - VH`, like the reference, so `pow` (undefined
     /// for a negative base) is never involved.
-    fn lighting_pbr(&self) -> Vec<Statement> {
+    fn lighting_pbr(&self, mapped: bool) -> Vec<Statement> {
         use Component::{X, Y, Z};
         let frame_global = frame_global(self.span);
         let frame = || Expr::global(&frame_global, self.span);
@@ -590,6 +650,32 @@ impl Builder {
         let one_minus = |x: Expr| self.sub(self.f(1.0), x);
         let range = || s("range");
         let unlimited = || self.bin(BinaryOp::Equal, range(), self.f(0.0));
+        let normal = if mapped {
+            Helper::MappedNormal.call(
+                vec![surface(), v3("normal_texel"), s("normal_scale")],
+                self.span,
+            )
+        } else {
+            surface().field("world_normal", ShaderType::VEC3, self.span)
+        };
+        let ambient = self.add(
+            self.mul(
+                self.mul(v3("c"), one_minus(s("m"))),
+                frame().field("ambient", ShaderType::VEC3, self.span),
+            ),
+            Helper::EnvironmentLight.call(
+                vec![v3("n"), v3("v"), v3("c"), s("m"), s("r"), v3("f0"), s("nv")],
+                self.span,
+            ),
+        );
+        let indirect_and_emission = if mapped {
+            self.add(
+                self.mul(ambient, clamp(s("occlusion"), 0.0, 1.0)),
+                v3("emissive"),
+            )
+        } else {
+            ambient
+        };
 
         // The per-light term, evaluated only for a light that faces the surface (NL > 0) and
         // has a half vector (L + V != 0), rule 8.
@@ -686,7 +772,17 @@ impl Builder {
                 value: self.add(
                     v3("rgb"),
                     self.mul(
-                        self.mul(self.add(v3("diffuse"), v3("specular")), v3("radiance")),
+                        self.mul(
+                            self.mul(self.add(v3("diffuse"), v3("specular")), v3("radiance")),
+                            Helper::ShadowVisibility.call(
+                                vec![
+                                    world_position(),
+                                    surface().field("world_normal", ShaderType::VEC3, self.span),
+                                    self.local("i", ShaderType::U32),
+                                ],
+                                self.span,
+                            ),
+                        ),
                         s("nl"),
                     ),
                 ),
@@ -809,10 +905,7 @@ impl Builder {
                     self.mul(v3("c"), s("m")),
                 ),
             ),
-            self.let_(
-                "n",
-                surface().field("world_normal", ShaderType::VEC3, self.span),
-            ),
+            self.let_("n", normal),
             self.let_(
                 "v",
                 self.call(
@@ -849,17 +942,135 @@ impl Builder {
             // `1 / (1.2 * 2^EV100)`, packed as `exposure` (decision 0081).
             self.ret(self.vec4(vec![
                 self.mul(
-                    self.add(
-                        v3("rgb"),
-                        self.mul(
-                            self.mul(v3("c"), one_minus(s("m"))),
-                            frame().field("ambient", ShaderType::VEC3, self.span),
-                        ),
-                    ),
+                    self.add(v3("rgb"), indirect_and_emission),
                     frame().field("exposure", ShaderType::F32, self.span),
                 ),
                 self.f(1.0),
             ])),
+        ]
+    }
+
+    /// Cotangent frame from screen derivatives: supports mirrored UVs without changing
+    /// the vertex ABI. Degenerate UVs/zero decoded vectors fall back to the geometric normal.
+    /// This is a derivative frame, not a claim of authored MikkTSpace tangent parity.
+    fn mapped_normal(&self) -> Vec<Statement> {
+        let v3 = |name: &str| self.local(name, ShaderType::VEC3);
+        let v2 = |name: &str| self.local(name, ShaderType::VEC2);
+        let surface = || self.local("surface", ShaderType::named(SURFACE_INPUT_STRUCT));
+        let dot = |a: Expr, b: Expr| self.call(Intrinsic::Dot, vec![a, b], ShaderType::F32);
+        let cross = |a: Expr, b: Expr| self.call(Intrinsic::Cross, vec![a, b], ShaderType::VEC3);
+        let max = |a: Expr, b: Expr| self.call(Intrinsic::Max, vec![a, b], ShaderType::F32);
+        let channel = |v: Expr, c: Component| v.swizzle(&[c], self.span);
+        vec![
+            self.let_(
+                "n",
+                surface().field("world_normal", ShaderType::VEC3, self.span),
+            ),
+            self.let_(
+                "q0",
+                self.call(
+                    Intrinsic::Dpdx,
+                    vec![surface().field("world_position", ShaderType::VEC3, self.span)],
+                    ShaderType::VEC3,
+                ),
+            ),
+            self.let_(
+                "q1",
+                self.call(
+                    Intrinsic::Dpdy,
+                    vec![surface().field("world_position", ShaderType::VEC3, self.span)],
+                    ShaderType::VEC3,
+                ),
+            ),
+            self.let_(
+                "st0",
+                self.call(
+                    Intrinsic::Dpdx,
+                    vec![surface().field("uv", ShaderType::VEC2, self.span)],
+                    ShaderType::VEC2,
+                ),
+            ),
+            self.let_(
+                "st1",
+                self.call(
+                    Intrinsic::Dpdy,
+                    vec![surface().field("uv", ShaderType::VEC2, self.span)],
+                    ShaderType::VEC2,
+                ),
+            ),
+            self.let_("q1perp", cross(v3("q1"), v3("n"))),
+            self.let_("q0perp", cross(v3("n"), v3("q0"))),
+            self.let_(
+                "t",
+                self.add(
+                    self.mul(v3("q1perp"), channel(v2("st0"), Component::X)),
+                    self.mul(v3("q0perp"), channel(v2("st1"), Component::X)),
+                ),
+            ),
+            self.let_(
+                "b",
+                self.add(
+                    self.mul(v3("q1perp"), channel(v2("st0"), Component::Y)),
+                    self.mul(v3("q0perp"), channel(v2("st1"), Component::Y)),
+                ),
+            ),
+            self.let_("area2", max(dot(v3("t"), v3("t")), dot(v3("b"), v3("b")))),
+            self.let_(
+                "inv",
+                self.mul(
+                    self.call(
+                        Intrinsic::Sign,
+                        vec![dot(cross(v3("q0"), v3("q1")), v3("n"))],
+                        ShaderType::F32,
+                    ),
+                    self.call(
+                        Intrinsic::InverseSqrt,
+                        vec![max(self.scalar("area2"), self.f(1e-20))],
+                        ShaderType::F32,
+                    ),
+                ),
+            ),
+            self.let_(
+                "map",
+                self.sub(
+                    self.mul(v3("texel"), self.f(2.0)),
+                    self.vec3(vec![self.f(1.0)]),
+                ),
+            ),
+            self.let_(
+                "result",
+                self.add(
+                    self.mul(
+                        self.add(
+                            self.mul(v3("t"), channel(v3("map"), Component::X)),
+                            self.mul(v3("b"), channel(v3("map"), Component::Y)),
+                        ),
+                        self.mul(self.scalar("scale"), self.scalar("inv")),
+                    ),
+                    self.mul(v3("n"), channel(v3("map"), Component::Z)),
+                ),
+            ),
+            self.let_("len2", dot(v3("result"), v3("result"))),
+            self.ret(self.call(
+                Intrinsic::Select,
+                vec![
+                    v3("n"),
+                    self.mul(
+                        v3("result"),
+                        self.call(
+                            Intrinsic::InverseSqrt,
+                            vec![max(self.scalar("len2"), self.f(1e-20))],
+                            ShaderType::F32,
+                        ),
+                    ),
+                    self.bin(
+                        BinaryOp::LogicalAnd,
+                        self.bin(BinaryOp::Greater, self.scalar("len2"), self.f(1e-16)),
+                        self.bin(BinaryOp::Greater, self.scalar("area2"), self.f(1e-20)),
+                    ),
+                ],
+                ShaderType::VEC3,
+            )),
         ]
     }
 

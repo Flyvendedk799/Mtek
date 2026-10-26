@@ -25,11 +25,14 @@ block material:src/main.mtek::Shiny MtekParams_e2cab98b_Shiny  group 1 binding 0
   metallic   f32    f32            16     4        0         src/main.mtek:6:5-6:31
   roughness  f32    f32            20     4        8         src/main.mtek:7:5-7:32
 
-block material:std/materials.mtek::Pbr MtekParams_2b212d15_Pbr  group 1 binding 0  visibility fragment  owner material instance  size 32 align 16
-  field       type   wgsl       offset  size  padding  array  declared at
-  base_color  color  vec4<f32>       0    16        0         std/materials.mtek:11:5-11:39
-  metallic    f32    f32            16     4        0         std/materials.mtek:12:5-12:31
-  roughness   f32    f32            20     4        8         std/materials.mtek:13:5-13:32
+block material:std/materials.mtek::Pbr MtekParams_2b212d15_Pbr  group 1 binding 0  visibility fragment  owner material instance  size 48 align 16
+  field               type   wgsl       offset  size  padding  array  declared at
+  base_color          color  vec4<f32>       0    16        0         std/materials.mtek:11:5-11:39
+  metallic            f32    f32            16     4        0         std/materials.mtek:12:5-12:31
+  roughness           f32    f32            20     4        0         std/materials.mtek:13:5-13:32
+  normal_scale        f32    f32            24     4        0         std/materials.mtek:26:5-26:35
+  occlusion_strength  f32    f32            28     4        0         std/materials.mtek:27:5-27:41
+  emissive            color  vec4<f32>      32    16        0         std/materials.mtek:28:5-28:37
 
 block material:std/materials.mtek::Unlit MtekParams_2b212d15_Unlit  group 1 binding 0  visibility fragment  owner material instance  size 16 align 16
   field  type   wgsl       offset  size  padding  array  declared at
@@ -44,20 +47,42 @@ instance #1 of std/materials.mtek::Unlit  entity src/main.mtek::Gallery.Lamp (#1
   color  color  initial  -             color       0    16  std/materials.mtek:6:5-6:34  src/main.mtek:43:5-47:6
 
 instance #2 of std/materials.mtek::Pbr  entity src/main.mtek::Gallery.Metal (#2)  block material:std/materials.mtek::Pbr  group 1 binding 0  storage shareable
-  param               type     update    dependencies  field                              offset  size  declared at                    instance at
-  base_color          color    initial   -             base_color                              0    16  std/materials.mtek:11:5-11:39  src/main.mtek:52:9-52:58
-  metallic            f32      initial   -             metallic                               16     4  std/materials.mtek:12:5-12:31  src/main.mtek:52:9-52:58
-  roughness           f32      initial   -             roughness                              20     4  std/materials.mtek:13:5-13:32  src/main.mtek:52:9-52:58
-  base_color_texture  texture  resource  -             binding 1 = texture.white               -     -  std/materials.mtek:14:5-14:57  src/main.mtek:52:9-52:58
-  base_color_sampler  sampler  resource  -             binding 2 = sampler.linear_repeat       -     -  std/materials.mtek:15:5-15:65  src/main.mtek:52:9-52:58
+  param                       type     update    dependencies  field                               offset  size  declared at                    instance at
+  base_color                  color    initial   -             base_color                               0    16  std/materials.mtek:11:5-11:39  src/main.mtek:52:9-52:58
+  metallic                    f32      initial   -             metallic                                16     4  std/materials.mtek:12:5-12:31  src/main.mtek:52:9-52:58
+  roughness                   f32      initial   -             roughness                               20     4  std/materials.mtek:13:5-13:32  src/main.mtek:52:9-52:58
+  base_color_texture          texture  resource  -             binding 1 = texture.white                -     -  std/materials.mtek:14:5-14:57  src/main.mtek:52:9-52:58
+  base_color_sampler          sampler  resource  -             binding 2 = sampler.linear_repeat        -     -  std/materials.mtek:15:5-15:65  src/main.mtek:52:9-52:58
+  metallic_roughness_texture  texture  resource  -             binding 3 = texture.white                -     -  std/materials.mtek:16:5-16:65  src/main.mtek:52:9-52:58
+  metallic_roughness_sampler  sampler  resource  -             binding 4 = sampler.linear_repeat        -     -  std/materials.mtek:17:5-17:73  src/main.mtek:52:9-52:58
+  normal_texture              texture  resource  -             binding 5 = texture.white                -     -  std/materials.mtek:18:5-18:53  src/main.mtek:52:9-52:58
+  normal_sampler              sampler  resource  -             binding 6 = sampler.linear_repeat        -     -  std/materials.mtek:19:5-19:61  src/main.mtek:52:9-52:58
+  occlusion_texture           texture  resource  -             binding 7 = texture.white                -     -  std/materials.mtek:20:5-20:56  src/main.mtek:52:9-52:58
+  occlusion_sampler           sampler  resource  -             binding 8 = sampler.linear_repeat        -     -  std/materials.mtek:21:5-21:64  src/main.mtek:52:9-52:58
+  emissive_texture            texture  resource  -             binding 9 = texture.white                -     -  std/materials.mtek:22:5-22:55  src/main.mtek:52:9-52:58
+  emissive_sampler            sampler  resource  -             binding 10 = sampler.linear_repeat       -     -  std/materials.mtek:23:5-23:63  src/main.mtek:52:9-52:58
+  normal_scale                f32      initial   -             normal_scale                            24     4  std/materials.mtek:26:5-26:35  src/main.mtek:52:9-52:58
+  occlusion_strength          f32      initial   -             occlusion_strength                      28     4  std/materials.mtek:27:5-27:41  src/main.mtek:52:9-52:58
+  emissive                    color    initial   -             emissive                                32    16  std/materials.mtek:28:5-28:37  src/main.mtek:52:9-52:58
 
 instance #3 of std/materials.mtek::Pbr  entity src/main.mtek::Gallery.Plastic (#3)  block material:std/materials.mtek::Pbr  group 1 binding 0  storage shareable
-  param               type     update    dependencies  field                              offset  size  declared at                    instance at
-  base_color          color    initial   -             base_color                              0    16  std/materials.mtek:11:5-11:39  src/main.mtek:56:9-56:123
-  metallic            f32      initial   -             metallic                               16     4  std/materials.mtek:12:5-12:31  src/main.mtek:56:9-56:123
-  roughness           f32      initial   -             roughness                              20     4  std/materials.mtek:13:5-13:32  src/main.mtek:56:9-56:123
-  base_color_texture  texture  resource  -             binding 1 = texture.white               -     -  std/materials.mtek:14:5-14:57  src/main.mtek:56:9-56:123
-  base_color_sampler  sampler  resource  -             binding 2 = sampler.nearest_clamp       -     -  std/materials.mtek:15:5-15:65  src/main.mtek:56:9-56:123
+  param                       type     update    dependencies  field                               offset  size  declared at                    instance at
+  base_color                  color    initial   -             base_color                               0    16  std/materials.mtek:11:5-11:39  src/main.mtek:56:9-56:123
+  metallic                    f32      initial   -             metallic                                16     4  std/materials.mtek:12:5-12:31  src/main.mtek:56:9-56:123
+  roughness                   f32      initial   -             roughness                               20     4  std/materials.mtek:13:5-13:32  src/main.mtek:56:9-56:123
+  base_color_texture          texture  resource  -             binding 1 = texture.white                -     -  std/materials.mtek:14:5-14:57  src/main.mtek:56:9-56:123
+  base_color_sampler          sampler  resource  -             binding 2 = sampler.nearest_clamp        -     -  std/materials.mtek:15:5-15:65  src/main.mtek:56:9-56:123
+  metallic_roughness_texture  texture  resource  -             binding 3 = texture.white                -     -  std/materials.mtek:16:5-16:65  src/main.mtek:56:9-56:123
+  metallic_roughness_sampler  sampler  resource  -             binding 4 = sampler.linear_repeat        -     -  std/materials.mtek:17:5-17:73  src/main.mtek:56:9-56:123
+  normal_texture              texture  resource  -             binding 5 = texture.white                -     -  std/materials.mtek:18:5-18:53  src/main.mtek:56:9-56:123
+  normal_sampler              sampler  resource  -             binding 6 = sampler.linear_repeat        -     -  std/materials.mtek:19:5-19:61  src/main.mtek:56:9-56:123
+  occlusion_texture           texture  resource  -             binding 7 = texture.white                -     -  std/materials.mtek:20:5-20:56  src/main.mtek:56:9-56:123
+  occlusion_sampler           sampler  resource  -             binding 8 = sampler.linear_repeat        -     -  std/materials.mtek:21:5-21:64  src/main.mtek:56:9-56:123
+  emissive_texture            texture  resource  -             binding 9 = texture.white                -     -  std/materials.mtek:22:5-22:55  src/main.mtek:56:9-56:123
+  emissive_sampler            sampler  resource  -             binding 10 = sampler.linear_repeat       -     -  std/materials.mtek:23:5-23:63  src/main.mtek:56:9-56:123
+  normal_scale                f32      initial   -             normal_scale                            24     4  std/materials.mtek:26:5-26:35  src/main.mtek:56:9-56:123
+  occlusion_strength          f32      initial   -             occlusion_strength                      28     4  std/materials.mtek:27:5-27:41  src/main.mtek:56:9-56:123
+  emissive                    color    initial   -             emissive                                32    16  std/materials.mtek:28:5-28:37  src/main.mtek:56:9-56:123
 
 instance #4 of src/main.mtek::Shiny  entity src/main.mtek::Gallery.Custom (#4)  block material:src/main.mtek::Shiny  group 1 binding 0  storage shareable
   param      type   update   dependencies  field      offset  size  declared at             instance at

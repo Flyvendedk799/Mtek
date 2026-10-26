@@ -47,6 +47,10 @@ export interface GpuMesh {
 
 const ORIGIN: readonly [number, number, number] = [0, 0, 0];
 type SkinMesh = Omit<GpuMesh, "boundingCenter" | "boundingRadius"> & { boundingCenter: [number, number, number]; boundingRadius: number };
+interface SkinInstance {
+  mesh: SkinMesh; sourceKey: string; player: SkeletonPlayer; references: number;
+  positions: Float32Array; normals: Float32Array; revision: number; boundsRevision: number; gpu?: GpuSkinInstance;
+}
 export type SkinDevice = Pick<GPUDevice, "queue"> & Partial<Pick<GPUDevice, "createCommandEncoder" | "createComputePipeline">>;
 
 /** The vertex buffer of `attribute`; every mesh drawn with a material has the attributes it reads (checked at mount). */
@@ -77,26 +81,36 @@ export class MeshStore {
   private readonly byKey = new Map<string, GpuMesh>();
   private readonly byId = new Map<string, GpuMesh>();
   private readonly skinSources = new Map<string, { positions: Float32Array; normals?: Float32Array; bounds: SkinBounds; gpu?: GpuSkinSource }>();
-  private readonly skinInstances = new Map<number, { mesh: SkinMesh; sourceKey: string; positions: Float32Array; normals: Float32Array; revision: number; boundsRevision: number; gpu?: GpuSkinInstance }>();
+  private readonly skinInstances = new Map<number, SkinInstance>();
+  private readonly skinCohorts = new WeakMap<SkeletonPlayer, Map<string,SkinInstance>>();
+  private nextSkinOrder = -1;
   private gpuSkinning: GpuSkinning | undefined;
 
   forEntity(id: string, slot: number, player?: SkeletonPlayer): GpuMesh {
     const source = this.get(id);
     if (player === undefined) return source;
     const existing = this.skinInstances.get(slot);
-    if (existing !== undefined) return existing.mesh;
+    if (existing !== undefined && existing.player === player && existing.sourceKey === source.key) return existing.mesh;
+    if (existing !== undefined) this.releaseSkin(slot);
+    let cohorts = this.skinCohorts.get(player);
+    const shared = cohorts?.get(source.key);
+    if (shared !== undefined) {
+      shared.references++; this.skinInstances.set(slot,shared); return shared.mesh;
+    }
+    if (cohorts === undefined) { cohorts = new Map(); this.skinCohorts.set(player,cohorts); }
     const positions=new Float32Array(this.gpuSkinning===undefined?source.vertexCount*3:0), normals=new Float32Array(this.gpuSkinning===undefined?source.vertexCount*3:0);
     const usage = BUFFER_USAGE_VERTEX | (this.gpuSkinning === undefined ? 0 : 0x80);
     const output=(label:string,data:Float32Array):GPUBuffer=>this.gpuSkinning===undefined
       ?uploadBuffer(this.registry,this.queue,label,usage,data)
       :this.registry.createBuffer({label,size:source.vertexCount*12,usage});
-    const mesh: SkinMesh={...source, key:source.key+"@"+String(slot), boundingCenter: [0,0,0], boundingRadius:Infinity,
+    const mesh: SkinMesh={...source, order:this.nextSkinOrder--, key:source.key+"@"+String(slot), boundingCenter: [0,0,0], boundingRadius:Infinity,
       vertexBuffers:{...source.vertexBuffers,
         position:output("skin positions",positions),
         ...(source.vertexBuffers.normal===undefined?{}:{normal:output("skin normals",normals)})}};
     const gpuSource = this.skinSources.get(source.key)?.gpu;
     const gpu = gpuSource === undefined ? undefined : this.gpuSkinning!.instance(gpuSource, source.vertexBuffers.position!, mesh.vertexBuffers.position!, mesh.vertexBuffers.normal, source.vertexCount, player.skin.joints.length);
-    this.skinInstances.set(slot,{mesh,sourceKey:source.key,positions,normals,revision:-1,boundsRevision:-1,...(gpu === undefined ? {} : {gpu})});
+    const instance: SkinInstance = {mesh,sourceKey:source.key,player,references:1,positions,normals,revision:-1,boundsRevision:-1,...(gpu === undefined ? {} : {gpu})};
+    cohorts.set(source.key,instance); this.skinInstances.set(slot,instance);
     return mesh;
   }
 
@@ -132,10 +146,12 @@ export class MeshStore {
   releaseSkin(slot: number): void {
     const instance=this.skinInstances.get(slot);
     if(instance===undefined) return;
+    this.skinInstances.delete(slot);
+    if (--instance.references > 0) return;
+    this.skinCohorts.get(instance.player)?.delete(instance.sourceKey);
     if (instance.gpu !== undefined) this.gpuSkinning!.release(instance.gpu);
     this.registry.release(instance.mesh.vertexBuffers.position!);
     if(instance.mesh.vertexBuffers.normal!==undefined) this.registry.release(instance.mesh.vertexBuffers.normal);
-    this.skinInstances.delete(slot);
   }
 
   constructor(

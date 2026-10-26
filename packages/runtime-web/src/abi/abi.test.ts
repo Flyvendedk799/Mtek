@@ -71,6 +71,25 @@ describe("constants", () => {
   });
 });
 
+it("accepts authored-position ABI 1 and rejects unknown versions", () => {
+  const manifest = example("valid/minimal.json") as { shaders: Record<string, unknown>[] };
+  const shader = manifest.shaders[0];
+  if (shader === undefined) throw new Error("no shader in minimal example");
+  shader["vertexDeformation"] = 1;
+  expect(validateManifest(manifest).ok).toBe(true);
+  shader["vertexDeformation"] = 2;
+  expect(validateManifest(manifest).ok).toBe(false);
+});
+
+it("validates bounds targets and bounds entity-field dependencies", () => {
+  const manifest = example("valid/minimal.json") as { scene: { bindings: unknown[] } };
+  const target = {kind:"bounds",entity:0,field:"bounds_radius"};
+  manifest.scene.bindings = [{id:0,target,deps:[{kind:"entityField",entity:0,field:"bounds_center"}],order:0,span:0}];
+  expect(validateManifest(manifest).ok).toBe(true);
+  target.field = "scale";
+  expect(validateManifest(manifest).ok).toBe(false);
+});
+
 // The manifests the compiler produces for the codegen fixtures (M1-17 goldens).
 const compiled = import.meta.glob<string>("../../../../tests/codegen/*/expected/program.manifest.json", {
   query: "?raw",
@@ -224,6 +243,18 @@ describe("shared valid examples", () => {
 });
 
 describe("shared invalid examples", () => {
+  it("rejects unknown scene-lighting ABI versions while accepting the current one", () => {
+    const manifest = clone(example("valid/full.json"));
+    const shader = (manifest["shaders"] as Array<Record<string, unknown>>)[0]!;
+    shader["lighting"] = 1; expect(checkManifest(manifest).ok).toBe(true);
+    for (const version of [0, 2, "1"]) {
+      shader["lighting"] = version;
+      const result = checkManifest(manifest);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.failures[0]?.field).toBe("shaders[0].lighting");
+    }
+    delete shader["lighting"]; expect(checkManifest(manifest).ok).toBe(true);
+  });
   const invalid = examplePaths("invalid");
   const expected = expectations();
 

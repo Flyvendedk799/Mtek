@@ -1,0 +1,169 @@
+{
+  "request": {
+    "model": "Fox",
+    "count": 10,
+    "engine": "three",
+    "pass": "counts",
+    "smoke": false
+  },
+  "result": {
+    "samples": [],
+    "compute": [],
+    "render": [],
+    "passes": [],
+    "computePassCounts": [],
+    "renderPassCounts": [],
+    "counters": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 120,
+      "renderPassesBegun": 120,
+      "computePassesBegun": 0,
+      "submits": 120,
+      "drawCalls": 1200,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 1200,
+      "setPipeline": 120,
+      "setBindGroup": 1320,
+      "setVertexBuffer": 360,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 1200,
+      "writeBufferBytes": 1843200,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 0,
+      "devicesDestroyed": 0
+    },
+    "info": {
+      "engine": "three",
+      "version": "0.186.1",
+      "skinNodes": 26,
+      "joints": 24,
+      "vertices": 1728,
+      "actors": 10,
+      "render": {
+        "calls": 0,
+        "frameCalls": 0,
+        "drawCalls": 0,
+        "triangles": 0,
+        "points": 0,
+        "lines": 0,
+        "timestamp": 0
+      },
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-3",
+        "device": "0x744c",
+        "description": "AMD Radeon RX 7900 XTX",
+        "isFallbackAdapter": false
+      },
+      "deviceFeatures": [
+        "bgra8unorm-storage",
+        "clip-distances",
+        "core-features-and-limits",
+        "depth-clip-control",
+        "depth32float-stencil8",
+        "dual-source-blending",
+        "float32-blendable",
+        "float32-filterable",
+        "indirect-first-instance",
+        "rg11b10ufloat-renderable",
+        "shader-f16",
+        "subgroups",
+        "texture-compression-bc",
+        "texture-compression-bc-sliced-3d",
+        "texture-formats-tier1",
+        "texture-formats-tier2",
+        "timestamp-query"
+      ],
+      "clock": {
+        "crossOriginIsolated": true,
+        "observedQuantumMs": 0.004999998956918716
+      }
+    },
+    "errors": []
+  },
+  "disposed": {
+    "counters": {
+      "buffersCreated": 24,
+      "bufferBytesCreated": 93600,
+      "texturesCreated": 2,
+      "textureBytesCreated": 1843200,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 2,
+      "bindGroupsCreated": 11,
+      "bindGroupLayoutsCreated": 2,
+      "pipelineLayoutsCreated": 1,
+      "renderPipelinesCreated": 1,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 240,
+      "renderPassesBegun": 240,
+      "computePassesBegun": 0,
+      "submits": 240,
+      "drawCalls": 2400,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 2400,
+      "setPipeline": 240,
+      "setBindGroup": 2640,
+      "setVertexBuffer": 720,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 2411,
+      "writeBufferBytes": 3688608,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 76032,
+      "buffersDestroyed": 24,
+      "texturesDestroyed": 2,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 1
+    },
+    "devices": [
+      {
+        "destroyed": true,
+        "errors": [],
+        "lost": {
+          "reason": "destroyed",
+          "message": "Device was destroyed."
+        }
+      }
+    ]
+  },
+  "heapBefore": null,
+  "heapWhileLive": null,
+  "heapAfter": null,
+  "hostLoad": {
+    "busyBeforePercent": 12.916842549598988,
+    "waitedForQuietMs": 262,
+    "noisy": false,
+    "busyDuringPercent": 19.748287088779826
+  },
+  "lock": {
+    "dir": "target/animation-benchmark-gpu.lock",
+    "waitedMs": 0
+  },
+  "errors": [],
+  "attempt": 0,
+  "accepted": true
+}

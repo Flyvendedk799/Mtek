@@ -5,7 +5,15 @@ import {
   multiplyInto,
   normalMatrixInto,
 } from "../math/mat4.js";
-import { multiplyQuat } from "./pose-layers.js";
+import { blendQuat, multiplyQuat } from "./pose-layers.js";
+
+export interface IKHingeLimit {
+  /** Hinge axis in the node's bind-local frame. Other rotational degrees of freedom are locked. */
+  readonly axis: readonly [number, number, number];
+  /** Signed bind-relative radians in [-pi,pi]. */
+  readonly min: number;
+  readonly max: number;
+}
 
 export interface IKConstraint {
   /** Contiguous parent-to-child chain, including the end effector. */
@@ -15,13 +23,17 @@ export interface IKConstraint {
   readonly weight?: number;
   readonly iterations?: number;
   readonly tolerance?: number;
+  /** End-effector orientation in mesh-local space. Requires uniform positive ancestor scales. */
+  readonly rotation?: readonly [number, number, number, number];
+  readonly rotationWeight?: number;
+  readonly limits?: Readonly<Record<string, IKHingeLimit>>;
 }
 
 /** Bounded CCD positional IK; evaluated in insertion order after procedural overrides. */
 export class PoseIK {
   private readonly constraints = new Map<
     string,
-    { indices: number[]; options: IKConstraint }
+    { indices: number[]; options: IKConstraint; limits: ReadonlyMap<number, IKHingeLimit> }
   >();
   private readonly globals: Float32Array[];
   private readonly local = identity();
@@ -29,6 +41,10 @@ export class PoseIK {
   private readonly inverse = identity();
   private readonly delta = new Float64Array(4);
   private readonly order: number[] = [];
+  private readonly orientation = new Float64Array(4);
+  private readonly parentRotation = new Float64Array(4);
+  private readonly bindRotation = new Float64Array(4);
+  private readonly relative = new Float64Array(4);
   revision = 0;
   constructor(private readonly skin: MtekSkin) {
     this.globals = skin.nodes.map(() => identity());
@@ -67,20 +83,66 @@ export class PoseIK {
       (options.iterations ?? 12) < 1 ||
       (options.iterations ?? 12) > 64 ||
       !Number.isFinite(options.tolerance ?? 0.001) ||
-      (options.tolerance ?? 0.001) <= 0
+      (options.tolerance ?? 0.001) <= 0 ||
+      !Number.isFinite(options.rotationWeight ?? 1) || (options.rotationWeight ?? 1) < 0 || (options.rotationWeight ?? 1) > 1
     )
       throw new RangeError(
         "Invalid IK target, weight, iterations or tolerance",
       );
+    const limits = new Map<number, IKHingeLimit>();
+    for (const [name, limit] of Object.entries(options.limits ?? {})) {
+      const node = this.skin.nodes.findIndex(node => node.name === name);
+      const length = Math.hypot(...limit.axis);
+      if (!indices.includes(node) || limit.axis.length !== 3 || !limit.axis.every(Number.isFinite)
+        || !Number.isFinite(length) || length < 1e-8 || !Number.isFinite(limit.min) || !Number.isFinite(limit.max)
+        || limit.min < -Math.PI || limit.max > Math.PI || limit.min > limit.max)
+        throw new RangeError(`Invalid IK hinge limit: ${name}`);
+      limits.set(node, { axis: limit.axis.map(value => value / length) as [number, number, number], min: limit.min, max: limit.max });
+    }
+    let rotation: [number, number, number, number] | undefined;
+    if (options.rotation !== undefined) {
+      const length = Math.hypot(...options.rotation);
+      if (options.rotation.length !== 4 || !options.rotation.every(Number.isFinite) || !Number.isFinite(length) || length < 1e-8)
+        throw new RangeError("Invalid IK orientation quaternion");
+      rotation = options.rotation.map(value => value / length) as [number, number, number, number];
+      for (let node = this.skin.meshNode; node >= 0; node = this.skin.nodes[node]!.parent)
+        if (node === indices.at(-1)) throw new RangeError("IK orientation mesh frame cannot descend from the end effector");
+    }
     this.constraints.set(id, {
       indices,
+      limits,
       options: {
         ...options,
+        ...(rotation === undefined ? {} : { rotation }),
         target: [...options.target],
         chain: [...options.chain],
       },
     });
     this.revision++;
+  }
+  private constrain(pose: Float64Array, node: number, limit: IKHingeLimit): void {
+    const at = node * 10 + 3, bind = this.skin.nodes[node]!.rotation, length = Math.hypot(...bind);
+    for (let c = 0; c < 4; c++) this.bindRotation[c] = bind[c]! / length;
+    for (let c = 0; c < 4; c++) this.relative[c] = this.bindRotation[c]! * (c < 3 ? -1 : 1);
+    multiplyQuat(this.relative, 0, this.relative, 0, pose, at);
+    const axis = limit.axis;
+    const projection = this.relative[0]! * axis[0] + this.relative[1]! * axis[1] + this.relative[2]! * axis[2];
+    let angle = Math.hypot(projection, this.relative[3]!) < 1e-10 ? 0 : 2 * Math.atan2(projection, this.relative[3]!);
+    if (angle > Math.PI) angle -= 2 * Math.PI;
+    if (angle < -Math.PI) angle += 2 * Math.PI;
+    angle = Math.max(limit.min, Math.min(limit.max, angle));
+    const sine = Math.sin(angle / 2);
+    this.relative.set([axis[0] * sine, axis[1] * sine, axis[2] * sine, Math.cos(angle / 2)]);
+    multiplyQuat(pose, at, this.bindRotation, 0, this.relative, 0);
+  }
+  private worldRotation(pose: Float64Array, node: number, out: Float64Array): void {
+    out.set([0, 0, 0, 1]);
+    for (let i = node; i >= 0; i = this.skin.nodes[i]!.parent) {
+      const at = i * 10;
+      if (Math.abs(pose[at + 7]! / pose[at + 8]! - 1) > 1e-6 || Math.abs(pose[at + 7]! / pose[at + 9]! - 1) > 1e-6)
+        throw new RangeError("IK orientation requires uniform ancestor scales");
+      multiplyQuat(out, 0, pose, at + 3, out, 0);
+    }
   }
   remove(id: string): void {
     if (this.constraints.delete(id)) this.revision++;
@@ -108,9 +170,10 @@ export class PoseIK {
     }
   }
   apply(pose: Float64Array): void {
-    for (const { indices, options } of this.constraints.values()) {
+    for (const { indices, options, limits } of this.constraints.values()) {
       const weight = options.weight ?? 1;
       if (weight === 0) continue;
+      for (const [node, limit] of limits) this.constrain(pose,node,limit);
       this.matrices(pose);
       const mesh = this.globals[this.skin.meshNode]!,
         t = options.target,
@@ -208,8 +271,21 @@ export class PoseIK {
             this.delta[3] = Math.SQRT1_2;
           }
           multiplyQuat(pose, i * 10 + 3, this.delta, 0, pose, i * 10 + 3);
+          const limit = limits.get(i);
+          if (limit !== undefined) this.constrain(pose,i,limit);
           this.matrices(pose);
         }
+      }
+      if (options.rotation !== undefined) {
+        const node = indices.at(-1)!;
+        this.worldRotation(pose,this.skin.meshNode,this.orientation);
+        multiplyQuat(this.orientation,0,this.orientation,0,options.rotation,0);
+        this.worldRotation(pose,this.skin.nodes[node]!.parent,this.parentRotation);
+        for (let c = 0; c < 3; c++) this.parentRotation[c] = -this.parentRotation[c]!;
+        multiplyQuat(this.orientation,0,this.parentRotation,0,this.orientation,0);
+        blendQuat(pose,node * 10 + 3,this.orientation,0,weight * (options.rotationWeight ?? 1));
+        const limit = limits.get(node);
+        if (limit !== undefined) this.constrain(pose,node,limit);
       }
     }
   }

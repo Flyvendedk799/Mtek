@@ -113,6 +113,9 @@ describe("contextual words", () => {
     expect(has(scopes("fixed_update(dt: f32) {}", "fixed_update"), "entity.name.function.lifecycle")).toBe(true);
     expect(has(scopes("ui(dt: f32) {}", "ui"), "entity.name.function.lifecycle")).toBe(true);
     expect(has(scopes("fragment(input: SurfaceInput) {}", "fragment"), "entity.name.function.stage")).toBe(true);
+    expect(has(scopes("vertex(input: VertexInput) -> vec3 {}", "vertex"), "entity.name.function.stage")).toBe(true);
+    expect(has(scopes("material M { vertex(input: VertexInput) -> vec3 {} }", "vertex"), "entity.name.function.stage")).toBe(true);
+    expect(has(scopes("fn vertex() {}", "vertex"), "invalid.illegal.reserved-word")).toBe(true);
     expect(has(scopes("camera Main { }", "camera"), "support.type.scene-object")).toBe(true);
     expect(has(scopes("camera Main { }", "Main"), "entity.name.type.object")).toBe(true);
   });
@@ -278,6 +281,18 @@ describe("the standard library", () => {
 });
 
 describe("names by position and convention (spec/language.md 3.3)", () => {
+  it("recognizes checked compute declarations/resources while reserving ordinary compute names", () => {
+    const source = "export compute Scale {\ninput source: array<f32, 8>;\noutput result: array<f32, 8>;\nkernel(input: ComputeInput) -> f32 { return source[input.index]; }\n}";
+    const lines = tokenizeText(grammar, source);
+    expect(has(scopesOf(lines, "compute"), "keyword.other.declaration")).toBe(true);
+    expect(has(scopesOf(lines, "compute"), "invalid.illegal")).toBe(false);
+    expect(has(scopesOf(lines, "Scale"), "entity.name.type.compute")).toBe(true);
+    expect(has(scopesOf(lines, "source"), "variable.other.declaration")).toBe(true);
+    expect(has(scopesOf(lines, "output"), "keyword.other.declaration")).toBe(true);
+    expect(has(scopesOf(lines, "ComputeInput"), "support.type.builtin")).toBe(true);
+    expect(has(scopes("const compute: i32 = 1;", "compute"), "invalid.illegal.reserved-word")).toBe(true);
+    expect(has(scopes("let input = 1;", "input"), "keyword")).toBe(false);
+  });
   it("scopes a field name before a colon, a call, a member and a method", () => {
     expect(has(scopes("position: vec3(0.0, 1.0, 2.0);", "position"), "variable.other.property")).toBe(true);
     expect(has(scopes("let a = helper(1.0);", "helper"), "entity.name.function.call")).toBe(true);

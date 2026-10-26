@@ -826,6 +826,9 @@ impl FnLowering<'_, '_> {
                 "position" | "rotation" | "scale" => Expr::ident("ctx")
                     .member("setTransform")
                     .call(vec![self.entity(*entity), Expr::string(field), value]),
+                "bounds_center" | "bounds_radius" => Expr::ident("ctx")
+                    .member("setBounds")
+                    .call(vec![self.entity(*entity), Expr::string(field), value]),
                 "visible" => Expr::ident("ctx")
                     .member("setVisible")
                     .call(vec![self.entity(*entity), value]),

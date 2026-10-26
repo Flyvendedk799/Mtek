@@ -1,0 +1,17 @@
+
+> audit:assets
+> npm run audit -w @mtek/asset-audit -- --file=benchmarks/runtime/animation/assets/Fox/Fox.glb --out=target/asset-audit-cli-incomplete-20261026-031344
+
+
+> @mtek/asset-audit@0.1.0-dev audit
+> node src/cli.ts --file=benchmarks/runtime/animation/assets/Fox/Fox.glb --out=target/asset-audit-cli-incomplete-20261026-031344
+
+Checking input (serial, existing compiler only)
+Failed/incomplete: <workspace>\target\asset-audit-cli-incomplete-20261026-031344\report.md
+npm error Lifecycle script `audit` failed with error:
+npm error code 1
+npm error path <workspace>\tools\asset-audit
+npm error workspace @mtek/asset-audit@0.1.0-dev
+npm error location <workspace>\tools\asset-audit
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c node src/cli.ts --file=benchmarks/runtime/animation/assets/Fox/Fox.glb --out=target/asset-audit-cli-incomplete-20261026-031344

@@ -1,0 +1,72 @@
+{
+  "format": "mtek-matched-animation/1",
+  "smoke": true,
+  "protocol": {
+    "schemaVersion": 1,
+    "models": [
+      "Fox",
+      "CesiumMan"
+    ],
+    "actors": [
+      1,
+      10,
+      50
+    ],
+    "implementations": [
+      "mtek",
+      "three"
+    ],
+    "threeVersion": "0.186.1",
+    "mtekRuntimeFlavour": "release",
+    "engineOrder": "Alternates by run, pass, actor-count case and model; deterministic",
+    "crossOriginIsolation": true,
+    "width": 640,
+    "height": 360,
+    "dt": 0.016666666666666666,
+    "warmupFrames": 120,
+    "cpuFrames": 600,
+    "gpuFrames": 300,
+    "countFrames": 120,
+    "cadenceFrames": 180,
+    "runs": 3,
+    "parityPhases": [
+      0,
+      0.25,
+      0.5,
+      0.75
+    ],
+    "color": "#70c8a8",
+    "clearColor": "#101820",
+    "jointToleranceMetres": 0.0001,
+    "pixelChannelTolerance": 2,
+    "maximumDifferingPixelFraction": 0.01,
+    "maximumForegroundDifferingPixelFraction": 0.01,
+    "cullingEdgeInsetMetres": 0.05,
+    "comment": "Independent poses, no pose throttling/cohorts, no frustum culling in primary timings, opaque flat-color materials, identical original geometry/clips, WebGPU on both sides. Timestamp pass sums include every compute/render pass across all encoders. RAF intervals are callback cadence, not a presented-frame measurement. Freeze definitions before recording measurements."
+  },
+  "definitions": {
+    "hash": "1f07a5cd463273aae4b8b0e81f4b02dd2df8f5496c3d40a35dfe243d11a2f214",
+    "files": {
+      "adapters.ts": "7528d43c27c041559f7e8baa1a8a1904d44fe1e63a05df1d71e628577fdb0a7e",
+      "assets/provenance.json": "771fde9b00ce9e12878d5b976caa834fd2ca0e89ebcd9ac5530fd5bc5d8ab0fd",
+      "demo.html": "bf278e35258b5546d1a615fd4f7876d1ff60bb1d3b248c32a6097817a1a7c1a3",
+      "demo.ts": "fcdf1f9e9e43b710b49b4b143bb956f51aeed343a6f1bf7cd3a4a850df3b4ad0",
+      "freeze.ts": "6f7e6bb57c614de0d29ea5af230242edd403c145842d5ee581110bd32ff6e61c",
+      "gpu-timer.ts": "36e880c32b8b11293a61151247ff3fed45cd4bed78bbb5a6a1a499bc4f98a956",
+      "layout.ts": "7d146686e4058675e4059992564c6a06b2077811d42299e19317e094e5567976",
+      "mtek-adapter.ts": "2d12b1a02672d08fe404defbf0c77c567a558a38b1eab2d7a62e10add3550fb6",
+      "page.ts": "53d5eb7c04309188af279d24f00e5f98a99492466a9ba4bacc3946fc1364ddfc",
+      "prepare.ts": "7527a8612042f030ec3394f64c0657a79799543cc2d4b554cc7581c4145ba3d8",
+      "protocol.json": "c5535111e32e64e9add6a0cf8c60f49f203909e9b92e3b4790c6aee30b29595b",
+      "report.ts": "9d319d2eec1fdf96de5b1064c2f3f8efc5dc27941c446a4582857d4aff481bb0",
+      "run.ts": "72dc5a22d159ab764c1fbbc8aa12458b25f571dc7a6fdd89a5d74474e38dd3e4",
+      "serve.ts": "1ae861716f85d2f437a665b59e3870b6b50f3bbc1eccc3e68b7f8d5674f44355",
+      "three-adapter.ts": "b7ed39018db1db407879f925cc83157bed5527afb15b5af51edb62559e8be3d5",
+      "types.ts": "bcee4b65f185a7e24541706175127a1ab70de6296cc7ae042b642b5d91f07404",
+      "verify-demo.ts": "692ae40bb4d916789dbad72c31d70541bb3d1c7d4b35b5b346c98cf313f62906"
+    }
+  },
+  "startedAt": "2026-10-25T23:39:51.036Z",
+  "status": "passed",
+  "completed": 90
+}

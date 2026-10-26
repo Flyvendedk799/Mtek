@@ -147,7 +147,10 @@ fn assert_golden(name: &str, text: &str) {
     let path = repo("tests/context/golden").join(name);
     if bless() {
         fs::create_dir_all(path.parent().unwrap()).unwrap();
-        fs::write(&path, text).unwrap();
+        // Replace rather than truncate: desktop editors can retain mapped golden files on Windows.
+        let temporary = path.with_extension("json.tmp");
+        fs::write(&temporary, text).unwrap();
+        fs::rename(&temporary, &path).unwrap();
         return;
     }
     let expected = fs::read_to_string(&path).unwrap_or_else(|e| {

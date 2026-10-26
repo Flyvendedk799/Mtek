@@ -810,7 +810,7 @@ fn member_start_candidates(
             out.extend(keywords(LIFECYCLE_KEYWORDS));
             out
         }
-        "material" => keywords(&["param", "fragment"]),
+        "material" => keywords(&["param", "fragment", "vertex"]),
         _ => Vec::new(),
     }
 }

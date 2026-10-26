@@ -6,7 +6,7 @@
     "endByte": 145,
     "message": "`bind` cannot be the value of the field 'mesh' of entity 'Cube': the field is not bindable.",
     "notes": [
-      "bindable fields: position, rotation, scale, visible"
+      "bindable fields: position, rotation, scale, visible, bounds_center, bounds_radius"
     ]
   }
 ]

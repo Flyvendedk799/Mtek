@@ -162,6 +162,7 @@ fn declared(item: &Item) -> Option<(DefKind, NodeId, &Ident)> {
         ItemKind::Struct(decl) => (DefKind::Struct, decl.id, &decl.name),
         ItemKind::Enum(decl) => (DefKind::Enum, decl.id, &decl.name),
         ItemKind::Material(decl) => (DefKind::Material, decl.id, &decl.name),
+        ItemKind::Compute(decl) => (DefKind::Compute, decl.id, &decl.name),
         ItemKind::Prefab(decl) => (DefKind::Prefab, decl.id, &decl.name),
         ItemKind::Scene(decl) => (DefKind::Scene, decl.id, &decl.name),
         ItemKind::Import(_) | ItemKind::Error => return None,

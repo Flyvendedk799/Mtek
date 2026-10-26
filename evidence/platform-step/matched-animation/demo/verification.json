@@ -1,0 +1,191 @@
+{
+  "errors": [],
+  "records": [
+    {
+      "model": "Fox",
+      "clips": [
+        "Survey",
+        "Walk",
+        "Run"
+      ],
+      "info": [
+        {
+          "engine": "mtek",
+          "skinNodes": 26,
+          "joints": 24,
+          "vertices": 1728,
+          "diagnostics": [],
+          "state": "running",
+          "counters": {
+            "buffersAllocated": 10,
+            "texturesAllocated": 3,
+            "pipelinesCreated": 3,
+            "shaderModulesCreated": 3,
+            "bindGroupsCreated": 14,
+            "uploads": 12,
+            "uploadBytes": 4314912,
+            "liveBuffers": 10,
+            "liveTextures": 2,
+            "liveSamplers": 1,
+            "liveShaderModules": 3,
+            "livePipelines": 3,
+            "liveBindGroups": 4,
+            "liveListeners": 9,
+            "frameTimeMs": 0.2999999988824129,
+            "cpuUpdateMs": 0.19999999925494194,
+            "renderPrepMs": 0.09999999962747097,
+            "gpuTimeAvailable": 0,
+            "drawCalls": 1,
+            "drawCallsTotal": 5,
+            "failedMaterials": 0,
+            "instancedDraws": 0,
+            "instancedDrawsTotal": 0,
+            "culledObjects": 0,
+            "culledObjectsTotal": 0,
+            "rebatchesTotal": 4,
+            "sharedParamBlocks": 0,
+            "ownedParamBlocks": 0,
+            "discardedSteps": 0,
+            "liveEntities": 1,
+            "pendingSpawns": 0,
+            "pendingRemovals": 0,
+            "entitySlots": 1,
+            "entitiesSpawned": 0,
+            "entitiesDestroyed": 0,
+            "physicsBodies": 0,
+            "physicsColliders": 0,
+            "physicsSteps": 0,
+            "physicsFrozenBodies": 0,
+            "framesRendered": 5,
+            "framesSkipped": 0,
+            "deviceLosses": 0,
+            "deviceRecoveries": 0,
+            "recoveryAttempts": 0
+          },
+          "view": {
+            "height": 2,
+            "position": [
+              3,
+              1.6,
+              2.8
+            ],
+            "target": [
+              0,
+              0.6,
+              0
+            ]
+          }
+        },
+        {
+          "engine": "three",
+          "version": "0.186.1",
+          "skinNodes": 26,
+          "joints": 24,
+          "vertices": 1728,
+          "actors": 1,
+          "render": {
+            "calls": 10,
+            "frameCalls": 0,
+            "drawCalls": 0,
+            "triangles": 0,
+            "points": 0,
+            "lines": 0,
+            "timestamp": 0
+          }
+        }
+      ]
+    },
+    {
+      "model": "CesiumMan",
+      "clips": [
+        "animation_0"
+      ],
+      "info": [
+        {
+          "engine": "mtek",
+          "skinNodes": 22,
+          "joints": 19,
+          "vertices": 3273,
+          "diagnostics": [],
+          "state": "running",
+          "counters": {
+            "buffersAllocated": 10,
+            "texturesAllocated": 3,
+            "pipelinesCreated": 3,
+            "shaderModulesCreated": 3,
+            "bindGroupsCreated": 14,
+            "uploads": 9,
+            "uploadBytes": 4433440,
+            "liveBuffers": 10,
+            "liveTextures": 2,
+            "liveSamplers": 1,
+            "liveShaderModules": 3,
+            "livePipelines": 3,
+            "liveBindGroups": 4,
+            "liveListeners": 9,
+            "frameTimeMs": 0.2999999988824129,
+            "cpuUpdateMs": 0.09999999962747097,
+            "renderPrepMs": 0.19999999925494194,
+            "gpuTimeAvailable": 0,
+            "drawCalls": 1,
+            "drawCallsTotal": 3,
+            "failedMaterials": 0,
+            "instancedDraws": 0,
+            "instancedDrawsTotal": 0,
+            "culledObjects": 0,
+            "culledObjectsTotal": 0,
+            "rebatchesTotal": 1,
+            "sharedParamBlocks": 0,
+            "ownedParamBlocks": 0,
+            "discardedSteps": 0,
+            "liveEntities": 1,
+            "pendingSpawns": 0,
+            "pendingRemovals": 0,
+            "entitySlots": 1,
+            "entitiesSpawned": 0,
+            "entitiesDestroyed": 0,
+            "physicsBodies": 0,
+            "physicsColliders": 0,
+            "physicsSteps": 0,
+            "physicsFrozenBodies": 0,
+            "framesRendered": 3,
+            "framesSkipped": 0,
+            "deviceLosses": 0,
+            "deviceRecoveries": 0,
+            "recoveryAttempts": 0
+          },
+          "view": {
+            "height": 2,
+            "position": [
+              3,
+              1.6,
+              2.8
+            ],
+            "target": [
+              0,
+              0.6,
+              0
+            ]
+          }
+        },
+        {
+          "engine": "three",
+          "version": "0.186.1",
+          "skinNodes": 22,
+          "joints": 19,
+          "vertices": 3273,
+          "actors": 1,
+          "render": {
+            "calls": 6,
+            "frameCalls": 0,
+            "drawCalls": 0,
+            "triangles": 0,
+            "points": 0,
+            "lines": 0,
+            "timestamp": 0
+          }
+        }
+      ]
+    }
+  ]
+}

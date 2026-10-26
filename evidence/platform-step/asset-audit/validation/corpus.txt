@@ -1,0 +1,25 @@
+
+> audit:assets
+> npm run audit -w @mtek/asset-audit -- --corpus=tools/asset-audit/corpus.json --out=evidence/platform-step/asset-audit/checked-2026-10-26 --check
+
+
+> @mtek/asset-audit@0.1.0-dev audit
+> node src/cli.ts --corpus=tools/asset-audit/corpus.json --out=evidence/platform-step/asset-audit/checked-2026-10-26 --check
+
+Checking fox-original (serial, existing compiler only)
+Checking cesium-man-original (serial, existing compiler only)
+Checking pbr-all-maps (serial, existing compiler only)
+Checking emissive-factor (serial, existing compiler only)
+Checking normal-map (serial, existing compiler only)
+Checking linear-animation (serial, existing compiler only)
+Checking cubic-animation-use (serial, existing compiler only)
+Checking multiple-primitives (serial, existing compiler only)
+Checking morph-targets (serial, existing compiler only)
+Checking sparse-accessor (serial, existing compiler only)
+Checking used-extension (serial, existing compiler only)
+Checking required-extensions (serial, existing compiler only)
+Checking external-buffer (serial, existing compiler only)
+Checking data-uri (serial, existing compiler only)
+Checking mixed-filters (serial, existing compiler only)
+Checking truncated-header (serial, existing compiler only)
+Passed: <workspace>\evidence\platform-step\asset-audit\checked-2026-10-26\report.md

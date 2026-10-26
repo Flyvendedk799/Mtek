@@ -1,0 +1,14 @@
+{
+  "contract": "authored finite vertex bounds",
+  "backend": "hardware",
+  "launchArgs": [
+    "--enable-unsafe-webgpu",
+    "--ignore-gpu-blocklist",
+    "--enable-webgpu-developer-features"
+  ],
+  "startedAt": "2026-10-26T05:22:57.023Z",
+  "status": "failed",
+  "browser": "153.0.8010.12",
+  "failure": "Error: page.evaluate: ReferenceError: structured is not defined\n    at shot (eval at evaluate (:311:30), <anonymous>:18:159)\n    at eval (eval at evaluate (:311:30), <anonymous>:25:34)\n    at async <anonymous>:337:30",
+  "finishedAt": "2026-10-26T05:22:59.253Z"
+}

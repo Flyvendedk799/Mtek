@@ -23,6 +23,7 @@ import { buildM2Fixtures } from "./m2-fixtures.ts";
 import { buildPulseCube, buildPulseCubeVariants } from "./m3-fixtures.ts";
 import { buildConfigurator } from "./m4-configurator.ts";
 import { buildProductConfigurator } from "./product-configurator.ts";
+import { buildLightingStudio } from "./lighting-studio.ts";
 import { buildM4Fixtures } from "./m4-fixtures.ts";
 import { buildM5Fixtures } from "./m5-fixtures.ts";
 import { buildM6Fixtures } from "./m6-fixtures.ts";
@@ -115,6 +116,11 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   // M4-10: the material configurator example, its host page and the repeated-object variant, in `.out/m4-configurator/`.
   buildConfigurator(cli);
   buildProductConfigurator(cli);
+  buildLightingStudio(cli);
+  const animationExample = join(out,"animation-demo");
+  mkdirSync(join(animationExample,"dist"),{recursive:true});
+  copyFileSync(join(REPO_ROOT,"examples/incremental-animation/index.html"),join(animationExample,"index.html"));
+  await build({entryPoints:[join(REPO_ROOT,"examples/incremental-animation/main.ts")],outfile:join(animationExample,"dist/main.js"),bundle:true,format:"esm",target:"es2022",logLevel:"warning"});
   // M5-01: static instances of prefabs, in `.out/m5/`.
   buildM5Fixtures(cli);
   // M5-07: the physics playground example, in `.out/m5-playground/`.

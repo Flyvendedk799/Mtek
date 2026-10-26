@@ -58,7 +58,7 @@ describe("examples/material-configurator/models/chair.glb is reproducible from t
     const normal = parseGlb(readFileSync(join(REPO_ROOT, FILES[1]))).json as unknown as { materials: Array<{ name: string; normalTexture?: unknown }>; images?: unknown[] };
     const extension = parseGlb(readFileSync(join(REPO_ROOT, FILES[2]))).json as unknown as { extensionsRequired?: string[] };
     expect((chair.json as unknown as { images?: unknown }).images).toBeUndefined();
-    expect(normal.materials.find((m) => m.name === "Fabric")?.normalTexture).toEqual({ index: 0 });
+    expect(normal.materials.find((m) => m.name === "Fabric")?.normalTexture).toEqual({ index: 0, texCoord: 1 });
     expect(normal.materials.filter((m) => m.normalTexture !== undefined)).toHaveLength(1);
     expect(normal.images).toHaveLength(1);
     expect(extension.extensionsRequired).toEqual(["KHR_draco_mesh_compression"]);

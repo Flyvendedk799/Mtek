@@ -1,0 +1,143 @@
+{
+  "date": "2026-10-26",
+  "scope": "Structured vertex outputs and typed fragment payloads; full shader-authoring acceptance and platform roadmap remain incomplete.",
+  "compiler": {
+    "unitTestsPassed": 916,
+    "integrationTestsPassed": 135,
+    "integrationSuites": {
+      "assets": 21,
+      "context": 34,
+      "context_cold_start": 16,
+      "fixtures": 23,
+      "grammar_model": 1,
+      "shader_lowering": 9,
+      "stdlib_registry": 25,
+      "stdlib_schema": 6
+    },
+    "diagnosticsAuditTestsPassed": 10
+  },
+  "gpu": [
+    {
+      "record": "verified-lifecycle/hardware.json",
+      "recordSha256": "54abf4ae95b4bbdfddbadec704ef285ac640ffe0d04aabd701326937e7c86873",
+      "contract": "structured vertex outputs and typed varyings",
+      "backend": "hardware",
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-3",
+        "device": "0x744c",
+        "description": "AMD Radeon RX 7900 XTX",
+        "isFallbackAdapter": false
+      },
+      "browser": "153.0.8010.12",
+      "casesPassed": 12,
+      "maximumPixelError": 0,
+      "minimumGeometryChangedPixels": 156,
+      "minimumShadowChangedPixels": 299,
+      "recoveryCasesPassed": 4,
+      "replacementCasesPassed": 24,
+      "zeroTrackedGpuResourcesAndListenersAfterDisposal": true
+    },
+    {
+      "record": "verified-lifecycle/software.json",
+      "recordSha256": "6ae0e97fb292e2bda3730ec3a93a3c043e68fca8258d69a66bcde3351f45a032",
+      "contract": "structured vertex outputs and typed varyings",
+      "backend": "software",
+      "adapter": {
+        "vendor": "google",
+        "architecture": "swiftshader",
+        "device": "0xc0de",
+        "description": "SwiftShader Device (Subzero)",
+        "isFallbackAdapter": true
+      },
+      "browser": "153.0.8010.12",
+      "casesPassed": 12,
+      "maximumPixelError": 0,
+      "minimumGeometryChangedPixels": 156,
+      "minimumShadowChangedPixels": 299,
+      "recoveryCasesPassed": 4,
+      "replacementCasesPassed": 24,
+      "zeroTrackedGpuResourcesAndListenersAfterDisposal": true
+    },
+    {
+      "record": "final-legacy/hardware.json",
+      "recordSha256": "24556e09169bb066b55681268db396c96d0f316ccd08a69568c78ab73274a8f3",
+      "contract": "position-only vertex",
+      "backend": "hardware",
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-3",
+        "device": "0x744c",
+        "description": "AMD Radeon RX 7900 XTX",
+        "isFallbackAdapter": false
+      },
+      "browser": "153.0.8010.12",
+      "casesPassed": 12,
+      "maximumPixelError": 0,
+      "minimumGeometryChangedPixels": 169,
+      "minimumShadowChangedPixels": 299,
+      "recoveryCasesPassed": 0,
+      "replacementCasesPassed": 0,
+      "zeroTrackedGpuResourcesAndListenersAfterDisposal": true
+    },
+    {
+      "record": "final-legacy/software.json",
+      "recordSha256": "6d53c9d5a2c96f0c7cb5abd37e7ec1ce1833da79d1d635143e77e33b1950d734",
+      "contract": "position-only vertex",
+      "backend": "software",
+      "adapter": {
+        "vendor": "google",
+        "architecture": "swiftshader",
+        "device": "0xc0de",
+        "description": "SwiftShader Device (Subzero)",
+        "isFallbackAdapter": true
+      },
+      "browser": "153.0.8010.12",
+      "casesPassed": 12,
+      "maximumPixelError": 0,
+      "minimumGeometryChangedPixels": 169,
+      "minimumShadowChangedPixels": 299,
+      "recoveryCasesPassed": 0,
+      "replacementCasesPassed": 0,
+      "zeroTrackedGpuResourcesAndListenersAfterDisposal": true
+    }
+  ],
+  "inspection": "inspect.json",
+  "checksPassed": [
+    "TypeScript project build",
+    "workspace lint",
+    "compiler and CLI Clippy --all-targets --locked -j 2 -- -D warnings",
+    "cargo fmt --check",
+    "git diff --check",
+    "generated coverage: 404 features / 217 positive programs / 246 diagnostic codes",
+    "generated release documentation comparisons",
+    "prebuilt runtime consistency against sources and dist",
+    "retained GPU source/output hash verification"
+  ],
+  "commands": [
+    "cargo test -p mtek-compiler -j 2 --lib --test fixtures --test shader_lowering --test assets --test grammar_model --test context --test context_cold_start --test stdlib_schema --test stdlib_registry -- --test-threads=2 --quiet",
+    "cargo test -p mtek-compiler -j 2 --test diagnostics_audit -- --test-threads=2 --quiet",
+    "node examples/vertex-deformation/verify.mjs hardware evidence/platform-step/shader-authoring/structured-2026-10-26/verified-lifecycle structured",
+    "node examples/vertex-deformation/verify.mjs software evidence/platform-step/shader-authoring/structured-2026-10-26/verified-lifecycle structured"
+  ],
+  "resourcePolicy": {
+    "cargoJobs": 2,
+    "testThreads": 2,
+    "coverageCompilerProbes": 1,
+    "sustainedPerformanceRuns": false,
+    "animationOptimization": false
+  },
+  "limitations": [
+    "One physical Radeon RX 7900 XTX desktop; software backend is on the same host.",
+    "Replacement resource comparison uses one warm-up cycle and two observed cycles per profile; no long-session plateau claim.",
+    "No new package-budget run; runtime code is unchanged in this increment.",
+    "Mtek-authored compute remains unimplemented (E4901)."
+  ],
+  "remaining": [
+    "Authored finite bounds and related tooling",
+    "Combined skeletal deformation and recovery validation",
+    "Wider physical-device evidence",
+    "Mtek-authored compute resource/dispatch/synchronization contract, implementation, examples and validation",
+    "Remaining platform roadmap work and deferred animation optimization/performance validation"
+  ]
+}

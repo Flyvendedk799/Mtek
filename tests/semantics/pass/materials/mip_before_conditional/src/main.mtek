@@ -1,0 +1,7 @@
+material M { param t: texture = texture.white(); param s: sampler = sampler.linear_repeat();
+fragment(input: SurfaceInput) -> color {
+    let texel = sample_mip(t, s, input.uv);
+    if input.uv.x > 0.5 { return color.linear(texel.xyz, 1.0); }
+    return #ffffff;
+} }
+scene Demo { camera Main {} }

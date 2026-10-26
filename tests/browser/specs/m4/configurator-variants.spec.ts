@@ -47,7 +47,7 @@ function locationInModel(literal: string): { line: number; column: number } {
 
 test.describe("an unsupported required asset feature fails explicitly, at compile time (M4-10)", () => {
   const variants = [
-    { glb: "chair_normal_texture.glb", code: "MTEK-E7016", names: ["normalTexture", "'Fabric'"], feature: "a normal texture" },
+    { glb: "chair_normal_texture.glb", code: "MTEK-E7009", names: ["normal", "TEXCOORD_1", "'Fabric'"], feature: "a normal texture on UV set 1" },
     { glb: "chair_required_extension.glb", code: "MTEK-E7004", names: ["KHR_draco_mesh_compression"], feature: "a required extension" },
   ] as const;
 

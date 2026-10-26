@@ -338,7 +338,24 @@ describe("MaterialStore: textures and samplers (decision 0054)", () => {
     expect(SAMPLER_PRESETS["sampler.nearest_clamp"]).toMatchObject({ magFilter: "nearest", minFilter: "nearest", addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge" });
     expect(SAMPLER_PRESETS["sampler.linear_repeat"]).toMatchObject({ magFilter: "linear", minFilter: "linear", addressModeU: "repeat", addressModeV: "repeat" });
     expect(SAMPLER_PRESETS["sampler.linear_clamp"]).toMatchObject({ magFilter: "linear", minFilter: "linear", addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge" });
-    expect(Object.keys(SAMPLER_PRESETS)).toHaveLength(4);
+    expect(Object.keys(SAMPLER_PRESETS)).toHaveLength(24);
+    for (const stem of ["linear_repeat", "linear_clamp", "nearest_repeat", "nearest_clamp"]) {
+      expect(SAMPLER_PRESETS[`sampler.${stem}_level0`]).toMatchObject({ lodMaxClamp: 0 });
+    }
+    expect(SAMPLER_PRESETS["sampler.linear_repeat_mip_nearest"]).toMatchObject({ minFilter: "linear", mipmapFilter: "nearest" });
+    expect(SAMPLER_PRESETS["sampler.nearest_clamp_mip_linear"]).toMatchObject({ minFilter: "nearest", mipmapFilter: "linear" });
+  });
+
+  it("preserves independent imported magnification/minification filters across wrap and mip modes", () => {
+    for (const mag of ["linear", "nearest"] as const) for (const wrap of ["repeat", "clamp"] as const) for (const mip of ["level0", "mip_nearest", "mip_linear"] as const) {
+      const min = mag === "linear" ? "nearest" : "linear";
+      const preset = SAMPLER_PRESETS[`sampler.mag_${mag}_min_${min}_${wrap}_${mip}`]!;
+      expect(preset.magFilter).toBe(mag); expect(preset.minFilter).toBe(min);
+      expect(preset.mipmapFilter).toBe(mip === "mip_linear" ? "linear" : "nearest");
+      expect(preset.lodMaxClamp).toBe(mip === "level0" ? 0 : undefined);
+      expect(preset.addressModeU).toBe(wrap === "repeat" ? "repeat" : "clamp-to-edge");
+      expect(preset.addressModeV).toBe(preset.addressModeU);
+    }
   });
 
   it("an instance with a block and resources has one bind group: the block at binding 0, then the resources", () => {

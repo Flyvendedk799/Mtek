@@ -47,6 +47,7 @@ pub(super) enum MtekType {
     Struct(String),
     /// The stage input record.
     SurfaceInput,
+    VertexInput,
 }
 
 /// Parses an IR type spelling. Arrays nest at most 256 levels (`E3032`).
@@ -63,6 +64,7 @@ pub(super) fn parse(ty: &str) -> Option<MtekType> {
         "quat" => MtekType::Quat,
         "mat4" => MtekType::Mat4,
         SURFACE_INPUT => MtekType::SurfaceInput,
+        "VertexInput" => MtekType::VertexInput,
         _ => {
             if let Some((element, length)) = split_array(ty) {
                 MtekType::Array {
@@ -152,6 +154,7 @@ impl<'p> TypeMapper<'p> {
             MtekType::Color | MtekType::Quat => ShaderType::VEC4,
             MtekType::Mat4 => ShaderType::Mat4,
             MtekType::SurfaceInput => ShaderType::named(SURFACE_INPUT_STRUCT),
+            MtekType::VertexInput => ShaderType::named("MtekVertexInput"),
             MtekType::Array { .. } | MtekType::Struct(_) => self.laid_out(ty, &parsed)?.0,
         })
     }
@@ -224,6 +227,8 @@ impl<'p> TypeMapper<'p> {
                 // names. Its natural 64-byte layout already satisfies aggregate layout.
                 self.decls.push(if decl.name == SURFACE_INPUT_STRUCT {
                     surface_input_struct(&SurfaceField::ALL, self.span)
+                } else if decl.name == "MtekVertexInput" {
+                    crate::lowering::standard_stage::vertex_input_struct(self.span)
                 } else {
                     decl
                 });
@@ -262,6 +267,14 @@ impl<'p> TypeMapper<'p> {
                 LayoutType::new_struct(symbol.clone(), members)
             }
             MtekType::SurfaceInput => surface_input_layout(),
+            MtekType::VertexInput => LayoutType::new_struct(
+                "MtekVertexInput",
+                vec![
+                    ("position".to_owned(), LayoutType::Vec3),
+                    ("normal".to_owned(), LayoutType::Vec3),
+                    ("uv".to_owned(), LayoutType::Vec2),
+                ],
+            ),
         })
     }
 }

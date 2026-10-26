@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E4020",
+    "file": "src/main.mtek",
+    "startByte": 36,
+    "endByte": 40,
+    "message": "Material 'Move' has no fragment stage.",
+    "notes": [
+      "a material requires exactly one `fragment` stage and may declare one `vertex` stage",
+      "help: add `fragment(input: SurfaceInput) -> color { … }`"
+    ]
+  }
+]

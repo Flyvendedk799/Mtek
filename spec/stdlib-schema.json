@@ -306,7 +306,7 @@
       "name": "Entity",
       "category": "object",
       "since": "M1",
-      "doc": "The fields of an entity or prefab body: a named node with a transform and optional components.",
+      "doc": "Entity/prefab: a named transform with optional components.",
       "fields": [
         {
           "name": "body",
@@ -319,6 +319,30 @@
           "range": null,
           "since": "M1",
           "doc": "A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; requires `collider`."
+        },
+        {
+          "name": "bounds_center",
+          "type": "vec3",
+          "default": "vec3(0.0, 0.0, 0.0)",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": "finite",
+          "since": "M1",
+          "doc": "Final deformed local sphere center; used when bounds_radius > 0."
+        },
+        {
+          "name": "bounds_radius",
+          "type": "f32",
+          "default": "0.0",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": "≥ 0, finite",
+          "since": "M1",
+          "doc": "Enclose every final local vertex/pose; 0 uses mesh/skin bounds, or unbounded authored vertices."
         },
         {
           "name": "clip",
@@ -427,7 +451,7 @@
           "constructionOnly": false,
           "range": "every component > 0, finite",
           "since": "M1",
-          "doc": "Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body."
+          "doc": "Parent-local scale. Bodies require construction-only scale; dynamic/kinematic bodies require `vec3(1.0)`."
         },
         {
           "name": "tag",
@@ -451,7 +475,7 @@
           "constructionOnly": false,
           "range": null,
           "since": "M1",
-          "doc": "Hides the mesh draw only; the entity's behaviour keeps running."
+          "doc": "Hide the mesh; behavior keeps running."
         }
       ]
     },
@@ -510,7 +534,7 @@
       "name": "Pbr",
       "category": "material",
       "since": "M1",
-      "doc": "The documented PBR subset (metallic-roughness, no image-based lighting).",
+      "doc": "Metallic-roughness PBR with optional scene shadows and environment lighting.",
       "fields": [
         {
           "name": "base_color",
@@ -549,6 +573,42 @@
           "doc": "Base colour texture."
         },
         {
+          "name": "emissive",
+          "type": "color",
+          "default": "#000000",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M1",
+          "doc": "Linear emission before exposure."
+        },
+        {
+          "name": "emissive_sampler",
+          "type": "sampler",
+          "default": "sampler.linear_repeat()",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "Sampler of the emissive map."
+        },
+        {
+          "name": "emissive_texture",
+          "type": "texture",
+          "default": "texture.white()",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "sRGB emissive colour, multiplied by emissive."
+        },
+        {
           "name": "metallic",
           "type": "f32",
           "default": "0.0",
@@ -559,6 +619,102 @@
           "range": null,
           "since": "M1",
           "doc": "Metalness; clamped to 0..1 by the lighting model."
+        },
+        {
+          "name": "metallic_roughness_sampler",
+          "type": "sampler",
+          "default": "sampler.linear_repeat()",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "Sampler of the metallic_roughness map."
+        },
+        {
+          "name": "metallic_roughness_texture",
+          "type": "texture",
+          "default": "texture.white()",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "Linear green roughness and blue metallic factors."
+        },
+        {
+          "name": "normal_sampler",
+          "type": "sampler",
+          "default": "sampler.linear_repeat()",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "Sampler of the normal map."
+        },
+        {
+          "name": "normal_scale",
+          "type": "f32",
+          "default": "0.0",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M1",
+          "doc": "Normal XY scale; zero suits the white fallback. GLB map default: one."
+        },
+        {
+          "name": "normal_texture",
+          "type": "texture",
+          "default": "texture.white()",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "Linear tangent-space normal map; enable with normal_scale."
+        },
+        {
+          "name": "occlusion_sampler",
+          "type": "sampler",
+          "default": "sampler.linear_repeat()",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "Sampler of the occlusion map."
+        },
+        {
+          "name": "occlusion_strength",
+          "type": "f32",
+          "default": "1.0",
+          "required": false,
+          "writable": true,
+          "bindable": true,
+          "constructionOnly": false,
+          "range": null,
+          "since": "M1",
+          "doc": "Indirect-light occlusion strength, clamped to 0..1."
+        },
+        {
+          "name": "occlusion_texture",
+          "type": "texture",
+          "default": "texture.white()",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "Linear red indirect-light occlusion."
         },
         {
           "name": "roughness",
@@ -2053,7 +2209,19 @@
       "handlersOnly": false,
       "cpuSemantics": "",
       "since": "M1",
-      "doc": "Filtered texel of `t` at `uv`. `texture` and `sampler` parameters may be used only as direct arguments to `sample`."
+      "doc": "Level-zero texel of `t` at `uv`. Texture/sampler params are direct operands of `sample` or `sample_mip` only."
+    },
+    {
+      "name": "sample_mip",
+      "signatures": [
+        "(t: texture, s: sampler, uv: vec2) -> vec4"
+      ],
+      "domain": "gpu",
+      "constEligible": false,
+      "handlersOnly": false,
+      "cpuSemantics": "",
+      "since": "M1",
+      "doc": "Implicit mip texel; fragment initial straight-line code only. Resource rules as for `sample`."
     },
     {
       "name": "saturate",
@@ -2899,7 +3067,20 @@
           "handlersOnly": false,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "The documented PBR subset evaluated for every light in the scene."
+          "doc": "PBR with scene lights, optional shadows and environment lighting."
+        },
+        {
+          "name": "pbr_mapped",
+          "kind": "function",
+          "signatures": [
+            "(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32, normal_texel: vec3, normal_scale: f32, occlusion: f32, emissive: vec3) -> color"
+          ],
+          "domain": "gpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Derivative normal, indirect occlusion, exposed emission; fragment initial straight-line code only."
         }
       ]
     },
@@ -3040,6 +3221,32 @@
           "doc": "Bilinear filtering, texture coordinates clamp to the edge."
         },
         {
+          "name": "linear_clamp_level0",
+          "kind": "function",
+          "signatures": [
+            "() -> sampler"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Base-level-only filtering."
+        },
+        {
+          "name": "linear_clamp_mip_nearest",
+          "kind": "function",
+          "signatures": [
+            "() -> sampler"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Explicit mip interpolation preset."
+        },
+        {
           "name": "linear_repeat",
           "kind": "function",
           "signatures": [
@@ -3051,6 +3258,32 @@
           "cpuSemantics": "",
           "since": "M1",
           "doc": "Bilinear filtering, texture coordinates wrap."
+        },
+        {
+          "name": "linear_repeat_level0",
+          "kind": "function",
+          "signatures": [
+            "() -> sampler"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Base-level-only filtering."
+        },
+        {
+          "name": "linear_repeat_mip_nearest",
+          "kind": "function",
+          "signatures": [
+            "() -> sampler"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Explicit mip interpolation preset."
         },
         {
           "name": "nearest_clamp",
@@ -3066,6 +3299,32 @@
           "doc": "Nearest-texel filtering, texture coordinates clamp to the edge."
         },
         {
+          "name": "nearest_clamp_level0",
+          "kind": "function",
+          "signatures": [
+            "() -> sampler"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Base-level-only filtering."
+        },
+        {
+          "name": "nearest_clamp_mip_linear",
+          "kind": "function",
+          "signatures": [
+            "() -> sampler"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Explicit mip interpolation preset."
+        },
+        {
           "name": "nearest_repeat",
           "kind": "function",
           "signatures": [
@@ -3077,6 +3336,32 @@
           "cpuSemantics": "",
           "since": "M1",
           "doc": "Nearest-texel filtering, texture coordinates wrap."
+        },
+        {
+          "name": "nearest_repeat_level0",
+          "kind": "function",
+          "signatures": [
+            "() -> sampler"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Base-level-only filtering."
+        },
+        {
+          "name": "nearest_repeat_mip_linear",
+          "kind": "function",
+          "signatures": [
+            "() -> sampler"
+          ],
+          "domain": "cpu",
+          "constEligible": true,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Explicit mip interpolation preset."
         }
       ]
     },
@@ -3116,6 +3401,72 @@
   ],
   "types": [
     {
+      "name": "ComputeInput",
+      "kind": "record",
+      "gpu": true,
+      "since": "M1",
+      "doc": "Compute invocation IDs (dispatch unavailable).",
+      "fields": [
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "global_x",
+          "type": "u32"
+        },
+        {
+          "name": "global_y",
+          "type": "u32"
+        },
+        {
+          "name": "global_z",
+          "type": "u32"
+        },
+        {
+          "name": "local_x",
+          "type": "u32"
+        },
+        {
+          "name": "local_y",
+          "type": "u32"
+        },
+        {
+          "name": "local_z",
+          "type": "u32"
+        },
+        {
+          "name": "group_x",
+          "type": "u32"
+        },
+        {
+          "name": "group_y",
+          "type": "u32"
+        },
+        {
+          "name": "group_z",
+          "type": "u32"
+        },
+        {
+          "name": "group_count_x",
+          "type": "u32"
+        },
+        {
+          "name": "group_count_y",
+          "type": "u32"
+        },
+        {
+          "name": "group_count_z",
+          "type": "u32"
+        },
+        {
+          "name": "local_index",
+          "type": "u32"
+        }
+      ],
+      "methods": []
+    },
+    {
       "name": "PointerEvent",
       "kind": "record",
       "gpu": false,
@@ -3138,7 +3489,7 @@
       "kind": "record",
       "gpu": true,
       "since": "M1",
-      "doc": "The interpolated inputs of a material fragment stage.",
+      "doc": "Interpolated fragment inputs.",
       "fields": [
         {
           "name": "local_position",
@@ -3150,6 +3501,28 @@
         },
         {
           "name": "world_normal",
+          "type": "vec3"
+        },
+        {
+          "name": "uv",
+          "type": "vec2"
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "VertexInput",
+      "kind": "record",
+      "gpu": true,
+      "since": "M1",
+      "doc": "Skinned local vertex inputs.",
+      "fields": [
+        {
+          "name": "position",
+          "type": "vec3"
+        },
+        {
+          "name": "normal",
           "type": "vec3"
         },
         {

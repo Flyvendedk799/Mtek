@@ -85,6 +85,22 @@ fn schema_rows() -> Vec<Row> {
             Some("every component > 0, finite"),
         ),
         ("Entity", "visible", "bool", Some("true"), "WB", None),
+        (
+            "Entity",
+            "bounds_center",
+            "vec3",
+            Some(V3_ZERO),
+            "WB",
+            Some("finite"),
+        ),
+        (
+            "Entity",
+            "bounds_radius",
+            "f32",
+            Some("0.0"),
+            "WB",
+            Some("\u{2265} 0, finite"),
+        ),
         ("Entity", "mesh", "mesh", None, "C", None),
         (
             "Entity",
@@ -224,6 +240,73 @@ fn schema_rows() -> Vec<Row> {
             "C",
             None,
         ),
+        (
+            "Pbr",
+            "metallic_roughness_texture",
+            "texture",
+            Some("texture.white()"),
+            "C",
+            None,
+        ),
+        (
+            "Pbr",
+            "metallic_roughness_sampler",
+            "sampler",
+            Some("sampler.linear_repeat()"),
+            "C",
+            None,
+        ),
+        (
+            "Pbr",
+            "normal_texture",
+            "texture",
+            Some("texture.white()"),
+            "C",
+            None,
+        ),
+        (
+            "Pbr",
+            "normal_sampler",
+            "sampler",
+            Some("sampler.linear_repeat()"),
+            "C",
+            None,
+        ),
+        (
+            "Pbr",
+            "occlusion_texture",
+            "texture",
+            Some("texture.white()"),
+            "C",
+            None,
+        ),
+        (
+            "Pbr",
+            "occlusion_sampler",
+            "sampler",
+            Some("sampler.linear_repeat()"),
+            "C",
+            None,
+        ),
+        (
+            "Pbr",
+            "emissive_texture",
+            "texture",
+            Some("texture.white()"),
+            "C",
+            None,
+        ),
+        (
+            "Pbr",
+            "emissive_sampler",
+            "sampler",
+            Some("sampler.linear_repeat()"),
+            "C",
+            None,
+        ),
+        ("Pbr", "normal_scale", "f32", Some("0.0"), "WB", None),
+        ("Pbr", "occlusion_strength", "f32", Some("1.0"), "WB", None),
+        ("Pbr", "emissive", "color", Some("#000000"), "WB", None),
         // Decision 0170: sprites.
         (
             "Sprite",
@@ -615,6 +698,7 @@ fn types_cover_section_2() {
         "sound",
         "array",
         "SurfaceInput",
+        "VertexInput",
         "PointerEvent",
     ] {
         assert!(registry.type_def(name).is_some(), "missing type {name}");
@@ -754,7 +838,7 @@ fn every_namespace_member_of_section_2_is_present() {
             count("easing"),
             count("animation")
         ],
-        [3, 5, 2, 2, 4, 3, 5, 1, 4, 10, 15]
+        [3, 5, 2, 2, 12, 3, 5, 2, 4, 10, 15]
     );
 }
 
@@ -1010,6 +1094,12 @@ fn intrinsic_rows() -> Vec<IntrinsicRow> {
     ];
     rows.push((
         "sample",
+        &["(texture, sampler, vec2) -> vec4"],
+        Domain::Gpu,
+        false,
+    ));
+    rows.push((
+        "sample_mip",
         &["(texture, sampler, vec2) -> vec4"],
         Domain::Gpu,
         false,
@@ -1611,7 +1701,9 @@ fn prelude_material_sources_are_embedded_and_match_the_schemas() {
         .expect("std/materials.mtek is embedded");
     assert!(source.contains("export material Unlit"));
     assert!(source.contains("export material Pbr"));
-    assert!(source.contains("lighting.pbr(surface, albedo, metallic, roughness)"));
+    assert!(
+        source.contains("lighting.pbr_mapped(surface, albedo, metallic * mr.z, roughness * mr.y")
+    );
     for material in ["Unlit", "Pbr"] {
         let schema = registry.schema(material).unwrap();
         let params = material_params(source, material);

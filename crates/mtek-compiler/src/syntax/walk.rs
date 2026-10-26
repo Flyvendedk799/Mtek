@@ -14,6 +14,7 @@ use super::ast::{
     PrefabDecl, SceneDecl, SceneMember, SceneObject, StageFn, StateDecl, Stmt, StructDecl,
     StructField, Type, TypeKind,
 };
+use super::ast::{ComputeDecl, ComputeMember};
 use crate::source::Span;
 
 /// What the walk reports about one node.
@@ -82,6 +83,7 @@ impl Walker<'_> {
             ItemKind::Struct(decl) => w.struct_decl(decl),
             ItemKind::Enum(decl) => w.enum_decl(decl),
             ItemKind::Material(decl) => w.material(decl),
+            ItemKind::Compute(decl) => w.compute(decl),
             ItemKind::Prefab(decl) => w.prefab(decl),
             ItemKind::Scene(decl) => w.scene(decl),
             ItemKind::Error => {}
@@ -90,6 +92,31 @@ impl Walker<'_> {
 
     fn ident(&mut self, ident: &Ident) {
         self.leaf(ident, "ident");
+    }
+
+    fn compute(&mut self, decl: &ComputeDecl) {
+        self.node(decl.id, decl.span, "compute", |w| {
+            w.ident(&decl.name);
+            for member in &decl.members {
+                match member {
+                    ComputeMember::Param(param) => w.param_decl(param),
+                    ComputeMember::Stage(stage) => w.stage_fn(stage),
+                    ComputeMember::Workgroup(field) => w.field_init(field),
+                    ComputeMember::Input(buffer) | ComputeMember::Output(buffer) => {
+                        let kind = if matches!(member, ComputeMember::Input(_)) {
+                            "input-buffer"
+                        } else {
+                            "output-buffer"
+                        };
+                        w.node(buffer.id, buffer.span, kind, |w| {
+                            w.ident(&buffer.name);
+                            w.ty(&buffer.ty);
+                        });
+                    }
+                    ComputeMember::Error(node) => w.leaf(node, "error"),
+                }
+            }
+        });
     }
 
     fn import(&mut self, decl: &ImportDecl) {

@@ -21,7 +21,7 @@ material Pulse {
 
 A material is a module item with:
 - zero or more `param` declarations (§2), then
-- exactly one stage function, `fragment` (§3). A material without `fragment` is `E4020`. A `vertex` or `compute` member is `E4901` ("custom vertex and compute stages are planned for v0.2").
+- exactly one `fragment` stage (§3) and optionally one authored `vertex` stage (§3.5), in either order. A material without `fragment` is `E4020`; duplicate stages are `E2002`. Custom compute stages remain unsupported (`E4901`).
 
 Materials are GPU programs plus a typed parameter interface. They have no state, no handlers and no CPU code.
 
@@ -41,7 +41,7 @@ Parameter storage is planned by the resource planner (`spec/gpu-layout.md`): val
 `fragment(name: SurfaceInput) -> color { … }`
 
 - Exactly one parameter, of type `SurfaceInput`, any name; result type `color` (`E4021` otherwise).
-- Effect level `pure`, with additional access to: the stage input, the material's params, and GPU-only intrinsics (`sample`, `lighting.pbr`).
+- Effect level `pure`, with additional access to: the stage input, the material's params, and GPU-only intrinsics (`sample`, `sample_mip`, `lighting.pbr`, `lighting.pbr_mapped`).
 - Everything reachable from it must satisfy GPU reachability (`spec/language.md` §8.4).
 - **No captures.** Stage code cannot reference scene state, entity fields, `frame.*`, `self`, `cpu fn`s, handles other than its own texture/sampler params, or anything else outside its params and inputs (`E4040`, with a note: "to use `frame.time` in a material, add a param and bind it: `phase: bind(frame.time)`"). This is what makes transport explicit and inspectable.
 
@@ -54,7 +54,7 @@ Parameter storage is planned by the resource planner (`spec/gpu-layout.md`): val
 | `world_normal` | `vec3` | Interpolated world-space normal, **re-normalised** in the fragment wrapper |
 | `uv` | `vec2` | Interpolated `TEXCOORD_0` |
 
-The compiler records which fields a material reads. The generated vertex stage outputs, and the vertex layout requires, **only those** (blueprint §7.2). A mesh that lacks an attribute a material reads is rejected: at compile time for built-in and asset meshes whose attributes are known (`E7010`), never by substituting zeros.
+The compiler records which fields a material reads. The generated vertex stage outputs **only those** varyings; authored vertex reads (§3.5) may require additional mesh attributes (blueprint §7.2). A mesh that lacks an attribute a material reads is rejected: at compile time for built-in and asset meshes whose attributes are known (`E7010`), never by substituting zeros.
 
 ### 3.2 The generated wrapper
 
@@ -63,6 +63,25 @@ For each material the compiler generates (in WGSL, from shader IR — never from
 - the fragment entry point: reconstructs `SurfaceInput`, calls the user's `fragment` body (lowered to a WGSL function), and writes the result, alpha included, to colour target 0 (decision 0138). The canvas is opaque, so the alpha only matters for a translucent draw (§3.4). When the returned alpha is a constant other than 1.0 the compiler emits warning `W5101`: that alpha blends only while a colour param of the instance is translucent.
 
 Bind groups, struct names and binding numbers are fixed by `spec/gpu-layout.md` §6.
+
+### 3.3 The fixed vertex and varying interface (normative)
+
+| Vertex attribute | `@location` | Format | Present when |
+|---|---|---|---|
+| `position` | 0 | `float32x3` | always |
+| `normal` | 1 | `float32x3` | the fragment reads `world_normal` or the vertex stage reads `normal` |
+| `uv` | 2 | `float32x2` | either stage reads `uv` |
+
+Each attribute lives in **its own vertex buffer** (non-interleaved, `arrayStride` 12/12/8, `stepMode: "vertex"`). The pipeline's `buffers` array lists only the present attributes, in the order position, normal, uv; vertex-buffer slot `k` is the `k`-th present attribute (so for `Unlit`, slot 0 = position only). The runtime binds the mesh's matching buffers in that order.
+
+| Varying (vertex → fragment) | `@location` | Emitted when |
+|---|---|---|
+| `local_position` | 0 | read by the fragment |
+| `world_position` | 1 | read by the fragment |
+| `world_normal` | 2 | read by the fragment |
+| `uv` | 3 | read by the fragment |
+
+Only the varyings the fragment reads are declared; vertex-only attribute reads do not add varyings, and the locations stay fixed so that pipeline layouts and span maps remain stable across edits.
 
 ### 3.4 Translucent draws (decision 0138)
 
@@ -78,24 +97,41 @@ Order is per object, not per triangle: intersecting translucent objects, or one 
 
 Particles (`particles`, `spec/scenes.md` §4.6) are drawn between the opaque pass and the translucent one. An emitter whose material is translucent (`Sprite`, a colour alpha below 1) draws with the blended instanced pipeline and no depth write; its particles are sorted back to front by view depth, and such emitters come after the opaque ones, back to front by their mean depth. They are not merged into the order of the translucent entities: a blended particle is hidden by a nearer translucent entity only through the blend order of the passes, not per object.
 
-### 3.3 The fixed vertex and varying interface (normative)
+### 3.5 Authored vertex stage (decisions 0197–0198)
 
-| Vertex attribute | `@location` | Format | Present when |
-|---|---|---|---|
-| `position` | 0 | `float32x3` | always |
-| `normal` | 1 | `float32x3` | the material reads `world_normal` |
-| `uv` | 2 | `float32x2` | the material reads `uv` |
+`vertex(input: VertexInput) -> vec3 { … }` returns a mesh-local position.
+`VertexInput` has `position: vec3`, `normal: vec3`, `uv: vec2`. Alternatively the
+result may be an ordinary user struct containing `position: vec3`, optional
+`normal: vec3` and `uv: vec2`, plus scalar/vector payload fields. Output geometry
+fields replace mesh values; omitted normal/UV fields retain them. Vertex reads
+add to required mesh attributes independently of fragment varyings. Generated
+normal/UV outputs remove the corresponding fragment-only mesh requirement.
+Passing the whole input record to a helper still requires all three mesh fields.
+Missing required asset data is `E7010`.
 
-Each attribute lives in **its own vertex buffer** (non-interleaved, `arrayStride` 12/12/8, `stepMode: "vertex"`). The pipeline's `buffers` array lists only the present attributes, in the order position, normal, uv; vertex-buffer slot `k` is the `k`-th present attribute (so for `Unlit`, slot 0 = position only). The runtime binds the mesh's matching buffers in that order.
+A fragment may take a second parameter of exactly the vertex output struct type:
+`fragment(surface: SurfaceInput, data: MyVertexData) -> color`. Without a matching
+structured vertex result this is `E4021`. All struct fields are forwarded when the
+second parameter exists. Payload fields support f32/i32/u32/bool, float vectors,
+color and quat; matrices, arrays, nested structs and CPU/resource values are
+`E4021`. Float/color fields interpolate in perspective at pixel centers; integer,
+boolean and quaternion fields take the first vertex's value. Surface varyings keep
+locations 0–3; payload fields fill unused locations in declaration order. The
+combined limit is 16 variables (`E6003`). Shader inspection lists the mapping.
 
-| Varying (vertex → fragment) | `@location` | Emitted when |
-|---|---|---|
-| `local_position` | 0 | read by the material |
-| `world_position` | 1 | read by the material |
-| `world_normal` | 2 | read by the material |
-| `uv` | 3 | read by the material |
+Both stages are GPU roots with existing purity/capture rules. `sample` reads level
+zero; implicit derivatives remain fragment-only (`E4042`). Skeletal deformation
+precedes the authored function; model/instance and camera transforms follow it.
+The result feeds clip position, fragment local/world positions and directional
+shadow passes. Chosen normals pass through the object's inverse-transpose matrix
+and are normalized for SurfaceInput; the custom payload keeps its local values.
 
-Only the varyings the material reads are declared; the locations stay fixed so that pipeline layouts and span maps remain stable across edits.
+No authored finite bound is available yet: camera-frustum rejection is skipped for
+these draws, and sorting/inspection centers remain the original mesh centers.
+Arbitrarily displaced translucent objects can therefore sort approximately.
+[Decision 0198](decisions/0198-typed-vertex-outputs-and-varyings.md) specifies the full
+IO contract; the [source examples](../examples/vertex-deformation/README.md) compare
+geometry, normals, UVs, typed payloads and shadows with ordinary transforms.
 
 ## 4. Material instances
 
@@ -127,14 +163,23 @@ material: Unlit { color: #ff8800 };
 - GPU intrinsic `sample(t: texture, s: sampler, uv: vec2) -> vec4` — returns the filtered texel. Textures declared with colour space `srgb` (the default for colour images) are created with an `-srgb` format, so `sample` returns linear values; `linear` textures are returned as stored.
 - `texture` and `sampler` params may be used **only as direct arguments to `sample`** (`E4041` for any other use, including passing them to user functions), which keeps lowering to WGSL handle variables trivial.
 - Mip-maps are not generated in v0.1 (one level); documented limitation, measured in the runtime benchmark. `sample` therefore reads level 0 explicitly (`textureSampleLevel`), which is also valid in non-uniform control flow.
-- A material has at most 8 `texture` and `sampler` params together (`E6002`, reported by `check`), and a resource is a param of its own, never an element of an array or a field of a struct (`E4030`). Resource params are construction-only: assigning one is `E5073` and binding one `E5004`.
+- A material has at most 16 `texture` and `sampler` params together (`E6002`, reported by `check`), and a resource is a param of its own, never an element of an array or a field of a struct (`E4030`). Resource params are construction-only: assigning one is `E5073` and binding one `E5004`.
 - Built-in textures are 1×1 and opaque, `texture.white()` `(1, 1, 1, 1)` and `texture.black()` `(0, 0, 0, 1)`; the samplers are filtering samplers (`linear_*` or `nearest_*` filtering, `*_repeat` or `*_clamp` addressing). How they are lowered, bound and created, and the `test.textures` control a test uses to sample a generated texture before asset textures exist, are decision 0054.
+
+`sample_mip(texture, sampler, uv)` selects mip levels from screen derivatives. It and
+`lighting.pbr_mapped` must appear in a fragment's initial straight-line prefix,
+before branches, loops, matches, nested blocks or short-circuit expressions
+(`E4042`); they cannot be called inside user helpers. Evaluate texels first and
+use the values in conditional code. `sample` retains its level-zero behavior.
+Each sampler preset has a `_level0` variant; linear presets add `_mip_nearest`,
+and nearest presets add `_mip_linear`. GLB import preserves the requested mip
+filter. See [decision 0194](decisions/0194-gltf-material-channels.md).
 
 ## 6. Colour pipeline
 
 - All shading is in linear space (`spec/language.md` §5.4).
 - The render target is written through an sRGB view (`spec/runtime-abi.md` §8.2), so the hardware performs the linear→sRGB encode. Lit materials apply the camera's exposure (§8 rule 9) before the output. There is **no tone mapping** in v0.1: linear values above 1.0 clip. This is documented and visible in tests (a light of high intensity saturates).
-- Opaque rendering only; depth test `less`, depth write on, back-face culling with counter-clockwise front faces (glTF convention). All built-in meshes are generated counter-clockwise when viewed from outside.
+- Opaque draws use depth test `less` and depth writes; translucent draws follow §3.4. Back-face culling uses counter-clockwise front faces (glTF convention). All built-in meshes are generated counter-clockwise when viewed from outside.
 
 ## 7. Lights (components, M4)
 
@@ -163,7 +208,7 @@ Notation: `N` = normalised world normal; `V = normalize(camera_position − worl
 8. No `NaN`: a light's term is exactly `0` when `NL ≤ 0`, and when `L + V = 0` (no half vector, reachable with `NL > 0` only for a back-facing normal). Implementations must test both before forming `H = normalize(L + V)`.
 9. Exposure: the result `rgb` of rule 7 is multiplied by the active camera's exposure scale `1 / (1.2 · 2^EV100)`, where EV100 is `Camera.exposure` (`spec/scenes.md` §3, decision `spec/decisions/0081-camera-exposure.md`). Light intensities stay physical (lux, candela); the default exposure (`-log2(1.2 · π)`, scale `π`) maps a white Lambertian surface under 1 lux to `1.0`.
 
-No image-based lighting, emissive, occlusion, normal mapping, clear-coat or shadows in v0.1. A call `lighting.pbr(input, …)` reads `world_position` and `world_normal` of the stage input (§3.1), and of nothing else.
+These direct-lighting formulas are extended by mapped emissive/occlusion/normal inputs (decision 0194) and optional scene shadows/environment lighting (decision 0195). Clear-coat remains unsupported. A call `lighting.pbr(input, …)` reads `world_position` and `world_normal` of the stage input (§3.1), and nothing else of it.
 
 ## 9. Built-in materials (prelude, written in Mtek)
 
@@ -181,15 +226,42 @@ export material Pbr {
     param roughness: f32 = 0.5;
     param base_color_texture: texture = texture.white();
     param base_color_sampler: sampler = sampler.linear_repeat();
+    param metallic_roughness_texture: texture = texture.white();
+    param metallic_roughness_sampler: sampler = sampler.linear_repeat();
+    param normal_texture: texture = texture.white();
+    param normal_sampler: sampler = sampler.linear_repeat();
+    param occlusion_texture: texture = texture.white();
+    param occlusion_sampler: sampler = sampler.linear_repeat();
+    param emissive_texture: texture = texture.white();
+    param emissive_sampler: sampler = sampler.linear_repeat();
+    // Zero disables normal mapping for the neutral white fallback. GLB imports set
+    // this to the file's normalTexture.scale (default 1) when a normal map exists.
+    param normal_scale: f32 = 0.0;
+    param occlusion_strength: f32 = 1.0;
+    param emissive: color = #000000;
     fragment(surface: SurfaceInput) -> color {
-        let texel = sample(base_color_texture, base_color_sampler, surface.uv);
+        let texel = sample_mip(base_color_texture, base_color_sampler, surface.uv);
         let albedo = color.linear(base_color.rgb * texel.xyz, 1.0);
-        return lighting.pbr(surface, albedo, metallic, roughness);
+        let mr = sample_mip(metallic_roughness_texture, metallic_roughness_sampler, surface.uv);
+        let normal = sample_mip(normal_texture, normal_sampler, surface.uv).xyz;
+        let ao = sample_mip(occlusion_texture, occlusion_sampler, surface.uv).x;
+        let emissive_texel = sample_mip(emissive_texture, emissive_sampler, surface.uv).xyz;
+        let emission = emissive.rgb * emissive_texel;
+        return lighting.pbr_mapped(surface, albedo, metallic * mr.z, roughness * mr.y, normal, normal_scale, 1.0 + clamp(occlusion_strength, 0.0, 1.0) * (ao - 1.0), emission);
     }
 }
 ```
 
 The param named `color` in `Unlit` relies on the rule in `spec/language.md` §4.2: a material param may share a prelude type's name; inside `Unlit`, `color` in expression position is the param, `color` in type position is the type, and `color.linear(…)` would be `E2005` (the prelude does not use it). (M1 provided `Unlit` through a minimal compiler-built shader IR; since M2 it is compiled from this source, and the temporary path is gone, decision 0044.) `Pbr` is compiled from this source too since task M4-03 (decision 0057).
+
+`Pbr` follows [decision 0194](decisions/0194-gltf-material-channels.md): sampled
+blue multiplies metallic, green multiplies roughness, and red supplies occlusion.
+Base and emissive textures are sRGB; the other maps are linear data. Occlusion
+scales ambient light only; emission is added before exposure. Normal mapping
+uses a derivative cotangent frame with geometric-normal fallback for degenerate
+UVs. Authored tangents and full MikkTSpace parity are not supported. Directly
+assigned normal maps need `normal_scale` (default zero); GLB imports use the
+file's scale, default one.
 
 ### 9.1 Sprites and the 2D camera (decision 0170)
 
@@ -207,12 +279,22 @@ A sprite is a `Plane` turned to face `+Z`: `mesh: Plane { size: vec2(w, h) }; ro
 
 The 2D camera preset is a camera on `+Z` looking down `-Z` with `projection: Orthographic { height: H }`: one world unit is `canvas height / H` pixels, `x` goes right and `y` goes up. Sprites at different `z` are ordered back to front by the translucent pass by their depth along the view direction (decision 0173), so a sprite nearer the camera is drawn over a farther one whatever order they are declared in.
 
+Authored finite spheres are available through entity/prefab `bounds_center` and
+`bounds_radius` (decision 0199). Positive radii must enclose the final result after
+skinning and vertex deformation; zero retains conservative authored visibility.
+These fields can bind to the same state or drive material params through binding
+dependencies. They do not prove that a shader respects its enclosure.
+
 ## 10. Not in v0.1
 
-Mtek-authored vertex and compute stages; multiply blending and per-triangle sorting of translucent draws; shadows; multiple render targets; material inheritance; texture params written at run time; derivatives (`dpdx`); language-visible storage buffers; texture arrays and cube maps.
+Mtek-authored compute stages; multiply blending and per-triangle sorting of translucent draws; point/cascaded shadows; multiple render targets; material inheritance; texture params written at run time; general derivatives (`dpdx`); language-visible storage buffers, texture arrays and cube maps.
 
 The host runtime provides additive material selection and ordered custom WGSL LDR
 post effects through `MtekMountOptions.rendering` (decision 0193). Image asset textures
 receive complete mip chains on WebGPU, averaged in linear light. These do not add
-Mtek language syntax or new shader stages. Normal maps, glTF metallic/roughness and
-occlusion textures, environment lighting and HDR post-processing remain unsupported.
+custom shader stages. Decision 0194 adds mapped PBR channels and mip-aware sampling
+functions. Host rendering options add directional shadows and HDR panorama IBL
+(decision 0195). HDR display/post targets, tone mapping and sky backgrounds remain
+unsupported. The scene-lighting group reserves three textures/two samplers: lit
+materials may declare at most thirteen textures/fourteen samplers, with the existing
+combined resource limit of sixteen.

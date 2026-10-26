@@ -6,7 +6,7 @@
     "endByte": 32,
     "message": "Custom `compute` stages are not supported in v0.1; they are planned for v0.2.",
     "notes": [
-      "help: a material has exactly one stage function, `fragment`; the compiler supplies the vertex stage"
+      "help: a material requires `fragment(input: SurfaceInput) -> color` and may declare `vertex(input: VertexInput) -> vec3`"
     ]
   }
 ]

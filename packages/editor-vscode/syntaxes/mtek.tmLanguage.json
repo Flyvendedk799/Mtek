@@ -36,6 +36,15 @@
       "include": "#number-invalid"
     },
     {
+      "include": "#checked-compute-declaration"
+    },
+    {
+      "include": "#checked-compute-resource"
+    },
+    {
+      "include": "#authored-vertex-stage"
+    },
+    {
       "include": "#reserved"
     },
     {
@@ -332,6 +341,39 @@
     "number-invalid": {
       "name": "invalid.illegal.number.mtek",
       "match": "(?<![A-Za-z0-9_.])[0-9][A-Za-z0-9_]*(?:\\.[0-9][A-Za-z0-9_]*|\\.(?![0-9.A-Za-z_]))?"
+    },
+    "checked-compute-declaration": {
+      "match": "(?:^|(?<=[{};]))\\s*(?:(export)\\s+)?(compute)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|query|super|trait|where|yield|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)(?![A-Za-z0-9_])(?!\\s*\\()",
+      "captures": {
+        "1": {
+          "name": "storage.modifier.mtek"
+        },
+        "2": {
+          "name": "keyword.other.declaration.mtek"
+        },
+        "3": {
+          "name": "entity.name.type.compute.mtek"
+        }
+      }
+    },
+    "checked-compute-resource": {
+      "match": "(?:^|(?<=[{};]))\\s*(input|output)\\s+(?!(?:component|workgroup|compute|storage|uniform|extern|static|system|unsafe|vertex|async|await|query|super|trait|where|yield|impl|loop|move|priv|type|mod|mut|pub|use|as)(?![A-Za-z0-9_]))([A-Za-z_][A-Za-z0-9_]*)(?=\\s*:)",
+      "captures": {
+        "1": {
+          "name": "keyword.other.declaration.mtek"
+        },
+        "2": {
+          "name": "variable.other.declaration.mtek"
+        }
+      }
+    },
+    "authored-vertex-stage": {
+      "match": "(?:^|(?<=[{};]))\\s*(vertex)\\s*(?=\\()",
+      "captures": {
+        "1": {
+          "name": "entity.name.function.stage.mtek"
+        }
+      }
     },
     "reserved": {
       "name": "invalid.illegal.reserved-word.mtek",
@@ -662,7 +704,7 @@
       }
     },
     "function-lighting": {
-      "match": "(?<![A-Za-z0-9_.])(lighting)(\\.)((?:pbr))\\s*(?=\\()",
+      "match": "(?<![A-Za-z0-9_.])(lighting)(\\.)((?:pbr_mapped|pbr))\\s*(?=\\()",
       "captures": {
         "1": {
           "name": "support.class.namespace.mtek"
@@ -704,7 +746,7 @@
       }
     },
     "function-sampler": {
-      "match": "(?<![A-Za-z0-9_.])(sampler)(\\.)((?:nearest_repeat|linear_repeat|nearest_clamp|linear_clamp))\\s*(?=\\()",
+      "match": "(?<![A-Za-z0-9_.])(sampler)(\\.)((?:linear_repeat_mip_nearest|nearest_repeat_mip_linear|linear_clamp_mip_nearest|nearest_clamp_mip_linear|nearest_repeat_level0|linear_repeat_level0|nearest_clamp_level0|linear_clamp_level0|nearest_repeat|linear_repeat|nearest_clamp|linear_clamp))\\s*(?=\\()",
       "captures": {
         "1": {
           "name": "support.class.namespace.mtek"
@@ -741,11 +783,11 @@
     },
     "builtin-function": {
       "name": "support.function.builtin.mtek",
-      "match": "(?<![A-Za-z0-9_.])(?:pointer_position|is_pointer_down|overlap_spheres|screen_to_world|world_to_screen|destroy_tagged|nearest_tagged|particle_count|overlap_boxes|count_tagged|first_tagged|inverse_sqrt|key_released|random_range|clear_saved|is_key_down|key_pressed|play_music|random_int|set_camera|set_volume|smoothstep|stop_music|normalize|set_muted|transpose|distance|is_muted|saturate|degrees|destroy|has_tag|play_at|radians|reflect|shuffle|chance|choose|length|paused|random|resume|sample|tagged|alive|atan2|clamp|cross|floor|fract|go_to|pause|print|reset|round|spawn|trunc|acos|asin|atan|ceil|exp2|load|log2|play|save|send|sign|sqrt|step|abs|cos|dot|exp|log|max|min|mix|pow|sin|tan)\\s*(?=\\()"
+      "match": "(?<![A-Za-z0-9_.])(?:pointer_position|is_pointer_down|overlap_spheres|screen_to_world|world_to_screen|destroy_tagged|nearest_tagged|particle_count|overlap_boxes|count_tagged|first_tagged|inverse_sqrt|key_released|random_range|clear_saved|is_key_down|key_pressed|play_music|random_int|sample_mip|set_camera|set_volume|smoothstep|stop_music|normalize|set_muted|transpose|distance|is_muted|saturate|degrees|destroy|has_tag|play_at|radians|reflect|shuffle|chance|choose|length|paused|random|resume|sample|tagged|alive|atan2|clamp|cross|floor|fract|go_to|pause|print|reset|round|spawn|trunc|acos|asin|atan|ceil|exp2|load|log2|play|save|send|sign|sqrt|step|abs|cos|dot|exp|log|max|min|mix|pow|sin|tan)\\s*(?=\\()"
     },
     "builtin-type": {
       "name": "support.type.builtin.mtek",
-      "match": "(?<![A-Za-z0-9_.])(?:PointerEvent|SurfaceInput|entity_ref|glb_asset|material|sampler|texture|string|array|color|sound|bool|font|mat4|mesh|quat|vec2|vec3|vec4|f32|i32|u32)(?![A-Za-z0-9_])"
+      "match": "(?<![A-Za-z0-9_.])(?:ComputeInput|PointerEvent|SurfaceInput|VertexInput|entity_ref|glb_asset|material|sampler|texture|string|array|color|sound|bool|font|mat4|mesh|quat|vec2|vec3|vec4|f32|i32|u32)(?![A-Za-z0-9_])"
     },
     "schema": {
       "name": "support.class.schema.mtek",

@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E7009",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The material 'Plain' (materials[0]) reads its normal texture from TEXCOORD_1; the profile supports TEXCOORD_0 only.",
+    "notes": [
+      "the problem is in the file 'models/model.glb'"
+    ]
+  }
+]

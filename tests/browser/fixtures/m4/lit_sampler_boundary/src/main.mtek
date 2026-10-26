@@ -1,0 +1,33 @@
+import { shade } from "./shade.mtek";
+
+material Lit {
+    param s0: sampler = sampler.linear_repeat();
+    param s1: sampler = sampler.linear_repeat();
+    param s2: sampler = sampler.linear_repeat();
+    param s3: sampler = sampler.linear_repeat();
+    param s4: sampler = sampler.linear_repeat();
+    param s5: sampler = sampler.linear_repeat();
+    param s6: sampler = sampler.linear_repeat();
+    param s7: sampler = sampler.linear_repeat();
+    param s8: sampler = sampler.linear_repeat();
+    param s9: sampler = sampler.linear_repeat();
+    param s10: sampler = sampler.linear_repeat();
+    param s11: sampler = sampler.linear_repeat();
+    param s12: sampler = sampler.linear_repeat();
+    param s13: sampler = sampler.linear_repeat();
+    param t0: texture = texture.white();
+    param t1: texture = texture.white();
+
+    fragment(surface: SurfaceInput) -> color {
+        return shade(surface);
+    }
+}
+
+scene Demo {
+    camera Main {}
+
+    entity Cube {
+        mesh: Box {};
+        material: Lit {};
+    }
+}

@@ -6,7 +6,7 @@
     "endByte": 14,
     "message": "Material 'Blank' has no fragment stage.",
     "notes": [
-      "a material has exactly one stage function, `fragment`; the compiler supplies the vertex stage",
+      "a material requires exactly one `fragment` stage and may declare one `vertex` stage",
       "help: add `fragment(input: SurfaceInput) -> color { … }`"
     ]
   }

@@ -3,10 +3,10 @@
 use crate::source::Span;
 use crate::syntax::TokenKind;
 use crate::syntax::ast::{
-    ConstDecl, EntityDecl, EntityMember, EnumDecl, FieldInit, FieldValue, FnDecl, Handler,
-    HandlerArg, ImportDecl, Item, ItemKind, LifecycleFn, MaterialDecl, MaterialMember, Module,
-    Node, Param, ParamDecl, Persist, PrefabDecl, SceneDecl, SceneMember, SceneObject, StageFn,
-    StateDecl, StructDecl, StructField, Type, TypeKind,
+    ComputeDecl, ComputeMember, ConstDecl, EntityDecl, EntityMember, EnumDecl, FieldInit,
+    FieldValue, FnDecl, Handler, HandlerArg, ImportDecl, Item, ItemKind, LifecycleFn, MaterialDecl,
+    MaterialMember, Module, Node, Param, ParamDecl, Persist, PrefabDecl, SceneDecl, SceneMember,
+    SceneObject, StageFn, StateDecl, StructDecl, StructField, Type, TypeKind,
 };
 
 use super::doc::Doc;
@@ -40,6 +40,7 @@ impl Printer<'_> {
             ItemKind::Struct(decl) => self.struct_decl(decl),
             ItemKind::Enum(decl) => self.enum_decl(decl),
             ItemKind::Material(decl) => self.material_decl(decl),
+            ItemKind::Compute(decl) => self.compute_decl(decl),
             ItemKind::Prefab(decl) => self.prefab_decl(decl),
             ItemKind::Scene(decl) => self.scene_decl(decl),
             ItemKind::Error => Doc::text(self.slice(item.span)),
@@ -166,6 +167,35 @@ impl Printer<'_> {
         let ret = self.return_type(stage.ret.as_ref());
         let body = self.block(&stage.body);
         Doc::concat(vec![name, params, ret, Doc::Space, body])
+    }
+
+    fn compute_decl(&mut self, decl: &ComputeDecl) -> Doc {
+        let name = self.ident(&decl.name);
+        let open = self.token_start(TokenKind::LBrace, decl.name.span.end, decl.span.start);
+        let body =
+            self.braced(
+                open,
+                closing(decl.span),
+                &decl.members,
+                &mut |p, member| match member {
+                    ComputeMember::Param(param) => p.param_decl(param),
+                    ComputeMember::Stage(stage) => p.stage_fn(stage),
+                    ComputeMember::Workgroup(field) => p.field_init(field),
+                    ComputeMember::Input(buffer) | ComputeMember::Output(buffer) => {
+                        let word = if matches!(member, ComputeMember::Input(_)) {
+                            "input "
+                        } else {
+                            "output "
+                        };
+                        let name = p.ident(&buffer.name);
+                        let ty = p.ty(&buffer.ty);
+                        let semi = p.semicolon(buffer.span.end);
+                        Doc::concat(vec![Doc::text(word), name, Doc::text(": "), ty, semi])
+                    }
+                    ComputeMember::Error(node) => Doc::text(p.slice(node.span)),
+                },
+            );
+        Doc::concat(vec![Doc::text("compute "), name, Doc::Space, body])
     }
 
     fn prefab_decl(&mut self, decl: &PrefabDecl) -> Doc {

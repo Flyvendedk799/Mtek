@@ -18,7 +18,7 @@
 //! a member that is valid Mtek but not here (`fn` in a scene, `param` in an
 //! entity that is not a prefab, a field in a material) is `E1040`; it is
 //! parsed for its own mistakes and replaced by an `Error` member. A
-//! `vertex` or `compute` member of a material is `E4901` and nothing else.
+//! A `compute` material member is `E4901`; `vertex` is a reserved-word stage entry.
 
 use crate::diagnostics::{Code, Diagnostic};
 use crate::source::Span;
@@ -26,9 +26,9 @@ use crate::source::Span;
 use super::Parser;
 use super::recover::{Nest, Sync, is_item_keyword, starts_expression};
 use crate::syntax::ast::{
-    ConstDecl, EntityDecl, EntityMember, ErrorNode, FieldInit, Handler, HandlerArg, LifecycleFn,
-    MaterialMember, Node, NodeId, Param, ParamDecl, Persist, SceneMember, SceneObject, StageFn,
-    StateDecl,
+    ConstDecl, EntityDecl, EntityMember, ErrorNode, FieldInit, Handler, HandlerArg, Ident,
+    LifecycleFn, MaterialMember, Node, NodeId, Param, ParamDecl, Persist, SceneMember, SceneObject,
+    StageFn, StateDecl,
 };
 use crate::syntax::token::TokenKind;
 
@@ -787,13 +787,10 @@ impl Parser<'_> {
         })
     }
 
-    /// A stage function of a material, or a `vertex` or `compute` stage:
-    /// `E4901`, parsed and dropped.
+    /// A fragment/vertex stage, or an unsupported compute stage parsed and dropped.
     fn stage_member(&mut self) -> Member {
         let start = self.span().start;
-        if self.tok().is_reserved_word()
-            && matches!(self.text_of(self.span()), "vertex" | "compute")
-        {
+        if self.tok().is_reserved_word() && self.text_of(self.span()) == "compute" {
             self.unsupported_stage();
             return Member::Error(self.error_node(start));
         }
@@ -801,10 +798,20 @@ impl Parser<'_> {
         self.member_from(start, stage, |stage| Member::Stage(Box::new(stage)))
     }
 
-    /// `fragment(input: SurfaceInput) -> color { ... }`.
-    fn stage_fn(&mut self) -> Option<StageFn> {
+    /// A fragment or authored vertex function with its typed signature.
+    pub(super) fn stage_fn(&mut self) -> Option<StageFn> {
         let start = self.span().start;
-        let name = self.ident()?;
+        let name = if self.tok().is_reserved_word() && self.text_of(self.span()) == "vertex" {
+            let span = self.span();
+            self.bump();
+            Ident {
+                id: self.id(),
+                name: "vertex".to_owned(),
+                span,
+            }
+        } else {
+            self.ident()?
+        };
         let params = self.param_list();
         let ret = self.return_type();
         let body = self.fn_body();
@@ -818,7 +825,7 @@ impl Parser<'_> {
         })
     }
 
-    /// A `vertex` or `compute` stage (reserved words, `spec/materials.md` 1):
+    /// A `compute` stage (reserved word, `spec/materials.md` 1):
     /// `E4901` at the word, and nothing else; in particular not `E0013`. The
     /// function is parsed as a stage function, for the mistakes in it, and
     /// dropped.
@@ -831,7 +838,7 @@ impl Parser<'_> {
             format!("Custom `{name}` stages are not supported in v0.1; they are planned for v0.2."),
         )
         .at(word)
-        .help("a material has exactly one stage function, `fragment`; the compiler supplies the vertex stage");
+        .help("a material requires `fragment(input: SurfaceInput) -> color` and may declare `vertex(input: VertexInput) -> vec3`");
         self.report(diagnostic);
         self.bump();
         drop(self.param_list());

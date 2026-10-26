@@ -1,0 +1,136 @@
+{
+  "date": "2026-10-26",
+  "scope": "Bounded original-character vertex/skin/shadow/recovery correctness and independent imported sampler filtering; full shader-authoring and platform roadmap remain incomplete.",
+  "compiler": {
+    "unitTestsPassed": 919,
+    "integrationTestsPassed": 111,
+    "integrationSuites": {
+      "assets": 21,
+      "build": 36,
+      "fixtures": 23,
+      "stdlib_registry": 25,
+      "stdlib_schema": 6
+    }
+  },
+  "runtimeTestsPassed": 196,
+  "runtimeTestFiles": [
+    "render/materials.test.ts",
+    "abi/abi.test.ts",
+    "abi/validator-reuse.test.ts",
+    "host/assets.test.ts",
+    "runtime-dts.test.ts"
+  ],
+  "assetAuditUnitTestsPassed": 11,
+  "gpu": [
+    {
+      "backend": "hardware",
+      "record": "verified-native/hardware.json",
+      "sha256": "37080ac3154f1307b01876ec18db0c5ec0d64c243c7ee53beeaae708a8376078",
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-3",
+        "device": "0x744c",
+        "description": "AMD Radeon RX 7900 XTX",
+        "isFallbackAdapter": false
+      },
+      "browser": "153.0.8010.12",
+      "authoredImageCasesPassed": 32,
+      "nativeMaterialCasesPassed": 2,
+      "cpuReferencePrograms": 34,
+      "boundsTransitionsPassed": 16,
+      "recoveriesPassed": 4,
+      "replacementsPassed": 12,
+      "samplerComparisonsPassed": 36,
+      "filterSensitivityControlsPassed": 4,
+      "maximumReferencePixelError": 0,
+      "minimumShadowChangedPixels": 58,
+      "maximumObservedBoundRadiusRatio": 0.4977218890778035,
+      "nativeCesiumManSampler": "sampler.mag_linear_min_nearest_repeat_mip_linear",
+      "resourceCountsStableAfterWarmup": true,
+      "zeroTrackedGpuResourcesAndListenersAfterDisposal": true
+    },
+    {
+      "backend": "software",
+      "record": "verified-native/software.json",
+      "sha256": "e6b2596234b97c04a1297436799e740e702113fa4b75a8400298236bda975a56",
+      "adapter": {
+        "vendor": "google",
+        "architecture": "swiftshader",
+        "device": "0xc0de",
+        "description": "SwiftShader Device (Subzero)",
+        "isFallbackAdapter": true
+      },
+      "browser": "153.0.8010.12",
+      "authoredImageCasesPassed": 32,
+      "nativeMaterialCasesPassed": 2,
+      "cpuReferencePrograms": 34,
+      "boundsTransitionsPassed": 16,
+      "recoveriesPassed": 4,
+      "replacementsPassed": 12,
+      "samplerComparisonsPassed": 36,
+      "filterSensitivityControlsPassed": 4,
+      "maximumReferencePixelError": 0,
+      "minimumShadowChangedPixels": 58,
+      "maximumObservedBoundRadiusRatio": 0.4977218890778035,
+      "nativeCesiumManSampler": "sampler.mag_linear_min_nearest_repeat_mip_linear",
+      "resourceCountsStableAfterWarmup": true,
+      "zeroTrackedGpuResourcesAndListenersAfterDisposal": true
+    }
+  ],
+  "characterAndLifecycleCasesPassed": 132,
+  "samplerComparisonsPassed": 72,
+  "samplerSensitivityControlsPassed": 8,
+  "assetAudit": {
+    "record": "asset-audit/report.json",
+    "entries": 16,
+    "expectedChecksPassed": 30,
+    "originalCesiumManImportMeshMaterialClipPassed": true,
+    "originalAssetsAndLicenseHashesMatchPinnedProvenance": true
+  },
+  "packageBudgets": {
+    "record": "budgets.json",
+    "examplesPassed": 11,
+    "limitsChanged": false,
+    "folderGrowthBytesAgainstBoundsIncrement": 3868
+  },
+  "inspection": "inspect-bindings.json",
+  "checksPassed": [
+    "TypeScript workspace check",
+    "strict TypeScript check of browser probes",
+    "workspace lint",
+    "compiler/CLI Clippy --all-targets --locked -j 2 -- -D warnings",
+    "cargo fmt --check",
+    "generated asset consistency",
+    "generated coverage: 404 features, 219 positive fixtures, 247 diagnostics",
+    "release docs: 261 context features, 247 diagnostics, ABI 1/language 0.1 comparisons",
+    "prebuilt runtime consistency against sources and dist",
+    "retained source/output hashes match current files",
+    "git diff --check"
+  ],
+  "resourcePolicy": {
+    "cargoJobs": 2,
+    "testThreads": 2,
+    "vitestWorkers": 1,
+    "coverageCompilerProbes": 1,
+    "imageWidth": 97,
+    "imageHeight": 97,
+    "sustainedPerformanceRuns": false,
+    "animationOptimization": false
+  },
+  "remaining": [
+    "Mtek-authored compute resource/dispatch/workgroup/synchronization/lifetime contract, implementation, examples and validation",
+    "Combined authored shared-pose instancing",
+    "Broader production animation compositions and world-space bounds overlays",
+    "Wider physical-device evidence",
+    "Remaining full scorecard work including deferred animation optimization and sustained CPU/GPU performance measurements"
+  ],
+  "limitations": [
+    "One physical Radeon RX 7900 XTX desktop; SwiftShader is on the same host.",
+    "One view and a bounded set of paused poses/positive stretch inputs; no whole-rig or all-pose claim.",
+    "Fox has no authored normals and is textured/unlit; CesiumMan tests lit normals.",
+    "CPU reference shares the sampled animation palette and CPU skinning oracle; this is image equivalence, not readback of every final GPU vertex.",
+    "Replacement explicitly reselects the paused pose; animation-controller migration is not claimed.",
+    "Three short replacement cycles include one warm-up; no long-session unloading evidence.",
+    "No external-engine rendering/performance comparison is claimed."
+  ]
+}

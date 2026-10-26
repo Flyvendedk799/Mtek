@@ -33,9 +33,10 @@ use std::collections::BTreeSet;
 use mtek_compiler::diagnostics::Diagnostics;
 use mtek_compiler::source::FileId;
 use mtek_compiler::syntax::ast::{
-    ArmBody, ArrayLengthKind, AssignOp, BinaryOp, Block, ConstDecl, ElseBranch, EntityDecl,
-    EntityMember, Expr, ExprKind, FieldInit, FieldValue, ForIter, HandlerArg, IfStmt, ItemKind,
-    MaterialMember, Module, Param, Pattern, PatternKind, SceneMember, Stmt, Type, TypeKind,
+    ArmBody, ArrayLengthKind, AssignOp, BinaryOp, Block, ComputeMember, ConstDecl, ElseBranch,
+    EntityDecl, EntityMember, Expr, ExprKind, FieldInit, FieldValue, ForIter, HandlerArg, IfStmt,
+    ItemKind, MaterialMember, Module, Param, Pattern, PatternKind, SceneMember, Stmt, Type,
+    TypeKind,
 };
 use mtek_compiler::syntax::{Token, TokenKind, TriviaKind, lex_str, parse_module};
 
@@ -75,7 +76,7 @@ impl std::fmt::Display for Point {
 }
 
 // The alternatives the tree distinguishes, as `spec/grammar.ebnf` writes them.
-const ITEM_DECLARATION: &str = "'export'? ( ConstDecl | FnDecl | StructDecl | EnumDecl | MaterialDecl | PrefabDecl | SceneDecl )";
+const ITEM_DECLARATION: &str = "'export'? ( ConstDecl | FnDecl | StructDecl | EnumDecl | MaterialDecl | ComputeDecl | PrefabDecl | SceneDecl )";
 const PATTERN_WILDCARD: &str = "'_'";
 const PATTERN_VARIANT: &str = "Ident '.' Ident";
 const UNARY_OPERATOR: &str = "( '-' | '!' ) UnaryExpr";
@@ -231,6 +232,41 @@ impl Hits<'_> {
                                 self.block(&stage.body);
                             }
                             MaterialMember::Error(_) => {}
+                        }
+                    }
+                }
+                ItemKind::Compute(decl) => {
+                    self.alt("Item", ITEM_DECLARATION);
+                    self.hit("ComputeDecl");
+                    for member in &decl.members {
+                        match member {
+                            ComputeMember::Param(param) => {
+                                self.alt("ComputeMember", "ParamDecl");
+                                self.param_decl(&param.ty, param.default.as_ref());
+                            }
+                            ComputeMember::Input(buffer) | ComputeMember::Output(buffer) => {
+                                self.alt("ComputeMember", "StorageDecl");
+                                self.hit("StorageDecl");
+                                self.ty(&buffer.ty);
+                            }
+                            ComputeMember::Workgroup(field) => {
+                                self.alt("ComputeMember", "ComputeWorkgroup");
+                                self.hit("ComputeWorkgroup");
+                                match &field.value {
+                                    FieldValue::Expr(expr) => self.expr(expr),
+                                    FieldValue::Bind(bind) => self.expr(&bind.source),
+                                }
+                            }
+                            ComputeMember::Stage(stage) => {
+                                self.alt("ComputeMember", "StageFn");
+                                self.hit("StageFn");
+                                self.params(&stage.params);
+                                if let Some(ret) = &stage.ret {
+                                    self.ty(ret);
+                                }
+                                self.block(&stage.body);
+                            }
+                            ComputeMember::Error(_) => {}
                         }
                     }
                 }

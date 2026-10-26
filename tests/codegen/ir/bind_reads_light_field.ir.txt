@@ -50,51 +50,72 @@ program (entry scene src/main.mtek::Demo)
       bind#3 entity#2.light.intensity = (state.pulse * 3.0): f32 [order 1; reads state pulse] @24:62-24:79
       bind#4 entity#3.position = (vec3(0.0, entity#2.light.intensity, 0.0)): vec3 [order 4; reads entity#2.light.intensity] @28:19-28:60
       bind#5 entity#3.light.intensity = ((entity#3.position.y): f32 + 1.0): f32 [order 5; reads entity#3.position] @29:40-29:67
-  module std/materials.mtek @1:1-46:1
+  module std/materials.mtek @1:1-64:1
     material Unlit [std/materials.mtek::Unlit] @5:8-8:2
       param #0 color: color = color(1.0, 1.0, 1.0, 1.0) @6:5-6:34
       block material:std/materials.mtek::Unlit MtekParams_2b212d15_Unlit (size 16, align 16)
       fragment -> color [std/materials.mtek::Unlit.fragment] reads none @7:5-7:63
         local #0 surface: SurfaceInput (param) @7:14-7:21
         return param color#0 @7:48-7:61
-    material Pbr [std/materials.mtek::Pbr] @10:8-21:2
+    material Pbr [std/materials.mtek::Pbr] @10:8-39:2
       param #0 base_color: color = color(1.0, 1.0, 1.0, 1.0) @11:5-11:39
       param #1 metallic: f32 = 0.0 @12:5-12:31
       param #2 roughness: f32 = 0.5 @13:5-13:32
       param #3 base_color_texture: texture = texture.white() @14:5-14:57
       param #4 base_color_sampler: sampler = sampler.linear_repeat() @15:5-15:65
-      block material:std/materials.mtek::Pbr MtekParams_2b212d15_Pbr (size 32, align 16)
-      fragment -> color [std/materials.mtek::Pbr.fragment] reads world_position, world_normal, uv @16:5-20:6
-        local #0 surface: SurfaceInput (param) @16:14-16:21
-        local #1 texel: vec4 (let) @17:13-17:18
-        local #2 albedo: color (let) @18:13-18:19
-        let texel#1 = (sample(param base_color_texture#3, param base_color_sampler#4, (surface#0.uv): vec2)): vec4 @17:9-17:80
-        let albedo#2 = (color.linear(((param base_color#0.rgb): vec3 * (texel#1.xyz): vec3): vec3, 1.0)): color @18:9-18:68
-        return (lighting.pbr(surface#0, albedo#2, param metallic#1, param roughness#2)): color @19:9-19:67
-    material Sprite [std/materials.mtek::Sprite] @26:8-45:2
-      param #0 sheet: texture = texture.white() @27:5-27:44
-      param #1 sheet_sampler: sampler = sampler.nearest_clamp() @28:5-28:60
-      param #2 tint: color = color(1.0, 1.0, 1.0, 1.0) @29:5-29:33
-      param #3 cell: f32 = 0.0 @30:5-30:27
-      param #4 columns: f32 = 1.0 @31:5-31:30
-      param #5 rows: f32 = 1.0 @32:5-32:27
+      param #5 metallic_roughness_texture: texture = texture.white() @16:5-16:65
+      param #6 metallic_roughness_sampler: sampler = sampler.linear_repeat() @17:5-17:73
+      param #7 normal_texture: texture = texture.white() @18:5-18:53
+      param #8 normal_sampler: sampler = sampler.linear_repeat() @19:5-19:61
+      param #9 occlusion_texture: texture = texture.white() @20:5-20:56
+      param #10 occlusion_sampler: sampler = sampler.linear_repeat() @21:5-21:64
+      param #11 emissive_texture: texture = texture.white() @22:5-22:55
+      param #12 emissive_sampler: sampler = sampler.linear_repeat() @23:5-23:63
+      param #13 normal_scale: f32 = 0.0 @26:5-26:35
+      param #14 occlusion_strength: f32 = 1.0 @27:5-27:41
+      param #15 emissive: color = color(0.0, 0.0, 0.0, 1.0) @28:5-28:37
+      block material:std/materials.mtek::Pbr MtekParams_2b212d15_Pbr (size 48, align 16)
+      fragment -> color [std/materials.mtek::Pbr.fragment] reads world_position, world_normal, uv @29:5-38:6
+        local #0 surface: SurfaceInput (param) @29:14-29:21
+        local #1 texel: vec4 (let) @30:13-30:18
+        local #2 albedo: color (let) @31:13-31:19
+        local #3 mr: vec4 (let) @32:13-32:15
+        local #4 normal: vec3 (let) @33:13-33:19
+        local #5 ao: f32 (let) @34:13-34:15
+        local #6 emissive_texel: vec3 (let) @35:13-35:27
+        local #7 emission: vec3 (let) @36:13-36:21
+        let texel#1 = (sample_mip(param base_color_texture#3, param base_color_sampler#4, (surface#0.uv): vec2)): vec4 @30:9-30:84
+        let albedo#2 = (color.linear(((param base_color#0.rgb): vec3 * (texel#1.xyz): vec3): vec3, 1.0)): color @31:9-31:68
+        let mr#3 = (sample_mip(param metallic_roughness_texture#5, param metallic_roughness_sampler#6, (surface#0.uv): vec2)): vec4 @32:9-32:97
+        let normal#4 = ((sample_mip(param normal_texture#7, param normal_sampler#8, (surface#0.uv): vec2)): vec4.xyz): vec3 @33:9-33:81
+        let ao#5 = ((sample_mip(param occlusion_texture#9, param occlusion_sampler#10, (surface#0.uv): vec2)): vec4.x): f32 @34:9-34:81
+        let emissive_texel#6 = ((sample_mip(param emissive_texture#11, param emissive_sampler#12, (surface#0.uv): vec2)): vec4.xyz): vec3 @35:9-35:93
+        let emission#7 = ((param emissive#15.rgb): vec3 * emissive_texel#6): vec3 @36:9-36:54
+        return (lighting.pbr_mapped(surface#0, albedo#2, (param metallic#1 * (mr#3.z): f32): f32, (param roughness#2 * (mr#3.y): f32): f32, normal#4, param normal_scale#13, (1.0 + ((clamp(param occlusion_strength#14, 0.0, 1.0)): f32 * (ao#5 - 1.0): f32): f32): f32, emission#7)): color @37:9-37:176
+    material Sprite [std/materials.mtek::Sprite] @44:8-63:2
+      param #0 sheet: texture = texture.white() @45:5-45:44
+      param #1 sheet_sampler: sampler = sampler.nearest_clamp() @46:5-46:60
+      param #2 tint: color = color(1.0, 1.0, 1.0, 1.0) @47:5-47:33
+      param #3 cell: f32 = 0.0 @48:5-48:27
+      param #4 columns: f32 = 1.0 @49:5-49:30
+      param #5 rows: f32 = 1.0 @50:5-50:27
       block material:std/materials.mtek::Sprite MtekParams_2b212d15_Sprite (size 32, align 16)
-      fragment -> color [std/materials.mtek::Sprite.fragment] reads uv @33:5-44:6
-        local #0 surface: SurfaceInput (param) @33:14-33:21
-        local #1 cols: f32 (let) @35:13-35:17
-        local #2 rws: f32 (let) @36:13-36:16
-        local #3 count: f32 (let) @37:13-37:18
-        local #4 index: f32 (let) @38:13-38:18
-        local #5 row: f32 (let) @39:13-39:16
-        local #6 column: f32 (let) @40:13-40:19
-        local #7 uv: vec2 (let) @41:13-41:15
-        local #8 texel: vec4 (let) @42:13-42:18
-        let cols#1 = (clamp((floor(param columns#4)): f32, 1.0, 64.0)): f32 @35:9-35:53
-        let rws#2 = (clamp((floor(param rows#5)): f32, 1.0, 64.0)): f32 @36:9-36:49
-        let count#3 = (cols#1 * rws#2): f32 @37:9-37:32
-        let index#4 = (clamp((floor((param cell#3 - (count#3 * (floor((param cell#3 / count#3): f32)): f32): f32): f32)): f32, 0.0, (count#3 - 1.0): f32)): f32 @38:9-38:88
-        let row#5 = (floor((index#4 / cols#1): f32)): f32 @39:9-39:39
-        let column#6 = (index#4 - (row#5 * cols#1): f32): f32 @40:9-40:41
-        let uv#7 = (((surface#0.uv): vec2 + (vec2(column#6, row#5)): vec2): vec2 / (vec2(cols#1, rws#2)): vec2): vec2 @41:9-41:69
-        let texel#8 = (sample(param sheet#0, param sheet_sampler#1, uv#7)): vec4 @42:9-42:54
-        return (color.linear(((param tint#2.rgb): vec3 * (texel#8.xyz): vec3): vec3, ((param tint#2.a): f32 * (texel#8.w): f32): f32)): color @43:9-43:69
+      fragment -> color [std/materials.mtek::Sprite.fragment] reads uv @51:5-62:6
+        local #0 surface: SurfaceInput (param) @51:14-51:21
+        local #1 cols: f32 (let) @53:13-53:17
+        local #2 rws: f32 (let) @54:13-54:16
+        local #3 count: f32 (let) @55:13-55:18
+        local #4 index: f32 (let) @56:13-56:18
+        local #5 row: f32 (let) @57:13-57:16
+        local #6 column: f32 (let) @58:13-58:19
+        local #7 uv: vec2 (let) @59:13-59:15
+        local #8 texel: vec4 (let) @60:13-60:18
+        let cols#1 = (clamp((floor(param columns#4)): f32, 1.0, 64.0)): f32 @53:9-53:53
+        let rws#2 = (clamp((floor(param rows#5)): f32, 1.0, 64.0)): f32 @54:9-54:49
+        let count#3 = (cols#1 * rws#2): f32 @55:9-55:32
+        let index#4 = (clamp((floor((param cell#3 - (count#3 * (floor((param cell#3 / count#3): f32)): f32): f32): f32)): f32, 0.0, (count#3 - 1.0): f32)): f32 @56:9-56:88
+        let row#5 = (floor((index#4 / cols#1): f32)): f32 @57:9-57:39
+        let column#6 = (index#4 - (row#5 * cols#1): f32): f32 @58:9-58:41
+        let uv#7 = (((surface#0.uv): vec2 + (vec2(column#6, row#5)): vec2): vec2 / (vec2(cols#1, rws#2)): vec2): vec2 @59:9-59:69
+        let texel#8 = (sample(param sheet#0, param sheet_sampler#1, uv#7)): vec4 @60:9-60:54
+        return (color.linear(((param tint#2.rgb): vec3 * (texel#8.xyz): vec3): vec3, ((param tint#2.a): f32 * (texel#8.w): f32): f32)): color @61:9-61:69

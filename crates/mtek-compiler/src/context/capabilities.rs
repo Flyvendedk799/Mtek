@@ -43,10 +43,7 @@ pub struct Capabilities {
 /// (the title without " not supported") is never used in this build.
 const UNSUPPORTED_PHRASES: &[(Code, &str)] = &[
     (Code::E1901, "bitwise operators (& | ^ ~ << >>)"),
-    (
-        Code::E4901,
-        "stage functions other than `fragment` (vertex, compute)",
-    ),
+    (Code::E4901, "compute stages"),
     (Code::E7901, "remote assets (URLs as asset paths)"),
     (
         Code::E7902,

@@ -369,9 +369,10 @@ fn package_scene(
         }
         // Every span was interned above, so the lookup cannot fail.
         let document = artifact.span_map_document(|span| spans.intern(span).unwrap_or(0));
-        let mut map_text = serde_json::to_string_pretty(&document).unwrap_or_default();
-        map_text.push('\n');
+        let map_text = metadata_json(&document, input.mode);
         shaders.push(Shader {
+            lighting: artifact.lighting.then_some(1),
+            vertex_deformation: artifact.vertex_deformation.then_some(1),
             hash: artifact.sha256.clone(),
             url: artifact.wgsl_path(),
             map: artifact.map_path(),
@@ -528,7 +529,7 @@ fn package_scene(
     }
     files.insert(
         scene_files.manifest.clone(),
-        manifest.to_json().into_bytes(),
+        metadata_json(&manifest, input.mode).into_bytes(),
     );
     for (path, bytes) in shader_files {
         files.insert(path, bytes);
@@ -541,6 +542,19 @@ fn package_scene(
         build_id,
         manifest,
     })
+}
+
+/// Production metadata keeps all diagnostics and source mappings without shipping indentation.
+/// Development and test packages keep the readable form; both represent the same JSON values.
+fn metadata_json(value: &impl serde::Serialize, mode: BuildMode) -> String {
+    let mut text = if matches!(mode, BuildMode::Release | BuildMode::Preview) {
+        serde_json::to_string(value)
+    } else {
+        serde_json::to_string_pretty(value)
+    }
+    .unwrap_or_default();
+    text.push('\n');
+    text
 }
 
 /// The resource plan of `program`'s entry scene, checked against the limits of `profile`
@@ -1290,6 +1304,10 @@ fn manifest_bindings(
     let mut out = Vec::with_capacity(bindings.len());
     for binding in bindings {
         let target = match &binding.target {
+            ir::BindingTarget::Bounds { entity, field } => BindingTarget::Bounds {
+                entity: *entity,
+                field: field.clone(),
+            },
             ir::BindingTarget::Transform { entity, field } => BindingTarget::Transform {
                 entity: *entity,
                 field: field.clone(),

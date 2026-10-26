@@ -1,0 +1,10 @@
+
+> audit:assets
+> npm run audit -w @mtek/asset-audit -- --file=benchmarks/runtime/animation/assets/Fox/Fox.glb --mesh=fox1 --clip=Walk --out=target/asset-audit-cli-positive-20261026-031344
+
+
+> @mtek/asset-audit@0.1.0-dev audit
+> node src/cli.ts --file=benchmarks/runtime/animation/assets/Fox/Fox.glb --mesh=fox1 --clip=Walk --out=target/asset-audit-cli-positive-20261026-031344
+
+Checking input (serial, existing compiler only)
+Passed: <workspace>\target\asset-audit-cli-positive-20261026-031344\report.md

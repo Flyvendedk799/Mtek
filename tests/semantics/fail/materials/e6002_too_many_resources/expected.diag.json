@@ -2,19 +2,19 @@
   {
     "code": "MTEK-E6002",
     "file": "src/main.mtek",
-    "startByte": 472,
-    "endByte": 474,
-    "message": "Material 'Atlas' declares more than 8 texture and sampler params.",
+    "startByte": 809,
+    "endByte": 811,
+    "message": "Material 'Atlas' declares more than 16 texture and sampler params.",
     "related": [
       {
         "message": "the material 'Atlas' is declared here",
         "file": "src/main.mtek",
-        "startByte": 94,
-        "endByte": 99
+        "startByte": 71,
+        "endByte": 76
       }
     ],
     "notes": [
-      "a material binds at most 8 textures and samplers in bind group 1; this is the 9th",
+      "a material binds at most 16 textures and samplers in bind group 1; this is the 17th",
       "help: use fewer textures, or share one sampler between several `sample` calls"
     ]
   }

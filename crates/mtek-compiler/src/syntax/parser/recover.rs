@@ -229,8 +229,12 @@ impl Parser<'_> {
     /// True if the current token starts a construct that `sync` stops at.
     fn starts_construct(&self, sync: Sync) -> bool {
         let kind = self.kind();
+        let compute_item = kind == TokenKind::Ident
+            && self.text_of(self.span()) == "compute"
+            && self.kind_at(1) != TokenKind::LParen;
+        let item = is_item_keyword(kind) || compute_item;
         match sync {
-            Sync::Item => is_item_keyword(kind),
+            Sync::Item => item,
             Sync::Statement => {
                 matches!(
                     kind,
@@ -243,13 +247,16 @@ impl Parser<'_> {
                         | TokenKind::KwReturn
                         | TokenKind::KwBreak
                         | TokenKind::KwContinue
-                ) || is_item_keyword(kind)
+                ) || item
             }
             Sync::Member => {
                 matches!(
                     kind,
                     TokenKind::KwState | TokenKind::KwParam | TokenKind::KwEntity | TokenKind::KwOn
-                ) || is_item_keyword(kind)
+                ) || item
+                    || (kind == TokenKind::Ident
+                        && self.kind_at(1) == TokenKind::Ident
+                        && matches!(self.text_of(self.span()), "input" | "output"))
                     || (self.at_field_name()
                         && (matches!(self.kind_at(1), TokenKind::Colon | TokenKind::LParen)
                             || (self.kind_at(1) == TokenKind::Ident
@@ -350,8 +357,10 @@ impl Parser<'_> {
                 | TokenKind::KwScene
                 | TokenKind::KwImport
                 | TokenKind::KwExport
-        ) || (kind == TokenKind::KwMaterial
-            && self.kind_at(1) != TokenKind::Colon);
+        ) || (kind == TokenKind::Ident
+            && self.text_of(self.span()) == "compute"
+            && self.kind_at(1) != TokenKind::LParen)
+            || (kind == TokenKind::KwMaterial && self.kind_at(1) != TokenKind::Colon);
         let start = self.span().start as usize;
         starts_item && start > 0 && self.text.as_bytes().get(start - 1) == Some(&b'\n')
     }

@@ -51,12 +51,14 @@ import { vertexBufferOf, type GpuMesh, type MeshStore } from "./meshes.js";
 import {skinWorldScale} from "../mesh/skin-bounds.js";
 import { INSTANCE_FLOATS, INSTANCE_STRIDE, type BindingPlan, alwaysBlends } from "./pipelines.js";
 import type { ParticleDraw } from "../scene/particles.js";
+import type { SceneLighting } from "./scene-lighting.js";
 
 /** What the renderer needs of the drawing surface (`host/surface.ts`). */
 export interface RenderSurface {
   readonly renderable: boolean;
   readonly size: { readonly width: number; readonly height: number };
-  render(clearColor: readonly [number, number, number, number], encode?: (pass: GPURenderPassEncoder) => void): boolean;
+  render(clearColor: readonly [number, number, number, number], encode?: (pass: GPURenderPassEncoder) => void,
+    before?: (encoder: GPUCommandEncoder, timestamps?: GPURenderPassTimestampWrites) => boolean): boolean;
 }
 
 /** The pipeline of a material for the surface's colour format. */
@@ -97,6 +99,9 @@ export interface DrawItem extends DrawSortKey {
   readonly attributes: readonly MtekVertexAttribute[];
   readonly gpuMesh: GpuMesh;
   readonly objectSlot: number;
+  /** Local vertex deformation has no compiler-proven finite bound yet. */
+  readonly vertexDeformation?: 1;
+  readonly materialId?: string;
   /** Drawn in the translucent pass: blended, after the opaque draws, back to front (decision 0138). */
   readonly translucent?: boolean;
 }
@@ -176,6 +181,7 @@ export function blendedKey(materialId: string, instanced: boolean): string {
 }
 
 export interface RendererOptions {
+  readonly lighting?: SceneLighting;
   readonly additiveMaterials?:ReadonlySet<string>;
   readonly device: ArenaDevice;
   readonly registry: ResourceRegistry;
@@ -274,6 +280,8 @@ export class Renderer {
   /** Per static entity index, from its last object-block write: world-space sphere centre (x, y, z) and largest world scale. */
   private sphereCentres: Float64Array;
   private sphereScales: Float64Array;
+  private boundsVersion = -1;
+  private readonly boundsCenter: [number, number, number] = [0, 0, 0];
   /** Per static entity index: the local-space centre of its mesh's bounding sphere; `undefined` at the mesh origin (every primitive shape). */
   private readonly localCentres: (readonly [number, number, number] | undefined)[] = [];
   private readonly sphere: WorldSphere = { x: 0, y: 0, z: 0, radius: 0 };
@@ -551,6 +559,7 @@ export class Renderer {
 
   /** Releases frame and object arenas (hot reload: discard a retired scene). */
   dispose(): void {
+    this.options.lighting?.dispose();
     this.frameArena.dispose();
     this.objectArena.dispose();
     if (this.instanceBuffer !== undefined) this.options.registry.release(this.instanceBuffer);
@@ -594,10 +603,11 @@ export class Renderer {
         order,
         pipeline: blended?.pipeline ?? pipeline.pipeline,
         // A translucent draw is never instanced: the pass is ordered back to front per draw.
-        instancedPipeline: blended === undefined && skin === undefined ? pipeline.instanced : undefined,
+        instancedPipeline: blended === undefined ? pipeline.instanced : undefined,
         attributes: entity.instance.material.shader.vertexAttributes,
         gpuMesh,
         objectSlot,
+        ...(entity.instance.material.shader.vertexDeformation === 1 ? { vertexDeformation: 1 as const, materialId: entity.instance.material.id } : {}),
         ...(blended === undefined ? {} : { translucent: true }),
       });
     };
@@ -625,24 +635,43 @@ export class Renderer {
     }
 
     const viewProj = this.writeFrameBlock();
+    this.options.lighting?.update(this.packedLights);
     this.applyWorldChanges();
     this.frameArena.flush(device.queue);
     materials.flush(device.queue);
 
     const listed = this.drawList();
+    const boundsDirty = this.boundsVersion !== this.options.world.boundsVersion;
+    if (boundsDirty) { this.cullDirty = true; this.boundsVersion = this.options.world.boundsVersion; }
     for(const draw of listed) {
+      const record = this.options.world.recordAt(draw.entity);
       const skin=this.options.world.skinPlayer(draw.entity);
-      if(skin!==undefined) {
+      if (record !== undefined && record.bounds_radius > 0) {
+        const center = record.bounds_center;
+        this.boundsCenter[0] = center.x; this.boundsCenter[1] = center.y; this.boundsCenter[2] = center.z;
+        const model = this.options.world.worldMatrix(draw.entity);
+        worldBoundingSphere(model, 1, this.sphere, this.boundsCenter);
+        this.sphereCentres[draw.entity*3] = this.sphere.x;
+        this.sphereCentres[draw.entity*3+1] = this.sphere.y;
+        this.sphereCentres[draw.entity*3+2] = this.sphere.z;
+        this.sphereScales[draw.entity] = skinWorldScale(model);
+      } else if(skin!==undefined) {
         if (this.options.meshes.updateSkinBounds(draw.entity,skin)) this.cullDirty = true;
         worldBoundingSphere(this.options.world.worldMatrix(draw.entity), 1, this.sphere, draw.gpuMesh.boundingCenter);
         this.sphereCentres[draw.entity*3] = this.sphere.x;
         this.sphereCentres[draw.entity*3+1] = this.sphere.y;
         this.sphereCentres[draw.entity*3+2] = this.sphere.z;
         this.sphereScales[draw.entity]=skinWorldScale(this.options.world.worldMatrix(draw.entity));
+      } else if (boundsDirty) {
+        worldBoundingSphere(this.options.world.worldMatrix(draw.entity), 1, this.sphere, draw.gpuMesh.boundingCenter);
+        this.sphereCentres[draw.entity*3] = this.sphere.x;
+        this.sphereCentres[draw.entity*3+1] = this.sphere.y;
+        this.sphereCentres[draw.entity*3+2] = this.sphere.z;
+        this.sphereScales[draw.entity] = this.sphere.radius;
       }
     }
     const culled = this.cull(listed, viewProj);
-    for (const draw of culled) {
+    for (const draw of this.options.lighting?.castsShadows === true ? listed : culled) {
       const skin = this.options.world.skinPlayer(draw.entity);
       if (skin !== undefined) this.options.meshes.updateSkin(draw.entity,skin);
     }
@@ -651,12 +680,21 @@ export class Renderer {
     if (draws !== culled) this.drawnUnchanged = this.translucentOrder.unchanged;
     const instanced = this.groupDraws(draws);
     this.writeIndividualObjectBlocks(draws);
+    if (this.options.lighting?.castsShadows === true) {
+      for (const draw of listed) if (draw.translucent !== true && this.objectStale[draw.entity] === 1) this.writeObjectBlock(draw.entity, draw.objectSlot);
+    }
     this.objectArena.flush(device.queue);
+    let shadowDraws = 0;
+    const lighting = this.options.lighting;
+    const before = lighting?.castsShadows === true ? (encoder: GPUCommandEncoder, timestamps?: GPURenderPassTimestampWrites): boolean => {
+      shadowDraws = lighting.encodeShadows(encoder, listed, this.objectArena.bindGroupDynamic(this.options.plan.object), draw => this.objectArena.slotOffset(draw.objectSlot), timestamps, draw => this.options.materials.bindGroup(draw.instance));
+      return true;
+    } : undefined;
     this.prepareParticles();
     const rendered = surface.render(clearColor, (pass) => {
       this.encode(pass, draws);
-    });
-    this.drawCallsLastFrame = rendered ? this.batches.length : 0;
+    }, before);
+    this.drawCallsLastFrame = rendered ? this.batches.length + shadowDraws : 0;
     this.instancedLastFrame = rendered ? instanced : 0;
     this.culledLastFrame = rendered ? listed.length - draws.length : 0;
     this.drawCallsTotal += this.drawCallsLastFrame;
@@ -691,8 +729,9 @@ export class Renderer {
     for (let i = 0; i < draws.length; i++) {
       const draw = draws[i] as DrawItem;
       const e = draw.entity;
-      const radius = draw.gpuMesh.boundingRadius * (sphereScales[e] ?? 0);
-      if (sphereIntersectsFrustum(planes, sphereCentres[e * 3] ?? 0, sphereCentres[e * 3 + 1] ?? 0, sphereCentres[e * 3 + 2] ?? 0, radius)) {
+      const authoredRadius = this.options.world.recordAt(e)?.bounds_radius ?? 0;
+      const radius = (authoredRadius > 0 ? authoredRadius : draw.gpuMesh.boundingRadius) * (sphereScales[e] ?? 0);
+      if ((draw.vertexDeformation === 1 && authoredRadius === 0) || sphereIntersectsFrustum(planes, sphereCentres[e * 3] ?? 0, sphereCentres[e * 3 + 1] ?? 0, sphereCentres[e * 3 + 2] ?? 0, radius)) {
         if (drawn[count] !== draw) {
           unchanged = false;
           drawn[count] = draw;
@@ -950,6 +989,7 @@ export class Renderer {
     const particles = this.particleBatchCount > 0;
     if (draws.length === 0 && !particles) return;
     const { plan, materials } = this.options;
+    if (this.options.lighting !== undefined) pass.setBindGroup(3, this.options.lighting.group);
     pass.setBindGroup(0, this.frameArena.bindGroupForSlot(this.frameSlot, plan.frame));
     const objectGroup = this.objectArena.bindGroupDynamic(plan.object);
     const dynamicOffset = this.dynamicOffset;

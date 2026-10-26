@@ -105,6 +105,16 @@ fn instantiate_scene(
             entity.rotation = sub.field(&template_entity.rotation)?;
             entity.scale = sub.field(&template_entity.scale)?;
             entity.visible = sub.field(&template_entity.visible)?;
+            entity.bounds_center = template_entity
+                .bounds_center
+                .as_ref()
+                .map(|field| sub.field(field))
+                .transpose()?;
+            entity.bounds_radius = template_entity
+                .bounds_radius
+                .as_ref()
+                .map(|field| sub.field(field))
+                .transpose()?;
             entity.mesh = template_entity.mesh.clone();
             entity.material = template_entity
                 .material
@@ -330,6 +340,16 @@ impl Substitution<'_> {
         copy.rotation = self.field(&entity.rotation)?;
         copy.scale = self.field(&entity.scale)?;
         copy.visible = self.field(&entity.visible)?;
+        copy.bounds_center = entity
+            .bounds_center
+            .as_ref()
+            .map(|field| self.field(field))
+            .transpose()?;
+        copy.bounds_radius = entity
+            .bounds_radius
+            .as_ref()
+            .map(|field| self.field(field))
+            .transpose()?;
         copy.material = entity
             .material
             .as_ref()
@@ -409,6 +429,10 @@ impl Substitution<'_> {
     fn binding(&self, binding: &Binding, scene: &Symbol) -> Result<Binding> {
         let id = self.binding_id(binding.id)?;
         let target = match &binding.target {
+            BindingTarget::Bounds { entity, field } => BindingTarget::Bounds {
+                entity: self.index(*entity),
+                field: field.clone(),
+            },
             BindingTarget::Transform { entity, field } => BindingTarget::Transform {
                 entity: self.index(*entity),
                 field: field.clone(),

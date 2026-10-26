@@ -92,17 +92,35 @@ impl SpanMap {
         shader_sha256: &str,
         mut span_id: impl FnMut(Span) -> u32,
     ) -> SpanMapDocument {
-        SpanMapDocument {
-            shader: shader_sha256.to_owned(),
-            entries: self
-                .entries
-                .iter()
-                .map(|entry| SpanMapDocumentEntry {
+        let mut entries: Vec<SpanMapDocumentEntry> = Vec::new();
+        for line in self.entries.chunk_by(|a, b| a.wgsl.line == b.wgsl.line) {
+            // Generated helper lines often map every nested expression to one material span.
+            // Union only those identical mappings; mixed-source lines retain specificity/ties.
+            let same_source = line.first().is_some_and(|first| {
+                line.iter()
+                    .all(|e| e.span == first.span && e.symbol == first.symbol)
+            });
+            let start = entries.len();
+            for entry in line {
+                let converted = SpanMapDocumentEntry {
                     wgsl: entry.wgsl,
                     span: span_id(entry.span),
                     symbol: entry.symbol.clone(),
-                })
-                .collect(),
+                };
+                if same_source
+                    && entries.len() > start
+                    && let Some(last) = entries.last_mut()
+                    && converted.wgsl.col_start <= last.wgsl.col_end
+                {
+                    last.wgsl.col_end = last.wgsl.col_end.max(converted.wgsl.col_end);
+                    continue;
+                }
+                entries.push(converted);
+            }
+        }
+        SpanMapDocument {
+            shader: shader_sha256.to_owned(),
+            entries,
         }
     }
 }
@@ -214,6 +232,33 @@ mod tests {
                 r#"{"wgsl":{"line":2,"colStart":14,"colEnd":20},"span":30,"symbol":"s3"}]}"#
             )
         );
+    }
+
+    #[test]
+    fn compact_identical_mappings_preserve_every_position_including_gaps_and_ties() {
+        let mut original = map();
+        original.entries.extend([
+            entry(4, 2, 10, 7),
+            entry(4, 3, 5, 7),
+            entry(4, 10, 12, 7),
+            entry(4, 15, 19, 7),
+        ]);
+        let document = original.document("ab", |span| span.start);
+        assert_eq!(document.entries.len(), 5);
+        for line in 1..=5 {
+            for column in 0..=32 {
+                let expected = original
+                    .find(line, column)
+                    .map(|entry| (entry.span.start, entry.symbol.as_str()));
+                let actual = document
+                    .entries
+                    .iter()
+                    .filter(|entry| entry.wgsl.contains(line, column))
+                    .min_by_key(|entry| entry.wgsl.width())
+                    .map(|entry| (entry.span, entry.symbol.as_str()));
+                assert_eq!(actual, expected, "{line}:{column}");
+            }
+        }
     }
 
     #[test]

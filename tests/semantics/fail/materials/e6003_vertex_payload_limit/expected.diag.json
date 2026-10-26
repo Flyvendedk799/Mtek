@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E6003",
+    "file": "src/main.mtek",
+    "startByte": 551,
+    "endByte": 559,
+    "message": "The material requires 17 interpolated variables; the supported limit is 16 (surface inputs plus payload fields).",
+    "notes": [
+      "help: remove payload fields or unused SurfaceInput reads"
+    ]
+  }
+]

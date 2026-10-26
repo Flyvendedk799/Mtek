@@ -486,7 +486,7 @@ pub fn pack(
             kind: AssetKind::Image {
                 color_space: space.as_str().to_owned(),
                 preprocessing: if wanted.mipmapped {
-                    vec!["mipmaps not generated".to_owned()]
+                    vec!["mipmaps generated at runtime".to_owned()]
                 } else {
                     Vec::new()
                 },

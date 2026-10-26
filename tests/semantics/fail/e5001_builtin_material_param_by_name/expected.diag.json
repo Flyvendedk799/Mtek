@@ -6,7 +6,7 @@
     "endByte": 462,
     "message": "The material of 'Lamp' has no param 'gloss'.",
     "notes": [
-      "its params are base_color, metallic, roughness, base_color_texture, base_color_sampler"
+      "its params are base_color, metallic, roughness, base_color_texture, base_color_sampler, metallic_roughness_texture, metallic_roughness_sampler, normal_texture, normal_sampler, occlusion_texture, occlusion_sampler, emissive_texture, emissive_sampler, normal_scale, occlusion_strength, emissive"
     ]
   },
   {
@@ -26,7 +26,7 @@
     "endByte": 1152,
     "message": "The material of 'Ball' has no param 'albedo'.",
     "notes": [
-      "its params are base_color, metallic, roughness, base_color_texture, base_color_sampler"
+      "its params are base_color, metallic, roughness, base_color_texture, base_color_sampler, metallic_roughness_texture, metallic_roughness_sampler, normal_texture, normal_sampler, occlusion_texture, occlusion_sampler, emissive_texture, emissive_sampler, normal_scale, occlusion_strength, emissive"
     ]
   },
   {
@@ -46,7 +46,7 @@
     "endByte": 1226,
     "message": "The material of 'Hanging' has no param 'shininess'.",
     "notes": [
-      "its params are base_color, metallic, roughness, base_color_texture, base_color_sampler"
+      "its params are base_color, metallic, roughness, base_color_texture, base_color_sampler, metallic_roughness_texture, metallic_roughness_sampler, normal_texture, normal_sampler, occlusion_texture, occlusion_sampler, emissive_texture, emissive_sampler, normal_scale, occlusion_strength, emissive"
     ]
   },
   {

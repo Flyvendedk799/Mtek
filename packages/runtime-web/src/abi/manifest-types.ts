@@ -144,6 +144,10 @@ export type MtekVertexAttribute = "position" | "normal" | "uv";
 export type MtekSurfaceInput = "local_position" | "world_position" | "world_normal" | "uv";
 
 export interface MtekShader {
+  /** Optional scene lighting binding group ABI. Absent on older compiled shaders. */
+  readonly lighting?: 1;
+  /** Authored local-position stage ABI. Bounds must remain conservative and shadows use the same deformation. */
+  readonly vertexDeformation?: 1;
   /** Full SHA-256 of the WGSL file. */
   readonly hash: string;
   readonly url: string;
@@ -415,12 +419,32 @@ export interface MtekClip {
 }
 
 export type MtekBuiltinResourceName =
+  | "sampler.mag_linear_min_nearest_repeat_level0"
+  | "sampler.mag_linear_min_nearest_repeat_mip_nearest"
+  | "sampler.mag_linear_min_nearest_repeat_mip_linear"
+  | "sampler.mag_linear_min_nearest_clamp_level0"
+  | "sampler.mag_linear_min_nearest_clamp_mip_nearest"
+  | "sampler.mag_linear_min_nearest_clamp_mip_linear"
+  | "sampler.mag_nearest_min_linear_repeat_level0"
+  | "sampler.mag_nearest_min_linear_repeat_mip_nearest"
+  | "sampler.mag_nearest_min_linear_repeat_mip_linear"
+  | "sampler.mag_nearest_min_linear_clamp_level0"
+  | "sampler.mag_nearest_min_linear_clamp_mip_nearest"
+  | "sampler.mag_nearest_min_linear_clamp_mip_linear"
   | "texture.white"
   | "texture.black"
   | "sampler.linear_repeat"
   | "sampler.linear_clamp"
   | "sampler.nearest_repeat"
-  | "sampler.nearest_clamp";
+  | "sampler.nearest_clamp"
+  | "sampler.linear_repeat_level0"
+  | "sampler.linear_repeat_mip_nearest"
+  | "sampler.linear_clamp_level0"
+  | "sampler.linear_clamp_mip_nearest"
+  | "sampler.nearest_repeat_level0"
+  | "sampler.nearest_repeat_mip_linear"
+  | "sampler.nearest_clamp_level0"
+  | "sampler.nearest_clamp_mip_linear";
 
 export type MtekResourceValue =
   | { readonly kind: "builtin"; readonly name: MtekBuiltinResourceName }
@@ -474,6 +498,7 @@ export interface MtekPrefab {
 }
 
 export type MtekBindingTarget =
+  | { readonly kind: "bounds"; readonly entity: number; readonly field: "bounds_center" | "bounds_radius" }
   | { readonly kind: "transform"; readonly entity: number; readonly field: "position" | "rotation" | "scale" }
   | { readonly kind: "visible"; readonly entity: number }
   | { readonly kind: "param"; readonly instance: number; readonly name: string }
@@ -498,7 +523,7 @@ export type MtekBindingDependency =
   | {
       readonly kind: "entityField";
       readonly entity: number;
-      readonly field: "position" | "rotation" | "scale" | "visible";
+      readonly field: "position" | "rotation" | "scale" | "visible" | "bounds_center" | "bounds_radius";
     }
   | { readonly kind: "entityState"; readonly entity: number; readonly name: string }
   | { readonly kind: "param"; readonly instance: number; readonly name: string }

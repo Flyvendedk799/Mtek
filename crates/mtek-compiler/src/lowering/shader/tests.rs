@@ -40,6 +40,151 @@ fn wgsl_of(source: &str) -> String {
 }
 
 #[test]
+fn authored_vertex_stage_tracks_inputs_helpers_params_and_source_spans() {
+    let source = format!(
+        r#"
+fn shift(input: VertexInput, amount: f32) -> vec3 {{
+    return input.position + vec3(input.uv.x * amount, 0.0, 0.0);
+}}
+material Deformed {{
+    param amount: f32 = 0.5;
+    vertex(input: VertexInput) -> vec3 {{ return shift(input, amount); }}
+    fragment(input: SurfaceInput) -> color {{ return color.linear(vec3(1.0), 1.0); }}
+}}
+{SCENE}
+"#
+    );
+    let (program, sources) = program(&[("src/main.mtek", &source)]);
+    let material = program.materials().next().expect("material");
+    let shader = lower_material(&program, material).expect("lowered");
+    let artifact = emit_shader(&shader).expect("Naga validates authored entry points");
+    assert!(artifact.vertex_deformation);
+    // Passing the whole input to a helper retains all three attributes.
+    assert_eq!(
+        artifact
+            .vertex_attributes
+            .iter()
+            .map(|a| a.name())
+            .collect::<Vec<_>>(),
+        vec!["position", "normal", "uv"]
+    );
+    assert!(artifact.surface_inputs.is_empty());
+    assert!(artifact.wgsl.contains("fn mtek_vertex("));
+    assert_eq!(
+        artifact
+            .wgsl
+            .matches("let mtek_deformed_position = mtek_vertex(")
+            .count(),
+        2
+    );
+    assert!(artifact.wgsl.contains("mtek_params.u_amount"));
+    assert!(artifact.span_map.entries.iter().any(|entry| {
+        entry.symbol.ends_with("Deformed.vertex")
+            && sources
+                .slice(entry.span)
+                .is_some_and(|s| s.contains("shift(input, amount)"))
+    }));
+}
+
+#[test]
+fn authored_vertex_attributes_are_independent_from_fragment_varyings() {
+    let source = r#"
+material Deformed {
+    fragment(input: SurfaceInput) -> color { return color.linear(input.local_position, 1.0); }
+    vertex(input: VertexInput) -> vec3 { return input.position + vec3(input.uv, 0.0); }
+}
+
+"#;
+    let (program, _) = program(&[("src/main.mtek", &format!("{source}\n{SCENE}"))]);
+    let material = program.materials().next().expect("material");
+    let artifact =
+        emit_shader(&lower_material(&program, material).expect("lowered")).expect("valid");
+    assert_eq!(
+        artifact
+            .vertex_attributes
+            .iter()
+            .map(|a| a.name())
+            .collect::<Vec<_>>(),
+        vec!["position", "uv"]
+    );
+    assert_eq!(artifact.surface_inputs, vec![SurfaceField::LocalPosition]);
+    assert!(artifact.wgsl.contains("mtek_deformed_position"));
+    assert!(!artifact.wgsl.contains("@location(1) mtek_normal"));
+}
+
+#[test]
+fn authored_vertex_input_can_be_copied_through_aggregate_locals() {
+    let wgsl = wgsl_of(
+        r#"
+material Deformed {
+    vertex(input: VertexInput) -> vec3 {
+        let vertices = [input];
+        return vertices[0].position;
+    }
+    fragment(input: SurfaceInput) -> color { return #ffffff; }
+}
+"#,
+    );
+    assert!(wgsl.contains("MtekVertexInput"));
+    assert!(wgsl.contains("array<"));
+}
+
+#[test]
+fn authored_vertex_rejects_bad_signatures_duplicates_cpu_calls_and_derivatives() {
+    let cases = [
+        (
+            "vertex(v: SurfaceInput) -> vec3 { return vec3(0.0); }",
+            "",
+            Code::E4021,
+        ),
+        (
+            "vertex(v: VertexInput) -> color { return color.linear(vec3(1.0), 1.0); }",
+            "",
+            Code::E4021,
+        ),
+        (
+            "vertex(v: VertexInput) -> vec3 { return v.position; } vertex(w: VertexInput) -> vec3 { return w.position; }",
+            "",
+            Code::E2002,
+        ),
+        (
+            "vertex(v: VertexInput) -> vec3 { return vec3(sample_mip(image, filter, v.uv).x); }",
+            "param image: texture = texture.white(); param filter: sampler = sampler.linear_repeat();",
+            Code::E4042,
+        ),
+        (
+            "vertex(v: VertexInput) -> vec3 { return vec3(random()); }",
+            "",
+            Code::E4012,
+        ),
+    ];
+    for (stage, params, expected) in cases {
+        let text = format!(
+            "material M {{ {params} {stage} fragment(s: SurfaceInput) -> color {{ return color.linear(vec3(1.0), 1.0); }} }} {SCENE}"
+        );
+        let mut fs = MemFs::new();
+        fs.insert(
+            ProjectPath::new("mtek.toml").unwrap(),
+            b"[project]\nname = \"fixture\"\nlanguage = \"0.1\"\n".to_vec(),
+        );
+        fs.insert(
+            ProjectPath::new("src/main.mtek").unwrap(),
+            text.into_bytes(),
+        );
+        let analysis = crate::analyze(&ProjectRoot::at_base(), &fs);
+        assert!(
+            analysis
+                .report
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == expected),
+            "{stage}: {:#?}",
+            analysis.report
+        );
+    }
+}
+
+#[test]
 fn function_names_are_module_qualified() {
     assert_eq!(
         function_name("src/main.mtek::pulse").map(|n| crate::emit_wgsl::printer::mangle(&n)),
@@ -314,4 +459,213 @@ fn a_long_call_chain_lowers_without_a_deep_stack() {
         })
         .expect("spawned");
     assert_eq!(handle.join().expect("no panic"), Ok(()));
+}
+
+#[test]
+fn structured_vertex_outputs_supply_normals_uv_and_typed_payloads() {
+    let text = r#"
+struct Payload { position: vec3; normal: vec3; uv: vec2; heat: f32; tag: u32; enabled: bool; }
+fn produce(input: VertexInput) -> Payload {
+    return Payload { position: input.position; normal: vec3(0.0, 1.0, 0.0); uv: vec2(0.25); heat: input.position.x; tag: u32(7); enabled: true };
+}
+material M {
+    vertex(input: VertexInput) -> Payload { return produce(input); }
+    fragment(surface: SurfaceInput, payload: Payload) -> color {
+        let tint = color.linear(vec3(surface.uv.x, payload.heat, f32(payload.tag) * 0.1), 1.0);
+        if payload.enabled { return lighting.pbr(surface, tint, 0.0, 0.5); }
+        return #000000;
+    }
+}
+"#;
+    let wgsl = wgsl_of(text);
+    assert_eq!(wgsl.matches("@interpolate(flat)").count(), 2);
+    assert!(wgsl.contains("mtek_deformed_vertex.u_normal"));
+    assert!(wgsl.contains("mtek_deformed_vertex.u_uv"));
+    assert!(wgsl.contains("payload_5"));
+}
+
+#[test]
+fn structured_geometry_outputs_remove_unneeded_mesh_attributes() {
+    let text = format!(
+        r#"
+struct Shape {{ position: vec3; normal: vec3; uv: vec2; }}
+material M {{
+    vertex(input: VertexInput) -> Shape {{
+        return Shape {{ position: input.position; normal: vec3(0.0, 1.0, 0.0); uv: vec2(0.5) }};
+    }}
+    fragment(s: SurfaceInput) -> color {{ return lighting.pbr(s, color.linear(vec3(s.uv, 0.0), 1.0), 0.0, 0.5); }}
+}}
+{SCENE}
+"#
+    );
+    let (program, _) = program(&[("src/main.mtek", &text)]);
+    let material = program.materials().next().unwrap();
+    let shader = lower_material(&program, material).unwrap();
+    assert_eq!(
+        shader
+            .vertex_attributes
+            .iter()
+            .map(|field| field.name())
+            .collect::<Vec<_>>(),
+        vec!["position"]
+    );
+    emit_shader(&shader).expect("normal and UV are supplied by the authored result");
+}
+
+fn stage_errors(types: &str, stages: &str) -> Vec<Code> {
+    let mut fs = MemFs::new();
+    fs.insert(
+        ProjectPath::new("mtek.toml").unwrap(),
+        b"[project]\nname = \"fixture\"\nlanguage = \"0.1\"\n".to_vec(),
+    );
+    fs.insert(
+        ProjectPath::new("src/main.mtek").unwrap(),
+        format!("{types} material M {{ {stages} }} {SCENE}").into_bytes(),
+    );
+    let analysis = crate::analyze(&ProjectRoot::at_base(), &fs);
+    analysis.report.diagnostics.iter().map(|d| d.code).collect()
+}
+
+#[test]
+fn structured_vertex_payloads_link_nominal_types_and_validate_fields() {
+    let cases = [
+        (
+            "struct Output { normal: vec3; }",
+            "vertex(v: VertexInput) -> Output { return Output { normal: v.normal }; } fragment(s: SurfaceInput) -> color { return #ffffff; }",
+        ),
+        (
+            "struct Output { position: vec2; }",
+            "vertex(v: VertexInput) -> Output { return Output { position: v.uv }; } fragment(s: SurfaceInput) -> color { return #ffffff; }",
+        ),
+        (
+            "struct Output { position: vec3; data: mat4; }",
+            "vertex(v: VertexInput) -> Output { return Output { position: v.position; data: mat4.identity() }; } fragment(s: SurfaceInput) -> color { return #ffffff; }",
+        ),
+        (
+            "struct Output { position: vec3; } struct Other { position: vec3; }",
+            "vertex(v: VertexInput) -> Output { return Output { position: v.position }; } fragment(s: SurfaceInput, data: Other) -> color { return #ffffff; }",
+        ),
+        (
+            "struct Output { position: vec3; }",
+            "fragment(s: SurfaceInput, data: Output) -> color { return #ffffff; }",
+        ),
+    ];
+    for (types, stages) in cases {
+        assert!(
+            stage_errors(types, stages).contains(&Code::E4021),
+            "{stages}"
+        );
+    }
+}
+
+#[test]
+fn structured_payload_slots_use_available_locations_and_enforce_the_limit() {
+    for count in [15, 16] {
+        let fields = (0..count)
+            .map(|i| format!("f{i}: f32;"))
+            .collect::<String>();
+        let values = (0..count)
+            .map(|i| format!("f{i}: 0.5;"))
+            .collect::<String>();
+        let types = format!("struct Payload {{ position: vec3; {fields} }}");
+        let stages = format!(
+            "vertex(v: VertexInput) -> Payload {{ return Payload {{ position: v.position; {values} }}; }} fragment(s: SurfaceInput, p: Payload) -> color {{ return color.linear(vec3(p.f14), 1.0); }}"
+        );
+        if count == 16 {
+            assert!(stage_errors(&types, &stages).contains(&Code::E6003));
+        } else {
+            let wgsl = wgsl_of(&format!("{types} material M {{ {stages} }}"));
+            assert!(wgsl.contains("@location(15)"));
+            assert!(!wgsl.contains("@location(16)"));
+        }
+    }
+}
+
+#[test]
+fn quaternion_payloads_preserve_vertex_values_and_inspect_as_flat() {
+    let source = format!(
+        r#"
+struct Payload {{ position: vec3; axis: quat; tint: color; }}
+material M {{
+    vertex(v: VertexInput) -> Payload {{
+        return Payload {{ position: v.position; axis: quat.axis_angle(vec3(0.0, 1.0, 0.0), v.uv.x); tint: #ff0000 }};
+    }}
+    fragment(s: SurfaceInput, p: Payload) -> color {{ return color.linear(p.tint.rgb * p.axis.w, 1.0); }}
+}}
+{SCENE}
+"#
+    );
+    let (program, _) = program(&[("src/main.mtek", &source)]);
+    let artifact =
+        emit_shader(&lower_material(&program, program.materials().next().unwrap()).unwrap())
+            .unwrap();
+    let axis = artifact
+        .varyings
+        .iter()
+        .find(|field| field.name == "axis")
+        .unwrap();
+    assert_eq!(axis.source_type, "quat");
+    assert_eq!(axis.wgsl_type, "vec4<f32>");
+    assert_eq!(axis.interpolation, "flat");
+    assert_eq!(
+        artifact
+            .varyings
+            .iter()
+            .find(|field| field.name == "tint")
+            .unwrap()
+            .interpolation,
+        "perspective-center"
+    );
+    let locations: BTreeSet<_> = artifact
+        .varyings
+        .iter()
+        .map(|field| field.location)
+        .collect();
+    assert_eq!(locations.len(), artifact.varyings.len());
+}
+
+#[test]
+fn imported_and_late_declared_vertex_payloads_keep_nominal_linkage_and_source_maps() {
+    let main = format!(
+        r#"
+import {{ Payload, produce }} from "./data.mtek";
+material M {{
+    vertex(input: VertexInput) -> Payload {{ return produce(input); }}
+    fragment(s: SurfaceInput, data: Payload) -> color {{ return color.linear(vec3(s.uv, f32(data.tag) * 0.1), 1.0); }}
+}}
+{SCENE}
+"#
+    );
+    let data = r#"
+export fn produce(input: VertexInput) -> Payload {
+    return Payload { position: input.position; normal: vec3(0.0, 1.0, 0.0); uv: vec2(0.5); tag: u32(7) };
+}
+export struct Payload { position: vec3; normal: vec3; uv: vec2; tag: u32; }
+"#;
+    let (program, _) = program(&[("src/main.mtek", &main), ("src/data.mtek", data)]);
+    let artifact =
+        emit_shader(&lower_material(&program, program.materials().next().unwrap()).unwrap())
+            .unwrap();
+    assert!(
+        artifact
+            .span_map
+            .entries
+            .iter()
+            .any(|entry| entry.symbol == "src/data.mtek::produce")
+    );
+    assert!(
+        artifact
+            .span_map
+            .entries
+            .iter()
+            .any(|entry| entry.symbol.ends_with("M.vertex"))
+    );
+    let field = artifact
+        .varyings
+        .iter()
+        .find(|field| field.name == "tag")
+        .unwrap();
+    assert_eq!(field.source_type, "u32");
+    assert_eq!(field.interpolation, "flat");
+    assert_eq!(field.location, 4);
 }

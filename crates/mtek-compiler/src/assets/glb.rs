@@ -112,29 +112,49 @@ pub struct GlbMesh {
 /// How a sampler of the file maps onto a sampler preset (`spec/materials.md` section 5).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SamplerChoice {
+    /// Minification filter; magnification is independent for imported glTF samplers.
     pub nearest: bool,
+    pub nearest_mag: bool,
     pub clamp: bool,
-    /// The file asked for a mip-mapped minification filter; v0.1 samples the base level.
+    /// The file asked for a mip-mapped minification filter.
     pub mipmapped: bool,
+    pub mip_linear: bool,
 }
 
 impl SamplerChoice {
     /// glTF's defaults: filtering is up to the implementation (linear), wrapping repeats.
     pub const DEFAULT: SamplerChoice = SamplerChoice {
         nearest: false,
+        nearest_mag: false,
         clamp: false,
         mipmapped: false,
+        mip_linear: false,
     };
 
     /// The sampler preset that expresses the choice.
     #[must_use]
     pub fn builtin(self) -> crate::stdlib::BuiltinSampler {
         use crate::stdlib::BuiltinSampler as S;
-        match (self.nearest, self.clamp) {
-            (false, false) => S::LinearRepeat,
-            (false, true) => S::LinearClamp,
-            (true, false) => S::NearestRepeat,
-            (true, true) => S::NearestClamp,
+        if self.nearest != self.nearest_mag {
+            return S::Mixed {
+                nearest_mag: self.nearest_mag,
+                clamp: self.clamp,
+                mip: self.mipmapped.then_some(self.mip_linear),
+            };
+        }
+        match (self.nearest, self.clamp, self.mipmapped, self.mip_linear) {
+            (false, false, false, _) => S::LinearRepeatLevel0,
+            (false, true, false, _) => S::LinearClampLevel0,
+            (true, false, false, _) => S::NearestRepeatLevel0,
+            (true, true, false, _) => S::NearestClampLevel0,
+            (false, false, true, false) => S::LinearRepeatMipNearest,
+            (false, true, true, false) => S::LinearClampMipNearest,
+            (true, false, true, true) => S::NearestRepeatMipLinear,
+            (true, true, true, true) => S::NearestClampMipLinear,
+            (false, false, true, true) => S::LinearRepeat,
+            (false, true, true, true) => S::LinearClamp,
+            (true, false, true, false) => S::NearestRepeat,
+            (true, true, true, false) => S::NearestClamp,
         }
     }
 }
@@ -156,6 +176,19 @@ pub struct GlbMaterial {
     pub metallic: f32,
     pub roughness: f32,
     pub texture: Option<GlbTexture>,
+    pub maps: GlbMaterialMaps,
+}
+
+/// Additional core glTF metallic-roughness channels, with their original sampler choices.
+#[derive(Clone, Debug, PartialEq)]
+pub struct GlbMaterialMaps {
+    pub metallic_roughness: Option<GlbTexture>,
+    pub normal: Option<GlbTexture>,
+    pub normal_scale: f32,
+    pub occlusion: Option<GlbTexture>,
+    pub occlusion_strength: f32,
+    pub emissive: Option<GlbTexture>,
+    pub emissive_factor: [f32; 3],
 }
 
 /// A validated embedded image.
@@ -1604,26 +1637,17 @@ impl<'a> Validator<'a> {
                 )) => (Some(false), true),
                 _ => (None, false),
             };
-            if let (Some(mag), Some(min)) = (mag, min)
-                && mag != min
-            {
-                self.report(
-                    10,
-                    Issue::new(
-                        Code::E7018,
-                        format!(
-                            "The {what} filters magnification {} and minification {}; the sampler presets use one filter for both.",
-                            if mag { "NEAREST" } else { "LINEAR" },
-                            if min { "NEAREST" } else { "LINEAR" }
-                        ),
-                    ),
-                );
-                ok = false;
-            }
             let choice = SamplerChoice {
-                nearest: mag.or(min).unwrap_or(false),
+                nearest: min.or(mag).unwrap_or(false),
+                nearest_mag: mag.or(min).unwrap_or(false),
                 clamp: s.is_some_and(|s| s.0),
                 mipmapped,
+                mip_linear: matches!(
+                    sampler.min_filter,
+                    Some(Checked::Valid(
+                        MinFilter::NearestMipmapLinear | MinFilter::LinearMipmapLinear
+                    ))
+                ),
             };
             self.samplers.push(ok.then_some(choice));
         }
@@ -1776,21 +1800,6 @@ impl<'a> Validator<'a> {
                 );
             }
             let mut unsupported = Vec::new();
-            if pbr.metallic_roughness_texture.is_some() {
-                unsupported.push("metallicRoughnessTexture");
-            }
-            if material.normal_texture.is_some() {
-                unsupported.push("normalTexture");
-            }
-            if material.occlusion_texture.is_some() {
-                unsupported.push("occlusionTexture");
-            }
-            if material.emissive_texture.is_some() {
-                unsupported.push("emissiveTexture");
-            }
-            if material.emissive_factor.0 != [0.0; 3] {
-                unsupported.push("emissiveFactor");
-            }
             if material.double_sided {
                 unsupported.push("doubleSided");
             }
@@ -1800,7 +1809,7 @@ impl<'a> Validator<'a> {
                     Issue::new(
                         Code::E7016,
                         format!(
-                            "The {what} uses {}; the profile supports base colour, metallic, roughness and a base colour texture on single-sided opaque materials.",
+                            "The {what} uses {}; the profile supports core metallic-roughness channels on single-sided opaque materials.",
                             unsupported.join(", ")
                         ),
                     ),
@@ -1823,13 +1832,60 @@ impl<'a> Validator<'a> {
                     texture = self.texture_of(&what, info.index.value());
                 }
             }
+            let metallic_roughness = pbr.metallic_roughness_texture.as_ref().and_then(|info| {
+                self.material_texture(
+                    &what,
+                    "metallic-roughness",
+                    info.index.value(),
+                    info.tex_coord,
+                )
+            });
+            let normal = material.normal_texture.as_ref().and_then(|info| {
+                self.material_texture(&what, "normal", info.index.value(), info.tex_coord)
+            });
+            let occlusion = material.occlusion_texture.as_ref().and_then(|info| {
+                self.material_texture(&what, "occlusion", info.index.value(), info.tex_coord)
+            });
+            let emissive = material.emissive_texture.as_ref().and_then(|info| {
+                self.material_texture(&what, "emissive", info.index.value(), info.tex_coord)
+            });
             self.materials.push(GlbMaterial {
                 name: material.name.clone(),
                 base_color: pbr.base_color_factor.0,
                 metallic: pbr.metallic_factor.0,
                 roughness: pbr.roughness_factor.0,
                 texture,
+                maps: GlbMaterialMaps {
+                    metallic_roughness,
+                    normal,
+                    normal_scale: material
+                        .normal_texture
+                        .as_ref()
+                        .map_or(0.0, |info| info.scale),
+                    occlusion,
+                    occlusion_strength: material
+                        .occlusion_texture
+                        .as_ref()
+                        .map_or(1.0, |info| info.strength.0),
+                    emissive,
+                    emissive_factor: material.emissive_factor.0,
+                },
             });
+        }
+    }
+
+    fn material_texture(
+        &mut self,
+        what: &str,
+        channel: &str,
+        index: usize,
+        tex_coord: u32,
+    ) -> Option<GlbTexture> {
+        if tex_coord != 0 {
+            self.report(8, Issue::new(Code::E7009, format!("The {what} reads its {channel} texture from TEXCOORD_{tex_coord}; the profile supports TEXCOORD_0 only.")));
+            None
+        } else {
+            self.texture_of(what, index)
         }
     }
 

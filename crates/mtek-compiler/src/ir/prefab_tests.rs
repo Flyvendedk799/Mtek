@@ -505,3 +505,41 @@ fn imported_assembly_initialisers_cannot_hide_child_reads_behind_params() {
     );
     assert!(matches!(lower_to_ir(&analysis), Err(LowerError::HasErrors)));
 }
+
+#[test]
+fn authored_bounds_survive_static_and_dynamic_prefab_lowering() {
+    let program = lowered(
+        r#"
+        prefab Bounded {
+            param offset: vec3;
+            param radius: f32 = 2.0;
+            bounds_center: offset;
+            bounds_radius: bind(radius);
+            mesh: Box {};
+            update(dt: f32) { self.bounds_center.y += dt; }
+        }
+        scene Demo {
+            camera Main {}
+            entity Plain { mesh: Box {}; }
+            entity Near: Bounded { offset: vec3(-10.0, 0.0, 0.0); }
+        }
+    "#,
+    )
+    .expect("bounds lower");
+    let prefab = program.prefabs().next().unwrap();
+    assert!(matches!(
+        prefab.entity.bounds_center.as_ref().unwrap().source,
+        Source::Expr(_)
+    ));
+    assert!(matches!(
+        prefab.entity.bounds_radius.as_ref().unwrap().source,
+        Source::Bound(_)
+    ));
+    let scene = program.entry().unwrap();
+    assert!(scene.entities[0].bounds_radius.is_none());
+    assert!(matches!(
+        scene.entities[1].bounds_center.as_ref().unwrap().source,
+        Source::Const(Value::Vec3([-10.0, 0.0, 0.0]))
+    ));
+    assert!(scene.bindings.iter().any(|binding| matches!(&binding.target, BindingTarget::Bounds { entity: 1, field } if field == "bounds_radius")));
+}

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Mtek — Lighting studio</title>
+  <link rel="stylesheet" href="./studio.css">
+</head>
+<body>
+  <main>
+    <aside>
+      <div class="brand">MTEK <span>RENDERING STUDIO</span></div>
+      <h1>Light. Surface.<br>Reflection.</h1>
+      <p class="intro">A compiled Mtek scene with directional shadows and image-based lighting.</p>
+      <fieldset><legend>View &amp; materials</legend>
+        <label>Camera orbit <input id="camera" type="range" min="-1.2" max="1.2" step="0.01" value="0.25"></label>
+        <label>Copper roughness <input id="roughness" type="range" min="0.05" max="1" step="0.01" value="0.2"></label>
+        <label class="row">Scene inspector <input id="inspector" type="checkbox"></label>
+      </fieldset>
+      <fieldset><legend>Directional shadows</legend>
+        <label class="row">Enable shadows <input id="shadows" type="checkbox" checked></label>
+        <label>Quality <select id="shadow-quality"><option value="low">Low · 512 / 1 tap</option><option value="medium" selected>Medium · 1024 / 9 taps</option><option value="high">High · 2048 / 25 taps</option></select></label>
+        <label>Light direction <input id="sun" type="range" min="-2.5" max="2.5" step="0.01" value="0.6"></label>
+      </fieldset>
+      <fieldset><legend>Environment</legend>
+        <label class="row">Enable reflections &amp; diffuse IBL <input id="environment" type="checkbox" checked></label>
+        <label>Rotation <input id="rotation" type="range" min="-3.14" max="3.14" step="0.05" value="0"></label>
+        <label>Intensity <input id="intensity" type="range" min="0" max="2" step="0.05" value="0.75"></label>
+        <label>Quality <select id="env-quality"><option value="low" selected>Low · 64 / 32 samples</option><option value="medium">Medium · 128 / 64 samples</option><option value="high">High · 256 / 128 samples</option></select></label>
+        <label class="file">Load a Radiance .hdr panorama<input id="hdr" type="file" accept=".hdr"></label>
+        <button id="reset">Use procedural studio</button>
+      </fieldset>
+      <p class="note">Linear HDR input. LDR output with sRGB encoding; highlights clip above one. Quality changes rebuild lighting resources.</p>
+    </aside>
+    <section class="viewport">
+      <canvas id="canvas" aria-label="Three materials and a rotating object with shadows"></canvas>
+      <header><span class="badge">WEBGPU</span><span id="status" role="status">Preparing lighting…</span><button id="pause">Pause motion</button></header>
+      <footer><span>COPPER / ROUGHNESS</span><span>CERAMIC / DIFFUSE</span><span>CHROME / REFLECTION</span></footer>
+      <pre id="diagnostics" hidden></pre>
+      <div id="scene-inspector" hidden></div>
+    </section>
+  </main>
+  <script type="module" src="./studio.js"></script>
+</body>
+</html>

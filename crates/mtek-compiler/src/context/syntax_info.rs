@@ -23,42 +23,42 @@ pub struct SyntaxRule {
 /// The rules, in the order the context lists them.
 pub const RULES: [SyntaxRule; 8] = [
     SyntaxRule {
-        text: "Declarations, fields, assignments and statements end with ';', also the last one before '}'.",
+        text: "Declarations, fields, assignments and statements end with ';', even before '}'.",
         violation: "scene Demo {\n    camera Main {}\n    clear_color: #000000\n}\n",
         code: Code::E1003,
     },
     SyntaxRule {
-        text: "Float literals have digits on both sides of the point (1.0, 0.5, 2.5e-3), never 1. or .5; integer literals have no sign, no leading zeros and no hexadecimal form.",
+        text: "Floats: 1.0, 0.5, 2.5e-3; digits required on both sides of '.'. Integers: unsigned decimal, no leading zeros.",
         violation: "scene Demo {\n    camera Main {}\n    ambient_intensity: 1.;\n}\n",
         code: Code::E0022,
     },
     SyntaxRule {
-        text: "Colours are written #RRGGBB or #RRGGBBAA.",
+        text: "Colours: #RRGGBB or #RRGGBBAA.",
         violation: "scene Demo {\n    camera Main {}\n    clear_color: #fff;\n}\n",
         code: Code::E0025,
     },
     SyntaxRule {
-        text: "Comparison operators (< <= > >=) and equality operators (== !=) do not chain: write (a < b) && (b < c).",
+        text: "< <= > >= == != do not chain; use (a < b) && (b < c).",
         violation: "const A: bool = 1 < 2 < 3;\n\nscene Demo {\n    camera Main {}\n}\n",
         code: Code::E1010,
     },
     SyntaxRule {
-        text: "Typed values are never converted implicitly: an i32 value is not an f32 value, and only a literal such as 1 may stand where an f32 is expected.",
+        text: "No implicit conversions; numeric literals may take expected numeric types.",
         violation: "scene Demo {\n    camera Main {}\n    state n: i32 = 1;\n    state f: f32 = 1.0;\n    on key_down(Key.Space) {\n        f = n;\n    }\n}\n",
         code: Code::E3001,
     },
     SyntaxRule {
-        text: "An import is import { Name } from \"./path.mtek\"; the path is relative (starts with ./ or ../) and ends in .mtek.",
+        text: "import {Name} from \"./path.mtek\"; paths start ./ or ../ and end .mtek.",
         violation: "import { Helper } from \"helper.mtek\";\n\nscene Demo {\n    camera Main {}\n}\n",
         code: Code::E2034,
     },
     SyntaxRule {
-        text: "Every scene needs a camera: camera Main { position: vec3(0.0, 2.0, 5.0); }.",
+        text: "Scenes need a camera: camera Main {}.",
         violation: "scene Demo {\n    entity Cube {\n        mesh: Box {};\n    }\n}\n",
         code: Code::E5012,
     },
     SyntaxRule {
-        text: "Fields and parameters must exist on their schema or declaration: an unknown name is an error, never ignored.",
+        text: "Fields/params must exist on their schema/declaration.",
         violation: "scene Demo {\n    camera Main {}\n    entity Cube {\n        mesh: Box { sizee: vec3(1.0); };\n    }\n}\n",
         code: Code::E5001,
     },

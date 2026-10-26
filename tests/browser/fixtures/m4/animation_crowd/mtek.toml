@@ -1,0 +1,6 @@
+[project]
+name = "animation-crowd"
+language = "0.1"
+
+[host.inputs]
+count = "Demo.count"

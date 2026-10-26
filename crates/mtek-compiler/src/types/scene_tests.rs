@@ -192,7 +192,14 @@ fn checked_scenes_fill_in_registry_defaults() {
     assert_eq!(
         names,
         [
-            "position", "rotation", "scale", "visible", "mesh", "material"
+            "position",
+            "rotation",
+            "scale",
+            "visible",
+            "bounds_center",
+            "bounds_radius",
+            "mesh",
+            "material"
         ]
     );
     let [child] = cube.children.as_slice() else {
@@ -349,4 +356,14 @@ fn child_field_initialisers_reject_sibling_reads_without_restricting_lexical_roo
     );
     let result = checked(&invalid);
     assert_eq!(result.codes(), ["E5081"], "{:#?}", result.diagnostics);
+}
+
+#[test]
+fn authored_bounds_validate_constants_and_allow_bindings_and_writes() {
+    let invalid = checked("scene Demo { camera Main {} entity A { bounds_radius: -1.0; } }");
+    assert_eq!(invalid.codes(), ["E5006"]);
+    let valid = checked(
+        "scene Demo { state r: f32 = 1.0; camera Main {} entity A { bounds_radius: bind(r); bounds_center: vec3(0.0); } update(dt: f32) { A.bounds_center.x += dt; } }",
+    );
+    assert!(valid.diagnostics.is_empty(), "{:?}", valid.diagnostics);
 }

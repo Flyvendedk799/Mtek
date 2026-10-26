@@ -3,6 +3,8 @@ import { identity, multiplyInto, fromRotationTranslationScaleInto, normalMatrixI
 import { ClipPlayers, sampleChannelInto, type PlayableChannel, type PlayableClip } from "./clips.js";
 import { PoseLayers } from "./pose-layers.js";
 import { PoseIK } from "./ik.js";
+import { LocomotionBlend } from "./locomotion.js";
+import { PoseSchedule, type AnimationUpdateBand } from "./pose-schedule.js";
 
 /** Shared file data, independently evaluated by every entity instance. */
 export function skinProblem(skin: MtekSkin, vertices: number): string | undefined {
@@ -60,6 +62,11 @@ function slerp(out: Float64Array, at: number, a: Float64Array, b: Float64Array, 
 export class SkeletonPlayer {
   readonly layers: PoseLayers;
   readonly ik: PoseIK;
+  readonly locomotion: LocomotionBlend;
+  private readonly schedule = new PoseSchedule();
+  private evaluatedLocomotion = -1;
+  /** Camera-distance bands; omit to evaluate on every update. Clocks and root motion are never throttled. */
+  setUpdatePolicy(bands: readonly AnimationUpdateBand[] | undefined): void { this.schedule.set(bands); }
   private rootNode = -1;
   private readonly rootDelta = new Float64Array(3);
   private readonly rootSample = new Float64Array(4);
@@ -131,6 +138,7 @@ export class SkeletonPlayer {
   constructor(readonly skin: MtekSkin, initial?: string) {
     this.layers = new PoseLayers(skin);
     this.ik = new PoseIK(skin);
+    this.locomotion = new LocomotionBlend(skin);
     this.bind = new Float64Array(skin.nodes.length*10);
     skin.nodes.forEach((node,i) => {
       this.bind.set(node.translation,i*10);
@@ -151,6 +159,7 @@ export class SkeletonPlayer {
   transition(name: string, seconds: number, looping: boolean, speed: number): boolean {
     const clip = this.skin.clips.find(c=>c.name===name);
     if (clip === undefined || !Number.isFinite(seconds) || seconds<0 || !Number.isFinite(speed) || speed<0) return false;
+    if (this.locomotion.active) { this.locomotion.set(undefined); this.name = ""; }
     if (name === this.name) return true; // declarative state selection doesn't restart every update
     this.outgoing = this.name !== "" && !this.held && this.blendTime >= this.blendDuration
       ? { name: this.name, clock: this.clock } : undefined;
@@ -174,6 +183,7 @@ export class SkeletonPlayer {
           || n.translation.some((v,k)=>v!==other.translation[k])
           || n.rotation.some((v,k)=>v!==other.rotation[k]) || n.scale.some((v,k)=>v!==other.scale[k]);
       })) return false;
+    this.locomotion.set(undefined);
     this.from.set(source.pose); this.pose.set(source.pose);
     this.held=true; this.name=""; this.outgoing=undefined;
     this.blendDuration=0; this.blendTime=0; this.evaluatedTime=NaN;
@@ -190,18 +200,26 @@ export class SkeletonPlayer {
     }
   }
   play(looping: boolean, speed: number): boolean {
+    if (this.locomotion.active) {
+      const ok = this.locomotion.play(looping,speed); if (ok) this.evaluate(); return ok;
+    }
     const ok = this.clock.play(0,looping,speed);
     if (ok) { this.from.set(this.sample); this.blendTime=0; this.evaluate(); }
     return ok;
   }
-  advance(dt: number, evaluate = true): void {
+  advance(dt: number, evaluate = true, distance = 0): void {
     if (!Number.isFinite(dt) || dt < 0) return;
     const previous=this.clock.time(0), outgoingTime=this.outgoing?.clock.time(0)??0, oldBlend=this.blendTime;
     this.clock.advance(dt,()=>undefined);
     this.outgoing?.clock.advance(dt,()=>undefined);
     this.layers.advance(dt);
+    this.locomotion.advance(dt);
     this.blendTime=Math.min(this.blendDuration,this.blendTime+dt);
-    if(this.rootNode>=0) {
+    if(this.rootNode>=0 && this.locomotion.active) {
+      this.rootSample.fill(0); this.locomotion.rootDelta(this.rootNode,this.rootSample);
+      for (let c=0;c<3;c++) this.rootDelta[c]=this.rootDelta[c]!+this.rootSample[c]!*this.clock.weight(0);
+    }
+    else if(this.rootNode>=0) {
       // Mean smoothstep transition weight over this update; constant root velocities
       // integrate independently of render cadence, including an interval past the fade.
       const integral=(t: number): number => t*t*t-.5*t*t*t*t;
@@ -215,7 +233,7 @@ export class SkeletonPlayer {
       if(this.outgoing!==undefined) this.extractRoot(this.outgoing.name,this.outgoing.clock,outgoingTime,(1-blend)*this.outgoing.clock.weight(0));
     }
     if (this.blendTime >= this.blendDuration) this.outgoing=undefined;
-    if (evaluate) this.evaluate();
+    if (evaluate && this.schedule.due(dt,distance)) this.evaluate();
   }
   private extractRoot(name: string, clock: ClipPlayers, previous: number, weight: number): void {
     if(weight===0 || this.held) return;
@@ -235,10 +253,11 @@ export class SkeletonPlayer {
   }
   evaluate(): void {
     const time = this.clock.time(0), weight = this.clock.weight(0);
-    if (this.override === undefined && time === this.evaluatedTime && this.blendTime === this.evaluatedBlend && weight === this.evaluatedWeight && this.evaluatedLayers === this.layers.revision && this.evaluatedIK === this.ik.revision) return;
+    if (this.override === undefined && time === this.evaluatedTime && this.blendTime === this.evaluatedBlend && weight === this.evaluatedWeight && this.evaluatedLayers === this.layers.revision && this.evaluatedIK === this.ik.revision && this.evaluatedLocomotion === this.locomotion.revision) return;
     this.evaluatedTime = time; this.evaluatedBlend = this.blendTime; this.evaluatedWeight = weight;
     this.evaluatedLayers = this.layers.revision;
     this.evaluatedIK = this.ik.revision;
+    this.evaluatedLocomotion = this.locomotion.revision;
     if (this.held) this.sample.set(this.from);
     else this.samplePose(this.name,time,this.sample);
     if (this.outgoing !== undefined) {
@@ -258,6 +277,13 @@ export class SkeletonPlayer {
       slerp(this.pose,at+3,this.from,this.sample,blend);
       for(const c of [0,1,2,7,8,9]) this.pose[at+c]=this.bind[at+c]!+(this.pose[at+c]!-this.bind[at+c]!)*weight;
       slerp(this.pose,at+3,this.bind,this.pose,weight);
+    }
+    if (this.locomotion.active) {
+      this.locomotion.apply(this.pose,this.bind);
+      for(let at=0;at<this.pose.length;at+=10) {
+        for(const c of [0,1,2,7,8,9]) this.pose[at+c]=this.bind[at+c]!+(this.pose[at+c]!-this.bind[at+c]!)*weight;
+        slerp(this.pose,at+3,this.bind,this.pose,weight);
+      }
     }
     // Interruption/restart snapshots must precede composition, otherwise an additive
     // or weighted layer would be applied again to an already composed snapshot.
@@ -302,7 +328,27 @@ type Apply = (slot: number, channel: PlayableChannel, value: ArrayLike<number>) 
 export class AnimationPlayers {
   private readonly nodes = new ClipPlayers();
   private readonly rigs = new Map<number,SkeletonPlayer>();
+  private readonly groups = new Map<SkeletonPlayer,number>();
   skin(slot: number): SkeletonPlayer | undefined { return this.rigs.get(slot); }
+  /** Explicit pose cohorts: all members intentionally share clocks, layers, IK and a palette. */
+  share(source: number, targets: readonly number[]): boolean {
+    const player = this.rigs.get(source);
+    if (player === undefined) throw new RangeError("Animation sharing needs a skinned source");
+    for (const target of targets) {
+      const other = this.rigs.get(target);
+      if (other === undefined || (other !== player && other.skin !== player.skin && JSON.stringify(other.skin) !== JSON.stringify(player.skin)))
+        throw new RangeError("Animation sharing needs identical skeletal assets");
+    }
+    let changed = false;
+    for (const target of targets) if (this.rigs.get(target) !== player) { this.rigs.set(target,player); changed = true; }
+    return changed;
+  }
+  detach(slot: number): SkeletonPlayer {
+    const source = this.rigs.get(slot);
+    if (source === undefined) throw new RangeError("Animation detaching needs a skinned entity");
+    const player = new SkeletonPlayer(source.skin);
+    player.copyPose(source); this.rigs.set(slot,player); return player;
+  }
   add(clip: PlayableClip): void { this.nodes.add(clip); }
   addSkin(slot: number, skin: MtekSkin, clip?: string): void { this.rigs.set(slot,new SkeletonPlayer(skin,clip)); }
   remove(slot: number): void { this.nodes.remove(slot); this.rigs.delete(slot); }
@@ -313,17 +359,30 @@ export class AnimationPlayers {
   transition(slot: number,name: string,seconds: number,looping: boolean,speed: number): boolean { return this.rigs.get(slot)?.transition(name,seconds,looping,speed) ?? false; }
   play(slot: number,looping: boolean,speed: number): boolean { const r=this.rigs.get(slot); return r===undefined?this.nodes.play(slot,looping,speed):r.play(looping,speed); }
   private clock(slot: number): [ClipPlayers,number] { const r=this.rigs.get(slot); return r===undefined?[this.nodes,slot]:[r.clock,0]; }
-  pause(slot: number): boolean { const [c,s]=this.clock(slot); return c.pause(s); }
-  resume(slot: number): boolean { const [c,s]=this.clock(slot); return c.resume(s); }
-  seek(slot: number,time: number): boolean { const [c,s]=this.clock(slot); return c.seek(s,time); }
+  pause(slot: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.pause(); const [c,s]=this.clock(slot); return c.pause(s); }
+  resume(slot: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.resume(); const [c,s]=this.clock(slot); return c.resume(s); }
+  seek(slot: number,time: number): boolean {
+    const blend=this.rigs.get(slot)?.locomotion;
+    if(blend?.active===true) {
+      if(!Number.isFinite(time)||time<0||time>blend.duration)return false;
+      blend.seek(time/blend.duration); return true;
+    }
+    const [c,s]=this.clock(slot); return c.seek(s,time);
+  }
   fade(slot: number,weight: number,duration: number): boolean { const [c,s]=this.clock(slot); return c.fade(s,weight,duration); }
-  time(slot: number): number { const [c,s]=this.clock(slot); return c.time(s); }
-  duration(slot: number): number { const [c,s]=this.clock(slot); return c.duration(s); }
+  time(slot: number): number { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.phase*blend.duration; const [c,s]=this.clock(slot); return c.time(s); }
+  duration(slot: number): number { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.duration; const [c,s]=this.clock(slot); return c.duration(s); }
   weight(slot: number): number { const [c,s]=this.clock(slot); return c.weight(s); }
-  playing(slot: number): boolean { const [c,s]=this.clock(slot); return c.playing(s); }
-  finished(slot: number): boolean { const [c,s]=this.clock(slot); return c.finished(s); }
-  crossed(slot: number,marker: number): boolean { const [c,s]=this.clock(slot); return c.crossed(s,marker); }
-  advance(dt: number,apply: Apply): void { this.nodes.advance(dt,apply); for(const r of this.rigs.values()) r.advance(dt); }
+  playing(slot: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.playing; const [c,s]=this.clock(slot); return c.playing(s); }
+  finished(slot: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.finished; const [c,s]=this.clock(slot); return c.finished(s); }
+  crossed(slot: number,marker: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.crossedPhase(marker/blend.duration); const [c,s]=this.clock(slot); return c.crossed(s,marker); }
+  advance(dt: number,apply: Apply,distance?: (slot: number)=>number): void {
+    this.nodes.advance(dt,apply);
+    this.groups.clear();
+    for (const [slot,player] of this.rigs) this.groups.set(player,Math.min(this.groups.get(player)??Infinity,distance?.(slot)??0));
+    for (const [player,nearest] of this.groups) player.advance(dt,true,nearest);
+    this.groups.clear();
+  }
   pose(apply: Apply,time?: number): void { this.nodes.pose(apply,time); for(const r of this.rigs.values()) r.evaluate(); }
   poseSlot(slot: number,apply: Apply): void { this.nodes.poseSlot(slot,apply); this.rigs.get(slot)?.evaluate(); }
 }

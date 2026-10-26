@@ -1,0 +1,33 @@
+fn shade(surface: SurfaceInput) -> color {
+    return lighting.pbr(surface, #ffffff, 0.0, 0.5);
+}
+
+material Lit {
+    param t0: texture = texture.white();
+    param t1: texture = texture.white();
+    param t2: texture = texture.white();
+    param t3: texture = texture.white();
+    param t4: texture = texture.white();
+    param t5: texture = texture.white();
+    param t6: texture = texture.white();
+    param t7: texture = texture.white();
+    param t8: texture = texture.white();
+    param t9: texture = texture.white();
+    param t10: texture = texture.white();
+    param t11: texture = texture.white();
+    param t12: texture = texture.white();
+    param t13: texture = texture.white();
+
+    fragment(surface: SurfaceInput) -> color {
+        return shade(surface);
+    }
+}
+
+scene Demo {
+    camera Main {}
+
+    entity Cube {
+        mesh: Box {};
+        material: Lit {};
+    }
+}

@@ -1,0 +1,55 @@
+{
+  "format": "mtek-size-report/1",
+  "examples": {
+    "arcade-audio": {
+      "folderBytes": 801210,
+      "zipBytes": 803012
+    },
+    "hud-score": {
+      "folderBytes": 765720,
+      "zipBytes": 766846
+    },
+    "lane-runner": {
+      "folderBytes": 765514,
+      "zipBytes": 767322
+    },
+    "material-configurator": {
+      "folderBytes": 833405,
+      "zipBytes": 834947
+    },
+    "modular-scene": {
+      "folderBytes": 731330,
+      "zipBytes": 732456
+    },
+    "physics-playground": {
+      "folderBytes": 5193362,
+      "zipBytes": 5194904
+    },
+    "product-configurator": {
+      "folderBytes": 809856,
+      "zipBytes": 810982
+    },
+    "pulse-cube": {
+      "folderBytes": 717249,
+      "zipBytes": 718375
+    },
+    "small-game": {
+      "folderBytes": 735823,
+      "zipBytes": 737281
+    },
+    "sprite-pop": {
+      "folderBytes": 734278,
+      "zipBytes": 735534
+    },
+    "stage-show": {
+      "folderBytes": 717545,
+      "zipBytes": 718801
+    }
+  },
+  "runtimeMinBytes": 673806,
+  "previousRuntimeMinBytes": 693856,
+  "runtimeDifferenceBytes": -20050,
+  "previousRecord": "../scene-lighting/package-sizes.json",
+  "budgetFile": "../../../budgets/small-games.json",
+  "budgetsUnchanged": true
+}

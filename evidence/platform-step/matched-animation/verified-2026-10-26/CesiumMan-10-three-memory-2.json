@@ -1,0 +1,178 @@
+{
+  "request": {
+    "model": "CesiumMan",
+    "count": 10,
+    "engine": "three",
+    "pass": "memory",
+    "smoke": false
+  },
+  "result": {
+    "live": {
+      "buffersCreated": 26,
+      "bufferBytesCreated": 253720,
+      "texturesCreated": 2,
+      "textureBytesCreated": 1843200,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 2,
+      "bindGroupsCreated": 11,
+      "bindGroupLayoutsCreated": 2,
+      "pipelineLayoutsCreated": 1,
+      "renderPipelinesCreated": 1,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 120,
+      "renderPassesBegun": 120,
+      "computePassesBegun": 0,
+      "submits": 120,
+      "drawCalls": 1200,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 1200,
+      "setPipeline": 120,
+      "setBindGroup": 1320,
+      "setVertexBuffer": 480,
+      "setIndexBuffer": 120,
+      "writeBufferCalls": 1211,
+      "writeBufferBytes": 1461408,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 239352,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 253720,
+      "liveTextureBytes": 1843200,
+      "devicesRequested": 1,
+      "devicesDestroyed": 0
+    },
+    "unknownTextureFormats": [],
+    "info": {
+      "engine": "three",
+      "version": "0.186.1",
+      "skinNodes": 22,
+      "joints": 19,
+      "vertices": 3273,
+      "actors": 10,
+      "render": {
+        "calls": 0,
+        "frameCalls": 0,
+        "drawCalls": 0,
+        "triangles": 0,
+        "points": 0,
+        "lines": 0,
+        "timestamp": 0
+      },
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-3",
+        "device": "0x744c",
+        "description": "AMD Radeon RX 7900 XTX",
+        "isFallbackAdapter": false
+      },
+      "deviceFeatures": [
+        "bgra8unorm-storage",
+        "clip-distances",
+        "core-features-and-limits",
+        "depth-clip-control",
+        "depth32float-stencil8",
+        "dual-source-blending",
+        "float32-blendable",
+        "float32-filterable",
+        "indirect-first-instance",
+        "rg11b10ufloat-renderable",
+        "shader-f16",
+        "subgroups",
+        "texture-compression-bc",
+        "texture-compression-bc-sliced-3d",
+        "texture-formats-tier1",
+        "texture-formats-tier2",
+        "timestamp-query"
+      ],
+      "clock": {
+        "crossOriginIsolated": true,
+        "observedQuantumMs": 0.004999998956918716
+      }
+    }
+  },
+  "disposed": {
+    "counters": {
+      "buffersCreated": 26,
+      "bufferBytesCreated": 253720,
+      "texturesCreated": 2,
+      "textureBytesCreated": 1843200,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 2,
+      "bindGroupsCreated": 11,
+      "bindGroupLayoutsCreated": 2,
+      "pipelineLayoutsCreated": 1,
+      "renderPipelinesCreated": 1,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 120,
+      "renderPassesBegun": 120,
+      "computePassesBegun": 0,
+      "submits": 120,
+      "drawCalls": 1200,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 1200,
+      "setPipeline": 120,
+      "setBindGroup": 1320,
+      "setVertexBuffer": 480,
+      "setIndexBuffer": 120,
+      "writeBufferCalls": 1211,
+      "writeBufferBytes": 1461408,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 239352,
+      "buffersDestroyed": 26,
+      "texturesDestroyed": 2,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 1
+    },
+    "devices": [
+      {
+        "destroyed": true,
+        "errors": [],
+        "lost": {
+          "reason": "destroyed",
+          "message": "Device was destroyed."
+        }
+      }
+    ]
+  },
+  "heapBefore": {
+    "usedSize": 3188532,
+    "totalSize": 3993600,
+    "embedderHeapUsedSize": 310672,
+    "backingStorageSize": 2592246
+  },
+  "heapWhileLive": {
+    "usedSize": 6017248,
+    "totalSize": 6885376,
+    "embedderHeapUsedSize": 468976,
+    "backingStorageSize": 3493509
+  },
+  "heapAfter": {
+    "usedSize": 5467788,
+    "totalSize": 6361088,
+    "embedderHeapUsedSize": 324512,
+    "backingStorageSize": 2897105
+  },
+  "hostLoad": {
+    "busyBeforePercent": 6.395348837209302,
+    "waitedForQuietMs": 265,
+    "noisy": false,
+    "busyDuringPercent": 12.028003276979222
+  },
+  "lock": {
+    "dir": "target/animation-benchmark-gpu.lock",
+    "waitedMs": 0
+  },
+  "errors": [],
+  "attempt": 0,
+  "accepted": true
+}

@@ -2,7 +2,7 @@
 
 {{generated}}
 
-Images and models are *assets*: files that the compiler opens and checks while it checks your program, so that a misspelled name or an unsupported file is an error with a position, not a black canvas. This page covers how to declare an asset, how a texture reaches a shader, what the four sampler presets do, and what is CPU-only and what is GPU-only.
+Images and models are *assets*: files that the compiler opens and checks while it checks your program, so that a misspelled name or an unsupported file is an error with a position, not a black canvas. This page covers how to declare an asset, how a texture reaches a shader, how the sampler presets filter, and what is CPU-only and what is GPU-only.
 
 ## Rules
 
@@ -10,14 +10,25 @@ Images and models are *assets*: files that the compiler opens and checks while i
 2. **Path rules.** The path is a string literal, because the compiler opens the file while it checks the program (`MTEK-E7022` for anything else, even a constant). It is resolved *relative to the file that contains it*, uses `/`, must stay inside the project (`MTEK-E7021`), must match the case of the file on disk (`MTEK-E7023`) and must name a file that exists (`MTEK-E7020`; the message shows the path it resolved, such as `src/textures/wood.png`, which is the usual sign that `../` is missing). A URL is `MTEK-E7901`: assets are local in this version.
 3. **Image files.** PNG and JPEG, at most 8192 pixels on a side (`[assets] max_texture_dimension`), and a JPEG must not carry an EXIF orientation other than 1 (`MTEK-E7017`). The file must be no larger than `max_file_bytes` (`MTEK-E7002`). Image `uv` coordinates have their origin at the top left.
 4. **Colour space.** `asset.texture` images are decoded as sRGB, so `sample` returns linear values, the same as a colour literal. `asset.linear_texture` images are used as stored; use it for anything that is data and not a colour.
-5. **Built-in textures** are 1x1 and opaque: `texture.white()` is `(1, 1, 1, 1)` and `texture.black()` is `(0, 0, 0, 1)`. The sampler presets are listed below the rules. `linear` filters between texels and `nearest` shows single texels (pixel art, data). `repeat` tiles the texture outside the range 0 to 1 and `clamp` repeats the edge texel. No mip-maps are made, so a texture far smaller on the screen than in the file will shimmer.
+5. **Built-in textures** are 1x1 and opaque: `texture.white()` is `(1, 1, 1, 1)` and `texture.black()` is `(0, 0, 0, 1)`. The sampler presets are listed below the rules. `linear` filters between texels and `nearest` shows single texels (pixel art, data). `repeat` tiles the texture outside the range 0 to 1 and `clamp` repeats the edge texel. Asset images receive a full mip chain; colour mips are averaged in linear light. Use `sample_mip` to select levels as a surface becomes smaller on screen.
 6. **A texture reaches a shader as a parameter.** Declare `param base: texture = texture.white();` and `param smp: sampler = sampler.linear_repeat();` in a material, give the entity an instance (`Textured { base: WOOD; smp: sampler.nearest_clamp() }`) and sample in the stage with {{signature sample}}. The result is a `vec4`; its components are `x`, `y`, `z`, `w` (`.rgb` on a `vec4` is `MTEK-E3013`), so write `color.linear(texel.xyz, 1.0)`.
-7. **Where a texture or sampler may be used.** In a stage, only as a direct argument of `sample` (`MTEK-E4041`; passing one to your own function is also `MTEK-E4011`). The preset constructors such as `sampler.linear_repeat()` are CPU-only, so they appear in parameter defaults and instance values and not in the stage (`MTEK-E4012`). `sample` itself is GPU-only: it cannot be called from `update` or a handler (`MTEK-E4013`).
-8. **Resource parameters are fixed.** The `texture` or `sampler` of an instance is chosen when the entity is created: assigning one is `MTEK-E5073` and binding one `MTEK-E5004`. A material may have at most 8 texture and sampler parameters together (`MTEK-E6002`).
-9. **The built-in `Pbr` material** has `base_color_texture` and `base_color_sampler` (the texture is multiplied by `base_color`). Use them for ordinary textured surfaces and write your own material when you need other maps.
+7. **Where a texture or sampler may be used.** In a stage, only as a direct argument of `sample` or `sample_mip` (`MTEK-E4041`; passing one to your own function is also `MTEK-E4011`). The preset constructors such as `sampler.linear_repeat()` are CPU-only, so they appear in parameter defaults and instance values and not in the stage (`MTEK-E4012`). Both sampling functions are GPU-only: they cannot be called from `update` or a handler (`MTEK-E4013`).
+8. **Resource parameters are fixed.** The `texture` or `sampler` of an instance is chosen when the entity is created: assigning one is `MTEK-E5073` and binding one `MTEK-E5004`. A material may have at most 16 texture and sampler parameters together (`MTEK-E6002`).
+9. **The built-in `Pbr` material** accepts base-colour, metallic-roughness, normal, occlusion and emissive texture/sampler pairs. Metallic uses blue and roughness green of the linear data map; occlusion uses red and affects indirect light only. Emissive and base colour use sRGB images. Set `normal_scale` when providing a normal map by hand (default zero; GLB maps import their scale, default one). `occlusion_strength` scales occlusion, and `emissive` multiplies the emissive image before exposure. See [Materials and shaders](materials-and-shaders.md) for the full parameter list.
 10. **Models.** A `.glb` file is read through accessors, and every name is checked against the file (`MTEK-E7024` lists the names that do exist); the accessors are listed below the rules. A mesh with more than one primitive needs `.primitive(name, index)` (`MTEK-E7012`). The node accessors give the *world* transform of a node of the default scene. Objects without a name in the file cannot be referenced. Each entity uses one mesh; instancing a whole node hierarchy with `model:` is `MTEK-E7902`.
-11. **The glTF profile is strict**: binary `.glb` with embedded buffers and images, no extensions, no skins, positions, normals and the first UV set only, opaque single-sided materials with a base colour texture. A LINEAR or STEP clip of translation, rotation and scale plays with `clip: "Name"` (decision 0156); morph weights and cubic spline stay out. A file that goes beyond the profile is an error that names the feature (`MTEK-E7001` to `MTEK-E7019`; see [Limitations](../limitations.md)).
+11. **The glTF profile is strict**: binary `.glb` with embedded buffers and images, no extensions, positions, normals and the first UV set, opaque single-sided core PBR materials including normal, MR, occlusion and emissive maps; validated skins follow decision 0191. A LINEAR or STEP clip of translation, rotation and scale plays with `clip: "Name"` (decision 0156); morph weights and cubic spline stay out. A file that goes beyond the profile is an error that names the feature (`MTEK-E7001` to `MTEK-E7019`; see [Limitations](../limitations.md)).
 12. **At run time** every asset the first scene needs is loaded before the program starts, checked against its recorded length and hash. A file that cannot be fetched or decoded stops the start with an overlay that names the file (`MTEK-E7030`, `MTEK-E7031`); nothing is drawn with a missing texture instead.
+
+`sample` reads level zero. `sample_mip` uses implicit mip selection, and must be
+called before control flow in the fragment's initial straight-line prefix
+(`MTEK-E4042`). Evaluate the texel first, then branch on its value. Each sampler
+has a `_level0` variant; linear presets add `_mip_nearest`, and nearest presets
+add `_mip_linear`. GLB imports preserve their requested mip filters.
+
+Imported glTF materials also preserve independent minification/magnification
+filters and their mip choice (decision 0200). Mixed filters are represented by
+internal manifest resources; the source constructors below retain their existing
+behavior. Mirrored repeat and differing U/V address modes remain unsupported.
 
 The sampler presets:
 
@@ -253,7 +264,7 @@ scene Demo {
 }
 ```
 
-The sampler presets run on the CPU (`MTEK-E4012`); add `param smp: sampler = sampler.linear_repeat();` and use `smp`. Passing `base` or `smp` to a function of your own is `MTEK-E4041`, because a texture exists only as an argument of `sample`.
+The sampler presets run on the CPU (`MTEK-E4012`); add `param smp: sampler = sampler.linear_repeat();` and use `smp`. Passing `base` or `smp` to a function of your own is `MTEK-E4041`, because a texture exists only as a direct argument of `sample` or `sample_mip`.
 
 ### Sampling on the CPU
 

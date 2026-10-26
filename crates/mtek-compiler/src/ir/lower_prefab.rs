@@ -235,6 +235,14 @@ impl Lowering<'_> {
                 "rotation" => &mut entity.rotation,
                 "scale" => &mut entity.scale,
                 "visible" => &mut entity.visible,
+                "bounds_center" => entity
+                    .bounds_center
+                    .as_mut()
+                    .ok_or("missing authored bounds center")?,
+                "bounds_radius" => entity
+                    .bounds_radius
+                    .as_mut()
+                    .ok_or("missing authored bounds radius")?,
                 other => {
                     return Err(format!("the field '{other}' of {what} cannot be computed"));
                 }
@@ -317,6 +325,8 @@ impl Lowering<'_> {
             rotation: pending(),
             scale: pending(),
             visible: pending(),
+            bounds_center: None,
+            bounds_radius: None,
             mesh: None,
             material: None,
             light: None,

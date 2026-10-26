@@ -44,6 +44,7 @@ import { DevTools } from "../dev/tools.js";
 import { loadStartupShaders } from "./shaders.js";
 import { checkTestTextures } from "../render/resources.js";
 import { startScene } from "../render/startup.js";
+import { snapshotRendering } from "../render/environment.js";
 import { InputState } from "../input/input.js";
 import { loadPhysicsBackend, type PhysicsLoadResult } from "../physics/load.js";
 import { PhysicsSystem } from "../physics/system.js";
@@ -210,6 +211,8 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
   program: MtekMountProgram<I, O>,
   options: MtekMountOptions<I> = {},
 ): Promise<MtekApp<I, O>> {
+  const rendering = snapshotRendering(options.rendering);
+  if (rendering !== undefined) options = { ...options, rendering };
   validateOptions(options as MtekMountOptions<never>);
   validateExtensions(options.extensions??[]);
   const effects=options.rendering?.postProcessing??[];

@@ -1,0 +1,5547 @@
+{
+  "contract": "structured vertex outputs and typed varyings",
+  "backend": "software",
+  "launchArgs": [
+    "--enable-unsafe-webgpu",
+    "--use-webgpu-adapter=swiftshader",
+    "--enable-webgpu-developer-features"
+  ],
+  "startedAt": "2026-10-26T04:02:44.902Z",
+  "status": "passed",
+  "browser": "153.0.8010.12",
+  "adapter": {
+    "vendor": "google",
+    "architecture": "swiftshader",
+    "device": "0xc0de",
+    "description": "SwiftShader Device (Subzero)",
+    "isFallbackAdapter": true
+  },
+  "cases": [
+    {
+      "shadows": false,
+      "disableInstancing": false,
+      "crowd": false,
+      "x": -10,
+      "y": 1.1,
+      "angle": 0,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9409,
+      "geometryChangedPixels": 156,
+      "shadowChangedPixels": 0,
+      "authored": {
+        "buffersAllocated": 15,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 5,
+        "uploads": 15,
+        "uploadBytes": 3272,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 5,
+        "liveBindGroups": 5,
+        "liveListeners": 9,
+        "frameTimeMs": 2.699999999254942,
+        "cpuUpdateMs": 0.8999999985098839,
+        "renderPrepMs": 1.800000000745058,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 2,
+        "drawCallsTotal": 2,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 1,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 1,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 16,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 6,
+        "uploads": 16,
+        "uploadBytes": 3400,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 5,
+        "liveBindGroups": 6,
+        "liveListeners": 9,
+        "frameTimeMs": 0.30000000074505806,
+        "cpuUpdateMs": 0.10000000149011612,
+        "renderPrepMs": 0.19999999925494194,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 2,
+        "drawCallsTotal": 4,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 2,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 2,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": false,
+      "disableInstancing": false,
+      "crowd": false,
+      "x": -9.5,
+      "y": 2,
+      "angle": -0.45,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9370,
+      "geometryChangedPixels": 202,
+      "shadowChangedPixels": 0,
+      "authored": {
+        "buffersAllocated": 18,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 6,
+        "uploads": 17,
+        "uploadBytes": 3416,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 5,
+        "liveBindGroups": 6,
+        "liveListeners": 9,
+        "frameTimeMs": 0.20000000298023224,
+        "cpuUpdateMs": 0.10000000149011612,
+        "renderPrepMs": 0.10000000149011612,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 2,
+        "drawCallsTotal": 7,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 4,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 4,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 19,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 6,
+        "uploads": 18,
+        "uploadBytes": 3544,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 5,
+        "liveBindGroups": 6,
+        "liveListeners": 9,
+        "frameTimeMs": 0.19999999925494194,
+        "cpuUpdateMs": 0.10000000149011612,
+        "renderPrepMs": 0.09999999776482582,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 2,
+        "drawCallsTotal": 9,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 5,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 5,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": false,
+      "disableInstancing": false,
+      "crowd": true,
+      "x": -10,
+      "y": 1.1,
+      "angle": 0.65,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9329,
+      "geometryChangedPixels": 429,
+      "shadowChangedPixels": 0,
+      "authored": {
+        "buffersAllocated": 21,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 7,
+        "uploads": 20,
+        "uploadBytes": 3816,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 5,
+        "liveBindGroups": 7,
+        "liveListeners": 9,
+        "frameTimeMs": 0.4000000022351742,
+        "cpuUpdateMs": 0.10000000149011612,
+        "renderPrepMs": 0.30000000074505806,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 2,
+        "drawCallsTotal": 12,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 1,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 7,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 7,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 22,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 7,
+        "uploads": 21,
+        "uploadBytes": 4048,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 5,
+        "liveBindGroups": 7,
+        "liveListeners": 9,
+        "frameTimeMs": 0.30000000074505806,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0.30000000074505806,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 2,
+        "drawCallsTotal": 14,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 2,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 8,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 8,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": false,
+      "disableInstancing": true,
+      "crowd": false,
+      "x": -10,
+      "y": 1.1,
+      "angle": 0,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9409,
+      "geometryChangedPixels": 156,
+      "shadowChangedPixels": 0,
+      "authored": {
+        "buffersAllocated": 14,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 3,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 5,
+        "uploads": 15,
+        "uploadBytes": 3272,
+        "liveBuffers": 13,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 3,
+        "liveBindGroups": 5,
+        "liveListeners": 9,
+        "frameTimeMs": 0.29999999701976776,
+        "cpuUpdateMs": 0.09999999776482582,
+        "renderPrepMs": 0.19999999925494194,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 2,
+        "drawCallsTotal": 2,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 1,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 1,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 15,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 3,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 6,
+        "uploads": 16,
+        "uploadBytes": 3400,
+        "liveBuffers": 13,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 3,
+        "liveBindGroups": 6,
+        "liveListeners": 9,
+        "frameTimeMs": 0.09999999776482582,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0.09999999776482582,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 2,
+        "drawCallsTotal": 4,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 2,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 2,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": false,
+      "disableInstancing": true,
+      "crowd": false,
+      "x": -9.5,
+      "y": 2,
+      "angle": -0.45,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9370,
+      "geometryChangedPixels": 202,
+      "shadowChangedPixels": 0,
+      "authored": {
+        "buffersAllocated": 17,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 3,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 6,
+        "uploads": 17,
+        "uploadBytes": 3416,
+        "liveBuffers": 13,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 3,
+        "liveBindGroups": 6,
+        "liveListeners": 9,
+        "frameTimeMs": 0.10000000149011612,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0.10000000149011612,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 2,
+        "drawCallsTotal": 7,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 4,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 4,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 18,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 3,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 6,
+        "uploads": 18,
+        "uploadBytes": 3544,
+        "liveBuffers": 13,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 3,
+        "liveBindGroups": 6,
+        "liveListeners": 9,
+        "frameTimeMs": 0.19999999925494194,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0.19999999925494194,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 2,
+        "drawCallsTotal": 9,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 5,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 5,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": false,
+      "disableInstancing": true,
+      "crowd": true,
+      "x": -10,
+      "y": 1.1,
+      "angle": 0.65,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9329,
+      "geometryChangedPixels": 429,
+      "shadowChangedPixels": 0,
+      "authored": {
+        "buffersAllocated": 20,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 3,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 7,
+        "uploads": 20,
+        "uploadBytes": 3944,
+        "liveBuffers": 13,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 3,
+        "liveBindGroups": 7,
+        "liveListeners": 9,
+        "frameTimeMs": 0.19999999925494194,
+        "cpuUpdateMs": 0.19999999925494194,
+        "renderPrepMs": 0,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 3,
+        "drawCallsTotal": 13,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 7,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 7,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 21,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 3,
+        "shaderModulesCreated": 3,
+        "bindGroupsCreated": 7,
+        "uploads": 21,
+        "uploadBytes": 4328,
+        "liveBuffers": 13,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 3,
+        "livePipelines": 3,
+        "liveBindGroups": 7,
+        "liveListeners": 9,
+        "frameTimeMs": 0,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 3,
+        "drawCallsTotal": 16,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 8,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 8,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": true,
+      "disableInstancing": false,
+      "crowd": false,
+      "x": -10,
+      "y": 1.1,
+      "angle": 0,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9409,
+      "geometryChangedPixels": 455,
+      "shadowChangedPixels": 299,
+      "authored": {
+        "buffersAllocated": 16,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 7,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 7,
+        "uploads": 16,
+        "uploadBytes": 3336,
+        "liveBuffers": 15,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 7,
+        "liveBindGroups": 7,
+        "liveListeners": 9,
+        "frameTimeMs": 0.4000000022351742,
+        "cpuUpdateMs": 0.10000000149011612,
+        "renderPrepMs": 0.30000000074505806,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 4,
+        "drawCallsTotal": 4,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 1,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 1,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 17,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 7,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 8,
+        "uploads": 17,
+        "uploadBytes": 3464,
+        "liveBuffers": 15,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 7,
+        "liveBindGroups": 8,
+        "liveListeners": 9,
+        "frameTimeMs": 0.19999999925494194,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0.19999999925494194,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 4,
+        "drawCallsTotal": 8,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 2,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 2,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": true,
+      "disableInstancing": false,
+      "crowd": false,
+      "x": -9.5,
+      "y": 2,
+      "angle": -0.45,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9370,
+      "geometryChangedPixels": 527,
+      "shadowChangedPixels": 325,
+      "authored": {
+        "buffersAllocated": 19,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 7,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 8,
+        "uploads": 18,
+        "uploadBytes": 3480,
+        "liveBuffers": 15,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 7,
+        "liveBindGroups": 8,
+        "liveListeners": 9,
+        "frameTimeMs": 0.19999999925494194,
+        "cpuUpdateMs": 0.10000000149011612,
+        "renderPrepMs": 0.09999999776482582,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 4,
+        "drawCallsTotal": 14,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 4,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 4,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 20,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 7,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 8,
+        "uploads": 19,
+        "uploadBytes": 3608,
+        "liveBuffers": 15,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 7,
+        "liveBindGroups": 8,
+        "liveListeners": 9,
+        "frameTimeMs": 0.19999999925494194,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0.19999999925494194,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 4,
+        "drawCallsTotal": 18,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 5,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 5,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": true,
+      "disableInstancing": false,
+      "crowd": true,
+      "x": -10,
+      "y": 1.1,
+      "angle": 0.65,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9317,
+      "geometryChangedPixels": 741,
+      "shadowChangedPixels": 342,
+      "authored": {
+        "buffersAllocated": 22,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 7,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 9,
+        "uploads": 22,
+        "uploadBytes": 4264,
+        "liveBuffers": 15,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 7,
+        "liveBindGroups": 9,
+        "liveListeners": 9,
+        "frameTimeMs": 0.19999999925494194,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0.19999999925494194,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 5,
+        "drawCallsTotal": 25,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 1,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 7,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 7,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 23,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 7,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 9,
+        "uploads": 24,
+        "uploadBytes": 4880,
+        "liveBuffers": 15,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 7,
+        "liveBindGroups": 9,
+        "liveListeners": 9,
+        "frameTimeMs": 0.19999999925494194,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0.19999999925494194,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 5,
+        "drawCallsTotal": 30,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 2,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 8,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 8,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": true,
+      "disableInstancing": true,
+      "crowd": false,
+      "x": -10,
+      "y": 1.1,
+      "angle": 0,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9409,
+      "geometryChangedPixels": 455,
+      "shadowChangedPixels": 299,
+      "authored": {
+        "buffersAllocated": 15,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 7,
+        "uploads": 16,
+        "uploadBytes": 3336,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 5,
+        "liveBindGroups": 7,
+        "liveListeners": 9,
+        "frameTimeMs": 0.4000000022351742,
+        "cpuUpdateMs": 0.20000000298023224,
+        "renderPrepMs": 0.19999999925494194,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 4,
+        "drawCallsTotal": 4,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 1,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 1,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 16,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 8,
+        "uploads": 17,
+        "uploadBytes": 3464,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 5,
+        "liveBindGroups": 8,
+        "liveListeners": 9,
+        "frameTimeMs": 0.19999999925494194,
+        "cpuUpdateMs": 0.09999999776482582,
+        "renderPrepMs": 0.10000000149011612,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 4,
+        "drawCallsTotal": 8,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 2,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 2,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": true,
+      "disableInstancing": true,
+      "crowd": false,
+      "x": -9.5,
+      "y": 2,
+      "angle": -0.45,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9370,
+      "geometryChangedPixels": 527,
+      "shadowChangedPixels": 325,
+      "authored": {
+        "buffersAllocated": 18,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 8,
+        "uploads": 18,
+        "uploadBytes": 3480,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 5,
+        "liveBindGroups": 8,
+        "liveListeners": 9,
+        "frameTimeMs": 0.19999999925494194,
+        "cpuUpdateMs": 0.10000000149011612,
+        "renderPrepMs": 0.09999999776482582,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 4,
+        "drawCallsTotal": 14,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 4,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 4,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 19,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 8,
+        "uploads": 19,
+        "uploadBytes": 3608,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 5,
+        "liveBindGroups": 8,
+        "liveListeners": 9,
+        "frameTimeMs": 0.19999999925494194,
+        "cpuUpdateMs": 0.10000000149011612,
+        "renderPrepMs": 0.09999999776482582,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 4,
+        "drawCallsTotal": 18,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 5,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 5,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    {
+      "shadows": true,
+      "disableInstancing": true,
+      "crowd": true,
+      "x": -10,
+      "y": 1.1,
+      "angle": 0.65,
+      "maxError": 0,
+      "differingPixels": 0,
+      "litPixels": 9317,
+      "geometryChangedPixels": 741,
+      "shadowChangedPixels": 342,
+      "authored": {
+        "buffersAllocated": 21,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 9,
+        "uploads": 21,
+        "uploadBytes": 4008,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 5,
+        "liveBindGroups": 9,
+        "liveListeners": 9,
+        "frameTimeMs": 0.10000000149011612,
+        "cpuUpdateMs": 0.10000000149011612,
+        "renderPrepMs": 0,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 6,
+        "drawCallsTotal": 26,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 7,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 7,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "reference": {
+        "buffersAllocated": 22,
+        "texturesAllocated": 6,
+        "pipelinesCreated": 5,
+        "shaderModulesCreated": 4,
+        "bindGroupsCreated": 9,
+        "uploads": 22,
+        "uploadBytes": 4392,
+        "liveBuffers": 14,
+        "liveTextures": 6,
+        "liveSamplers": 3,
+        "liveShaderModules": 4,
+        "livePipelines": 5,
+        "liveBindGroups": 9,
+        "liveListeners": 9,
+        "frameTimeMs": 0.19999999925494194,
+        "cpuUpdateMs": 0,
+        "renderPrepMs": 0.19999999925494194,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 6,
+        "drawCallsTotal": 32,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 8,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 8,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    }
+  ],
+  "diagnostics": [],
+  "disposal": [
+    {
+      "buffersAllocated": 23,
+      "texturesAllocated": 6,
+      "pipelinesCreated": 5,
+      "shaderModulesCreated": 3,
+      "bindGroupsCreated": 7,
+      "uploads": 21,
+      "uploadBytes": 4048,
+      "liveBuffers": 0,
+      "liveTextures": 0,
+      "liveSamplers": 0,
+      "liveShaderModules": 0,
+      "livePipelines": 0,
+      "liveBindGroups": 0,
+      "liveListeners": 0,
+      "frameTimeMs": 0.19999999925494194,
+      "cpuUpdateMs": 0.10000000149011612,
+      "renderPrepMs": 0.09999999776482582,
+      "gpuTimeAvailable": 0,
+      "drawCalls": 1,
+      "drawCallsTotal": 15,
+      "failedMaterials": 0,
+      "instancedDraws": 0,
+      "instancedDrawsTotal": 2,
+      "culledObjects": 0,
+      "culledObjectsTotal": 0,
+      "rebatchesTotal": 9,
+      "sharedParamBlocks": 1,
+      "ownedParamBlocks": 2,
+      "discardedSteps": 0,
+      "liveEntities": 8,
+      "pendingSpawns": 0,
+      "pendingRemovals": 0,
+      "entitySlots": 8,
+      "entitiesSpawned": 0,
+      "entitiesDestroyed": 0,
+      "physicsBodies": 0,
+      "physicsColliders": 0,
+      "physicsSteps": 0,
+      "physicsFrozenBodies": 0,
+      "framesRendered": 9,
+      "framesSkipped": 0,
+      "deviceLosses": 0,
+      "deviceRecoveries": 0,
+      "recoveryAttempts": 0
+    },
+    {
+      "buffersAllocated": 22,
+      "texturesAllocated": 6,
+      "pipelinesCreated": 3,
+      "shaderModulesCreated": 3,
+      "bindGroupsCreated": 7,
+      "uploads": 21,
+      "uploadBytes": 4328,
+      "liveBuffers": 0,
+      "liveTextures": 0,
+      "liveSamplers": 0,
+      "liveShaderModules": 0,
+      "livePipelines": 0,
+      "liveBindGroups": 0,
+      "liveListeners": 0,
+      "frameTimeMs": 0.19999999925494194,
+      "cpuUpdateMs": 0.10000000149011612,
+      "renderPrepMs": 0.09999999776482582,
+      "gpuTimeAvailable": 0,
+      "drawCalls": 1,
+      "drawCallsTotal": 17,
+      "failedMaterials": 0,
+      "instancedDraws": 0,
+      "instancedDrawsTotal": 0,
+      "culledObjects": 0,
+      "culledObjectsTotal": 0,
+      "rebatchesTotal": 9,
+      "sharedParamBlocks": 1,
+      "ownedParamBlocks": 2,
+      "discardedSteps": 0,
+      "liveEntities": 8,
+      "pendingSpawns": 0,
+      "pendingRemovals": 0,
+      "entitySlots": 8,
+      "entitiesSpawned": 0,
+      "entitiesDestroyed": 0,
+      "physicsBodies": 0,
+      "physicsColliders": 0,
+      "physicsSteps": 0,
+      "physicsFrozenBodies": 0,
+      "framesRendered": 9,
+      "framesSkipped": 0,
+      "deviceLosses": 0,
+      "deviceRecoveries": 0,
+      "recoveryAttempts": 0
+    },
+    {
+      "buffersAllocated": 24,
+      "texturesAllocated": 6,
+      "pipelinesCreated": 7,
+      "shaderModulesCreated": 4,
+      "bindGroupsCreated": 9,
+      "uploads": 24,
+      "uploadBytes": 4880,
+      "liveBuffers": 0,
+      "liveTextures": 0,
+      "liveSamplers": 0,
+      "liveShaderModules": 0,
+      "livePipelines": 0,
+      "liveBindGroups": 0,
+      "liveListeners": 0,
+      "frameTimeMs": 0.19999999925494194,
+      "cpuUpdateMs": 0,
+      "renderPrepMs": 0.19999999925494194,
+      "gpuTimeAvailable": 0,
+      "drawCalls": 2,
+      "drawCallsTotal": 32,
+      "failedMaterials": 0,
+      "instancedDraws": 0,
+      "instancedDrawsTotal": 2,
+      "culledObjects": 0,
+      "culledObjectsTotal": 0,
+      "rebatchesTotal": 9,
+      "sharedParamBlocks": 1,
+      "ownedParamBlocks": 2,
+      "discardedSteps": 0,
+      "liveEntities": 8,
+      "pendingSpawns": 0,
+      "pendingRemovals": 0,
+      "entitySlots": 8,
+      "entitiesSpawned": 0,
+      "entitiesDestroyed": 0,
+      "physicsBodies": 0,
+      "physicsColliders": 0,
+      "physicsSteps": 0,
+      "physicsFrozenBodies": 0,
+      "framesRendered": 9,
+      "framesSkipped": 0,
+      "deviceLosses": 0,
+      "deviceRecoveries": 0,
+      "recoveryAttempts": 0
+    },
+    {
+      "buffersAllocated": 23,
+      "texturesAllocated": 6,
+      "pipelinesCreated": 5,
+      "shaderModulesCreated": 4,
+      "bindGroupsCreated": 9,
+      "uploads": 22,
+      "uploadBytes": 4392,
+      "liveBuffers": 0,
+      "liveTextures": 0,
+      "liveSamplers": 0,
+      "liveShaderModules": 0,
+      "livePipelines": 0,
+      "liveBindGroups": 0,
+      "liveListeners": 0,
+      "frameTimeMs": 0.10000000149011612,
+      "cpuUpdateMs": 0,
+      "renderPrepMs": 0.10000000149011612,
+      "gpuTimeAvailable": 0,
+      "drawCalls": 2,
+      "drawCallsTotal": 34,
+      "failedMaterials": 0,
+      "instancedDraws": 0,
+      "instancedDrawsTotal": 0,
+      "culledObjects": 0,
+      "culledObjectsTotal": 0,
+      "rebatchesTotal": 9,
+      "sharedParamBlocks": 1,
+      "ownedParamBlocks": 2,
+      "discardedSteps": 0,
+      "liveEntities": 8,
+      "pendingSpawns": 0,
+      "pendingRemovals": 0,
+      "entitySlots": 8,
+      "entitiesSpawned": 0,
+      "entitiesDestroyed": 0,
+      "physicsBodies": 0,
+      "physicsColliders": 0,
+      "physicsSteps": 0,
+      "physicsFrozenBodies": 0,
+      "framesRendered": 9,
+      "framesSkipped": 0,
+      "deviceLosses": 0,
+      "deviceRecoveries": 0,
+      "recoveryAttempts": 0
+    }
+  ],
+  "errors": [],
+  "manifestSha256": "69ff4e2739a1d23f84684a4ac2638a8b67f52ed9927778157992f63d77ad04b5",
+  "manifest": {
+    "manifestSchema": 1,
+    "runtimeAbi": 1,
+    "languageVersion": "0.1",
+    "compilerVersion": "0.1.0-dev",
+    "buildId": "d966b1ee653332c6fb3f428c35b46926561c1af0eea460e56ab69529cd2d25ba",
+    "targetProfile": "webgpu-core-2026",
+    "requiredCapabilities": {
+      "features": [],
+      "limits": {},
+      "wgslLanguageFeatures": []
+    },
+    "subsystems": {
+      "physics": false
+    },
+    "runtimeConfig": {
+      "fixedStep": 0.016666668,
+      "maxCatchUpSteps": 4,
+      "maxFrameDelta": 0.1,
+      "maxEntities": 16384,
+      "pauseWhenHidden": true
+    },
+    "entryScene": "Demo",
+    "sources": [
+      {
+        "id": 0,
+        "path": "src/main.mtek",
+        "sha256": "fe86ea943efa682c9deef8f15249311dafc0bcb53e2f62f3719d48c6cc307632"
+      },
+      {
+        "id": 1,
+        "path": "std/materials.mtek",
+        "sha256": "563ebc87a40d50380b3fc94278f57d0b3140329cf1bdd5ff1567f1db53504cc0"
+      }
+    ],
+    "spans": [
+      {
+        "file": 0,
+        "start": 1705,
+        "end": 3794,
+        "startLine": 49,
+        "startColumn": 1,
+        "endLine": 112,
+        "endColumn": 2
+      },
+      {
+        "file": 0,
+        "start": 1777,
+        "end": 1801,
+        "startLine": 52,
+        "startColumn": 5,
+        "endLine": 52,
+        "endColumn": 29
+      },
+      {
+        "file": 0,
+        "start": 1806,
+        "end": 1833,
+        "startLine": 53,
+        "startColumn": 5,
+        "endLine": 53,
+        "endColumn": 32
+      },
+      {
+        "file": 0,
+        "start": 1838,
+        "end": 1863,
+        "startLine": 54,
+        "startColumn": 5,
+        "endLine": 54,
+        "endColumn": 30
+      },
+      {
+        "file": 0,
+        "start": 1868,
+        "end": 1896,
+        "startLine": 55,
+        "startColumn": 5,
+        "endLine": 55,
+        "endColumn": 33
+      },
+      {
+        "file": 0,
+        "start": 1901,
+        "end": 1931,
+        "startLine": 56,
+        "startColumn": 5,
+        "endLine": 56,
+        "endColumn": 35
+      },
+      {
+        "file": 0,
+        "start": 1936,
+        "end": 1962,
+        "startLine": 57,
+        "startColumn": 5,
+        "endLine": 57,
+        "endColumn": 31
+      },
+      {
+        "file": 0,
+        "start": 1968,
+        "end": 2165,
+        "startLine": 59,
+        "startColumn": 5,
+        "endLine": 64,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 2170,
+        "end": 2292,
+        "startLine": 65,
+        "startColumn": 5,
+        "endLine": 68,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 2297,
+        "end": 2428,
+        "startLine": 69,
+        "startColumn": 5,
+        "endLine": 72,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 2433,
+        "end": 2669,
+        "startLine": 73,
+        "startColumn": 5,
+        "endLine": 78,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 2674,
+        "end": 2948,
+        "startLine": 79,
+        "startColumn": 5,
+        "endLine": 85,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 2953,
+        "end": 3125,
+        "startLine": 86,
+        "startColumn": 5,
+        "endLine": 91,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 3130,
+        "end": 3302,
+        "startLine": 92,
+        "startColumn": 5,
+        "endLine": 97,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 3307,
+        "end": 3547,
+        "startLine": 98,
+        "startColumn": 5,
+        "endLine": 104,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 3552,
+        "end": 3792,
+        "startLine": 105,
+        "startColumn": 5,
+        "endLine": 111,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 1467,
+        "end": 1703,
+        "startLine": 42,
+        "startColumn": 1,
+        "endLine": 47,
+        "endColumn": 2
+      },
+      {
+        "file": 0,
+        "start": 353,
+        "end": 1465,
+        "startLine": 15,
+        "startColumn": 1,
+        "endLine": 40,
+        "endColumn": 2
+      },
+      {
+        "file": 0,
+        "start": 376,
+        "end": 419,
+        "startLine": 16,
+        "startColumn": 5,
+        "endLine": 16,
+        "endColumn": 48
+      },
+      {
+        "file": 0,
+        "start": 424,
+        "end": 448,
+        "startLine": 17,
+        "startColumn": 5,
+        "endLine": 17,
+        "endColumn": 29
+      },
+      {
+        "file": 1,
+        "start": 379,
+        "end": 2177,
+        "startLine": 10,
+        "startColumn": 8,
+        "endLine": 39,
+        "endColumn": 2
+      },
+      {
+        "file": 1,
+        "start": 398,
+        "end": 432,
+        "startLine": 11,
+        "startColumn": 5,
+        "endLine": 11,
+        "endColumn": 39
+      },
+      {
+        "file": 1,
+        "start": 437,
+        "end": 463,
+        "startLine": 12,
+        "startColumn": 5,
+        "endLine": 12,
+        "endColumn": 31
+      },
+      {
+        "file": 1,
+        "start": 468,
+        "end": 495,
+        "startLine": 13,
+        "startColumn": 5,
+        "endLine": 13,
+        "endColumn": 32
+      },
+      {
+        "file": 1,
+        "start": 500,
+        "end": 552,
+        "startLine": 14,
+        "startColumn": 5,
+        "endLine": 14,
+        "endColumn": 57
+      },
+      {
+        "file": 1,
+        "start": 557,
+        "end": 617,
+        "startLine": 15,
+        "startColumn": 5,
+        "endLine": 15,
+        "endColumn": 65
+      },
+      {
+        "file": 1,
+        "start": 622,
+        "end": 682,
+        "startLine": 16,
+        "startColumn": 5,
+        "endLine": 16,
+        "endColumn": 65
+      },
+      {
+        "file": 1,
+        "start": 687,
+        "end": 755,
+        "startLine": 17,
+        "startColumn": 5,
+        "endLine": 17,
+        "endColumn": 73
+      },
+      {
+        "file": 1,
+        "start": 760,
+        "end": 808,
+        "startLine": 18,
+        "startColumn": 5,
+        "endLine": 18,
+        "endColumn": 53
+      },
+      {
+        "file": 1,
+        "start": 813,
+        "end": 869,
+        "startLine": 19,
+        "startColumn": 5,
+        "endLine": 19,
+        "endColumn": 61
+      },
+      {
+        "file": 1,
+        "start": 874,
+        "end": 925,
+        "startLine": 20,
+        "startColumn": 5,
+        "endLine": 20,
+        "endColumn": 56
+      },
+      {
+        "file": 1,
+        "start": 930,
+        "end": 989,
+        "startLine": 21,
+        "startColumn": 5,
+        "endLine": 21,
+        "endColumn": 64
+      },
+      {
+        "file": 1,
+        "start": 994,
+        "end": 1044,
+        "startLine": 22,
+        "startColumn": 5,
+        "endLine": 22,
+        "endColumn": 55
+      },
+      {
+        "file": 1,
+        "start": 1049,
+        "end": 1107,
+        "startLine": 23,
+        "startColumn": 5,
+        "endLine": 23,
+        "endColumn": 63
+      },
+      {
+        "file": 1,
+        "start": 1280,
+        "end": 1310,
+        "startLine": 26,
+        "startColumn": 5,
+        "endLine": 26,
+        "endColumn": 35
+      },
+      {
+        "file": 1,
+        "start": 1315,
+        "end": 1351,
+        "startLine": 27,
+        "startColumn": 5,
+        "endLine": 27,
+        "endColumn": 41
+      },
+      {
+        "file": 1,
+        "start": 1356,
+        "end": 1388,
+        "startLine": 28,
+        "startColumn": 5,
+        "endLine": 28,
+        "endColumn": 37
+      },
+      {
+        "file": 0,
+        "start": 1492,
+        "end": 1701,
+        "startLine": 43,
+        "startColumn": 5,
+        "endLine": 46,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 1543,
+        "end": 1623,
+        "startLine": 44,
+        "startColumn": 9,
+        "endLine": 44,
+        "endColumn": 89
+      },
+      {
+        "file": 0,
+        "start": 1553,
+        "end": 1622,
+        "startLine": 44,
+        "startColumn": 19,
+        "endLine": 44,
+        "endColumn": 88
+      },
+      {
+        "file": 0,
+        "start": 1553,
+        "end": 1590,
+        "startLine": 44,
+        "startColumn": 19,
+        "endLine": 44,
+        "endColumn": 56
+      },
+      {
+        "file": 0,
+        "start": 1558,
+        "end": 1570,
+        "startLine": 44,
+        "startColumn": 24,
+        "endLine": 44,
+        "endColumn": 36
+      },
+      {
+        "file": 0,
+        "start": 1558,
+        "end": 1568,
+        "startLine": 44,
+        "startColumn": 24,
+        "endLine": 44,
+        "endColumn": 34
+      },
+      {
+        "file": 0,
+        "start": 1558,
+        "end": 1565,
+        "startLine": 44,
+        "startColumn": 24,
+        "endLine": 44,
+        "endColumn": 31
+      },
+      {
+        "file": 0,
+        "start": 1572,
+        "end": 1584,
+        "startLine": 44,
+        "startColumn": 38,
+        "endLine": 44,
+        "endColumn": 50
+      },
+      {
+        "file": 0,
+        "start": 1572,
+        "end": 1582,
+        "startLine": 44,
+        "startColumn": 38,
+        "endLine": 44,
+        "endColumn": 48
+      },
+      {
+        "file": 0,
+        "start": 1572,
+        "end": 1579,
+        "startLine": 44,
+        "startColumn": 38,
+        "endLine": 44,
+        "endColumn": 45
+      },
+      {
+        "file": 0,
+        "start": 1586,
+        "end": 1589,
+        "startLine": 44,
+        "startColumn": 52,
+        "endLine": 44,
+        "endColumn": 55
+      },
+      {
+        "file": 0,
+        "start": 1593,
+        "end": 1622,
+        "startLine": 44,
+        "startColumn": 59,
+        "endLine": 44,
+        "endColumn": 88
+      },
+      {
+        "file": 0,
+        "start": 1598,
+        "end": 1610,
+        "startLine": 44,
+        "startColumn": 64,
+        "endLine": 44,
+        "endColumn": 76
+      },
+      {
+        "file": 0,
+        "start": 1598,
+        "end": 1608,
+        "startLine": 44,
+        "startColumn": 64,
+        "endLine": 44,
+        "endColumn": 74
+      },
+      {
+        "file": 0,
+        "start": 1598,
+        "end": 1605,
+        "startLine": 44,
+        "startColumn": 64,
+        "endLine": 44,
+        "endColumn": 71
+      },
+      {
+        "file": 0,
+        "start": 1612,
+        "end": 1615,
+        "startLine": 44,
+        "startColumn": 78,
+        "endLine": 44,
+        "endColumn": 81
+      },
+      {
+        "file": 0,
+        "start": 1617,
+        "end": 1621,
+        "startLine": 44,
+        "startColumn": 83,
+        "endLine": 44,
+        "endColumn": 87
+      },
+      {
+        "file": 0,
+        "start": 1632,
+        "end": 1695,
+        "startLine": 45,
+        "startColumn": 9,
+        "endLine": 45,
+        "endColumn": 72
+      },
+      {
+        "file": 0,
+        "start": 1639,
+        "end": 1694,
+        "startLine": 45,
+        "startColumn": 16,
+        "endLine": 45,
+        "endColumn": 71
+      },
+      {
+        "file": 0,
+        "start": 1652,
+        "end": 1659,
+        "startLine": 45,
+        "startColumn": 29,
+        "endLine": 45,
+        "endColumn": 36
+      },
+      {
+        "file": 0,
+        "start": 1661,
+        "end": 1683,
+        "startLine": 45,
+        "startColumn": 38,
+        "endLine": 45,
+        "endColumn": 60
+      },
+      {
+        "file": 0,
+        "start": 1674,
+        "end": 1677,
+        "startLine": 45,
+        "startColumn": 51,
+        "endLine": 45,
+        "endColumn": 54
+      },
+      {
+        "file": 0,
+        "start": 1679,
+        "end": 1682,
+        "startLine": 45,
+        "startColumn": 56,
+        "endLine": 45,
+        "endColumn": 59
+      },
+      {
+        "file": 0,
+        "start": 1685,
+        "end": 1688,
+        "startLine": 45,
+        "startColumn": 62,
+        "endLine": 45,
+        "endColumn": 65
+      },
+      {
+        "file": 0,
+        "start": 1690,
+        "end": 1693,
+        "startLine": 45,
+        "startColumn": 67,
+        "endLine": 45,
+        "endColumn": 70
+      },
+      {
+        "file": 0,
+        "start": 453,
+        "end": 1131,
+        "startLine": 18,
+        "startColumn": 5,
+        "endLine": 34,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 507,
+        "end": 526,
+        "startLine": 19,
+        "startColumn": 9,
+        "endLine": 19,
+        "endColumn": 28
+      },
+      {
+        "file": 0,
+        "start": 515,
+        "end": 525,
+        "startLine": 19,
+        "startColumn": 17,
+        "endLine": 19,
+        "endColumn": 27
+      },
+      {
+        "file": 0,
+        "start": 519,
+        "end": 524,
+        "startLine": 19,
+        "startColumn": 21,
+        "endLine": 19,
+        "endColumn": 26
+      },
+      {
+        "file": 0,
+        "start": 535,
+        "end": 554,
+        "startLine": 20,
+        "startColumn": 9,
+        "endLine": 20,
+        "endColumn": 28
+      },
+      {
+        "file": 0,
+        "start": 543,
+        "end": 553,
+        "startLine": 20,
+        "startColumn": 17,
+        "endLine": 20,
+        "endColumn": 27
+      },
+      {
+        "file": 0,
+        "start": 547,
+        "end": 552,
+        "startLine": 20,
+        "startColumn": 21,
+        "endLine": 20,
+        "endColumn": 26
+      },
+      {
+        "file": 0,
+        "start": 563,
+        "end": 586,
+        "startLine": 21,
+        "startColumn": 9,
+        "endLine": 21,
+        "endColumn": 32
+      },
+      {
+        "file": 0,
+        "start": 571,
+        "end": 585,
+        "startLine": 21,
+        "startColumn": 17,
+        "endLine": 21,
+        "endColumn": 31
+      },
+      {
+        "file": 0,
+        "start": 571,
+        "end": 576,
+        "startLine": 21,
+        "startColumn": 17,
+        "endLine": 21,
+        "endColumn": 22
+      },
+      {
+        "file": 0,
+        "start": 595,
+        "end": 616,
+        "startLine": 22,
+        "startColumn": 9,
+        "endLine": 22,
+        "endColumn": 30
+      },
+      {
+        "file": 0,
+        "start": 603,
+        "end": 615,
+        "startLine": 22,
+        "startColumn": 17,
+        "endLine": 22,
+        "endColumn": 29
+      },
+      {
+        "file": 0,
+        "start": 603,
+        "end": 608,
+        "startLine": 22,
+        "startColumn": 17,
+        "endLine": 22,
+        "endColumn": 22
+      },
+      {
+        "file": 0,
+        "start": 625,
+        "end": 1125,
+        "startLine": 23,
+        "startColumn": 9,
+        "endLine": 33,
+        "endColumn": 11
+      },
+      {
+        "file": 0,
+        "start": 632,
+        "end": 1124,
+        "startLine": 23,
+        "startColumn": 16,
+        "endLine": 33,
+        "endColumn": 10
+      },
+      {
+        "file": 0,
+        "start": 670,
+        "end": 726,
+        "startLine": 24,
+        "startColumn": 23,
+        "endLine": 24,
+        "endColumn": 79
+      },
+      {
+        "file": 0,
+        "start": 670,
+        "end": 717,
+        "startLine": 24,
+        "startColumn": 23,
+        "endLine": 24,
+        "endColumn": 70
+      },
+      {
+        "file": 0,
+        "start": 675,
+        "end": 692,
+        "startLine": 24,
+        "startColumn": 28,
+        "endLine": 24,
+        "endColumn": 45
+      },
+      {
+        "file": 0,
+        "start": 675,
+        "end": 682,
+        "startLine": 24,
+        "startColumn": 28,
+        "endLine": 24,
+        "endColumn": 35
+      },
+      {
+        "file": 0,
+        "start": 675,
+        "end": 676,
+        "startLine": 24,
+        "startColumn": 28,
+        "endLine": 24,
+        "endColumn": 29
+      },
+      {
+        "file": 0,
+        "start": 679,
+        "end": 682,
+        "startLine": 24,
+        "startColumn": 32,
+        "endLine": 24,
+        "endColumn": 35
+      },
+      {
+        "file": 0,
+        "start": 679,
+        "end": 680,
+        "startLine": 24,
+        "startColumn": 32,
+        "endLine": 24,
+        "endColumn": 33
+      },
+      {
+        "file": 0,
+        "start": 685,
+        "end": 692,
+        "startLine": 24,
+        "startColumn": 38,
+        "endLine": 24,
+        "endColumn": 45
+      },
+      {
+        "file": 0,
+        "start": 685,
+        "end": 686,
+        "startLine": 24,
+        "startColumn": 38,
+        "endLine": 24,
+        "endColumn": 39
+      },
+      {
+        "file": 0,
+        "start": 689,
+        "end": 692,
+        "startLine": 24,
+        "startColumn": 42,
+        "endLine": 24,
+        "endColumn": 45
+      },
+      {
+        "file": 0,
+        "start": 689,
+        "end": 690,
+        "startLine": 24,
+        "startColumn": 42,
+        "endLine": 24,
+        "endColumn": 43
+      },
+      {
+        "file": 0,
+        "start": 694,
+        "end": 711,
+        "startLine": 24,
+        "startColumn": 47,
+        "endLine": 24,
+        "endColumn": 64
+      },
+      {
+        "file": 0,
+        "start": 694,
+        "end": 701,
+        "startLine": 24,
+        "startColumn": 47,
+        "endLine": 24,
+        "endColumn": 54
+      },
+      {
+        "file": 0,
+        "start": 694,
+        "end": 695,
+        "startLine": 24,
+        "startColumn": 47,
+        "endLine": 24,
+        "endColumn": 48
+      },
+      {
+        "file": 0,
+        "start": 698,
+        "end": 701,
+        "startLine": 24,
+        "startColumn": 51,
+        "endLine": 24,
+        "endColumn": 54
+      },
+      {
+        "file": 0,
+        "start": 698,
+        "end": 699,
+        "startLine": 24,
+        "startColumn": 51,
+        "endLine": 24,
+        "endColumn": 52
+      },
+      {
+        "file": 0,
+        "start": 704,
+        "end": 711,
+        "startLine": 24,
+        "startColumn": 57,
+        "endLine": 24,
+        "endColumn": 64
+      },
+      {
+        "file": 0,
+        "start": 704,
+        "end": 705,
+        "startLine": 24,
+        "startColumn": 57,
+        "endLine": 24,
+        "endColumn": 58
+      },
+      {
+        "file": 0,
+        "start": 708,
+        "end": 711,
+        "startLine": 24,
+        "startColumn": 61,
+        "endLine": 24,
+        "endColumn": 64
+      },
+      {
+        "file": 0,
+        "start": 708,
+        "end": 709,
+        "startLine": 24,
+        "startColumn": 61,
+        "endLine": 24,
+        "endColumn": 62
+      },
+      {
+        "file": 0,
+        "start": 713,
+        "end": 716,
+        "startLine": 24,
+        "startColumn": 66,
+        "endLine": 24,
+        "endColumn": 69
+      },
+      {
+        "file": 0,
+        "start": 713,
+        "end": 714,
+        "startLine": 24,
+        "startColumn": 66,
+        "endLine": 24,
+        "endColumn": 67
+      },
+      {
+        "file": 0,
+        "start": 720,
+        "end": 726,
+        "startLine": 24,
+        "startColumn": 73,
+        "endLine": 24,
+        "endColumn": 79
+      },
+      {
+        "file": 0,
+        "start": 748,
+        "end": 795,
+        "startLine": 25,
+        "startColumn": 21,
+        "endLine": 25,
+        "endColumn": 68
+      },
+      {
+        "file": 0,
+        "start": 753,
+        "end": 770,
+        "startLine": 25,
+        "startColumn": 26,
+        "endLine": 25,
+        "endColumn": 43
+      },
+      {
+        "file": 0,
+        "start": 753,
+        "end": 760,
+        "startLine": 25,
+        "startColumn": 26,
+        "endLine": 25,
+        "endColumn": 33
+      },
+      {
+        "file": 0,
+        "start": 753,
+        "end": 754,
+        "startLine": 25,
+        "startColumn": 26,
+        "endLine": 25,
+        "endColumn": 27
+      },
+      {
+        "file": 0,
+        "start": 757,
+        "end": 760,
+        "startLine": 25,
+        "startColumn": 30,
+        "endLine": 25,
+        "endColumn": 33
+      },
+      {
+        "file": 0,
+        "start": 757,
+        "end": 758,
+        "startLine": 25,
+        "startColumn": 30,
+        "endLine": 25,
+        "endColumn": 31
+      },
+      {
+        "file": 0,
+        "start": 763,
+        "end": 770,
+        "startLine": 25,
+        "startColumn": 36,
+        "endLine": 25,
+        "endColumn": 43
+      },
+      {
+        "file": 0,
+        "start": 763,
+        "end": 764,
+        "startLine": 25,
+        "startColumn": 36,
+        "endLine": 25,
+        "endColumn": 37
+      },
+      {
+        "file": 0,
+        "start": 767,
+        "end": 770,
+        "startLine": 25,
+        "startColumn": 40,
+        "endLine": 25,
+        "endColumn": 43
+      },
+      {
+        "file": 0,
+        "start": 767,
+        "end": 768,
+        "startLine": 25,
+        "startColumn": 40,
+        "endLine": 25,
+        "endColumn": 41
+      },
+      {
+        "file": 0,
+        "start": 772,
+        "end": 789,
+        "startLine": 25,
+        "startColumn": 45,
+        "endLine": 25,
+        "endColumn": 62
+      },
+      {
+        "file": 0,
+        "start": 772,
+        "end": 779,
+        "startLine": 25,
+        "startColumn": 45,
+        "endLine": 25,
+        "endColumn": 52
+      },
+      {
+        "file": 0,
+        "start": 772,
+        "end": 773,
+        "startLine": 25,
+        "startColumn": 45,
+        "endLine": 25,
+        "endColumn": 46
+      },
+      {
+        "file": 0,
+        "start": 776,
+        "end": 779,
+        "startLine": 25,
+        "startColumn": 49,
+        "endLine": 25,
+        "endColumn": 52
+      },
+      {
+        "file": 0,
+        "start": 776,
+        "end": 777,
+        "startLine": 25,
+        "startColumn": 49,
+        "endLine": 25,
+        "endColumn": 50
+      },
+      {
+        "file": 0,
+        "start": 782,
+        "end": 789,
+        "startLine": 25,
+        "startColumn": 55,
+        "endLine": 25,
+        "endColumn": 62
+      },
+      {
+        "file": 0,
+        "start": 782,
+        "end": 783,
+        "startLine": 25,
+        "startColumn": 55,
+        "endLine": 25,
+        "endColumn": 56
+      },
+      {
+        "file": 0,
+        "start": 786,
+        "end": 789,
+        "startLine": 25,
+        "startColumn": 59,
+        "endLine": 25,
+        "endColumn": 62
+      },
+      {
+        "file": 0,
+        "start": 786,
+        "end": 787,
+        "startLine": 25,
+        "startColumn": 59,
+        "endLine": 25,
+        "endColumn": 60
+      },
+      {
+        "file": 0,
+        "start": 791,
+        "end": 794,
+        "startLine": 25,
+        "startColumn": 64,
+        "endLine": 25,
+        "endColumn": 67
+      },
+      {
+        "file": 0,
+        "start": 791,
+        "end": 792,
+        "startLine": 25,
+        "startColumn": 64,
+        "endLine": 25,
+        "endColumn": 65
+      },
+      {
+        "file": 0,
+        "start": 813,
+        "end": 847,
+        "startLine": 26,
+        "startColumn": 17,
+        "endLine": 26,
+        "endColumn": 51
+      },
+      {
+        "file": 0,
+        "start": 818,
+        "end": 828,
+        "startLine": 26,
+        "startColumn": 22,
+        "endLine": 26,
+        "endColumn": 32
+      },
+      {
+        "file": 0,
+        "start": 818,
+        "end": 826,
+        "startLine": 26,
+        "startColumn": 22,
+        "endLine": 26,
+        "endColumn": 30
+      },
+      {
+        "file": 0,
+        "start": 818,
+        "end": 823,
+        "startLine": 26,
+        "startColumn": 22,
+        "endLine": 26,
+        "endColumn": 27
+      },
+      {
+        "file": 0,
+        "start": 830,
+        "end": 846,
+        "startLine": 26,
+        "startColumn": 34,
+        "endLine": 26,
+        "endColumn": 50
+      },
+      {
+        "file": 0,
+        "start": 830,
+        "end": 833,
+        "startLine": 26,
+        "startColumn": 34,
+        "endLine": 26,
+        "endColumn": 37
+      },
+      {
+        "file": 0,
+        "start": 836,
+        "end": 846,
+        "startLine": 26,
+        "startColumn": 40,
+        "endLine": 26,
+        "endColumn": 50
+      },
+      {
+        "file": 0,
+        "start": 836,
+        "end": 844,
+        "startLine": 26,
+        "startColumn": 40,
+        "endLine": 26,
+        "endColumn": 48
+      },
+      {
+        "file": 0,
+        "start": 836,
+        "end": 841,
+        "startLine": 26,
+        "startColumn": 40,
+        "endLine": 26,
+        "endColumn": 45
+      },
+      {
+        "file": 0,
+        "start": 867,
+        "end": 877,
+        "startLine": 27,
+        "startColumn": 19,
+        "endLine": 27,
+        "endColumn": 29
+      },
+      {
+        "file": 0,
+        "start": 867,
+        "end": 875,
+        "startLine": 27,
+        "startColumn": 19,
+        "endLine": 27,
+        "endColumn": 27
+      },
+      {
+        "file": 0,
+        "start": 867,
+        "end": 872,
+        "startLine": 27,
+        "startColumn": 19,
+        "endLine": 27,
+        "endColumn": 24
+      },
+      {
+        "file": 0,
+        "start": 896,
+        "end": 926,
+        "startLine": 28,
+        "startColumn": 18,
+        "endLine": 28,
+        "endColumn": 48
+      },
+      {
+        "file": 0,
+        "start": 896,
+        "end": 902,
+        "startLine": 28,
+        "startColumn": 18,
+        "endLine": 28,
+        "endColumn": 24
+      },
+      {
+        "file": 0,
+        "start": 905,
+        "end": 926,
+        "startLine": 28,
+        "startColumn": 27,
+        "endLine": 28,
+        "endColumn": 48
+      },
+      {
+        "file": 0,
+        "start": 909,
+        "end": 925,
+        "startLine": 28,
+        "startColumn": 31,
+        "endLine": 28,
+        "endColumn": 47
+      },
+      {
+        "file": 0,
+        "start": 909,
+        "end": 919,
+        "startLine": 28,
+        "startColumn": 31,
+        "endLine": 28,
+        "endColumn": 41
+      },
+      {
+        "file": 0,
+        "start": 909,
+        "end": 917,
+        "startLine": 28,
+        "startColumn": 31,
+        "endLine": 28,
+        "endColumn": 39
+      },
+      {
+        "file": 0,
+        "start": 909,
+        "end": 914,
+        "startLine": 28,
+        "startColumn": 31,
+        "endLine": 28,
+        "endColumn": 36
+      },
+      {
+        "file": 0,
+        "start": 922,
+        "end": 925,
+        "startLine": 28,
+        "startColumn": 44,
+        "endLine": 28,
+        "endColumn": 47
+      },
+      {
+        "file": 0,
+        "start": 948,
+        "end": 973,
+        "startLine": 29,
+        "startColumn": 21,
+        "endLine": 29,
+        "endColumn": 46
+      },
+      {
+        "file": 0,
+        "start": 948,
+        "end": 969,
+        "startLine": 29,
+        "startColumn": 21,
+        "endLine": 29,
+        "endColumn": 42
+      },
+      {
+        "file": 0,
+        "start": 952,
+        "end": 968,
+        "startLine": 29,
+        "startColumn": 25,
+        "endLine": 29,
+        "endColumn": 41
+      },
+      {
+        "file": 0,
+        "start": 952,
+        "end": 962,
+        "startLine": 29,
+        "startColumn": 25,
+        "endLine": 29,
+        "endColumn": 35
+      },
+      {
+        "file": 0,
+        "start": 952,
+        "end": 960,
+        "startLine": 29,
+        "startColumn": 25,
+        "endLine": 29,
+        "endColumn": 33
+      },
+      {
+        "file": 0,
+        "start": 952,
+        "end": 957,
+        "startLine": 29,
+        "startColumn": 25,
+        "endLine": 29,
+        "endColumn": 30
+      },
+      {
+        "file": 0,
+        "start": 965,
+        "end": 968,
+        "startLine": 29,
+        "startColumn": 38,
+        "endLine": 29,
+        "endColumn": 41
+      },
+      {
+        "file": 0,
+        "start": 972,
+        "end": 973,
+        "startLine": 29,
+        "startColumn": 45,
+        "endLine": 29,
+        "endColumn": 46
+      },
+      {
+        "file": 0,
+        "start": 996,
+        "end": 1012,
+        "startLine": 30,
+        "startColumn": 22,
+        "endLine": 30,
+        "endColumn": 38
+      },
+      {
+        "file": 0,
+        "start": 996,
+        "end": 1006,
+        "startLine": 30,
+        "startColumn": 22,
+        "endLine": 30,
+        "endColumn": 32
+      },
+      {
+        "file": 0,
+        "start": 996,
+        "end": 1004,
+        "startLine": 30,
+        "startColumn": 22,
+        "endLine": 30,
+        "endColumn": 30
+      },
+      {
+        "file": 0,
+        "start": 996,
+        "end": 1001,
+        "startLine": 30,
+        "startColumn": 22,
+        "endLine": 30,
+        "endColumn": 27
+      },
+      {
+        "file": 0,
+        "start": 1009,
+        "end": 1012,
+        "startLine": 30,
+        "startColumn": 35,
+        "endLine": 30,
+        "endColumn": 38
+      },
+      {
+        "file": 0,
+        "start": 1032,
+        "end": 1078,
+        "startLine": 31,
+        "startColumn": 19,
+        "endLine": 31,
+        "endColumn": 65
+      },
+      {
+        "file": 0,
+        "start": 1045,
+        "end": 1072,
+        "startLine": 31,
+        "startColumn": 32,
+        "endLine": 31,
+        "endColumn": 59
+      },
+      {
+        "file": 0,
+        "start": 1050,
+        "end": 1060,
+        "startLine": 31,
+        "startColumn": 37,
+        "endLine": 31,
+        "endColumn": 47
+      },
+      {
+        "file": 0,
+        "start": 1050,
+        "end": 1058,
+        "startLine": 31,
+        "startColumn": 37,
+        "endLine": 31,
+        "endColumn": 45
+      },
+      {
+        "file": 0,
+        "start": 1050,
+        "end": 1055,
+        "startLine": 31,
+        "startColumn": 37,
+        "endLine": 31,
+        "endColumn": 42
+      },
+      {
+        "file": 0,
+        "start": 1062,
+        "end": 1065,
+        "startLine": 31,
+        "startColumn": 49,
+        "endLine": 31,
+        "endColumn": 52
+      },
+      {
+        "file": 0,
+        "start": 1067,
+        "end": 1071,
+        "startLine": 31,
+        "startColumn": 54,
+        "endLine": 31,
+        "endColumn": 58
+      },
+      {
+        "file": 0,
+        "start": 1074,
+        "end": 1077,
+        "startLine": 31,
+        "startColumn": 61,
+        "endLine": 31,
+        "endColumn": 64
+      },
+      {
+        "file": 0,
+        "start": 1098,
+        "end": 1113,
+        "startLine": 32,
+        "startColumn": 19,
+        "endLine": 32,
+        "endColumn": 34
+      },
+      {
+        "file": 0,
+        "start": 1136,
+        "end": 1463,
+        "startLine": 35,
+        "startColumn": 5,
+        "endLine": 39,
+        "endColumn": 6
+      },
+      {
+        "file": 0,
+        "start": 1211,
+        "end": 1338,
+        "startLine": 36,
+        "startColumn": 9,
+        "endLine": 36,
+        "endColumn": 136
+      },
+      {
+        "file": 0,
+        "start": 1221,
+        "end": 1337,
+        "startLine": 36,
+        "startColumn": 19,
+        "endLine": 36,
+        "endColumn": 135
+      },
+      {
+        "file": 0,
+        "start": 1221,
+        "end": 1320,
+        "startLine": 36,
+        "startColumn": 19,
+        "endLine": 36,
+        "endColumn": 118
+      },
+      {
+        "file": 0,
+        "start": 1221,
+        "end": 1301,
+        "startLine": 36,
+        "startColumn": 19,
+        "endLine": 36,
+        "endColumn": 99
+      },
+      {
+        "file": 0,
+        "start": 1226,
+        "end": 1238,
+        "startLine": 36,
+        "startColumn": 24,
+        "endLine": 36,
+        "endColumn": 36
+      },
+      {
+        "file": 0,
+        "start": 1226,
+        "end": 1236,
+        "startLine": 36,
+        "startColumn": 24,
+        "endLine": 36,
+        "endColumn": 34
+      },
+      {
+        "file": 0,
+        "start": 1226,
+        "end": 1233,
+        "startLine": 36,
+        "startColumn": 24,
+        "endLine": 36,
+        "endColumn": 31
+      },
+      {
+        "file": 0,
+        "start": 1240,
+        "end": 1252,
+        "startLine": 36,
+        "startColumn": 38,
+        "endLine": 36,
+        "endColumn": 50
+      },
+      {
+        "file": 0,
+        "start": 1240,
+        "end": 1247,
+        "startLine": 36,
+        "startColumn": 38,
+        "endLine": 36,
+        "endColumn": 45
+      },
+      {
+        "file": 0,
+        "start": 1254,
+        "end": 1300,
+        "startLine": 36,
+        "startColumn": 52,
+        "endLine": 36,
+        "endColumn": 98
+      },
+      {
+        "file": 0,
+        "start": 1255,
+        "end": 1293,
+        "startLine": 36,
+        "startColumn": 53,
+        "endLine": 36,
+        "endColumn": 91
+      },
+      {
+        "file": 0,
+        "start": 1255,
+        "end": 1271,
+        "startLine": 36,
+        "startColumn": 53,
+        "endLine": 36,
+        "endColumn": 69
+      },
+      {
+        "file": 0,
+        "start": 1259,
+        "end": 1270,
+        "startLine": 36,
+        "startColumn": 57,
+        "endLine": 36,
+        "endColumn": 68
+      },
+      {
+        "file": 0,
+        "start": 1259,
+        "end": 1266,
+        "startLine": 36,
+        "startColumn": 57,
+        "endLine": 36,
+        "endColumn": 64
+      },
+      {
+        "file": 0,
+        "start": 1274,
+        "end": 1293,
+        "startLine": 36,
+        "startColumn": 72,
+        "endLine": 36,
+        "endColumn": 91
+      },
+      {
+        "file": 0,
+        "start": 1278,
+        "end": 1292,
+        "startLine": 36,
+        "startColumn": 76,
+        "endLine": 36,
+        "endColumn": 90
+      },
+      {
+        "file": 0,
+        "start": 1278,
+        "end": 1285,
+        "startLine": 36,
+        "startColumn": 76,
+        "endLine": 36,
+        "endColumn": 83
+      },
+      {
+        "file": 0,
+        "start": 1297,
+        "end": 1300,
+        "startLine": 36,
+        "startColumn": 95,
+        "endLine": 36,
+        "endColumn": 98
+      },
+      {
+        "file": 0,
+        "start": 1304,
+        "end": 1320,
+        "startLine": 36,
+        "startColumn": 102,
+        "endLine": 36,
+        "endColumn": 118
+      },
+      {
+        "file": 0,
+        "start": 1304,
+        "end": 1316,
+        "startLine": 36,
+        "startColumn": 102,
+        "endLine": 36,
+        "endColumn": 114
+      },
+      {
+        "file": 0,
+        "start": 1304,
+        "end": 1311,
+        "startLine": 36,
+        "startColumn": 102,
+        "endLine": 36,
+        "endColumn": 109
+      },
+      {
+        "file": 0,
+        "start": 1323,
+        "end": 1337,
+        "startLine": 36,
+        "startColumn": 121,
+        "endLine": 36,
+        "endColumn": 135
+      },
+      {
+        "file": 0,
+        "start": 1323,
+        "end": 1335,
+        "startLine": 36,
+        "startColumn": 121,
+        "endLine": 36,
+        "endColumn": 133
+      },
+      {
+        "file": 0,
+        "start": 1323,
+        "end": 1330,
+        "startLine": 36,
+        "startColumn": 121,
+        "endLine": 36,
+        "endColumn": 128
+      },
+      {
+        "file": 0,
+        "start": 1347,
+        "end": 1433,
+        "startLine": 37,
+        "startColumn": 9,
+        "endLine": 37,
+        "endColumn": 95
+      },
+      {
+        "file": 0,
+        "start": 1350,
+        "end": 1365,
+        "startLine": 37,
+        "startColumn": 12,
+        "endLine": 37,
+        "endColumn": 27
+      },
+      {
+        "file": 0,
+        "start": 1350,
+        "end": 1357,
+        "startLine": 37,
+        "startColumn": 12,
+        "endLine": 37,
+        "endColumn": 19
+      },
+      {
+        "file": 0,
+        "start": 1368,
+        "end": 1431,
+        "startLine": 37,
+        "startColumn": 30,
+        "endLine": 37,
+        "endColumn": 93
+      },
+      {
+        "file": 0,
+        "start": 1375,
+        "end": 1430,
+        "startLine": 37,
+        "startColumn": 37,
+        "endLine": 37,
+        "endColumn": 92
+      },
+      {
+        "file": 0,
+        "start": 1388,
+        "end": 1395,
+        "startLine": 37,
+        "startColumn": 50,
+        "endLine": 37,
+        "endColumn": 57
+      },
+      {
+        "file": 0,
+        "start": 1397,
+        "end": 1419,
+        "startLine": 37,
+        "startColumn": 59,
+        "endLine": 37,
+        "endColumn": 81
+      },
+      {
+        "file": 0,
+        "start": 1410,
+        "end": 1413,
+        "startLine": 37,
+        "startColumn": 72,
+        "endLine": 37,
+        "endColumn": 75
+      },
+      {
+        "file": 0,
+        "start": 1415,
+        "end": 1418,
+        "startLine": 37,
+        "startColumn": 77,
+        "endLine": 37,
+        "endColumn": 80
+      },
+      {
+        "file": 0,
+        "start": 1421,
+        "end": 1424,
+        "startLine": 37,
+        "startColumn": 83,
+        "endLine": 37,
+        "endColumn": 86
+      },
+      {
+        "file": 0,
+        "start": 1426,
+        "end": 1429,
+        "startLine": 37,
+        "startColumn": 88,
+        "endLine": 37,
+        "endColumn": 91
+      },
+      {
+        "file": 0,
+        "start": 1442,
+        "end": 1457,
+        "startLine": 38,
+        "startColumn": 9,
+        "endLine": 38,
+        "endColumn": 24
+      },
+      {
+        "file": 0,
+        "start": 1449,
+        "end": 1456,
+        "startLine": 38,
+        "startColumn": 16,
+        "endLine": 38,
+        "endColumn": 23
+      },
+      {
+        "file": 1,
+        "start": 1393,
+        "end": 2175,
+        "startLine": 29,
+        "startColumn": 5,
+        "endLine": 38,
+        "endColumn": 6
+      },
+      {
+        "file": 1,
+        "start": 1444,
+        "end": 1519,
+        "startLine": 30,
+        "startColumn": 9,
+        "endLine": 30,
+        "endColumn": 84
+      },
+      {
+        "file": 1,
+        "start": 1456,
+        "end": 1518,
+        "startLine": 30,
+        "startColumn": 21,
+        "endLine": 30,
+        "endColumn": 83
+      },
+      {
+        "file": 1,
+        "start": 1467,
+        "end": 1485,
+        "startLine": 30,
+        "startColumn": 32,
+        "endLine": 30,
+        "endColumn": 50
+      },
+      {
+        "file": 1,
+        "start": 1487,
+        "end": 1505,
+        "startLine": 30,
+        "startColumn": 52,
+        "endLine": 30,
+        "endColumn": 70
+      },
+      {
+        "file": 1,
+        "start": 1507,
+        "end": 1517,
+        "startLine": 30,
+        "startColumn": 72,
+        "endLine": 30,
+        "endColumn": 82
+      },
+      {
+        "file": 1,
+        "start": 1507,
+        "end": 1514,
+        "startLine": 30,
+        "startColumn": 72,
+        "endLine": 30,
+        "endColumn": 79
+      },
+      {
+        "file": 1,
+        "start": 1528,
+        "end": 1587,
+        "startLine": 31,
+        "startColumn": 9,
+        "endLine": 31,
+        "endColumn": 68
+      },
+      {
+        "file": 1,
+        "start": 1541,
+        "end": 1586,
+        "startLine": 31,
+        "startColumn": 22,
+        "endLine": 31,
+        "endColumn": 67
+      },
+      {
+        "file": 1,
+        "start": 1554,
+        "end": 1580,
+        "startLine": 31,
+        "startColumn": 35,
+        "endLine": 31,
+        "endColumn": 61
+      },
+      {
+        "file": 1,
+        "start": 1554,
+        "end": 1568,
+        "startLine": 31,
+        "startColumn": 35,
+        "endLine": 31,
+        "endColumn": 49
+      },
+      {
+        "file": 1,
+        "start": 1554,
+        "end": 1564,
+        "startLine": 31,
+        "startColumn": 35,
+        "endLine": 31,
+        "endColumn": 45
+      },
+      {
+        "file": 1,
+        "start": 1571,
+        "end": 1580,
+        "startLine": 31,
+        "startColumn": 52,
+        "endLine": 31,
+        "endColumn": 61
+      },
+      {
+        "file": 1,
+        "start": 1571,
+        "end": 1576,
+        "startLine": 31,
+        "startColumn": 52,
+        "endLine": 31,
+        "endColumn": 57
+      },
+      {
+        "file": 1,
+        "start": 1582,
+        "end": 1585,
+        "startLine": 31,
+        "startColumn": 63,
+        "endLine": 31,
+        "endColumn": 66
+      },
+      {
+        "file": 1,
+        "start": 1596,
+        "end": 1684,
+        "startLine": 32,
+        "startColumn": 9,
+        "endLine": 32,
+        "endColumn": 97
+      },
+      {
+        "file": 1,
+        "start": 1605,
+        "end": 1683,
+        "startLine": 32,
+        "startColumn": 18,
+        "endLine": 32,
+        "endColumn": 96
+      },
+      {
+        "file": 1,
+        "start": 1616,
+        "end": 1642,
+        "startLine": 32,
+        "startColumn": 29,
+        "endLine": 32,
+        "endColumn": 55
+      },
+      {
+        "file": 1,
+        "start": 1644,
+        "end": 1670,
+        "startLine": 32,
+        "startColumn": 57,
+        "endLine": 32,
+        "endColumn": 83
+      },
+      {
+        "file": 1,
+        "start": 1672,
+        "end": 1682,
+        "startLine": 32,
+        "startColumn": 85,
+        "endLine": 32,
+        "endColumn": 95
+      },
+      {
+        "file": 1,
+        "start": 1672,
+        "end": 1679,
+        "startLine": 32,
+        "startColumn": 85,
+        "endLine": 32,
+        "endColumn": 92
+      },
+      {
+        "file": 1,
+        "start": 1693,
+        "end": 1765,
+        "startLine": 33,
+        "startColumn": 9,
+        "endLine": 33,
+        "endColumn": 81
+      },
+      {
+        "file": 1,
+        "start": 1706,
+        "end": 1764,
+        "startLine": 33,
+        "startColumn": 22,
+        "endLine": 33,
+        "endColumn": 80
+      },
+      {
+        "file": 1,
+        "start": 1706,
+        "end": 1760,
+        "startLine": 33,
+        "startColumn": 22,
+        "endLine": 33,
+        "endColumn": 76
+      },
+      {
+        "file": 1,
+        "start": 1717,
+        "end": 1731,
+        "startLine": 33,
+        "startColumn": 33,
+        "endLine": 33,
+        "endColumn": 47
+      },
+      {
+        "file": 1,
+        "start": 1733,
+        "end": 1747,
+        "startLine": 33,
+        "startColumn": 49,
+        "endLine": 33,
+        "endColumn": 63
+      },
+      {
+        "file": 1,
+        "start": 1749,
+        "end": 1759,
+        "startLine": 33,
+        "startColumn": 65,
+        "endLine": 33,
+        "endColumn": 75
+      },
+      {
+        "file": 1,
+        "start": 1749,
+        "end": 1756,
+        "startLine": 33,
+        "startColumn": 65,
+        "endLine": 33,
+        "endColumn": 72
+      },
+      {
+        "file": 1,
+        "start": 1774,
+        "end": 1846,
+        "startLine": 34,
+        "startColumn": 9,
+        "endLine": 34,
+        "endColumn": 81
+      },
+      {
+        "file": 1,
+        "start": 1783,
+        "end": 1845,
+        "startLine": 34,
+        "startColumn": 18,
+        "endLine": 34,
+        "endColumn": 80
+      },
+      {
+        "file": 1,
+        "start": 1783,
+        "end": 1843,
+        "startLine": 34,
+        "startColumn": 18,
+        "endLine": 34,
+        "endColumn": 78
+      },
+      {
+        "file": 1,
+        "start": 1794,
+        "end": 1811,
+        "startLine": 34,
+        "startColumn": 29,
+        "endLine": 34,
+        "endColumn": 46
+      },
+      {
+        "file": 1,
+        "start": 1813,
+        "end": 1830,
+        "startLine": 34,
+        "startColumn": 48,
+        "endLine": 34,
+        "endColumn": 65
+      },
+      {
+        "file": 1,
+        "start": 1832,
+        "end": 1842,
+        "startLine": 34,
+        "startColumn": 67,
+        "endLine": 34,
+        "endColumn": 77
+      },
+      {
+        "file": 1,
+        "start": 1832,
+        "end": 1839,
+        "startLine": 34,
+        "startColumn": 67,
+        "endLine": 34,
+        "endColumn": 74
+      },
+      {
+        "file": 1,
+        "start": 1855,
+        "end": 1939,
+        "startLine": 35,
+        "startColumn": 9,
+        "endLine": 35,
+        "endColumn": 93
+      },
+      {
+        "file": 1,
+        "start": 1876,
+        "end": 1938,
+        "startLine": 35,
+        "startColumn": 30,
+        "endLine": 35,
+        "endColumn": 92
+      },
+      {
+        "file": 1,
+        "start": 1876,
+        "end": 1934,
+        "startLine": 35,
+        "startColumn": 30,
+        "endLine": 35,
+        "endColumn": 88
+      },
+      {
+        "file": 1,
+        "start": 1887,
+        "end": 1903,
+        "startLine": 35,
+        "startColumn": 41,
+        "endLine": 35,
+        "endColumn": 57
+      },
+      {
+        "file": 1,
+        "start": 1905,
+        "end": 1921,
+        "startLine": 35,
+        "startColumn": 59,
+        "endLine": 35,
+        "endColumn": 75
+      },
+      {
+        "file": 1,
+        "start": 1923,
+        "end": 1933,
+        "startLine": 35,
+        "startColumn": 77,
+        "endLine": 35,
+        "endColumn": 87
+      },
+      {
+        "file": 1,
+        "start": 1923,
+        "end": 1930,
+        "startLine": 35,
+        "startColumn": 77,
+        "endLine": 35,
+        "endColumn": 84
+      },
+      {
+        "file": 1,
+        "start": 1948,
+        "end": 1993,
+        "startLine": 36,
+        "startColumn": 9,
+        "endLine": 36,
+        "endColumn": 54
+      },
+      {
+        "file": 1,
+        "start": 1963,
+        "end": 1992,
+        "startLine": 36,
+        "startColumn": 24,
+        "endLine": 36,
+        "endColumn": 53
+      },
+      {
+        "file": 1,
+        "start": 1963,
+        "end": 1975,
+        "startLine": 36,
+        "startColumn": 24,
+        "endLine": 36,
+        "endColumn": 36
+      },
+      {
+        "file": 1,
+        "start": 1963,
+        "end": 1971,
+        "startLine": 36,
+        "startColumn": 24,
+        "endLine": 36,
+        "endColumn": 32
+      },
+      {
+        "file": 1,
+        "start": 1978,
+        "end": 1992,
+        "startLine": 36,
+        "startColumn": 39,
+        "endLine": 36,
+        "endColumn": 53
+      },
+      {
+        "file": 1,
+        "start": 2002,
+        "end": 2169,
+        "startLine": 37,
+        "startColumn": 9,
+        "endLine": 37,
+        "endColumn": 176
+      },
+      {
+        "file": 1,
+        "start": 2009,
+        "end": 2168,
+        "startLine": 37,
+        "startColumn": 16,
+        "endLine": 37,
+        "endColumn": 175
+      },
+      {
+        "file": 1,
+        "start": 2029,
+        "end": 2036,
+        "startLine": 37,
+        "startColumn": 36,
+        "endLine": 37,
+        "endColumn": 43
+      },
+      {
+        "file": 1,
+        "start": 2038,
+        "end": 2044,
+        "startLine": 37,
+        "startColumn": 45,
+        "endLine": 37,
+        "endColumn": 51
+      },
+      {
+        "file": 1,
+        "start": 2046,
+        "end": 2061,
+        "startLine": 37,
+        "startColumn": 53,
+        "endLine": 37,
+        "endColumn": 68
+      },
+      {
+        "file": 1,
+        "start": 2046,
+        "end": 2054,
+        "startLine": 37,
+        "startColumn": 53,
+        "endLine": 37,
+        "endColumn": 61
+      },
+      {
+        "file": 1,
+        "start": 2057,
+        "end": 2061,
+        "startLine": 37,
+        "startColumn": 64,
+        "endLine": 37,
+        "endColumn": 68
+      },
+      {
+        "file": 1,
+        "start": 2057,
+        "end": 2059,
+        "startLine": 37,
+        "startColumn": 64,
+        "endLine": 37,
+        "endColumn": 66
+      },
+      {
+        "file": 1,
+        "start": 2063,
+        "end": 2079,
+        "startLine": 37,
+        "startColumn": 70,
+        "endLine": 37,
+        "endColumn": 86
+      },
+      {
+        "file": 1,
+        "start": 2063,
+        "end": 2072,
+        "startLine": 37,
+        "startColumn": 70,
+        "endLine": 37,
+        "endColumn": 79
+      },
+      {
+        "file": 1,
+        "start": 2075,
+        "end": 2079,
+        "startLine": 37,
+        "startColumn": 82,
+        "endLine": 37,
+        "endColumn": 86
+      },
+      {
+        "file": 1,
+        "start": 2075,
+        "end": 2077,
+        "startLine": 37,
+        "startColumn": 82,
+        "endLine": 37,
+        "endColumn": 84
+      },
+      {
+        "file": 1,
+        "start": 2081,
+        "end": 2087,
+        "startLine": 37,
+        "startColumn": 88,
+        "endLine": 37,
+        "endColumn": 94
+      },
+      {
+        "file": 1,
+        "start": 2089,
+        "end": 2101,
+        "startLine": 37,
+        "startColumn": 96,
+        "endLine": 37,
+        "endColumn": 108
+      },
+      {
+        "file": 1,
+        "start": 2103,
+        "end": 2157,
+        "startLine": 37,
+        "startColumn": 110,
+        "endLine": 37,
+        "endColumn": 164
+      },
+      {
+        "file": 1,
+        "start": 2103,
+        "end": 2106,
+        "startLine": 37,
+        "startColumn": 110,
+        "endLine": 37,
+        "endColumn": 113
+      },
+      {
+        "file": 1,
+        "start": 2109,
+        "end": 2157,
+        "startLine": 37,
+        "startColumn": 116,
+        "endLine": 37,
+        "endColumn": 164
+      },
+      {
+        "file": 1,
+        "start": 2109,
+        "end": 2144,
+        "startLine": 37,
+        "startColumn": 116,
+        "endLine": 37,
+        "endColumn": 151
+      },
+      {
+        "file": 1,
+        "start": 2115,
+        "end": 2133,
+        "startLine": 37,
+        "startColumn": 122,
+        "endLine": 37,
+        "endColumn": 140
+      },
+      {
+        "file": 1,
+        "start": 2135,
+        "end": 2138,
+        "startLine": 37,
+        "startColumn": 142,
+        "endLine": 37,
+        "endColumn": 145
+      },
+      {
+        "file": 1,
+        "start": 2140,
+        "end": 2143,
+        "startLine": 37,
+        "startColumn": 147,
+        "endLine": 37,
+        "endColumn": 150
+      },
+      {
+        "file": 1,
+        "start": 2148,
+        "end": 2156,
+        "startLine": 37,
+        "startColumn": 155,
+        "endLine": 37,
+        "endColumn": 163
+      },
+      {
+        "file": 1,
+        "start": 2148,
+        "end": 2150,
+        "startLine": 37,
+        "startColumn": 155,
+        "endLine": 37,
+        "endColumn": 157
+      },
+      {
+        "file": 1,
+        "start": 2153,
+        "end": 2156,
+        "startLine": 37,
+        "startColumn": 160,
+        "endLine": 37,
+        "endColumn": 163
+      },
+      {
+        "file": 1,
+        "start": 2159,
+        "end": 2167,
+        "startLine": 37,
+        "startColumn": 166,
+        "endLine": 37,
+        "endColumn": 174
+      },
+      {
+        "file": 0,
+        "start": 2506,
+        "end": 2530,
+        "startLine": 75,
+        "startColumn": 18,
+        "endLine": 75,
+        "endColumn": 42
+      },
+      {
+        "file": 0,
+        "start": 2607,
+        "end": 2640,
+        "startLine": 77,
+        "startColumn": 37,
+        "endLine": 77,
+        "endColumn": 70
+      },
+      {
+        "file": 0,
+        "start": 2649,
+        "end": 2660,
+        "startLine": 77,
+        "startColumn": 79,
+        "endLine": 77,
+        "endColumn": 90
+      },
+      {
+        "file": 0,
+        "start": 2717,
+        "end": 2766,
+        "startLine": 80,
+        "startColumn": 19,
+        "endLine": 80,
+        "endColumn": 68
+      },
+      {
+        "file": 0,
+        "start": 2786,
+        "end": 2826,
+        "startLine": 81,
+        "startColumn": 19,
+        "endLine": 81,
+        "endColumn": 59
+      },
+      {
+        "file": 0,
+        "start": 2845,
+        "end": 2870,
+        "startLine": 82,
+        "startColumn": 18,
+        "endLine": 82,
+        "endColumn": 43
+      },
+      {
+        "file": 0,
+        "start": 3026,
+        "end": 3049,
+        "startLine": 88,
+        "startColumn": 18,
+        "endLine": 88,
+        "endColumn": 41
+      },
+      {
+        "file": 0,
+        "start": 3203,
+        "end": 3226,
+        "startLine": 94,
+        "startColumn": 18,
+        "endLine": 94,
+        "endColumn": 41
+      },
+      {
+        "file": 0,
+        "start": 3445,
+        "end": 3469,
+        "startLine": 101,
+        "startColumn": 18,
+        "endLine": 101,
+        "endColumn": 42
+      },
+      {
+        "file": 0,
+        "start": 3690,
+        "end": 3714,
+        "startLine": 108,
+        "startColumn": 18,
+        "endLine": 108,
+        "endColumn": 42
+      }
+    ],
+    "symbols": [
+      {
+        "id": "src/main.mtek::Demo",
+        "kind": "scene",
+        "span": 0
+      },
+      {
+        "id": "src/main.mtek::Demo.angle",
+        "kind": "state",
+        "span": 1
+      },
+      {
+        "id": "src/main.mtek::Demo.shift_x",
+        "kind": "state",
+        "span": 2
+      },
+      {
+        "id": "src/main.mtek::Demo.shift_y",
+        "kind": "state",
+        "span": 3
+      },
+      {
+        "id": "src/main.mtek::Demo.authored",
+        "kind": "state",
+        "span": 4
+      },
+      {
+        "id": "src/main.mtek::Demo.reference",
+        "kind": "state",
+        "span": 5
+      },
+      {
+        "id": "src/main.mtek::Demo.crowd",
+        "kind": "state",
+        "span": 6
+      },
+      {
+        "id": "src/main.mtek::Demo.Main",
+        "kind": "camera",
+        "span": 7
+      },
+      {
+        "id": "src/main.mtek::Demo.Sun",
+        "kind": "entity",
+        "span": 8
+      },
+      {
+        "id": "src/main.mtek::Demo.Floor",
+        "kind": "entity",
+        "span": 9
+      },
+      {
+        "id": "src/main.mtek::Demo.Moving",
+        "kind": "entity",
+        "span": 10
+      },
+      {
+        "id": "src/main.mtek::Demo.MovingReference",
+        "kind": "entity",
+        "span": 11
+      },
+      {
+        "id": "src/main.mtek::Demo.CrowdA",
+        "kind": "entity",
+        "span": 12
+      },
+      {
+        "id": "src/main.mtek::Demo.CrowdB",
+        "kind": "entity",
+        "span": 13
+      },
+      {
+        "id": "src/main.mtek::Demo.ReferenceA",
+        "kind": "entity",
+        "span": 14
+      },
+      {
+        "id": "src/main.mtek::Demo.ReferenceB",
+        "kind": "entity",
+        "span": 15
+      },
+      {
+        "id": "src/main.mtek::Reference",
+        "kind": "material",
+        "span": 16
+      },
+      {
+        "id": "src/main.mtek::Shifted",
+        "kind": "material",
+        "span": 17
+      },
+      {
+        "id": "src/main.mtek::Shifted.offset",
+        "kind": "param",
+        "span": 18
+      },
+      {
+        "id": "src/main.mtek::Shifted.angle",
+        "kind": "param",
+        "span": 19
+      },
+      {
+        "id": "std/materials.mtek::Pbr",
+        "kind": "material",
+        "span": 20
+      },
+      {
+        "id": "std/materials.mtek::Pbr.base_color",
+        "kind": "param",
+        "span": 21
+      },
+      {
+        "id": "std/materials.mtek::Pbr.metallic",
+        "kind": "param",
+        "span": 22
+      },
+      {
+        "id": "std/materials.mtek::Pbr.roughness",
+        "kind": "param",
+        "span": 23
+      },
+      {
+        "id": "std/materials.mtek::Pbr.base_color_texture",
+        "kind": "param",
+        "span": 24
+      },
+      {
+        "id": "std/materials.mtek::Pbr.base_color_sampler",
+        "kind": "param",
+        "span": 25
+      },
+      {
+        "id": "std/materials.mtek::Pbr.metallic_roughness_texture",
+        "kind": "param",
+        "span": 26
+      },
+      {
+        "id": "std/materials.mtek::Pbr.metallic_roughness_sampler",
+        "kind": "param",
+        "span": 27
+      },
+      {
+        "id": "std/materials.mtek::Pbr.normal_texture",
+        "kind": "param",
+        "span": 28
+      },
+      {
+        "id": "std/materials.mtek::Pbr.normal_sampler",
+        "kind": "param",
+        "span": 29
+      },
+      {
+        "id": "std/materials.mtek::Pbr.occlusion_texture",
+        "kind": "param",
+        "span": 30
+      },
+      {
+        "id": "std/materials.mtek::Pbr.occlusion_sampler",
+        "kind": "param",
+        "span": 31
+      },
+      {
+        "id": "std/materials.mtek::Pbr.emissive_texture",
+        "kind": "param",
+        "span": 32
+      },
+      {
+        "id": "std/materials.mtek::Pbr.emissive_sampler",
+        "kind": "param",
+        "span": 33
+      },
+      {
+        "id": "std/materials.mtek::Pbr.normal_scale",
+        "kind": "param",
+        "span": 34
+      },
+      {
+        "id": "std/materials.mtek::Pbr.occlusion_strength",
+        "kind": "param",
+        "span": 35
+      },
+      {
+        "id": "std/materials.mtek::Pbr.emissive",
+        "kind": "param",
+        "span": 36
+      }
+    ],
+    "layouts": [
+      {
+        "id": "builtin:frame",
+        "wgslStruct": "MtekFrame",
+        "size": 288,
+        "align": 16,
+        "root": {
+          "kind": "struct",
+          "offset": 0,
+          "size": 288,
+          "align": 16,
+          "members": [
+            {
+              "name": "view_proj",
+              "mtekType": "mat4",
+              "node": {
+                "kind": "matrix",
+                "offset": 0,
+                "size": 64,
+                "align": 16,
+                "columns": 4,
+                "rows": 4,
+                "columnStride": 16
+              }
+            },
+            {
+              "name": "camera_position",
+              "mtekType": "vec3",
+              "node": {
+                "kind": "vector",
+                "offset": 64,
+                "size": 12,
+                "align": 16,
+                "scalar": "f32",
+                "components": 3
+              }
+            },
+            {
+              "name": "light_count",
+              "mtekType": "u32",
+              "node": {
+                "kind": "scalar",
+                "offset": 76,
+                "size": 4,
+                "align": 4,
+                "scalar": "u32"
+              }
+            },
+            {
+              "name": "ambient",
+              "mtekType": "vec3",
+              "node": {
+                "kind": "vector",
+                "offset": 80,
+                "size": 12,
+                "align": 16,
+                "scalar": "f32",
+                "components": 3
+              }
+            },
+            {
+              "name": "exposure",
+              "mtekType": "f32",
+              "node": {
+                "kind": "scalar",
+                "offset": 92,
+                "size": 4,
+                "align": 4,
+                "scalar": "f32"
+              }
+            },
+            {
+              "name": "lights",
+              "mtekType": "array<MtekLight, 4>",
+              "node": {
+                "kind": "array",
+                "offset": 96,
+                "size": 192,
+                "align": 16,
+                "length": 4,
+                "stride": 48,
+                "padded": false,
+                "element": {
+                  "kind": "struct",
+                  "name": "MtekLight",
+                  "offset": 0,
+                  "size": 48,
+                  "align": 16,
+                  "members": [
+                    {
+                      "name": "color",
+                      "mtekType": "vec3",
+                      "node": {
+                        "kind": "vector",
+                        "offset": 0,
+                        "size": 12,
+                        "align": 16,
+                        "scalar": "f32",
+                        "components": 3
+                      }
+                    },
+                    {
+                      "name": "kind",
+                      "mtekType": "u32",
+                      "node": {
+                        "kind": "scalar",
+                        "offset": 12,
+                        "size": 4,
+                        "align": 4,
+                        "scalar": "u32"
+                      }
+                    },
+                    {
+                      "name": "position",
+                      "mtekType": "vec3",
+                      "node": {
+                        "kind": "vector",
+                        "offset": 16,
+                        "size": 12,
+                        "align": 16,
+                        "scalar": "f32",
+                        "components": 3
+                      }
+                    },
+                    {
+                      "name": "range",
+                      "mtekType": "f32",
+                      "node": {
+                        "kind": "scalar",
+                        "offset": 28,
+                        "size": 4,
+                        "align": 4,
+                        "scalar": "f32"
+                      }
+                    },
+                    {
+                      "name": "direction",
+                      "mtekType": "vec3",
+                      "node": {
+                        "kind": "vector",
+                        "offset": 32,
+                        "size": 12,
+                        "align": 16,
+                        "scalar": "f32",
+                        "components": 3
+                      }
+                    },
+                    {
+                      "name": "reserved",
+                      "mtekType": "f32",
+                      "node": {
+                        "kind": "scalar",
+                        "offset": 44,
+                        "size": 4,
+                        "align": 4,
+                        "scalar": "f32"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "builtin:object",
+        "wgslStruct": "MtekObject",
+        "size": 128,
+        "align": 16,
+        "root": {
+          "kind": "struct",
+          "offset": 0,
+          "size": 128,
+          "align": 16,
+          "members": [
+            {
+              "name": "model",
+              "mtekType": "mat4",
+              "node": {
+                "kind": "matrix",
+                "offset": 0,
+                "size": 64,
+                "align": 16,
+                "columns": 4,
+                "rows": 4,
+                "columnStride": 16
+              }
+            },
+            {
+              "name": "normal_matrix",
+              "mtekType": "mat4",
+              "node": {
+                "kind": "matrix",
+                "offset": 64,
+                "size": 64,
+                "align": 16,
+                "columns": 4,
+                "rows": 4,
+                "columnStride": 16
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "material:src/main.mtek::Shifted",
+        "wgslStruct": "MtekParams_e2cab98b_Shifted",
+        "size": 16,
+        "align": 16,
+        "root": {
+          "kind": "struct",
+          "offset": 0,
+          "size": 16,
+          "align": 16,
+          "members": [
+            {
+              "name": "offset",
+              "mtekType": "vec3",
+              "node": {
+                "kind": "vector",
+                "offset": 0,
+                "size": 12,
+                "align": 16,
+                "scalar": "f32",
+                "components": 3
+              }
+            },
+            {
+              "name": "angle",
+              "mtekType": "f32",
+              "node": {
+                "kind": "scalar",
+                "offset": 12,
+                "size": 4,
+                "align": 4,
+                "scalar": "f32"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "material:std/materials.mtek::Pbr",
+        "wgslStruct": "MtekParams_2b212d15_Pbr",
+        "size": 48,
+        "align": 16,
+        "root": {
+          "kind": "struct",
+          "offset": 0,
+          "size": 48,
+          "align": 16,
+          "members": [
+            {
+              "name": "base_color",
+              "mtekType": "color",
+              "node": {
+                "kind": "vector",
+                "offset": 0,
+                "size": 16,
+                "align": 16,
+                "scalar": "f32",
+                "components": 4
+              }
+            },
+            {
+              "name": "metallic",
+              "mtekType": "f32",
+              "node": {
+                "kind": "scalar",
+                "offset": 16,
+                "size": 4,
+                "align": 4,
+                "scalar": "f32"
+              }
+            },
+            {
+              "name": "roughness",
+              "mtekType": "f32",
+              "node": {
+                "kind": "scalar",
+                "offset": 20,
+                "size": 4,
+                "align": 4,
+                "scalar": "f32"
+              }
+            },
+            {
+              "name": "normal_scale",
+              "mtekType": "f32",
+              "node": {
+                "kind": "scalar",
+                "offset": 24,
+                "size": 4,
+                "align": 4,
+                "scalar": "f32"
+              }
+            },
+            {
+              "name": "occlusion_strength",
+              "mtekType": "f32",
+              "node": {
+                "kind": "scalar",
+                "offset": 28,
+                "size": 4,
+                "align": 4,
+                "scalar": "f32"
+              }
+            },
+            {
+              "name": "emissive",
+              "mtekType": "color",
+              "node": {
+                "kind": "vector",
+                "offset": 32,
+                "size": 16,
+                "align": 16,
+                "scalar": "f32",
+                "components": 4
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "shaders": [
+      {
+        "lighting": 1,
+        "hash": "d623923ba93ac7638137394ebb2de960558a45dc1ca210f3cba3a56c9f85eafd",
+        "url": "shaders/d623923ba93ac763.wgsl",
+        "map": "shaders/d623923ba93ac763.mtek-map.json",
+        "material": "src/main.mtek::Reference",
+        "vertexEntry": "mtek_vs",
+        "instancedVertexEntry": "mtek_vs_instanced",
+        "fragmentEntry": "mtek_fs",
+        "vertexAttributes": [
+          "position",
+          "normal",
+          "uv"
+        ],
+        "surfaceInputs": [
+          "world_position",
+          "world_normal",
+          "uv"
+        ]
+      },
+      {
+        "lighting": 1,
+        "vertexDeformation": 1,
+        "hash": "d13b37eaa9665be6d463a0238881b31e9d73342872a4ab2ca47e773f8970e20a",
+        "url": "shaders/d13b37eaa9665be6.wgsl",
+        "map": "shaders/d13b37eaa9665be6.mtek-map.json",
+        "material": "src/main.mtek::Shifted",
+        "vertexEntry": "mtek_vs",
+        "instancedVertexEntry": "mtek_vs_instanced",
+        "fragmentEntry": "mtek_fs",
+        "vertexAttributes": [
+          "position",
+          "normal",
+          "uv"
+        ],
+        "surfaceInputs": [
+          "world_position",
+          "world_normal",
+          "uv"
+        ]
+      },
+      {
+        "lighting": 1,
+        "hash": "cc306e7c4fdef230097df5347603306d53d7cb9c70ffad1a5af1fe7c60414277",
+        "url": "shaders/cc306e7c4fdef230.wgsl",
+        "map": "shaders/cc306e7c4fdef230.mtek-map.json",
+        "material": "std/materials.mtek::Pbr",
+        "vertexEntry": "mtek_vs",
+        "instancedVertexEntry": "mtek_vs_instanced",
+        "fragmentEntry": "mtek_fs",
+        "vertexAttributes": [
+          "position",
+          "normal",
+          "uv"
+        ],
+        "surfaceInputs": [
+          "world_position",
+          "world_normal",
+          "uv"
+        ]
+      }
+    ],
+    "materials": [
+      {
+        "id": "src/main.mtek::Reference",
+        "layout": null,
+        "shader": "d623923ba93ac7638137394ebb2de960558a45dc1ca210f3cba3a56c9f85eafd",
+        "resources": [],
+        "params": []
+      },
+      {
+        "id": "src/main.mtek::Shifted",
+        "layout": "material:src/main.mtek::Shifted",
+        "shader": "d13b37eaa9665be6d463a0238881b31e9d73342872a4ab2ca47e773f8970e20a",
+        "resources": [],
+        "params": [
+          {
+            "name": "offset",
+            "type": "vec3",
+            "span": 18
+          },
+          {
+            "name": "angle",
+            "type": "f32",
+            "span": 19
+          }
+        ]
+      },
+      {
+        "id": "std/materials.mtek::Pbr",
+        "layout": "material:std/materials.mtek::Pbr",
+        "shader": "cc306e7c4fdef230097df5347603306d53d7cb9c70ffad1a5af1fe7c60414277",
+        "resources": [
+          {
+            "name": "base_color_texture",
+            "kind": "texture",
+            "binding": 1
+          },
+          {
+            "name": "base_color_sampler",
+            "kind": "sampler",
+            "binding": 2
+          },
+          {
+            "name": "metallic_roughness_texture",
+            "kind": "texture",
+            "binding": 3
+          },
+          {
+            "name": "metallic_roughness_sampler",
+            "kind": "sampler",
+            "binding": 4
+          },
+          {
+            "name": "normal_texture",
+            "kind": "texture",
+            "binding": 5
+          },
+          {
+            "name": "normal_sampler",
+            "kind": "sampler",
+            "binding": 6
+          },
+          {
+            "name": "occlusion_texture",
+            "kind": "texture",
+            "binding": 7
+          },
+          {
+            "name": "occlusion_sampler",
+            "kind": "sampler",
+            "binding": 8
+          },
+          {
+            "name": "emissive_texture",
+            "kind": "texture",
+            "binding": 9
+          },
+          {
+            "name": "emissive_sampler",
+            "kind": "sampler",
+            "binding": 10
+          }
+        ],
+        "params": [
+          {
+            "name": "base_color",
+            "type": "color",
+            "span": 21
+          },
+          {
+            "name": "metallic",
+            "type": "f32",
+            "span": 22
+          },
+          {
+            "name": "roughness",
+            "type": "f32",
+            "span": 23
+          },
+          {
+            "name": "base_color_texture",
+            "type": "texture",
+            "span": 24
+          },
+          {
+            "name": "base_color_sampler",
+            "type": "sampler",
+            "span": 25
+          },
+          {
+            "name": "metallic_roughness_texture",
+            "type": "texture",
+            "span": 26
+          },
+          {
+            "name": "metallic_roughness_sampler",
+            "type": "sampler",
+            "span": 27
+          },
+          {
+            "name": "normal_texture",
+            "type": "texture",
+            "span": 28
+          },
+          {
+            "name": "normal_sampler",
+            "type": "sampler",
+            "span": 29
+          },
+          {
+            "name": "occlusion_texture",
+            "type": "texture",
+            "span": 30
+          },
+          {
+            "name": "occlusion_sampler",
+            "type": "sampler",
+            "span": 31
+          },
+          {
+            "name": "emissive_texture",
+            "type": "texture",
+            "span": 32
+          },
+          {
+            "name": "emissive_sampler",
+            "type": "sampler",
+            "span": 33
+          },
+          {
+            "name": "normal_scale",
+            "type": "f32",
+            "span": 34
+          },
+          {
+            "name": "occlusion_strength",
+            "type": "f32",
+            "span": 35
+          },
+          {
+            "name": "emissive",
+            "type": "color",
+            "span": 36
+          }
+        ]
+      }
+    ],
+    "meshes": [
+      {
+        "id": "mesh:0",
+        "kind": "plane",
+        "size": [
+          20,
+          20
+        ]
+      },
+      {
+        "id": "mesh:1",
+        "kind": "box",
+        "size": [
+          1,
+          1,
+          1
+        ]
+      }
+    ],
+    "assets": [],
+    "scene": {
+      "name": "Demo",
+      "symbol": "src/main.mtek::Demo",
+      "fields": {
+        "clearColor": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "ambientColor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "ambientIntensity": 0.02,
+        "gravity": [
+          0,
+          -9.81,
+          0
+        ]
+      },
+      "state": [
+        {
+          "name": "angle",
+          "type": "f32",
+          "symbol": "src/main.mtek::Demo.angle"
+        },
+        {
+          "name": "shift_x",
+          "type": "f32",
+          "symbol": "src/main.mtek::Demo.shift_x"
+        },
+        {
+          "name": "shift_y",
+          "type": "f32",
+          "symbol": "src/main.mtek::Demo.shift_y"
+        },
+        {
+          "name": "authored",
+          "type": "bool",
+          "symbol": "src/main.mtek::Demo.authored"
+        },
+        {
+          "name": "reference",
+          "type": "bool",
+          "symbol": "src/main.mtek::Demo.reference"
+        },
+        {
+          "name": "crowd",
+          "type": "bool",
+          "symbol": "src/main.mtek::Demo.crowd"
+        }
+      ],
+      "cameras": [
+        {
+          "name": "Main",
+          "symbol": "src/main.mtek::Demo.Main",
+          "projection": "orthographic",
+          "hasTarget": true,
+          "active": true,
+          "exposure": -0.2630344
+        }
+      ],
+      "entities": [
+        {
+          "index": 0,
+          "name": "Sun",
+          "symbol": "src/main.mtek::Demo.Sun",
+          "parent": null,
+          "mesh": null,
+          "material": null,
+          "light": 0,
+          "body": null,
+          "collider": null,
+          "state": [],
+          "update": false,
+          "fixedUpdate": false
+        },
+        {
+          "index": 1,
+          "name": "Floor",
+          "symbol": "src/main.mtek::Demo.Floor",
+          "parent": null,
+          "mesh": "mesh:0",
+          "material": {
+            "id": "std/materials.mtek::Pbr",
+            "instance": 0
+          },
+          "light": null,
+          "body": null,
+          "collider": null,
+          "state": [],
+          "update": false,
+          "fixedUpdate": false
+        },
+        {
+          "index": 2,
+          "name": "Moving",
+          "symbol": "src/main.mtek::Demo.Moving",
+          "parent": null,
+          "mesh": "mesh:1",
+          "material": {
+            "id": "src/main.mtek::Shifted",
+            "instance": 1
+          },
+          "light": null,
+          "body": null,
+          "collider": null,
+          "state": [],
+          "update": false,
+          "fixedUpdate": false
+        },
+        {
+          "index": 3,
+          "name": "MovingReference",
+          "symbol": "src/main.mtek::Demo.MovingReference",
+          "parent": null,
+          "mesh": "mesh:1",
+          "material": {
+            "id": "src/main.mtek::Reference",
+            "instance": 2
+          },
+          "light": null,
+          "body": null,
+          "collider": null,
+          "state": [],
+          "update": false,
+          "fixedUpdate": false
+        },
+        {
+          "index": 4,
+          "name": "CrowdA",
+          "symbol": "src/main.mtek::Demo.CrowdA",
+          "parent": null,
+          "mesh": "mesh:1",
+          "material": {
+            "id": "src/main.mtek::Shifted",
+            "instance": 3
+          },
+          "light": null,
+          "body": null,
+          "collider": null,
+          "state": [],
+          "update": false,
+          "fixedUpdate": false
+        },
+        {
+          "index": 5,
+          "name": "CrowdB",
+          "symbol": "src/main.mtek::Demo.CrowdB",
+          "parent": null,
+          "mesh": "mesh:1",
+          "material": {
+            "id": "src/main.mtek::Shifted",
+            "instance": 4
+          },
+          "light": null,
+          "body": null,
+          "collider": null,
+          "state": [],
+          "update": false,
+          "fixedUpdate": false
+        },
+        {
+          "index": 6,
+          "name": "ReferenceA",
+          "symbol": "src/main.mtek::Demo.ReferenceA",
+          "parent": null,
+          "mesh": "mesh:1",
+          "material": {
+            "id": "src/main.mtek::Reference",
+            "instance": 5
+          },
+          "light": null,
+          "body": null,
+          "collider": null,
+          "state": [],
+          "update": false,
+          "fixedUpdate": false
+        },
+        {
+          "index": 7,
+          "name": "ReferenceB",
+          "symbol": "src/main.mtek::Demo.ReferenceB",
+          "parent": null,
+          "mesh": "mesh:1",
+          "material": {
+            "id": "src/main.mtek::Reference",
+            "instance": 6
+          },
+          "light": null,
+          "body": null,
+          "collider": null,
+          "state": [],
+          "update": false,
+          "fixedUpdate": false
+        }
+      ],
+      "materialInstances": [
+        {
+          "index": 0,
+          "material": "std/materials.mtek::Pbr",
+          "entity": 1,
+          "params": [
+            {
+              "name": "base_color",
+              "class": "initial"
+            },
+            {
+              "name": "metallic",
+              "class": "initial"
+            },
+            {
+              "name": "roughness",
+              "class": "initial"
+            },
+            {
+              "name": "base_color_texture",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "texture.white"
+              }
+            },
+            {
+              "name": "base_color_sampler",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "sampler.linear_repeat"
+              }
+            },
+            {
+              "name": "metallic_roughness_texture",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "texture.white"
+              }
+            },
+            {
+              "name": "metallic_roughness_sampler",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "sampler.linear_repeat"
+              }
+            },
+            {
+              "name": "normal_texture",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "texture.white"
+              }
+            },
+            {
+              "name": "normal_sampler",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "sampler.linear_repeat"
+              }
+            },
+            {
+              "name": "occlusion_texture",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "texture.white"
+              }
+            },
+            {
+              "name": "occlusion_sampler",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "sampler.linear_repeat"
+              }
+            },
+            {
+              "name": "emissive_texture",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "texture.white"
+              }
+            },
+            {
+              "name": "emissive_sampler",
+              "class": "resource",
+              "value": {
+                "kind": "builtin",
+                "name": "sampler.linear_repeat"
+              }
+            },
+            {
+              "name": "normal_scale",
+              "class": "initial"
+            },
+            {
+              "name": "occlusion_strength",
+              "class": "initial"
+            },
+            {
+              "name": "emissive",
+              "class": "initial"
+            }
+          ],
+          "shareable": true
+        },
+        {
+          "index": 1,
+          "material": "src/main.mtek::Shifted",
+          "entity": 2,
+          "params": [
+            {
+              "name": "offset",
+              "class": "bound",
+              "binding": 1
+            },
+            {
+              "name": "angle",
+              "class": "bound",
+              "binding": 2
+            }
+          ],
+          "shareable": false
+        },
+        {
+          "index": 2,
+          "material": "src/main.mtek::Reference",
+          "entity": 3,
+          "params": [],
+          "shareable": true
+        },
+        {
+          "index": 3,
+          "material": "src/main.mtek::Shifted",
+          "entity": 4,
+          "params": [
+            {
+              "name": "offset",
+              "class": "initial"
+            },
+            {
+              "name": "angle",
+              "class": "initial"
+            }
+          ],
+          "shareable": true
+        },
+        {
+          "index": 4,
+          "material": "src/main.mtek::Shifted",
+          "entity": 5,
+          "params": [
+            {
+              "name": "offset",
+              "class": "initial"
+            },
+            {
+              "name": "angle",
+              "class": "initial"
+            }
+          ],
+          "shareable": true
+        },
+        {
+          "index": 5,
+          "material": "src/main.mtek::Reference",
+          "entity": 6,
+          "params": [],
+          "shareable": true
+        },
+        {
+          "index": 6,
+          "material": "src/main.mtek::Reference",
+          "entity": 7,
+          "params": [],
+          "shareable": true
+        }
+      ],
+      "bindings": [
+        {
+          "id": 0,
+          "target": {
+            "kind": "visible",
+            "entity": 2
+          },
+          "deps": [
+            {
+              "kind": "state",
+              "name": "authored"
+            },
+            {
+              "kind": "state",
+              "name": "crowd"
+            }
+          ],
+          "order": 0,
+          "span": 273
+        },
+        {
+          "id": 1,
+          "target": {
+            "kind": "param",
+            "instance": 1,
+            "name": "offset"
+          },
+          "deps": [
+            {
+              "kind": "state",
+              "name": "shift_x"
+            },
+            {
+              "kind": "state",
+              "name": "shift_y"
+            }
+          ],
+          "order": 1,
+          "span": 274
+        },
+        {
+          "id": 2,
+          "target": {
+            "kind": "param",
+            "instance": 1,
+            "name": "angle"
+          },
+          "deps": [
+            {
+              "kind": "state",
+              "name": "angle"
+            }
+          ],
+          "order": 2,
+          "span": 275
+        },
+        {
+          "id": 3,
+          "target": {
+            "kind": "transform",
+            "entity": 3,
+            "field": "rotation"
+          },
+          "deps": [
+            {
+              "kind": "state",
+              "name": "angle"
+            }
+          ],
+          "order": 3,
+          "span": 276
+        },
+        {
+          "id": 4,
+          "target": {
+            "kind": "transform",
+            "entity": 3,
+            "field": "position"
+          },
+          "deps": [
+            {
+              "kind": "state",
+              "name": "shift_x"
+            },
+            {
+              "kind": "state",
+              "name": "shift_y"
+            }
+          ],
+          "order": 4,
+          "span": 277
+        },
+        {
+          "id": 5,
+          "target": {
+            "kind": "visible",
+            "entity": 3
+          },
+          "deps": [
+            {
+              "kind": "state",
+              "name": "reference"
+            },
+            {
+              "kind": "state",
+              "name": "crowd"
+            }
+          ],
+          "order": 5,
+          "span": 278
+        },
+        {
+          "id": 6,
+          "target": {
+            "kind": "visible",
+            "entity": 4
+          },
+          "deps": [
+            {
+              "kind": "state",
+              "name": "authored"
+            },
+            {
+              "kind": "state",
+              "name": "crowd"
+            }
+          ],
+          "order": 6,
+          "span": 279
+        },
+        {
+          "id": 7,
+          "target": {
+            "kind": "visible",
+            "entity": 5
+          },
+          "deps": [
+            {
+              "kind": "state",
+              "name": "authored"
+            },
+            {
+              "kind": "state",
+              "name": "crowd"
+            }
+          ],
+          "order": 7,
+          "span": 280
+        },
+        {
+          "id": 8,
+          "target": {
+            "kind": "visible",
+            "entity": 6
+          },
+          "deps": [
+            {
+              "kind": "state",
+              "name": "reference"
+            },
+            {
+              "kind": "state",
+              "name": "crowd"
+            }
+          ],
+          "order": 8,
+          "span": 281
+        },
+        {
+          "id": 9,
+          "target": {
+            "kind": "visible",
+            "entity": 7
+          },
+          "deps": [
+            {
+              "kind": "state",
+              "name": "reference"
+            },
+            {
+              "kind": "state",
+              "name": "crowd"
+            }
+          ],
+          "order": 9,
+          "span": 282
+        }
+      ],
+      "hostInputs": [
+        {
+          "name": "angle",
+          "target": {
+            "kind": "state",
+            "name": "angle"
+          },
+          "type": "f32",
+          "codec": "f32"
+        },
+        {
+          "name": "authored",
+          "target": {
+            "kind": "state",
+            "name": "authored"
+          },
+          "type": "bool",
+          "codec": "bool"
+        },
+        {
+          "name": "crowd",
+          "target": {
+            "kind": "state",
+            "name": "crowd"
+          },
+          "type": "bool",
+          "codec": "bool"
+        },
+        {
+          "name": "reference",
+          "target": {
+            "kind": "state",
+            "name": "reference"
+          },
+          "type": "bool",
+          "codec": "bool"
+        },
+        {
+          "name": "shift_x",
+          "target": {
+            "kind": "state",
+            "name": "shift_x"
+          },
+          "type": "f32",
+          "codec": "f32"
+        },
+        {
+          "name": "shift_y",
+          "target": {
+            "kind": "state",
+            "name": "shift_y"
+          },
+          "type": "f32",
+          "codec": "f32"
+        }
+      ],
+      "lights": [
+        {
+          "index": 0,
+          "entity": 0,
+          "kind": "directional",
+          "classes": {
+            "color": "initial",
+            "intensity": "initial"
+          }
+        }
+      ]
+    }
+  },
+  "files": [
+    {
+      "path": ".structured-out/app.d.ts",
+      "bytes": 402,
+      "sha256": "1546182e9c35476b5418d3d3d94b332d1e8851a07b205123faf21f96fa0b6c6a"
+    },
+    {
+      "path": ".structured-out/app.js",
+      "bytes": 12600,
+      "sha256": "0d6839d72730e17958c30ef3c8040f32f0e6f1af930697c2a2b188ff72acc967"
+    },
+    {
+      "path": ".structured-out/app.js.map",
+      "bytes": 848,
+      "sha256": "3a55ec4c01e382db4016a1ef0accf5c03710c420df9548af33c739f9cb4b0de4"
+    },
+    {
+      "path": ".structured-out/index.html",
+      "bytes": 369,
+      "sha256": "df008fe8d66102ed4e298e022bdbb796b614f7b13b456b83e85c8f9263603607"
+    },
+    {
+      "path": ".structured-out/program.manifest.json",
+      "bytes": 77658,
+      "sha256": "69ff4e2739a1d23f84684a4ac2638a8b67f52ed9927778157992f63d77ad04b5"
+    },
+    {
+      "path": ".structured-out/runtime.08d16504a8759146.js",
+      "bytes": 1111776,
+      "sha256": "08d16504a8759146af7a282efd1694d529ed060649744804fcb11ee417f745a9"
+    },
+    {
+      "path": ".structured-out/runtime.d.ts",
+      "bytes": 18257,
+      "sha256": "6ac0ef5819754f18961a2c1158c872b224796baccb15f5e3655413ae0d68ad60"
+    },
+    {
+      "path": ".structured-out/shaders/cc306e7c4fdef230.mtek-map.json",
+      "bytes": 40597,
+      "sha256": "7384c517bc0613bbad958ea888cd3f54986fda4d854bf16bef06ce1925a4914e"
+    },
+    {
+      "path": ".structured-out/shaders/cc306e7c4fdef230.wgsl",
+      "bytes": 13676,
+      "sha256": "cc306e7c4fdef230097df5347603306d53d7cb9c70ffad1a5af1fe7c60414277"
+    },
+    {
+      "path": ".structured-out/shaders/d13b37eaa9665be6.mtek-map.json",
+      "bytes": 52193,
+      "sha256": "b9f0a727e769be2d5339682ffe0e71673e8fdd42e28c214658e1376c23f2573d"
+    },
+    {
+      "path": ".structured-out/shaders/d13b37eaa9665be6.wgsl",
+      "bytes": 13417,
+      "sha256": "d13b37eaa9665be6d463a0238881b31e9d73342872a4ab2ca47e773f8970e20a"
+    },
+    {
+      "path": ".structured-out/shaders/d623923ba93ac763.mtek-map.json",
+      "bytes": 25906,
+      "sha256": "0efd016ca5606c09cdd2ccc8f32915433ba06e20a98e9fc958492eb9eee3a843"
+    },
+    {
+      "path": ".structured-out/shaders/d623923ba93ac763.wgsl",
+      "bytes": 10545,
+      "sha256": "d623923ba93ac7638137394ebb2de960558a45dc1ca210f3cba3a56c9f85eafd"
+    }
+  ],
+  "sources": [
+    {
+      "path": "structured/src/main.mtek",
+      "bytes": 3795,
+      "sha256": "fe86ea943efa682c9deef8f15249311dafc0bcb53e2f62f3719d48c6cc307632"
+    },
+    {
+      "path": "structured/mtek.toml",
+      "bytes": 217,
+      "sha256": "45098374e86657b06d64497f496fabd86f621655431729014e3129e4efe34599"
+    },
+    {
+      "path": "verify.mjs",
+      "bytes": 8443,
+      "sha256": "31cb60ce467ab4f9dd61ac51eb535e96919cffbb99c853f8fbd6b472b22482f6"
+    },
+    {
+      "path": "serve.mjs",
+      "bytes": 2061,
+      "sha256": "d80aa38f14a77cecac6169e05c107d111ed9af225de7c75ae452aa613a806643"
+    }
+  ],
+  "finishedAt": "2026-10-26T04:02:46.694Z"
+}

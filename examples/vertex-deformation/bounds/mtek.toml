@@ -1,0 +1,12 @@
+[project]
+name = "bounded-vertex"
+language = "0.1"
+
+[host.inputs]
+shift_x = "Demo.shift_x"
+shift_y = "Demo.shift_y"
+authored = "Demo.authored"
+reference = "Demo.reference"
+crowd = "Demo.crowd"
+angle = "Demo.angle"
+bound_radius = "Demo.bound_radius"

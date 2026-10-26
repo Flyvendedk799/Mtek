@@ -1,0 +1,21 @@
+{
+  "name": "@mtek/asset-audit",
+  "version": "0.1.0-dev",
+  "private": true,
+  "type": "module",
+  "description": "Bounded local asset corpus reports using the real Mtek compiler, without building it.",
+  "scripts": {
+    "audit": "node src/cli.ts",
+    "check:types": "tsc --noEmit",
+    "lint": "eslint src test",
+    "test:unit": "vitest run --maxWorkers=1"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.1",
+    "eslint": "10.12.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.0",
+    "vitest": "5.0.3"
+  }
+}

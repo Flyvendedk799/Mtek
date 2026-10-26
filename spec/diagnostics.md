@@ -218,7 +218,12 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e4032"></a>E4032 | too many material parameters | > 64 |
 | <a id="mtek-e4040"></a>E4040 | capture in GPU stage | scene state, `frame`, entity, `cpu fn` (help: add a param and `bind`); ambient CPU reads through helper calls; a texture or sampler constant (help: a param with the constant as its default) |
 | <a id="mtek-e4041"></a>E4041 | invalid use of texture or sampler | only as `sample` arguments (decision 0054) |
-| <a id="mtek-e4901"></a>E4901 | stage not supported | `vertex`/`compute` |
+| <a id="mtek-e4042"></a>E4042 | derivative operation outside the unconditional fragment prefix | Evaluate `sample_mip` and `lighting.pbr_mapped` before control flow, directly in a fragment (decision 0194) |
+| <a id="mtek-e4050"></a>E4050 | invalid compute declaration | missing/duplicate output or kernel, duplicate workgroup declaration |
+| <a id="mtek-e4051"></a>E4051 | invalid compute resource | type, capacity, buffer/uniform byte or expanded-layout budget |
+| <a id="mtek-e4052"></a>E4052 | invalid compute buffer access | whole-buffer values, output reads and buffer writes |
+| <a id="mtek-e4053"></a>E4053 | invalid compute workgroup size | constant u32 triple, positive axes and total limits |
+| <a id="mtek-e4901"></a>E4901 | stage not supported | material compute member, or standalone compute's pending packaging/dispatch gate |
 
 ### 5.5 Scenes, schemas, ownership, bindings (`5xxx`)
 | Code | Title | Trigger |
@@ -293,8 +298,8 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | Code | Title | Trigger |
 |---|---|---|
 | <a id="mtek-e6001"></a>E6001 | parameter block too large | > 65 536 bytes |
-| <a id="mtek-e6002"></a>E6002 | too many material resources | > 8 textures+samplers; reported by `check` at the ninth (decision 0054) |
-| <a id="mtek-e6003"></a>E6003 | too many interpolated inputs | **Reserved:** > 16 inter-stage variables; v0.1 has no custom vertex stage and at most 4 (`spec/materials.md` §3.3), so the limit cannot be reached |
+| <a id="mtek-e6002"></a>E6002 | too many material resources | > 16 textures+samplers; reported by `check` at the seventeenth (decision 0194) |
+| <a id="mtek-e6003"></a>E6003 | too many interpolated inputs | > 16 combined SurfaceInput and custom payload variables (`spec/materials.md` §3.5, decision 0198) |
 | <a id="mtek-e6100"></a>E6100 | generated WGSL failed validation | compiler bug; Naga message in notes |
 
 ### 5.7 Assets (`7xxx`)
@@ -317,7 +322,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e7015"></a>E7015 | transparency in material | `alphaMode` is not OPAQUE, or the base colour alpha is not 1 |
 | <a id="mtek-e7016"></a>E7016 | unsupported material feature | normal, occlusion, emissive or metallic-roughness texture, non-zero emissive factor, `doubleSided` |
 | <a id="mtek-e7017"></a>E7017 | unsupported or oversized image | image is not PNG/JPEG, has no embedded bytes, is unreadable, exceeds `max_texture_dimension`, or is a JPEG with an EXIF orientation other than 1 (decision 0082) |
-| <a id="mtek-e7018"></a>E7018 | unsupported sampler mode | MIRRORED_REPEAT, or wrap or filter modes that no sampler preset can express |
+| <a id="mtek-e7018"></a>E7018 | unsupported sampler mode | MIRRORED_REPEAT or differing U/V wrap modes (mixed min/mag filters are supported by decision 0200) |
 | <a id="mtek-e7019"></a>E7019 | animation present | a skin or a duplicate animation name in a declared file; or a `clip` that names an animation with a morph-weight channel, cubic-spline or any other interpolation, a path other than translation, rotation or scale, or a channel with no keyframes or more than 4096 (decisions 0156 and 0174). LINEAR and STEP translation, rotation and scale are clips; an unplayable animation nobody names is ignored |
 | <a id="mtek-e7020"></a>E7020 | asset file not found | the file named by an `asset.*` call does not exist or cannot be read (decision 0058) |
 | <a id="mtek-e7021"></a>E7021 | asset path outside project | the path escapes the project root, is absolute or malformed |
@@ -364,6 +369,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-w8070"></a>W8070 | scene restarted on reload | names the forcing declaration |
 | <a id="mtek-e8080"></a>E8080 | execution budget exceeded | a loop of a `--mode preview` build ran past the frame's loop budget (`manifest.preview.loopBudget`, default 10 million iterations): reported at the loop, the scene stops and the overlay shows it; during `init` the mount fails with the kind `budget-exceeded` (decision 0075) |
 | <a id="mtek-e8090"></a>E8090 | invalid scale value | run-time write ignored |
+| <a id="mtek-e8091"></a>E8091 | invalid authored bounds | a non-finite bounds center or non-finite/negative radius was written at runtime; the write is ignored (decision 0199) |
 | <a id="mtek-e8100"></a>E8100 | non-opaque color value | a host input with the `color-hex-opaque` codec rejected a colour with alpha (material param writes take any alpha since decision 0138) |
 | <a id="mtek-e8101"></a>E8101 | command not valid for the target's body kind | a body command through an `entity_ref` (or a velocity read) whose body kind, or lack of a body, it does not support; the command is dropped and a read gives zero (decision 0066) |
 | <a id="mtek-e8102"></a>E8102 | physics module failed to load | mount fails with the kind `physics-failed`; a reload whose physics module cannot load is refused (decision 0066) |

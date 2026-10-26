@@ -1,0 +1,169 @@
+{
+  "chair_normal_texture.glb": {
+    "checkStatus": 1,
+    "buildStatus": 1,
+    "diagnostics": [
+      {
+        "schemaVersion": 1,
+        "code": "MTEK-E7009",
+        "severity": "error",
+        "title": "unsupported vertex attribute",
+        "message": "The material 'Fabric' (materials[1]) reads its normal texture from TEXCOORD_1; the profile supports TEXCOORD_0 only.",
+        "source": {
+          "file": "src/model.mtek",
+          "startByte": 384,
+          "endByte": 405,
+          "startLine": 4,
+          "startColumn": 32,
+          "endLine": 4,
+          "endColumn": 53
+        },
+        "related": [],
+        "notes": [
+          "the problem is in the file 'models/chair.glb'"
+        ],
+        "suggestedEdits": [],
+        "phase": "check",
+        "docs": "spec/diagnostics.md#mtek-e7009"
+      }
+    ]
+  },
+  "chair_required_extension.glb": {
+    "checkStatus": 1,
+    "buildStatus": 1,
+    "diagnostics": [
+      {
+        "schemaVersion": 1,
+        "code": "MTEK-E7004",
+        "severity": "error",
+        "title": "required extension",
+        "message": "The file requires the glTF extensions KHR_draco_mesh_compression; the v0.1 profile supports none.",
+        "source": {
+          "file": "src/model.mtek",
+          "startByte": 384,
+          "endByte": 405,
+          "startLine": 4,
+          "startColumn": 32,
+          "endLine": 4,
+          "endColumn": 53
+        },
+        "related": [],
+        "notes": [
+          "the problem is in the file 'models/chair.glb'",
+          "help: re-export the model without extensions (for example without Draco or meshopt compression)"
+        ],
+        "suggestedEdits": [],
+        "phase": "check",
+        "docs": "spec/diagnostics.md#mtek-e7004"
+      }
+    ]
+  },
+  "instancing": {
+    "entities": 80,
+    "instancedCounters": {
+      "buffersAllocated": 21,
+      "texturesAllocated": 3,
+      "pipelinesCreated": 2,
+      "shaderModulesCreated": 1,
+      "bindGroupsCreated": 6,
+      "uploads": 24,
+      "uploadBytes": 34308,
+      "liveBuffers": 20,
+      "liveTextures": 3,
+      "liveSamplers": 1,
+      "liveShaderModules": 1,
+      "livePipelines": 2,
+      "liveBindGroups": 6,
+      "liveListeners": 9,
+      "frameTimeMs": 2.8999999999068677,
+      "cpuUpdateMs": 0.6999999999534339,
+      "renderPrepMs": 2.199999999953434,
+      "gpuTimeAvailable": 0,
+      "drawCalls": 5,
+      "drawCallsTotal": 5,
+      "failedMaterials": 0,
+      "instancedDraws": 4,
+      "instancedDrawsTotal": 4,
+      "culledObjects": 0,
+      "culledObjectsTotal": 0,
+      "rebatchesTotal": 1,
+      "sharedParamBlocks": 3,
+      "ownedParamBlocks": 1,
+      "discardedSteps": 0,
+      "liveEntities": 82,
+      "pendingSpawns": 0,
+      "pendingRemovals": 0,
+      "entitySlots": 82,
+      "entitiesSpawned": 0,
+      "entitiesDestroyed": 0,
+      "physicsBodies": 0,
+      "physicsColliders": 0,
+      "physicsSteps": 0,
+      "physicsFrozenBodies": 0,
+      "framesRendered": 1,
+      "framesSkipped": 0,
+      "deviceLosses": 0,
+      "deviceRecoveries": 0,
+      "recoveryAttempts": 0
+    },
+    "individualCounters": {
+      "buffersAllocated": 20,
+      "texturesAllocated": 3,
+      "pipelinesCreated": 1,
+      "shaderModulesCreated": 1,
+      "bindGroupsCreated": 6,
+      "uploads": 23,
+      "uploadBytes": 24196,
+      "liveBuffers": 19,
+      "liveTextures": 3,
+      "liveSamplers": 1,
+      "liveShaderModules": 1,
+      "livePipelines": 1,
+      "liveBindGroups": 6,
+      "liveListeners": 9,
+      "frameTimeMs": 0.8999999999068677,
+      "cpuUpdateMs": 0.19999999995343387,
+      "renderPrepMs": 0.6999999999534339,
+      "gpuTimeAvailable": 0,
+      "drawCalls": 80,
+      "drawCallsTotal": 80,
+      "failedMaterials": 0,
+      "instancedDraws": 0,
+      "instancedDrawsTotal": 0,
+      "culledObjects": 0,
+      "culledObjectsTotal": 0,
+      "rebatchesTotal": 1,
+      "sharedParamBlocks": 3,
+      "ownedParamBlocks": 1,
+      "discardedSteps": 0,
+      "liveEntities": 82,
+      "pendingSpawns": 0,
+      "pendingRemovals": 0,
+      "entitySlots": 82,
+      "entitiesSpawned": 0,
+      "entitiesDestroyed": 0,
+      "physicsBodies": 0,
+      "physicsColliders": 0,
+      "physicsSteps": 0,
+      "physicsFrozenBodies": 0,
+      "framesRendered": 1,
+      "framesSkipped": 0,
+      "deviceLosses": 0,
+      "deviceRecoveries": 0,
+      "recoveryAttempts": 0
+    },
+    "instancedVsIndividual": {
+      "differing": 0,
+      "maxDiff": 0
+    },
+    "instancedVsOracle": {
+      "compared": 162896,
+      "maxError": 1,
+      "entities": 80
+    },
+    "individualVsOracle": {
+      "compared": 162896,
+      "maxError": 1
+    }
+  }
+}

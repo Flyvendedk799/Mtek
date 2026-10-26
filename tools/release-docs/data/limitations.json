@@ -9,10 +9,10 @@
       }
     },
     "E4901": {
-      "reason": "A material has exactly one stage function, `fragment`. Custom vertex and compute stages are planned for v0.2.",
+      "reason": "Runnable compute remains unsupported. Standalone declarations now parse and type-check (decision 0202), but receive E4901 until lowering, packaging and runtime dispatch are integrated. A material requires one fragment stage and may declare one authored vertex stage.",
       "source": {
         "file": "spec/materials.md",
-        "quote": "custom vertex and compute stages are planned for v0.2"
+        "quote": "Custom compute stages remain unsupported"
       }
     },
     "E5901": {
@@ -75,7 +75,7 @@
     {
       "id": "lang-loops",
       "area": "Language",
-      "restriction": "No `loop`. Write `while true { â€¦ }` and leave it with `break`. `while` runs at most 1 000 000 iterations.",
+      "restriction": "No `loop`. Write `while true { … }` and leave it with `break`. `while` runs at most 1 000 000 iterations.",
       "reason": "`loop` stays reserved (decision 0144). A `while` that runs past the cap fails the frame with E8080.",
       "codes": [
         "E0013",
@@ -242,7 +242,7 @@
     {
       "id": "lang-unsupported-list-wording",
       "area": "Language",
-      "restriction": "Most items of spec/language.md section 11 have no unsupported-feature code of their own. Only the reserved words (E0013), the bitwise operators (E1901) and the vertex and compute stages (E4901) do; the others are rejected by the general rules named in the entries above.",
+      "restriction": "Most items of spec/language.md section 11 have no unsupported-feature code of their own. Only the reserved words (E0013), the bitwise operators (E1901) and compute stages (E4901) do; the others are rejected by the general rules named in the entries above.",
       "reason": "Section 11 used to be headed as if every item had \"a dedicated unsupported diagnostic\", which the compiler does not meet. Decision 0102 corrected the heading instead of hiding the difference. Every item is still rejected with a diagnostic.",
       "codes": [
         "E0013",
@@ -260,13 +260,15 @@
     {
       "id": "materials-scope",
       "area": "Materials and rendering",
-      "restriction": "No Mtek-authored vertex or compute stages, multiply blending, shadows, multiple render targets, material inheritance, derivatives, language-visible storage buffers, texture arrays or cube maps. Host options provide additive materials and LDR post effects; image assets receive mipmaps on WebGPU (decision 0193). Normal mapping, other glTF PBR texture channels, environment lighting and HDR post-processing remain unsupported.",
-      "reason": "The Mtek source language keeps its v0.1 shader-stage contract. Decision 0193 extends the host runtime without adding shader stages.",
+      "restriction": "No runnable Mtek-authored compute, multiply blending, point/cascaded shadows, multiple render targets, material inheritance, general derivative intrinsics or usable source storage buffers/texture arrays/cube maps. Standalone compute/resources now parse and type-check but remain blocked by E4901 at the build boundary. Host options provide additive materials, LDR post effects, one directional shadow map and HDR panorama IBL. HDR display/post targets and tone mapping remain unsupported.",
+      "reason": "Vertex position/normal/UV outputs, typed varying payloads and authored finite spheres are implemented by decisions 0197–0199. Sampled original-character skin/deformation/shadow/recovery cases match CPU references; decision 0200 preserves mixed glTF sampler filters. Authors must enclose final geometry. Combined shared-pose instancing, broader animation compositions, overlays, wider physical devices and compute resources/dispatch remain required work. Decisions 0193 to 0195 add host rendering facilities and core material channels.",
       "codes": [
         "E4901"
       ],
       "decisions": [
-        "0193"
+        "0193",
+        "0194",
+        "0195"
       ],
       "source": {
         "file": "spec/materials.md",
@@ -519,7 +521,7 @@
     {
       "id": "gltf-animation",
       "area": "Assets",
-      "restriction": "No morph targets, cubic-spline interpolation or sparse accessors. Validated skeletal meshes retain four influences, up to 128 joints and 256 nodes. WebGPU deforms visible actors on the GPU using conservative animated bounds; the CPU skinning function remains available for inspection (decision 0193). Skeletal geometry still uses individual draw calls. Named LINEAR/STEP clips, transitions and sockets remain supported; host APIs add masks, additive layers, positional IK and validated bind-relative retargeting. These have no new Mtek language intrinsics.",
+      "restriction": "No morph targets, cubic-spline interpolation or sparse accessors. Skeletal meshes retain four influences, up to 128 joints and 256 nodes. WebGPU deforms visible actors with conservative animated bounds; CPU deformation remains available for inspection. Explicit shared-pose cohorts can instance compatible opaque draws; independent poses retain separate palettes/outputs. Host APIs add layers, synchronized 1D locomotion, distance policies, positional/orientation IK with hinge limits and explicit bind-frame retargeting (decision 0196). These have no new Mtek language intrinsics; automatic humanoid mapping and arbitrary independent-pose crowd instancing are unsupported.",
       "reason": "Decision 0015 rejected every animation. Decision 0156 plays TRS clips and keeps the rest of that rejection; decision 0174 composes clips with the entity and narrows the error to the use.",
       "codes": [
         "E7008",
@@ -531,7 +533,8 @@
         "0156",
         "0174",
         "0191",
-        "0193"
+        "0193",
+        "0196"
       ],
       "source": {
         "file": "spec/decisions/0191-skeletal-animation.md",
@@ -559,18 +562,19 @@
     {
       "id": "gltf-materials",
       "area": "Assets",
-      "restriction": "Opaque, single-sided materials with a base colour texture only: no alpha modes other than OPAQUE, no double-sided materials, no normal, occlusion, emissive or metallic-roughness textures, no emissive factor.",
-      "reason": "Decision 0015.",
+      "restriction": "Opaque, single-sided core metallic-roughness materials, including base-colour, normal, MR, occlusion and emissive maps on UV0. Other alpha modes, double-sided materials, authored tangents and additional UV sets remain unsupported. Normal maps use a derivative frame rather than authored MikkTSpace tangents.",
+      "reason": "Decision 0194 extends the strict material profile while retaining explicit boundaries.",
       "codes": [
         "E7015",
         "E7016"
       ],
       "decisions": [
-        "0015"
+        "0015",
+        "0194"
       ],
       "source": {
-        "file": "spec/decisions/0015-asset-strictness.md",
-        "quote": "non-opaque or double-sided materials, or textures other than base colour"
+        "file": "spec/decisions/0194-gltf-material-channels.md",
+        "quote": "OPAQUE, single-sided"
       }
     },
     {

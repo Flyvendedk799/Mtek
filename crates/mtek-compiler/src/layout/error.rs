@@ -18,6 +18,8 @@ pub enum LayoutError {
     DuplicateMember { struct_name: String, member: String },
     /// An array of length 0 or longer than [`MAX_ARRAY_LENGTH`].
     InvalidArrayLength { length: u32 },
+    /// A root storage resource must contain at least one element.
+    EmptyStorageArray,
     /// A size or offset does not fit in 32 bits.
     SizeOverflow,
 }
@@ -45,6 +47,9 @@ impl fmt::Display for LayoutError {
             ),
             LayoutError::SizeOverflow => {
                 f.write_str("the layout is too large: a size or offset exceeds 32 bits")
+            }
+            LayoutError::EmptyStorageArray => {
+                f.write_str("a storage buffer array must contain at least one element")
             }
         }
     }

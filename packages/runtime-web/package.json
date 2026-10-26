@@ -20,5 +20,24 @@
     "typescript": "6.0.3",
     "typescript-eslint": "8.71.0",
     "vitest": "5.0.3"
-  }
+  },
+  "main": "./dist/runtime.js",
+  "types": "./src/runtime.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/runtime.d.ts",
+      "import": "./dist/runtime.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src/runtime.d.ts",
+    "dist/runtime.js",
+    "dist/runtime.js.map",
+    "dist/runtime.dev.js",
+    "dist/runtime.dev.js.map",
+    "dist/runtime.min.js",
+    "README.md"
+  ],
+  "license": "UNLICENSED"
 }

@@ -2,6 +2,7 @@
   "files": [],
   "references": [
     { "path": "packages/runtime-web" },
+    { "path": "packages/inspector" },
     { "path": "packages/physics-rapier" },
     { "path": "packages/editor-vscode" },
     { "path": "tests/browser" },
@@ -11,6 +12,7 @@
     { "path": "benchmarks/runtime" },
     { "path": "tools/ai-eval" },
     { "path": "tools/coverage-matrix" },
-    { "path": "tools/release-docs" }
+    { "path": "tools/release-docs" },
+    { "path": "tools/asset-audit" }
   ]
 }

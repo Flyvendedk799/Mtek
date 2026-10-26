@@ -26,7 +26,7 @@ A language model that writes Mtek should be given the **[language guide](languag
 | [Prefabs and scenes](concepts/prefabs-and-scenes.md) | What may appear where, why a prefab is one entity, static and dynamic instances, cameras. |
 | [Lighting, units and colour](concepts/lighting-and-units.md) | Lux and candela, the camera exposure scale, what it does to ambient light, sRGB and linear colour. |
 | [Materials and shaders](concepts/materials-and-shaders.md) | The fragment stage, what it may read, the built-in materials, instances and their parameters. |
-| [Textures, samplers and assets](concepts/textures-samplers-and-assets.md) | Declaring images and models, path rules, the four sampler presets, what is CPU-only and what is GPU-only. |
+| [Textures, samplers and assets](concepts/textures-samplers-and-assets.md) | Declaring images and models, path rules, sampler presets and mip filters, what is CPU-only and what is GPU-only. |
 | [Physics](concepts/physics.md) | Bodies, colliders, commands, collision events and the limits. |
 | [Modules, projects and host inputs](concepts/modules-and-projects.md) | Imports and exports, `mtek.toml`, and how a web page sets values of the scene. |
 

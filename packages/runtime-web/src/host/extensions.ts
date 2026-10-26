@@ -11,6 +11,8 @@ export interface SceneTransform {
   readonly rotation: Quat;
   readonly scale: Vec3;
   readonly visible: boolean;
+  /** Explicit final mesh-local sphere, when supplied by source. Fresh copied values. */
+  readonly bounds?: { readonly center: Vec3; readonly radius: number };
 }
 export interface TransformUpdate {
   readonly id: string;
@@ -25,6 +27,10 @@ export interface ExtensionContext {
   /** Validates the complete batch before applying any write. Local transforms, before bindings. */
   writeTransforms(updates: readonly TransformUpdate[]): void;
   animation(id: string): SkeletonPlayer | undefined;
+  /** Explicit shared-pose cohort; use distinct sources for distinct phases or actions. */
+  shareAnimation(source: string, targets: readonly string[]): void;
+  /** Independent held pose; select a clip or locomotion blend to resume motion. */
+  detachAnimation(id: string): SkeletonPlayer;
   /** Explicitly supplied host services (for example a loader or navigation adapter). */
   service<T>(name: string): T | undefined;
 }
@@ -58,7 +64,7 @@ export function validateExtensions(extensions: readonly MtekExtension[]): void {
 export function sceneAccess(
   getWorld: () => World,
   active: () => void,
-): Pick<ExtensionContext, "readTransforms" | "writeTransforms" | "animation"> {
+): Pick<ExtensionContext, "readTransforms" | "writeTransforms" | "animation" | "shareAnimation" | "detachAnimation"> {
   const epochs = new WeakMap<World, number>();
   let nextEpoch = 0;
   const records = (): Map<string, EntityRecord> => {
@@ -91,6 +97,7 @@ export function sceneAccess(
         rotation: { ...r.rotation },
         scale: { ...r.scale },
         visible: r.visible,
+        ...(r.bounds_radius > 0 ? { bounds: { center: { ...r.bounds_center }, radius: r.bounds_radius } } : {}),
       }));
     },
     writeTransforms: (updates) => {
@@ -143,6 +150,21 @@ export function sceneAccess(
       if (record === undefined)
         throw new RangeError(`Unknown or stale entity ID: ${id}`);
       return getWorld().skinPlayer(record.ref.slot);
+    },
+    shareAnimation: (source, targets) => {
+      active();
+      const entities = records();
+      const slots = [source,...targets].map(id => {
+        const entity = entities.get(id);
+        if (entity === undefined) throw new RangeError(`Unknown or stale entity ID: ${id}`);
+        return entity.ref.slot;
+      });
+      getWorld().shareAnimation(slots[0]!,slots.slice(1));
+    },
+    detachAnimation: id => {
+      active(); const entity = records().get(id);
+      if (entity === undefined) throw new RangeError(`Unknown or stale entity ID: ${id}`);
+      return getWorld().detachAnimation(entity.ref.slot);
     },
   };
 }

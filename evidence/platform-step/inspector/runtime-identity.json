@@ -1,0 +1,25 @@
+{
+  "note": "No animation/rendering implementation change; SDK packaging and the optional inspector leave the measured runtime/declaration bytes unchanged.",
+  "files": {
+    "runtime.js": {
+      "bytes": 1095775,
+      "sha256": "97deb64ad1edadfe9f91a84ae0935f2bca8c6e6ad5fc962f89c00d8b91eaff61",
+      "matchesMeasuredAnimationRuntime": true
+    },
+    "runtime.dev.js": {
+      "bytes": 1107954,
+      "sha256": "9955f67745ebfa03ff1b95616ed56733e5b16030a1a4e0b7bc534c135b189025",
+      "matchesMeasuredAnimationRuntime": true
+    },
+    "runtime.min.js": {
+      "bytes": 673806,
+      "sha256": "0788b54d68d1a76b4571e81f028a3b3c8c3c6add665cdbe852e558db85183a1d",
+      "matchesMeasuredAnimationRuntime": true
+    },
+    "runtime.d.ts": {
+      "bytes": 18257,
+      "sha256": "6ac0ef5819754f18961a2c1158c872b224796baccb15f5e3655413ae0d68ad60",
+      "matchesMeasuredAnimationRuntime": true
+    }
+  }
+}

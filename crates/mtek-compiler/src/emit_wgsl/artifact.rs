@@ -37,6 +37,9 @@ use super::validate::validate;
 /// a dynamic offset (`spec/gpu-layout.md` section 6).
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShaderArtifact {
+    pub varyings: Vec<crate::lowering::standard_stage::VertexVarying>,
+    pub lighting: bool,
+    pub vertex_deformation: bool,
     /// The material symbol (`std/materials.mtek::Unlit`), the manifest shader's `material`.
     pub material: String,
     /// The WGSL text; deterministic, `\n` line ends, final line break.
@@ -100,6 +103,18 @@ pub fn emit_shader(shader: &MaterialShader) -> Result<ShaderArtifact, Vec<Diagno
     let printed = print_module(&shader.module);
     validate(&printed.text, &printed.span_map)?;
     Ok(ShaderArtifact {
+        varyings: shader.varyings.clone(),
+        vertex_deformation: shader
+            .module
+            .functions
+            .iter()
+            .any(|f| f.name == crate::lowering::shader_ir::Name::generated("vertex")),
+        lighting: shader.module.globals.iter().any(|g| {
+            matches!(
+                g.kind,
+                crate::lowering::shader_ir::GlobalKind::Uniform { group: 3, .. }
+            )
+        }),
         material: shader.module.symbol.clone(),
         sha256: sha256_hex(printed.text.as_bytes()),
         wgsl: printed.text,
@@ -138,7 +153,9 @@ mod tests {
             surface_inputs: Default::default(),
             params: None,
             resources: Vec::new(),
+            vertex: None,
             fragment: FragmentBody {
+                varying_param: None,
                 surface_param: Name::generated("s"),
                 body: vec![Statement::Return {
                     value: Some(value),
@@ -191,7 +208,23 @@ mod tests {
         assert_eq!(artifact.material, "src/main.mtek::M");
         let document = artifact.span_map_document(|_| 0);
         assert_eq!(document.shader, artifact.sha256);
-        assert_eq!(document.entries.len(), artifact.span_map.entries.len());
+        assert!(document.entries.len() < artifact.span_map.entries.len());
+        for (index, line) in artifact.wgsl.lines().enumerate() {
+            let line_number = u32::try_from(index + 1).expect("line fits");
+            for column in 1..=u32::try_from(line.chars().count() + 1).expect("column fits") {
+                let original = artifact.span_map.find(line_number, column);
+                let exported = document
+                    .entries
+                    .iter()
+                    .filter(|entry| entry.wgsl.contains(line_number, column))
+                    .min_by_key(|entry| entry.wgsl.width());
+                assert_eq!(
+                    exported.map(|entry| (entry.span, entry.symbol.as_str())),
+                    original.map(|entry| (0, entry.symbol.as_str())),
+                    "{line_number}:{column}"
+                );
+            }
+        }
     }
 
     #[test]

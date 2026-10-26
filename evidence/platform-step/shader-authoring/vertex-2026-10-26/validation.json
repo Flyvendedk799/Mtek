@@ -1,0 +1,84 @@
+{
+  "date": "2026-10-26",
+  "scope": "First authored local-position vertex increment; full shader-authoring track and full platform roadmap remain incomplete.",
+  "compiler": {
+    "unitTestsPassed": 910,
+    "integrationTestsPassed": 134,
+    "integrationSuites": {
+      "assets": 20,
+      "context": 34,
+      "context_cold_start": 16,
+      "fixtures": 23,
+      "grammar_model": 1,
+      "shader_lowering": 9,
+      "stdlib_registry": 25,
+      "stdlib_schema": 6
+    },
+    "log": "validation/compiler.txt"
+  },
+  "lspCompletionTestsPassed": 22,
+  "runtimeAbiRenderTestsPassed": 211,
+  "editorGrammarTestsPassed": 51,
+  "gpu": {
+    "hardware": {
+      "record": "verified/hardware.json",
+      "casesPassed": 12,
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-3",
+        "device": "0x744c",
+        "description": "AMD Radeon RX 7900 XTX",
+        "isFallbackAdapter": false
+      },
+      "browser": "153.0.8010.12",
+      "maximumPixelError": 0,
+      "minimumGeometryChangedPixels": 169,
+      "minimumShadowChangedPixels": 299
+    },
+    "software": {
+      "record": "verified/software.json",
+      "casesPassed": 12,
+      "adapter": {
+        "vendor": "google",
+        "architecture": "swiftshader",
+        "device": "0xc0de",
+        "description": "SwiftShader Device (Subzero)",
+        "isFallbackAdapter": true
+      },
+      "browser": "153.0.8010.12",
+      "maximumPixelError": 0,
+      "minimumGeometryChangedPixels": 169,
+      "minimumShadowChangedPixels": 299
+    }
+  },
+  "budgets": "budgets.json",
+  "inspection": "inspect.json",
+  "checksPassed": [
+    "TypeScript project build",
+    "workspace lint",
+    "compiler and CLI Clippy --all-targets -D warnings",
+    "grammar generation and tests",
+    "stdlib schema generation and checks",
+    "context-size reserve",
+    "generated feature coverage: 404 features / 216 positive programs / 246 diagnostic codes",
+    "generated release documentation comparisons",
+    "prebuilt runtime consistency against dist",
+    "11 existing example package budgets",
+    "git diff --check"
+  ],
+  "resourcePolicy": {
+    "cargoJobs": 2,
+    "testThreads": 2,
+    "vitestWorkers": 1,
+    "finalCoverageCompilerProbes": 1,
+    "sustainedPerformanceRuns": false,
+    "animationOptimization": false
+  },
+  "remaining": [
+    "typed vertex outputs and normal/UV authoring",
+    "custom varying linkage and interpolation",
+    "finite authored bounds and overlays",
+    "broader skinned/recovery/physical-device evidence",
+    "Mtek-authored compute resource and dispatch contract, implementation, examples and validation"
+  ]
+}

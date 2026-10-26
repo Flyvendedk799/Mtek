@@ -1,0 +1,44 @@
+{
+  "name": "@mtek/inspector",
+  "version": "0.1.0-dev",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "description": "Optional scene and animation inspection through Mtek extension API 1.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "peerDependencies": {
+    "@mtek/runtime-web": "0.1.0-dev"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check:types": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint src test",
+    "test:unit": "vitest run",
+    "verify:package": "node scripts/verify-package.mjs",
+    "verify:ui": "node scripts/verify-ui.mjs",
+    "check:example": "tsc --noEmit -p ../../examples/scene-inspector/tsconfig.json",
+    "pretest:unit": "node scripts/prepare-test.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.63.0",
+    "@types/node": "24.19.1",
+    "esbuild": "0.28.2",
+    "eslint": "10.12.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.0",
+    "vitest": "5.0.3"
+  }
+}

@@ -4,7 +4,7 @@
     "file": "src/main.mtek",
     "startByte": 96,
     "endByte": 104,
-    "message": "Duplicate stage function 'fragment': material 'Twice' already has its stage function.",
+    "message": "Duplicate stage function 'fragment': material 'Twice' already has this stage function.",
     "related": [
       {
         "message": "the stage function is declared here",
@@ -14,7 +14,7 @@
       }
     ],
     "notes": [
-      "a material has exactly one stage function, `fragment`"
+      "a material has one `fragment` stage and at most one `vertex` stage"
     ]
   }
 ]

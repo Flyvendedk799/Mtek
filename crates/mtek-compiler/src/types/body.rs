@@ -63,6 +63,7 @@ pub(super) struct BodyState {
 
 /// What the checker tracks in a stage function (decision 0039).
 pub(super) struct StageState {
+    pub(super) input_type: &'static str,
     /// The material's name, for messages.
     pub(super) material: String,
     /// The `SurfaceInput` parameter.
@@ -77,6 +78,8 @@ pub(super) struct StageState {
     /// The expressions that are the texture or sampler operand of a `sample` call; any other
     /// use of a texture or sampler param is `E4041` (decision 0054).
     pub(super) sample_operands: BTreeSet<NodeId>,
+    /// Conservative derivative safety: only the initial straight-line stage prefix.
+    pub(super) derivatives_allowed: bool,
 }
 
 /// How a statement leaves its block, when it always does.
@@ -417,6 +420,17 @@ impl<'a> Checker<'a> {
     }
 
     fn stmt(&mut self, stmt: &Stmt) -> Option<Exit> {
+        if matches!(
+            stmt,
+            Stmt::If(_)
+                | Stmt::For(_)
+                | Stmt::While(_)
+                | Stmt::Match(_)
+                | Stmt::Block(_)
+                | Stmt::Timer(_)
+        ) {
+            self.end_derivative_prefix();
+        }
         match stmt {
             Stmt::Let(decl) => {
                 self.local(decl, false);
@@ -1112,6 +1126,12 @@ impl<'a> Checker<'a> {
         let def = self.res.def(id)?.clone();
         match def.kind {
             DefKind::Local { mutable: true } => Some(id),
+            DefKind::InputBuffer | DefKind::OutputBuffer => {
+                self.report_diagnostic(Diagnostic::new(Code::E4052,
+                    format!("Cannot assign to the {} '{}'.", def.kind.noun(), def.name))
+                    .at(target.span).help("input buffers are read-only; write one output element by returning it from `kernel`"));
+                None
+            }
             // Scene and entity state are written by lifecycle functions and handlers.
             DefKind::State if self.scope.is_some() => None,
             DefKind::Local { mutable: false }
@@ -1198,6 +1218,19 @@ impl<'a> Checker<'a> {
                         "Cannot assign to {part}the prefab param '{name}': params are immutable construction inputs."
                     ),
                     Some("keep changing values in `state`, initialised from the param"),
+                )
+            }
+            DefKind::Param
+                if def
+                    .parent
+                    .and_then(|parent| self.res.def(parent))
+                    .is_some_and(|parent| parent.kind == DefKind::Compute) =>
+            {
+                (
+                    format!(
+                        "Cannot assign to {part}the compute param '{name}': params are read-only in the kernel."
+                    ),
+                    Some("copy it into a `var` local and assign to that"),
                 )
             }
             DefKind::Param => (

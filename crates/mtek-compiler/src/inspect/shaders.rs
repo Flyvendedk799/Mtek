@@ -29,6 +29,12 @@ pub struct ShadersView {
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Shader {
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub varyings: Vec<crate::lowering::standard_stage::VertexVarying>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lighting: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vertex_deformation: Option<u32>,
     pub material: String,
     /// The material declaration.
     pub declaration: SourceLocation,
@@ -87,6 +93,9 @@ pub fn shaders_view(
             });
         }
         shaders.push(Shader {
+            varyings: artifact.varyings.clone(),
+            lighting: artifact.lighting.then_some(1),
+            vertex_deformation: artifact.vertex_deformation.then_some(1),
             material: artifact.material.clone(),
             declaration: SourceLocation::of(artifact.span_map.declaration, sources)?,
             hash: artifact.sha256.clone(),
@@ -133,11 +142,17 @@ impl ShadersView {
         );
         for shader in &self.shaders {
             out.push('\n');
+            if shader.lighting.is_some() {
+                out.push_str("scene lighting ABI 1: group 3, 256-byte uniform; shadow depth/comparison sampler; GGX cube/filtering sampler; BRDF LUT\n");
+            }
             out.push_str(&format!(
                 "shader of material {} (declared at {})\n",
                 shader.material,
                 shader.declaration.human()
             ));
+            if shader.vertex_deformation == Some(1) {
+                out.push_str("  authored local-position stage ABI 1: vertex-visible params/resources; conservative culling; matching shadows\n");
+            }
             out.push_str(&format!("  file {} (sha256 {})\n", shader.url, shader.hash));
             out.push_str(&format!(
                 "  entry points {} (vertex), {} (instanced vertex), {} (fragment)\n",
@@ -147,6 +162,16 @@ impl ShadersView {
                 "  vertex attributes {}\n",
                 shader.vertex_attributes.join(", ")
             ));
+            for varying in &shader.varyings {
+                out.push_str(&format!(
+                    "  payload {}: {} => @location({}) {} ({})\n",
+                    varying.name,
+                    varying.source_type,
+                    varying.location,
+                    varying.wgsl_type,
+                    varying.interpolation
+                ));
+            }
             out.push_str(&format!(
                 "  surface inputs {}\n",
                 if shader.surface_inputs.is_empty() {

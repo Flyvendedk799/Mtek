@@ -305,7 +305,14 @@ fn every_manifest_validates_against_the_schema() {
         let text = std::str::from_utf8(&result.files["program.manifest.json"]).unwrap();
         assert_valid(&schema, &label, text);
         // The model prints it back identically.
-        assert_eq!(manifest_of(&result).to_json(), text, "{label}");
+        assert_eq!(
+            format!(
+                "{}\n",
+                serde_json::to_string(&manifest_of(&result)).unwrap()
+            ),
+            text,
+            "{label}"
+        );
     }
     for name in codegen_fixtures() {
         let path = codegen_dir()
@@ -314,6 +321,29 @@ fn every_manifest_validates_against_the_schema() {
         if let Ok(text) = fs::read_to_string(&path) {
             assert_valid(&schema, &format!("{name}/expected"), &text);
         }
+    }
+}
+
+#[test]
+fn production_metadata_is_compact_without_losing_development_diagnostics() {
+    let root = codegen_dir().join("builtin_params");
+    let release = built(&root, BuildMode::Release);
+    let dev = built(&root, BuildMode::Dev);
+    for (path, bytes) in &release.files {
+        if path != "program.manifest.json" && !path.ends_with(".mtek-map.json") {
+            continue;
+        }
+        let expanded = &dev.files[path];
+        let compact: Value = serde_json::from_slice(bytes).unwrap();
+        assert_eq!(
+            compact,
+            serde_json::from_slice::<Value>(expanded).unwrap(),
+            "{path}"
+        );
+        assert!(bytes.len() < expanded.len(), "{path}");
+        let text = std::str::from_utf8(bytes).unwrap();
+        assert_eq!(text.lines().count(), 1, "{path}");
+        assert!(text.ends_with('\n'), "{path}");
     }
 }
 
@@ -792,14 +822,22 @@ fn a_colour_state_bound_into_a_material_colour_gets_the_opaque_host_input_codec(
 }
 
 #[test]
-fn the_modes_differ_only_in_the_page() {
+fn the_modes_differ_only_in_the_page_and_metadata_whitespace() {
     let root = codegen_dir().join("scene_a_target_camera_box");
     let release = built(&root, BuildMode::Release);
     for mode in [BuildMode::Test, BuildMode::Dev] {
         let other = built(&root, mode);
         for (path, bytes) in &release.files {
             if path != "index.html" {
-                assert_eq!(other.files.get(path), Some(bytes), "{mode:?}: {path}");
+                if path == "program.manifest.json" || path.ends_with(".mtek-map.json") {
+                    assert_eq!(
+                        serde_json::from_slice::<Value>(&other.files[path]).unwrap(),
+                        serde_json::from_slice::<Value>(bytes).unwrap(),
+                        "{mode:?}: {path}"
+                    );
+                } else {
+                    assert_eq!(other.files.get(path), Some(bytes), "{mode:?}: {path}");
+                }
             }
         }
         assert_ne!(other.files["index.html"], release.files["index.html"]);
@@ -1468,7 +1506,11 @@ fn every_project_builds_as_a_preview_with_a_valid_manifest_and_checks_that_resol
         let text = text_of(&result, "program.manifest.json");
         assert_valid(&schema, &label, text);
         let manifest = manifest_of(&result);
-        assert_eq!(manifest.to_json(), text, "{label}");
+        assert_eq!(
+            format!("{}\n", serde_json::to_string(&manifest).unwrap()),
+            text,
+            "{label}"
+        );
         assert!(manifest.preview.is_some(), "{label}");
         let app = text_of(&result, "app.js");
         let loops = app.matches("--budget.n < 0").count();
@@ -1570,4 +1612,27 @@ fn a_parameter_block_over_the_profile_limit_is_e6001_and_no_files() {
             .diagnostics
             .is_empty()
     );
+}
+
+#[test]
+fn authored_bounds_compile_to_valid_bindings_and_static_and_prefab_setters() {
+    let result = built(
+        &repo().join("tests/semantics/pass/materials/authored_bounds"),
+        BuildMode::Test,
+    );
+    let manifest = manifest_of(&result);
+    let json = serde_json::to_string(&manifest).unwrap();
+    assert_valid(&validator(), "authored bounds", &json);
+    assert!(
+        manifest
+            .scene
+            .bindings
+            .iter()
+            .any(|binding| matches!(&binding.target,
+        mtek_compiler::package::manifest::BindingTarget::Bounds { field, .. } if field == "bounds_center"))
+    );
+    let script = std::str::from_utf8(&result.files["app.js"]).unwrap();
+    assert!(script.contains("ctx.setBounds("));
+    assert!(script.contains("bounds_radius"));
+    assert!(script.contains("bounds_center"));
 }

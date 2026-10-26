@@ -142,6 +142,77 @@ fn build_project(suite: &str, name: &str) -> mtek_compiler::BuildResult {
 }
 
 #[test]
+fn authored_vertex_reads_require_asset_attributes_even_when_fragment_is_constant() {
+    // Keep the generated GLB unchanged and probe an independent vertex-only UV read.
+    let mut files = project_fs("fail", "e7010_mesh_lacks_uv", None);
+    files.insert(
+        ProjectPath::new("src/main.mtek").unwrap(),
+        br#"
+const CHAIR = asset.glb("../models/chair.glb");
+material Move {
+    vertex(input: VertexInput) -> vec3 { return input.position + vec3(input.uv, 0.0); }
+    fragment(input: SurfaceInput) -> color { return #ffffff; }
+}
+scene Demo {
+    camera Main {}
+    entity Wedge { mesh: CHAIR.mesh("Wedge"); material: Move {}; }
+}
+"#
+        .to_vec(),
+    );
+    let result = analyze(&ProjectRoot::at_base(), &files);
+    let errors: Vec<_> = result
+        .report
+        .diagnostics
+        .iter()
+        .filter(|d| d.severity == mtek_compiler::diagnostics::Severity::Error)
+        .collect();
+    assert_eq!(errors.len(), 1, "{:#?}", result.report);
+    assert_eq!(errors[0].code, Code::E7010);
+    assert!(errors[0].message.contains("TEXCOORD_0"));
+}
+
+#[test]
+fn imported_vertex_outputs_can_supply_missing_asset_uvs_and_normals() {
+    let mut files = project_fs("fail", "e7010_mesh_lacks_uv", None);
+    files.insert(
+        ProjectPath::new("src/main.mtek").unwrap(),
+        br#"
+import { Generated } from "./generated.mtek";
+const CHAIR = asset.glb("../models/chair.glb");
+scene Demo {
+    camera Main {}
+    entity Wedge { mesh: CHAIR.mesh("Wedge"); material: Generated {}; }
+}
+"#
+        .to_vec(),
+    );
+    files.insert(ProjectPath::new("src/generated.mtek").unwrap(), br#"
+struct GeneratedVertex { position: vec3; normal: vec3; uv: vec2; }
+export material Generated {
+    vertex(input: VertexInput) -> GeneratedVertex {
+        return GeneratedVertex { position: input.position; normal: vec3(0.0, 1.0, 0.0); uv: vec2(0.5) };
+    }
+    fragment(surface: SurfaceInput) -> color {
+        return lighting.pbr(surface, color.linear(vec3(surface.uv, 0.0), 1.0), 0.0, 0.5);
+    }
+}
+"#.to_vec());
+    let result = build(
+        &ProjectRoot::at_base(),
+        &files,
+        &CompileOptions::with_stub_runtime(BuildMode::Release),
+    );
+    assert!(!result.has_errors(), "{:#?}", result.report);
+    let shaders: Vec<_> = result
+        .files
+        .iter()
+        .filter(|(path, _)| path.ends_with(".wgsl"))
+        .collect();
+    assert!(!shaders.is_empty());
+}
+
+#[test]
 fn every_failing_project_reports_exactly_its_diagnostics() {
     let names = names("fail");
     assert!(names.len() >= 60, "fixtures are missing: {names:?}");
@@ -464,7 +535,7 @@ fn the_supported_project_copies_images_byte_for_byte_with_their_colour_space() {
     // The file whose sampler asked for mip-maps records that nothing generates them.
     let mipmapped: Vec<&&Value> = images
         .iter()
-        .filter(|i| i["preprocessing"] == json!(["mipmaps not generated"]))
+        .filter(|i| i["preprocessing"] == json!(["mipmaps generated at runtime"]))
         .collect();
     assert_eq!(mipmapped.len(), 1);
     // Resource params of the instances name those urls.
@@ -695,6 +766,47 @@ fn a_suggested_rename_removes_its_diagnostic_and_introduces_none() {
 }
 
 #[test]
+fn core_maps_are_imported_with_correct_colour_spaces_and_shared_data_uploads() {
+    let result = build_project("pass", "pbr_all_maps");
+    assert!(!result.has_errors(), "{:#?}", result.report);
+    let manifest = manifest_of(&result);
+    let images: Vec<_> = manifest["assets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|asset| asset["kind"] == "image")
+        .collect();
+    assert_eq!(
+        images.len(),
+        3,
+        "one shared source in two colour spaces, plus a normal image"
+    );
+    assert_eq!(
+        images
+            .iter()
+            .filter(|asset| asset["colorSpace"] == "linear")
+            .count(),
+        2
+    );
+    assert_eq!(
+        images
+            .iter()
+            .filter(|asset| asset["colorSpace"] == "srgb")
+            .count(),
+        1
+    );
+    let same_bytes: Vec<_> = images
+        .iter()
+        .filter(|asset| asset["source"] == "models/model.glb#images[0]")
+        .collect();
+    assert_eq!(same_bytes.len(), 2);
+    assert_eq!(same_bytes[0]["sha256"], same_bytes[1]["sha256"]);
+    assert_ne!(same_bytes[0]["url"], same_bytes[1]["url"]);
+    // The source fixture edits imported parameters by name in update(). Its build
+    // also checks retention of the accessor's concrete Pbr schema.
+}
+
+#[test]
 fn a_gltf_material_is_a_pbr_instance_once_pbr_exists() {
     // `glb_asset.material` produces a `Pbr` instance (spec/assets.md section 2.1), so it waits
     // for the built-in `Pbr` (task M4-03): until then it says so with E9010; after, it works.
@@ -709,6 +821,7 @@ scene Demo {
         material: CHAIR.material("Fabric");
     }
 }
+
 "#
         .to_vec(),
     );

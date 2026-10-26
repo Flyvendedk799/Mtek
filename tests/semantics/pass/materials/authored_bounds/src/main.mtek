@@ -1,0 +1,26 @@
+material Offset {
+    param shift: vec3 = vec3(-10.0, 0.0, 0.0);
+    vertex(input: VertexInput) -> vec3 { return input.position + shift; }
+    fragment(input: SurfaceInput) -> color { return #ffffff; }
+}
+prefab Bounded {
+    param center: vec3;
+    bounds_center: center;
+    bounds_radius: 1.0;
+    mesh: Box {};
+    material: Offset {};
+    update(dt: f32) { self.bounds_radius = 1.0 + dt; }
+}
+scene Demo {
+    state shift: f32 = -10.0;
+    camera Main {}
+    entity Moving {
+        position: vec3(10.0, 0.0, 0.0);
+        bounds_center: bind(vec3(shift, 0.0, 0.0));
+        bounds_radius: 1.0;
+        mesh: Box {};
+        material: Offset { shift: bind(Moving.bounds_center) };
+    }
+    entity Fixed: Bounded { center: vec3(-10.0, 0.0, 0.0); }
+    update(dt: f32) { shift += dt; Moving.bounds_radius = 1.0; }
+}

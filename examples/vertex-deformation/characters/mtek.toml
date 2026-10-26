@@ -1,0 +1,13 @@
+[project]
+name = "deformed-characters"
+language = "0.1"
+
+[host.inputs]
+character = "Demo.character"
+authored = "Demo.authored"
+reference = "Demo.reference"
+shift_x = "Demo.shift_x"
+shift_y = "Demo.shift_y"
+shape = "Demo.shape"
+bound_radius = "Demo.bound_radius"
+original = "Demo.original"

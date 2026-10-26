@@ -1,0 +1,5 @@
+
+> @mtek/inspector@0.1.0-dev verify:ui
+> node scripts/verify-ui.mjs
+
+DOM-only inspector verification passed; GPU disabled, zero adapter requests.

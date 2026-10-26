@@ -755,6 +755,7 @@ pub fn grammar() -> GrammarModel {
                                 r("StructDecl"),
                                 r("EnumDecl"),
                                 r("MaterialDecl"),
+                                r("ComputeDecl"),
                                 r("PrefabDecl"),
                                 r("SceneDecl"),
                             ],
@@ -863,6 +864,44 @@ pub fn grammar() -> GrammarModel {
             ]),
         ),
         syntax("MaterialMember", alt(vec![r("ParamDecl"), r("StageFn")])),
+        noted(
+            syntax(
+                "ComputeDecl",
+                seq(vec![
+                    lit("compute"),
+                    r("Ident"),
+                    lit("{"),
+                    star(r("ComputeMember")),
+                    lit("}"),
+                ]),
+            ),
+            &[
+                "                    /* [S: source-compute-build-gate: parsed and checked; packaging/dispatch still E4901] */",
+            ],
+        ),
+        syntax(
+            "ComputeMember",
+            alt(vec![
+                r("ParamDecl"),
+                r("StorageDecl"),
+                r("ComputeWorkgroup"),
+                r("StageFn"),
+            ]),
+        ),
+        syntax(
+            "StorageDecl",
+            seq(vec![
+                group(alt(vec![lit("input"), lit("output")])),
+                r("Ident"),
+                lit(":"),
+                r("Type"),
+                lit(";"),
+            ]),
+        ),
+        syntax(
+            "ComputeWorkgroup",
+            seq(vec![lit("workgroup_size"), lit(":"), r("Expr"), lit(";")]),
+        ),
         syntax(
             "ParamDecl",
             seq(vec![
@@ -878,15 +917,16 @@ pub fn grammar() -> GrammarModel {
             syntax(
                 "StageFn",
                 seq([
-                    vec![r("Ident")],
+                    vec![group(alt(vec![r("Ident"), lit("vertex")]))],
                     parens_params(),
                     vec![return_type(), r("Block")],
                 ]
                 .concat()),
             ),
             &[
-                "                    /* [S: stage-name: Ident must be 'fragment' (E4020/E4021); 'vertex'/'compute'",
-                "                        are reserved words and are reported as E4901 by the parser] */",
+                "                    /* [S: stage-name: one required 'fragment', one optional 'vertex' (E4020/E4021);",
+                "                        compute is reserved and reported as E4901 by the parser] */",
+                "                    /* [S: vertex-payload-limit: at most 16 interpolated variables (E6003)] */",
             ],
         ),
         Blank,
@@ -1475,7 +1515,7 @@ mod tests {
                 );
             }
         }
-        assert_eq!(model.productions().count(), 82);
+        assert_eq!(model.productions().count(), 86);
     }
 
     #[test]

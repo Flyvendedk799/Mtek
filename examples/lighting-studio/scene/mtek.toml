@@ -1,0 +1,8 @@
+[project]
+name = "lighting-studio"
+language = "0.1"
+
+[host.inputs]
+camera_yaw = "Studio.camera_yaw"
+sun_yaw = "Studio.sun_yaw"
+roughness = "Studio.roughness"

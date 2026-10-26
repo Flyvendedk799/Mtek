@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-26",
+  "scope": "Compute shader backend and storage-array layout only. Mtek source compute, runtime dispatch and the full shader-authoring/platform roadmap remain incomplete.",
+  "compiler": {
+    "unitTestsPassed": 923,
+    "integrationTestsPassed": 25,
+    "integrationSuites": {
+      "compute_backend": 5,
+      "naga_oracle": 7,
+      "shader_lowering": 9,
+      "wgsl_blocks": 4
+    },
+    "newStorageUnitTests": 4,
+    "storageOracleElementTypes": 27,
+    "existingLayoutFixtures": 14,
+    "additionalStorageElementTypes": 13
+  },
+  "commands": [
+    {
+      "command": "cargo test -p mtek-compiler --lib --test compute_backend --test naga_oracle --test shader_lowering --test wgsl_blocks --locked -j 2 -- --test-threads=2",
+      "result": "passed"
+    },
+    {
+      "command": "cargo clippy -p mtek-compiler -p mtek-cli --all-targets --locked -j 2 -- -D warnings",
+      "result": "passed"
+    },
+    {
+      "command": "cargo fmt --all --check",
+      "result": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    }
+  ],
+  "existingShaderGoldensUnchanged": true,
+  "sourceComputeSupported": false,
+  "runtimeComputeDispatchAdded": false,
+  "manifestOrAbiChanged": false,
+  "gpuTestsRun": false,
+  "sustainedPerformanceTestsRun": false,
+  "animationOptimizationDeferred": true,
+  "sustainedCpuGpuMeasurementsDeferred": true,
+  "sourceSha256": {
+    "crates/mtek-compiler/src/layout/compute.rs": "8cb90e114575645bd12f68ce77f6456b8624bfc3449f1144d8ae324caef46e85",
+    "crates/mtek-compiler/src/layout/error.rs": "be25987fad1d7eb480ae559ea405958f50e3ca43e8d609627a3f5a65fbe00794",
+    "crates/mtek-compiler/src/layout/mod.rs": "128166bd2505f3e4c11d7743d0a29032500a411cb7cf1c5e37ba9fb7a8d9414f",
+    "crates/mtek-compiler/src/layout/storage.rs": "b16f7792f24709b398995be2be82f6797254cc9bca66756b3825fc8ef3e917b3",
+    "crates/mtek-compiler/src/lowering/shader_ir.rs": "a193125dbf269e82fbda7ba6025b9c87914a6215768ccab603590176463106d3",
+    "crates/mtek-compiler/src/emit_wgsl/printer.rs": "3de1cf7c08c57e8bcd23ec0de44e6f98da0bc709396d92c2764a05dc634e7764",
+    "crates/mtek-compiler/tests/compute_backend.rs": "9fa241a18c0c3cd6cb6b1d1a2501a3ef04f773ec46b7f985e60c16b780222e9c",
+    "crates/mtek-compiler/tests/naga_oracle.rs": "b10d6ac3f6340aa004ffde882cf1f91807cf5def19b6a64e4f259f562cea298c",
+    "spec/decisions/0201-compute-backend-and-storage-layout.md": "0bd1d0ad9a6e17c46306ca2dd0c57dc0e76d24e2e84838d04541646ed8e5e5ac"
+  },
+  "nextRequired": [
+    "Source compute declarations and resource/host lifecycle contract",
+    "Parsing, resolution, typing and GPU effects",
+    "Kernel lowering and bounded dispatch",
+    "Manifest, inspection, editor and coverage integration",
+    "Upload/readback, synchronization and compute/render ordering",
+    "Disposal, replacement and device recovery",
+    "Numerical Mtek-source buffer transform with CPU and direct-WGSL references",
+    "Mtek-source compute-to-render example and required device evidence"
+  ]
+}

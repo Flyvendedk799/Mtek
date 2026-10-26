@@ -75,7 +75,7 @@ Bool            ::= 'true' | 'false'
 Module          ::= Item* EOF
 Item            ::= Import
                   | 'export'? ( ConstDecl | FnDecl | StructDecl | EnumDecl | MaterialDecl
-                              | PrefabDecl | SceneDecl )
+                              | ComputeDecl | PrefabDecl | SceneDecl )
 
 Import          ::= 'import' '{' Ident ( ',' Ident )* ','? '}' 'from' String ';'
                     /* 'from' is contextual. [S: import-specifier: specifier rules E2030-E2034] */
@@ -98,10 +98,16 @@ EnumDecl        ::= 'enum' Ident '{' Ident ( ',' Ident )* ','? '}'
 
 MaterialDecl    ::= 'material' Ident '{' MaterialMember* '}'
 MaterialMember  ::= ParamDecl | StageFn
+ComputeDecl     ::= 'compute' Ident '{' ComputeMember* '}'
+                    /* [S: source-compute-build-gate: parsed and checked; packaging/dispatch still E4901] */
+ComputeMember   ::= ParamDecl | StorageDecl | ComputeWorkgroup | StageFn
+StorageDecl     ::= ( 'input' | 'output' ) Ident ':' Type ';'
+ComputeWorkgroup ::= 'workgroup_size' ':' Expr ';'
 ParamDecl       ::= 'param' Ident ':' Type ( '=' Expr )? ';'
-StageFn         ::= Ident '(' ParamList? ')' ( '->' Type )? Block
-                    /* [S: stage-name: Ident must be 'fragment' (E4020/E4021); 'vertex'/'compute'
-                        are reserved words and are reported as E4901 by the parser] */
+StageFn         ::= ( Ident | 'vertex' ) '(' ParamList? ')' ( '->' Type )? Block
+                    /* [S: stage-name: one required 'fragment', one optional 'vertex' (E4020/E4021);
+                        compute is reserved and reported as E4901 by the parser] */
+                    /* [S: vertex-payload-limit: at most 16 interpolated variables (E6003)] */
 
 /* ---------------------------------------------------------------------
    4. Scenes, entities, prefabs

@@ -1,0 +1,14 @@
+fn offset_position(input: VertexInput, amount: f32) -> vec3 {
+    return input.position + input.normal * amount + vec3(input.uv, 0.0);
+}
+
+material Expanded {
+    param amount: f32 = 0.1;
+    vertex(input: VertexInput) -> vec3 { return offset_position(input, amount); }
+    fragment(input: SurfaceInput) -> color { return #ffffff; }
+}
+
+scene Demo {
+    camera Main {}
+    entity Cube { mesh: Box {}; material: Expanded {}; }
+}

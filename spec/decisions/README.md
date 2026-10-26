@@ -198,5 +198,20 @@ recorded here before code depends on it (blueprint §15).
 | 0191 | [Skeletal animation](0191-skeletal-animation.md): rig import, named clip transitions and sockets |
 | 0192 | [Animation continuity](0192-animation-continuity.md): moving crossfades and pose transfer |
 | 0193 | [Platform runtime extensions](0193-platform-runtime-extensions.md): GPU deformation and culling, composable host animation, independent loaders, rendering options and optional spatial queries |
+| 0194 | [glTF material channels](0194-gltf-material-channels.md): core texture slots, colour-space packaging, mapped lighting, mip sampling and derivative control-flow checks |
+| 0195 | [Shadows and environment lighting](0195-shadows-and-environment-lighting.md): directional shadow quality, HDR panorama IBL, lighting binding ABI, recovery and source-map compaction |
+| 0196 | [Animation blends and crowds](0196-animation-blends-and-crowds.md): synchronized locomotion, distance policies, constrained IK, retarget frames and shared-pose instancing |
+
+| 0197 | [Authored position stages](0197-authored-position-stages.md): optional typed vertex position functions, resource visibility, conservative culling and matching directional shadows |
+
+| 0198 | [Typed vertex outputs and varyings](0198-typed-vertex-outputs-and-varyings.md): normal/UV results, nominal fragment payloads, interpolation, location limits and inspection |
+
+| 0199 | [Authored deformation bounds](0199-authored-deformation-bounds.md): bindable final local spheres, culling/sorting, lifecycle and copied inspection |
+
+| 0200 | [Independent glTF sampler filters](0200-independent-gltf-sampler-filters.md): preserve mixed min/mag filters, imported resource names and original-character evidence |
+
+| 0201 | [Compute backend and storage-array layout](0201-compute-backend-and-storage-layout.md): typed compute entries/builtins, explicit storage access and packed outer resource arrays; source/runtime integration remains open |
+
+| 0202 | [Bounded source compute checking](0202-bounded-source-compute-checking.md): declarations, buffer/value ownership, kernel typing/effects and bounded workgroups; runnable packaging remains gated |
 
 Numbers 0157-0169 are unused: the sprites record is 0170 and no record has been written in between. (Earlier versions of this index listed ghost rows 0160-0162 for what are records 0130-0132; they were removed.)

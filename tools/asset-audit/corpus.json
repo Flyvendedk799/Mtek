@@ -1,0 +1,312 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "fox-original",
+      "file": "../../benchmarks/runtime/animation/assets/Fox/Fox.glb",
+      "sha256": "d97044e701822bac5a62696459b27d7b375aada5de8574ed4362edbba94771f7",
+      "provenance": "KhronosGroup/glTF-Sample-Assets @ 8f492390ddc7a2ae221a1369ef560589cf8c70fb; original Fox authors/licenses in benchmarks/runtime/animation/assets/Fox/",
+      "expectedImport": {
+        "status": "passed"
+      },
+      "probes": [
+        {
+          "id": "survey",
+          "mesh": "fox1",
+          "clip": "Survey",
+          "expected": {
+            "status": "passed"
+          }
+        },
+        {
+          "id": "walk",
+          "mesh": "fox1",
+          "clip": "Walk",
+          "expected": {
+            "status": "passed"
+          }
+        },
+        {
+          "id": "run",
+          "mesh": "fox1",
+          "clip": "Run",
+          "expected": {
+            "status": "passed"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cesium-man-original",
+      "file": "../../benchmarks/runtime/animation/assets/CesiumMan/CesiumMan.glb",
+      "sha256": "b7001eaeea8254bd44773bcd247e78696d94169388fbb2a1800fc69434e777d9",
+      "provenance": "KhronosGroup/glTF-Sample-Assets @ 8f492390ddc7a2ae221a1369ef560589cf8c70fb; Cesium CC BY 4.0 and retained mark notice",
+      "expectedImport": {
+        "status": "passed"
+      },
+      "probes": [
+        {
+          "id": "mesh",
+          "mesh": "Cesium_Man",
+          "expected": {
+            "status": "passed"
+          }
+        },
+        {
+          "id": "material",
+          "material": "Cesium_Man-effect",
+          "expected": {
+            "status": "passed"
+          },
+          "mesh": "Cesium_Man"
+        },
+        {
+          "id": "clip",
+          "mesh": "Cesium_Man",
+          "clip": "animation_0",
+          "expected": {
+            "status": "passed"
+          }
+        }
+      ]
+    },
+    {
+      "id": "pbr-all-maps",
+      "file": "../../tests/assets/pass/pbr_all_maps/models/model.glb",
+      "sha256": "61022506daffb2226c4f21f9327d6f2d77222506446e5dda53c32e44abea73ae",
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs",
+      "expectedImport": {
+        "status": "passed"
+      },
+      "probes": [
+        {
+          "id": "mesh-and-material",
+          "mesh": "Quad",
+          "material": "Mapped",
+          "expected": {
+            "status": "passed"
+          }
+        }
+      ]
+    },
+    {
+      "id": "emissive-factor",
+      "file": "../../tests/assets/pass/pbr_emissive_factor/models/model.glb",
+      "sha256": "d9ca23883f0a0f01bf5d40be2bbe71b96608fabe009e23ac5d78703aa68bf4db",
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs",
+      "expectedImport": {
+        "status": "passed"
+      },
+      "probes": [
+        {
+          "id": "mesh-and-material",
+          "mesh": "Tri",
+          "material": "Plain",
+          "expected": {
+            "status": "passed"
+          }
+        }
+      ]
+    },
+    {
+      "id": "normal-map",
+      "file": "../../tests/assets/pass/pbr_normal_texture/models/model.glb",
+      "sha256": "aa2c238eb5c376e5f7e8af337a5f4a81b02ae14eb248c9fddf36764b5be3e012",
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs",
+      "expectedImport": {
+        "status": "passed"
+      },
+      "probes": [
+        {
+          "id": "mesh-and-material",
+          "mesh": "Tri",
+          "material": "Plain",
+          "expected": {
+            "status": "passed"
+          }
+        }
+      ]
+    },
+    {
+      "id": "linear-animation",
+      "file": "../../tests/assets/pass/animated_clip/models/model.glb",
+      "sha256": "3bba29147952abb3a355373178b86a9d2b3350d20a94980c77fc6fe27121ad00",
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs",
+      "expectedImport": {
+        "status": "passed"
+      },
+      "probes": [
+        {
+          "id": "clip",
+          "mesh": "Tri",
+          "clip": "animation_0",
+          "expected": {
+            "status": "passed"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cubic-animation-use",
+      "file": "../../tests/assets/pass/animation_unused_cubic/models/model.glb",
+      "sha256": "b7e22e72013cc73b6b8475ebf110f63f311366f7efb52582c36cd40ab8331917",
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs",
+      "expectedImport": {
+        "status": "passed"
+      },
+      "probes": [
+        {
+          "id": "cubic-clip",
+          "mesh": "Tri",
+          "clip": "animation_0",
+          "expected": {
+            "status": "rejected",
+            "codes": [
+              "MTEK-E5016"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "multiple-primitives",
+      "file": "../../tests/assets/fail/e7012_several_primitives/models/chair.glb",
+      "sha256": "b4cdc64a8f322599fdb414b80c592a3b176ce1abca60aa91eb2713f8b73a65d4",
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs",
+      "expectedImport": {
+        "status": "passed"
+      },
+      "probes": [
+        {
+          "id": "ambiguous-mesh",
+          "mesh": "Twin",
+          "expected": {
+            "status": "rejected",
+            "codes": [
+              "MTEK-E7012"
+            ]
+          }
+        },
+        {
+          "id": "explicit-primitive",
+          "mesh": "Twin",
+          "primitive": 0,
+          "expected": {
+            "status": "passed"
+          }
+        }
+      ]
+    },
+    {
+      "id": "morph-targets",
+      "file": "../../tests/assets/fail/e7008_morph_targets/models/model.glb",
+      "sha256": "b4dedbc4f799daf2c7bb0898de9d909aecf77f475596b4e9ac249d11bdd6c433",
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs",
+      "expectedImport": {
+        "status": "rejected",
+        "codes": [
+          "MTEK-E7008"
+        ]
+      },
+      "probes": []
+    },
+    {
+      "id": "sparse-accessor",
+      "file": "../../tests/assets/fail/e7011_sparse_accessor/models/model.glb",
+      "sha256": "9f70b89031dc91b779c34dc9da0cb0f9211162d1f4a7f5bfeedcc82c215c171c",
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs",
+      "expectedImport": {
+        "status": "rejected",
+        "codes": [
+          "MTEK-E7011"
+        ]
+      },
+      "probes": []
+    },
+    {
+      "id": "used-extension",
+      "file": "../../tests/assets/fail/e7005_used_extension/models/model.glb",
+      "sha256": "328379bf2f85e8c4534a79d2ebd5df7a604f458172edcee5cf8278324e93759c",
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs",
+      "expectedImport": {
+        "status": "rejected",
+        "codes": [
+          "MTEK-E7005"
+        ]
+      },
+      "probes": []
+    },
+    {
+      "id": "required-extensions",
+      "file": "../../tests/assets/fail/e7004_required_extension/models/model.glb",
+      "sha256": "d49a84514cfcc1fedf765b9a9f4504820813d5f44e3d8fc9849deffa28d742dd",
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs",
+      "expectedImport": {
+        "status": "rejected",
+        "codes": [
+          "MTEK-E7004",
+          "MTEK-E7005"
+        ]
+      },
+      "probes": []
+    },
+    {
+      "id": "external-buffer",
+      "file": "../../tests/assets/fail/e7003_external_buffer/models/model.glb",
+      "sha256": "55555fe58307d111c16cdd3600d03b5b5c0e64dd5a28e116d2d657b76d739a4b",
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs",
+      "expectedImport": {
+        "status": "rejected",
+        "codes": [
+          "MTEK-E7003"
+        ]
+      },
+      "probes": []
+    },
+    {
+      "id": "data-uri",
+      "file": "../../tests/assets/fail/e7003_data_uri_buffer/models/model.glb",
+      "sha256": "629c580d486eded398b1622a8543c9d4a9944113b9a7794a958e3e063bff7b09",
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs",
+      "expectedImport": {
+        "status": "rejected",
+        "codes": [
+          "MTEK-E7003"
+        ]
+      },
+      "probes": []
+    },
+    {
+      "id": "mixed-filters",
+      "file": "../../tests/assets/pass/mixed_filters/models/model.glb",
+      "sha256": "7f4e22162a7e4e5c1cb9dab848b4c51178804d01f8321ff471eb7f329dc6ac68",
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs",
+      "expectedImport": {
+        "status": "passed"
+      },
+      "probes": [
+        {
+          "id": "mesh",
+          "mesh": "Tri",
+          "expected": {
+            "status": "passed"
+          },
+          "material": "Plain"
+        }
+      ]
+    },
+    {
+      "id": "truncated-header",
+      "file": "../../tests/assets/fail/e7001_truncated_header/models/model.glb",
+      "sha256": "e6e4bd92d32681560de2f20faf66a01732f43bfd862f2bf4ac7c86b6faed14e1",
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs",
+      "expectedImport": {
+        "status": "rejected",
+        "codes": [
+          "MTEK-E7001"
+        ]
+      },
+      "probes": []
+    }
+  ]
+}

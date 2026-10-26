@@ -518,6 +518,15 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                     TypeRef::Sampler,
                     "Nearest-texel filtering, texture coordinates clamp to the edge.",
                 ),
+                builtin_handle("linear_repeat_level0", TypeRef::Sampler, "Base-level-only filtering."),
+                builtin_handle("linear_repeat_mip_nearest", TypeRef::Sampler, "Explicit mip interpolation preset."),
+                builtin_handle("linear_clamp_level0", TypeRef::Sampler, "Base-level-only filtering."),
+                builtin_handle("linear_clamp_mip_nearest", TypeRef::Sampler, "Explicit mip interpolation preset."),
+                builtin_handle("nearest_repeat_level0", TypeRef::Sampler, "Base-level-only filtering."),
+                builtin_handle("nearest_repeat_mip_linear", TypeRef::Sampler, "Explicit mip interpolation preset."),
+                builtin_handle("nearest_clamp_level0", TypeRef::Sampler, "Base-level-only filtering."),
+                builtin_handle("nearest_clamp_mip_linear", TypeRef::Sampler, "Explicit mip interpolation preset."),
+
             ],
         ),
         namespace(
@@ -614,7 +623,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                 Domain::Gpu,
                 false,
                 Milestone::M1,
-                "The documented PBR subset evaluated for every light in the scene.",
+                "PBR with scene lights, optional shadows and environment lighting.",
                 vec![sig(
                     &[
                         p("surface", exact(TypeRef::Record("SurfaceInput"))),
@@ -624,6 +633,16 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                     ],
                     exact(TypeRef::Color),
                 )],
+            )), NamespaceMember::Function(function(
+                "pbr_mapped", Domain::Gpu, false, Milestone::M1,
+                "Derivative normal, indirect occlusion, exposed emission; fragment initial straight-line code only.",
+                vec![sig(&[
+                    p("surface", exact(TypeRef::Record("SurfaceInput"))),
+                    p("base_color", exact(TypeRef::Color)),
+                    p("metallic", F32), p("roughness", F32),
+                    p("normal_texel", exact(TypeRef::Vec3)), p("normal_scale", F32),
+                    p("occlusion", F32), p("emissive", exact(TypeRef::Vec3)),
+                ], exact(TypeRef::Color))],
             ))],
         ),
     ]
@@ -861,7 +880,61 @@ pub(super) fn types() -> Vec<TypeDef> {
                 // Planned for M2; implemented by task M2-04 before the M2 gate (decision 0039).
                 Milestone::M1,
                 true,
-                "The interpolated inputs of a material fragment stage.",
+                "Interpolated fragment inputs.",
+            )
+        },
+        TypeDef {
+            fields: vec![
+                RecordField {
+                    name: "position",
+                    ty: TypeRef::Vec3,
+                },
+                RecordField {
+                    name: "normal",
+                    ty: TypeRef::Vec3,
+                },
+                RecordField {
+                    name: "uv",
+                    ty: TypeRef::Vec2,
+                },
+            ],
+            ..simple(
+                "VertexInput",
+                TypeKind::Record,
+                Milestone::M1,
+                true,
+                "Skinned local vertex inputs.",
+            )
+        },
+        TypeDef {
+            fields: [
+                "index",
+                "global_x",
+                "global_y",
+                "global_z",
+                "local_x",
+                "local_y",
+                "local_z",
+                "group_x",
+                "group_y",
+                "group_z",
+                "group_count_x",
+                "group_count_y",
+                "group_count_z",
+                "local_index",
+            ]
+            .into_iter()
+            .map(|name| RecordField {
+                name,
+                ty: TypeRef::U32,
+            })
+            .collect(),
+            ..simple(
+                "ComputeInput",
+                TypeKind::Record,
+                Milestone::M1,
+                true,
+                "Compute invocation IDs (dispatch unavailable).",
             )
         },
         TypeDef {

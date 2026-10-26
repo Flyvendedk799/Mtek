@@ -1,0 +1,2 @@
+prebuilt-runtime: wrote 5 files to crates/mtek-cli/prebuilt
+prebuilt-runtime: the prebuilt runtime matches its sources

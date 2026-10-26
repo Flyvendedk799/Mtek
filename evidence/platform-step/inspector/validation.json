@@ -1,0 +1,108 @@
+{
+  "recordedAt": "2026-10-26T01:38:55.649979+00:00",
+  "status": "implemented with deferred real-rendering validation",
+  "unitTests": 11,
+  "unitFiles": 2,
+  "workers": 1,
+  "checks": {
+    "install": {
+      "status": "passed",
+      "file": "validation/install.txt",
+      "sha256": "b125771fda8addd462adfe7f7b03299feb35e28badbb2d16ae8589e371216f8f"
+    },
+    "runtime-build": {
+      "status": "passed",
+      "file": "validation/runtime-build.txt",
+      "sha256": "87b2fa1e70e2214a09a3d9deeca21ad31cae2ddb07c11b7e7c65d009a407155e"
+    },
+    "build": {
+      "status": "passed",
+      "file": "validation/build.txt",
+      "sha256": "fe04e64ef26da4592b1c9b00e4465c178a0ff92904874fe6b930674d66315801"
+    },
+    "types": {
+      "status": "passed",
+      "file": "validation/types.txt",
+      "sha256": "3f9c420b318d1dd8f84463c548599aa2afb5a037c718817e8444a98dd7af3973"
+    },
+    "lint": {
+      "status": "passed",
+      "file": "validation/lint.txt",
+      "sha256": "62b27e661cc808ef331f3232a1b7a7688add5af31628431d73bfdc9d474205d4"
+    },
+    "unit": {
+      "status": "passed",
+      "file": "validation/unit.txt",
+      "sha256": "d652552aaa6ecbc49ec55745ba4dd048f1d59eb29297dfa9c8a8ade34de65faa"
+    },
+    "sandbox-types": {
+      "status": "passed",
+      "file": "validation/sandbox-types.txt",
+      "sha256": "18664780922e35ca8482e5f715cd6348c2ad24d8aa8f7ecc09d9884116ad7abf"
+    },
+    "package": {
+      "status": "passed",
+      "file": "validation/package.txt",
+      "sha256": "0f1b5a38ee4816e14ca07c40f6fbef5a1c31c1fef7586f96ebefef990ad99fc9"
+    },
+    "ui": {
+      "status": "passed",
+      "file": "validation/ui.txt",
+      "sha256": "e72ad4b61a0b0d766f018d71d2d9e3262db012c128f11d124b0598cbec5b055b"
+    },
+    "prebuilt": {
+      "status": "passed",
+      "file": "validation/prebuilt.txt",
+      "sha256": "d3b6f7cf3dd4beccc5e5d0e3c0800fb1976e7f49df3846b1293b119ac7551712"
+    }
+  },
+  "packageConsumer": "strict NodeNext with skipLibCheck=false, public package exports, offline local tarballs, no repository aliases",
+  "ui": {
+    "status": "passed",
+    "gpuDisabled": true,
+    "gpuRequests": 0,
+    "pageErrors": 0,
+    "screenshotSha256": "770860971be5e4ce6395851b3c5c86df0fd6488e45852b7284ec94c869d8fb4a"
+  },
+  "sourceHashes": {
+    "packages/inspector/eslint.config.js": "4fb5bab7fa0de6e3fa4519a637f3ac8079673a722d2d4cd34e50d7a27520ef31",
+    "packages/inspector/package.json": "d903264011247e056c802af5705c967e2c5e916cb5fd8f0319de24f81740f3e8",
+    "packages/inspector/README.md": "57cab9655f29f8e18844c568ffab876a12f3b30ec47fb83176c075a3f3b807f9",
+    "packages/inspector/tsconfig.build.json": "84c6e4d3fd80e2285f7124b8ac6909ae78fbe8409165eb0cf43c74693766ab9f",
+    "packages/inspector/tsconfig.json": "ef430746155812deaf1f74864a2e98d1d8a6c7247101453e12aae8d27722843a",
+    "packages/inspector/vitest.config.ts": "cb73fb49b02dca6bd6ee4e913ee4529125ed201bb89bf4c67a42a41538ac6900",
+    "packages/inspector/scripts/build.mjs": "be1589c330a956983c42788b6fffca9987998cfff12db06c3259d37b5e58e6eb",
+    "packages/inspector/scripts/prepare-test.mjs": "d807834a0c3aae9d7ec37debdfff169327ce4783e40f4a0705675f3cc5d6fc10",
+    "packages/inspector/scripts/verify-package.mjs": "4b631cf0a819146ee92293f4a5e91f989e1660a59e420dd87f2a0888b952f235",
+    "packages/inspector/scripts/verify-ui.mjs": "83474a1caae3d5e483a85cf1610b97d6b6cfc2364ec468f68391d2e3a6c6f1ad",
+    "packages/inspector/src/controller.ts": "9c06b7b1a8db50818057f5e99ec3785df25d20ba4c06cf0a382426f524e15fd5",
+    "packages/inspector/src/index.ts": "e146db8b07d4bccd71e65f8f2c09005b90a3bfe9d1bf49a8170966dfe6de4c59",
+    "packages/inspector/src/panel.ts": "615a050a83648886f89f16fc2298199f33367dee5b22bc4390810995177722c4",
+    "packages/inspector/src/types.ts": "242c1c74ff3c43552ba2530ddce496dcc7d53b8910f4ed8a9ca8caa14ce8ede7",
+    "packages/inspector/test/controller.test.ts": "802bb6b46873dcfa6828b9280a90984f3400d47e05295695e82b0f9338af1ef9",
+    "packages/inspector/test/fixture.ts": "bb493e98d71c51b1c3dc1a52d4861bdbe6b1dde9d1656212cc4bc4b594cfa42a",
+    "packages/inspector/test/runtime-contract.test.ts": "1ea27690cb799ffb9a136e52c7bd6c637090dc6aaa4048fbd5cefb3e9b6cb4f4",
+    "examples/scene-inspector/index.html": "55f898590564c035db4d5c2500acf3bb1394968a770e169f1ae1c0326fb797bc",
+    "examples/scene-inspector/main.ts": "58574d39a7eb64b1f075e0d37e164597ba01570d4dbec27f690fb98d839909e5",
+    "examples/scene-inspector/README.md": "2b677627d41c33b1472b24a0b09dd29f279b939370c5d28e0e2511dfcbdf7607",
+    "examples/scene-inspector/serve.mjs": "f81c2f7c1586838906cb9f2f4cc5afa3da4ccb9810ec056c6ccbfbd6bfe5b052",
+    "examples/scene-inspector/tsconfig.json": "01b7510234ee9102592a2b66fce24e671c0b064ee022b1333389aa16a55f23f6"
+  },
+  "measuredRuntimeArtifactsUnchanged": true,
+  "existingDependencyPinsUnchanged": true,
+  "studioIntegration": {
+    "status": "wired, syntax checked; not activated for a rendered test",
+    "optIn": true
+  },
+  "deferred": [
+    "animation performance optimization remains planned per user request",
+    "real rendered lighting-studio inspector check",
+    "hardware GPU/browser/performance suites during CPU/GPU-heavy work"
+  ],
+  "cargoBuildsPerformed": 0,
+  "physicalGpuRunsPerformed": 0,
+  "publicRegistryPublication": false,
+  "frozenAiArchiveChanges": 0,
+  "matchedAnimationReportRegeneration": "passed",
+  "legacyRuntimeDefinitionsHash": "eb4cc9428208b5eaa47656305d55721d19ebb8b9cc672a98a422a7f546c086e1"
+}

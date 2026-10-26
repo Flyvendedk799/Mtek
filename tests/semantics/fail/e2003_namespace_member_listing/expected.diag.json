@@ -6,7 +6,7 @@
     "endByte": 125,
     "message": "The built-in namespace `sampler` has no member 'trilinear'.",
     "notes": [
-      "the members of `sampler` are: linear_repeat(), linear_clamp(), nearest_repeat(), nearest_clamp()"
+      "the members of `sampler` are: linear_repeat(), linear_clamp(), nearest_repeat(), nearest_clamp(), linear_repeat_level0(), linear_repeat_mip_nearest(), linear_clamp_level0(), linear_clamp_mip_nearest(), nearest_repeat_level0(), nearest_repeat_mip_linear(), nearest_clamp_level0(), nearest_clamp_mip_linear()"
     ]
   }
 ]

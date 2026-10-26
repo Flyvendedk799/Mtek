@@ -27,8 +27,10 @@ export interface Builtins {
 
 export const BUILTINS: Builtins = {
   types: [
+    "ComputeInput",
     "PointerEvent",
     "SurfaceInput",
+    "VertexInput",
     "array",
     "bool",
     "color",
@@ -134,7 +136,7 @@ export const BUILTINS: Builtins = {
     "reset",
     "resume",
     "round",
-    "sample",
+    "sample", "sample_mip",
     "saturate",
     "save",
     "screen_to_world",
@@ -183,6 +185,7 @@ export const BUILTINS: Builtins = {
     { namespace: "color", name: "linear" },
     { namespace: "color", name: "srgb" },
     { namespace: "lighting", name: "pbr" },
+    { namespace: "lighting", name: "pbr_mapped" },
     { namespace: "mat4", name: "columns" },
     { namespace: "mat4", name: "identity" },
     { namespace: "mat4", name: "rotation" },
@@ -194,6 +197,15 @@ export const BUILTINS: Builtins = {
     { namespace: "sampler", name: "linear_clamp" },
     { namespace: "sampler", name: "linear_repeat" },
     { namespace: "sampler", name: "nearest_clamp" },
+    { namespace: "sampler", name: "linear_repeat_level0" },
+    { namespace: "sampler", name: "linear_repeat_mip_nearest" },
+    { namespace: "sampler", name: "linear_clamp_level0" },
+    { namespace: "sampler", name: "linear_clamp_mip_nearest" },
+    { namespace: "sampler", name: "nearest_repeat_level0" },
+    { namespace: "sampler", name: "nearest_repeat_mip_linear" },
+    { namespace: "sampler", name: "nearest_clamp_level0" },
+    { namespace: "sampler", name: "nearest_clamp_mip_linear" },
+
     { namespace: "sampler", name: "nearest_repeat" },
     { namespace: "texture", name: "black" },
     { namespace: "texture", name: "white" },

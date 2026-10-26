@@ -283,7 +283,7 @@ Rules:
 
 ### 8.3 Limits checked at compile time
 
-Against the target profile's limits (v0.1 profile `webgpu-core-2026` = WebGPU default limits): block `size ≤ maxUniformBufferBindingSize` (65 536) — else `E6001`; texture+sampler params per material ≤ 8 — else `E6002` (reported by `check` at the ninth, decision 0054); vertex outputs used ≤ `maxInterStageShaderVariables` (16) — else `E6003`. The runtime re-checks against the actual device and fails mount with `E8002` if the device is smaller than the profile.
+Against the target profile's limits (v0.1 profile `webgpu-core-2026` = WebGPU default limits): block `size ≤ maxUniformBufferBindingSize` (65 536) — else `E6001`; texture+sampler params per material ≤ 16 — else `E6002` (reported by `check` at the seventeenth, decision 0194); vertex outputs used ≤ `maxInterStageShaderVariables` (16) — else `E6003`. The runtime re-checks against the actual device and fails mount with `E8002` if the device is smaller than the profile.
 
 ## 9. Verification (the oracles)
 
@@ -298,3 +298,54 @@ Against the target profile's limits (v0.1 profile `webgpu-core-2026` = WebGPU de
 ## 10. Inspectability (`mtek inspect --bindings`)
 
 For each material instance and built-in block: the source param (name, declared type, originating span), the logical slot (`group`, `binding`, field path), the physical layout (offset, size, WGSL representation, padding), stage visibility, update class (`initial | imperative | bound | resource`) with the binding's dependency list, and whether the instance's storage may be shared. JSON (`--format json`) uses the record format of §5 plus these fields; the human format is a table (field names, order and the human layout are decision 0044). The development overlay shows per-frame `uploadBytes`, `uploads`, `pipelinesCreated`, `bindGroupsCreated`, `buffersAllocated` and live resource counts (`spec/runtime-abi.md` §10).
+
+
+## 11. Optional scene-lighting group
+
+Decision 0195 adds group 3 only to shaders declaring `lighting: 1`. Its fragment
+bindings are: uniform 0 (256 bytes), depth texture 1, comparison sampler 2,
+prefiltered environment cube 3, filtering sampler 4 and BRDF LUT texture 5.
+The uniform offsets are matrix @0, shadow params @64, filter @80, environment @96,
+and nine SH vec4s @112. No offset in `MtekFrame` or `MtekObject` changes.
+
+Three sampled textures and two samplers are reserved from default per-stage limits.
+A lit material may have at most thirteen texture and fourteen sampler params,
+within the existing sixteen combined-resource maximum (`E6002`). The checker
+tracks lighting through imported/user functions as well as direct calls. Unlit
+shaders retain their existing group plan and resource limits.
+
+## Authored local-position stage bindings (decision 0197)
+
+Shaders marked `vertexDeformation: 1` use the existing group-1 parameter/resource
+layout with vertex **and** fragment visibility. Fragment-only materials retain
+fragment-only group-1 visibility. The binding-plan cache distinguishes those layouts;
+an empty group remains shared. No parameter bytes or texture formats change.
+A directional shadow of an authored material binds a full `MtekFrame` with the
+light matrix at group 0, that material's live group 1 and the dynamic object group 2.
+Fragment-only lighting resources in group 3 are unreachable from the vertex entry
+and are not bound while writing the shadow attachment.
+
+Imported glTF mixed min/mag samplers use twelve additional internal resource
+identifiers (decision 0200), covering both supported address modes and all mip
+choices. These map to separate WebGPU min/mag filters; source sampler constructors
+and existing resource names remain unchanged. The emitted runtime and schema
+must understand the identifiers; they add no binding slots or groups.
+
+## Compute backend storage arrays (decision 0201)
+
+The shader backend can represent fixed-capacity storage-buffer arrays, compute
+entries with static workgroup sizes and compute builtin inputs. This is compiler
+infrastructure. Decision 0202 adds source declaration/resource/kernel checking,
+but runnable packaging and runtime dispatch remain unsupported.
+
+`layout::storage_array` computes an outer resource array with natural WGSL
+element alignment/stride. Scalars/bool32 use stride 4, vec2 stride 8, vec3 and
+vec4 stride 16, and mat4 stride 64. Composite elements keep the existing ordinary
+value representation, including nested uniform-array wrappers and member padding.
+Only the resource's outer array is packed. Its capacity is independent of the
+ordinary value-array length cap, with empty/overflowing layouts rejected. Future
+resource byte budgets and actual device-limit checks remain mandatory.
+
+Storage access is explicitly `read` or `read_write`. WGSL declarations, nested
+type declarations and eventual transport metadata must use the same layout
+record. Existing uniform layout and material binding contracts are unchanged.

@@ -1,0 +1,5 @@
+// covers: [S: stage-name]
+material Move {
+    vertex(input: VertexInput) -> vec3 { return input.position; }
+}
+scene Demo { camera Main {} }

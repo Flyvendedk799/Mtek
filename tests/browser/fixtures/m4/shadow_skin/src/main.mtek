@@ -1,0 +1,30 @@
+const MODEL = asset.glb("../models/caster.glb");
+
+scene Demo {
+    clear_color: #000000;
+    ambient_intensity: 0.02;
+
+    camera Main {
+        position: vec3(0.0, 8.0, 0.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 8.0; near: 0.1; far: 30.0 };
+        exposure: -0.2630344;
+    }
+
+    entity Sun {
+        rotation: quat.euler(-0.7, 1.5707963, 0.0);
+        light: DirectionalLight { intensity: 3.0 };
+    }
+
+    entity Floor {
+        mesh: Plane { size: vec2(20.0, 20.0) };
+        material: Pbr { base_color: #b0b0b0; roughness: 0.8 };
+    }
+
+    entity Caster {
+        position: vec3(5.0, 3.0, 0.0);
+        mesh: MODEL.mesh("Caster");
+        clip: "Slide";
+        material: Pbr {};
+    }
+}

@@ -247,7 +247,7 @@
         "endColumn": 46
       },
       "preprocessing": [
-        "mipmaps not generated"
+        "mipmaps generated at runtime"
       ]
     },
     {

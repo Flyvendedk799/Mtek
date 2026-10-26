@@ -1,0 +1,52 @@
+scene Studio {
+    clear_color: #151b27;
+    ambient_intensity: 0.01;
+
+    state camera_yaw: f32 = 0.25;
+    state sun_yaw: f32 = 0.6;
+    state roughness: f32 = 0.2;
+
+    camera Main {
+        position: bind(vec3(sin(camera_yaw) * 9.0, 5.0, cos(camera_yaw) * 9.0));
+        target: vec3(0.0, 0.8, 0.0);
+        exposure: -0.2630344;
+    }
+
+    entity Sun {
+        rotation: bind(quat.euler(-0.9, sun_yaw, 0.0));
+        light: DirectionalLight { color: #fff3df; intensity: 1.8 };
+    }
+
+    entity Ground {
+        mesh: Plane { size: vec2(20.0, 20.0) };
+        material: Pbr { base_color: #7e8996; roughness: 0.9 };
+    }
+
+    entity Copper {
+        position: vec3(-2.3, 1.0, 0.0);
+        mesh: Sphere { radius: 1.0; segments: 64; rings: 32 };
+        material: Pbr { base_color: #e6ac7e; metallic: 1.0; roughness: bind(roughness) };
+    }
+
+    entity Ceramic {
+        position: vec3(0.0, 1.0, 0.0);
+        mesh: Sphere { radius: 1.0; segments: 64; rings: 32 };
+        material: Pbr { base_color: #e2e5e9; roughness: 0.4 };
+    }
+
+    entity Chrome {
+        position: vec3(2.3, 1.0, 0.0);
+        mesh: Sphere { radius: 1.0; segments: 64; rings: 32 };
+        material: Pbr { base_color: #d4e0ef; metallic: 1.0; roughness: 0.08 };
+    }
+
+    entity MovingCube {
+        position: vec3(0.0, 1.4, -3.2);
+        mesh: Box { size: vec3(1.8, 2.8, 1.0) };
+        material: Pbr { base_color: #4c8793; roughness: 0.45 };
+
+        update(dt: f32) {
+            self.rotation *= quat.axis_angle(vec3(0.0, 1.0, 0.0), dt * 0.45);
+        }
+    }
+}

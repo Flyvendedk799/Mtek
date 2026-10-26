@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E4042",
+    "file": "src/main.mtek",
+    "startByte": 202,
+    "endByte": 228,
+    "message": "`sample_mip` requires the unconditional prefix of a fragment stage.",
+    "notes": [
+      "help: evaluate it before any branch, loop, nested block or short-circuit expression, then use its value in conditional code; `sample` reads level zero and is valid in conditional code"
+    ]
+  }
+]

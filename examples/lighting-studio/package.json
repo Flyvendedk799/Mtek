@@ -1,0 +1,6 @@
+{
+  "name": "mtek-lighting-studio",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "node dev.mjs" }
+}

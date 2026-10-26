@@ -242,10 +242,20 @@ export declare function mountMtek<I = Record<string, unknown>, O = Record<string
 
 export declare const EXTENSION_API_VERSION = 1;
 export interface PostEffect {readonly id:string;readonly wgsl:string}
-export interface MtekRenderingOptions {readonly additiveMaterials?:readonly string[];readonly postProcessing?:readonly PostEffect[]}
+export type LightingQuality = "low" | "medium" | "high";
+export interface LinearEnvironment {readonly width:number;readonly height:number;readonly data:Float32Array}
+export interface EnvironmentLightingOptions extends LinearEnvironment {readonly intensity?:number;readonly rotation?:number;readonly quality?:LightingQuality}
+export interface DirectionalShadowOptions {
+  readonly light:string;readonly quality?:LightingQuality;readonly center?:readonly [number,number,number];
+  readonly size?:number;readonly distance?:number;readonly near?:number;readonly far?:number;readonly bias?:number;readonly normalBias?:number;
+}
+export interface MtekRenderingOptions {readonly additiveMaterials?:readonly string[];readonly postProcessing?:readonly PostEffect[];readonly shadows?:DirectionalShadowOptions;readonly environment?:EnvironmentLightingOptions}
+export declare function decodeRadiance(bytes:Uint8Array):LinearEnvironment;
 export interface AnimationVector { readonly x:number;readonly y:number;readonly z:number }
 export interface AnimationQuaternion extends AnimationVector { readonly w:number }
 export interface SceneTransform {
+  /** Explicit final mesh-local sphere, when supplied by source. */
+  readonly bounds?: { readonly center: AnimationVector; readonly radius: number };
   readonly id:string;readonly name:string;readonly position:AnimationVector;
   readonly rotation:AnimationQuaternion;readonly scale:AnimationVector;readonly visible:boolean;
 }
@@ -255,6 +265,7 @@ export interface ExtensionContext {
   readTransforms():readonly SceneTransform[];
   writeTransforms(updates:readonly TransformUpdate[]):void;
   animation(id:string):AnimationPlayer|undefined;
+  shareAnimation(source:string,targets:readonly string[]):void;detachAnimation(id:string):AnimationPlayer;
   service<T>(name:string):T|undefined;
 }
 export interface MtekExtension {
@@ -274,13 +285,23 @@ export interface AnimationLayer {
   readonly clip:string;readonly weight:number;readonly mask?:Readonly<Record<string,number>>;
   readonly additive?:boolean;readonly speed?:number;readonly looping?:boolean;
 }
-export interface IKConstraint {readonly chain:readonly string[];readonly target:readonly [number,number,number];readonly weight?:number;readonly iterations?:number;readonly tolerance?:number}
+export interface IKHingeLimit {readonly axis:readonly [number,number,number];readonly min:number;readonly max:number}
+export interface IKConstraint {readonly chain:readonly string[];readonly target:readonly [number,number,number];readonly weight?:number;readonly iterations?:number;readonly tolerance?:number;readonly rotation?:readonly [number,number,number,number];readonly rotationWeight?:number;readonly limits?:Readonly<Record<string,IKHingeLimit>>}
 export interface AnimationBone {
   readonly position:{set(x:number,y:number,z:number):unknown};
   readonly quaternion:{set(x:number,y:number,z:number,w:number):unknown};
   readonly scale:{set(x:number,y:number,z:number):unknown};
 }
-export interface AnimationControllerOptions {readonly clip?:string;readonly bones?:Readonly<Record<string,AnimationBone>>;readonly updateInterval?:number}
+export interface AnimationUpdateBand {readonly distance:number;readonly interval:number}
+export interface LocomotionSample {readonly clip:string;readonly threshold:number}
+export interface LocomotionOptions {readonly samples:readonly LocomotionSample[];readonly parameter?:number;readonly phase?:number;readonly speed?:number;readonly looping?:boolean}
+export interface LocomotionPlayer {
+  readonly active:boolean;readonly phase:number;readonly parameter:number;readonly revision:number;readonly playing:boolean;readonly finished:boolean;readonly duration:number;
+  set(options:LocomotionOptions|undefined):void;setParameter(value:number):void;seek(phase:number):void;
+  crossed(clip:string,seconds:number):boolean;crossedPhase(phase:number):boolean;
+  play(looping?:boolean,speed?:number):boolean;pause():boolean;resume():boolean;
+}
+export interface AnimationControllerOptions {readonly clip?:string;readonly bones?:Readonly<Record<string,AnimationBone>>;readonly updateInterval?:number;readonly updatePolicy?:readonly AnimationUpdateBand[]}
 export interface AnimationClock {
   play(slot:number,looping:boolean,speed:number):boolean;pause(slot:number):boolean;resume(slot:number):boolean;
   seek(slot:number,time:number):boolean;fade(slot:number,weight:number,duration:number):boolean;
@@ -289,10 +310,12 @@ export interface AnimationClock {
 export interface AnimationPlayer {
   readonly skin:MtekSkin;readonly palette:Float32Array;readonly pose:Float64Array;readonly revision:number;
   readonly clock:AnimationClock;
+  readonly locomotion:LocomotionPlayer;
+  setUpdatePolicy(bands:readonly AnimationUpdateBand[]|undefined):void;
   readonly layers:{set(id:string,options:AnimationLayer):void;remove(id:string):void;clear():void;seek(id:string,seconds:number):boolean;crossed(id:string,marker:number):boolean};
   readonly ik:{set(id:string,options:IKConstraint):void;remove(id:string):void;clear():void};
   transition(name:string,seconds:number,looping:boolean,speed:number):boolean;
-  play(looping:boolean,speed:number):boolean;advance(dt:number,evaluate?:boolean):void;evaluate():void;
+  play(looping:boolean,speed:number):boolean;advance(dt:number,evaluate?:boolean,distance?:number):void;evaluate():void;
   jointPosition(name:string):AnimationVector;jointRotation(name:string):AnimationQuaternion;
   setProceduralOverride(override:((pose:Float64Array)=>void)|undefined):void;
   setRootMotion(node:string|undefined):void;consumeRootMotion():AnimationVector;
@@ -300,11 +323,13 @@ export interface AnimationPlayer {
 export declare class AnimationController {
   readonly apiVersion=1;readonly player:AnimationPlayer;
   constructor(skin:MtekSkin,options?:AnimationControllerOptions);
-  setUpdateInterval(seconds:number):void;setLayer(id:string,layer:AnimationLayer):void;setIK(id:string,constraint:IKConstraint):void;
-  update(dt:number,force?:boolean):boolean;dispose():void;
+  setUpdateInterval(seconds:number):void;setUpdatePolicy(bands:readonly AnimationUpdateBand[]|undefined):void;
+  setLocomotion(options:LocomotionOptions|undefined):void;setLocomotionParameter(value:number):void;setLayer(id:string,layer:AnimationLayer):void;setIK(id:string,constraint:IKConstraint):void;
+  update(dt:number,force?:boolean,distance?:number):boolean;dispose():void;
 }
 export declare function createAnimationController(skin:MtekSkin,options?:AnimationControllerOptions):AnimationController;
-export declare function retargetSkin(source:MtekSkin,target:MtekSkin,mapping:Readonly<Record<string,string>>,translationScale?:number):MtekSkin;
+export interface RetargetOptions {readonly translationScale?:number;readonly rotationSpace?:"local"|"world";readonly nodeTranslationScales?:Readonly<Record<string,number>>}
+export declare function retargetSkin(source:MtekSkin,target:MtekSkin,mapping:Readonly<Record<string,string>>,options?:number|RetargetOptions):MtekSkin;
 export declare function deformSkin(skin:MtekSkin,palette:Float32Array,positions:Float32Array,normals:Float32Array|undefined,outPositions:Float32Array,outNormals:Float32Array):void;
 export interface AssetDescriptor {readonly url:string;readonly bytes?:number;readonly sha256?:string}
 export interface AssetProgress {readonly loaded:number;readonly total:number|undefined}

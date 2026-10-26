@@ -1,0 +1,161 @@
+{
+  "request": {
+    "model": "CesiumMan",
+    "count": 10,
+    "engine": "mtek",
+    "pass": "cpu",
+    "smoke": true
+  },
+  "result": {
+    "samples": [
+      0.6450000014156103,
+      0.8599999994039536,
+      0.48000000044703484,
+      0.6300000008195639,
+      0.5500000007450581,
+      0.6199999991804361,
+      0.6400000005960464,
+      0.5449999999254942
+    ],
+    "compute": [],
+    "render": [],
+    "passes": [],
+    "computePassCounts": [],
+    "renderPassCounts": [],
+    "counters": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 0,
+      "renderPassesBegun": 0,
+      "computePassesBegun": 0,
+      "submits": 0,
+      "drawCalls": 0,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 0,
+      "setPipeline": 0,
+      "setBindGroup": 0,
+      "setVertexBuffer": 0,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 0,
+      "writeBufferBytes": 0,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 0,
+      "devicesDestroyed": 0
+    },
+    "info": {
+      "engine": "mtek",
+      "skinNodes": 22,
+      "joints": 19,
+      "vertices": 3273,
+      "diagnostics": [],
+      "state": "running",
+      "counters": {
+        "buffersAllocated": 39,
+        "texturesAllocated": 2,
+        "pipelinesCreated": 3,
+        "shaderModulesCreated": 2,
+        "bindGroupsCreated": 13,
+        "uploads": 118,
+        "uploadBytes": 374000,
+        "liveBuffers": 39,
+        "liveTextures": 2,
+        "liveSamplers": 0,
+        "liveShaderModules": 2,
+        "livePipelines": 3,
+        "liveBindGroups": 13,
+        "liveListeners": 9,
+        "frameTimeMs": 0.5399999991059303,
+        "cpuUpdateMs": 0.35999999940395355,
+        "renderPrepMs": 0.17999999970197678,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 10,
+        "drawCallsTotal": 110,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 11,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 0,
+        "discardedSteps": 0,
+        "liveEntities": 10,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 10,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 11,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "view": {
+        "height": 9,
+        "position": [
+          0,
+          7.2,
+          11.25
+        ],
+        "target": [
+          0,
+          0.7,
+          0
+        ]
+      },
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-3",
+        "device": "0x744c",
+        "description": "AMD Radeon RX 7900 XTX",
+        "isFallbackAdapter": false
+      },
+      "deviceFeatures": [
+        "core-features-and-limits"
+      ],
+      "clock": {
+        "crossOriginIsolated": true,
+        "observedQuantumMs": 0.004999998956918716
+      }
+    },
+    "errors": []
+  },
+  "disposed": null,
+  "heapBefore": null,
+  "heapWhileLive": null,
+  "heapAfter": null,
+  "hostLoad": {
+    "busyBeforePercent": 10.445501730103807,
+    "waitedForQuietMs": 252,
+    "noisy": false,
+    "busyDuringPercent": 26.49102489866821
+  },
+  "lock": {
+    "dir": "target/animation-benchmark-gpu.lock",
+    "waitedMs": 0
+  },
+  "errors": []
+}

@@ -1,0 +1,9 @@
+compute Scale {
+    param gain: f32 = 2.0;
+    input source: array<vec4, 128>;
+    output result: array<vec4, 128>;
+    workgroup_size: [64, 1, 1];
+    kernel(input: ComputeInput) -> vec4 {
+        return source[input.index] * gain;
+    }
+}

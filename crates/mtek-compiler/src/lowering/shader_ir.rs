@@ -9,7 +9,7 @@
 //! - [`ShaderType`] covers every WGSL type of `spec/gpu-layout.md` section 3 (a `bool`
 //!   stored in a struct, array or block is the `u32` scalar; padded array elements are
 //!   the `MtekPad16_*` wrapper structs);
-//! - [`GlobalKind`] covers uniform blocks and the texture and sampler globals of group 1 (decision 0054);
+//! - [`GlobalKind`] covers uniform blocks, storage buffers and texture/sampler globals;
 //! - [`Statement`]: `let`, `var`, assignment, `if`, counted `for`, `break`,
 //!   `continue`, blocks, call statements and `return`;
 //! - [`ExprKind`]: literals, locals, globals, field, swizzle and index access, unary
@@ -90,6 +90,9 @@ pub enum ShaderType {
     },
     /// `texture_2d<f32>`: the handle of a `texture` param (decision 0054).
     Texture2d,
+    TextureCube,
+    DepthTexture2d,
+    ComparisonSampler,
     /// `sampler`: the handle of a `sampler` param.
     Sampler,
 }
@@ -227,6 +230,11 @@ impl Name {
 pub enum BuiltinValue {
     /// `@builtin(position)`.
     Position,
+    GlobalInvocationId,
+    LocalInvocationId,
+    WorkgroupId,
+    NumWorkgroups,
+    LocalInvocationIndex,
 }
 
 /// How a stage parameter, result or IO struct member is bound.
@@ -235,6 +243,8 @@ pub enum IoBinding {
     Builtin(BuiltinValue),
     /// `@location(n)`: a vertex attribute, a varying or a colour target.
     Location(u32),
+    /// Integer/boolean payload values use flat interpolation.
+    FlatLocation(u32),
 }
 
 /// One member of a struct declaration.
@@ -261,6 +271,13 @@ pub struct StructDecl {
     pub span: Span,
 }
 
+/// Allowed access to a storage buffer. WGSL has no write-only storage-buffer mode.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StorageAccess {
+    Read,
+    ReadWrite,
+}
+
 /// What a module-scope variable holds.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GlobalKind {
@@ -270,10 +287,22 @@ pub enum GlobalKind {
         binding: u32,
         ty: ShaderType,
     },
+    /// `var<storage, read>` or `var<storage, read_write>`.
+    Storage {
+        group: u32,
+        binding: u32,
+        access: StorageAccess,
+        ty: ShaderType,
+    },
     /// `@group(g) @binding(b) var name: texture_2d<f32>;`
     Texture { group: u32, binding: u32 },
     /// `@group(g) @binding(b) var name: sampler;`
     Sampler { group: u32, binding: u32 },
+    Handle {
+        group: u32,
+        binding: u32,
+        ty: ShaderType,
+    },
 }
 
 /// A module-scope variable.
@@ -288,7 +317,9 @@ impl GlobalDecl {
     /// The type of the variable.
     pub fn ty(&self) -> &ShaderType {
         match &self.kind {
-            GlobalKind::Uniform { ty, .. } => ty,
+            GlobalKind::Uniform { ty, .. }
+            | GlobalKind::Storage { ty, .. }
+            | GlobalKind::Handle { ty, .. } => ty,
             GlobalKind::Texture { .. } => &ShaderType::Texture2d,
             GlobalKind::Sampler { .. } => &ShaderType::Sampler,
         }
@@ -300,6 +331,10 @@ impl GlobalDecl {
 pub enum ShaderStage {
     Vertex,
     Fragment,
+    /// A compute entry with a static three-dimensional workgroup size.
+    Compute {
+        workgroup_size: [u32; 3],
+    },
 }
 
 /// A function parameter.
@@ -320,7 +355,7 @@ pub struct FunctionResult {
     pub binding: Option<IoBinding>,
 }
 
-/// A function: a helper, the fragment body or an entry point.
+/// A function: a helper, an authored stage body or an entry point.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Function {
     pub name: Name,
@@ -575,6 +610,8 @@ pub enum Intrinsic {
     Degrees,
     Distance,
     Dot,
+    Dpdx,
+    Dpdy,
     Exp,
     Exp2,
     Floor,
@@ -605,11 +642,13 @@ pub enum Intrinsic {
     /// `textureSampleLevel(texture, sampler, uv, level)`: the lowering of Mtek's `sample`,
     /// always at level 0 (decision 0054).
     TextureSampleLevel,
+    TextureSample,
+    TextureSampleCompareLevel,
 }
 
 impl Intrinsic {
     /// Every intrinsic, for tests and lookups.
-    pub const ALL: [Intrinsic; 39] = [
+    pub const ALL: [Intrinsic; 43] = [
         Intrinsic::Abs,
         Intrinsic::Acos,
         Intrinsic::Asin,
@@ -622,6 +661,8 @@ impl Intrinsic {
         Intrinsic::Degrees,
         Intrinsic::Distance,
         Intrinsic::Dot,
+        Intrinsic::Dpdx,
+        Intrinsic::Dpdy,
         Intrinsic::Exp,
         Intrinsic::Exp2,
         Intrinsic::Floor,
@@ -649,6 +690,8 @@ impl Intrinsic {
         Intrinsic::Transpose,
         Intrinsic::Trunc,
         Intrinsic::TextureSampleLevel,
+        Intrinsic::TextureSample,
+        Intrinsic::TextureSampleCompareLevel,
     ];
 
     /// The WGSL function name.
@@ -666,6 +709,8 @@ impl Intrinsic {
             Intrinsic::Degrees => "degrees",
             Intrinsic::Distance => "distance",
             Intrinsic::Dot => "dot",
+            Intrinsic::Dpdx => "dpdx",
+            Intrinsic::Dpdy => "dpdy",
             Intrinsic::Exp => "exp",
             Intrinsic::Exp2 => "exp2",
             Intrinsic::Floor => "floor",
@@ -693,6 +738,8 @@ impl Intrinsic {
             Intrinsic::Transpose => "transpose",
             Intrinsic::Trunc => "trunc",
             Intrinsic::TextureSampleLevel => "textureSampleLevel",
+            Intrinsic::TextureSample => "textureSample",
+            Intrinsic::TextureSampleCompareLevel => "textureSampleCompareLevel",
         }
     }
 
@@ -991,10 +1038,10 @@ impl Expr {
 /// functions).
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShaderModule {
-    /// The material the module was generated for (`std/materials.mtek::Unlit`). It is the
+    /// The material or compute declaration the module was generated for. It is the
     /// symbol of every span-map entry outside a function.
     pub symbol: String,
-    /// The material declaration: the span of generated code and the fallback of the
+    /// The declaration: the span of generated code and the fallback of the
     /// span map.
     pub span: Span,
     /// Struct declarations, each type declared before its first use.
@@ -1044,6 +1091,18 @@ pub fn struct_decls_from_layout(record: &LayoutRecord, span: Span) -> Vec<Struct
         span,
     };
     collector.declare_struct(&record.wgsl_struct, &record.root);
+    collector.ordered
+}
+
+/// Declarations needed by a value type, including a storage array root. Unlike
+/// [`struct_decls_from_layout`], this does not introduce a block wrapper struct.
+pub fn type_decls_from_layout_node(node: &LayoutNode, span: Span) -> Vec<StructDecl> {
+    let mut collector = StructCollector {
+        seen: BTreeSet::new(),
+        ordered: Vec::new(),
+        span,
+    };
+    collector.declare_dependencies(node);
     collector.ordered
 }
 

@@ -1,0 +1,33 @@
+scene Demo {
+    clear_color: #000000;
+    ambient_intensity: 0.02;
+
+    state caster_x: f32 = 0.0;
+    state caster_y: f32 = 1.1;
+    state caster_visible: bool = true;
+    state sun_yaw: f32 = 1.5707963;
+
+    camera Main {
+        position: vec3(0.0, 8.0, 0.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 8.0; near: 0.1; far: 30.0 };
+        exposure: -0.2630344;
+    }
+
+    entity Sun {
+        rotation: bind(quat.euler(-0.7, sun_yaw, 0.0));
+        light: DirectionalLight { intensity: 3.0 };
+    }
+
+    entity Floor {
+        mesh: Plane { size: vec2(20.0, 20.0) };
+        material: Pbr { base_color: #b0b0b0; roughness: 0.8 };
+    }
+
+    entity Caster {
+        position: bind(vec3(caster_x, caster_y, 0.0));
+        visible: bind(caster_visible);
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Pbr { base_color: #ffffff; roughness: 0.5 };
+    }
+}

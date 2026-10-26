@@ -1,0 +1,51 @@
+{
+  "format": "mtek-size-report/1",
+  "examples": {
+    "arcade-audio": {
+      "folderBytes": 809075,
+      "zipBytes": 810877
+    },
+    "hud-score": {
+      "folderBytes": 773585,
+      "zipBytes": 774711
+    },
+    "lane-runner": {
+      "folderBytes": 773379,
+      "zipBytes": 775187
+    },
+    "material-configurator": {
+      "folderBytes": 841270,
+      "zipBytes": 842812
+    },
+    "modular-scene": {
+      "folderBytes": 739195,
+      "zipBytes": 740321
+    },
+    "physics-playground": {
+      "folderBytes": 5201227,
+      "zipBytes": 5202769
+    },
+    "product-configurator": {
+      "folderBytes": 817721,
+      "zipBytes": 818847
+    },
+    "pulse-cube": {
+      "folderBytes": 725114,
+      "zipBytes": 726240
+    },
+    "small-game": {
+      "folderBytes": 743688,
+      "zipBytes": 745146
+    },
+    "sprite-pop": {
+      "folderBytes": 742143,
+      "zipBytes": 743399
+    },
+    "stage-show": {
+      "folderBytes": 725410,
+      "zipBytes": 726666
+    }
+  },
+  "problems": [],
+  "policy": "Serial compiler processes; existing size budgets unchanged; scratch outputs retained under target."
+}

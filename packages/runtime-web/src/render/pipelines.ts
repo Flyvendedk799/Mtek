@@ -103,6 +103,7 @@ function materialLayoutKey(size: number, resources: readonly MtekMaterialResourc
  * pipeline are valid for every other.
  */
 export class BindingPlan {
+  private lightingLayout: GPUBindGroupLayout | undefined;
   readonly frame: GPUBindGroupLayout;
   readonly object: GPUBindGroupLayout;
   private readonly materialLayouts = new Map<string, GPUBindGroupLayout>();
@@ -119,22 +120,24 @@ export class BindingPlan {
   }
 
   /**
-   * Group 1 of a material: its parameter block at binding 0 (fragment stage; absent without value
+   * Group 1 of a material: its parameter block at binding 0 (both stages for authored vertices; absent without value
    * params), then one binding per texture or sampler (`spec/gpu-layout.md` section 6). The layout
    * depends only on the block size and the kinds of the resources, so materials with the same shape
    * share it.
    */
-  material(layout: MtekLayoutRecord | null, resources: readonly MtekMaterialResource[] = []): GPUBindGroupLayout {
+  material(layout: MtekLayoutRecord | null, resources: readonly MtekMaterialResource[] = [], vertex = false): GPUBindGroupLayout {
     const size = layout?.size ?? 0;
-    const key = materialLayoutKey(size, resources);
+    vertex = vertex && (size > 0 || resources.length > 0);
+    const key = materialLayoutKey(size, resources) + (vertex ? "#vertex1" : "");
+    const visibility = STAGE_FRAGMENT | (vertex ? STAGE_VERTEX : 0);
     let found = this.materialLayouts.get(key);
     if (found === undefined) {
-      const entries: GPUBindGroupLayoutEntry[] = size === 0 ? [] : [uniformEntry(size, STAGE_FRAGMENT, false)];
+      const entries: GPUBindGroupLayoutEntry[] = size === 0 ? [] : [uniformEntry(size, visibility, false)];
       for (const resource of resources) {
         entries.push(
           resource.kind === "texture"
-            ? { binding: resource.binding, visibility: STAGE_FRAGMENT, texture: { sampleType: "float", viewDimension: "2d", multisampled: false } }
-            : { binding: resource.binding, visibility: STAGE_FRAGMENT, sampler: { type: "filtering" } },
+            ? { binding: resource.binding, visibility, texture: { sampleType: "float", viewDimension: "2d", multisampled: false } }
+            : { binding: resource.binding, visibility, sampler: { type: "filtering" } },
         );
       }
       found = this.registry.createBindGroupLayout({
@@ -152,13 +155,25 @@ export class BindingPlan {
     return this.emptyGroup;
   }
 
-  pipelineLayout(layout: MtekLayoutRecord | null, resources: readonly MtekMaterialResource[] = []): GPUPipelineLayout {
-    const key = materialLayoutKey(layout?.size ?? 0, resources);
+  sceneLighting(): GPUBindGroupLayout {
+    this.lightingLayout ??= this.registry.createBindGroupLayout({ label: "mtek scene lighting ABI 1", entries: [
+      { binding: 0, visibility: STAGE_FRAGMENT, buffer: { type: "uniform", minBindingSize: 256 } },
+      { binding: 1, visibility: STAGE_FRAGMENT, texture: { sampleType: "depth" } },
+      { binding: 2, visibility: STAGE_FRAGMENT, sampler: { type: "comparison" } },
+      { binding: 3, visibility: STAGE_FRAGMENT, texture: { sampleType: "float", viewDimension: "cube" } },
+      { binding: 4, visibility: STAGE_FRAGMENT, sampler: { type: "filtering" } },
+      { binding: 5, visibility: STAGE_FRAGMENT, texture: { sampleType: "float" } },
+    ] });
+    return this.lightingLayout;
+  }
+
+  pipelineLayout(layout: MtekLayoutRecord | null, resources: readonly MtekMaterialResource[] = [], lighting = false, vertex = false): GPUPipelineLayout {
+    const key = materialLayoutKey(layout?.size ?? 0, resources) + (lighting ? "#lighting1" : "") + (vertex ? "#vertex1" : "");
     let found = this.pipelineLayouts.get(key);
     if (found === undefined) {
       found = this.registry.createPipelineLayout({
         label: `mtek pipeline layout (${key})`,
-        bindGroupLayouts: [this.frame, this.material(layout, resources), this.object],
+        bindGroupLayouts: [this.frame, this.material(layout, resources, vertex), this.object, ...(lighting ? [this.sceneLighting()] : [])],
       });
       this.pipelineLayouts.set(key, found);
     }
@@ -231,7 +246,7 @@ export function pipelineDescriptor(plan: BindingPlan, request: PipelineRequest):
   }
   return {
     label: request.instanced === true ? `mtek pipeline ${material.id} (instanced)` : `mtek pipeline ${material.id}`,
-    layout: plan.pipelineLayout(material.layout, material.resources),
+    layout: plan.pipelineLayout(material.layout, material.resources, material.shader.lighting === 1, material.shader.vertexDeformation === 1),
     vertex: { module, entryPoint, buffers },
     fragment: {
       module,

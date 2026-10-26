@@ -60,6 +60,7 @@ pub(crate) use interp::precision as interp_precision;
 mod bind;
 mod body;
 mod check;
+mod compute;
 mod consteval;
 pub mod effects;
 #[cfg(test)]
@@ -181,9 +182,33 @@ pub struct MaterialInfo {
     pub span: Span,
     /// The params in declaration order.
     pub params: Vec<MaterialParam>,
-    /// The fragment stage, if the material declares one (the first stage
-    /// function; any further one is an error).
+    /// The required fragment stage; duplicate declarations are errors.
     pub fragment: Option<StageInfo>,
+    /// Optional authored local-position deformation, checked as a separate GPU root.
+    pub vertex: Option<StageInfo>,
+}
+
+/// Checked source compute declaration; packaging and dispatch remain gated.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ComputeInfo {
+    pub name: String,
+    pub name_span: Span,
+    pub span: Span,
+    pub params: Vec<MaterialParam>,
+    pub inputs: Vec<ComputeBuffer>,
+    pub output: Option<ComputeBuffer>,
+    pub kernel: Option<StageInfo>,
+    pub workgroup_size: [u32; 3],
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct ComputeBuffer {
+    pub name: String,
+    pub def: DefId,
+    pub span: Span,
+    pub element: TyId,
+    pub capacity: u32,
+    pub layout: crate::layout::LayoutNode,
 }
 
 impl MaterialInfo {
@@ -217,6 +242,9 @@ pub struct MaterialParam {
 /// The checked stage function of a material.
 #[derive(Clone, Debug, PartialEq)]
 pub struct StageInfo {
+    /// Checked result and optional nominal fragment payload type.
+    pub result: TyId,
+    pub varying: Option<TyId>,
     /// The declared name.
     pub name_span: Span,
     /// The whole stage function.
@@ -513,6 +541,7 @@ pub struct Typeck {
     fields: BTreeMap<NodeId, FieldKind>,
     /// Every material the module declares, by its `DefId`.
     materials: BTreeMap<DefId, MaterialInfo>,
+    computes: BTreeMap<DefId, ComputeInfo>,
     /// Every `state` declaration, by its `DefId`.
     states: BTreeMap<DefId, StateInfo>,
     /// State initialisers, lifecycle functions and handlers, in source order.
@@ -563,6 +592,7 @@ impl Typeck {
             calls: BTreeMap::new(),
             fields: BTreeMap::new(),
             materials: BTreeMap::new(),
+            computes: BTreeMap::new(),
             states: BTreeMap::new(),
             cpu_bodies: Vec::new(),
             writes: Vec::new(),
@@ -684,6 +714,10 @@ impl Typeck {
     /// Every material the module declares, in `DefId` (source) order.
     pub fn materials(&self) -> impl Iterator<Item = (DefId, &MaterialInfo)> + '_ {
         self.materials.iter().map(|(def, info)| (*def, info))
+    }
+
+    pub fn computes(&self) -> impl Iterator<Item = (DefId, &ComputeInfo)> + '_ {
+        self.computes.iter().map(|(def, info)| (*def, info))
     }
 
     /// Every scene the build checks, in source order, as the scene checks
@@ -960,6 +994,7 @@ pub(crate) fn check_module_with_assets<'a>(
             MaterialInfo {
                 params,
                 fragment: None,
+                vertex: None,
                 ..info.clone()
             },
         );

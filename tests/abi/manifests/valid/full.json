@@ -716,6 +716,8 @@
   ],
   "shaders": [
     {
+      "lighting": 1,
+      "vertexDeformation": 1,
       "hash": "5c08635e9bb99393155167a629f8b9308c3e39c03c0f4d22ab22f57842b911a0",
       "url": "shaders/5c08635e9bb99393.wgsl",
       "map": "shaders/5c08635e9bb99393.mtek-map.json",

@@ -30,8 +30,8 @@ use std::cmp::Reverse;
 
 use crate::lowering::shader_ir::{
     BuiltinValue, Expr, ExprKind, Function, FunctionParam, GlobalDecl, GlobalKind, IoBinding,
-    Literal, Name, Scalar, ShaderModule, ShaderStage, ShaderType, Statement, StructDecl,
-    StructMember,
+    Literal, Name, Scalar, ShaderModule, ShaderStage, ShaderType, Statement, StorageAccess,
+    StructDecl, StructMember,
 };
 use crate::source::Span;
 
@@ -114,6 +114,9 @@ pub fn type_text(ty: &ShaderType) -> String {
             format!("array<{}, {length}>", type_text(element))
         }
         ShaderType::Texture2d => "texture_2d<f32>".to_owned(),
+        ShaderType::TextureCube => "texture_cube<f32>".to_owned(),
+        ShaderType::DepthTexture2d => "texture_depth_2d".to_owned(),
+        ShaderType::ComparisonSampler => "sampler_comparison".to_owned(),
         ShaderType::Sampler => "sampler".to_owned(),
     }
 }
@@ -130,7 +133,19 @@ fn scalar_text(scalar: Scalar) -> &'static str {
 fn binding_text(binding: IoBinding) -> String {
     match binding {
         IoBinding::Builtin(BuiltinValue::Position) => "@builtin(position)".to_owned(),
+        IoBinding::Builtin(BuiltinValue::GlobalInvocationId) => {
+            "@builtin(global_invocation_id)".to_owned()
+        }
+        IoBinding::Builtin(BuiltinValue::LocalInvocationId) => {
+            "@builtin(local_invocation_id)".to_owned()
+        }
+        IoBinding::Builtin(BuiltinValue::WorkgroupId) => "@builtin(workgroup_id)".to_owned(),
+        IoBinding::Builtin(BuiltinValue::NumWorkgroups) => "@builtin(num_workgroups)".to_owned(),
+        IoBinding::Builtin(BuiltinValue::LocalInvocationIndex) => {
+            "@builtin(local_invocation_index)".to_owned()
+        }
         IoBinding::Location(location) => format!("@location({location})"),
+        IoBinding::FlatLocation(location) => format!("@location({location}) @interpolate(flat)"),
     }
 }
 
@@ -273,7 +288,27 @@ impl Printer {
                 self.push(&type_text(ty));
                 self.push(";");
             }
-            GlobalKind::Texture { group, binding } | GlobalKind::Sampler { group, binding } => {
+            GlobalKind::Storage {
+                group,
+                binding,
+                access,
+                ty,
+            } => {
+                let access = match access {
+                    StorageAccess::Read => "read",
+                    StorageAccess::ReadWrite => "read_write",
+                };
+                self.push(&format!(
+                    "@group({group}) @binding({binding}) var<storage, {access}> "
+                ));
+                self.push(&mangle(&global.name));
+                self.push(": ");
+                self.push(&type_text(ty));
+                self.push(";");
+            }
+            GlobalKind::Texture { group, binding }
+            | GlobalKind::Sampler { group, binding }
+            | GlobalKind::Handle { group, binding, .. } => {
                 self.push(&format!("@group({group}) @binding({binding}) var "));
                 self.push(&mangle(&global.name));
                 self.push(": ");
@@ -289,10 +324,14 @@ impl Printer {
         let symbol = function.symbol.as_str();
         if let Some(stage) = function.stage {
             let start = self.column();
-            self.push(match stage {
-                ShaderStage::Vertex => "@vertex",
-                ShaderStage::Fragment => "@fragment",
-            });
+            match stage {
+                ShaderStage::Vertex => self.push("@vertex"),
+                ShaderStage::Fragment => self.push("@fragment"),
+                ShaderStage::Compute { workgroup_size } => self.push(&format!(
+                    "@compute @workgroup_size({}, {}, {})",
+                    workgroup_size[0], workgroup_size[1], workgroup_size[2]
+                )),
+            }
             self.record(start, function.span, symbol);
             self.end_line();
         }

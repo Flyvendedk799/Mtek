@@ -58,6 +58,7 @@ pub enum Accessed {
         metallic: f32,
         roughness: f32,
         texture: Option<GlbTexture>,
+        maps: super::GlbMaterialMaps,
     },
 }
 
@@ -300,6 +301,7 @@ pub fn evaluate(
                     metallic: material.metallic,
                     roughness: material.roughness,
                     texture: material.texture,
+                    maps: material.maps.clone(),
                 },
                 "material_base_color" => Accessed::Color(material.base_color),
                 "material_metallic" => Accessed::Scalar(material.metallic),

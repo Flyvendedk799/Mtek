@@ -6,10 +6,10 @@ A material is the one place where Mtek code runs on the GPU. It is a list of typ
 
 ## Rules
 
-1. **Shape.** `material Name { param ...; fragment(input: SurfaceInput) -> color { ... } }`. A material has zero or more parameters and exactly one `fragment` stage (`MTEK-E4020` if it has none, `MTEK-E2002` for a second one). It has no state, no handlers and no CPU code (`MTEK-E1040`). A `vertex` or `compute` stage is `MTEK-E4901`: the vertex stage is fixed in this version.
+1. **Shape.** `material Name { param ...; fragment(input: SurfaceInput) -> color { ... } }`. A material has zero or more parameters and exactly one `fragment` stage (`MTEK-E4020` if it has none, `MTEK-E2002` for a second one). It has no state, no handlers and no CPU code (`MTEK-E1040`). An optional `vertex(input: VertexInput) -> vec3` modifies local positions before model/camera transforms and also feeds shadows. A named struct result can also supply normal/UV and typed payload fields. `fragment(surface: SurfaceInput, data: OutputType)` receives that matching payload; float/color fields interpolate smoothly, integer/bool/quaternion fields use the first vertex, and surface plus payload fields have a combined 16-variable limit (`MTEK-E6003`). A `compute` stage remains `MTEK-E4901`.
 2. **The stage.** `fragment` takes one parameter of type `SurfaceInput`, with any name, and returns a `color` (`MTEK-E4021` otherwise). `SurfaceInput` has the fields {{type-fields SurfaceInput}}. `world_normal` is re-normalised for you; `uv` has its origin at the top left. The compiler notices which fields the stage reads, and only those are passed from the vertex stage; a mesh that lacks an attribute the stage reads is rejected when the program is compiled (`MTEK-E7010`).
 3. **Alpha comes from the colour params.** The pixel is written with the alpha you return. It blends with what is behind it only while a `color` param of the instance has an alpha below 1: the draw is then translucent, drawn after the opaque ones and back to front (decision 0138). A constant returned alpha other than 1.0 gives the warning `MTEK-W5101`.
-4. **Parameters.** `param name: T = default;`. `T` is `bool`, `i32`, `u32`, `f32`, `vec2`, `vec3`, `vec4`, `mat4`, `quat`, `color`, a `struct` of those, an array of those, `texture` or `sampler` (anything else, such as `string`, is `MTEK-E4030`). The default is a constant (`MTEK-E4031`). Inside the stage a parameter is a read-only value (`MTEK-E3061` on assignment). A `color` parameter takes any alpha; below 1 the draw is translucent. A material has at most 8 texture and sampler parameters together (`MTEK-E6002`).
+4. **Parameters.** `param name: T = default;`. `T` is `bool`, `i32`, `u32`, `f32`, `vec2`, `vec3`, `vec4`, `mat4`, `quat`, `color`, a `struct` of those, an array of those, `texture` or `sampler` (anything else, such as `string`, is `MTEK-E4030`). The default is a constant (`MTEK-E4031`). Inside the stage a parameter is a read-only value (`MTEK-E3061` on assignment). A `color` parameter takes any alpha; below 1 the draw is translucent. A material has at most 16 texture and sampler parameters together (`MTEK-E6002`).
 5. **The stage reads nothing else.** It may use the input, the parameters, constants and pure functions. It cannot capture scene state, entity fields, `frame.*`, `self` or a `cpu fn` (`MTEK-E4040`). To use `frame.time` in a material, add a parameter and bind it in the instance: `phase: bind(frame.time)`.
 6. **GPU rules apply to the stage and everything it calls**: constant loop bounds, no strings, no CPU-only intrinsics, no recursion. See [Functions and effects](functions-and-effects.md).
 7. **Parameters are never compiled into the shader.** A value that changes at run time is written to a buffer. Changing a parameter, even every frame, never builds a new shader or pipeline.
@@ -17,7 +17,7 @@ A material is the one place where Mtek code runs on the GPU. It is a list of typ
 9. **Built-in materials.** `Unlit` writes its `color`, unaffected by lights and exposure. `Pbr` is the lit material. Both are ordinary Mtek source in the compiler's prelude, and an entity with a `mesh` and no `material` gets `Unlit {}`. Their parameters are listed below the rules.
 10. **Lit shading in your own material** uses the GPU intrinsic {{signature lighting.pbr}}. It reads `world_position` and `world_normal` of the input and applies every light of the scene, the ambient light and the camera's exposure (see [Lighting, units and colour](lighting-and-units.md)). Without it, a material is not lit and not scaled by exposure.
 11. **Names.** A material or prefab parameter may share its name with a prelude type, as `Unlit` does with `color`. Inside, the name means the parameter in expressions, and `color.linear(...)` would then be `MTEK-E2005`. Choose another name for your own parameters.
-12. **Glb materials.** `MODEL.material("Name")` gives a `Pbr` instance with the factors and base colour texture of a material in a glTF file (see [Textures, samplers and assets](textures-samplers-and-assets.md)).
+12. **Glb materials.** `MODEL.material("Name")` gives a `Pbr` instance with all supported texture channels, samplers and factors from a glTF material (see [Textures, samplers and assets](textures-samplers-and-assets.md)). Its concrete schema permits named parameter access, such as `Cube.material.normal_scale`.
 
 The parameters of the built-in materials:
 
@@ -34,7 +34,7 @@ The parameters of the built-in materials:
 - Only the stage function and its pure callees reach the GPU, so you can read a program and know exactly which code runs where. Nothing is moved to the GPU because it looks mathematical.
 - A stage cannot capture state, because capturing would hide how a value gets to the GPU. Passing it through a parameter makes the transport visible in the entity that uses the material, where a `bind` shows which state feeds it.
 - Parameters outside the shader code mean no recompiling and no stalls on the first frame in which a colour changes, which is what makes live tuning cheap.
-- The fixed vertex stage and the single colour target keep every material interchangeable on every mesh the language can draw.
+- The shared transform/binding interface and single colour target let authored vertex and fragment stages use meshes that supply their required attributes.
 
 ## Examples
 
@@ -279,6 +279,21 @@ scene Demo {
 ```
 
 This compiles with the warning `MTEK-W5101`: `Ghost` has no colour param, so its draws are never translucent and the pixel looks opaque. Return the alpha of a `color` param, or `1.0`, to remove the warning.
+
+## Bounding deformed geometry
+
+Entities and prefabs can declare `bounds_center: vec3` and `bounds_radius: f32`.
+They are writable and bindable. A positive radius must enclose the final geometry
+in mesh-local space after skinning and the authored vertex function. Include every
+pose/displacement, or bind these values to the same inputs as the shader. Object
+and parent transforms are applied by the runtime.
+
+The default radius, zero, uses automatic mesh/skin bounds for ordinary materials
+and conservative visibility for authored vertex materials. A positive sphere
+allows camera culling and supplies the center for transparent sorting. Bounds do
+not change physics shapes. Constants outside the finite/nonnegative range are
+`MTEK-E5006`; invalid runtime writes are ignored with `MTEK-E8091`. The optional
+inspector displays the supplied local sphere.
 
 ## See also
 

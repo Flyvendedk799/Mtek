@@ -1,0 +1,142 @@
+{
+  "format": "mtek-package-size-comparison/1",
+  "date": "2026-10-25",
+  "comparison": "Same mapped-material feature set before/after lossless production metadata compaction. Not a comparison with the base commit.",
+  "command": "npm run check:budgets",
+  "before": {
+    "arcade-audio": {
+      "folderBytes": 907861,
+      "folderLimit": 880000,
+      "zipBytes": 909663,
+      "zipLimit": 880000
+    },
+    "hud-score": {
+      "folderBytes": 860524,
+      "folderLimit": 820000,
+      "zipBytes": 861650,
+      "zipLimit": 820000
+    },
+    "lane-runner": {
+      "folderBytes": 799549,
+      "folderLimit": 810000,
+      "zipBytes": 801357,
+      "zipLimit": 810000
+    },
+    "material-configurator": {
+      "folderBytes": 1012139,
+      "folderLimit": 970000,
+      "zipBytes": 1013681,
+      "zipLimit": 970000
+    },
+    "modular-scene": {
+      "folderBytes": 752374,
+      "folderLimit": 760000,
+      "zipBytes": 753500,
+      "zipLimit": 760000
+    },
+    "physics-playground": {
+      "folderBytes": 5302868,
+      "folderLimit": 5660000,
+      "zipBytes": 5304410,
+      "zipLimit": 5660000
+    },
+    "product-configurator": {
+      "folderBytes": 934866,
+      "folderLimit": 870000,
+      "zipBytes": 935992,
+      "zipLimit": 870000
+    },
+    "pulse-cube": {
+      "folderBytes": 734009,
+      "folderLimit": 740000,
+      "zipBytes": 735135,
+      "zipLimit": 740000
+    },
+    "small-game": {
+      "folderBytes": 757585,
+      "folderLimit": 770000,
+      "zipBytes": 759043,
+      "zipLimit": 770000
+    },
+    "sprite-pop": {
+      "folderBytes": 762781,
+      "folderLimit": 770000,
+      "zipBytes": 764037,
+      "zipLimit": 770000
+    },
+    "stage-show": {
+      "folderBytes": 733166,
+      "folderLimit": 740000,
+      "zipBytes": 734422,
+      "zipLimit": 740000
+    }
+  },
+  "after": {
+    "arcade-audio": {
+      "folderBytes": 836417,
+      "folderLimit": 880000,
+      "zipBytes": 838219,
+      "zipLimit": 880000
+    },
+    "hud-score": {
+      "folderBytes": 797025,
+      "folderLimit": 820000,
+      "zipBytes": 798151,
+      "zipLimit": 820000
+    },
+    "lane-runner": {
+      "folderBytes": 767961,
+      "folderLimit": 810000,
+      "zipBytes": 769769,
+      "zipLimit": 810000
+    },
+    "material-configurator": {
+      "folderBytes": 889496,
+      "folderLimit": 970000,
+      "zipBytes": 891038,
+      "zipLimit": 970000
+    },
+    "modular-scene": {
+      "folderBytes": 733777,
+      "folderLimit": 760000,
+      "zipBytes": 734903,
+      "zipLimit": 760000
+    },
+    "physics-playground": {
+      "folderBytes": 5228569,
+      "folderLimit": 5660000,
+      "zipBytes": 5230111,
+      "zipLimit": 5660000
+    },
+    "product-configurator": {
+      "folderBytes": 841565,
+      "folderLimit": 870000,
+      "zipBytes": 842691,
+      "zipLimit": 870000
+    },
+    "pulse-cube": {
+      "folderBytes": 719474,
+      "folderLimit": 740000,
+      "zipBytes": 720600,
+      "zipLimit": 740000
+    },
+    "small-game": {
+      "folderBytes": 738233,
+      "folderLimit": 770000,
+      "zipBytes": 739691,
+      "zipLimit": 770000
+    },
+    "sprite-pop": {
+      "folderBytes": 737676,
+      "folderLimit": 770000,
+      "zipBytes": 738932,
+      "zipLimit": 770000
+    },
+    "stage-show": {
+      "folderBytes": 719955,
+      "folderLimit": 740000,
+      "zipBytes": 721211,
+      "zipLimit": 740000
+    }
+  }
+}

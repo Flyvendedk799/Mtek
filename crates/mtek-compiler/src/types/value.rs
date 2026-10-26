@@ -750,7 +750,18 @@ pub fn has_namespace_evaluator(namespace: &str, member: &str) -> bool {
             | ("texture", "white" | "black")
             | (
                 "sampler",
-                "linear_repeat" | "linear_clamp" | "nearest_repeat" | "nearest_clamp"
+                "linear_repeat"
+                    | "linear_clamp"
+                    | "nearest_repeat"
+                    | "nearest_clamp"
+                    | "linear_repeat_level0"
+                    | "linear_repeat_mip_nearest"
+                    | "linear_clamp_level0"
+                    | "linear_clamp_mip_nearest"
+                    | "nearest_repeat_level0"
+                    | "nearest_repeat_mip_linear"
+                    | "nearest_clamp_level0"
+                    | "nearest_clamp_mip_linear"
             )
     )
 }
@@ -836,6 +847,29 @@ pub fn namespace_function(
         ("texture", "white", []) => Ok(V::Texture(BuiltinTexture::White)),
         ("texture", "black", []) => Ok(V::Texture(BuiltinTexture::Black)),
         ("sampler", "linear_repeat", []) => Ok(V::Sampler(BuiltinSampler::LinearRepeat)),
+        ("sampler", "linear_repeat_level0", []) => {
+            Ok(V::Sampler(BuiltinSampler::LinearRepeatLevel0))
+        }
+        ("sampler", "linear_repeat_mip_nearest", []) => {
+            Ok(V::Sampler(BuiltinSampler::LinearRepeatMipNearest))
+        }
+        ("sampler", "linear_clamp_level0", []) => Ok(V::Sampler(BuiltinSampler::LinearClampLevel0)),
+        ("sampler", "linear_clamp_mip_nearest", []) => {
+            Ok(V::Sampler(BuiltinSampler::LinearClampMipNearest))
+        }
+        ("sampler", "nearest_repeat_level0", []) => {
+            Ok(V::Sampler(BuiltinSampler::NearestRepeatLevel0))
+        }
+        ("sampler", "nearest_repeat_mip_linear", []) => {
+            Ok(V::Sampler(BuiltinSampler::NearestRepeatMipLinear))
+        }
+        ("sampler", "nearest_clamp_level0", []) => {
+            Ok(V::Sampler(BuiltinSampler::NearestClampLevel0))
+        }
+        ("sampler", "nearest_clamp_mip_linear", []) => {
+            Ok(V::Sampler(BuiltinSampler::NearestClampMipLinear))
+        }
+
         ("sampler", "linear_clamp", []) => Ok(V::Sampler(BuiltinSampler::LinearClamp)),
         ("sampler", "nearest_repeat", []) => Ok(V::Sampler(BuiltinSampler::NearestRepeat)),
         ("sampler", "nearest_clamp", []) => Ok(V::Sampler(BuiltinSampler::NearestClamp)),

@@ -279,6 +279,8 @@
       "required": ["hash", "url", "map", "material", "vertexEntry", "fragmentEntry", "vertexAttributes", "surfaceInputs"],
       "properties": {
         "hash": { "$ref": "#/$defs/sha256" },
+        "vertexDeformation": { "const": 1, "description": "Authored local-position stage ABI 1; conservative culling and matching shadow deformation are required." },
+        "lighting": { "const": 1, "description": "Scene lighting binding group ABI (group 3). Absent on older shaders." },
         "url": { "type": "string", "pattern": "^shaders/[0-9a-f]{16}\\.wgsl$" },
         "map": { "type": "string", "pattern": "^shaders/[0-9a-f]{16}\\.mtek-map\\.json$" },
         "material": { "$ref": "#/$defs/symbolId", "description": "Id of the material this shader was generated for." },
@@ -909,7 +911,7 @@
         "kind": { "const": "builtin" },
         "name": {
           "type": "string",
-          "enum": ["texture.white", "texture.black", "sampler.linear_repeat", "sampler.linear_clamp", "sampler.nearest_repeat", "sampler.nearest_clamp"]
+          "enum": ["texture.white", "texture.black", "sampler.mag_linear_min_nearest_repeat_level0", "sampler.mag_linear_min_nearest_repeat_mip_nearest", "sampler.mag_linear_min_nearest_repeat_mip_linear", "sampler.mag_linear_min_nearest_clamp_level0", "sampler.mag_linear_min_nearest_clamp_mip_nearest", "sampler.mag_linear_min_nearest_clamp_mip_linear", "sampler.mag_nearest_min_linear_repeat_level0", "sampler.mag_nearest_min_linear_repeat_mip_nearest", "sampler.mag_nearest_min_linear_repeat_mip_linear", "sampler.mag_nearest_min_linear_clamp_level0", "sampler.mag_nearest_min_linear_clamp_mip_nearest", "sampler.mag_nearest_min_linear_clamp_mip_linear", "sampler.linear_repeat", "sampler.linear_clamp", "sampler.nearest_repeat", "sampler.nearest_clamp", "sampler.linear_repeat_level0", "sampler.linear_repeat_mip_nearest", "sampler.linear_clamp_level0", "sampler.linear_clamp_mip_nearest", "sampler.nearest_repeat_level0", "sampler.nearest_repeat_mip_linear", "sampler.nearest_clamp_level0", "sampler.nearest_clamp_mip_linear"]
         }
       }
     },
@@ -939,6 +941,7 @@
       "type": "object",
       "oneOf": [
         { "$ref": "#/$defs/transformTarget" },
+        { "$ref": "#/$defs/boundsTarget" },
         { "$ref": "#/$defs/visibleTarget" },
         { "$ref": "#/$defs/paramTarget" },
         { "$ref": "#/$defs/cameraTarget" },
@@ -954,6 +957,15 @@
         "kind": { "const": "transform" },
         "entity": { "$ref": "#/$defs/index" },
         "field": { "type": "string", "enum": ["position", "rotation", "scale"] }
+      }
+    },
+    "boundsTarget": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "entity", "field"],
+      "properties": {
+        "kind": { "const": "bounds" },
+        "entity": { "$ref": "#/$defs/index" },
+        "field": { "type": "string", "enum": ["bounds_center", "bounds_radius"] }
       }
     },
     "visibleTarget": {
@@ -1026,7 +1038,7 @@
       "properties": {
         "kind": { "const": "entityField" },
         "entity": { "$ref": "#/$defs/index" },
-        "field": { "type": "string", "enum": ["position", "rotation", "scale", "visible"] }
+        "field": { "type": "string", "enum": ["position", "rotation", "scale", "visible", "bounds_center", "bounds_radius"] }
       }
     },
     "entityStateDep": {

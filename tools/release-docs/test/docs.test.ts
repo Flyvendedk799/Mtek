@@ -92,7 +92,7 @@ describe("directives that read the registry", () => {
     expect(membersTable(registry, "sampler")).toContain("`sampler.nearest_clamp`");
     expect(methodsTable(registry, "glb_asset")).toContain("`.node_position`");
     expect(typeFields(registry, "SurfaceInput")).toContain("`uv: vec2`");
-    expect(intrinsicsOf(registry, "gpu")).toBe("`lighting.pbr`, `sample`");
+    expect(intrinsicsOf(registry, "gpu")).toBe("`lighting.pbr`, `lighting.pbr_mapped`, `sample`, `sample_mip`");
     expect(intrinsicsOf(registry, "cpu")).toContain("`random`");
     expect(intrinsicsOf(registry, "cpu")).toContain("`texture.white`");
   });

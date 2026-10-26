@@ -66,8 +66,8 @@ use super::shader_ir::{
     Literal, Name, ShaderType, Statement, UnaryOp, UserNameKind,
 };
 use super::standard_stage::{
-    FragmentBody, MaterialDescription, MaterialShader, SurfaceField, build_standard_stage,
-    params_global, resource_global,
+    FragmentBody, MaterialDescription, MaterialShader, SurfaceField, VertexBody, VertexField,
+    build_standard_stage, params_global, resource_global,
 };
 
 /// What went wrong: a description of the compiler defect.
@@ -164,7 +164,9 @@ impl<'p> ShaderLowering<'p> {
             surface_inputs.insert(field);
         }
         // `lighting.pbr` reads these two members of the `MtekSurfaceInput` it is given.
-        if self.helpers.contains(&Helper::LightingPbr) {
+        if self.helpers.contains(&Helper::LightingPbr)
+            || self.helpers.contains(&Helper::LightingPbrMapped)
+        {
             for needed in [SurfaceField::WorldPosition, SurfaceField::WorldNormal] {
                 if !surface_inputs.contains(&needed) {
                     return Err(format!(
@@ -174,6 +176,47 @@ impl<'p> ShaderLowering<'p> {
                 }
             }
         }
+
+        let vertex = if let Some(stage) = &material.vertex {
+            let mut vertex_body = Body {
+                locals: &stage.locals,
+                calls: Vec::new(),
+            };
+            let statements = self.block(&mut vertex_body, &stage.body)?;
+            body.calls.extend(vertex_body.calls);
+            let param = stage
+                .locals
+                .first()
+                .ok_or_else(|| "vertex stage has no input".to_owned())?;
+            let result = self.types.value_type(&stage.result)?;
+            let fields = if let Some(MtekType::Struct(symbol)) = parse(&stage.result) {
+                let fields = self.types.struct_item(&symbol)?.fields.clone();
+                let struct_name = TypeMapper::struct_name(&symbol);
+                let mut outputs = Vec::new();
+                for field in fields {
+                    outputs.push(VertexField {
+                        source_type: field.ty.clone(),
+                        member: member_wgsl_name(&struct_name, &field.name),
+                        ty: self.types.stored_type(&field.ty)?,
+                        name: field.name,
+                    });
+                }
+                outputs
+            } else {
+                Vec::new()
+            };
+            Some(VertexBody {
+                result,
+                fields,
+                input_param: Name::user(UserNameKind::Param, param.name.clone()),
+                inputs: stage.surface_inputs.clone(),
+                body: statements,
+                symbol: stage.symbol.to_string(),
+                span: stage.span,
+            })
+        } else {
+            None
+        };
 
         // Every function the stage reaches, lowered once.
         let mut lowered: BTreeMap<String, (Function, Vec<String>)> = BTreeMap::new();
@@ -222,22 +265,36 @@ impl<'p> ShaderLowering<'p> {
             }
         }
 
+        let lighting = self.helpers.contains(&Helper::LightingPbr)
+            || self.helpers.contains(&Helper::LightingPbrMapped);
+        let mut resources: Vec<_> = plan::resources(material)
+            .iter()
+            .map(|resource| resource_global(resource, material.span))
+            .collect();
+        let mut structs = std::mem::take(&mut self.types.decls);
+        if lighting {
+            resources.extend(helpers::scene_lighting::globals(material.span));
+            structs.push(helpers::scene_lighting::declaration(material.span));
+        }
         Ok(MaterialDescription {
             symbol: material.symbol.to_string(),
             declaration: material.span,
             surface_inputs,
             params: material.layout.clone(),
-            resources: plan::resources(material)
-                .iter()
-                .map(|resource| resource_global(resource, material.span))
-                .collect(),
+            resources,
+            vertex,
             fragment: FragmentBody {
+                varying_param: stage
+                    .locals
+                    .get(1)
+                    .filter(|local| local.kind == LocalKind::Param)
+                    .map(|local| Name::user(UserNameKind::Param, local.name.clone())),
                 surface_param: Name::user(UserNameKind::Param, surface.name.clone()),
                 body: statements,
                 symbol: stage.symbol.to_string(),
                 span: stage.span,
             },
-            structs: std::mem::take(&mut self.types.decls),
+            structs,
             functions,
         })
     }
@@ -769,7 +826,7 @@ impl<'p> ShaderLowering<'p> {
     ) -> Result<Expr, Defect> {
         match parse(base_ty) {
             // `MtekSurfaceInput` members are named like the Mtek fields.
-            Some(MtekType::SurfaceInput) => {
+            Some(MtekType::SurfaceInput | MtekType::VertexInput) => {
                 let field_ty = self.types.value_type(ty)?;
                 Ok(base.field(field, field_ty, span))
             }
@@ -916,9 +973,18 @@ impl<'p> ShaderLowering<'p> {
                     span,
                 ));
             }
+            "sample_mip" => {
+                return Ok(Expr::intrinsic(
+                    Intrinsic::TextureSample,
+                    args,
+                    result,
+                    span,
+                ));
+            }
             "color.linear" => return Ok(Expr::construct(ShaderType::VEC4, args, span)),
             "color.srgb" => Helper::ColorSrgb,
             "lighting.pbr" => Helper::LightingPbr,
+            "lighting.pbr_mapped" => Helper::LightingPbrMapped,
             "quat.axis_angle" => Helper::QuatAxisAngle,
             "quat.euler" => Helper::QuatEuler,
             "mat4.translation" => Helper::Mat4Translation,

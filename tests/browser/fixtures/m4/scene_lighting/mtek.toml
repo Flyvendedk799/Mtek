@@ -1,0 +1,9 @@
+[project]
+name = "scene-lighting"
+language = "0.1"
+
+[host.inputs]
+caster_x = "Demo.caster_x"
+caster_y = "Demo.caster_y"
+caster_visible = "Demo.caster_visible"
+sun_yaw = "Demo.sun_yaw"

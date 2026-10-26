@@ -1,0 +1,14 @@
+[
+  {
+    "project": "hardware",
+    "file": "lighting-studio-hardware.png",
+    "sha256": "4a427d0723da66f8f69e47b5c8d7e5d9bd6c3a2674e932e1ee9fd18455a4b9f7",
+    "bytes": 91348
+  },
+  {
+    "project": "software",
+    "file": "lighting-studio-software.png",
+    "sha256": "bb1aac3105ec00756307dd1a2d711524f36a701953dade9d3312db153716bf35",
+    "bytes": 91163
+  }
+]

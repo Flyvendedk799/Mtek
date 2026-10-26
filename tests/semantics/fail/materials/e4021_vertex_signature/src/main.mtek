@@ -1,0 +1,13 @@
+// An authored vertex stage requires VertexInput and a vec3 local-position result.
+material Wobble {
+    vertex(input: SurfaceInput) -> color {
+        return #ffffff;
+    }
+    fragment(input: SurfaceInput) -> color {
+        return #ffffff;
+    }
+}
+
+scene Demo {
+    camera Main {}
+}

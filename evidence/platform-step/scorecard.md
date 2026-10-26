@@ -1,8 +1,34 @@
 # Platform step implementation scorecard
 
-Date: 2026-10-25. This records an implementation increment against the supplied
+Date: 2026-10-26. This records an implementation increment against the supplied
 ten-item platform request. **The entire request is not complete.** Existing frozen
 AI benchmark evidence was not modified or used as source examples.
+
+A [second rendering increment is validated](rendering-channels-progress.md):
+core glTF material maps, mip-aware sampling and lossless metadata compaction.
+Its separate record includes 42 passing hardware/software GPU checks and package
+budgets. The historical checks below describe the preceding committed increment.
+
+A [third rendering increment](lighting-progress.md) adds directional shadow
+quality levels and HDR environment lighting, validated by 64 hardware/software
+GPU checks. It includes a standalone lighting studio and preserves all eleven
+existing example package budgets.
+
+An [animation increment](animation-progress.md) adds synchronized locomotion, mounted
+distance policies, orientation/hinge IK, explicit retarget frames and shared-pose
+crowd instancing. Its final GPU run passes 40 hardware/software checks.
+
+A [matched animation/character increment](matched-animation-progress.md) adds two
+pinned authored assets, a textured clip demo and a complete 210-pass comparison
+against Three.js WebGPU. Correctness gates pass; the report records higher Mtek
+CPU/GPU time and GPU buffer use, with lower JS heap in these workloads. CPU noise
+waits/retries without relaxing the measurement limits.
+
+An [external inspector/SDK increment](inspector-progress.md) adds a separately
+packaged optional panel, transform history, animation inspection and local-tarball
+compatibility evidence. Eleven focused tests and GPU-disabled DOM checks pass.
+Its real studio rendering check and animation performance optimization are
+**deferred while the user is doing CPU/GPU-heavy work**, not cancelled.
 
 ## Delivered behavior
 
@@ -26,20 +52,43 @@ AI benchmark evidence was not modified or used as source examples.
 - Correct Node type-stripping version boundaries in the CLI runner/npm engine range,
   and editor highlighting synchronized with the existing animation namespace.
 
+An [asset-audit increment](asset-audit-progress.md) adds a 16-input pinned corpus,
+separate import/use reporting and retained compiler diagnostics. Its 26 serial
+checks match their expected outcomes and 11 focused tests pass without Cargo/GPU
+work. Expected rejections are not compatibility successes.
+
+## Explicit shader-authoring track
+
+[Mtek-authored vertex and compute shaders](shader-authoring-plan.md) are now an
+explicit required workstream, added at the user's request on 2026-10-26. A [first vertex increment](shader-authoring-progress.md) implements authored
+local-position functions, vertex-visible resources, conservative culling,
+instancing and matching directional shadows. A [structured-output increment](shader-authoring-structured-progress.md) adds normal/UV outputs and typed varying payloads with location/interpolation checks.
+An [authored-bounds increment](shader-authoring-bounds-progress.md) adds bindable final local spheres, culling/sorting and copied inspection. A [production-character increment](shader-authoring-characters-progress.md) validates bounded skin/deformation/shadow/recovery cases against CPU-skinned references and preserves original mixed-filter samplers. World-space overlays, combined authored shared-pose instancing, broader animation compositions and wider physical-device evidence remain; compute is still unimplemented (`E4901`). The plan
+retains compute resources/dispatch, lifecycle/recovery and full validation.
+Runtime-internal compute and host WGSL effects do not satisfy this requirement.
+A [compute-backend increment](shader-authoring-compute-progress.md) adds typed
+entries/builtins, explicit storage access and independently checked memory
+layouts. Source declarations/resources/kernels now parse and type-check, with GPU
+effects and bounded workgroups. E4901 still blocks runnable packaging; kernel
+lowering, manifest/runtime dispatch, lifecycle and end-to-end evidence remain required.
+Heavy compiler/GPU validation remains deferred during the user's heavy work.
+Editor follow-up: structural auto-indent does not yet match `mtek fmt` for
+wrapped binary continuations; its corpus check remains a known failure.
+
 ## Request acceptance status
 
 | Area | Status | Remaining work before the requested acceptance criteria are met |
 |---|---|---|
-| 1. Scalable skeletal animation | Partial | True crowd instancing/shared animation palettes, mounted-scene distance policy, complete matched rendering workloads with Three.js, p95 CPU/GPU/memory results across mesh complexities and hardware tiers. |
-| 2. Composable/adaptable animation | Partial | Dedicated locomotion blend trees, orientation/joint-limit IK, arbitrary humanoid retargeting, production asset demonstrations, and full transition/root-motion combinations. Host APIs currently implement compatible-rig local transfer and bounded positional IK. |
-| 3. Core rendering/materials | Partial | Shadow quality levels, normal/metallic/roughness/occlusion/emissive glTF channels, environment lighting, HDR effects and a matched material/lighting reference suite. |
-| 4. Incremental adoption | Partial | Animation and content can be consumed independently and a real Three.js integration exists. A separately packaged external extension and published compatibility/release policy still need evidence. Custom render passes are currently LDR WGSL effects, not arbitrary access to renderer internals. |
-| 5. Asset/content pipeline | Partial | Morphs, cubic splines, compression, compiler-integrated async scene streaming, LOD and a varied compatibility corpus. The new pool is an independent host capability; it does not change the strict GLB profile. |
+| 1. Scalable skeletal animation | Implemented + measured on one desktop | GPU skinning, animated culling, shared-pose cohorts and distance policies are implemented. The requested 1/10/50 independent-character comparison at two mesh complexities now has complete p95 CPU/GPU/upload/memory and correctness evidence. Mtek costs more CPU/GPU time and GPU buffers in these unlit workloads; independent-crowd optimization remains planned but deferred during the user’s CPU/GPU-heavy work; wider hardware evidence remains. |
+| 2. Composable/adaptable animation | Partial | Synchronized 1D locomotion, orientation targets, hinge limits and explicit local/world-frame retargeting are implemented. Two authored-character clip demonstrations now exist; broader authored-rig combinations of transitions, root motion and constraints still need evidence. General 2D blend spaces, anatomical constraints and automatic humanoid mapping are possible extensions beyond the original compatible-rig workflow. |
+| 3. Core rendering/materials | Partial | Core glTF texture channels, mip-aware sampling, directional shadow quality levels and HDR environment lighting are implemented and tested. Authored position/normal/UV results and typed varying payloads are implemented. Authored finite spheres now drive culling and sorting. Original Fox/CesiumMan skin/deformation/shadow cases now match CPU references; imported mixed min/mag samplers are preserved. Combined authored shared-pose instancing, broader animation compositions, bound overlays, wider physical-device evidence and Mtek-authored compute remain in the shader-authoring track. HDR display/effects, cascaded/point shadows, authored tangent compatibility and a matched material/lighting reference suite remain. |
+| 4. Incremental adoption | API/package proof delivered; rendering check deferred | Animation/content APIs and the Three.js integration exist. The optional inspector is separately packaged, installed and strictly type-checked without source aliases, with mounted lifecycle/version tests and a documented compatibility policy. Its opt-in lighting-studio rendering check is deferred. Packages remain private development snapshots; stable release/external adoption evidence remains. |
+| 5. Asset/content pipeline | Partial | A pinned 16-input compatibility corpus and serial audit tool now separate declaration import from named mesh/material/clip use; the original 26 checks matched expected outcomes. A subsequent [30-check run](shader-authoring/characters-2026-10-26/asset-audit/report.md) now accepts original CesiumMan mesh/material/clip use and mixed min/mag filters, retaining the original provenance. Morphs, cubic-spline playback, compression, compiler-integrated async scene streaming, LOD, unloading/plateau evidence and a broader production corpus remain. The independent pool does not change the strict GLB profile. |
 | 6. Movement/spatial queries | Partial | Broader stairs/slope/platform/obstacle corpus, variable-rate movement tests and published operating ranges. CCD coverage remains case-specific; automatic moving-platform carry is not implemented. |
 | 7. Browser/device contract | Partial | The CLI's Node version mismatch was fixed and existing hardware/SwiftShader browser coverage was exercised. No new real-device CI or mobile/integrated-GPU evidence was obtained. WebGPU remains required. |
-| 8. Inspection/authoring | Partial | The integration demo includes skeleton overlays and pose CPU p95. A mounted scene inspector, collision/IK target overlays, transition timeline, resource diagnosis and end-to-end authoring workflows remain. |
-| 9. Fair workload evidence | Pending | No claim of general superiority, no new complete rendering comparison, no second maintained baseline runtime and no long-session/hardware-tier scorecard. Correctness probes are not performance benchmarks. |
-| 10. Language/compiler advantage | Pending | No new language syntax, compiler asset optimization, reproducible release process or human/AI productivity study was added. Existing token-efficiency claims gain no support from this increment. |
+| 8. Inspection/authoring | Partial | An optional public-API inspector now supports selection, local transform edits/history, animation scrubbing, mesh-local joints and optional host metrics; fake-GPU mounted and GPU-disabled DOM checks pass. Its real studio check is deferred. World-space IK/collision overlays, transition/layer diagnosis, resource provenance/history, persistent authored IDs and end-to-end workflows remain. |
+| 9. Fair workload evidence | Partial | A frozen animation-only comparison against pinned Three.js now retains 210 accepted passes, three-repeat p95s, live memory, rejected attempts and visual gates on one desktop. It shows current costs as well as smaller JS heap. Matched material/lighting, streaming and long-session workloads, regression budgets, a second maintained runtime, presented-frame measurements and other hardware tiers remain. No general superiority claim follows. |
+| 10. Language/compiler advantage | Partial; shader-authoring in progress | Mtek source now authors position/normal/UV vertex functions and typed fragment payloads, with GPU effects, source mapping, inspected interpolation/locations and matched transform-reference checks. Authored finite bounds and copied inspection are implemented; sampled production-character skin/deformation/recovery cases now match CPU references. Combined authored shared-pose instancing, broader animation compositions, bound overlays, wider physical-device evidence and compute resources/dispatch remain required work, alongside compiler asset optimization, reproducible release process and human/AI productivity evidence. Existing token-efficiency claims gain no support from these increments. |
 
 ## Reproducible checks
 

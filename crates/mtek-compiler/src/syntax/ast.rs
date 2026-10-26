@@ -160,6 +160,7 @@ pub enum ItemKind {
     /// `enum Name { A, B }` (decision 0129).
     Enum(EnumDecl),
     Material(MaterialDecl),
+    Compute(ComputeDecl),
     Prefab(PrefabDecl),
     Scene(SceneDecl),
     /// Text the parser skipped while recovering at item level (the span of
@@ -258,6 +259,34 @@ pub enum MaterialMember {
     Param(ParamDecl),
     Stage(StageFn),
     Error(ErrorNode),
+}
+
+/// A standalone bounded compute program. Buffers are resources, not array values.
+#[derive(Clone, PartialEq, Debug)]
+pub struct ComputeDecl {
+    pub id: NodeId,
+    pub span: Span,
+    pub name: Ident,
+    pub members: Vec<ComputeMember>,
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub enum ComputeMember {
+    Param(ParamDecl),
+    Input(StorageDecl),
+    Output(StorageDecl),
+    Workgroup(FieldInit),
+    Stage(StageFn),
+    Error(ErrorNode),
+}
+
+/// `input name: array<T, N>;` or `output name: array<T, N>;`.
+#[derive(Clone, PartialEq, Debug)]
+pub struct StorageDecl {
+    pub id: NodeId,
+    pub span: Span,
+    pub name: Ident,
+    pub ty: Type,
 }
 
 /// `param name: Type = default;` in a material or a prefab.
@@ -933,6 +962,8 @@ impl_node!(
     StructField,
     EnumDecl,
     MaterialDecl,
+    ComputeDecl,
+    StorageDecl,
     ParamDecl,
     StageFn,
     SceneDecl,
@@ -977,6 +1008,14 @@ impl_node_for_enum!(SceneMember {
     Entity,
     Lifecycle,
     Handler,
+    Error
+});
+impl_node_for_enum!(ComputeMember {
+    Param,
+    Input,
+    Output,
+    Workgroup,
+    Stage,
     Error
 });
 impl_node_for_enum!(EntityMember {

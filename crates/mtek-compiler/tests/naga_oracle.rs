@@ -17,6 +17,77 @@ use mtek_compiler::emit_wgsl::{
 use mtek_compiler::layout::{LayoutNode, LayoutRecord, LayoutType, ScalarKind, compute};
 use naga::{ArraySize, Handle, Module, Scalar, Type, TypeInner, VectorSize};
 
+#[test]
+fn storage_array_layouts_match_naga_recursively() {
+    use mtek_compiler::emit_wgsl::print_module;
+    use mtek_compiler::layout::fixture::parse_type_json;
+    use mtek_compiler::layout::storage_array;
+    use mtek_compiler::lowering::shader_ir::{
+        Function, GlobalDecl, GlobalKind, Name, ShaderModule, ShaderStage, ShaderType,
+        StorageAccess, type_decls_from_layout_node,
+    };
+    use mtek_compiler::source::{FileId, Span};
+
+    let mut types = vec![
+        LayoutType::F32,
+        LayoutType::I32,
+        LayoutType::U32,
+        LayoutType::Bool,
+        LayoutType::Vec2,
+        LayoutType::Vec3,
+        LayoutType::Vec4,
+        LayoutType::Color,
+        LayoutType::Quat,
+        LayoutType::Mat4,
+        LayoutType::new_struct("Small", vec![("v".into(), LayoutType::F32)]),
+        LayoutType::new_array(LayoutType::F32, 3),
+        LayoutType::new_array(LayoutType::new_array(LayoutType::Bool, 3), 2),
+    ];
+    for name in fixture_names() {
+        types.push(
+            parse_type_json(&common::read(
+                &common::fixture_dir().join(format!("{name}.type.json")),
+            ))
+            .unwrap_or_else(|e| panic!("fixture {name}: {e}")),
+        );
+    }
+    let span = Span::new(FileId(0), 0, 1);
+    for ty in types {
+        let root = storage_array(&ty, 7).unwrap_or_else(|e| panic!("storage {ty}: {e}"));
+        let mut ir = ShaderModule::new("storage-oracle", span);
+        ir.structs = type_decls_from_layout_node(&root, span);
+        ir.globals.push(GlobalDecl {
+            name: Name::generated("storage"),
+            kind: GlobalKind::Storage {
+                group: 0,
+                binding: 0,
+                access: StorageAccess::ReadWrite,
+                ty: ShaderType::from_layout_node(&root),
+            },
+            span,
+        });
+        ir.functions.push(Function {
+            name: Name::generated("cs"),
+            stage: Some(ShaderStage::Compute {
+                workgroup_size: [1, 1, 1],
+            }),
+            params: vec![],
+            result: None,
+            body: vec![],
+            symbol: "storage-oracle".into(),
+            span,
+        });
+        let source = print_module(&ir).text;
+        let module = validated(&source, &ty.mtek_spelling());
+        let (_, global) = module
+            .global_variables
+            .iter()
+            .next()
+            .unwrap_or_else(|| panic!("storage global"));
+        check_node(&module, global.ty, &root, &ty.mtek_spelling());
+    }
+}
+
 /// The oracle module: structs, the binding and a fragment entry point that XORs the bit
 /// pattern of every leaf into an accumulator, so that every leaf is read.
 fn oracle_module(record: &LayoutRecord, structs: &str) -> (String, Vec<Leaf>) {

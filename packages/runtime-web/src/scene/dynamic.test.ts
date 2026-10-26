@@ -58,6 +58,7 @@ function harness(options: { maxEntities?: number; prefabs?: readonly ResolvedPre
   const reports: MtekDiagnostic[] = [];
   const ctxCalls: string[] = [];
   const ctx = {
+    setBounds: (entity: EntityRecord, field: string, value: unknown) => ctxCalls.push(`setBounds:${field}:${JSON.stringify(value)}:${String(entity.ref.slot)}`),
     setTransform: (entity: EntityRecord, field: string, value: unknown) => ctxCalls.push(`setTransform:${field}:${JSON.stringify(value)}:${String(entity.ref.slot)}`),
     setVisible: (entity: EntityRecord, value: boolean) => ctxCalls.push(`setVisible:${String(value)}:${String(entity.ref.slot)}`),
     setParam: (entity: EntityRecord, name: string, value: unknown) => ctxCalls.push(`setParam:${name}:${JSON.stringify(value)}:${String(entity.ref.slot)}`),
@@ -71,6 +72,8 @@ function harness(options: { maxEntities?: number; prefabs?: readonly ResolvedPre
         rotation: { x: 0, y: 0, z: 0, w: 1 },
         scale: { x: 1, y: 1, z: 1 },
         visible: true,
+        bounds_center: { x: 0, y: 0, z: 0 },
+        bounds_radius: 0,
         state: Object.fromEntries(prefab.resolved.state.map((s) => [s.name, 0])),
         params,
         mat: resolved.instance === null ? null : { p: { color: { r: 0, g: 0, b: 0, a: 0 } } },
@@ -400,6 +403,14 @@ describe("lifecycle listeners (the physics hook)", () => {
 });
 
 describe("bindings of instances", () => {
+  it("applies bounds bindings to the spawned record, on initial creation and later frames", () => {
+    const bindings: MtekBinding[] = [{id:0, target:{kind:"bounds",entity:0,field:"bounds_radius"},deps:[],order:0,span:0}];
+    const {dynamic,ctxCalls} = harness({prefabs:[resolvedPrefab("A",{bindings})],code:()=>({bindings:[()=>2]})});
+    dynamic.spawn("src/main.mtek::A", {n:1}, 0); dynamic.flush();
+    expect(ctxCalls).toContain("setBounds:bounds_radius:2:2");
+    ctxCalls.length = 0; dynamic.evaluateBindings();
+    expect(ctxCalls).toEqual(["setBounds:bounds_radius:2:2"]);
+  });
   const BINDINGS: readonly MtekBinding[] = [
     { id: 0, target: { kind: "param", instance: 0, name: "color" }, deps: [], order: 1, span: 0 },
     { id: 1, target: { kind: "transform", entity: 0, field: "position" }, deps: [], order: 0, span: 0 },

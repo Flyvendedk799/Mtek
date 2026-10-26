@@ -50,6 +50,7 @@
 //! dedicated meaning (`E1010`, `E1011`, `E1020`, `E1030`, `E1040`, `E1050`,
 //! `E1901`, `E4901`, `E0013`, `W0007`) are never suppressed that way.
 
+mod compute;
 mod expr;
 #[cfg(test)]
 mod expr_tests;

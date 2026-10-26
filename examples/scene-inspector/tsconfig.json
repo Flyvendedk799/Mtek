@@ -1,0 +1,4 @@
+{
+  "extends": "../../packages/inspector/tsconfig.json",
+  "include": ["main.ts"]
+}

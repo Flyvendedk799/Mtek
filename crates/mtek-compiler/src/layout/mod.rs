@@ -3,6 +3,7 @@
 //!
 //! - [`types`]: [`LayoutType`], the typed block description,
 //! - [`compute`](mod@compute): the uniform-address-space algorithm and [`compute()`](compute::compute),
+//! - [`storage`]: packed outer storage arrays of ordinary GPU-storable values,
 //! - [`record`]: [`LayoutRecord`] / [`LayoutNode`], the serialisable result,
 //! - [`builtin`]: the compiler-owned frame and object blocks,
 //! - [`fixture`]: the JSON type format of the layout fixtures,
@@ -17,6 +18,7 @@ pub mod error;
 pub mod fixture;
 pub mod naming;
 pub mod record;
+pub mod storage;
 pub mod types;
 
 pub use builtin::{BuiltinBlock, builtin_blocks};
@@ -27,4 +29,5 @@ pub use naming::{
     split_material_layout_id, user_struct_name,
 };
 pub use record::{LayoutMember, LayoutNode, LayoutRecord, ScalarKind};
+pub use storage::storage_array;
 pub use types::LayoutType;

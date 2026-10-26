@@ -143,7 +143,7 @@ fn objects() -> Vec<SchemaDef> {
         "Entity",
         SchemaCategory::Object,
         Milestone::M1,
-        "The fields of an entity or prefab body: a named node with a transform and optional components.",
+        "Entity/prefab: a named transform with optional components.",
         vec![
             field(
                 "position",
@@ -163,7 +163,7 @@ fn objects() -> Vec<SchemaDef> {
                 "scale",
                 TypeRef::Vec3,
                 writable_bindable(),
-                "Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body.",
+                "Parent-local scale. Bodies require construction-only scale; dynamic/kinematic bodies require `vec3(1.0)`.",
             )
             .default(ConstValue::splat3(1.0))
             .range(ValueRange::positive().and_finite())
@@ -172,9 +172,17 @@ fn objects() -> Vec<SchemaDef> {
                 "visible",
                 TypeRef::Bool,
                 writable_bindable(),
-                "Hides the mesh draw only; the entity's behaviour keeps running.",
+                "Hide the mesh; behavior keeps running.",
             )
             .default(ConstValue::Bool(true)),
+            field(
+                "bounds_center", TypeRef::Vec3, writable_bindable(),
+                "Final deformed local sphere center; used when bounds_radius > 0.",
+            ).default(ConstValue::splat3(0.0)).range(ValueRange::finite()),
+            field(
+                "bounds_radius", TypeRef::F32, writable_bindable(),
+                "Enclose every final local vertex/pose; 0 uses mesh/skin bounds, or unbounded authored vertices.",
+            ).default(ConstValue::F32(0.0)).range(ValueRange::non_negative().and_finite()),
             field(
                 "mesh",
                 TypeRef::Mesh,
@@ -438,7 +446,7 @@ fn materials() -> Vec<SchemaDef> {
             "Pbr",
             SchemaCategory::Material,
             Milestone::M1,
-            "The documented PBR subset (metallic-roughness, no image-based lighting).",
+            "Metallic-roughness PBR with optional scene shadows and environment lighting.",
             vec![
                 field(
                     "base_color",
@@ -479,6 +487,28 @@ fn materials() -> Vec<SchemaDef> {
                 .default(ConstValue::Sampler(
                     crate::stdlib::value::BuiltinSampler::LinearRepeat,
                 )),
+                field("metallic_roughness_texture", TypeRef::Texture, C, "Linear green roughness and blue metallic factors.")
+                    .default(ConstValue::Texture(crate::stdlib::value::BuiltinTexture::White)),
+                field("metallic_roughness_sampler", TypeRef::Sampler, C, "Sampler of the metallic_roughness map.")
+                    .default(ConstValue::Sampler(crate::stdlib::value::BuiltinSampler::LinearRepeat)),
+                field("normal_texture", TypeRef::Texture, C, "Linear tangent-space normal map; enable with normal_scale.")
+                    .default(ConstValue::Texture(crate::stdlib::value::BuiltinTexture::White)),
+                field("normal_sampler", TypeRef::Sampler, C, "Sampler of the normal map.")
+                    .default(ConstValue::Sampler(crate::stdlib::value::BuiltinSampler::LinearRepeat)),
+                field("occlusion_texture", TypeRef::Texture, C, "Linear red indirect-light occlusion.")
+                    .default(ConstValue::Texture(crate::stdlib::value::BuiltinTexture::White)),
+                field("occlusion_sampler", TypeRef::Sampler, C, "Sampler of the occlusion map.")
+                    .default(ConstValue::Sampler(crate::stdlib::value::BuiltinSampler::LinearRepeat)),
+                field("emissive_texture", TypeRef::Texture, C, "sRGB emissive colour, multiplied by emissive.")
+                    .default(ConstValue::Texture(crate::stdlib::value::BuiltinTexture::White)),
+                field("emissive_sampler", TypeRef::Sampler, C, "Sampler of the emissive map.")
+                    .default(ConstValue::Sampler(crate::stdlib::value::BuiltinSampler::LinearRepeat)),
+                field("normal_scale", TypeRef::F32, writable_bindable(), "Normal XY scale; zero suits the white fallback. GLB map default: one.")
+                    .default(ConstValue::F32(0.0)),
+                field("occlusion_strength", TypeRef::F32, writable_bindable(), "Indirect-light occlusion strength, clamped to 0..1.")
+                    .default(ConstValue::F32(1.0)),
+                field("emissive", TypeRef::Color, writable_bindable(), "Linear emission before exposure.")
+                    .default(ConstValue::srgb(0, 0, 0)),
             ],
         ),
         // Decision 0170: sprites, always drawn in the translucent pass (decision 0138).

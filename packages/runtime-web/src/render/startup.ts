@@ -32,6 +32,7 @@ import { instancingCandidates } from "./instancing.js";
 import { BindingPlan, PipelineCache, alwaysBlends, canBlend, materialPipelineKey, type PipelineResult } from "./pipelines.js";
 import type { TextureOverrides } from "./resources.js";
 import { Renderer, blendedKey, type MaterialPipeline, type RenderSurface } from "./renderer.js";
+import { SceneLighting, sceneLightingProblem } from "./scene-lighting.js";
 
 export interface SceneStartupOptions {
   readonly rendering?:MtekRenderingOptions;
@@ -106,6 +107,8 @@ function missingModule(material: ResolvedMaterial, phase: MtekRuntimePhase | und
 /** Builds and initialises the scene. Errors thrown by generated code (internal errors) propagate. */
 export async function startScene(options: SceneStartupOptions): Promise<SceneStartupResult> {
   const { manifest, structure, program, device, registry, surface, modules, report, services } = options;
+  const lightingProblem = sceneLightingProblem(manifest, options.rendering);
+  if (lightingProblem !== undefined) return { ok: false, diagnostics: [makeRuntimeDiagnostic("E8051", { phase: "runtime:mount", message: lightingProblem })] };
   const additive=new Set(options.rendering?.additiveMaterials??[]);
   const blendMode=(material:ResolvedMaterial):"alpha"|"additive"=>additive.has(material.id)?"additive":"alpha";
   options.assertActive?.();
@@ -117,6 +120,7 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
   const materials = new MaterialStore(device, registry, plan, structure, program.writers, options.textures, options.assets?.images, mipmaps);
   let meshes: MeshStore | undefined;
   let renderer: Renderer | undefined;
+  let lighting: SceneLighting | undefined;
   let committed = false;
   try {
     const { recover } = options;
@@ -148,6 +152,15 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
 
     meshes = new MeshStore(registry, device.queue, undefined, device.limits.maxBufferSize, structure.meshes.some(m => m.descriptor.kind === "asset" && m.descriptor.skin !== undefined) ? device : undefined);
     meshes.upload(structure.meshes, options.assets?.files);
+
+    if (structure.materials.some(material => material.shader.lighting === 1)) {
+      device.pushErrorScope("validation");
+      let validation: GPUError | null;
+      try { lighting = new SceneLighting(device, registry, plan, manifest, options.rendering, { structure, modules }); }
+      finally { validation = await device.popErrorScope(); }
+      if (validation !== null) return { ok: false, diagnostics: [makeRuntimeDiagnostic("E8051", { phase: options.recover === undefined ? "runtime:mount" : "runtime:device", message: `Scene lighting initialization failed: ${validation.message}` })] };
+      options.assertActive?.();
+    }
 
     const pipelines = options.pipelineCache ?? new PipelineCache(device, registry, plan, manifest);
     const phase: MtekRuntimePhase | undefined = recover === undefined ? undefined : "runtime:device";
@@ -259,6 +272,7 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
       pipelines: byMaterial,
       blendedSeed,
       additiveMaterials:additive,
+      ...(lighting === undefined ? {} : { lighting }),
       // The translucent variant (decision 0138) of a material not known to blend at startup is made the first time a draw needs it.
       blend: async (material, instancedVariant) => {
         const module = modules.get(material.shader.hash);
@@ -283,6 +297,7 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
     // A retired generation has already released these resources; never release a rebuilt scene's objects.
     if (!committed && registry.generation === generation) {
       renderer?.dispose();
+      lighting?.dispose();
       meshes?.dispose();
       materials.dispose();
     }

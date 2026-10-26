@@ -25,6 +25,8 @@ The fields of an entity, a camera and a light, and whether a field can be bound 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
 | `body` | `body` | none | fixed at construction |  | A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; requires `collider`. |
+| `bounds_center` | `vec3` | `vec3(0.0, 0.0, 0.0)` | assignable, bindable | finite | Final deformed local sphere center; used when bounds_radius > 0. |
+| `bounds_radius` | `f32` | `0.0` | assignable, bindable | ≥ 0, finite | Enclose every final local vertex/pose; 0 uses mesh/skin bounds, or unbounded authored vertices. |
 | `clip` | `string` | none | fixed at construction |  | The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. It composes with the entity's own transform (decision 0174). |
 | `collider` | `collider` | none | fixed at construction |  | A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`. |
 | `light` | `light` | none | fixed at construction |  | A light component (`DirectionalLight`, `PointLight`). Its fields are writable and bindable as their schemas say. Named entities only. |
@@ -33,9 +35,9 @@ The fields of an entity, a camera and a light, and whether a field can be bound 
 | `particles` | `emitter` | none | fixed at construction |  | A particle emitter (decision 0155). Up to 64 particles live at once. They are drawn with this entity's mesh as camera-facing billboards, in the colour of its material. Without a mesh the particles are still counted. |
 | `position` | `vec3` | `vec3(0.0, 0.0, 0.0)` | assignable, bindable |  | Position local to the parent, in metres. |
 | `rotation` | `quat` | `quat.identity()` | assignable, bindable |  | Rotation local to the parent. |
-| `scale` | `vec3` | `vec3(1.0, 1.0, 1.0)` | assignable, bindable | every component > 0, finite | Scale local to the parent. Construction-only (and `vec3(1.0)` for dynamic and kinematic bodies) when the entity has a body. |
+| `scale` | `vec3` | `vec3(1.0, 1.0, 1.0)` | assignable, bindable | every component > 0, finite | Parent-local scale. Bodies require construction-only scale; dynamic/kinematic bodies require `vec3(1.0)`. |
 | `tag` | `string` | none | fixed at construction |  | A group name (`"rock"`) that `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag` and `destroy_tagged` look the entity up by (decision 0150). A string literal of lowercase letters, digits and `_`. |
-| `visible` | `bool` | `true` | assignable, bindable |  | Hides the mesh draw only; the entity's behaviour keeps running. |
+| `visible` | `bool` | `true` | assignable, bindable |  | Hide the mesh; behavior keeps running. |
 
 **`Camera`**
 

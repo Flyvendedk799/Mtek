@@ -17,7 +17,7 @@ pub const SCHEMA_GUIDE: &str = "A field line reads `name: type = default [flags]
 
 /// The `schemaGuide` text of a cold-start project, whose lines also have a range and the registry's
 /// documentation (decision 0110).
-pub const SCHEMA_GUIDE_DETAILED: &str = "A field line reads `name: type = default [flags] range R // meaning`. Flags: R required, W writable from handlers, B bindable with bind(..), C construction-only (a constant expression). A field that is not listed does not exist. Function [brackets] mark optional arguments; [handler] means handlers/lifecycle only.";
+pub const SCHEMA_GUIDE_DETAILED: &str = "Fields: name: type = default [flags] range R // meaning. R required; W writable in handlers; B bindable via bind(..); C construction-only constant. Unlisted fields do not exist. Function [args] optional; [handler] handlers/lifecycle only.";
 
 /// One context document.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -269,11 +269,18 @@ fn indented_json(value: &impl Serialize) -> String {
     String::from_utf8(bytes).unwrap_or_default()
 }
 
-/// One-space indentation, except the machine-readable capability list, with a trailing LF.
-/// Compact capabilities leave room for the complete cold-start API as builtins grow.
+/// Compact cold-start JSON; otherwise one-space indentation except for capabilities. Ends in LF.
+/// Whitespace never displaces library entries from a cold-start context's byte budget.
 pub fn render(context: &Context) -> String {
     // The derived `Serialize` of these types cannot fail (no maps with non-string keys, no
     // custom serialisers).
+    // Keep this choice even when fitting drops the entire reference. Switching back to pretty
+    // output at that point would make removing a section increase the size, breaking bisection.
+    if context.schema_guide == SCHEMA_GUIDE_DETAILED {
+        let mut text = serde_json::to_string(context).unwrap_or_default();
+        text.push('\n');
+        return text;
+    }
     let mut text = indented_json(context);
     let supported = indented_json(&context.supported);
     let expanded = format!("\"supported\": {}", supported.replace('\n', "\n "));

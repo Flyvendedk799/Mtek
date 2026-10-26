@@ -357,6 +357,7 @@ fn item_sexp(item: &Item) -> Sexp {
         ItemKind::Struct(decl) => struct_sexp(decl),
         ItemKind::Enum(decl) => enum_sexp(decl),
         ItemKind::Material(decl) => material_sexp(decl),
+        ItemKind::Compute(decl) => compute_sexp(decl),
         ItemKind::Prefab(decl) => prefab_sexp(decl),
         ItemKind::Scene(decl) => scene_sexp(decl),
         ItemKind::Error => bare("error"),
@@ -366,6 +367,35 @@ fn item_sexp(item: &Item) -> Sexp {
     } else {
         decl
     }
+}
+
+fn compute_sexp(decl: &crate::syntax::ast::ComputeDecl) -> Sexp {
+    use crate::syntax::ast::ComputeMember;
+    List::new("compute")
+        .atom(decl.name.name.as_str())
+        .children(decl.members.iter().map(|member| {
+            match member {
+                ComputeMember::Param(param) => param_decl_sexp(param),
+                ComputeMember::Stage(stage) => stage_sexp(stage),
+                ComputeMember::Workgroup(field) => List::new("field")
+                    .atom(field.name.name.as_str())
+                    .child(field_value_sexp(&field.value))
+                    .done(),
+                ComputeMember::Input(buffer) | ComputeMember::Output(buffer) => {
+                    let kind = if matches!(member, ComputeMember::Input(_)) {
+                        "input-buffer"
+                    } else {
+                        "output-buffer"
+                    };
+                    List::new(kind)
+                        .atom(buffer.name.name.as_str())
+                        .child(type_sexp(&buffer.ty))
+                        .done()
+                }
+                ComputeMember::Error(_) => bare("error"),
+            }
+        }))
+        .done()
 }
 
 fn import_sexp(decl: &ImportDecl) -> Sexp {

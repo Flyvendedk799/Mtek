@@ -206,7 +206,7 @@ export class MaterialStore implements ParamSink {
     const kinds = instance.material.resources;
     if (instance.resources.length > 0) {
       this.resources.set(instance.index, {
-        layout: this.plan.material(layout, kinds),
+        layout: this.plan.material(layout, kinds, instance.material.shader.vertexDeformation === 1),
         entries: instance.resources.map((resource) => ({
           binding: resource.binding,
           resource: "asset" in resource ? this.assetTextures.textureView(resource.asset) : resource.kind === "texture" ? this.builtins.textureView(resource.value) : this.builtins.sampler(resource.value),
@@ -222,7 +222,7 @@ export class MaterialStore implements ParamSink {
       }
       const layoutWriters = this.writers.get(layout.id);
       if (layoutWriters === undefined) throw new Error(`internal error: no writers for the layout '${layout.id}'`);
-      storage = { arena, slot: arena.allocate(), writers: layoutWriters, layout: this.plan.material(layout, kinds) };
+      storage = { arena, slot: arena.allocate(), writers: layoutWriters, layout: this.plan.material(layout, kinds, instance.material.shader.vertexDeformation === 1) };
     }
     this.instances.set(instance.index, instance);
     this.blocks[instance.index] = { storage, members: new Set([instance.index]), name: instance.index, resourceGroup: undefined, key: undefined };

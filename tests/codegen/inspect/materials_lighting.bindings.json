@@ -488,13 +488,13 @@
     {
       "id": "material:std/materials.mtek::Pbr",
       "wgslStruct": "MtekParams_2b212d15_Pbr",
-      "size": 32,
+      "size": 48,
       "align": 16,
       "root": {
         "kind": "struct",
         "name": "std/materials.mtek::Pbr",
         "offset": 0,
-        "size": 32,
+        "size": 48,
         "align": 16,
         "members": [
           {
@@ -529,6 +529,40 @@
               "size": 4,
               "align": 4,
               "scalar": "f32"
+            }
+          },
+          {
+            "name": "normal_scale",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 24,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          },
+          {
+            "name": "occlusion_strength",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 28,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          },
+          {
+            "name": "emissive",
+            "mtekType": "color",
+            "node": {
+              "kind": "vector",
+              "offset": 32,
+              "size": 16,
+              "align": 16,
+              "scalar": "f32",
+              "components": 4
             }
           }
         ]
@@ -582,7 +616,7 @@
           "wgslType": "f32",
           "offset": 20,
           "size": 4,
-          "padding": 8,
+          "padding": 0,
           "declaration": {
             "file": "std/materials.mtek",
             "startByte": 468,
@@ -591,6 +625,57 @@
             "startColumn": 5,
             "endLine": 13,
             "endColumn": 32
+          }
+        },
+        {
+          "path": "normal_scale",
+          "mtekType": "f32",
+          "wgslType": "f32",
+          "offset": 24,
+          "size": 4,
+          "padding": 0,
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 1280,
+            "endByte": 1310,
+            "startLine": 26,
+            "startColumn": 5,
+            "endLine": 26,
+            "endColumn": 35
+          }
+        },
+        {
+          "path": "occlusion_strength",
+          "mtekType": "f32",
+          "wgslType": "f32",
+          "offset": 28,
+          "size": 4,
+          "padding": 0,
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 1315,
+            "endByte": 1351,
+            "startLine": 27,
+            "startColumn": 5,
+            "endLine": 27,
+            "endColumn": 41
+          }
+        },
+        {
+          "path": "emissive",
+          "mtekType": "color",
+          "wgslType": "vec4<f32>",
+          "offset": 32,
+          "size": 16,
+          "padding": 0,
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 1356,
+            "endByte": 1388,
+            "startLine": 28,
+            "startColumn": 5,
+            "endLine": 28,
+            "endColumn": 37
           }
         }
       ]
@@ -871,6 +956,295 @@
           "dependencies": [],
           "binding": 2,
           "resource": "sampler.linear_repeat"
+        },
+        {
+          "name": "metallic_roughness_texture",
+          "type": "texture",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 622,
+            "endByte": 682,
+            "startLine": 16,
+            "startColumn": 5,
+            "endLine": 16,
+            "endColumn": 65
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1595,
+            "endByte": 1644,
+            "startLine": 52,
+            "startColumn": 9,
+            "endLine": 52,
+            "endColumn": 58
+          },
+          "update": "resource",
+          "dependencies": [],
+          "binding": 3,
+          "resource": "texture.white"
+        },
+        {
+          "name": "metallic_roughness_sampler",
+          "type": "sampler",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 687,
+            "endByte": 755,
+            "startLine": 17,
+            "startColumn": 5,
+            "endLine": 17,
+            "endColumn": 73
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1595,
+            "endByte": 1644,
+            "startLine": 52,
+            "startColumn": 9,
+            "endLine": 52,
+            "endColumn": 58
+          },
+          "update": "resource",
+          "dependencies": [],
+          "binding": 4,
+          "resource": "sampler.linear_repeat"
+        },
+        {
+          "name": "normal_texture",
+          "type": "texture",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 760,
+            "endByte": 808,
+            "startLine": 18,
+            "startColumn": 5,
+            "endLine": 18,
+            "endColumn": 53
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1595,
+            "endByte": 1644,
+            "startLine": 52,
+            "startColumn": 9,
+            "endLine": 52,
+            "endColumn": 58
+          },
+          "update": "resource",
+          "dependencies": [],
+          "binding": 5,
+          "resource": "texture.white"
+        },
+        {
+          "name": "normal_sampler",
+          "type": "sampler",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 813,
+            "endByte": 869,
+            "startLine": 19,
+            "startColumn": 5,
+            "endLine": 19,
+            "endColumn": 61
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1595,
+            "endByte": 1644,
+            "startLine": 52,
+            "startColumn": 9,
+            "endLine": 52,
+            "endColumn": 58
+          },
+          "update": "resource",
+          "dependencies": [],
+          "binding": 6,
+          "resource": "sampler.linear_repeat"
+        },
+        {
+          "name": "occlusion_texture",
+          "type": "texture",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 874,
+            "endByte": 925,
+            "startLine": 20,
+            "startColumn": 5,
+            "endLine": 20,
+            "endColumn": 56
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1595,
+            "endByte": 1644,
+            "startLine": 52,
+            "startColumn": 9,
+            "endLine": 52,
+            "endColumn": 58
+          },
+          "update": "resource",
+          "dependencies": [],
+          "binding": 7,
+          "resource": "texture.white"
+        },
+        {
+          "name": "occlusion_sampler",
+          "type": "sampler",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 930,
+            "endByte": 989,
+            "startLine": 21,
+            "startColumn": 5,
+            "endLine": 21,
+            "endColumn": 64
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1595,
+            "endByte": 1644,
+            "startLine": 52,
+            "startColumn": 9,
+            "endLine": 52,
+            "endColumn": 58
+          },
+          "update": "resource",
+          "dependencies": [],
+          "binding": 8,
+          "resource": "sampler.linear_repeat"
+        },
+        {
+          "name": "emissive_texture",
+          "type": "texture",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 994,
+            "endByte": 1044,
+            "startLine": 22,
+            "startColumn": 5,
+            "endLine": 22,
+            "endColumn": 55
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1595,
+            "endByte": 1644,
+            "startLine": 52,
+            "startColumn": 9,
+            "endLine": 52,
+            "endColumn": 58
+          },
+          "update": "resource",
+          "dependencies": [],
+          "binding": 9,
+          "resource": "texture.white"
+        },
+        {
+          "name": "emissive_sampler",
+          "type": "sampler",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 1049,
+            "endByte": 1107,
+            "startLine": 23,
+            "startColumn": 5,
+            "endLine": 23,
+            "endColumn": 63
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1595,
+            "endByte": 1644,
+            "startLine": 52,
+            "startColumn": 9,
+            "endLine": 52,
+            "endColumn": 58
+          },
+          "update": "resource",
+          "dependencies": [],
+          "binding": 10,
+          "resource": "sampler.linear_repeat"
+        },
+        {
+          "name": "normal_scale",
+          "type": "f32",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 1280,
+            "endByte": 1310,
+            "startLine": 26,
+            "startColumn": 5,
+            "endLine": 26,
+            "endColumn": 35
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1595,
+            "endByte": 1644,
+            "startLine": 52,
+            "startColumn": 9,
+            "endLine": 52,
+            "endColumn": 58
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "normal_scale",
+          "offset": 24,
+          "size": 4
+        },
+        {
+          "name": "occlusion_strength",
+          "type": "f32",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 1315,
+            "endByte": 1351,
+            "startLine": 27,
+            "startColumn": 5,
+            "endLine": 27,
+            "endColumn": 41
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1595,
+            "endByte": 1644,
+            "startLine": 52,
+            "startColumn": 9,
+            "endLine": 52,
+            "endColumn": 58
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "occlusion_strength",
+          "offset": 28,
+          "size": 4
+        },
+        {
+          "name": "emissive",
+          "type": "color",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 1356,
+            "endByte": 1388,
+            "startLine": 28,
+            "startColumn": 5,
+            "endLine": 28,
+            "endColumn": 37
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1595,
+            "endByte": 1644,
+            "startLine": 52,
+            "startColumn": 9,
+            "endLine": 52,
+            "endColumn": 58
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "emissive",
+          "offset": 32,
+          "size": 16
         }
       ]
     },
@@ -1016,6 +1390,295 @@
           "dependencies": [],
           "binding": 2,
           "resource": "sampler.nearest_clamp"
+        },
+        {
+          "name": "metallic_roughness_texture",
+          "type": "texture",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 622,
+            "endByte": 682,
+            "startLine": 16,
+            "startColumn": 5,
+            "endLine": 16,
+            "endColumn": 65
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1718,
+            "endByte": 1832,
+            "startLine": 56,
+            "startColumn": 9,
+            "endLine": 56,
+            "endColumn": 123
+          },
+          "update": "resource",
+          "dependencies": [],
+          "binding": 3,
+          "resource": "texture.white"
+        },
+        {
+          "name": "metallic_roughness_sampler",
+          "type": "sampler",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 687,
+            "endByte": 755,
+            "startLine": 17,
+            "startColumn": 5,
+            "endLine": 17,
+            "endColumn": 73
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1718,
+            "endByte": 1832,
+            "startLine": 56,
+            "startColumn": 9,
+            "endLine": 56,
+            "endColumn": 123
+          },
+          "update": "resource",
+          "dependencies": [],
+          "binding": 4,
+          "resource": "sampler.linear_repeat"
+        },
+        {
+          "name": "normal_texture",
+          "type": "texture",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 760,
+            "endByte": 808,
+            "startLine": 18,
+            "startColumn": 5,
+            "endLine": 18,
+            "endColumn": 53
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1718,
+            "endByte": 1832,
+            "startLine": 56,
+            "startColumn": 9,
+            "endLine": 56,
+            "endColumn": 123
+          },
+          "update": "resource",
+          "dependencies": [],
+          "binding": 5,
+          "resource": "texture.white"
+        },
+        {
+          "name": "normal_sampler",
+          "type": "sampler",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 813,
+            "endByte": 869,
+            "startLine": 19,
+            "startColumn": 5,
+            "endLine": 19,
+            "endColumn": 61
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1718,
+            "endByte": 1832,
+            "startLine": 56,
+            "startColumn": 9,
+            "endLine": 56,
+            "endColumn": 123
+          },
+          "update": "resource",
+          "dependencies": [],
+          "binding": 6,
+          "resource": "sampler.linear_repeat"
+        },
+        {
+          "name": "occlusion_texture",
+          "type": "texture",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 874,
+            "endByte": 925,
+            "startLine": 20,
+            "startColumn": 5,
+            "endLine": 20,
+            "endColumn": 56
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1718,
+            "endByte": 1832,
+            "startLine": 56,
+            "startColumn": 9,
+            "endLine": 56,
+            "endColumn": 123
+          },
+          "update": "resource",
+          "dependencies": [],
+          "binding": 7,
+          "resource": "texture.white"
+        },
+        {
+          "name": "occlusion_sampler",
+          "type": "sampler",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 930,
+            "endByte": 989,
+            "startLine": 21,
+            "startColumn": 5,
+            "endLine": 21,
+            "endColumn": 64
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1718,
+            "endByte": 1832,
+            "startLine": 56,
+            "startColumn": 9,
+            "endLine": 56,
+            "endColumn": 123
+          },
+          "update": "resource",
+          "dependencies": [],
+          "binding": 8,
+          "resource": "sampler.linear_repeat"
+        },
+        {
+          "name": "emissive_texture",
+          "type": "texture",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 994,
+            "endByte": 1044,
+            "startLine": 22,
+            "startColumn": 5,
+            "endLine": 22,
+            "endColumn": 55
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1718,
+            "endByte": 1832,
+            "startLine": 56,
+            "startColumn": 9,
+            "endLine": 56,
+            "endColumn": 123
+          },
+          "update": "resource",
+          "dependencies": [],
+          "binding": 9,
+          "resource": "texture.white"
+        },
+        {
+          "name": "emissive_sampler",
+          "type": "sampler",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 1049,
+            "endByte": 1107,
+            "startLine": 23,
+            "startColumn": 5,
+            "endLine": 23,
+            "endColumn": 63
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1718,
+            "endByte": 1832,
+            "startLine": 56,
+            "startColumn": 9,
+            "endLine": 56,
+            "endColumn": 123
+          },
+          "update": "resource",
+          "dependencies": [],
+          "binding": 10,
+          "resource": "sampler.linear_repeat"
+        },
+        {
+          "name": "normal_scale",
+          "type": "f32",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 1280,
+            "endByte": 1310,
+            "startLine": 26,
+            "startColumn": 5,
+            "endLine": 26,
+            "endColumn": 35
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1718,
+            "endByte": 1832,
+            "startLine": 56,
+            "startColumn": 9,
+            "endLine": 56,
+            "endColumn": 123
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "normal_scale",
+          "offset": 24,
+          "size": 4
+        },
+        {
+          "name": "occlusion_strength",
+          "type": "f32",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 1315,
+            "endByte": 1351,
+            "startLine": 27,
+            "startColumn": 5,
+            "endLine": 27,
+            "endColumn": 41
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1718,
+            "endByte": 1832,
+            "startLine": 56,
+            "startColumn": 9,
+            "endLine": 56,
+            "endColumn": 123
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "occlusion_strength",
+          "offset": 28,
+          "size": 4
+        },
+        {
+          "name": "emissive",
+          "type": "color",
+          "declaration": {
+            "file": "std/materials.mtek",
+            "startByte": 1356,
+            "endByte": 1388,
+            "startLine": 28,
+            "startColumn": 5,
+            "endLine": 28,
+            "endColumn": 37
+          },
+          "instance": {
+            "file": "src/main.mtek",
+            "startByte": 1718,
+            "endByte": 1832,
+            "startLine": 56,
+            "startColumn": 9,
+            "endLine": 56,
+            "endColumn": 123
+          },
+          "update": "initial",
+          "dependencies": [],
+          "field": "emissive",
+          "offset": 32,
+          "size": 16
         }
       ]
     },

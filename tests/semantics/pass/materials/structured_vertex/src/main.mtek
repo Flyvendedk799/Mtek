@@ -1,0 +1,11 @@
+struct Output { position: vec3; normal: vec3; uv: vec2; tag: u32; active: bool; weight: f32; }
+material Structured {
+    vertex(input: VertexInput) -> Output {
+        return Output { position: input.position; normal: input.normal; uv: input.uv; tag: u32(7); active: true; weight: input.uv.x };
+    }
+    fragment(surface: SurfaceInput, payload: Output) -> color {
+        if payload.active { return color.linear(vec3(surface.uv.x, payload.weight, f32(payload.tag) * 0.1), 1.0); }
+        return #000000;
+    }
+}
+scene Demo { camera Main {} entity Cube { mesh: Box {}; material: Structured {}; } }

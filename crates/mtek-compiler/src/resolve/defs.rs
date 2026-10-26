@@ -35,6 +35,9 @@ pub enum DefKind {
     /// `enum Name { … }` (decision 0129).
     Enum,
     Material,
+    Compute,
+    InputBuffer,
+    OutputBuffer,
     Prefab,
     Scene,
     /// A name brought in by `import { … }`.
@@ -71,6 +74,9 @@ impl DefKind {
             DefKind::Struct => "struct",
             DefKind::Enum => "enum",
             DefKind::Material => "material",
+            DefKind::Compute => "compute program",
+            DefKind::InputBuffer => "input storage buffer",
+            DefKind::OutputBuffer => "output storage buffer",
             DefKind::Prefab => "prefab",
             DefKind::Scene => "scene",
             DefKind::Import => "imported name",

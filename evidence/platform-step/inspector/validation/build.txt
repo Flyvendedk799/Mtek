@@ -1,0 +1,4 @@
+
+> @mtek/inspector@0.1.0-dev build
+> node scripts/build.mjs
+

@@ -1,0 +1,119 @@
+// Authored position/normal/UV rotation with typed fragment payloads.
+// Explicit final local spheres follow the authored displacement; radius zero opts out.
+struct VertexPayload {
+    position: vec3;
+    normal: vec3;
+    uv: vec2;
+    heat: f32;
+    tag: u32;
+    signed: i32;
+    enabled: bool;
+    tone: color;
+    axis: quat;
+}
+
+material Shifted {
+    param offset: vec3 = vec3(-10.0, 0.0, 0.0);
+    param angle: f32 = 0.65;
+    vertex(input: VertexInput) -> VertexPayload {
+        let c = cos(angle);
+        let s = sin(angle);
+        let p = input.position;
+        let n = input.normal;
+        return VertexPayload {
+            position: vec3(c * p.x - s * p.y, s * p.x + c * p.y, p.z) + offset;
+            normal: vec3(c * n.x - s * n.y, s * n.x + c * n.y, n.z);
+            uv: vec2(input.uv.y, 1.0 - input.uv.x);
+            heat: input.uv.x;
+            tag: u32(7) + u32(input.uv.x * 4.0);
+            signed: i32(input.uv.y * 2.0) - 4;
+            enabled: input.uv.x < 0.5;
+            tone: color.linear(vec3(input.uv.y, 0.5, 0.25), 1.0);
+            axis: quat.axis_angle(vec3(0.0, 1.0, 0.0), input.uv.x);
+        };
+    }
+    fragment(surface: SurfaceInput, payload: VertexPayload) -> color {
+        let rgb = vec3(surface.uv.x, payload.heat, (f32(payload.tag) + f32(payload.signed)) * 0.1) * payload.tone.rgb * payload.axis.w;
+        if payload.enabled { return lighting.pbr(surface, color.linear(rgb, 1.0), 0.0, 0.5); }
+        return #ff00ff;
+    }
+}
+
+material Reference {
+    fragment(surface: SurfaceInput) -> color {
+        let rgb = vec3(surface.uv.y, surface.uv.x, 0.5) * vec3(surface.uv.y, 0.5, 0.25);
+        return lighting.pbr(surface, color.linear(rgb, 1.0), 0.0, 0.5);
+    }
+}
+
+scene Demo {
+    clear_color: #000000;
+    ambient_intensity: 0.02;
+    state bound_radius: f32 = 0.87;
+    state angle: f32 = 0.65;
+    state shift_x: f32 = -10.0;
+    state shift_y: f32 = 1.1;
+    state authored: bool = true;
+    state reference: bool = false;
+    state crowd: bool = false;
+
+    camera Main {
+        position: vec3(0.0, 8.0, 0.0);
+        target: vec3(0.0, 0.0, 0.0);
+        projection: Orthographic { height: 8.0; near: 0.1; far: 30.0 };
+        exposure: -0.2630344;
+    }
+    entity Sun {
+        rotation: quat.euler(-0.7, 1.5707963, 0.0);
+        light: DirectionalLight { intensity: 3.0 };
+    }
+    entity Floor {
+        mesh: Plane { size: vec2(20.0, 20.0) };
+        material: Pbr { base_color: #b0b0b0; roughness: 0.8 };
+    }
+    entity Moving {
+        bounds_center: bind(vec3(shift_x, shift_y, 0.0));
+        bounds_radius: bind(bound_radius);
+        position: vec3(10.0, 0.0, 0.0);
+        visible: bind(authored && !crowd);
+        mesh: Box { size: vec3(1.0) };
+        material: Shifted { offset: bind(vec3(shift_x, shift_y, 0.0)); angle: bind(angle) };
+    }
+    entity MovingReference {
+        rotation: bind(quat.axis_angle(vec3(0.0, 0.0, 1.0), angle));
+        position: bind(vec3(10.0 + shift_x, shift_y, 0.0));
+        visible: bind(reference && !crowd);
+        mesh: Box { size: vec3(1.0) };
+        material: Reference {};
+    }
+    entity CrowdA {
+        bounds_center: vec3(-10.0, 0.0, 0.0);
+        bounds_radius: 0.87;
+        position: vec3(10.0, 1.1, 0.0);
+        visible: bind(authored && crowd);
+        mesh: Box { size: vec3(1.0) };
+        material: Shifted {};
+    }
+    entity CrowdB {
+        bounds_center: vec3(-10.0, 0.0, 0.0);
+        bounds_radius: 0.87;
+        position: vec3(12.0, 1.1, 0.0);
+        visible: bind(authored && crowd);
+        mesh: Box { size: vec3(1.0) };
+        material: Shifted {};
+    }
+    entity ReferenceA {
+        rotation: bind(quat.axis_angle(vec3(0.0, 0.0, 1.0), 0.65));
+        position: vec3(0.0, 1.1, 0.0);
+        visible: bind(reference && crowd);
+        mesh: Box { size: vec3(1.0) };
+        material: Reference {};
+    }
+    entity ReferenceB {
+        rotation: bind(quat.axis_angle(vec3(0.0, 0.0, 1.0), 0.65));
+        position: vec3(2.0, 1.1, 0.0);
+        visible: bind(reference && crowd);
+        mesh: Box { size: vec3(1.0) };
+        material: Reference {};
+    }
+}

@@ -1,0 +1,75 @@
+{
+  "format": "mtek-package-size-record/1",
+  "date": "2026-10-25",
+  "command": "npm run check:budgets",
+  "comparison": "Current shadows/environment implementation. Existing budgets are unchanged; this is not a matched renderer comparison.",
+  "runtimeMinBytes": 693856,
+  "examples": {
+    "arcade-audio": {
+      "folderBytes": 819505,
+      "folderLimit": 880000,
+      "zipBytes": 821307,
+      "zipLimit": 880000
+    },
+    "hud-score": {
+      "folderBytes": 784015,
+      "folderLimit": 820000,
+      "zipBytes": 785141,
+      "zipLimit": 820000
+    },
+    "lane-runner": {
+      "folderBytes": 783809,
+      "folderLimit": 810000,
+      "zipBytes": 785617,
+      "zipLimit": 810000
+    },
+    "material-configurator": {
+      "folderBytes": 851700,
+      "folderLimit": 970000,
+      "zipBytes": 853242,
+      "zipLimit": 970000
+    },
+    "modular-scene": {
+      "folderBytes": 749625,
+      "folderLimit": 760000,
+      "zipBytes": 750751,
+      "zipLimit": 760000
+    },
+    "physics-playground": {
+      "folderBytes": 5211657,
+      "folderLimit": 5660000,
+      "zipBytes": 5213199,
+      "zipLimit": 5660000
+    },
+    "product-configurator": {
+      "folderBytes": 828151,
+      "folderLimit": 870000,
+      "zipBytes": 829277,
+      "zipLimit": 870000
+    },
+    "pulse-cube": {
+      "folderBytes": 735544,
+      "folderLimit": 740000,
+      "zipBytes": 736670,
+      "zipLimit": 740000
+    },
+    "small-game": {
+      "folderBytes": 754118,
+      "folderLimit": 770000,
+      "zipBytes": 755576,
+      "zipLimit": 770000
+    },
+    "sprite-pop": {
+      "folderBytes": 752573,
+      "folderLimit": 770000,
+      "zipBytes": 753829,
+      "zipLimit": 770000
+    },
+    "stage-show": {
+      "folderBytes": 735840,
+      "folderLimit": 740000,
+      "zipBytes": 737096,
+      "zipLimit": 740000
+    }
+  }
+}

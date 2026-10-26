@@ -22,7 +22,10 @@ fn committed_schema_matches_the_generator() {
     let generated = export_schema_json(registry());
     let path = schema_path();
     if std::env::var_os("MTEK_BLESS").is_some_and(|v| v == "1") {
-        fs::write(&path, &generated).unwrap();
+        // Replace rather than truncate: desktop editors can retain mapped golden files on Windows.
+        let temporary = path.with_extension("json.tmp");
+        fs::write(&temporary, &generated).unwrap();
+        fs::rename(&temporary, &path).unwrap();
         return;
     }
     let committed = fs::read_to_string(&path).unwrap_or_else(|e| {

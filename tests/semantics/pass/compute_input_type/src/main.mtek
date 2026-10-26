@@ -1,0 +1,10 @@
+// Type/field coverage only. This helper has no invocation producer until the
+// compute packaging/dispatch gate is implemented; it does not execute a kernel.
+fn invocation_index(input: ComputeInput) -> u32 {
+    return input.index + input.global_x + input.global_y + input.global_z
+        + input.local_x + input.local_y + input.local_z
+        + input.group_x + input.group_y + input.group_z
+        + input.group_count_x + input.group_count_y + input.group_count_z
+        + input.local_index;
+}
+scene Demo { camera Main {} }

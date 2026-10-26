@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mtek authored vertex stage</title>
+<style>
+  body{margin:2rem auto;max-width:48rem;padding:0 1rem;background:#131720;color:#e9eef8;font:16px/1.5 system-ui}
+  canvas{width:min(100%,32rem);aspect-ratio:1;background:black;display:block;margin:1rem 0}
+  label{display:block;margin:.8rem 0}input{vertical-align:middle}pre{white-space:pre-wrap;color:#ffbdad}
+</style>
+<h1>Authored vertex translation</h1>
+<p>The mesh starts outside the camera. Its Mtek vertex stage moves it into view and casts the matching shadow. The reference uses an ordinary object transform.</p>
+<label>Horizontal shift <input id="shift" type="range" min="-12" max="-8" value="-10" step="0.1"></label>
+<label><input id="reference" type="checkbox"> Show transform reference</label>
+<label><input id="crowd" type="checkbox"> Show two static instances</label>
+<canvas width="512" height="512" aria-label="Lit translated geometry and its shadow"></canvas>
+<p id="status" role="status">Preparing…</p><pre id="errors" role="alert"></pre>
+<script type="module">
+import program,{mountMtek} from "./.out/app.js";
+const status=document.querySelector("#status"),errors=document.querySelector("#errors");
+try {
+  const app=await mountMtek(document.querySelector("canvas"),program,{
+    rendering:{shadows:{light:"Sun",quality:"low"}},
+    test:{manualClock:true},onDiagnostic:diagnostic=>{errors.textContent+=`${diagnostic.code}: ${diagnostic.message}\n`;}
+  });
+  function render(){
+    app.setInput("shift_x",Number(document.querySelector("#shift").value));
+    const reference=document.querySelector("#reference").checked;
+    app.setInput("reference",reference);app.setInput("authored",!reference);
+    app.setInput("crowd",document.querySelector("#crowd").checked);
+    app.debug.step(1,1/60);status.textContent=reference?"Transform reference":"Mtek-authored vertex stage";
+  }
+  for(const control of document.querySelectorAll("input"))control.addEventListener("input",render);
+  render();addEventListener("pagehide",()=>app.dispose(),{once:true});
+}catch(error){status.textContent="Could not render";errors.textContent=String(error);}
+</script>
+</html>

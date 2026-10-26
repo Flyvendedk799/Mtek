@@ -306,22 +306,28 @@ impl Tree<'_> {
                 ),
             );
         }
-        let stage = &material.fragment;
-        let location = self.location(stage.span);
-        let inputs = if stage.surface_inputs.is_empty() {
-            "none".to_owned()
-        } else {
-            stage.surface_inputs.join(", ")
-        };
-        self.line(
-            depth + 1,
-            format!(
-                "fragment -> {} [{}] reads {inputs} {location}",
-                stage.result, stage.symbol
-            ),
-        );
-        self.locals(depth + 2, &stage.locals);
-        self.block(depth + 2, &stage.body, &stage.locals);
+        for (kind, stage) in material
+            .vertex
+            .iter()
+            .map(|stage| ("vertex", stage))
+            .chain(std::iter::once(("fragment", &material.fragment)))
+        {
+            let location = self.location(stage.span);
+            let inputs = if stage.surface_inputs.is_empty() {
+                "none".to_owned()
+            } else {
+                stage.surface_inputs.join(", ")
+            };
+            self.line(
+                depth + 1,
+                format!(
+                    "{kind} -> {} [{}] reads {inputs} {location}",
+                    stage.result, stage.symbol
+                ),
+            );
+            self.locals(depth + 2, &stage.locals);
+            self.block(depth + 2, &stage.body, &stage.locals);
+        }
     }
 
     fn block(&mut self, depth: usize, block: &Block, locals: &[LocalItem]) {
@@ -529,7 +535,8 @@ impl Tree<'_> {
     fn binding(&mut self, depth: usize, binding: &Binding) {
         let location = self.location(binding.span);
         let target = match &binding.target {
-            BindingTarget::Transform { entity, field } => format!("entity#{entity}.{field}"),
+            BindingTarget::Bounds { entity, field }
+            | BindingTarget::Transform { entity, field } => format!("entity#{entity}.{field}"),
             BindingTarget::Visible { entity } => format!("entity#{entity}.visible"),
             BindingTarget::Param { entity, name } => format!("entity#{entity}.material.{name}"),
             BindingTarget::Camera { camera, field } => format!("camera {camera}.{field}"),
@@ -679,6 +686,12 @@ impl Tree<'_> {
         self.field(depth + 1, "rotation", &entity.rotation);
         self.field(depth + 1, "scale", &entity.scale);
         self.field(depth + 1, "visible", &entity.visible);
+        if let Some(field) = &entity.bounds_center {
+            self.field(depth + 1, "bounds_center", field);
+        }
+        if let Some(field) = &entity.bounds_radius {
+            self.field(depth + 1, "bounds_radius", field);
+        }
         if let Some(tag) = &entity.tag {
             self.line(depth + 1, format!("tag {tag:?}"));
         }

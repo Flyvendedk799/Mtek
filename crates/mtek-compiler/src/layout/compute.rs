@@ -149,7 +149,7 @@ fn check_array_length(length: u32) -> Result<(), LayoutError> {
 /// The alignment WGSL itself derives for `ty` once the emitter has added its attributes
 /// (`@align(16)` on struct and array members). For a struct this is its own
 /// `layoutStruct` alignment, which can be smaller than `UAlign`.
-fn natural_align(ty: &LayoutType) -> Result<u32, LayoutError> {
+pub(super) fn natural_align(ty: &LayoutType) -> Result<u32, LayoutError> {
     match ty {
         LayoutType::Struct { name, members } => Ok(layout_struct(name, members)?.align),
         LayoutType::Array { element, .. } => natural_align(element),
@@ -186,7 +186,7 @@ pub fn compute(ty: &LayoutType, id: &str, wgsl_struct: &str) -> Result<LayoutRec
 }
 
 /// Builds the node of `ty` placed at the absolute byte `offset`.
-fn build_node(ty: &LayoutType, offset: u32) -> Result<LayoutNode, LayoutError> {
+pub(super) fn build_node(ty: &LayoutType, offset: u32) -> Result<LayoutNode, LayoutError> {
     let vector = |size: u32, align: u32, components: u32| LayoutNode::Vector {
         offset,
         size,

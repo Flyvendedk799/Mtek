@@ -250,6 +250,13 @@ fn lighting_pbr_is_a_helper_over_the_frame_block_that_reads_two_surface_fields()
             continue;
         }
         let wgsl = &artifact.wgsl;
+        if key == "materials.Pbr" {
+            assert!(wgsl.contains("fn mtek_lighting_pbr_mapped("));
+            assert!(wgsl.contains("dpdx(mtek_surface.world_position)"));
+            assert!(wgsl.contains("textureSample("));
+            assert!(wgsl.contains("clamp(mtek_occlusion, 0.0, 1.0)"));
+            continue;
+        }
         if key == "main.Checker" {
             // Two calls, one helper.
             assert_eq!(wgsl.matches("fn mtek_lighting_pbr(").count(), 1, "{wgsl}");

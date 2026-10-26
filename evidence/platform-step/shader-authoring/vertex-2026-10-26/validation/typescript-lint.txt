@@ -1,0 +1,64 @@
+
+> check:ts
+> node scripts/gen-manifest-validator.mjs && tsc -b
+
+
+> lint
+> npm run lint --workspaces --if-present
+
+
+> @mtek/runtime-web@0.1.0-dev lint
+> npm run gen && eslint src
+
+
+> @mtek/runtime-web@0.1.0-dev gen
+> node ../../scripts/gen-manifest-validator.mjs
+
+
+> @mtek/inspector@0.1.0-dev lint
+> eslint src test
+
+
+> @mtek/physics-rapier@0.1.0-dev lint
+> eslint src
+
+
+> mtek-vscode@0.1.0 lint
+> eslint src
+
+
+> @mtek/browser-tests@0.1.0-dev lint
+> eslint .
+
+
+> @mtek/codegen-tests@0.1.0-dev lint
+> eslint .
+
+
+> @mtek/benchmarks@0.1.0-dev lint
+> eslint .
+
+
+> @mtek/baseline-m0-bridge@0.1.0-dev lint
+> eslint .
+
+
+> @mtek/runtime-benchmarks@0.1.0-dev lint
+> eslint .
+
+
+> @mtek/ai-eval@0.1.0-dev lint
+> eslint . && node src/check-boundary.ts
+
+ai-eval boundary: OK (no language package imports the harness, an adapter or a provider; the core imports no optional adapter)
+
+> @mtek/coverage-matrix@0.1.0-dev lint
+> eslint .
+
+
+> @mtek/release-docs@0.1.0-dev lint
+> eslint .
+
+
+> @mtek/asset-audit@0.1.0-dev lint
+> eslint src test

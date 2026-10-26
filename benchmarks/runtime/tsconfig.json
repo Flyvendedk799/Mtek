@@ -1,13 +1,27 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "types": ["node", "@webgpu/types"],
+    "types": [
+      "node",
+      "@webgpu/types"
+    ],
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
-    "paths": { "@implementation": ["./harness/floor.ts"] },
+    "paths": {
+      "@implementation": [
+        "./harness/floor.ts"
+      ],
+      "@animation-implementation": [
+        "./animation/mtek-adapter.ts"
+      ]
+    },
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
@@ -18,5 +32,14 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["common", "harness", "tools", "*/direct", "*/three", "*/*.ts", "vitest.config.ts"]
+  "include": [
+    "common",
+    "harness",
+    "tools",
+    "animation",
+    "*/direct",
+    "*/three",
+    "*/*.ts",
+    "vitest.config.ts"
+  ]
 }

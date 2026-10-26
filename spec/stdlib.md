@@ -43,7 +43,7 @@ The generated file contains more than the sketch above (field `constructionOnly`
 
 ## 2. Types and namespaces
 
-Types: `bool i32 u32 f32 string vec2 vec3 vec4 mat4 quat color mesh material texture sampler entity_ref sound` and the generic `array<T, N>`; structured built-ins `SurfaceInput` (`spec/materials.md` §3.1) and `PointerEvent { position: vec2; button: i32 }`.
+Types: `bool i32 u32 f32 string vec2 vec3 vec4 mat4 quat color mesh material texture sampler entity_ref sound` and the generic `array<T, N>`; structured built-ins `VertexInput { position: vec3; normal: vec3; uv: vec2 }` (`spec/materials.md` §3.5), `SurfaceInput` (`spec/materials.md` §3.1), `ComputeInput` (decision 0202: fourteen u32 invocation fields; runnable compute packaging/dispatch remains gated), and `PointerEvent { position: vec2; button: i32 }`.
 
 | Namespace | Members |
 |---|---|
@@ -52,10 +52,10 @@ Types: `bool i32 u32 f32 string vec2 vec3 vec4 mat4 quat color mesh material tex
 | `mat4` | `identity()`, `translation(v: vec3)`, `rotation(q: quat)`, `scale(v: vec3)`, `columns(c0, c1, c2, c3: vec4)` |
 | `color` | `linear(rgb: vec3, a: f32)`, `srgb(rgb: vec3, a: f32)` |
 | `texture` | `white()`, `black()` (1×1 built-ins) |
-| `sampler` | `linear_repeat()`, `linear_clamp()`, `nearest_repeat()`, `nearest_clamp()` |
+| `sampler` | `linear_repeat()`, `linear_clamp()`, `nearest_repeat()`, `nearest_clamp()`; `linear_repeat_level0()`, `linear_clamp_level0()`, `nearest_repeat_level0()`, `nearest_clamp_level0()`, `linear_repeat_mip_nearest()`, `linear_clamp_mip_nearest()`, `nearest_repeat_mip_linear()`, `nearest_clamp_mip_linear()` (decision 0194) |
 | `frame` | `time: f32`, `delta: f32`, `index: u32` (`spec/scenes.md` §7.5) |
 | `asset` | `glb(path: string) -> glb_asset`, `texture(path: string) -> texture`, `linear_texture(path: string) -> texture`, `sound(path: string) -> sound`, `font(path: string) -> font` (`spec/assets.md` §2, `spec/audio.md` §2, `spec/hud.md` §6; `glb_asset` accessors in §2.1 there; implemented by task M4-05 ahead of the M4 gate, decision 0058) |
-| `lighting` | `pbr(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32) -> color` — GPU only (implemented by M4-03, decision 0057) |
+| `lighting` | `pbr(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32) -> color` and `pbr_mapped(surface, base_color, metallic, roughness, normal_texel, normal_scale, occlusion, emissive) -> color` — GPU only (decisions 0057, 0194) |
 | `hud` | `text(content: string, at: vec2[, size: f32[, tint: color[, align: f32[, font: font]]]])`, `pixel_font() -> font` (decision 0139), `rect(at: vec2, size: vec2, tint: color[, align: f32])`, `button(label: string, at: vec2[, size: f32]) -> bool` — CPU, handlers and lifecycle functions only; immediate mode, drawn over the canvas (`spec/hud.md`, decision 0134) |
 | `easing` | `in_quad(t: f32) -> f32`, `out_quad(t: f32) -> f32`, `in_out_quad(t: f32) -> f32`, `in_cubic(t: f32) -> f32`, `out_cubic(t: f32) -> f32`, `in_out_cubic(t: f32) -> f32`, `in_out_sine(t: f32) -> f32`, `out_back(t: f32) -> f32`, `out_elastic(t: f32) -> f32`, `out_bounce(t: f32) -> f32` — CPU, also allowed in `bind`; `t` clamped to 0..1, result binary32 (`spec/tweens.md`, decision 0135) |
 | `Key` | enum constants (§5.2) |
@@ -80,6 +80,8 @@ Flags: **R** required · **W** writable from handlers · **B** bindable · **C**
 | `rotation` | `quat` | `quat.identity()` | W B |
 | `scale` | `vec3` (> 0) | `vec3(1.0)` | W B (C if the entity has a body) |
 | `visible` | `bool` | `true` | W B |
+| `bounds_center` | `vec3` (finite) | `vec3(0.0)` | W B |
+| `bounds_radius` | `f32` (finite, ≥ 0) | `0.0` | W B |
 | `mesh` | mesh schema | — | C |
 | `material` | material instance | `Unlit {}` when `mesh` is set | W for compatible value-only replacements (params W B) |
 | `light` | light schema | — | C (fields W B) |
@@ -88,6 +90,13 @@ Flags: **R** required · **W** writable from handlers · **B** bindable · **C**
 | `tag` | string | — | C |
 | `particles` | `Emitter` | — | C |
 | `clip` | string | — | C |
+
+Authored final local mesh bounds (decision 0199): `bounds_center: vec3 = vec3(0.0)`
+and `bounds_radius: f32 = 0.0` are writable and bindable. A positive finite radius
+replaces automatic mesh/skin bounds and must enclose the final deformed geometry.
+Zero selects automatic bounds, or conservative visibility for authored vertex
+stages. The center must be finite. Constant violations are `E5006`; invalid runtime
+writes are ignored with `E8091`.
 
 ### 3.3 `Camera` (scene-object kind `camera`), `Perspective`, `Orthographic`
 As in `spec/scenes.md` §3, including `exposure: f32 = -1.9145305` (EV100, C, decision 0081). `Perspective { fov_y: f32 = 0.9 (0, π); near: f32 = 0.1 (> 0); far: f32 = 1000.0 (> near) }`, `Orthographic { height: f32 = 10.0 (> 0); near: f32 = 0.1; far: f32 = 1000.0 }`; all projection fields W B.
@@ -188,7 +197,8 @@ Notation: `T` ranges over `f32, vec2, vec3, vec4` (component-wise), `I` over `i3
 | `normalize` | `V → V` | both | ✓ | a zero vector, or one whose squared length underflows or overflows, → zero vector on CPU and GPU (decision 0047) |
 | `reflect` | `(V, V) → V` | both | ✓ | `i − 2·dot(n, i)·n` |
 | `transpose` | `mat4 → mat4` | both | ✓ | |
-| `sample` | `(texture, sampler, vec2) → vec4` | gpu | — | `spec/materials.md` §5 |
+| `sample` | `(texture, sampler, vec2) → vec4` | gpu | — | Level zero; `spec/materials.md` §5 |
+| `sample_mip` | `(texture, sampler, vec2) → vec4` | gpu | — | Implicit mip selection in the unconditional fragment prefix; `spec/materials.md` §5 |
 | `random` | `() → f32` | cpu | — | `[0, 1)`, seeded PRNG (xoshiro128**, seed from mount options) — deterministic under a fixed seed |
 | `random_range` | `(f32, f32) → f32` | cpu | — | `lo + (hi − lo) · random()` rounded to f32: in `[lo, hi)`; one draw of `random()` (decision 0149) |
 | `random_int` | `(i32, i32) → i32` | cpu | — | `lo + floor(random() · (hi − lo))`: in `[lo, hi)`, `lo` when `hi ≤ lo`; one draw, also then (decision 0149) |

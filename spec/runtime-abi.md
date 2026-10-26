@@ -165,7 +165,7 @@ Ownership rules (`spec/scenes.md` §8) are enforced **statically**; the setters 
 
 ## 5. The manifest (`program.manifest.json`)
 
-JSON, UTF-8, keys in a fixed order, schema version 1. A JSON Schema for it is checked in as `spec/manifest.schema.json` and the runtime validates the manifest against a compiled form of that schema before using it.
+JSON, UTF-8, keys in a fixed order, schema version 1. A JSON Schema for it is checked in as `spec/manifest.schema.json` and the runtime validates the manifest against a compiled form of that schema before using it. Release and preview packages use compact JSON with a final LF for the manifest and WGSL span maps; development and test packages indent them. The values and source mappings are identical (decision 0194). A shader may declare `lighting: 1`, requiring the scene-lighting group of decision 0195; older shaders omit it. On generated lines with one source span/symbol, overlapping source-map ranges may be coalesced without changing position lookup.
 
 ```json
 {
@@ -268,12 +268,12 @@ One entry per emitted WGSL statement/expression that originates in Mtek source; 
                     "offsets": { "position": 140, "normal": 188, "indices": 236 },
                     "boundingSphere": { "center": [0.5, 0.5, 0.5], "radius": 0.8660255 } } ] }
 { "url": "assets/9c39f834fcfae0c6.png", "sha256": "…", "bytes": 76, "kind": "image", "span": 4,
-  "colorSpace": "srgb", "preprocessing": [ "mipmaps not generated" ] }
+  "colorSpace": "srgb", "preprocessing": [ "mipmaps generated at runtime" ] }
 ```
 
 - **Mesh data.** A `.bin` holds the referenced primitives of one GLB, in the order of the `primitives` array. Every offset is a **byte offset from the start of the file** and a multiple of 4; numbers are little-endian. A primitive stores, in this order: `position` (`f32 × 3` per vertex), `normal` (`f32 × 3`) if `attributes` has `"normal"`, `uv` (`f32 × 2`) if it has `"uv"`, all tightly packed, then `indexCount` indices of `indexFormat` (`uint16` when `vertexCount` ≤ 65 535, otherwise `uint32`), then zero padding to a multiple of 4. `boundingSphere` is in the mesh's local space (the entity transform applies as for built-in shapes). Triangles are counter-clockwise from the front, uv origin top-left, +Y up (glTF's conventions, which are Mtek's; nothing is converted).
 - **Meshes.** `meshes[]` has entries `{ "id": "mesh:N", "kind": "asset", "asset": <url of a mesh-data entry>, "primitive": <index into that entry's primitives> }`; an entity's `mesh` is the id. The compiler has checked that the mesh has every attribute its material reads (`shaders[].vertexAttributes`, `E7010`).
-- **Images.** The file is a PNG or JPEG exactly as the author wrote it; `colorSpace` says how to upload it (`"srgb"`: `rgba8unorm-srgb`, `"linear"`: `rgba8unorm`, `spec/assets.md` §5). An instance's `texture` param is `{ "name": "base_color_texture", "class": "resource", "value": { "kind": "asset", "asset": <url of an image entry> } }`; its `sampler` param is a built-in preset. `preprocessing` lists what the compiler decided instead of the author (`mipmaps not generated`: the file's sampler asked for mip-maps, v0.1 samples the base level).
+- **Images.** The file is a PNG or JPEG exactly as the author wrote it; `colorSpace` says how to upload it (`"srgb"`: `rgba8unorm-srgb`, `"linear"`: `rgba8unorm`, `spec/assets.md` §5). An instance's `texture` param is `{ "name": "base_color_texture", "class": "resource", "value": { "kind": "asset", "asset": <url of an image entry> } }`; its `sampler` param is a built-in preset. `preprocessing` lists what the compiler decided instead of the author (`mipmaps generated at runtime`: the file's sampler asked for mip levels, which the runtime generates before drawing).
 - **Audio** (decision 0130). The file is a WAV, Ogg or MP3 exactly as the author wrote it: `{ "url": "assets/<h16>.wav", "sha256": "…", "bytes": 2252, "kind": "audio", "format": "wav", "mime": "audio/wav", "source": "sounds/hit.wav", "span": 3 }`. `format` is `wav`, `ogg` or `mp3`; `source` is the project path, the string by which generated code names the sound (`ctx.audio.play(spanId, "sounds/hit.wav", ..)`).
 - **Loading.** The runtime fetches each `url` from `baseUrl`, verifies `bytes` and `sha256`, decodes images, uploads meshes and textures and keeps the verified bytes for device recovery and hot reload; every state, diagnostic and limit check is decision 0060.
 - **Names.** The `<h16>` of a `.bin` is the first 16 hex digits of the SHA-256 of the GLB's project path, a zero byte and the file's bytes; of an image, of the colour space name, a zero byte and the image bytes. The same image bytes used in both colour spaces are two files.
@@ -579,3 +579,103 @@ entity has its own player; teardown removes it before slot reuse.
 
 Decision 0192 adds `ctx.animationCopyPose(target, source) -> boolean` for a held,
 independent skeletal pose snapshot. References must be live and rigs compatible.
+
+
+## 13. Optional scene lighting (decision 0195)
+
+`MtekMountOptions.rendering.shadows` configures one directional map by unique light
+entity name/full symbol, low/medium/high quality, fixed world-space centre and
+size, light-camera distance/near/far, depth bias and geometric-normal bias.
+`rendering.environment` accepts a linear RGBA Float32Array panorama with dimensions,
+intensity, yaw rotation and low/medium/high prefilter quality. These settings and
+pixels are copied at mount and retained for recovery and compatible replacement.
+`decodeRadiance(bytes)` decodes supported RGBE panoramas without fetching data.
+
+Lit shaders advertise `lighting: 1`; the runtime binds the 256-byte lighting block,
+directional depth/comparison sampler, GGX environment cube/filtering sampler and
+BRDF LUT in group 3. Older shaders omit this field and retain their original
+binding plan. Unknown versions fail manifest validation; requesting these host
+options without a compatible lit shader reports `E8051`.
+
+Opaque visible entities cast regardless of camera culling, using current skinned
+positions. Draw counters include their extra shadow draws. When GPU timestamps are
+available, their interval runs from shadow-pass begin through colour-pass end;
+separate skinning/preprocessing and subsequent post effects are outside it.
+All lighting GPU resources are scene-owned and rebuilt after device loss.
+
+See [decision 0195](decisions/0195-shadows-and-environment-lighting.md) for the exact
+binding offsets, equations, colour assumptions, defaults, input bounds, shadow
+volume and remaining restrictions. HDR sources do not enable an HDR display,
+tone mapping or a sky background.
+
+## 14. Extended host animation controls
+
+[Decision 0196](decisions/0196-animation-blends-and-crowds.md) specifies synchronized
+1D locomotion blends, camera-distance pose policies, orientation/hinge IK and
+world-frame retargeting. These extend the independent animation API and the live
+players returned by extension contexts; they introduce no manifest or language change.
+
+`context.shareAnimation(sourceId, targetIds)` links an explicit shared-pose cohort
+after validating identical skeletal assets. It shares controls, evaluation, palettes
+and deformed geometry; compatible opaque draws can be instanced.
+`context.detachAnimation(id)` creates an independent held snapshot. Select a clip
+or blend to resume motion. Controls and extracted root motion belong to the cohort.
+
+Distance bands start at zero and increase strictly. Mounted players use the nearest
+cohort member's world-origin distance to the active camera. Clocks, markers and root
+motion continue between pose evaluations; sockets describe the last displayed pose.
+Standalone controllers accept distance as the third `update` argument.
+
+Entity IDs and players remain scene-generation-owned. Recovery-aware extensions
+re-query IDs and reapply sharing and animation settings after reconstruction.
+
+## 15. Optional inspection consumer and package boundary
+
+`@mtek/inspector` is an independently packaged extension API 1 consumer. It uses
+public copied transforms, validated batches, animation players and explicitly
+supplied host services. It introduces no language, manifest or renderer ABI change
+and is not included automatically in compiled applications. Its controller queues
+mutations for the before-frame hook and observes completed state after frames.
+Bindings/physics retain ownership; shared-pose edits remain shared unless explicitly
+detached. An inspector is not a source of whole-frame GPU benchmark evidence.
+
+The [runtime SDK compatibility policy](../packages/runtime-web/README.md) defines
+version checks, teardown, reconstruction and development-package limitations.
+[Inspector usage](../packages/inspector/README.md) documents transform history,
+animation controls, bounded snapshots, public API limitations and optional host
+metrics. Installed-tarball type/runtime tests and fake-GPU mounted tests cover
+this boundary. Real rendered-scene authoring validation remains separate.
+
+## 16. Authored local-position stages (decision 0197)
+
+A shader may declare `vertexDeformation: 1`. Unknown values fail schema validation.
+The property requires group-1 values/textures/samplers to be visible in the vertex
+and fragment stages, with separate binding-layout cache keys. The emitted runtime
+must support this property; older schemas reject it. Fragment-only shaders omit it
+and retain their binding layouts. Extension API 1 is unchanged.
+
+Both ordinary and instanced entries run the authored local-position function after
+skinning and before model/projection transforms. The runtime retains authored draws
+when camera culling cannot prove their displaced bounds. Directional shadows use
+the same vertex entry with a light-projection frame, material and object groups;
+they do not bind the writable depth texture for sampling. Scene disposal/replacement
+releases those extra buffers and pipelines. See decision 0197 for normal/UV,
+transparent ordering and authored-bound limitations.
+
+Structured vertex outputs and matching fragment payloads (decision 0198) use the
+same `vertexDeformation: 1` binding contract. Normal/UV values and varying linkage
+are resolved within the generated shader; no new host resource bindings are needed.
+`mtek inspect --shaders` reports payload source/WGSL types, locations and modes.
+
+## 17. Authored mesh bounds (decision 0199)
+
+Entity records default `bounds_center` to the local origin and `bounds_radius` to
+zero. `ctx.setBounds` validates/copies writes and increments a culling revision
+independent of world-matrix updates. Manifest `bounds` targets and entity-field
+dependencies support the two source names. Positive spheres replace mesh/skin
+bounds in final local space; zero restores automatic bounds or unbounded authored
+visibility. World expansion covers inherited shear. Sorting uses the same center;
+shadow casters remain independent of camera culling. Recovery retains CPU records;
+replacement initializes the new program's bounds. Optional extension snapshot
+`bounds` values are fresh copies. See decision 0199 for the enclosure promise,
+invalid-write behavior and the absence of a world-space overlay.

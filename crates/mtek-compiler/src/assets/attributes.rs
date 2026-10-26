@@ -14,7 +14,7 @@ use crate::types::{CheckedEntity, ConstValue, MaterialInfo, Typeck};
 fn surface_inputs<'t>(
     typecks: &[&'t Typeck],
     value: &ConstValue,
-) -> Option<(&'t MaterialInfo, String)> {
+) -> Option<(&'t MaterialInfo, &'t Typeck, String)> {
     for typeck in typecks {
         for (_, info) in typeck.materials() {
             let found = match value {
@@ -23,7 +23,7 @@ fn surface_inputs<'t>(
                 _ => false,
             };
             if found {
-                return Some((info, info.name.clone()));
+                return Some((info, typeck, info.name.clone()));
             }
         }
     }
@@ -57,7 +57,7 @@ fn check_entity(
     let Some(material_value) = entity.field("material").and_then(|f| f.value.as_ref()) else {
         return;
     };
-    let Some((info, material_name)) = surface_inputs(typecks, material_value) else {
+    let Some((info, owner, material_name)) = surface_inputs(typecks, material_value) else {
         return;
     };
     let Some(stage) = &info.fragment else {
@@ -83,9 +83,25 @@ fn check_entity(
         ("uv", "TEXCOORD_0", primitive_data.uv.is_some()),
         ("world_normal", "NORMAL", primitive_data.normal.is_some()),
     ] {
-        if present || !stage.surface_inputs.contains(&input) {
+        let vertex_input = if input == "world_normal" {
+            "normal"
+        } else {
+            input
+        };
+        let authored = info
+            .vertex
+            .as_ref()
+            .and_then(|vertex| owner.interner().struct_def(vertex.result))
+            .is_some_and(|output| output.field(vertex_input).is_some());
+        let fragment_reads = stage.surface_inputs.contains(&input) && !authored;
+        let vertex_reads = info
+            .vertex
+            .as_ref()
+            .is_some_and(|stage| stage.surface_inputs.contains(&vertex_input));
+        if present || !(fragment_reads || vertex_reads) {
             continue;
         }
+        let input = if fragment_reads { input } else { vertex_input };
         sink.push(
             Diagnostic::new(
                 Code::E7010,

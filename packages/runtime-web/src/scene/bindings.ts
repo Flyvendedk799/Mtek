@@ -12,6 +12,7 @@ import { RuntimeInternalError, type World } from "./world.js";
 /** The setters of `ctx` a binding is applied through. */
 interface BindingContext {
   setTransform(entity: unknown, field: string, value: unknown): void;
+  setBounds(entity: unknown, field: string, value: unknown): void;
   setVisible(entity: unknown, value: boolean): void;
   setParam(entity: unknown, name: string, value: unknown): void;
   setCamera(field: string, value: unknown): void;
@@ -59,6 +60,10 @@ export class Bindings {
       case "transform": {
         // The same validated write as `ctx.setTransform`, with the entity and the field resolved once.
         return this.world.transformSetter(entity(target.entity), target.field);
+      }
+      case "bounds": {
+        const record = entity(target.entity);
+        return value => { ctx.setBounds(record, target.field, value); };
       }
       case "visible": {
         const record = entity(target.entity);

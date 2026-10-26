@@ -85,7 +85,7 @@ function w_builtin_MtekObject(m, base, v) {
   w_builtin_MtekObject_normal_matrix(m, base, v.normal_matrix);
 }
 
-// Generated from layout material:std/materials.mtek::Pbr (size 32). Do not edit.
+// Generated from layout material:std/materials.mtek::Pbr (size 48). Do not edit.
 function w_2b212d15_Pbr_base_color(m, base, v) {
   const w = base >>> 2;
   m.f32[w + 0] = v.r; m.f32[w + 1] = v.g; m.f32[w + 2] = v.b; m.f32[w + 3] = v.a;
@@ -96,10 +96,23 @@ function w_2b212d15_Pbr_metallic(m, base, v) {
 function w_2b212d15_Pbr_roughness(m, base, v) {
   m.f32[(base >>> 2) + 5] = v;
 }
+function w_2b212d15_Pbr_normal_scale(m, base, v) {
+  m.f32[(base >>> 2) + 6] = v;
+}
+function w_2b212d15_Pbr_occlusion_strength(m, base, v) {
+  m.f32[(base >>> 2) + 7] = v;
+}
+function w_2b212d15_Pbr_emissive(m, base, v) {
+  const w = base >>> 2;
+  m.f32[w + 8] = v.r; m.f32[w + 9] = v.g; m.f32[w + 10] = v.b; m.f32[w + 11] = v.a;
+}
 function w_2b212d15_Pbr(m, base, v) {
   w_2b212d15_Pbr_base_color(m, base, v.base_color);
   w_2b212d15_Pbr_metallic(m, base, v.metallic);
   w_2b212d15_Pbr_roughness(m, base, v.roughness);
+  w_2b212d15_Pbr_normal_scale(m, base, v.normal_scale);
+  w_2b212d15_Pbr_occlusion_strength(m, base, v.occlusion_strength);
+  w_2b212d15_Pbr_emissive(m, base, v.emissive);
 }
 
 // Generated from layout material:std/materials.mtek::Unlit (size 16). Do not edit.
@@ -114,7 +127,7 @@ function w_2b212d15_Unlit(m, base, v) {
 export const writers = {
   "builtin:frame": { all: w_builtin_MtekFrame, fields: { view_proj: w_builtin_MtekFrame_view_proj, camera_position: w_builtin_MtekFrame_camera_position, light_count: w_builtin_MtekFrame_light_count, ambient: w_builtin_MtekFrame_ambient, exposure: w_builtin_MtekFrame_exposure, lights: w_builtin_MtekFrame_lights } },
   "builtin:object": { all: w_builtin_MtekObject, fields: { model: w_builtin_MtekObject_model, normal_matrix: w_builtin_MtekObject_normal_matrix } },
-  "material:std/materials.mtek::Pbr": { all: w_2b212d15_Pbr, fields: { base_color: w_2b212d15_Pbr_base_color, metallic: w_2b212d15_Pbr_metallic, roughness: w_2b212d15_Pbr_roughness } },
+  "material:std/materials.mtek::Pbr": { all: w_2b212d15_Pbr, fields: { base_color: w_2b212d15_Pbr_base_color, metallic: w_2b212d15_Pbr_metallic, roughness: w_2b212d15_Pbr_roughness, normal_scale: w_2b212d15_Pbr_normal_scale, occlusion_strength: w_2b212d15_Pbr_occlusion_strength, emissive: w_2b212d15_Pbr_emissive } },
   "material:std/materials.mtek::Unlit": { all: w_2b212d15_Unlit, fields: { color: w_2b212d15_Unlit_color } },
 };
 
@@ -178,6 +191,9 @@ function s_Demo_init(ctx) {
   ctx.setVisible(e1, true);
   ctx.setParam(e1, "base_color", { r: 0.5271151065826416, g: 0.5271151065826416, b: 0.5271151065826416, a: 1.0 });
   ctx.setParam(e1, "roughness", 0.25);
+  ctx.setParam(e1, "normal_scale", 0.0);
+  ctx.setParam(e1, "occlusion_strength", 1.0);
+  ctx.setParam(e1, "emissive", { r: 0.0, g: 0.0, b: 0.0, a: 1.0 });
   // entity #2 Plain (src/main.mtek::Demo.Plain)
   const e2 = ctx.e[2];
   ctx.setTransform(e2, "position", { x: 1.5, y: 0.0, z: 0.0 });

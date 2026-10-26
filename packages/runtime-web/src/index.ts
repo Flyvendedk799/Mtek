@@ -6,7 +6,8 @@ export const RUNTIME_VERSION = "0.1.0-dev";
 export * from "./animation.js";
 export {EXTENSION_API_VERSION} from "./host/extensions.js";
 export type {MtekExtension,ExtensionContext,SceneTransform,TransformUpdate} from "./host/extensions.js";
-export type {MtekRenderingOptions,PostEffect} from "./render/options.js";
+export type {MtekRenderingOptions,PostEffect,LightingQuality,LinearEnvironment,EnvironmentLightingOptions,DirectionalShadowOptions} from "./render/options.js";
+export { decodeRadiance } from "./render/environment.js";
 export {AssetPool} from "./assets/pool.js";
 export type {AssetDescriptor,AssetProgress,AssetLoader,AssetLease,AssetRequestOptions,AssetPoolOptions} from "./assets/pool.js";
 

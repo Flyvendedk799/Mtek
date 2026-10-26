@@ -152,6 +152,7 @@ interface SpawnRequest {
 
 /** The setters of `ctx` a binding is applied through. */
 interface BindingContext {
+  setBounds(entity: unknown, field: string, value: unknown): void;
   setTransform(entity: unknown, field: string, value: unknown): void;
   setVisible(entity: unknown, value: boolean): void;
   setParam(entity: unknown, name: string, value: unknown): void;
@@ -509,6 +510,9 @@ export class DynamicEntities {
       switch (target.kind) {
         case "transform":
           ctx.setTransform(record, target.field, value);
+          break;
+        case "bounds":
+          ctx.setBounds(record, target.field, value);
           break;
         case "visible":
           ctx.setVisible(record, value as boolean);

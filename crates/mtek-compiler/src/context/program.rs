@@ -197,6 +197,8 @@ impl Collector<'_, '_> {
             ItemKind::Struct(decl) => self.structure(item, decl),
             ItemKind::Enum(decl) => self.enumeration(item, decl),
             ItemKind::Material(decl) => self.material(item, decl),
+            // Keep unsupported compute out of the implemented context surface.
+            ItemKind::Compute(_) => {}
             ItemKind::Prefab(decl) => {
                 let index = self.push(Spec {
                     parent: None,

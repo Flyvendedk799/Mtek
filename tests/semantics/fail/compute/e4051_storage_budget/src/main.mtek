@@ -1,0 +1,6 @@
+compute Broken {
+    input source: array<vec4, 1048577>;
+    output result: array<vec4, 1>;
+    kernel(input: ComputeInput) -> vec4 { return vec4(1.0); }
+}
+scene Demo { camera Main {} }
