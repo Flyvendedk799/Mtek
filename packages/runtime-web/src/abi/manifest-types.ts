@@ -55,6 +55,7 @@ export type MtekSymbolKind =
   | "entity"
   | "state"
   | "material"
+  | "compute"
   | "param"
   | "prefab"
   | "function";
@@ -159,6 +160,15 @@ export interface MtekShader {
   readonly fragmentEntry: string;
   readonly vertexAttributes: readonly MtekVertexAttribute[];
   readonly surfaceInputs: readonly MtekSurfaceInput[];
+}
+
+export interface MtekComputeProgram {
+  readonly api: 1;
+  readonly definition: import("../compute/definition.js").ComputeDefinition;
+  readonly shader: { readonly hash: string; readonly url: string; readonly map: string };
+  readonly params: readonly { readonly name: string; readonly type: string; readonly hasDefault: boolean; readonly span: SpanId }[];
+  readonly defaults: readonly number[];
+  readonly span: SpanId;
 }
 
 export interface MtekMaterialResource {
@@ -632,6 +642,7 @@ export interface MtekManifest {
   readonly layouts: readonly MtekLayoutRecord[];
   readonly shaders: readonly MtekShader[];
   readonly materials: readonly MtekMaterial[];
+  readonly computePrograms?: readonly MtekComputeProgram[];
   readonly meshes: readonly MtekMesh[];
   readonly assets: readonly MtekAsset[];
   /** The prefabs the program spawns, by symbol; absent when it spawns none (decision 0064). */

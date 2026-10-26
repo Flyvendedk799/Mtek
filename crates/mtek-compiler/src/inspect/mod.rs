@@ -21,6 +21,7 @@
 
 pub mod assets;
 pub mod bindings;
+pub mod compute;
 pub mod shaders;
 pub mod view;
 
@@ -203,13 +204,19 @@ fn views(
     match what {
         Inspect::Shaders => {
             let artifacts = material_shaders(program, &plan)?;
-            let view = shaders::shaders_view(scene, profile.as_str(), &plan, &artifacts, sources)
-                .map_err(view_defect)?;
+            let mut view =
+                shaders::shaders_view(scene, profile.as_str(), &plan, &artifacts, sources)
+                    .map_err(view_defect)?;
+            view.compute_programs = compute::views(program, sources)?;
             Ok((Some(view), None, None))
         }
         Inspect::Bindings => {
-            let view = bindings::bindings_view(scene, profile.as_str(), &plan, sources)
+            let mut view = bindings::bindings_view(scene, profile.as_str(), &plan, sources)
                 .map_err(view_defect)?;
+            view.compute_programs = compute::views(program, sources)?
+                .into_iter()
+                .map(|view| view.bindings)
+                .collect();
             Ok((None, Some(view), None))
         }
         Inspect::Assets => {

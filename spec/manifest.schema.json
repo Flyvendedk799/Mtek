@@ -68,6 +68,7 @@
     "layouts": { "type": "array", "items": { "$ref": "#/$defs/layout" } },
     "shaders": { "type": "array", "items": { "$ref": "#/$defs/shader" } },
     "materials": { "type": "array", "items": { "$ref": "#/$defs/material" } },
+    "computePrograms": { "type": "array", "items": { "$ref": "#/$defs/computeProgram" }, "description": "Compute contract 1. Absent when no source compute declarations exist." },
     "meshes": { "type": "array", "items": { "$ref": "#/$defs/mesh" } },
     "assets": { "type": "array", "items": { "$ref": "#/$defs/asset" } },
     "prefabs": {
@@ -163,7 +164,7 @@
       "required": ["id", "kind", "span"],
       "properties": {
         "id": { "$ref": "#/$defs/symbolId" },
-        "kind": { "type": "string", "enum": ["scene", "camera", "entity", "state", "material", "param", "prefab", "function"] },
+        "kind": { "type": "string", "enum": ["scene", "camera", "entity", "state", "material", "compute", "param", "prefab", "function"] },
         "span": { "$ref": "#/$defs/spanId" }
       }
     },
@@ -174,7 +175,7 @@
       "additionalProperties": false,
       "required": ["id", "wgslStruct", "size", "align", "root"],
       "properties": {
-        "id": { "type": "string", "pattern": "^(builtin:[a-z]+|material:.+::.+|fixture:.+)$" },
+        "id": { "type": "string", "pattern": "^(builtin:[a-z]+|material:.+::.+|compute:.+|fixture:.+)$" },
         "wgslStruct": { "$ref": "#/$defs/wgslIdentifier" },
         "size": { "$ref": "#/$defs/index" },
         "align": { "$ref": "#/$defs/index" },
@@ -270,6 +271,80 @@
         "name": { "$ref": "#/$defs/name" },
         "mtekType": { "$ref": "#/$defs/mtekTypeName" },
         "node": { "$ref": "#/$defs/layoutNode" }
+      }
+    },
+
+    "computeProgram": {
+      "type": "object", "additionalProperties": false,
+      "required": ["api", "definition", "shader", "params", "defaults", "span"],
+      "properties": {
+        "api": { "const": 1 },
+        "definition": { "$ref": "#/$defs/computeDefinition" },
+        "shader": { "$ref": "#/$defs/computeShader" },
+        "params": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/computeParam" } },
+        "defaults": { "type": "array", "maxItems": 65536, "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
+        "span": { "$ref": "#/$defs/spanId" }
+      }
+    },
+    "computeDefinition": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "entryPoint", "workgroupSize", "dispatch", "inputs", "output"],
+      "properties": {
+        "id": { "$ref": "#/$defs/symbolId" },
+        "entryPoint": { "const": "mtek_cs" },
+        "workgroupSize": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "integer", "minimum": 1, "maximum": 256 } },
+        "dispatch": { "$ref": "#/$defs/computeDispatchLayout" },
+        "uniforms": { "$ref": "#/$defs/layout" },
+        "inputs": { "type": "array", "maxItems": 4, "items": { "$ref": "#/$defs/computeResource" } },
+        "output": { "$ref": "#/$defs/computeResource" }
+      }
+    },
+    "computeResource": {
+      "type": "object", "additionalProperties": false, "required": ["name", "layout"],
+      "properties": { "name": { "$ref": "#/$defs/name" }, "layout": { "$ref": "#/$defs/layoutArrayNode" } }
+    },
+    "computeDispatchLayout": {
+      "type": "object", "additionalProperties": false, "required": ["id", "wgslStruct", "size", "align", "root"],
+      "properties": {
+        "id": { "const": "compute:dispatch" }, "wgslStruct": { "const": "MtekComputeDispatch" },
+        "size": { "const": 12 }, "align": { "const": 4 }, "root": { "$ref": "#/$defs/computeDispatchRoot" }
+      }
+    },
+    "computeDispatchRoot": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "offset", "size", "align", "members"],
+      "properties": {
+        "kind": { "const": "struct" }, "name": { "const": "MtekComputeDispatch" },
+        "offset": { "const": 0 }, "size": { "const": 12 }, "align": { "const": 4 },
+        "members": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/$defs/computeDispatchMember" } }
+      }
+    },
+    "computeDispatchMember": {
+      "type": "object", "additionalProperties": false, "required": ["name", "mtekType", "node"],
+      "properties": {
+        "name": { "enum": ["x", "y", "z"] }, "mtekType": { "const": "u32" },
+        "node": { "$ref": "#/$defs/computeDispatchScalar" }
+      }
+    },
+    "computeDispatchScalar": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "offset", "size", "align", "scalar"],
+      "properties": {
+        "kind": { "const": "scalar" }, "offset": { "enum": [0, 4, 8] },
+        "size": { "const": 4 }, "align": { "const": 4 }, "scalar": { "const": "u32" }
+      }
+    },
+    "computeShader": {
+      "type": "object", "additionalProperties": false, "required": ["hash", "url", "map"],
+      "properties": {
+        "hash": { "$ref": "#/$defs/sha256" },
+        "url": { "type": "string", "pattern": "^shaders/[0-9a-f]{16}\\.wgsl$" },
+        "map": { "type": "string", "pattern": "^shaders/[0-9a-f]{16}\\.mtek-map\\.json$" }
+      }
+    },
+    "computeParam": {
+      "type": "object", "additionalProperties": false, "required": ["name", "type", "hasDefault", "span"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" }, "type": { "$ref": "#/$defs/mtekTypeName" },
+        "hasDefault": { "type": "boolean" }, "span": { "$ref": "#/$defs/spanId" }
       }
     },
 

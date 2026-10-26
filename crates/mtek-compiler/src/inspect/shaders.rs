@@ -23,6 +23,8 @@ pub struct ShadersView {
     pub scene: String,
     pub target_profile: String,
     pub shaders: Vec<Shader>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub compute_programs: Vec<super::compute::ComputeShader>,
 }
 
 /// The shader of one material.
@@ -122,6 +124,7 @@ pub fn shaders_view(
         scene: scene.to_owned(),
         target_profile: target_profile.to_owned(),
         shaders,
+        compute_programs: Vec::new(),
     })
 }
 
@@ -216,6 +219,18 @@ impl ShadersView {
                 out.push_str(text.trim_end());
                 out.push('\n');
             }
+        }
+        for compute in &self.compute_programs {
+            out.push_str(&super::compute::human_bindings(&compute.bindings));
+            out.push_str(&format!(
+                "  file {} (sha256 {})\n",
+                compute.url, compute.hash
+            ));
+            out.push_str(&compute.wgsl);
+            out.push_str(&format!(
+                "  span map {} source entries\n",
+                compute.span_map.len()
+            ));
         }
         out
     }

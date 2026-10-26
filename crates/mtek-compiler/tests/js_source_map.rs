@@ -205,6 +205,7 @@ fn expr(e: &Expr, out: &mut Expected) {
         | ExprKind::Field { base, .. }
         | ExprKind::RefField { target: base, .. } => children.push(base),
         ExprKind::Index { base, index } => children.extend([&**base, &**index]),
+        ExprKind::StorageRead { index, .. } => children.push(index),
         ExprKind::Match {
             scrutinee,
             arms,

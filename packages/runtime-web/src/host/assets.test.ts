@@ -85,6 +85,9 @@ describe("a program with assets mounts and draws", () => {
     expect(texture?.usage).toBe(4 | 2 | 16);
     expect([texture?.width, texture?.height]).toEqual([2, 2]);
     expect([...(texture?.pixels ?? [])]).toEqual(TEXELS);
+    const mipPass = host.device.renderPasses.find((pass) => pass.nonIndexedDraws.length > 0);
+    expect([mipPass?.targetWidth, mipPass?.targetHeight]).toEqual([1, 1]);
+    expect(mipPass?.nonIndexedDraws.map((draw) => draw.vertexCount)).toEqual([3]);
     // Exactly one image copy: no colour conversion or flip is requested.
     const copies = host.device.queue.externalCopies;
     expect(copies).toHaveLength(1);
@@ -457,8 +460,8 @@ function gpuContents(device: FakeHost["device"]): { buffers: [string, number, nu
 describe("device loss with assets (decisions 0056 and 0060)", () => {
   it("rebuilds the asset meshes and textures on the new device from the retained bytes, without any request", async () => {
     const { host, manifest } = assetHost();
-    const seen: string[] = [];
-    const app = await mount(host, manifest, { onDiagnostic: (d) => seen.push(d.code), test: { manualClock: true, renderTarget: { width: 16, height: 8 } } });
+    const seen: MtekDiagnostic[] = [];
+    const app = await mount(host, manifest, { onDiagnostic: (d) => seen.push(d), test: { manualClock: true, renderTarget: { width: 16, height: 8 } } });
     app.debug?.step(2, 1 / 60);
     const before = gpuContents(host.device);
     const draws = host.device.renderPasses.at(-1)?.draws.length;
@@ -474,7 +477,7 @@ describe("device loss with assets (decisions 0056 and 0060)", () => {
     expect(host.timers.pending.map((t) => t.delayMs)).toEqual([]);
     expect(app.state).toBe("running");
 
-    expect(seen).toEqual(["MTEK-W8060", "MTEK-W8061"]);
+    expect(seen.map((diagnostic) => diagnostic.code), JSON.stringify(seen)).toEqual(["MTEK-W8060", "MTEK-W8061"]);
     // The rebuild used the bytes the mount verified: not one more request for an asset file.
     expect(host.fetched.filter((url) => url.includes("assets/"))).toHaveLength(assetFetches);
     expect(host.adapter?.hostDevices).toHaveLength(2);

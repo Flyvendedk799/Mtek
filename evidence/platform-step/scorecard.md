@@ -63,7 +63,7 @@ work. Expected rejections are not compatibility successes.
 explicit required workstream, added at the user's request on 2026-10-26. A [first vertex increment](shader-authoring-progress.md) implements authored
 local-position functions, vertex-visible resources, conservative culling,
 instancing and matching directional shadows. A [structured-output increment](shader-authoring-structured-progress.md) adds normal/UV outputs and typed varying payloads with location/interpolation checks.
-An [authored-bounds increment](shader-authoring-bounds-progress.md) adds bindable final local spheres, culling/sorting and copied inspection. A [production-character increment](shader-authoring-characters-progress.md) validates bounded skin/deformation/shadow/recovery cases against CPU-skinned references and preserves original mixed-filter samplers. World-space overlays, combined authored shared-pose instancing, broader animation compositions and wider physical-device evidence remain; compute is still unimplemented (`E4901`). The plan
+An [authored-bounds increment](shader-authoring-bounds-progress.md) adds bindable final local spheres, culling/sorting and copied inspection. A [production-character increment](shader-authoring-characters-progress.md) validates bounded skin/deformation/shadow/recovery cases against CPU-skinned references and preserves original mixed-filter samplers. World-space overlays, combined authored shared-pose instancing, broader animation compositions and wider physical-device evidence remain; source compute still awaits acceptance (`E4901`). The plan
 retains compute resources/dispatch, lifecycle/recovery and full validation.
 Runtime-internal compute and host WGSL effects do not satisfy this requirement.
 A [compute-backend increment](shader-authoring-compute-progress.md) adds typed
@@ -76,7 +76,17 @@ An [additional compute lowering/editor checkpoint](shader-authoring/compute-lowe
 connects checked declarations to typed IR and Naga-validated kernel WGSL, while
 retaining the public E4901 packaging gate. Editor continuation indentation now
 passes the formatter corpus, 81 unit tests and 11 real VS Code integration tests.
-Compute packaging, runtime dispatch and GPU acceptance remain unfinished.
+Compute GPU acceptance and the compute-to-render path remain unfinished.
+An [artifact/resource-owner increment](shader-authoring/compute-ownership-2026-10-26/checkpoint.md)
+adds validated compute artifacts with separately content-addressed maps, shared
+compiler/runtime layouts, and internal owners for upload/dispatch/readback,
+replacement, cancellation and device recovery. A subsequent
+[packaging/mounted increment](shader-authoring/compute-packaging-2026-10-26/checkpoint.md)
+connects manifest/schema packaging, generated source-default writers, inspection,
+public host handles, shader loading, replacement and device recovery. All eleven
+example package budgets hold without raising limits. Ordinary source analysis
+still emits E4901 until numerical GPU/render acceptance; CPU fake checks do not
+establish it. The planner packaging guard is removed.
 
 ## Request acceptance status
 

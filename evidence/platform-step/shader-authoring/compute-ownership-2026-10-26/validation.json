@@ -1,0 +1,92 @@
+{
+  "date": "2026-10-26",
+  "scope": "Internal compute artifacts and resource ownership; public source packaging remains gated",
+  "implemented": [
+    "Naga-validated compute artifacts",
+    "Separate source-map content hashes after span interning",
+    "Shared compiler/runtime resource layout fixture",
+    "Copied packed uploads and uniform bytes",
+    "Device/domain validation and zero output tails",
+    "Queue-ordered readback with dispatch validation",
+    "Completed-dispatch snapshot recovery and staged edit restoration",
+    "Creation cancellation, replacement invalidation and batch recovery rollback",
+    "Exact-once resource release through disposal, loss and registry retirement"
+  ],
+  "checks": {
+    "compilerUnit": {
+      "testThreads": 2,
+      "passed": 923,
+      "failed": 0,
+      "jobs": 2
+    },
+    "compilerIntegration": {
+      "suites": {
+        "naga_oracle": 7,
+        "compute_backend": 5,
+        "compute_frontend": 15,
+        "compute_lowering": 9,
+        "wgsl_blocks": 4,
+        "shader_lowering": 9
+      },
+      "passed": 49,
+      "failed": 0
+    },
+    "javascriptSourceMaps": {
+      "passed": 3,
+      "failed": 0
+    },
+    "runtimeCompute": {
+      "workers": 1,
+      "passed": 39,
+      "failed": 0,
+      "backend": "CPU fake with injected callback; no WGSL execution"
+    },
+    "runtimeRegistry": {
+      "workers": 1,
+      "passed": 26,
+      "failed": 0
+    },
+    "compilerClippyAllTargets": "passed: cargo clippy -p mtek-compiler --all-targets --locked -j 2 -- -D warnings",
+    "rustFormatting": "passed: cargo fmt --all --check",
+    "runtimeTypes": "passed: npx tsc -p packages/runtime-web/tsconfig.json --noEmit",
+    "runtimeLint": "passed: npx eslint src/compute src/test-support/fake-compute.ts",
+    "editorLint": "passed: npm run lint -w mtek-vscode",
+    "sourceWhitespace": "tracked diff check and explicit checkpoint-file scan passed"
+  },
+  "boundaries": {
+    "publicComputePackaging": false,
+    "computeToRenderDemo": false,
+    "mountedHostAPI": false,
+    "sourceGate": "E4901 and planner guard retained",
+    "manifestSchemaChanged": false,
+    "animationOptimizationRun": false,
+    "numericalGPUAcceptance": false,
+    "runtimeABIChanged": false,
+    "sustainedBenchmarksRun": false
+  },
+  "remaining": [
+    "Manifest/schema and resource inspection",
+    "Source defaults/generated writers and structured host values",
+    "Mounted public handles, shader loading/diagnostics and app lifecycle wiring",
+    "Generated-position render attachment and bounds/lifetime",
+    "Real numerical Mtek-source GPU checks against CPU and direct-WGSL references",
+    "Broader roadmap and deferred sustained performance work"
+  ],
+  "sourceSha256": {
+    "crates/mtek-compiler/src/emit_wgsl/artifact.rs": "19ec23899f265a2df80df522486d5ba9cf2f7cfd7cdea5fbcf54c992f260efaa",
+    "crates/mtek-compiler/src/emit_wgsl/compute_artifact.rs": "c156acaf6f24969ee543975ff91aba0716410a944a78306c4ea6bc18ee9a6e76",
+    "crates/mtek-compiler/src/emit_wgsl/mod.rs": "4ca380631c06b8f5cf8e2eaa6e30e3db05ed4bdc206fd1efe89b5ad51d656cd1",
+    "crates/mtek-compiler/tests/compute_lowering.rs": "582cca5da6953e604c73447bc8867984f5d848d1e45cedea106efafea3246a35",
+    "crates/mtek-compiler/tests/js_source_map.rs": "2f022907720aa3d1ad0ce9e5746fcf6c5fad19bf33e41f186429b432d9bcb961",
+    "packages/runtime-web/src/compute/definition.ts": "2c7a0b1dff5d35a3fe0d0e91218b6872eed5ce35a9e69c47e8cc45fc2c2f8ecb",
+    "packages/runtime-web/src/compute/instance.ts": "8bbff66433a0aa229c6f00bfb66f15e94b463aa214386441c30e937f722a571d",
+    "packages/runtime-web/src/compute/instance.test.ts": "6e2961488e36422b95e008b445c7e8782c187abc7990db270269a0b15a970bae",
+    "packages/runtime-web/src/compute/store.ts": "a05ebaa618e29a5bc3427cd3002c0965a0ab3b2940087deed4fa97eeb00c8fc1",
+    "packages/runtime-web/src/compute/store.test.ts": "950dfdec9098161538ed0ae96d2cbe7e804481c4dd100b54d6a991b923466a80",
+    "packages/runtime-web/src/test-support/fake-compute.ts": "fea187692a90d6f304cf04667bef8abd7686a2f275541941c194abdac603b16a",
+    "tests/codegen/compute-contract/kernel.mtek": "2ff6a63fd5e16d5bdd58c44f030a124328172b9ba081d6ed1e32fe0f234b1c87",
+    "tests/codegen/compute-contract/expected.definition.json": "95ac6b594cdc5d321323b94616c32aa63d48ca994e3774d5d67e35171a2e8edb",
+    "tests/codegen/compute-contract/expected.wgsl": "b5a8bc10eaf3c3c26c72f421561c46453cb56691a369c6c3b17fdde3f6c0bf59",
+    "spec/decisions/0203-compute-artifacts-and-internal-resource-ownership.md": "f868bc5b290bd6de8d04236c80f9823e75249ca40ff2894ba9c7ae93d1d92d4d"
+  }
+}

@@ -13,7 +13,7 @@ import {
   validManifest,
 } from "../test-support/mount-fixture.js";
 import { BASE_URL } from "../test-support/fake-host.js";
-import { findSpanMapEntry, loadStartupShaders, parseSpanMap, type ShaderLoadOptions, type SpanMapEntry } from "./shaders.js";
+import { findSpanMapEntry, loadCandidateShaders, loadStartupShaders, parseSpanMap, type ShaderLoadOptions, type SpanMapEntry } from "./shaders.js";
 
 const entry = (line: number, colStart: number, colEnd: number, span: number): SpanMapEntry => ({ wgsl: { line, colStart, colEnd }, span });
 
@@ -87,6 +87,25 @@ describe("loadStartupShaders", () => {
     expect([...result.modules.keys()]).toEqual([SHADER_HASH]);
     expect(fetched).toEqual([SHADER_URL, SHADER_MAP_URL]);
     expect(registry.snapshot().liveShaderModules).toBe(1);
+    expect(device.openErrorScopes).toBe(0);
+  });
+
+  it("owns a shared candidate module once when declarations have distinct source maps", async () => {
+    const device = new FakeHostDevice();
+    const registry = new ResourceRegistry(asGpu(device));
+    const shader = (map: string, material: string) => ({ hash: SHADER_HASH, url: SHADER_URL, map, material, kind: "compute" as const });
+    const result = await loadCandidateShaders({
+      manifest: validManifest() as unknown as MtekManifest,
+      baseUrl: new URL(BASE_URL), device: asGpu(device), registry,
+      shaders: [shader("shaders/first.mtek-map.json", "First"), shader("shaders/second.mtek-map.json", "Second")],
+      fetch: (url) => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(url === SHADER_URL ? VALID_WGSL : spanMapJson()) }),
+    });
+    expect(result.diagnostics).toEqual([]);
+    expect(result.modules.size).toBe(1);
+    expect(result.created).toHaveLength(1);
+    expect(registry.snapshot().liveShaderModules).toBe(1);
+    for (const module of result.created) registry.release(module);
+    expect(registry.snapshot().liveShaderModules).toBe(0);
     expect(device.openErrorScopes).toBe(0);
   });
 

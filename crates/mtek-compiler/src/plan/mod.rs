@@ -346,9 +346,6 @@ pub fn plan_program(program: &Program) -> Result<ResourcePlan, String> {
 /// # Errors
 /// As [`plan_program`].
 pub fn plan_scene(program: &Program, scene: &Scene) -> Result<ResourcePlan, String> {
-    if program.computes().next().is_some() {
-        return Err("compute packaging and runtime dispatch are not yet available".into());
-    }
     let mut meshes: Vec<MeshDesc> = Vec::new();
     let mut mesh_indices = BTreeMap::new();
     let mut entity_meshes = Vec::with_capacity(scene.entities.len());

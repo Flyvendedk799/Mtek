@@ -10,6 +10,8 @@ import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { manifestValidationSchema } from "./manifest-validation-schema.ts";
+import { compactStandaloneSchemaData } from "./standalone-schema-data.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -47,8 +49,8 @@ const ajv = new Ajv2020({
   unicode: false, // length and pattern checks on UTF-16 code units: no import of ajv/dist/runtime/ucs2length
   code: { source: true, esm: true },
 });
-const validate = ajv.compile(schema);
-const generated = standaloneCode(ajv, validate);
+const validate = ajv.compile(manifestValidationSchema(schema));
+const generated = compactStandaloneSchemaData(standaloneCode(ajv, validate));
 
 // The bundled runtime must not need Ajv at run time: fail the build if the generated code imports anything.
 const importLike = /\b(?:import\s*[\w{*"']|import\s*\(|require\s*\()/;

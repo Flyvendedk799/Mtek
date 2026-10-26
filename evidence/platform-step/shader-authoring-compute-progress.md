@@ -1,6 +1,6 @@
 # Compute authoring progress
 
-Date: 2026-10-26. Status: **backend and source checking implemented; runnable compute incomplete**.
+Date: 2026-10-26. Status: **backend, source checking, packaging and mounted API implemented; public source/GPU acceptance incomplete**.
 Required work in scorecard areas 3 and 10 and the
 [shader-authoring plan](shader-authoring-plan.md).
 
@@ -84,18 +84,26 @@ predict those continuations. This remains open and is not counted as passing.
 Further tooling checks and current source hashes belong in
 [`source-checking-2026-10-26/validation.json`](shader-authoring/source-checking-2026-10-26/validation.json).
 
-## Required next work
+## Mounted packaging increment and required next work
+
+An [artifact/resource-owner increment](shader-authoring/compute-ownership-2026-10-26/checkpoint.md)
+now supplies validated compiler artifacts and internal runtime upload/dispatch/
+readback/recovery/replacement owners. It has a shared compiler/runtime layout
+fixture and CPU fake lifecycle checks. That record describes the preceding
+internal-only checkpoint. A subsequent
+[packaging/mounted checkpoint](shader-authoring/compute-packaging-2026-10-26/checkpoint.md)
+connects these owners to `mountMtek`, manifest/schema packaging, generated default
+writers, inspection and public handles. It does not establish numerical GPU execution.
 
 Checked declarations now connect to typed IR and kernel WGSL in the
 [compute lowering checkpoint](shader-authoring/compute-lowering-2026-10-26/checkpoint.md).
 The editor indentation failure described above is historical and fixed by that
-checkpoint. Public analysis/build still emits E4901. A separate planner guard
-also refuses compute packaging, so development IR cannot silently omit kernels.
+checkpoint. Public analysis/build still emits E4901. The planner packaging guard
+has now been removed: checked development IR packages all compute artifacts.
 
-Connect lowered kernels to manifest packaging, runtime
-dispatch and inspection. Implement the accepted host ownership/recovery contract,
-bounded dispatch/device-limit validation, upload/readback,
-ordering/synchronization, disposal, replacement and device recovery. Run an actual
+Manifest packaging, mounted dispatch/inspection and the accepted ownership/recovery
+contract are now connected, including bounded dispatch/device-limit validation,
+upload/readback, ordering, disposal, replacement and device recovery. Run an actual
 Mtek-authored numerical buffer transform against CPU and direct-WGSL references,
 plus a compute-to-render example. Update editor/coverage/release capabilities only
 as those paths become usable. Naga/backend checks alone cannot close this track.

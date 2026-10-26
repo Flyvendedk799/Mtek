@@ -95,6 +95,9 @@ pub struct Manifest {
     pub layouts: Vec<Layout>,
     pub shaders: Vec<Shader>,
     pub materials: Vec<Material>,
+    /// Experimental compute contract 1; absent for programs without compute declarations.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub compute_programs: Vec<ComputeProgram>,
     pub meshes: Vec<Mesh>,
     pub assets: Vec<Asset>,
     /// The prefabs the program spawns (decision 0064); absent when it spawns none.
@@ -225,9 +228,39 @@ pub enum SymbolKind {
     Entity,
     State,
     Material,
+    Compute,
     Param,
     Prefab,
     Function,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ComputeProgram {
+    pub api: u32,
+    pub definition: crate::emit_wgsl::ComputeDefinition,
+    pub shader: ComputeShader,
+    pub params: Vec<ComputeParam>,
+    /// Packed uniform defaults. Required params retain zero bytes until the host supplies them.
+    pub defaults: Vec<u8>,
+    pub span: u32,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ComputeShader {
+    pub hash: String,
+    pub url: String,
+    pub map: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ComputeParam {
+    pub name: String,
+    #[serde(rename = "type")]
+    pub ty: String,
+    pub has_default: bool,
+    pub span: u32,
 }
 
 /// A layout record (`spec/gpu-layout.md` section 5). The root is a struct node without a

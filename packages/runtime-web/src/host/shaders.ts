@@ -13,6 +13,11 @@ import type { ResourceRegistry } from "../gpu/registry.js";
 import type { FetchResponseLike } from "./environment.js";
 import { resolveSpan, spanOfSymbol } from "./failures.js";
 
+export type ShaderSource = Pick<MtekShader, "hash" | "url" | "map" | "material"> & { readonly kind?: "compute" };
+export function programShaders(manifest: MtekManifest): readonly ShaderSource[] {
+  return [...manifest.shaders, ...(manifest.computePrograms ?? []).map((compute) => ({ ...compute.shader, material: compute.definition.id, kind: "compute" as const }))];
+}
+
 /** One entry of a WGSL span map. Lines and columns are 1-based; `colEnd` is exclusive. */
 export interface SpanMapEntry {
   readonly wgsl: { readonly line: number; readonly colStart: number; readonly colEnd: number };
@@ -83,7 +88,7 @@ export interface ShaderLoadOptions {
   /** The phase recorded in the diagnostics. Default `runtime:mount`. */
   readonly phase?: MtekRuntimePhase;
   /** The shaders to load. Default: every shader of the manifest. */
-  readonly shaders?: readonly MtekShader[];
+  readonly shaders?: readonly ShaderSource[];
 }
 
 export interface ShaderLoadResult {
@@ -106,11 +111,11 @@ async function fetchText(options: ShaderLoadOptions, relative: string): Promise<
   }
 }
 
-function describeFailure(manifest: MtekManifest, phase: MtekRuntimePhase, shader: MtekShader, message: string, notes: string[]): MtekDiagnostic {
+function describeFailure(manifest: MtekManifest, phase: MtekRuntimePhase, shader: ShaderSource, message: string, notes: string[]): MtekDiagnostic {
   const spanId = spanOfSymbol(manifest, shader.material);
   return makeRuntimeDiagnostic("E8051", {
     phase,
-    message: `Shader for material '${shader.material}' failed: ${message}`,
+    message: `Shader for ${shader.kind ?? "material"} '${shader.material}' failed: ${message}`,
     source: spanId === undefined ? null : resolveSpan(manifest, spanId),
     notes,
   });
@@ -120,7 +125,7 @@ function describeFailure(manifest: MtekManifest, phase: MtekRuntimePhase, shader
 export async function loadStartupShaders(options: ShaderLoadOptions): Promise<ShaderLoadResult> {
   const { manifest, device, registry } = options;
   const phase = options.phase ?? "runtime:mount";
-  const list = options.shaders ?? manifest.shaders;
+  const list = options.shaders ?? programShaders(manifest);
   const modules = new Map<string, GPUShaderModule>();
   const diagnostics: MtekDiagnostic[] = [];
 
@@ -155,7 +160,7 @@ export async function loadStartupShaders(options: ShaderLoadOptions): Promise<Sh
     let compileErrors: readonly GPUCompilationMessage[] = [];
     let thrown: string | undefined;
     try {
-      module = registry.createShaderModule({ label: `mtek shader ${shader.hash.slice(0, 16)}`, code: files.wgsl.text });
+      module = modules.get(shader.hash) ?? registry.createShaderModule({ label: `mtek shader ${shader.hash.slice(0, 16)}`, code: files.wgsl.text });
       const info = await module.getCompilationInfo();
       compileErrors = info.messages.filter((message) => message.type === "error");
     } catch (error) {
@@ -189,7 +194,7 @@ export async function loadStartupShaders(options: ShaderLoadOptions): Promise<Sh
       diagnostics.push(
         makeRuntimeDiagnostic("E8051", {
           phase,
-          message: `Shader for material '${shader.material}' failed to compile: ${message.message}`,
+          message: `Shader for ${shader.kind ?? "material"} '${shader.material}' failed to compile: ${message.message}`,
           source: spanId === undefined ? null : resolveSpan(manifest, spanId),
           notes,
         }),
@@ -214,7 +219,7 @@ export async function loadCandidateShaders(
 ): Promise<ShaderLoadResult & { readonly created: readonly GPUShaderModule[] }> {
   const { manifest, device, registry } = options;
   const phase = options.phase ?? "runtime:reload";
-  const list = options.shaders ?? manifest.shaders;
+  const list = options.shaders ?? programShaders(manifest);
   const modules = new Map<string, GPUShaderModule>(existing);
   const created: GPUShaderModule[] = [];
   const diagnostics: MtekDiagnostic[] = [];
@@ -252,7 +257,7 @@ export async function loadCandidateShaders(
       let compileErrors: readonly GPUCompilationMessage[] = [];
       let thrown: string | undefined;
       try {
-        module = registry.createShaderModule({ label: `mtek shader ${shader.hash.slice(0, 16)}`, code: files.wgsl.text });
+        module = modules.get(shader.hash) ?? registry.createShaderModule({ label: `mtek shader ${shader.hash.slice(0, 16)}`, code: files.wgsl.text });
         const info = await module.getCompilationInfo();
         compileErrors = info.messages.filter((message) => message.type === "error");
       } catch (error) {
@@ -267,7 +272,7 @@ export async function loadCandidateShaders(
       }
       if (module !== undefined) {
         modules.set(shader.hash, module);
-        created.push(module);
+        if (!created.includes(module)) created.push(module);
       }
       options.assertActive?.();
 
@@ -290,7 +295,7 @@ export async function loadCandidateShaders(
         diagnostics.push(
           makeRuntimeDiagnostic("E8051", {
             phase,
-            message: `Shader for material '${shader.material}' failed to compile: ${message.message}`,
+            message: `Shader for ${shader.kind ?? "material"} '${shader.material}' failed to compile: ${message.message}`,
             source: spanId === undefined ? null : resolveSpan(manifest, spanId),
             notes,
           }),

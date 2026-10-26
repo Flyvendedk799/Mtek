@@ -1,0 +1,2625 @@
+{
+  "manifestSchema": 1,
+  "runtimeAbi": 1,
+  "languageVersion": "0.1",
+  "compilerVersion": "0.1.0-dev",
+  "buildId": "6aef7d77a149894e885f53eb10980a2955524875f3892be4d7d2188e99a37799",
+  "targetProfile": "webgpu-core-2026",
+  "requiredCapabilities": {
+    "features": [],
+    "limits": {},
+    "wgslLanguageFeatures": []
+  },
+  "subsystems": {
+    "physics": false
+  },
+  "runtimeConfig": {
+    "fixedStep": 0.016666668,
+    "maxCatchUpSteps": 4,
+    "maxFrameDelta": 0.1,
+    "maxEntities": 16384,
+    "pauseWhenHidden": true
+  },
+  "entryScene": "Demo",
+  "sources": [
+    {
+      "id": 0,
+      "path": "src/main.mtek",
+      "sha256": "11cc54d59502f6ef1899c4e9b5a80baef336618475f0ddb9aa254e041420e772"
+    }
+  ],
+  "spans": [
+    {
+      "file": 0,
+      "start": 1838,
+      "end": 1867,
+      "startLine": 56,
+      "startColumn": 1,
+      "endLine": 56,
+      "endColumn": 30
+    },
+    {
+      "file": 0,
+      "start": 1851,
+      "end": 1865,
+      "startLine": 56,
+      "startColumn": 14,
+      "endLine": 56,
+      "endColumn": 28
+    },
+    {
+      "file": 0,
+      "start": 230,
+      "end": 998,
+      "startLine": 10,
+      "startColumn": 1,
+      "endLine": 30,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 711,
+      "end": 996,
+      "startLine": 23,
+      "startColumn": 5,
+      "endLine": 29,
+      "endColumn": 6
+    },
+    {
+      "file": 0,
+      "start": 254,
+      "end": 276,
+      "startLine": 11,
+      "startColumn": 5,
+      "endLine": 11,
+      "endColumn": 27
+    },
+    {
+      "file": 0,
+      "start": 281,
+      "end": 308,
+      "startLine": 12,
+      "startColumn": 5,
+      "endLine": 12,
+      "endColumn": 32
+    },
+    {
+      "file": 0,
+      "start": 313,
+      "end": 355,
+      "startLine": 13,
+      "startColumn": 5,
+      "endLine": 13,
+      "endColumn": 47
+    },
+    {
+      "file": 0,
+      "start": 360,
+      "end": 400,
+      "startLine": 14,
+      "startColumn": 5,
+      "endLine": 14,
+      "endColumn": 45
+    },
+    {
+      "file": 0,
+      "start": 405,
+      "end": 442,
+      "startLine": 15,
+      "startColumn": 5,
+      "endLine": 15,
+      "endColumn": 42
+    },
+    {
+      "file": 0,
+      "start": 447,
+      "end": 493,
+      "startLine": 16,
+      "startColumn": 5,
+      "endLine": 16,
+      "endColumn": 51
+    },
+    {
+      "file": 0,
+      "start": 999,
+      "end": 1161,
+      "startLine": 31,
+      "startColumn": 1,
+      "endLine": 35,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 1093,
+      "end": 1159,
+      "startLine": 34,
+      "startColumn": 5,
+      "endLine": 34,
+      "endColumn": 71
+    },
+    {
+      "file": 0,
+      "start": 1162,
+      "end": 1327,
+      "startLine": 36,
+      "startColumn": 1,
+      "endLine": 40,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 1258,
+      "end": 1325,
+      "startLine": 39,
+      "startColumn": 5,
+      "endLine": 39,
+      "endColumn": 72
+    },
+    {
+      "file": 0,
+      "start": 1328,
+      "end": 1493,
+      "startLine": 41,
+      "startColumn": 1,
+      "endLine": 45,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 1424,
+      "end": 1491,
+      "startLine": 44,
+      "startColumn": 5,
+      "endLine": 44,
+      "endColumn": 72
+    },
+    {
+      "file": 0,
+      "start": 1494,
+      "end": 1685,
+      "startLine": 46,
+      "startColumn": 1,
+      "endLine": 50,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 1607,
+      "end": 1683,
+      "startLine": 49,
+      "startColumn": 5,
+      "endLine": 49,
+      "endColumn": 81
+    },
+    {
+      "file": 0,
+      "start": 1686,
+      "end": 1837,
+      "startLine": 51,
+      "startColumn": 1,
+      "endLine": 55,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 1765,
+      "end": 1835,
+      "startLine": 54,
+      "startColumn": 5,
+      "endLine": 54,
+      "endColumn": 75
+    },
+    {
+      "file": 0,
+      "start": 1709,
+      "end": 1725,
+      "startLine": 52,
+      "startColumn": 5,
+      "endLine": 52,
+      "endColumn": 21
+    },
+    {
+      "file": 0,
+      "start": 1518,
+      "end": 1557,
+      "startLine": 47,
+      "startColumn": 5,
+      "endLine": 47,
+      "endColumn": 44
+    },
+    {
+      "file": 0,
+      "start": 1562,
+      "end": 1602,
+      "startLine": 48,
+      "startColumn": 5,
+      "endLine": 48,
+      "endColumn": 45
+    },
+    {
+      "file": 0,
+      "start": 1614,
+      "end": 1619,
+      "startLine": 49,
+      "startColumn": 12,
+      "endLine": 49,
+      "endColumn": 17
+    },
+    {
+      "file": 0,
+      "start": 1654,
+      "end": 1681,
+      "startLine": 49,
+      "startColumn": 52,
+      "endLine": 49,
+      "endColumn": 79
+    },
+    {
+      "file": 0,
+      "start": 1661,
+      "end": 1680,
+      "startLine": 49,
+      "startColumn": 59,
+      "endLine": 49,
+      "endColumn": 78
+    },
+    {
+      "file": 0,
+      "start": 1668,
+      "end": 1679,
+      "startLine": 49,
+      "startColumn": 66,
+      "endLine": 49,
+      "endColumn": 77
+    },
+    {
+      "file": 0,
+      "start": 1668,
+      "end": 1673,
+      "startLine": 49,
+      "startColumn": 66,
+      "endLine": 49,
+      "endColumn": 71
+    },
+    {
+      "file": 0,
+      "start": 1353,
+      "end": 1383,
+      "startLine": 42,
+      "startColumn": 5,
+      "endLine": 42,
+      "endColumn": 35
+    },
+    {
+      "file": 0,
+      "start": 1388,
+      "end": 1419,
+      "startLine": 43,
+      "startColumn": 5,
+      "endLine": 43,
+      "endColumn": 36
+    },
+    {
+      "file": 0,
+      "start": 1431,
+      "end": 1436,
+      "startLine": 44,
+      "startColumn": 12,
+      "endLine": 44,
+      "endColumn": 17
+    },
+    {
+      "file": 0,
+      "start": 1462,
+      "end": 1489,
+      "startLine": 44,
+      "startColumn": 43,
+      "endLine": 44,
+      "endColumn": 70
+    },
+    {
+      "file": 0,
+      "start": 1469,
+      "end": 1488,
+      "startLine": 44,
+      "startColumn": 50,
+      "endLine": 44,
+      "endColumn": 69
+    },
+    {
+      "file": 0,
+      "start": 1476,
+      "end": 1487,
+      "startLine": 44,
+      "startColumn": 57,
+      "endLine": 44,
+      "endColumn": 68
+    },
+    {
+      "file": 0,
+      "start": 1476,
+      "end": 1481,
+      "startLine": 44,
+      "startColumn": 57,
+      "endLine": 44,
+      "endColumn": 62
+    },
+    {
+      "file": 0,
+      "start": 1730,
+      "end": 1760,
+      "startLine": 53,
+      "startColumn": 5,
+      "endLine": 53,
+      "endColumn": 35
+    },
+    {
+      "file": 0,
+      "start": 1772,
+      "end": 1777,
+      "startLine": 54,
+      "startColumn": 12,
+      "endLine": 54,
+      "endColumn": 17
+    },
+    {
+      "file": 0,
+      "start": 1802,
+      "end": 1833,
+      "startLine": 54,
+      "startColumn": 42,
+      "endLine": 54,
+      "endColumn": 73
+    },
+    {
+      "file": 0,
+      "start": 1809,
+      "end": 1832,
+      "startLine": 54,
+      "startColumn": 49,
+      "endLine": 54,
+      "endColumn": 72
+    },
+    {
+      "file": 0,
+      "start": 1809,
+      "end": 1813,
+      "startLine": 54,
+      "startColumn": 49,
+      "endLine": 54,
+      "endColumn": 53
+    },
+    {
+      "file": 0,
+      "start": 1816,
+      "end": 1832,
+      "startLine": 54,
+      "startColumn": 56,
+      "endLine": 54,
+      "endColumn": 72
+    },
+    {
+      "file": 0,
+      "start": 1820,
+      "end": 1831,
+      "startLine": 54,
+      "startColumn": 60,
+      "endLine": 54,
+      "endColumn": 71
+    },
+    {
+      "file": 0,
+      "start": 1820,
+      "end": 1825,
+      "startLine": 54,
+      "startColumn": 60,
+      "endLine": 54,
+      "endColumn": 65
+    },
+    {
+      "file": 0,
+      "start": 1024,
+      "end": 1053,
+      "startLine": 32,
+      "startColumn": 5,
+      "endLine": 32,
+      "endColumn": 34
+    },
+    {
+      "file": 0,
+      "start": 1058,
+      "end": 1088,
+      "startLine": 33,
+      "startColumn": 5,
+      "endLine": 33,
+      "endColumn": 35
+    },
+    {
+      "file": 0,
+      "start": 1100,
+      "end": 1105,
+      "startLine": 34,
+      "startColumn": 12,
+      "endLine": 34,
+      "endColumn": 17
+    },
+    {
+      "file": 0,
+      "start": 1130,
+      "end": 1157,
+      "startLine": 34,
+      "startColumn": 42,
+      "endLine": 34,
+      "endColumn": 69
+    },
+    {
+      "file": 0,
+      "start": 1137,
+      "end": 1156,
+      "startLine": 34,
+      "startColumn": 49,
+      "endLine": 34,
+      "endColumn": 68
+    },
+    {
+      "file": 0,
+      "start": 1144,
+      "end": 1155,
+      "startLine": 34,
+      "startColumn": 56,
+      "endLine": 34,
+      "endColumn": 67
+    },
+    {
+      "file": 0,
+      "start": 1144,
+      "end": 1149,
+      "startLine": 34,
+      "startColumn": 56,
+      "endLine": 34,
+      "endColumn": 61
+    },
+    {
+      "file": 0,
+      "start": 498,
+      "end": 527,
+      "startLine": 17,
+      "startColumn": 5,
+      "endLine": 17,
+      "endColumn": 34
+    },
+    {
+      "file": 0,
+      "start": 532,
+      "end": 562,
+      "startLine": 18,
+      "startColumn": 5,
+      "endLine": 18,
+      "endColumn": 35
+    },
+    {
+      "file": 0,
+      "start": 567,
+      "end": 600,
+      "startLine": 19,
+      "startColumn": 5,
+      "endLine": 19,
+      "endColumn": 38
+    },
+    {
+      "file": 0,
+      "start": 605,
+      "end": 637,
+      "startLine": 20,
+      "startColumn": 5,
+      "endLine": 20,
+      "endColumn": 37
+    },
+    {
+      "file": 0,
+      "start": 642,
+      "end": 675,
+      "startLine": 21,
+      "startColumn": 5,
+      "endLine": 21,
+      "endColumn": 38
+    },
+    {
+      "file": 0,
+      "start": 718,
+      "end": 723,
+      "startLine": 23,
+      "startColumn": 12,
+      "endLine": 23,
+      "endColumn": 17
+    },
+    {
+      "file": 0,
+      "start": 759,
+      "end": 792,
+      "startLine": 24,
+      "startColumn": 9,
+      "endLine": 24,
+      "endColumn": 42
+    },
+    {
+      "file": 0,
+      "start": 771,
+      "end": 791,
+      "startLine": 24,
+      "startColumn": 21,
+      "endLine": 24,
+      "endColumn": 41
+    },
+    {
+      "file": 0,
+      "start": 779,
+      "end": 790,
+      "startLine": 24,
+      "startColumn": 29,
+      "endLine": 24,
+      "endColumn": 40
+    },
+    {
+      "file": 0,
+      "start": 779,
+      "end": 784,
+      "startLine": 24,
+      "startColumn": 29,
+      "endLine": 24,
+      "endColumn": 34
+    },
+    {
+      "file": 0,
+      "start": 801,
+      "end": 849,
+      "startLine": 25,
+      "startColumn": 9,
+      "endLine": 25,
+      "endColumn": 57
+    },
+    {
+      "file": 0,
+      "start": 801,
+      "end": 815,
+      "startLine": 25,
+      "startColumn": 9,
+      "endLine": 25,
+      "endColumn": 23
+    },
+    {
+      "file": 0,
+      "start": 801,
+      "end": 806,
+      "startLine": 25,
+      "startColumn": 9,
+      "endLine": 25,
+      "endColumn": 14
+    },
+    {
+      "file": 0,
+      "start": 818,
+      "end": 848,
+      "startLine": 25,
+      "startColumn": 26,
+      "endLine": 25,
+      "endColumn": 56
+    },
+    {
+      "file": 0,
+      "start": 818,
+      "end": 832,
+      "startLine": 25,
+      "startColumn": 26,
+      "endLine": 25,
+      "endColumn": 40
+    },
+    {
+      "file": 0,
+      "start": 818,
+      "end": 823,
+      "startLine": 25,
+      "startColumn": 26,
+      "endLine": 25,
+      "endColumn": 31
+    },
+    {
+      "file": 0,
+      "start": 835,
+      "end": 848,
+      "startLine": 25,
+      "startColumn": 43,
+      "endLine": 25,
+      "endColumn": 56
+    },
+    {
+      "file": 0,
+      "start": 835,
+      "end": 841,
+      "startLine": 25,
+      "startColumn": 43,
+      "endLine": 25,
+      "endColumn": 49
+    },
+    {
+      "file": 0,
+      "start": 844,
+      "end": 848,
+      "startLine": 25,
+      "startColumn": 52,
+      "endLine": 25,
+      "endColumn": 56
+    },
+    {
+      "file": 0,
+      "start": 858,
+      "end": 882,
+      "startLine": 26,
+      "startColumn": 9,
+      "endLine": 26,
+      "endColumn": 33
+    },
+    {
+      "file": 0,
+      "start": 858,
+      "end": 871,
+      "startLine": 26,
+      "startColumn": 9,
+      "endLine": 26,
+      "endColumn": 22
+    },
+    {
+      "file": 0,
+      "start": 858,
+      "end": 863,
+      "startLine": 26,
+      "startColumn": 9,
+      "endLine": 26,
+      "endColumn": 14
+    },
+    {
+      "file": 0,
+      "start": 874,
+      "end": 881,
+      "startLine": 26,
+      "startColumn": 25,
+      "endLine": 26,
+      "endColumn": 32
+    },
+    {
+      "file": 0,
+      "start": 891,
+      "end": 968,
+      "startLine": 27,
+      "startColumn": 9,
+      "endLine": 27,
+      "endColumn": 86
+    },
+    {
+      "file": 0,
+      "start": 891,
+      "end": 907,
+      "startLine": 27,
+      "startColumn": 9,
+      "endLine": 27,
+      "endColumn": 25
+    },
+    {
+      "file": 0,
+      "start": 891,
+      "end": 904,
+      "startLine": 27,
+      "startColumn": 9,
+      "endLine": 27,
+      "endColumn": 22
+    },
+    {
+      "file": 0,
+      "start": 891,
+      "end": 896,
+      "startLine": 27,
+      "startColumn": 9,
+      "endLine": 27,
+      "endColumn": 14
+    },
+    {
+      "file": 0,
+      "start": 905,
+      "end": 906,
+      "startLine": 27,
+      "startColumn": 23,
+      "endLine": 27,
+      "endColumn": 24
+    },
+    {
+      "file": 0,
+      "start": 910,
+      "end": 967,
+      "startLine": 27,
+      "startColumn": 28,
+      "endLine": 27,
+      "endColumn": 85
+    },
+    {
+      "file": 0,
+      "start": 910,
+      "end": 956,
+      "startLine": 27,
+      "startColumn": 28,
+      "endLine": 27,
+      "endColumn": 74
+    },
+    {
+      "file": 0,
+      "start": 910,
+      "end": 929,
+      "startLine": 27,
+      "startColumn": 28,
+      "endLine": 27,
+      "endColumn": 47
+    },
+    {
+      "file": 0,
+      "start": 917,
+      "end": 928,
+      "startLine": 27,
+      "startColumn": 35,
+      "endLine": 27,
+      "endColumn": 46
+    },
+    {
+      "file": 0,
+      "start": 917,
+      "end": 922,
+      "startLine": 27,
+      "startColumn": 35,
+      "endLine": 27,
+      "endColumn": 40
+    },
+    {
+      "file": 0,
+      "start": 932,
+      "end": 956,
+      "startLine": 27,
+      "startColumn": 50,
+      "endLine": 27,
+      "endColumn": 74
+    },
+    {
+      "file": 0,
+      "start": 932,
+      "end": 950,
+      "startLine": 27,
+      "startColumn": 50,
+      "endLine": 27,
+      "endColumn": 68
+    },
+    {
+      "file": 0,
+      "start": 938,
+      "end": 949,
+      "startLine": 27,
+      "startColumn": 56,
+      "endLine": 27,
+      "endColumn": 67
+    },
+    {
+      "file": 0,
+      "start": 938,
+      "end": 943,
+      "startLine": 27,
+      "startColumn": 56,
+      "endLine": 27,
+      "endColumn": 61
+    },
+    {
+      "file": 0,
+      "start": 959,
+      "end": 967,
+      "startLine": 27,
+      "startColumn": 77,
+      "endLine": 27,
+      "endColumn": 85
+    },
+    {
+      "file": 0,
+      "start": 959,
+      "end": 964,
+      "startLine": 27,
+      "startColumn": 77,
+      "endLine": 27,
+      "endColumn": 82
+    },
+    {
+      "file": 0,
+      "start": 965,
+      "end": 966,
+      "startLine": 27,
+      "startColumn": 83,
+      "endLine": 27,
+      "endColumn": 84
+    },
+    {
+      "file": 0,
+      "start": 977,
+      "end": 990,
+      "startLine": 28,
+      "startColumn": 9,
+      "endLine": 28,
+      "endColumn": 22
+    },
+    {
+      "file": 0,
+      "start": 984,
+      "end": 989,
+      "startLine": 28,
+      "startColumn": 16,
+      "endLine": 28,
+      "endColumn": 21
+    },
+    {
+      "file": 0,
+      "start": 1187,
+      "end": 1217,
+      "startLine": 37,
+      "startColumn": 5,
+      "endLine": 37,
+      "endColumn": 35
+    },
+    {
+      "file": 0,
+      "start": 1222,
+      "end": 1253,
+      "startLine": 38,
+      "startColumn": 5,
+      "endLine": 38,
+      "endColumn": 36
+    },
+    {
+      "file": 0,
+      "start": 1265,
+      "end": 1270,
+      "startLine": 39,
+      "startColumn": 12,
+      "endLine": 39,
+      "endColumn": 17
+    },
+    {
+      "file": 0,
+      "start": 1296,
+      "end": 1323,
+      "startLine": 39,
+      "startColumn": 43,
+      "endLine": 39,
+      "endColumn": 70
+    },
+    {
+      "file": 0,
+      "start": 1303,
+      "end": 1322,
+      "startLine": 39,
+      "startColumn": 50,
+      "endLine": 39,
+      "endColumn": 69
+    },
+    {
+      "file": 0,
+      "start": 1310,
+      "end": 1321,
+      "startLine": 39,
+      "startColumn": 57,
+      "endLine": 39,
+      "endColumn": 68
+    },
+    {
+      "file": 0,
+      "start": 1310,
+      "end": 1315,
+      "startLine": 39,
+      "startColumn": 57,
+      "endLine": 39,
+      "endColumn": 62
+    }
+  ],
+  "symbols": [
+    {
+      "id": "src/main.mtek::Demo",
+      "kind": "scene",
+      "span": 0
+    },
+    {
+      "id": "src/main.mtek::Demo.Main",
+      "kind": "camera",
+      "span": 1
+    },
+    {
+      "id": "src/main.mtek::Transform",
+      "kind": "compute",
+      "span": 2
+    },
+    {
+      "id": "src/main.mtek::Transform.kernel",
+      "kind": "function",
+      "span": 3
+    },
+    {
+      "id": "src/main.mtek::Transform.gain",
+      "kind": "param",
+      "span": 4
+    },
+    {
+      "id": "src/main.mtek::Transform.enabled",
+      "kind": "param",
+      "span": 5
+    },
+    {
+      "id": "src/main.mtek::Transform.offset",
+      "kind": "param",
+      "span": 6
+    },
+    {
+      "id": "src/main.mtek::Transform.table",
+      "kind": "param",
+      "span": 7
+    },
+    {
+      "id": "src/main.mtek::Transform.matrix",
+      "kind": "param",
+      "span": 8
+    },
+    {
+      "id": "src/main.mtek::Transform.settings",
+      "kind": "param",
+      "span": 9
+    },
+    {
+      "id": "src/main.mtek::ScalarCopy",
+      "kind": "compute",
+      "span": 10
+    },
+    {
+      "id": "src/main.mtek::ScalarCopy.kernel",
+      "kind": "function",
+      "span": 11
+    },
+    {
+      "id": "src/main.mtek::VectorCopy",
+      "kind": "compute",
+      "span": 12
+    },
+    {
+      "id": "src/main.mtek::VectorCopy.kernel",
+      "kind": "function",
+      "span": 13
+    },
+    {
+      "id": "src/main.mtek::MatrixCopy",
+      "kind": "compute",
+      "span": 14
+    },
+    {
+      "id": "src/main.mtek::MatrixCopy.kernel",
+      "kind": "function",
+      "span": 15
+    },
+    {
+      "id": "src/main.mtek::ArrayCopy",
+      "kind": "compute",
+      "span": 16
+    },
+    {
+      "id": "src/main.mtek::ArrayCopy.kernel",
+      "kind": "function",
+      "span": 17
+    },
+    {
+      "id": "src/main.mtek::Required",
+      "kind": "compute",
+      "span": 18
+    },
+    {
+      "id": "src/main.mtek::Required.kernel",
+      "kind": "function",
+      "span": 19
+    },
+    {
+      "id": "src/main.mtek::Required.bias",
+      "kind": "param",
+      "span": 20
+    }
+  ],
+  "layouts": [
+    {
+      "id": "builtin:frame",
+      "wgslStruct": "MtekFrame",
+      "size": 288,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 288,
+        "align": 16,
+        "members": [
+          {
+            "name": "view_proj",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 0,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          },
+          {
+            "name": "camera_position",
+            "mtekType": "vec3",
+            "node": {
+              "kind": "vector",
+              "offset": 64,
+              "size": 12,
+              "align": 16,
+              "scalar": "f32",
+              "components": 3
+            }
+          },
+          {
+            "name": "light_count",
+            "mtekType": "u32",
+            "node": {
+              "kind": "scalar",
+              "offset": 76,
+              "size": 4,
+              "align": 4,
+              "scalar": "u32"
+            }
+          },
+          {
+            "name": "ambient",
+            "mtekType": "vec3",
+            "node": {
+              "kind": "vector",
+              "offset": 80,
+              "size": 12,
+              "align": 16,
+              "scalar": "f32",
+              "components": 3
+            }
+          },
+          {
+            "name": "exposure",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 92,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          },
+          {
+            "name": "lights",
+            "mtekType": "array<MtekLight, 4>",
+            "node": {
+              "kind": "array",
+              "offset": 96,
+              "size": 192,
+              "align": 16,
+              "length": 4,
+              "stride": 48,
+              "padded": false,
+              "element": {
+                "kind": "struct",
+                "name": "MtekLight",
+                "offset": 0,
+                "size": 48,
+                "align": 16,
+                "members": [
+                  {
+                    "name": "color",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 0,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "kind",
+                    "mtekType": "u32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 12,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "u32"
+                    }
+                  },
+                  {
+                    "name": "position",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 16,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "range",
+                    "mtekType": "f32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 28,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  },
+                  {
+                    "name": "direction",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 32,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "reserved",
+                    "mtekType": "f32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 44,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "builtin:object",
+      "wgslStruct": "MtekObject",
+      "size": 128,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 128,
+        "align": 16,
+        "members": [
+          {
+            "name": "model",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 0,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          },
+          {
+            "name": "normal_matrix",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 64,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "compute:src/main.mtek::Required:params",
+      "wgslStruct": "MtekComputeParams_e2cab98b_Required",
+      "size": 4,
+      "align": 4,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 4,
+        "align": 4,
+        "members": [
+          {
+            "name": "bias",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 0,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "compute:src/main.mtek::Transform:params",
+      "wgslStruct": "MtekComputeParams_e2cab98b_Transform",
+      "size": 144,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 144,
+        "align": 16,
+        "members": [
+          {
+            "name": "gain",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 0,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          },
+          {
+            "name": "enabled",
+            "mtekType": "bool",
+            "node": {
+              "kind": "scalar",
+              "offset": 4,
+              "size": 4,
+              "align": 4,
+              "scalar": "bool32"
+            }
+          },
+          {
+            "name": "offset",
+            "mtekType": "vec3",
+            "node": {
+              "kind": "vector",
+              "offset": 16,
+              "size": 12,
+              "align": 16,
+              "scalar": "f32",
+              "components": 3
+            }
+          },
+          {
+            "name": "table",
+            "mtekType": "array<f32, 2>",
+            "node": {
+              "kind": "array",
+              "offset": 32,
+              "size": 32,
+              "align": 16,
+              "length": 2,
+              "stride": 16,
+              "padded": true,
+              "element": {
+                "kind": "scalar",
+                "offset": 0,
+                "size": 4,
+                "align": 4,
+                "scalar": "f32"
+              }
+            }
+          },
+          {
+            "name": "matrix",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 64,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          },
+          {
+            "name": "settings",
+            "mtekType": "src/main.mtek::Small",
+            "node": {
+              "kind": "struct",
+              "name": "src/main.mtek::Small",
+              "offset": 128,
+              "size": 4,
+              "align": 16,
+              "members": [
+                {
+                  "name": "value",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 128,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "shaders": [],
+  "materials": [],
+  "computePrograms": [
+    {
+      "api": 1,
+      "definition": {
+        "id": "src/main.mtek::ArrayCopy",
+        "entryPoint": "mtek_cs",
+        "workgroupSize": [
+          64,
+          1,
+          1
+        ],
+        "dispatch": {
+          "id": "compute:dispatch",
+          "wgslStruct": "MtekComputeDispatch",
+          "size": 12,
+          "align": 4,
+          "root": {
+            "kind": "struct",
+            "name": "MtekComputeDispatch",
+            "offset": 0,
+            "size": 12,
+            "align": 4,
+            "members": [
+              {
+                "name": "x",
+                "mtekType": "u32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 0,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "u32"
+                }
+              },
+              {
+                "name": "y",
+                "mtekType": "u32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 4,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "u32"
+                }
+              },
+              {
+                "name": "z",
+                "mtekType": "u32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 8,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "u32"
+                }
+              }
+            ]
+          }
+        },
+        "inputs": [
+          {
+            "name": "source",
+            "layout": {
+              "kind": "array",
+              "offset": 0,
+              "size": 544,
+              "align": 4,
+              "length": 17,
+              "stride": 32,
+              "padded": false,
+              "element": {
+                "kind": "array",
+                "offset": 0,
+                "size": 32,
+                "align": 4,
+                "length": 2,
+                "stride": 16,
+                "padded": true,
+                "element": {
+                  "kind": "scalar",
+                  "offset": 0,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "f32"
+                }
+              }
+            }
+          }
+        ],
+        "output": {
+          "name": "result",
+          "layout": {
+            "kind": "array",
+            "offset": 0,
+            "size": 544,
+            "align": 4,
+            "length": 17,
+            "stride": 32,
+            "padded": false,
+            "element": {
+              "kind": "array",
+              "offset": 0,
+              "size": 32,
+              "align": 4,
+              "length": 2,
+              "stride": 16,
+              "padded": true,
+              "element": {
+                "kind": "scalar",
+                "offset": 0,
+                "size": 4,
+                "align": 4,
+                "scalar": "f32"
+              }
+            }
+          }
+        }
+      },
+      "shader": {
+        "hash": "90d8881e6ceb3544fb27d3b8d804fa1158523a9c4de8d3f45da5b8a5d5f4a5cc",
+        "url": "shaders/90d8881e6ceb3544.wgsl",
+        "map": "shaders/272c1b372cb6d395.mtek-map.json"
+      },
+      "params": [],
+      "defaults": [],
+      "span": 16
+    },
+    {
+      "api": 1,
+      "definition": {
+        "id": "src/main.mtek::MatrixCopy",
+        "entryPoint": "mtek_cs",
+        "workgroupSize": [
+          64,
+          1,
+          1
+        ],
+        "dispatch": {
+          "id": "compute:dispatch",
+          "wgslStruct": "MtekComputeDispatch",
+          "size": 12,
+          "align": 4,
+          "root": {
+            "kind": "struct",
+            "name": "MtekComputeDispatch",
+            "offset": 0,
+            "size": 12,
+            "align": 4,
+            "members": [
+              {
+                "name": "x",
+                "mtekType": "u32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 0,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "u32"
+                }
+              },
+              {
+                "name": "y",
+                "mtekType": "u32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 4,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "u32"
+                }
+              },
+              {
+                "name": "z",
+                "mtekType": "u32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 8,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "u32"
+                }
+              }
+            ]
+          }
+        },
+        "inputs": [
+          {
+            "name": "source",
+            "layout": {
+              "kind": "array",
+              "offset": 0,
+              "size": 1088,
+              "align": 16,
+              "length": 17,
+              "stride": 64,
+              "padded": false,
+              "element": {
+                "kind": "matrix",
+                "offset": 0,
+                "size": 64,
+                "align": 16,
+                "columns": 4,
+                "rows": 4,
+                "columnStride": 16
+              }
+            }
+          }
+        ],
+        "output": {
+          "name": "result",
+          "layout": {
+            "kind": "array",
+            "offset": 0,
+            "size": 1088,
+            "align": 16,
+            "length": 17,
+            "stride": 64,
+            "padded": false,
+            "element": {
+              "kind": "matrix",
+              "offset": 0,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          }
+        }
+      },
+      "shader": {
+        "hash": "ee01095dee7c159cdde17ad42019837c234017d0e1e9bcc23ffd7804294dd767",
+        "url": "shaders/ee01095dee7c159c.wgsl",
+        "map": "shaders/623786620da66006.mtek-map.json"
+      },
+      "params": [],
+      "defaults": [],
+      "span": 14
+    },
+    {
+      "api": 1,
+      "definition": {
+        "id": "src/main.mtek::Required",
+        "entryPoint": "mtek_cs",
+        "workgroupSize": [
+          64,
+          1,
+          1
+        ],
+        "dispatch": {
+          "id": "compute:dispatch",
+          "wgslStruct": "MtekComputeDispatch",
+          "size": 12,
+          "align": 4,
+          "root": {
+            "kind": "struct",
+            "name": "MtekComputeDispatch",
+            "offset": 0,
+            "size": 12,
+            "align": 4,
+            "members": [
+              {
+                "name": "x",
+                "mtekType": "u32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 0,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "u32"
+                }
+              },
+              {
+                "name": "y",
+                "mtekType": "u32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 4,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "u32"
+                }
+              },
+              {
+                "name": "z",
+                "mtekType": "u32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 8,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "u32"
+                }
+              }
+            ]
+          }
+        },
+        "uniforms": {
+          "id": "compute:src/main.mtek::Required:params",
+          "wgslStruct": "MtekComputeParams_e2cab98b_Required",
+          "size": 4,
+          "align": 4,
+          "root": {
+            "kind": "struct",
+            "name": "src/main.mtek::Required",
+            "offset": 0,
+            "size": 4,
+            "align": 4,
+            "members": [
+              {
+                "name": "bias",
+                "mtekType": "f32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 0,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "f32"
+                }
+              }
+            ]
+          }
+        },
+        "inputs": [],
+        "output": {
+          "name": "result",
+          "layout": {
+            "kind": "array",
+            "offset": 0,
+            "size": 68,
+            "align": 4,
+            "length": 17,
+            "stride": 4,
+            "padded": false,
+            "element": {
+              "kind": "scalar",
+              "offset": 0,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          }
+        }
+      },
+      "shader": {
+        "hash": "8be158d2289e391bd00aa05c50a65d1874ce8b7a62f743748f73ca107dc165c4",
+        "url": "shaders/8be158d2289e391b.wgsl",
+        "map": "shaders/a4cd25e0fcb896b7.mtek-map.json"
+      },
+      "params": [
+        {
+          "name": "bias",
+          "type": "f32",
+          "hasDefault": false,
+          "span": 20
+        }
+      ],
+      "defaults": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "span": 18
+    },
+    {
+      "api": 1,
+      "definition": {
+        "id": "src/main.mtek::ScalarCopy",
+        "entryPoint": "mtek_cs",
+        "workgroupSize": [
+          64,
+          1,
+          1
+        ],
+        "dispatch": {
+          "id": "compute:dispatch",
+          "wgslStruct": "MtekComputeDispatch",
+          "size": 12,
+          "align": 4,
+          "root": {
+            "kind": "struct",
+            "name": "MtekComputeDispatch",
+            "offset": 0,
+            "size": 12,
+            "align": 4,
+            "members": [
+              {
+                "name": "x",
+                "mtekType": "u32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 0,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "u32"
+                }
+              },
+              {
+                "name": "y",
+                "mtekType": "u32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 4,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "u32"
+                }
+              },
+              {
+                "name": "z",
+                "mtekType": "u32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 8,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "u32"
+                }
+              }
+            ]
+          }
+        },
+        "inputs": [
+          {
+            "name": "source",
+            "layout": {
+              "kind": "array",
+              "offset": 0,
+              "size": 68,
+              "align": 4,
+              "length": 17,
+              "stride": 4,
+              "padded": false,
+              "element": {
+                "kind": "scalar",
+                "offset": 0,
+                "size": 4,
+                "align": 4,
+                "scalar": "f32"
+              }
+            }
+          }
+        ],
+        "output": {
+          "name": "result",
+          "layout": {
+            "kind": "array",
+            "offset": 0,
+            "size": 68,
+            "align": 4,
+            "length": 17,
+            "stride": 4,
+            "padded": false,
+            "element": {
+              "kind": "scalar",
+              "offset": 0,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          }
+        }
+      },
+      "shader": {
+        "hash": "0b3085128810cac956b5220e8db9320b3449248d8576affe5712f548505227f7",
+        "url": "shaders/0b3085128810cac9.wgsl",
+        "map": "shaders/c172a906cfd9f348.mtek-map.json"
+      },
+      "params": [],
+      "defaults": [],
+      "span": 10
+    },
+    {
+      "api": 1,
+      "definition": {
+        "id": "src/main.mtek::Transform",
+        "entryPoint": "mtek_cs",
+        "workgroupSize": [
+          4,
+          2,
+          2
+        ],
+        "dispatch": {
+          "id": "compute:dispatch",
+          "wgslStruct": "MtekComputeDispatch",
+          "size": 12,
+          "align": 4,
+          "root": {
+            "kind": "struct",
+            "name": "MtekComputeDispatch",
+            "offset": 0,
+            "size": 12,
+            "align": 4,
+            "members": [
+              {
+                "name": "x",
+                "mtekType": "u32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 0,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "u32"
+                }
+              },
+              {
+                "name": "y",
+                "mtekType": "u32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 4,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "u32"
+                }
+              },
+              {
+                "name": "z",
+                "mtekType": "u32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 8,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "u32"
+                }
+              }
+            ]
+          }
+        },
+        "uniforms": {
+          "id": "compute:src/main.mtek::Transform:params",
+          "wgslStruct": "MtekComputeParams_e2cab98b_Transform",
+          "size": 144,
+          "align": 16,
+          "root": {
+            "kind": "struct",
+            "name": "src/main.mtek::Transform",
+            "offset": 0,
+            "size": 144,
+            "align": 16,
+            "members": [
+              {
+                "name": "gain",
+                "mtekType": "f32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 0,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "f32"
+                }
+              },
+              {
+                "name": "enabled",
+                "mtekType": "bool",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 4,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "bool32"
+                }
+              },
+              {
+                "name": "offset",
+                "mtekType": "vec3",
+                "node": {
+                  "kind": "vector",
+                  "offset": 16,
+                  "size": 12,
+                  "align": 16,
+                  "scalar": "f32",
+                  "components": 3
+                }
+              },
+              {
+                "name": "table",
+                "mtekType": "array<f32, 2>",
+                "node": {
+                  "kind": "array",
+                  "offset": 32,
+                  "size": 32,
+                  "align": 16,
+                  "length": 2,
+                  "stride": 16,
+                  "padded": true,
+                  "element": {
+                    "kind": "scalar",
+                    "offset": 0,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                }
+              },
+              {
+                "name": "matrix",
+                "mtekType": "mat4",
+                "node": {
+                  "kind": "matrix",
+                  "offset": 64,
+                  "size": 64,
+                  "align": 16,
+                  "columns": 4,
+                  "rows": 4,
+                  "columnStride": 16
+                }
+              },
+              {
+                "name": "settings",
+                "mtekType": "src/main.mtek::Small",
+                "node": {
+                  "kind": "struct",
+                  "name": "src/main.mtek::Small",
+                  "offset": 128,
+                  "size": 4,
+                  "align": 16,
+                  "members": [
+                    {
+                      "name": "value",
+                      "mtekType": "f32",
+                      "node": {
+                        "kind": "scalar",
+                        "offset": 128,
+                        "size": 4,
+                        "align": 4,
+                        "scalar": "f32"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "inputs": [
+          {
+            "name": "scalar",
+            "layout": {
+              "kind": "array",
+              "offset": 0,
+              "size": 68,
+              "align": 4,
+              "length": 17,
+              "stride": 4,
+              "padded": false,
+              "element": {
+                "kind": "scalar",
+                "offset": 0,
+                "size": 4,
+                "align": 4,
+                "scalar": "f32"
+              }
+            }
+          },
+          {
+            "name": "small",
+            "layout": {
+              "kind": "array",
+              "offset": 0,
+              "size": 68,
+              "align": 4,
+              "length": 17,
+              "stride": 4,
+              "padded": false,
+              "element": {
+                "kind": "struct",
+                "name": "src/main.mtek::Small",
+                "offset": 0,
+                "size": 4,
+                "align": 4,
+                "members": [
+                  {
+                    "name": "value",
+                    "mtekType": "f32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 0,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "records",
+            "layout": {
+              "kind": "array",
+              "offset": 0,
+              "size": 1632,
+              "align": 16,
+              "length": 17,
+              "stride": 96,
+              "padded": false,
+              "element": {
+                "kind": "struct",
+                "name": "src/main.mtek::Record",
+                "offset": 0,
+                "size": 96,
+                "align": 16,
+                "members": [
+                  {
+                    "name": "position",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 0,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "enabled",
+                    "mtekType": "bool",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 12,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "bool32"
+                    }
+                  },
+                  {
+                    "name": "samples",
+                    "mtekType": "array<f32, 3>",
+                    "node": {
+                      "kind": "array",
+                      "offset": 16,
+                      "size": 48,
+                      "align": 16,
+                      "length": 3,
+                      "stride": 16,
+                      "padded": true,
+                      "element": {
+                        "kind": "scalar",
+                        "offset": 0,
+                        "size": 4,
+                        "align": 4,
+                        "scalar": "f32"
+                      }
+                    }
+                  },
+                  {
+                    "name": "small",
+                    "mtekType": "src/main.mtek::Small",
+                    "node": {
+                      "kind": "struct",
+                      "name": "src/main.mtek::Small",
+                      "offset": 64,
+                      "size": 4,
+                      "align": 16,
+                      "members": [
+                        {
+                          "name": "value",
+                          "mtekType": "f32",
+                          "node": {
+                            "kind": "scalar",
+                            "offset": 64,
+                            "size": 4,
+                            "align": 4,
+                            "scalar": "f32"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "tint",
+                    "mtekType": "color",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 80,
+                      "size": 16,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 4
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "matrices",
+            "layout": {
+              "kind": "array",
+              "offset": 0,
+              "size": 1088,
+              "align": 16,
+              "length": 17,
+              "stride": 64,
+              "padded": false,
+              "element": {
+                "kind": "matrix",
+                "offset": 0,
+                "size": 64,
+                "align": 16,
+                "columns": 4,
+                "rows": 4,
+                "columnStride": 16
+              }
+            }
+          }
+        ],
+        "output": {
+          "name": "result",
+          "layout": {
+            "kind": "array",
+            "offset": 0,
+            "size": 1632,
+            "align": 16,
+            "length": 17,
+            "stride": 96,
+            "padded": false,
+            "element": {
+              "kind": "struct",
+              "name": "src/main.mtek::Record",
+              "offset": 0,
+              "size": 96,
+              "align": 16,
+              "members": [
+                {
+                  "name": "position",
+                  "mtekType": "vec3",
+                  "node": {
+                    "kind": "vector",
+                    "offset": 0,
+                    "size": 12,
+                    "align": 16,
+                    "scalar": "f32",
+                    "components": 3
+                  }
+                },
+                {
+                  "name": "enabled",
+                  "mtekType": "bool",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 12,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "bool32"
+                  }
+                },
+                {
+                  "name": "samples",
+                  "mtekType": "array<f32, 3>",
+                  "node": {
+                    "kind": "array",
+                    "offset": 16,
+                    "size": 48,
+                    "align": 16,
+                    "length": 3,
+                    "stride": 16,
+                    "padded": true,
+                    "element": {
+                      "kind": "scalar",
+                      "offset": 0,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  }
+                },
+                {
+                  "name": "small",
+                  "mtekType": "src/main.mtek::Small",
+                  "node": {
+                    "kind": "struct",
+                    "name": "src/main.mtek::Small",
+                    "offset": 64,
+                    "size": 4,
+                    "align": 16,
+                    "members": [
+                      {
+                        "name": "value",
+                        "mtekType": "f32",
+                        "node": {
+                          "kind": "scalar",
+                          "offset": 64,
+                          "size": 4,
+                          "align": 4,
+                          "scalar": "f32"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "tint",
+                  "mtekType": "color",
+                  "node": {
+                    "kind": "vector",
+                    "offset": 80,
+                    "size": 16,
+                    "align": 16,
+                    "scalar": "f32",
+                    "components": 4
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "shader": {
+        "hash": "e49f0a1c71fb8066cc837de1f9db9902fc885a3e194862eccad233991bf0be89",
+        "url": "shaders/e49f0a1c71fb8066.wgsl",
+        "map": "shaders/87b3ffb5b8e4f69a.mtek-map.json"
+      },
+      "params": [
+        {
+          "name": "gain",
+          "type": "f32",
+          "hasDefault": true,
+          "span": 4
+        },
+        {
+          "name": "enabled",
+          "type": "bool",
+          "hasDefault": true,
+          "span": 5
+        },
+        {
+          "name": "offset",
+          "type": "vec3",
+          "hasDefault": true,
+          "span": 6
+        },
+        {
+          "name": "table",
+          "type": "array<f32, 2>",
+          "hasDefault": true,
+          "span": 7
+        },
+        {
+          "name": "matrix",
+          "type": "mat4",
+          "hasDefault": true,
+          "span": 8
+        },
+        {
+          "name": "settings",
+          "type": "src/main.mtek::Small",
+          "hasDefault": true,
+          "span": 9
+        }
+      ],
+      "defaults": [
+        0,
+        0,
+        0,
+        64,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        128,
+        62,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        128,
+        63,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        64,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        128,
+        63,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        128,
+        63,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        128,
+        63,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        128,
+        63,
+        0,
+        0,
+        64,
+        64,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "span": 2
+    },
+    {
+      "api": 1,
+      "definition": {
+        "id": "src/main.mtek::VectorCopy",
+        "entryPoint": "mtek_cs",
+        "workgroupSize": [
+          64,
+          1,
+          1
+        ],
+        "dispatch": {
+          "id": "compute:dispatch",
+          "wgslStruct": "MtekComputeDispatch",
+          "size": 12,
+          "align": 4,
+          "root": {
+            "kind": "struct",
+            "name": "MtekComputeDispatch",
+            "offset": 0,
+            "size": 12,
+            "align": 4,
+            "members": [
+              {
+                "name": "x",
+                "mtekType": "u32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 0,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "u32"
+                }
+              },
+              {
+                "name": "y",
+                "mtekType": "u32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 4,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "u32"
+                }
+              },
+              {
+                "name": "z",
+                "mtekType": "u32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 8,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "u32"
+                }
+              }
+            ]
+          }
+        },
+        "inputs": [
+          {
+            "name": "source",
+            "layout": {
+              "kind": "array",
+              "offset": 0,
+              "size": 272,
+              "align": 16,
+              "length": 17,
+              "stride": 16,
+              "padded": false,
+              "element": {
+                "kind": "vector",
+                "offset": 0,
+                "size": 16,
+                "align": 16,
+                "scalar": "f32",
+                "components": 4
+              }
+            }
+          }
+        ],
+        "output": {
+          "name": "result",
+          "layout": {
+            "kind": "array",
+            "offset": 0,
+            "size": 272,
+            "align": 16,
+            "length": 17,
+            "stride": 16,
+            "padded": false,
+            "element": {
+              "kind": "vector",
+              "offset": 0,
+              "size": 16,
+              "align": 16,
+              "scalar": "f32",
+              "components": 4
+            }
+          }
+        }
+      },
+      "shader": {
+        "hash": "8083d2a6c4354fcd50113d369511dafce750780cca1e6f901898af7a1e0e7304",
+        "url": "shaders/8083d2a6c4354fcd.wgsl",
+        "map": "shaders/736ac8ef0db4bf2a.mtek-map.json"
+      },
+      "params": [],
+      "defaults": [],
+      "span": 12
+    }
+  ],
+  "meshes": [],
+  "assets": [],
+  "scene": {
+    "name": "Demo",
+    "symbol": "src/main.mtek::Demo",
+    "fields": {
+      "clearColor": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "ambientColor": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "ambientIntensity": 0.0,
+      "gravity": [
+        0.0,
+        -9.81,
+        0.0
+      ]
+    },
+    "state": [],
+    "cameras": [
+      {
+        "name": "Main",
+        "symbol": "src/main.mtek::Demo.Main",
+        "projection": "perspective",
+        "hasTarget": false,
+        "active": true,
+        "exposure": -1.9145305
+      }
+    ],
+    "entities": [],
+    "materialInstances": [],
+    "bindings": [],
+    "hostInputs": [],
+    "lights": []
+  }
+}

@@ -135,7 +135,7 @@ describe("shared valid examples", () => {
   const valid = examplePaths("valid");
 
   it("include a minimal and a full manifest", () => {
-    expect(valid).toEqual(["valid/full.json", "valid/minimal.json"]);
+    expect(valid).toEqual(["valid/compute.json", "valid/full.json", "valid/minimal.json"]);
   });
 
   for (const path of valid) {
@@ -191,7 +191,7 @@ describe("shared valid examples", () => {
     expect(validateManifest(typed).ok).toBe(true);
   });
 
-  it("the full example touches every property of the schema (except documented optional ones)", () => {
+  it("the full and compiler compute examples touch every property of the schema (except documented optional ones)", () => {
     interface SchemaNode {
       $ref?: string;
       properties?: Record<string, SchemaNode>;
@@ -234,6 +234,7 @@ describe("shared valid examples", () => {
       }
     };
     walk(example("valid/full.json"), "");
+    walk(example("valid/compute.json"), "");
 
     // Optional properties the spec shows omitted: the root of a layout block has no struct name.
     const documentedOptional = new Set([".layouts[].root.name"]);

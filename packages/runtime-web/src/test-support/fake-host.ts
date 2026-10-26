@@ -27,6 +27,7 @@
 import { createHash } from "node:crypto";
 import type { MtekManifest } from "../abi/manifest-types.js";
 import { checkManifest } from "../abi/validate.js";
+import { FakeComputeDevice } from "./fake-compute.js";
 import type { BytesResponseLike, DocumentLike, FetchResponseLike, HostEnvironment, ResizeObserverLike } from "../host/environment.js";
 import { syntheticProgram, type TestProgram } from "./program.js";
 import {
@@ -145,6 +146,8 @@ export interface FakeRenderPassRecord {
   readonly depthWidth: number;
   readonly depthHeight: number;
   readonly draws: readonly FakeDrawRecord[];
+  /** Non-indexed procedural draws; the fake records commands, not WGSL pixels. */
+  readonly nonIndexedDraws: readonly { readonly vertexCount: number; readonly pipeline: FakeResource; readonly bindGroups: readonly FakeBindGroup[] }[];
 }
 
 /** The fields of a render pipeline descriptor the fakes interpret. */
@@ -187,6 +190,7 @@ const USAGE_BUFFER_VERTEX = 0x20;
 /** A render pass encoder that validates its commands like a WebGPU implementation and records draws. */
 export class FakeRenderPassEncoder {
   readonly draws: FakeDrawRecord[] = [];
+  readonly nonIndexedDraws: { readonly vertexCount: number; readonly pipeline: FakeResource; readonly bindGroups: readonly FakeBindGroup[] }[] = [];
   ended = false;
   private pipeline: FakeResource | null = null;
   private readonly groups: (FakeBindGroup | undefined)[] = [];
@@ -236,31 +240,42 @@ export class FakeRenderPassEncoder {
     this.index = { buffer, format };
   }
 
-  drawIndexed(indexCount: number, instanceCount = 1, firstIndex = 0, baseVertex = 0, firstInstance = 0): void {
-    this.recording("drawIndexed");
-    if (firstIndex !== 0 || baseVertex !== 0) throw new Error("drawIndexed: the fake supports firstIndex and baseVertex 0 only");
+  private drawBindings(what: string): { pipeline: FakeResource; groups: FakeBindGroup[] } {
+    this.recording(what);
     const pipeline = this.pipeline;
-    if (pipeline === null) throw new Error("drawIndexed: no pipeline is set");
+    if (pipeline === null) throw new Error(`${what}: no pipeline is set`);
     const groupLayouts = pipelineGroupLayouts(pipeline);
     const groups: FakeBindGroup[] = [];
     groupLayouts.forEach((layout, i) => {
       const group = this.groups[i];
-      if (group === undefined) throw new Error(`drawIndexed: bind group ${String(i)} is not set`);
-      if (group.descriptor.layout !== layout) throw new Error(`drawIndexed: bind group ${String(i)} was made for another layout`);
+      if (group === undefined) throw new Error(`${what}: bind group ${String(i)} is not set`);
+      if (group.descriptor.layout !== layout) throw new Error(`${what}: bind group ${String(i)} was made for another layout`);
       const dynamic = layoutEntries(layout).filter((entry) => entry.buffer?.hasDynamicOffset === true);
       const offsets = this.offsets[i] ?? [];
       if (offsets.length !== dynamic.length) {
-        throw new Error(`drawIndexed: bind group ${String(i)} needs ${String(dynamic.length)} dynamic offsets, got ${String(offsets.length)}`);
+        throw new Error(`${what}: bind group ${String(i)} needs ${String(dynamic.length)} dynamic offsets, got ${String(offsets.length)}`);
       }
       offsets.forEach((offset, k) => {
-        if (offset % this.alignment !== 0) throw new Error(`drawIndexed: dynamic offset ${String(offset)} is not aligned to ${String(this.alignment)}`);
+        if (offset % this.alignment !== 0) throw new Error(`${what}: dynamic offset ${String(offset)} is not aligned to ${String(this.alignment)}`);
         const entry = group.descriptor.entries.find((e) => e.binding === dynamic[k]?.binding);
-        if (entry === undefined) throw new Error("drawIndexed: no entry for a dynamic binding");
+        if (entry === undefined) throw new Error(`${what}: no entry for a dynamic binding`);
         const size = entry.resource.size ?? entry.resource.buffer.size;
-        if ((entry.resource.offset ?? 0) + offset + size > entry.resource.buffer.size) throw new Error("drawIndexed: dynamic offset beyond the buffer");
+        if ((entry.resource.offset ?? 0) + offset + size > entry.resource.buffer.size) throw new Error(`${what}: dynamic offset beyond the buffer`);
       });
       groups.push(group);
     });
+    return { pipeline, groups };
+  }
+
+  draw(vertexCount: number, instanceCount = 1, firstVertex = 0, firstInstance = 0): void {
+    const { pipeline, groups } = this.drawBindings("draw");
+    if (!Number.isInteger(vertexCount) || vertexCount < 0 || instanceCount !== 1 || firstVertex !== 0 || firstInstance !== 0 || ((pipeline.descriptor as FakePipelineDescriptor).vertex.buffers?.length ?? 0) !== 0) throw new Error("draw: the fake supports procedural, non-instanced vertices only");
+    this.nonIndexedDraws.push({ vertexCount, pipeline, bindGroups: groups });
+  }
+
+  drawIndexed(indexCount: number, instanceCount = 1, firstIndex = 0, baseVertex = 0, firstInstance = 0): void {
+    if (firstIndex !== 0 || baseVertex !== 0) throw new Error("drawIndexed: the fake supports firstIndex and baseVertex 0 only");
+    const { pipeline, groups } = this.drawBindings("drawIndexed");
     const buffers = (pipeline.descriptor as FakePipelineDescriptor).vertex.buffers ?? [];
     const vertexBuffers = buffers.map((layout, slot) => {
       const buffer = this.vertexBuffers[slot];
@@ -298,7 +313,7 @@ export class FakeRenderPassEncoder {
 
 interface ColorAttachment {
   readonly view: FakeTextureView;
-  readonly clearValue?: { r: number; g: number; b: number; a: number };
+  readonly clearValue?: { r: number; g: number; b: number; a: number } | readonly [number, number, number, number];
   readonly loadOp: string;
   readonly storeOp: string;
 }
@@ -327,6 +342,20 @@ export class FakeCommandEncoder {
 
   constructor(private readonly device: FakeHostDevice) {}
 
+  clearBuffer(buffer: FakeBuffer): void {
+    this.ensureRecording("clearBuffer");
+    const encoder = this.device.compute.createCommandEncoder();
+    encoder.clearBuffer(buffer); const command = encoder.finish();
+    this.commands.push(() => command.execute());
+  }
+
+  beginComputePass(): ReturnType<ReturnType<FakeComputeDevice["createCommandEncoder"]>["beginComputePass"]> {
+    this.ensureRecording("beginComputePass"); this.passOpen = true;
+    const encoder = this.device.compute.createCommandEncoder();
+    const pass = encoder.beginComputePass();
+    return { ...pass, end: () => { pass.end(); this.passOpen = false; const command = encoder.finish(); this.commands.push(() => command.execute()); } };
+  }
+
   private ensureRecording(what: string): void {
     if (this.finished) throw new Error(`${what}: the command encoder is finished`);
     if (this.passOpen) throw new Error(`${what}: a render pass is still open`);
@@ -347,13 +376,14 @@ export class FakeCommandEncoder {
         throw new Error("beginRenderPass: the depth attachment's texture lacks RENDER_ATTACHMENT");
       }
       if (!depth.view.format.startsWith("depth")) throw new Error("beginRenderPass: the depth attachment has a non-depth format");
-      if (depthTexture.width !== colorTexture.width || depthTexture.height !== colorTexture.height) {
+      if (depth.view.width !== color.view.width || depth.view.height !== color.view.height) {
         throw new Error("beginRenderPass: attachments must have the same size");
       }
     }
     this.passOpen = true;
     const pass = new FakeRenderPassEncoder(color.view.format, depth?.view.format, this.device.limits["minUniformBufferOffsetAlignment"] ?? 256);
-    const clear = color.clearValue ?? { r: 0, g: 0, b: 0, a: 0 };
+    const value = color.clearValue ?? { r: 0, g: 0, b: 0, a: 0 };
+    const clear = "r" in value ? value : { r: value[0], g: value[1], b: value[2], a: value[3] };
     this.commands.push(() => {
       if (colorTexture.destroyed || (depth !== undefined && depth.view.texture.destroyed)) {
         this.device.raiseValidation("render pass uses a destroyed texture");
@@ -362,16 +392,17 @@ export class FakeCommandEncoder {
       const srgb = color.view.format.endsWith("-srgb");
       const bytes = [clear.r, clear.g, clear.b].map((c) => (srgb ? encodeSrgbByte(c) : Math.round(Math.min(Math.max(c, 0), 1) * 255)));
       bytes.push(Math.round(Math.min(Math.max(clear.a, 0), 1) * 255));
-      const pixels = colorTexture.pixels;
+      const pixels = color.view.pixels;
       for (let i = 0; i < pixels.length; i += 4) pixels.set(bytes, i);
       this.device.renderPasses.push({
-        targetWidth: colorTexture.width,
-        targetHeight: colorTexture.height,
+        targetWidth: color.view.width,
+        targetHeight: color.view.height,
         viewFormat: color.view.format,
         clearValue: clear,
         depthWidth: depth?.view.texture.width ?? 0,
         depthHeight: depth?.view.texture.height ?? 0,
         draws: [...pass.draws],
+        nonIndexedDraws: [...pass.nonIndexedDraws],
       });
     });
     const end = pass.end.bind(pass);
@@ -451,6 +482,8 @@ export interface FakeHostHooks {
 }
 
 export class FakeHostDevice extends FakeDevice {
+  readonly compute = new FakeComputeDevice();
+  createComputePipeline(descriptor: unknown): FakeResource { return this.compute.createComputePipeline(descriptor); }
   readonly features = new Set<string>();
   readonly renderPasses: FakeRenderPassRecord[] = [];
   readonly shaderModules: FakeShaderModule[] = [];
@@ -464,6 +497,7 @@ export class FakeHostDevice extends FakeDevice {
     private readonly hooks: FakeHostHooks = {},
   ) {
     super(limits);
+    this.compute.validation = (message) => this.raiseValidation(message);
   }
 
   /** Raises a validation error: captured by an open `validation` scope, else uncaptured. */
@@ -500,7 +534,7 @@ export class FakeHostDevice extends FakeDevice {
       return "the vertex stage has no module or entry point";
     }
     if (descriptor.fragment?.targets.length !== 1) return "exactly one colour target is required";
-    if (descriptor.depthStencil?.format.startsWith("depth") !== true) return "the depth format is not a depth format";
+    if (descriptor.depthStencil !== undefined && !descriptor.depthStencil.format.startsWith("depth")) return "the depth format is not a depth format";
     return this.hooks.pipelineError?.(descriptor);
   }
 

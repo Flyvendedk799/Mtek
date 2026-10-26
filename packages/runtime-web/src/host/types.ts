@@ -6,6 +6,7 @@
 import type { MtekDiagnostic } from "../diagnostics/types.js";
 import type { MtekExtension } from "./extensions.js";
 import type {MtekRenderingOptions} from "../render/options.js";
+import type { MtekComputeHandle } from "../compute/host.js";
 
 /** `spec/runtime-abi.md` section 10.2. */
 export interface MtekTestOptions {
@@ -125,6 +126,8 @@ export type MtekInputResult = { ok: true } | { ok: false; error: { code: string;
 export type MtekAppState = "running" | "paused" | "recovering" | "failed" | "disposed";
 
 export interface MtekApp<I = Record<string, unknown>, O = Record<string, unknown>> {
+  /** Create an owned instance of a packaged compute declaration, by qualified symbol. */
+  createCompute(id: string, params?: Readonly<Record<string, unknown>>): Promise<MtekComputeHandle>;
   setInput<K extends keyof I & string>(name: K, value: I[K]): MtekInputResult;
   /**
    * Initial snapshot after the next settled frame, then only value changes. Returns an idempotent

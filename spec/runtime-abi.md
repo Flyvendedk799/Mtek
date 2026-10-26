@@ -352,6 +352,7 @@ With `failureDisplay: "overlay"` the runtime also renders a readable error panel
 
 ```ts
 export interface MtekApp<I = Record<string, unknown>, O = Record<string, unknown>> {
+  createCompute(id: string, params?: Readonly<Record<string, unknown>>): Promise<MtekComputeHandle>; // development compute contract, decision 0204
   setInput<K extends keyof I & string>(name: K, value: I[K]): MtekInputResult; // queued; applied at the next frame start
   onOutput<K extends keyof O & string>(name: K, listener: (value: O[K]) => void): () => void; // §6.6
   pause(): void;
@@ -378,6 +379,17 @@ export interface MtekProgram<I = Record<string, unknown>, O = Record<string, unk
 ```
 
 `setInput` never throws and never mutates live state immediately: valid values are queued and applied in phase 1 of the next frame (blueprint §5.4).
+
+The development compute contract is defined by
+[decision 0204](decisions/0204-compute-packaging-and-mounted-handles.md).
+`MtekComputeHandle` exposes packed input upload, structured parameter edits,
+asynchronous logical-domain dispatch/readback, copied resource inspection and
+disposal. It is program-owned and survives scene changes/device recovery;
+committed program replacement invalidates old handles. The optional manifest
+`computePrograms` entries carry `api: 1`, compiler layouts/defaults and independently
+hashed shaders/maps. Ordinary source builds still receive E4901 pending GPU and
+compute-to-render acceptance; the mounted development fixture bypasses only that
+gate in compiler tests. The declarations do not establish numerical GPU acceptance.
 
 ### 6.3 Host input codecs
 

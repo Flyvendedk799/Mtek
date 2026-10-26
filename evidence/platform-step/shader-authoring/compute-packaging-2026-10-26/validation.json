@@ -1,0 +1,188 @@
+{
+  "date": "2026-10-26",
+  "recordedAt": "2026-10-26T18:12:38.665Z",
+  "baseCommit": "06102e87cceaaa83b1a0bac6fe5cde13ad644af5",
+  "scope": "Compute packaging, inspection and mounted handles; CPU-only checkpoint",
+  "environment": {
+    "node": "v22.23.2",
+    "cargoJobs": 2,
+    "rustTestThreads": 2,
+    "vitestWorkers": 1
+  },
+  "checks": [
+    {
+      "command": "cargo test -p mtek-compiler --locked -j 2 --test compute_lowering --test manifest_model --test inspect_views --test shader_lowering --test build -- --test-threads=2",
+      "passed": 65,
+      "failed": 0,
+      "suites": {
+        "build": 36,
+        "compute_lowering": 10,
+        "inspect_views": 7,
+        "manifest_model": 3,
+        "shader_lowering": 9
+      }
+    },
+    {
+      "command": "cargo clippy -p mtek-compiler --all-targets --locked -j 2 -- -D warnings",
+      "status": "passed"
+    },
+    {
+      "command": "cargo fmt --check",
+      "status": "passed"
+    },
+    {
+      "command": "npx vitest run --maxWorkers=1",
+      "cwd": "packages/runtime-web",
+      "files": 107,
+      "passed": 1644,
+      "failed": 0,
+      "durationSeconds": 67.52
+    },
+    {
+      "command": "npm run check:ts",
+      "status": "passed; all workspace projects"
+    },
+    {
+      "command": "npm run lint -w @mtek/runtime-web",
+      "status": "passed"
+    },
+    {
+      "command": "npm run build -w @mtek/runtime-web",
+      "status": "passed"
+    },
+    {
+      "command": "cargo build -p mtek-cli --locked -j 2",
+      "status": "passed"
+    },
+    {
+      "command": "cargo test -p mtek-cli --locked -j 2 --test prebuilt -- --test-threads=2",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "command": "node scripts/prebuilt-runtime.mjs --write",
+      "status": "refreshed"
+    },
+    {
+      "command": "node scripts/prebuilt-runtime.mjs --check --against-dist",
+      "status": "passed; byte-identical"
+    },
+    {
+      "command": "node scripts/game-budgets.mjs size --mtek target/debug/mtek.exe --json evidence/platform-step/shader-authoring/compute-packaging-2026-10-26/package-sizes.json",
+      "examples": 11,
+      "folderAndZipChecks": 22,
+      "failed": 0,
+      "budgetsChanged": false
+    }
+  ],
+  "rejectedAttempts": [
+    {
+      "scope": "Eager compute bundle",
+      "status": "six example package limits exceeded",
+      "report": "rejected-size-eager-runtime.json",
+      "resolution": "Trim generated schema annotations and statically unused standalone schema data; limits unchanged"
+    },
+    {
+      "scope": "Initial full runtime regression",
+      "passed": 1628,
+      "failed": 16,
+      "cause": "Fake GPU lacked non-indexed mipmap draws; following focused run exposed rejection of depthless pipelines",
+      "resolution": "Fake-only draw/mip-view/depth validation corrections; all 1644 runtime tests then passed"
+    },
+    {
+      "scope": "Workspace type check",
+      "status": "initial TS5097 failure",
+      "resolution": "Use JS module specifier for the TypeScript build helper import in tests; workspace check passed"
+    }
+  ],
+  "bundleBytes": {
+    "runtime": 1136282,
+    "development": 1148464,
+    "minified": 688174,
+    "declarations": 20682,
+    "minifiedDeltaFromPreviousPrebuilt": 2786,
+    "declarationsDeltaFromPreviousPrebuilt": 2274,
+    "standaloneSchemaDataReduction": 35785
+  },
+  "boundaries": {
+    "manifestSchemaVersion": 1,
+    "runtimeAbiVersion": 1,
+    "computeEntryApi": 1,
+    "publicSourceGate": "E4901 retained; planner packaging guard removed",
+    "mountedHandlesImplemented": true,
+    "manifestPackagingImplemented": true,
+    "numericalGpuAcceptance": false,
+    "computeToRenderImplemented": false,
+    "gpuOrBrowserProcessLaunched": false,
+    "sustainedBenchmarksRun": false,
+    "animationOptimizationRun": false,
+    "fullRoadmapComplete": false
+  },
+  "sourceHashes": {
+    "crates/mtek-cli/prebuilt/PROVENANCE.json": "95a0181c7f98e2fa7bc6ab9eafd03c610dc59f56b281d26b136827fc0aa6b2c4",
+    "crates/mtek-cli/prebuilt/runtime.d.ts": "7c16d20a5f391334154665ebad3ec18412e986fcbbefb855e21cf3933b4c9541",
+    "crates/mtek-cli/prebuilt/runtime.dev.js": "2a9ec43677bca7184f526aeeb2cd99521fc4f5be2013c918756c6b8e374eb5c3",
+    "crates/mtek-cli/prebuilt/runtime.js": "beb3596a6c592a2739f4fc22c4d3e55d56b14534cfee3c01a8f37ab98c9c1540",
+    "crates/mtek-cli/prebuilt/runtime.min.js": "2c7c59fb5a6f6383d669e02e7891e33a6b490b02c4f3b6bbd307d2e0109b5bf6",
+    "crates/mtek-compiler/src/emit_wgsl/artifact.rs": "19ec23899f265a2df80df522486d5ba9cf2f7cfd7cdea5fbcf54c992f260efaa",
+    "crates/mtek-compiler/src/emit_wgsl/compute_artifact.rs": "b10c9dbb55c0b18f023b0f32c5675c76bcaed7d4b8c43c01302b1223e12dc2e7",
+    "crates/mtek-compiler/src/emit_wgsl/mod.rs": "4ca380631c06b8f5cf8e2eaa6e30e3db05ed4bdc206fd1efe89b5ad51d656cd1",
+    "crates/mtek-compiler/src/inspect/bindings.rs": "b782848db1f66c102925bae0e620c31c64fdc18d990d7455ebd508060840f97a",
+    "crates/mtek-compiler/src/inspect/compute.rs": "dba3aa130ef5c7b0733be48ccce1e244f5c0e76eaa2877f5b360f91cab6ac94b",
+    "crates/mtek-compiler/src/inspect/mod.rs": "5f832051105a985cc181b6586dc53a7d2654304c9209b2877759ca3ae03d4714",
+    "crates/mtek-compiler/src/inspect/shaders.rs": "473f16e03a4181f670490362d16afabd950b0bd4c8640f6665f32dce5d447a4b",
+    "crates/mtek-compiler/src/lib.rs": "5276827bb6ff69b759713b007ba03855bd4e6125a277dd0857ac4d703c07c168",
+    "crates/mtek-compiler/src/package/builder.rs": "58182586542ccb18d4c654ae6af7fffefdf3b23737a649bac7861d623d01b104",
+    "crates/mtek-compiler/src/package/compute.rs": "306fce0d50495a0ff2f70aecd563f5c3e6f4b82ae9abf40511221c350431ffcb",
+    "crates/mtek-compiler/src/package/manifest.rs": "add733a7c6a49fe67812a29d1f5289abdc7c8c9a862105d94d5b37601fd85b46",
+    "crates/mtek-compiler/src/package/mod.rs": "cc76729e228ec3e1aa8212e63b1680daacf3897219cadf2067c88d518de89408",
+    "crates/mtek-compiler/src/plan/mod.rs": "95e12b3a4ea5de753965eae26d76fc573a203f421a1ed1e05d74654105254d07",
+    "crates/mtek-compiler/tests/compute_lowering.rs": "e2e401d8a0d7c7b3ae7efaeeea7491b3314ba80e86b4ff75d9c9a36c384e94df",
+    "crates/mtek-compiler/tests/js_source_map.rs": "2f022907720aa3d1ad0ce9e5746fcf6c5fad19bf33e41f186429b432d9bcb961",
+    "packages/runtime-web/src/abi/abi.test.ts": "1fd250edb72c85f0b9746382a8f97820c42483a767e83b9560f7c9b9ff64d944",
+    "packages/runtime-web/src/abi/manifest-types.ts": "c639d579661d5b9bc6da72138df1ba008194a231a8d14aa36850ce576f9d4c45",
+    "packages/runtime-web/src/abi/validator-reuse.test.ts": "2fbd6b1b183439a0511abdc7a3d5ed2b2d4e2cd3661d6eb9981f4ffe8ad424fc",
+    "packages/runtime-web/src/compute/definition.ts": "2c7a0b1dff5d35a3fe0d0e91218b6872eed5ce35a9e69c47e8cc45fc2c2f8ecb",
+    "packages/runtime-web/src/compute/host.ts": "89eeb3883100de0f036cbc34498acb4b828cac1a1d2396ed1bafcd6469bac41e",
+    "packages/runtime-web/src/compute/instance.test.ts": "eb5bde6d02fc1931e9450df3b3970c5f2533c8aa7bb78cea9ba34c5c2322c9ac",
+    "packages/runtime-web/src/compute/instance.ts": "8bbff66433a0aa229c6f00bfb66f15e94b463aa214386441c30e937f722a571d",
+    "packages/runtime-web/src/compute/store.test.ts": "950dfdec9098161538ed0ae96d2cbe7e804481c4dd100b54d6a991b923466a80",
+    "packages/runtime-web/src/compute/store.ts": "a05ebaa618e29a5bc3427cd3002c0965a0ab3b2940087deed4fa97eeb00c8fc1",
+    "packages/runtime-web/src/host/app.ts": "5fd0a15cb49686c0cf9cc06d077e198927dadca0d53f742e5119855cbfe5a841",
+    "packages/runtime-web/src/host/assets.test.ts": "7750622fd3a806da1b24fa61eb970209cc3da9e651e2f24b36e2c393cb11e5ba",
+    "packages/runtime-web/src/host/compute.test.ts": "e10a75ce236a5598f77d2e5ed94db0aeacad96dc0281465df15fb082e2eba8cd",
+    "packages/runtime-web/src/host/shaders.test.ts": "a8165f356b80a627864758684007fc08c62a6173a390e31cd78b77b615b97819",
+    "packages/runtime-web/src/host/shaders.ts": "f7c86d7d0061eec0185e489eb5bd07ffe0111c295046a6a397ee9125df7b0ec7",
+    "packages/runtime-web/src/host/types.ts": "d5b83994b5aafd251e9f8b2d63ae2956c5e352454db450d94674ff9dfaa6886c",
+    "packages/runtime-web/src/index.ts": "d381a54feebd2787a332214c1cf5527129726d3738f86960458a67c6eacfaa14",
+    "packages/runtime-web/src/runtime.d.ts": "7c16d20a5f391334154665ebad3ec18412e986fcbbefb855e21cf3933b4c9541",
+    "packages/runtime-web/src/test-support/fake-compute.ts": "fea187692a90d6f304cf04667bef8abd7686a2f275541941c194abdac603b16a",
+    "packages/runtime-web/src/test-support/fake-gpu.ts": "d53fd9c874f1f56f1e79e1accfec20ac10355d0a852368af315fbc8abd5a25f8",
+    "packages/runtime-web/src/test-support/fake-host.ts": "23cbd1423983373a06f88e9e9049e35ed96ecec5f251514ffdd3ad0db4a7d86b",
+    "packages/runtime-web/src/test-support/program.ts": "f36499f194fbb544b0791ece5b905efb5fd5bf315333462b8e54bdcbfe14b088",
+    "scripts/gen-manifest-validator.mjs": "97d53268be7a6610345f735b03c36f3e069c7a234f5cf022131e0bf52edc67d8",
+    "scripts/manifest-validation-schema.ts": "f195620959ec278894379815e3d4f9131b12686431f12930b08ff8e743a7f728",
+    "scripts/prebuilt-runtime.mjs": "82b23b3ccf9217d3e5575f1a028fd9c82b2f339a9027e3c0ea8af9f3b23443bc",
+    "scripts/standalone-schema-data.ts": "c7b1b327c8b5628bbf758f1ec316219f307dd3fbfc02819a33008ac7b73ecb41",
+    "spec/manifest.schema.json": "9baca2921804d1383ab66fe5e5fdc5d972cf22d7f6ed907f428890ef03796865",
+    "tests/abi/manifests/valid/compute.json": "d79e0c24f7abbca5cb9ae78ae5fced78eebaa9c3bc082de921f537aaf74bada1",
+    "tests/codegen/compute-contract/expected.app.js": "3b7f74c7c86078a2547e79896ad5e19e418901ae270320a34af1ae839891c5a5",
+    "tests/codegen/compute-contract/expected.definition.json": "a711d37ca3b29bc4eb4995e595a5bfdadc6970ed8bfc4cac49f06c8f72ff4a76",
+    "tests/codegen/compute-contract/expected.wgsl": "e49f0a1c71fb8066cc837de1f9db9902fc885a3e194862eccad233991bf0be89",
+    "tests/codegen/compute-contract/packaged/app.js": "3b7f74c7c86078a2547e79896ad5e19e418901ae270320a34af1ae839891c5a5",
+    "tests/codegen/compute-contract/packaged/program.manifest.json": "d79e0c24f7abbca5cb9ae78ae5fced78eebaa9c3bc082de921f537aaf74bada1",
+    "tests/codegen/compute-contract/packaged/shaders/0b3085128810cac9.wgsl": "0b3085128810cac956b5220e8db9320b3449248d8576affe5712f548505227f7",
+    "tests/codegen/compute-contract/packaged/shaders/272c1b372cb6d395.mtek-map.json": "272c1b372cb6d395f50bafa27253a56957b711dd27da345838aca56c5c6ce5fd",
+    "tests/codegen/compute-contract/packaged/shaders/623786620da66006.mtek-map.json": "623786620da66006b6ef2d2d4edece7058d617c49b1fdc670f7eb22e6a173ba6",
+    "tests/codegen/compute-contract/packaged/shaders/736ac8ef0db4bf2a.mtek-map.json": "736ac8ef0db4bf2a2fb557c5c4c5cba7e2140fd24a30137d9795a70a608d0d87",
+    "tests/codegen/compute-contract/packaged/shaders/8083d2a6c4354fcd.wgsl": "8083d2a6c4354fcd50113d369511dafce750780cca1e6f901898af7a1e0e7304",
+    "tests/codegen/compute-contract/packaged/shaders/87b3ffb5b8e4f69a.mtek-map.json": "87b3ffb5b8e4f69a4472fb1dc98252aad44140088df9e9300a38b983cc1931b3",
+    "tests/codegen/compute-contract/packaged/shaders/8be158d2289e391b.wgsl": "8be158d2289e391bd00aa05c50a65d1874ce8b7a62f743748f73ca107dc165c4",
+    "tests/codegen/compute-contract/packaged/shaders/90d8881e6ceb3544.wgsl": "90d8881e6ceb3544fb27d3b8d804fa1158523a9c4de8d3f45da5b8a5d5f4a5cc",
+    "tests/codegen/compute-contract/packaged/shaders/a4cd25e0fcb896b7.mtek-map.json": "a4cd25e0fcb896b709d1111bc4c4e533e9349b18bc8091715e0a7a5b7bb12ad7",
+    "tests/codegen/compute-contract/packaged/shaders/c172a906cfd9f348.mtek-map.json": "c172a906cfd9f348f34065c1bd020c3bbc46269173d01ef806f8fdcd93f9309c",
+    "tests/codegen/compute-contract/packaged/shaders/e49f0a1c71fb8066.wgsl": "e49f0a1c71fb8066cc837de1f9db9902fc885a3e194862eccad233991bf0be89",
+    "tests/codegen/compute-contract/packaged/shaders/ee01095dee7c159c.wgsl": "ee01095dee7c159cdde17ad42019837c234017d0e1e9bcc23ffd7804294dd767"
+  },
+  "hashBasis": "Git index bytes for this checkpoint; source line endings normalized by repository attributes"
+}

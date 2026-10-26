@@ -12,6 +12,7 @@
 //! - [`replace`]: the pure replace-on-success plan the command line tool executes.
 
 pub mod builder;
+mod compute;
 pub mod html;
 pub mod identity;
 pub mod manifest;

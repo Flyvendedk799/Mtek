@@ -1,0 +1,437 @@
+{
+  "id": "src/main.mtek::Transform",
+  "entryPoint": "mtek_cs",
+  "workgroupSize": [
+    4,
+    2,
+    2
+  ],
+  "dispatch": {
+    "id": "compute:dispatch",
+    "wgslStruct": "MtekComputeDispatch",
+    "size": 12,
+    "align": 4,
+    "root": {
+      "kind": "struct",
+      "name": "MtekComputeDispatch",
+      "offset": 0,
+      "size": 12,
+      "align": 4,
+      "members": [
+        {
+          "name": "x",
+          "mtekType": "u32",
+          "node": {
+            "kind": "scalar",
+            "offset": 0,
+            "size": 4,
+            "align": 4,
+            "scalar": "u32"
+          }
+        },
+        {
+          "name": "y",
+          "mtekType": "u32",
+          "node": {
+            "kind": "scalar",
+            "offset": 4,
+            "size": 4,
+            "align": 4,
+            "scalar": "u32"
+          }
+        },
+        {
+          "name": "z",
+          "mtekType": "u32",
+          "node": {
+            "kind": "scalar",
+            "offset": 8,
+            "size": 4,
+            "align": 4,
+            "scalar": "u32"
+          }
+        }
+      ]
+    }
+  },
+  "uniforms": {
+    "id": "compute:src/main.mtek::Transform:params",
+    "wgslStruct": "MtekComputeParams_e2cab98b_Transform",
+    "size": 144,
+    "align": 16,
+    "root": {
+      "kind": "struct",
+      "name": "src/main.mtek::Transform",
+      "offset": 0,
+      "size": 144,
+      "align": 16,
+      "members": [
+        {
+          "name": "gain",
+          "mtekType": "f32",
+          "node": {
+            "kind": "scalar",
+            "offset": 0,
+            "size": 4,
+            "align": 4,
+            "scalar": "f32"
+          }
+        },
+        {
+          "name": "enabled",
+          "mtekType": "bool",
+          "node": {
+            "kind": "scalar",
+            "offset": 4,
+            "size": 4,
+            "align": 4,
+            "scalar": "bool32"
+          }
+        },
+        {
+          "name": "offset",
+          "mtekType": "vec3",
+          "node": {
+            "kind": "vector",
+            "offset": 16,
+            "size": 12,
+            "align": 16,
+            "scalar": "f32",
+            "components": 3
+          }
+        },
+        {
+          "name": "table",
+          "mtekType": "array<f32, 2>",
+          "node": {
+            "kind": "array",
+            "offset": 32,
+            "size": 32,
+            "align": 16,
+            "length": 2,
+            "stride": 16,
+            "padded": true,
+            "element": {
+              "kind": "scalar",
+              "offset": 0,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          }
+        },
+        {
+          "name": "matrix",
+          "mtekType": "mat4",
+          "node": {
+            "kind": "matrix",
+            "offset": 64,
+            "size": 64,
+            "align": 16,
+            "columns": 4,
+            "rows": 4,
+            "columnStride": 16
+          }
+        },
+        {
+          "name": "settings",
+          "mtekType": "src/main.mtek::Small",
+          "node": {
+            "kind": "struct",
+            "name": "src/main.mtek::Small",
+            "offset": 128,
+            "size": 4,
+            "align": 16,
+            "members": [
+              {
+                "name": "value",
+                "mtekType": "f32",
+                "node": {
+                  "kind": "scalar",
+                  "offset": 128,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "f32"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "inputs": [
+    {
+      "name": "scalar",
+      "layout": {
+        "kind": "array",
+        "offset": 0,
+        "size": 68,
+        "align": 4,
+        "length": 17,
+        "stride": 4,
+        "padded": false,
+        "element": {
+          "kind": "scalar",
+          "offset": 0,
+          "size": 4,
+          "align": 4,
+          "scalar": "f32"
+        }
+      }
+    },
+    {
+      "name": "small",
+      "layout": {
+        "kind": "array",
+        "offset": 0,
+        "size": 68,
+        "align": 4,
+        "length": 17,
+        "stride": 4,
+        "padded": false,
+        "element": {
+          "kind": "struct",
+          "name": "src/main.mtek::Small",
+          "offset": 0,
+          "size": 4,
+          "align": 4,
+          "members": [
+            {
+              "name": "value",
+              "mtekType": "f32",
+              "node": {
+                "kind": "scalar",
+                "offset": 0,
+                "size": 4,
+                "align": 4,
+                "scalar": "f32"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "records",
+      "layout": {
+        "kind": "array",
+        "offset": 0,
+        "size": 1632,
+        "align": 16,
+        "length": 17,
+        "stride": 96,
+        "padded": false,
+        "element": {
+          "kind": "struct",
+          "name": "src/main.mtek::Record",
+          "offset": 0,
+          "size": 96,
+          "align": 16,
+          "members": [
+            {
+              "name": "position",
+              "mtekType": "vec3",
+              "node": {
+                "kind": "vector",
+                "offset": 0,
+                "size": 12,
+                "align": 16,
+                "scalar": "f32",
+                "components": 3
+              }
+            },
+            {
+              "name": "enabled",
+              "mtekType": "bool",
+              "node": {
+                "kind": "scalar",
+                "offset": 12,
+                "size": 4,
+                "align": 4,
+                "scalar": "bool32"
+              }
+            },
+            {
+              "name": "samples",
+              "mtekType": "array<f32, 3>",
+              "node": {
+                "kind": "array",
+                "offset": 16,
+                "size": 48,
+                "align": 16,
+                "length": 3,
+                "stride": 16,
+                "padded": true,
+                "element": {
+                  "kind": "scalar",
+                  "offset": 0,
+                  "size": 4,
+                  "align": 4,
+                  "scalar": "f32"
+                }
+              }
+            },
+            {
+              "name": "small",
+              "mtekType": "src/main.mtek::Small",
+              "node": {
+                "kind": "struct",
+                "name": "src/main.mtek::Small",
+                "offset": 64,
+                "size": 4,
+                "align": 16,
+                "members": [
+                  {
+                    "name": "value",
+                    "mtekType": "f32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 64,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "name": "tint",
+              "mtekType": "color",
+              "node": {
+                "kind": "vector",
+                "offset": 80,
+                "size": 16,
+                "align": 16,
+                "scalar": "f32",
+                "components": 4
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "matrices",
+      "layout": {
+        "kind": "array",
+        "offset": 0,
+        "size": 1088,
+        "align": 16,
+        "length": 17,
+        "stride": 64,
+        "padded": false,
+        "element": {
+          "kind": "matrix",
+          "offset": 0,
+          "size": 64,
+          "align": 16,
+          "columns": 4,
+          "rows": 4,
+          "columnStride": 16
+        }
+      }
+    }
+  ],
+  "output": {
+    "name": "result",
+    "layout": {
+      "kind": "array",
+      "offset": 0,
+      "size": 1632,
+      "align": 16,
+      "length": 17,
+      "stride": 96,
+      "padded": false,
+      "element": {
+        "kind": "struct",
+        "name": "src/main.mtek::Record",
+        "offset": 0,
+        "size": 96,
+        "align": 16,
+        "members": [
+          {
+            "name": "position",
+            "mtekType": "vec3",
+            "node": {
+              "kind": "vector",
+              "offset": 0,
+              "size": 12,
+              "align": 16,
+              "scalar": "f32",
+              "components": 3
+            }
+          },
+          {
+            "name": "enabled",
+            "mtekType": "bool",
+            "node": {
+              "kind": "scalar",
+              "offset": 12,
+              "size": 4,
+              "align": 4,
+              "scalar": "bool32"
+            }
+          },
+          {
+            "name": "samples",
+            "mtekType": "array<f32, 3>",
+            "node": {
+              "kind": "array",
+              "offset": 16,
+              "size": 48,
+              "align": 16,
+              "length": 3,
+              "stride": 16,
+              "padded": true,
+              "element": {
+                "kind": "scalar",
+                "offset": 0,
+                "size": 4,
+                "align": 4,
+                "scalar": "f32"
+              }
+            }
+          },
+          {
+            "name": "small",
+            "mtekType": "src/main.mtek::Small",
+            "node": {
+              "kind": "struct",
+              "name": "src/main.mtek::Small",
+              "offset": 64,
+              "size": 4,
+              "align": 16,
+              "members": [
+                {
+                  "name": "value",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 64,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "tint",
+            "mtekType": "color",
+            "node": {
+              "kind": "vector",
+              "offset": 80,
+              "size": 16,
+              "align": 16,
+              "scalar": "f32",
+              "components": 4
+            }
+          }
+        ]
+      }
+    }
+  }
+}

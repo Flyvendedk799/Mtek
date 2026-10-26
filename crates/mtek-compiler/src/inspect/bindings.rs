@@ -34,6 +34,8 @@ pub struct BindingsView {
     pub target_profile: String,
     pub blocks: Vec<Block>,
     pub instances: Vec<Instance>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub compute_programs: Vec<super::compute::ComputeBindings>,
 }
 
 /// A bound block.
@@ -275,6 +277,7 @@ pub fn bindings_view(
         target_profile: target_profile.to_owned(),
         blocks,
         instances,
+        compute_programs: Vec::new(),
     })
 }
 
@@ -498,6 +501,9 @@ impl BindingsView {
                 ],
                 &rows,
             );
+        }
+        for compute in &self.compute_programs {
+            out.push_str(&super::compute::human_bindings(compute));
         }
         out
     }

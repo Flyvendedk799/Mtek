@@ -36,7 +36,7 @@ fn memory(source: &str) -> MemFs {
     memory
 }
 
-fn development_ir(memory: &MemFs) -> Program {
+fn development_analysis(memory: &MemFs) -> mtek_compiler::Analysis {
     let mut analysis = mtek_compiler::analyze(&ProjectRoot::at_base(), memory);
     let errors: Vec<_> = analysis
         .report
@@ -57,7 +57,11 @@ fn development_ir(memory: &MemFs) -> Program {
         .diagnostics
         .retain(|diagnostic| diagnostic.code != Code::E4901);
     analysis.report.summary.errors = 0;
-    ir::lower_to_ir(&analysis).unwrap()
+    analysis
+}
+
+fn development_ir(memory: &MemFs) -> Program {
+    ir::lower_to_ir(&development_analysis(memory)).unwrap()
 }
 
 fn shader(source: &str) -> (Program, mtek_compiler::emit_wgsl::PrintedModule) {
@@ -112,11 +116,7 @@ fn source_kernel_uniforms_storage_and_three_dimensional_entry_validate() {
             .text
             .contains("var<storage, read_write> mtek_output: array<f32, 257>")
     );
-    assert!(
-        mtek_compiler::plan::plan_program(&program)
-            .unwrap_err()
-            .contains("compute packaging")
-    );
+    assert!(mtek_compiler::plan::plan_program(&program).is_ok());
     let json = ir::to_json(&program);
     assert!(json.contains("\"kind\": \"compute\""));
     assert!(json.contains("\"kind\": \"storageRead\""));
@@ -289,5 +289,220 @@ fn rounded_three_dimensional_tails_cannot_alias_logical_slots() {
             seen.into_iter().collect::<Vec<_>>(),
             (0..domain.iter().product()).collect::<Vec<_>>()
         );
+    }
+}
+
+#[test]
+fn validated_artifact_matches_the_shared_runtime_layout_contract() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/codegen/compute-contract");
+    let source = std::fs::read_to_string(root.join("kernel.mtek")).unwrap();
+    let program = development_ir(&memory(&source));
+    let item = program.computes().next().unwrap();
+    let artifact = mtek_compiler::emit_wgsl::emit_compute(&program, item).unwrap();
+    assert_eq!(
+        artifact,
+        mtek_compiler::emit_wgsl::emit_compute(&program, item).unwrap()
+    );
+    assert_eq!(artifact.definition.inputs.len(), 4);
+    assert_eq!(artifact.definition.inputs[0].layout.size(), 17 * 4);
+    assert_eq!(artifact.definition.inputs[1].layout.size(), 17 * 4);
+    assert_eq!(artifact.definition.dispatch.size, 12);
+    assert_eq!(artifact.sha256.len(), 64);
+    assert!(artifact.wgsl_path().starts_with("shaders/"));
+    assert!(
+        artifact
+            .span_map_file(|span| span.start)
+            .unwrap()
+            .0
+            .ends_with(".mtek-map.json")
+    );
+    let document = artifact.span_map_document(|span| span.start);
+    assert!(
+        serde_json::to_string(&document)
+            .unwrap()
+            .contains(&artifact.sha256)
+    );
+    for (file, text) in [
+        (
+            "expected.definition.json",
+            format!(
+                "{}\n",
+                serde_json::to_string_pretty(&artifact.definition).unwrap()
+            ),
+        ),
+        ("expected.wgsl", artifact.wgsl.clone()),
+    ] {
+        if std::env::var("MTEK_BLESS").is_ok_and(|value| value == "1") {
+            std::fs::write(root.join(file), &text).unwrap();
+        }
+        assert_eq!(
+            std::fs::read_to_string(root.join(file)).unwrap(),
+            text,
+            "{file}"
+        );
+    }
+}
+
+#[test]
+fn identical_compute_wgsl_keeps_distinct_content_addressed_source_maps() {
+    let source = "compute One { output result: array<f32, 8>; kernel(input: ComputeInput) -> f32 { return f32(input.index); } }\ncompute Two { output result: array<f32, 8>; kernel(input: ComputeInput) -> f32 { return f32(input.index); } }\nscene Demo { camera Main {} }";
+    let program = development_ir(&memory(source));
+    let artifacts = program
+        .computes()
+        .map(|item| mtek_compiler::emit_wgsl::emit_compute(&program, item).unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(artifacts[0].wgsl, artifacts[1].wgsl);
+    assert_eq!(artifacts[0].wgsl_path(), artifacts[1].wgsl_path());
+    let first = artifacts[0].span_map_file(|span| span.start).unwrap();
+    let second = artifacts[1].span_map_file(|span| span.start).unwrap();
+    assert_ne!(first.0, second.0);
+    assert_ne!(first.1, second.1);
+    assert_eq!(
+        first,
+        artifacts[0].span_map_file(|span| span.start).unwrap()
+    );
+    let reindexed = artifacts[0].span_map_file(|span| span.start + 1).unwrap();
+    assert_ne!(first.0, reindexed.0);
+    use sha2::Digest;
+    let hash: String = sha2::Sha256::digest(first.1.as_bytes())
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect();
+    assert_eq!(first.0, format!("shaders/{}.mtek-map.json", &hash[..16]));
+}
+
+#[test]
+fn compute_artifacts_are_not_returned_when_naga_rejects_the_kernel() {
+    let program = development_ir(&memory(SOURCE));
+    let mut item = program.computes().next().unwrap().clone();
+    let Stmt::Return {
+        value: Some(value), ..
+    } = &mut item.kernel.body.stmts[0]
+    else {
+        panic!("return")
+    };
+    // Deliberately corrupt typed IR: a bool literal in an f32-returning kernel.
+    // The artifact boundary must validate the emitted module rather than trust it.
+    value.kind = ExprKind::Const {
+        value: ir::Value::Bool(true),
+    };
+    let errors = mtek_compiler::emit_wgsl::emit_compute(&program, &item).unwrap_err();
+    assert!(
+        errors
+            .iter()
+            .any(|diagnostic| diagnostic.code == Code::E6100),
+        "{errors:?}"
+    );
+}
+
+#[test]
+fn compute_packaging_keeps_shaders_maps_defaults_writers_and_manifest_together() {
+    use mtek_compiler::package::{PackageInput, package};
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/codegen/compute-contract");
+    let source = std::fs::read_to_string(root.join("kernel.mtek")).unwrap();
+    let analysis = development_analysis(&memory(&source));
+    let program = ir::lower_to_ir(&analysis).unwrap();
+    let packaged = package(
+        analysis.project.as_ref().unwrap(),
+        &program,
+        &PackageInput {
+            profile: Default::default(),
+            mode: mtek_compiler::BuildMode::Test,
+            runtime_bundle: b"export const stub = true;\n",
+            runtime_declarations: b"// development fixture\n",
+            physics_bundle: None,
+            force_physics_subsystem: false,
+            loop_budget: None,
+            assets: &analysis.assets,
+        },
+    )
+    .unwrap();
+    let computes = &packaged.manifest.compute_programs;
+    assert_eq!(computes.len(), 6);
+    let compute = computes
+        .iter()
+        .find(|compute| compute.definition.id.ends_with("::Transform"))
+        .unwrap();
+    assert_eq!(compute.api, 1);
+    assert_eq!(
+        compute.defaults.len(),
+        compute.definition.uniforms.as_ref().unwrap().size as usize
+    );
+    assert_eq!(compute.params.len(), 6);
+    assert!(compute.params.iter().all(|param| param.has_default));
+    assert!(packaged.files.contains_key(&compute.shader.url));
+    assert!(packaged.files.contains_key(&compute.shader.map));
+    let wgsl = std::str::from_utf8(&packaged.files[&compute.shader.url]).unwrap();
+    validate_wgsl(wgsl).unwrap();
+    let map: serde_json::Value =
+        serde_json::from_slice(&packaged.files[&compute.shader.map]).unwrap();
+    assert_eq!(map["shader"], compute.shader.hash);
+    assert!(
+        packaged
+            .manifest
+            .symbols
+            .iter()
+            .any(|symbol| symbol.id == compute.definition.id)
+    );
+    let app = std::str::from_utf8(&packaged.files["app.js"]).unwrap();
+    assert!(app.contains("compute:src/main.mtek::Transform:params"));
+    let manifest = packaged.manifest.to_json();
+    let views = mtek_compiler::compute_inspection_views(
+        &program,
+        &analysis.project.as_ref().unwrap().sources,
+    )
+    .unwrap();
+    assert_eq!(views.len(), 6);
+    let view = views
+        .iter()
+        .find(|view| view.bindings.definition.id.ends_with("::Transform"))
+        .unwrap();
+    assert_eq!(view.hash, compute.shader.hash);
+    assert_eq!(view.bindings.definition, compute.definition);
+    assert_eq!(
+        view.bindings
+            .slots
+            .iter()
+            .map(|slot| slot.binding)
+            .collect::<Vec<_>>(),
+        vec![0, 1, 2, 3, 4, 5, 6]
+    );
+    assert!(
+        view.span_map
+            .iter()
+            .any(|entry| entry.symbol.ends_with("Transform.kernel"))
+    );
+    let fixture = root.join("../../abi/manifests/valid/compute.json");
+    for (path, text) in [
+        (fixture, manifest),
+        (root.join("expected.app.js"), app.to_owned()),
+    ] {
+        if std::env::var("MTEK_BLESS").is_ok_and(|value| value == "1") {
+            std::fs::write(&path, &text).unwrap();
+        }
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap(),
+            text,
+            "{}",
+            path.display()
+        );
+    }
+    let out = root.join("packaged");
+    for (name, bytes) in &packaged.files {
+        if name == "index.html"
+            || name == "runtime.d.ts"
+            || name.starts_with("runtime.")
+            || name == "app.d.ts"
+        {
+            continue;
+        }
+        let path = out.join(name);
+        if std::env::var("MTEK_BLESS").is_ok_and(|value| value == "1") {
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(&path, bytes).unwrap();
+        }
+        assert_eq!(std::fs::read(&path).unwrap(), *bytes, "{name}");
     }
 }

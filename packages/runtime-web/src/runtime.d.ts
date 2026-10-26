@@ -182,7 +182,39 @@ export interface MtekDebug {
   };
 }
 
+export type MtekComputeLayout =
+  | { readonly kind: "scalar"; readonly offset: number; readonly size: number; readonly align: number; readonly scalar: "f32" | "i32" | "u32" | "bool32" }
+  | { readonly kind: "vector"; readonly offset: number; readonly size: number; readonly align: number; readonly scalar: "f32"; readonly components: 2 | 3 | 4 }
+  | { readonly kind: "matrix"; readonly offset: number; readonly size: number; readonly align: number; readonly columns: 4; readonly rows: 4; readonly columnStride: 16 }
+  | { readonly kind: "struct"; readonly name?: string; readonly offset: number; readonly size: number; readonly align: number; readonly members: readonly { readonly name: string; readonly mtekType: string; readonly node: MtekComputeLayout }[] }
+  | { readonly kind: "array"; readonly offset: number; readonly size: number; readonly align: number; readonly length: number; readonly stride: number; readonly padded: boolean; readonly element: MtekComputeLayout };
+export interface MtekComputeBufferInfo {
+  readonly name: string; readonly capacity: number; readonly stride: number; readonly bytes: number; readonly layout: MtekComputeLayout;
+}
+export interface MtekComputeInspection {
+  readonly id: string;
+  readonly state: "ready" | "recovering" | "lost" | "failed" | "disposed";
+  readonly inputs: readonly MtekComputeBufferInfo[];
+  readonly output: MtekComputeBufferInfo;
+  readonly pendingReadbacks: number;
+  readonly dispatchPending: boolean;
+  readonly completedDomain?: readonly [number, number, number];
+}
+export interface MtekComputeHandle {
+  readonly state: MtekComputeInspection["state"];
+  /** Upload an exact-size packed resource; bytes are copied. Layout is available through inspect(). */
+  upload(name: string, data: ArrayBufferView): void;
+  /** Supply a scalar, vector tuple/object, column-major matrix, array or struct value. */
+  setParam(name: string, value: unknown): void;
+  dispatch(domain: readonly [number, number?, number?]): Promise<void>;
+  readback(): Promise<ArrayBuffer>;
+  inspect(): MtekComputeInspection;
+  dispose(): void;
+}
+
 export interface MtekApp<I = Record<string, unknown>, O = Record<string, unknown>> {
+  /** Create an instance of a packaged compute declaration, by qualified source symbol. */
+  createCompute(id: string, params?: Readonly<Record<string, unknown>>): Promise<MtekComputeHandle>;
   /** Never throws; the value is queued and applied at the next frame start. */
   setInput<K extends keyof I & string>(name: K, value: I[K]): MtekInputResult;
   /**

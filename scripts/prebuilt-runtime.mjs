@@ -35,6 +35,8 @@ const INPUTS = [
   "packages/physics-rapier",
   "spec/manifest.schema.json",
   "scripts/gen-manifest-validator.mjs",
+  "scripts/manifest-validation-schema.ts",
+  "scripts/standalone-schema-data.ts",
   "package-lock.json",
 ];
 

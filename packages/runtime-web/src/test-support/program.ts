@@ -9,7 +9,7 @@
  *  - `syntheticProgram(manifest, init)` combines both into a program module object.
  */
 /// <reference types="node" />
-import { cpSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -82,11 +82,14 @@ function rtBundle(): string {
 
 /** Imports `tests/codegen/<name>/expected/app.js` from a temporary copy with a stand-in runtime bundle. */
 export async function loadGoldenProgram(name: string): Promise<GoldenProgram> {
-  const source = resolve(CODEGEN_DIR, name, "expected");
+  const source = resolve(CODEGEN_DIR, name, name === "compute-contract" ? "packaged" : "expected");
   const target = mkdtempSync(join(tmpdir(), `mtek-runtime-${name}-`));
   cpSync(source, target, { recursive: true });
   // app.js.map names the project-relative sources (decision 0030); put them where it says.
-  cpSync(resolve(CODEGEN_DIR, name, "src"), join(target, "src"), { recursive: true });
+  if (name === "compute-contract") {
+    mkdirSync(join(target, "src"), { recursive: true });
+    cpSync(resolve(CODEGEN_DIR, name, "kernel.mtek"), join(target, "src", "main.mtek"));
+  } else cpSync(resolve(CODEGEN_DIR, name, "src"), join(target, "src"), { recursive: true });
   const appFile = join(target, "app.js");
   const bundle = RUNTIME_LINE.exec(readFileSync(appFile, "utf8"))?.[1];
   if (bundle === undefined) throw new Error(`${name}: app.js has no runtime re-export line`);

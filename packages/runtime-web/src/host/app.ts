@@ -5,6 +5,7 @@
  * every GPU resource (through the registry). Everything it adds is removed by `dispose()`.
  */
 import type { MtekManifest } from "../abi/manifest-types.js";
+import { ComputeHost, type MtekComputeHandle } from "../compute/host.js";
 import { checkManifest } from "../abi/validate.js";
 import { closeImages, decodeImages, loadAssets, type LoadedAssets } from "../assets/loader.js";
 import { MtekMountError, makeRuntimeDiagnostic, type MtekDiagnostic, type MtekRuntimePhase } from "../diagnostics/types.js";
@@ -45,7 +46,7 @@ import {
   stateIdentity,
   type StructuralChange,
 } from "./reload.js";
-import { loadCandidateShaders, loadStartupShaders } from "./shaders.js";
+import { loadCandidateShaders, loadStartupShaders, programShaders } from "./shaders.js";
 import type { Surface } from "./surface.js";
 import type { MtekApp, MtekAppState, MtekDebug, MtekInputResult, MtekMountProgram, MtekTestOptions } from "./types.js";
 
@@ -183,6 +184,18 @@ function attemptFailureText(error: unknown): string {
 }
 
 export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>> implements MtekApp<I, O> {
+  private computes: ComputeHost;
+  async createCompute(id: string, params?: Readonly<Record<string, unknown>>): Promise<MtekComputeHandle> { return this.computes.create(id, params); }
+  private computeHost(manifest: MtekManifest, program: MtekMountProgram<Record<string, unknown>>, modules: ReadonlyMap<string, GPUShaderModule>): ComputeHost {
+    const checked = checkProgram(program, manifest);
+    if (!checked.ok) throw new Error(checked.diagnostics.map((diagnostic) => diagnostic.message).join(" "));
+    return new ComputeHost(manifest, checked.program.writers, this.deps.device, this.deps.registry, modules,
+      () => { if (this.current !== "running" && this.current !== "paused") throw new Error(`application is ${this.current}`); },
+      (id, error) => {
+        const compute = manifest.computePrograms?.find((compute) => compute.definition.id === id);
+        this.report(makeRuntimeDiagnostic("E8050", { phase: "runtime:update", message: `Compute '${id}' failed: ${errorText(error)}`, ...(compute === undefined ? {} : { source: resolveSpan(manifest, compute.span) }) }));
+      });
+  }
   private extensions: ExtensionHost | undefined;
   installExtensions(extensions: readonly MtekExtension[],services:Readonly<Record<string,unknown>>={}):void {
     const access=sceneAccess(()=>this.deps.scene.world,()=>{if(this.current==="disposed"||this.current==="failed")throw new Error(`The application is ${this.current}`);});
@@ -218,6 +231,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         readonly manifest: MtekManifest;
         readonly program: MtekMountProgram<Record<string, unknown>>;
         readonly modules: Map<string, GPUShaderModule>;
+        readonly computes: ComputeHost;
         readonly assets: LoadedAssets;
         readonly sceneFunctions: MtekProgramScene;
         readonly restart: StructuralChange | undefined;
@@ -269,7 +283,8 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
     this.hooks = this.gameHooks();
     this.hostInputs = new HostInputs(manifest);
     this.hostOutputs = new HostOutputs(manifest);
-    for (const shader of manifest.shaders) {
+    this.computes = this.computeHost(manifest, deps.program, deps.modules);
+    for (const shader of programShaders(manifest)) {
       if (!this.shaderSources.has(shader.hash)) this.shaderSources.set(shader.hash, new URL(shader.url, deps.program.baseUrl).href);
     }
     registry.phase = "runtime:render";
@@ -620,18 +635,19 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
 
       // Reused modules need their retained source at the candidate's URL for recovery, even when
       // the build moved. Only WGSL is interchangeable by hash; span maps belong to their build.
-      for (const shader of manifest.shaders) {
+      for (const shader of programShaders(manifest)) {
         const source = this.shaderSources.get(shader.hash);
         if (source === undefined) continue;
         const target = new URL(shader.url, candidate.baseUrl).href;
         if (source !== target) {
           await this.deps.fetchShaderFile(target, source);
           assertActive();
-          const mapUrl = new URL(shader.map, candidate.baseUrl).href;
-          // Maps are optional. Retain this build's map when available; never alias the old one.
-          try { await this.deps.fetchShaderFile(mapUrl); } catch { /* Recovery falls back to the material declaration. */ }
-          assertActive();
         }
+        const mapUrl = new URL(shader.map, candidate.baseUrl).href;
+        // A new compute map may have a new content hash even when WGSL/URL is unchanged.
+        // Retain this build's map for offline recovery; never alias the old one.
+        try { await this.deps.fetchShaderFile(mapUrl); } catch { /* Recovery falls back to the declaration. */ }
+        assertActive();
       }
 
       const shaders = await loadCandidateShaders(
@@ -653,7 +669,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         for (const diagnostic of shaders.diagnostics) report(diagnostic);
         return { ok: false, diagnostics: shaders.diagnostics };
       }
-      for (const shader of manifest.shaders) this.shaderSources.set(shader.hash, new URL(shader.url, candidate.baseUrl).href);
+      for (const shader of programShaders(manifest)) this.shaderSources.set(shader.hash, new URL(shader.url, candidate.baseUrl).href);
 
       const restart = findStructuralChange(
         this.deps.manifest.scene,
@@ -745,7 +761,9 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       // registry already dropped them), so it cannot become the live scene.
       assertActive();
 
+      const computes = this.computeHost(manifest, candidate, shaders.modules);
       if (this.pendingSwap !== undefined) {
+        this.pendingSwap.computes.dispose();
         this.pendingSwap.scene.materials.dispose();
         this.pendingSwap.scene.meshes.dispose();
         this.pendingSwap.scene.renderer.dispose();
@@ -757,6 +775,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         manifest,
         program: candidate,
         modules: new Map(shaders.modules),
+        computes,
         assets: loaded.assets,
         sceneFunctions: checked.program.scene,
         restart: mode.kind === "reload" ? restart : undefined,
@@ -829,10 +848,12 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
   dispose(): void {
     if (this.current === "disposed") return;
     this.current = "disposed";
+    this.computes.dispose();
     this.extensions?.dispose();
     if (this.deps.game !== undefined) this.deps.game.target = INERT_GAME;
     this.hostOutputs.dispose();
     if (this.pendingSwap !== undefined) {
+      this.pendingSwap.computes.dispose();
       this.pendingSwap.scene.materials.dispose();
       this.pendingSwap.scene.meshes.dispose();
       this.pendingSwap.scene.renderer.dispose();
@@ -924,6 +945,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
   private fail(cause: MtekDiagnostic): void {
     if (this.current === "disposed" || this.current === "failed") return;
     this.current = "failed";
+    this.computes.dispose();
     this.hostOutputs.dispose();
     this.scheduler.stop();
     this.clearRecoveryTimer();
@@ -980,6 +1002,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       `Recovery: up to ${String(RECOVERY_ATTEMPTS)} attempts, after ${this.recoveryDelaysMs.map((delay) => `${String(delay)} ms`).join(", ")}; the application is paused until one succeeds.`,
     ];
     if (this.pendingSwap !== undefined) {
+      this.pendingSwap.computes.dispose();
       // Its resources belong to the lost device; the next build of the dev server replaces it.
       this.pendingSwap = undefined;
       notes.push("A hot-reload candidate that was waiting for the next frame was discarded.");
@@ -990,6 +1013,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       this.scheduler.pause();
     }
     this.current = "recovering";
+    this.computes.deviceLost();
     this.deps.device.onuncapturederror = null;
     this.deps.registry.phase = "runtime:device";
     const nth = this.losses === 1 ? "" : ` (device loss ${String(this.losses)})`;
@@ -1143,6 +1167,8 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       this.ensureRecovering();
 
       // Out-of-memory results arrive after a round trip (as at mount), and the new device may have been lost meanwhile.
+      await this.computes.recover(device, registry, shaders.modules);
+      this.ensureRecovering();
       await device.queue.onSubmittedWorkDone();
       this.ensureRecovering();
       if (this.attemptProblem !== undefined) throw new Error(this.attemptProblem);
@@ -1157,6 +1183,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       lost.destroy();
     } finally {
       if (!committed) {
+        this.computes.deviceLost();
         device.onuncapturederror = null;
         device.destroy();
       }
@@ -1345,6 +1372,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         });
       } catch (error) {
         pending.scene.materials.dispose();
+        pending.computes.dispose();
         pending.scene.meshes.dispose();
         pending.scene.renderer.dispose();
         const cause = makeRuntimeDiagnostic("E8102", {
@@ -1404,6 +1432,8 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
     this.deps.physics = physics;
     this.deps.physicsModule = pending.physicsModule;
     this.deps.scene = pending.scene;
+    this.computes.dispose();
+    this.computes = pending.computes;
     this.deps.manifest = pending.manifest;
     this.deps.program = pending.program;
     this.deps.modules = pending.modules;

@@ -1,0 +1,56 @@
+// Internal compiler/runtime contract fixture. Public builds still report E4901.
+struct Small { value: f32; }
+struct Record {
+    position: vec3;
+    enabled: bool;
+    samples: array<f32, 3>;
+    small: Small;
+    tint: color;
+}
+compute Transform {
+    param gain: f32 = 2.0;
+    param enabled: bool = true;
+    param offset: vec3 = vec3(0.25, 0.0, 0.0);
+    param table: array<f32, 2> = [1.0, 2.0];
+    param matrix: mat4 = mat4.identity();
+    param settings: Small = Small { value: 3.0; };
+    input scalar: array<f32, 17>;
+    input small: array<Small, 17>;
+    input records: array<Record, 17>;
+    input matrices: array<mat4, 17>;
+    output result: array<Record, 17>;
+    workgroup_size: [4, 2, 2];
+    kernel(input: ComputeInput) -> Record {
+        var value = records[input.index];
+        value.position = value.position + offset * gain;
+        value.enabled = enabled;
+        value.samples[1] = scalar[input.index] + small[input.index].value + table[0];
+        return value;
+    }
+}
+compute ScalarCopy {
+    input source: array<f32, 17>;
+    output result: array<f32, 17>;
+    kernel(input: ComputeInput) -> f32 { return source[input.index]; }
+}
+compute VectorCopy {
+    input source: array<vec4, 17>;
+    output result: array<vec4, 17>;
+    kernel(input: ComputeInput) -> vec4 { return source[input.index]; }
+}
+compute MatrixCopy {
+    input source: array<mat4, 17>;
+    output result: array<mat4, 17>;
+    kernel(input: ComputeInput) -> mat4 { return source[input.index]; }
+}
+compute ArrayCopy {
+    input source: array<array<f32, 2>, 17>;
+    output result: array<array<f32, 2>, 17>;
+    kernel(input: ComputeInput) -> array<f32, 2> { return source[input.index]; }
+}
+compute Required {
+    param bias: f32;
+    output result: array<f32, 17>;
+    kernel(input: ComputeInput) -> f32 { return bias + f32(input.index); }
+}
+scene Demo { camera Main {} }

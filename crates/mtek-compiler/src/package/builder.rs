@@ -394,6 +394,8 @@ fn package_scene(
         shader_files.push((artifact.wgsl_path(), artifact.wgsl.clone().into_bytes()));
         shader_files.push((artifact.map_path(), map_text.into_bytes()));
     }
+    let compute_programs =
+        super::compute::assemble(program, &mut spans, &mut layouts, &mut shader_files)?;
 
     // The assets: re-laid out meshes and copied images, with the declaring spans interned here.
     let packed = pack_assets(input.assets, &plan, &mut spans)?;
@@ -501,6 +503,7 @@ fn package_scene(
         layouts: layouts.iter().map(Layout::from_record).collect(),
         shaders,
         materials: manifest_materials,
+        compute_programs,
         meshes: meshes(&plan, &packed, input.assets).map_err(defect)?,
         assets: packed.assets.clone(),
         prefabs: manifest_prefabs,
@@ -656,6 +659,25 @@ fn symbols(
         }
         for state in &prefab.state {
             add(state.symbol.to_string(), SymbolKind::State, state.span)?;
+        }
+    }
+    for compute in program.computes() {
+        add(
+            compute.symbol.to_string(),
+            SymbolKind::Compute,
+            compute.span,
+        )?;
+        add(
+            compute.kernel.symbol.to_string(),
+            SymbolKind::Function,
+            compute.kernel.span,
+        )?;
+        for param in &compute.params {
+            add(
+                compute.symbol.child(&param.name).to_string(),
+                SymbolKind::Param,
+                param.span,
+            )?;
         }
     }
     for module in &program.modules {

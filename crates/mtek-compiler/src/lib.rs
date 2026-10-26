@@ -48,6 +48,10 @@ pub use check::{
     Analysis, AnalyzeOptions, CheckResult, ModuleUnit, analyze, analyze_with,
     analyze_without_edits, check,
 };
+pub use inspect::compute::{
+    ComputeBindings as ComputeBindingsView, ComputeShader as ComputeShaderView,
+    views as compute_inspection_views,
+};
 pub use inspect::{Inspect, InspectFormat, InspectResult, inspect};
 
 #[cfg(test)]

@@ -307,18 +307,24 @@ export interface FakeTextureDescriptor {
   readonly format: string;
   readonly usage: number;
   readonly viewFormats?: readonly string[];
+  readonly mipLevelCount?: number;
 }
 
 export class FakeTextureView {
   constructor(
     readonly texture: FakeTexture,
     readonly format: string,
+    readonly baseMipLevel = 0,
   ) {}
+  get width(): number { return Math.max(1, this.texture.width >> this.baseMipLevel); }
+  get height(): number { return Math.max(1, this.texture.height >> this.baseMipLevel); }
+  get pixels(): Uint8Array { return this.texture.mipPixels(this.baseMipLevel); }
 }
 
 export class FakeTexture {
   destroyed = false;
   private pixelData: Uint8Array | undefined;
+  private readonly mipData = new Map<number, Uint8Array>();
 
   constructor(readonly descriptor: unknown) {}
 
@@ -348,14 +354,26 @@ export class FakeTexture {
     return this.pixelData;
   }
 
+  mipPixels(level: number): Uint8Array {
+    if (level === 0) return this.pixels;
+    let pixels = this.mipData.get(level);
+    if (pixels === undefined) {
+      pixels = new Uint8Array(Math.max(1, this.width >> level) * Math.max(1, this.height >> level) * 4);
+      this.mipData.set(level, pixels);
+    }
+    return pixels;
+  }
+
   /** `GPUTexture.createView`: the view format must be the texture's format or one of its `viewFormats`. */
-  createView(descriptor: { readonly format?: string } = {}): FakeTextureView {
+  createView(descriptor: { readonly format?: string; readonly baseMipLevel?: number; readonly mipLevelCount?: number } = {}): FakeTextureView {
     if (this.destroyed) throw new Error("createView: the texture is destroyed");
     const format = descriptor.format ?? this.format;
     if (format !== this.format && !(this.typed.viewFormats ?? []).includes(format)) {
       throw new TypeError(`createView: format ${format} is neither the texture format ${this.format} nor in its viewFormats`);
     }
-    return new FakeTextureView(this, format);
+    const base = descriptor.baseMipLevel ?? 0, count = descriptor.mipLevelCount ?? (this.typed.mipLevelCount ?? 1) - base;
+    if (!Number.isInteger(base) || base < 0 || !Number.isInteger(count) || count < 1 || base + count > (this.typed.mipLevelCount ?? 1)) throw new RangeError("createView: mip levels exceed the texture");
+    return new FakeTextureView(this, format, base);
   }
 
   destroy(): void {

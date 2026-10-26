@@ -15,6 +15,7 @@
 
 pub mod artifact;
 pub mod blocks;
+pub mod compute_artifact;
 pub mod printer;
 pub mod span_map;
 pub mod validate;
@@ -24,6 +25,7 @@ pub use blocks::{
     Leaf, LeafKind, emit_bindings, emit_block_structs, leaf_accessors, member_wgsl_name,
     padded_element_name, wgsl_struct_name,
 };
+pub use compute_artifact::{ComputeArtifact, ComputeDefinition, ComputeResource, emit_compute};
 pub use printer::{PrintedModule, print_module};
 pub use span_map::{SpanMap, SpanMapDocument, SpanMapEntry, WgslRange};
 pub use validate::{WgslErrorStage, WgslLabel, WgslValidationError, validate, validate_wgsl};
