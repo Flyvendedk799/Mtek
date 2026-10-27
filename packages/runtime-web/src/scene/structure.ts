@@ -26,7 +26,7 @@ import type {
   MtekStateEntry,
   MtekVertexAttribute,
 } from "../abi/manifest-types.js";
-import { skinProblem } from "./skeleton.js";
+import { skinProblem } from "./skin-problem.js";
 import { makeRuntimeDiagnostic, type MtekDiagnostic } from "../diagnostics/types.js";
 import { regionProblem } from "../mesh/asset.js";
 import type { MeshSource } from "../mesh/cache.js";

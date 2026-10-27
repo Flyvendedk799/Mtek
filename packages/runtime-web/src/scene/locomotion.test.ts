@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { MtekSkin } from "../abi/manifest-types.js";
 import { animatedSkin } from "../test-support/animated-skin.js";
-import { AnimationPlayers, SkeletonPlayer } from "./skeleton.js";
+import { SkeletalPlayers as AnimationPlayers, SkeletonPlayer } from "./skeleton.js";
 import { createAnimationController } from "../animation.js";
 import { PoseSchedule } from "./pose-schedule.js";
 

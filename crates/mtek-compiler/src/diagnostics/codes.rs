@@ -307,6 +307,7 @@ catalogue! {
     E8111 Error "unknown name in animation command",
     E8112 Error "limb command on a rig that is not a humanoid",
     E8113 Error "animation command rejected",
+    E8114 Error "animation module failed to load",
     W8201 Warning "audio value clamped",
     W8202 Warning "sound could not be decoded",
     W8203 Warning "too many HUD items",

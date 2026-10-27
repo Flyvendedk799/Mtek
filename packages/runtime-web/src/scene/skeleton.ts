@@ -1,6 +1,7 @@
 import type { MtekSkin } from "../abi/manifest-types.js";
 import { identity, multiplyInto, fromRotationTranslationScaleInto, normalMatrixInto } from "../math/mat4.js";
-import { ClipPlayers, sampleChannelInto, type PlayableChannel, type PlayableClip } from "./clips.js";
+import { ClipPlayers, sampleChannelInto } from "./clips.js";
+import { AnimationPlayers, type Apply } from "./animation-players.js";
 import { PoseLayers } from "./pose-layers.js";
 import { PoseIK } from "./ik.js";
 import { BlendSpace } from "./blend-space.js";
@@ -8,49 +9,6 @@ import { LocomotionBlend } from "./locomotion.js";
 import { PoseSchedule, type AnimationUpdateBand } from "./pose-schedule.js";
 import type { AnimationInspection } from "./animation-inspection.js";
 import type { HumanoidMap } from "./humanoid-types.js";
-
-/** Shared file data, independently evaluated by every entity instance. */
-export function skinProblem(skin: MtekSkin, vertices: number): string | undefined {
-  const n = skin.nodes.length;
-  if(n>256||skin.joints.length>128)return "skin exceeds the 256-node or 128-joint profile";
-  const index=(i: number,max: number): boolean => Number.isInteger(i)&&i>=0&&i<max;
-  const finite=(values: readonly number[],length: number): boolean => values.length===length&&values.every(Number.isFinite);
-  if (!index(skin.meshNode,n) || skin.joints.length===0 || skin.joints.some(j => !index(j,n)) || skin.inverseBind.length !== skin.joints.length
-    || skin.inverseBind.some(m=>!finite(m,16))) return "skin node or inverse-bind count is invalid";
-  if (skin.indices.length !== vertices || skin.weights.length !== vertices) return "skin influences do not match the vertex count";
-  for (let i = 0; i < n; i++) {
-    const node = skin.nodes[i]!;
-    if ((node.parent!==-1&&!index(node.parent,n)) || !finite(node.translation,3) || !finite(node.rotation,4) || !finite(node.scale,3) || node.scale.some(v => v <= 0) || Math.hypot(...node.rotation) < 1e-8) return "invalid skeletal bind transform";
-    let parent = i;
-    for (let depth = 0; parent >= 0; depth++) {
-      if(!index(parent,n))return "invalid skeletal bind transform";
-      if (depth >= n) return "cyclic skeletal hierarchy";
-      parent = skin.nodes[parent]!.parent;
-    }
-  }
-  for (let i = 0; i < vertices; i++) {
-    const weights = skin.weights[i]!;
-    if (skin.indices[i]!.length!==4 || skin.indices[i]!.some(j => !index(j,skin.joints.length)) || !finite(weights,4) || weights.some(w => w < 0) || Math.abs(weights.reduce((a,b) => a+b,0)-1) > 0.001) return "invalid vertex joint indices or weights";
-  }
-  const names = new Set<string>();
-  for (const clip of skin.clips) {
-    if (names.has(clip.name)) return "duplicate skeletal clip name";
-    if(!Number.isFinite(clip.duration)||clip.duration<0) return "invalid skeletal clip duration";
-    names.add(clip.name);
-    const channels = new Set<string>();
-    for (const c of clip.channels) {
-      const key = String(c.node) + c.path;
-      if (!index(c.node,n) || channels.has(key) || c.times.length===0 || c.values.length !== c.times.length * (c.path === "rotation" ? 4 : 3) || c.values.some(v=>!Number.isFinite(v))
-        || c.times.some((t,i) => !Number.isFinite(t) || t < 0 || t > clip.duration || (i > 0 && t <= c.times[i-1]!))
-        || (c.path === "scale" && c.values.some(v => v <= 0))) return "invalid skeletal clip channel";
-      if (c.path === "rotation") {
-        for (let k=0;k<c.values.length;k+=4) if (Math.hypot(...c.values.slice(k,k+4)) < 1e-8) return "invalid skeletal rotation";
-      }
-      channels.add(key);
-    }
-  }
-  return undefined;
-}
 
 function slerp(out: Float64Array, at: number, a: Float64Array, b: Float64Array, t: number): void {
   let dot = 0;
@@ -361,15 +319,16 @@ export class SkeletonPlayer {
   }
 }
 
-type Apply = (slot: number, channel: PlayableChannel, value: ArrayLike<number>) => void;
-/** The same Mtek control API for rigid-node and skeletal animation. */
-export class AnimationPlayers {
-  private readonly nodes = new ClipPlayers();
+/**
+ * The same Mtek control API for rigid-node and skeletal animation: the players of a world whose animation module is
+ * loaded (decision 0225). Rigid clips are the base class's; an entity with a rig answers for itself.
+ */
+export class SkeletalPlayers extends AnimationPlayers {
   private readonly rigs = new Map<number,SkeletonPlayer>();
   private readonly groups = new Map<SkeletonPlayer,number>();
-  skin(slot: number): SkeletonPlayer | undefined { return this.rigs.get(slot); }
+  override skin(slot: number): SkeletonPlayer | undefined { return this.rigs.get(slot); }
   /** Explicit pose cohorts: all members intentionally share clocks, layers, IK and a palette. */
-  share(source: number, targets: readonly number[]): boolean {
+  override share(source: number, targets: readonly number[]): boolean {
     const player = this.rigs.get(source);
     if (player === undefined) throw new RangeError("Animation sharing needs a skinned source");
     for (const target of targets) {
@@ -381,25 +340,24 @@ export class AnimationPlayers {
     for (const target of targets) if (this.rigs.get(target) !== player) { this.rigs.set(target,player); changed = true; }
     return changed;
   }
-  detach(slot: number): SkeletonPlayer {
+  override detach(slot: number): SkeletonPlayer {
     const source = this.rigs.get(slot);
     if (source === undefined) throw new RangeError("Animation detaching needs a skinned entity");
     const player = new SkeletonPlayer(source.skin);
     player.copyPose(source); this.rigs.set(slot,player); return player;
   }
-  add(clip: PlayableClip): void { this.nodes.add(clip); }
-  addSkin(slot: number, skin: MtekSkin, clip?: string): void { this.rigs.set(slot,new SkeletonPlayer(skin,clip)); }
-  remove(slot: number): void { this.nodes.remove(slot); this.rigs.delete(slot); }
-  copyPose(target: number,source: number): boolean {
+  override addSkin(slot: number, skin: MtekSkin, clip?: string): void { this.rigs.set(slot,new SkeletonPlayer(skin,clip)); }
+  override remove(slot: number): void { super.remove(slot); this.rigs.delete(slot); }
+  override copyPose(target: number,source: number): boolean {
     const a=this.rigs.get(target),b=this.rigs.get(source);
     return a!==undefined && b!==undefined && a.copyPose(b);
   }
-  transition(slot: number,name: string,seconds: number,looping: boolean,speed: number): boolean { return this.rigs.get(slot)?.transition(name,seconds,looping,speed) ?? false; }
-  play(slot: number,looping: boolean,speed: number): boolean { const r=this.rigs.get(slot); return r===undefined?this.nodes.play(slot,looping,speed):r.play(looping,speed); }
+  override transition(slot: number,name: string,seconds: number,looping: boolean,speed: number): boolean { return this.rigs.get(slot)?.transition(name,seconds,looping,speed) ?? false; }
+  override play(slot: number,looping: boolean,speed: number): boolean { const r=this.rigs.get(slot); return r===undefined?super.play(slot,looping,speed):r.play(looping,speed); }
   private clock(slot: number): [ClipPlayers,number] { const r=this.rigs.get(slot); return r===undefined?[this.nodes,slot]:[r.clock,0]; }
-  pause(slot: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.pause(); const [c,s]=this.clock(slot); return c.pause(s); }
-  resume(slot: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.resume(); const [c,s]=this.clock(slot); return c.resume(s); }
-  seek(slot: number,time: number): boolean {
+  override pause(slot: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.pause(); const [c,s]=this.clock(slot); return c.pause(s); }
+  override resume(slot: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.resume(); const [c,s]=this.clock(slot); return c.resume(s); }
+  override seek(slot: number,time: number): boolean {
     const blend=this.rigs.get(slot)?.locomotion;
     if(blend?.active===true) {
       if(!Number.isFinite(time)||time<0||time>blend.duration)return false;
@@ -407,20 +365,20 @@ export class AnimationPlayers {
     }
     const [c,s]=this.clock(slot); return c.seek(s,time);
   }
-  fade(slot: number,weight: number,duration: number): boolean { const [c,s]=this.clock(slot); return c.fade(s,weight,duration); }
-  time(slot: number): number { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.phase*blend.duration; const [c,s]=this.clock(slot); return c.time(s); }
-  duration(slot: number): number { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.duration; const [c,s]=this.clock(slot); return c.duration(s); }
-  weight(slot: number): number { const [c,s]=this.clock(slot); return c.weight(s); }
-  playing(slot: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.playing; const [c,s]=this.clock(slot); return c.playing(s); }
-  finished(slot: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.finished; const [c,s]=this.clock(slot); return c.finished(s); }
-  crossed(slot: number,marker: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.crossedPhase(marker/blend.duration); const [c,s]=this.clock(slot); return c.crossed(s,marker); }
-  advance(dt: number,apply: Apply,distance?: (slot: number)=>number): void {
-    this.nodes.advance(dt,apply);
+  override fade(slot: number,weight: number,duration: number): boolean { const [c,s]=this.clock(slot); return c.fade(s,weight,duration); }
+  override time(slot: number): number { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.phase*blend.duration; const [c,s]=this.clock(slot); return c.time(s); }
+  override duration(slot: number): number { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.duration; const [c,s]=this.clock(slot); return c.duration(s); }
+  override weight(slot: number): number { const [c,s]=this.clock(slot); return c.weight(s); }
+  override playing(slot: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.playing; const [c,s]=this.clock(slot); return c.playing(s); }
+  override finished(slot: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.finished; const [c,s]=this.clock(slot); return c.finished(s); }
+  override crossed(slot: number,marker: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.crossedPhase(marker/blend.duration); const [c,s]=this.clock(slot); return c.crossed(s,marker); }
+  override advance(dt: number,apply: Apply,distance?: (slot: number)=>number): void {
+    super.advance(dt,apply);
     this.groups.clear();
     for (const [slot,player] of this.rigs) this.groups.set(player,Math.min(this.groups.get(player)??Infinity,distance?.(slot)??0));
     for (const [player,nearest] of this.groups) player.advance(dt,true,nearest);
     this.groups.clear();
   }
-  pose(apply: Apply,time?: number): void { this.nodes.pose(apply,time); for(const r of this.rigs.values()) r.evaluate(); }
-  poseSlot(slot: number,apply: Apply): void { this.nodes.poseSlot(slot,apply); this.rigs.get(slot)?.evaluate(); }
+  override pose(apply: Apply,time?: number): void { super.pose(apply,time); for(const r of this.rigs.values()) r.evaluate(); }
+  override poseSlot(slot: number,apply: Apply): void { super.poseSlot(slot,apply); this.rigs.get(slot)?.evaluate(); }
 }

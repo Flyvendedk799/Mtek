@@ -68,6 +68,9 @@ pub const MANIFEST_JSON: &str = "program.manifest.json";
 /// The directory of the content-addressed physics bundle (`physics/<h16>.js`, `spec/physics.md`
 /// section 5).
 pub const PHYSICS_DIR: &str = "physics";
+/// The directory of the content-addressed animation module (`animation/<h16>.js`, decision
+/// 0225, `spec/runtime-abi.md` section 5.2).
+pub const ANIMATION_DIR: &str = "animation";
 
 /// What [`package`] needs besides the project and the IR.
 #[derive(Clone, Copy, Debug)]
@@ -84,6 +87,9 @@ pub struct PackageInput<'a> {
     /// Treat the program as using physics although no source construct says so
     /// ([`CompileOptions::force_physics_subsystem`](crate::CompileOptions::force_physics_subsystem)).
     pub force_physics_subsystem: bool,
+    /// The animation module (`animation/<h16>.js`, decision 0225); written, and required, only when
+    /// the program has a skinned mesh or `clips_from` (the manifest's `subsystems.animation`).
+    pub animation_bundle: Option<&'a [u8]>,
     /// The loop budget of a `preview` build ([`CompileOptions::loop_budget`](crate::CompileOptions::loop_budget));
     /// `None` is the default. Ignored by every other mode.
     pub loop_budget: Option<u32>,
@@ -427,6 +433,29 @@ fn package_scene(
         .collect::<Result<Vec<_>, String>>()
         .map_err(defect)?;
 
+    // `subsystems.animation` is true when the program has a skinned mesh or plays the clips of
+    // another skeleton with `clips_from` (decision 0225): exactly what the runtime's scene
+    // structure needs the animation module for. Meshes without a skin (static glTF meshes, node
+    // clips) do not need it.
+    let manifest_meshes = meshes(&plan, &packed, input.assets).map_err(defect)?;
+    let uses_animation = !clip_sources.is_empty()
+        || manifest_meshes
+            .iter()
+            .any(|mesh| matches!(mesh.shape, MeshShape::Asset { skin: Some(_), .. }));
+    let animation_bundle = match (uses_animation, input.animation_bundle) {
+        (false, _) => None,
+        (true, Some(bundle)) => Some(bundle),
+        (true, None) => {
+            return Err(vec![
+                Diagnostic::new(
+                    Code::E9030,
+                    "Cannot build: the animation module is not available to the compiler, but the program has a skinned mesh or uses `clips_from`.",
+                )
+                .help("build the runtime first (`npm run build`), then rebuild the mtek command line tool"),
+            ]);
+        }
+    };
+
     // `app.js` last: the spans its run-time warnings report (clamped indices) follow every
     // other span, so a program's span ids do not depend on its function bodies.
     let runtime_file = format!("runtime.{}.js", h16(input.runtime_bundle));
@@ -499,6 +528,9 @@ fn package_scene(
             physics: uses_physics,
             physics_module: physics_bundle
                 .map(|bundle| format!("{PHYSICS_DIR}/{}.js", h16(bundle))),
+            animation: uses_animation,
+            animation_module: animation_bundle
+                .map(|bundle| format!("{ANIMATION_DIR}/{}.js", h16(bundle))),
         },
         runtime_config: RuntimeConfig {
             fixed_step: number(runtime.fixed_step, "runtime.fixed_step")?,
@@ -517,7 +549,7 @@ fn package_scene(
         shaders,
         materials: manifest_materials,
         compute_programs,
-        meshes: meshes(&plan, &packed, input.assets).map_err(defect)?,
+        meshes: manifest_meshes,
         clip_sources,
         assets: packed.assets.clone(),
         prefabs: manifest_prefabs,
@@ -542,6 +574,10 @@ fn package_scene(
     files.insert(RUNTIME_DTS.to_owned(), input.runtime_declarations.to_vec());
     files.insert(runtime_file, input.runtime_bundle.to_vec());
     if let (Some(bundle), Some(module)) = (physics_bundle, &manifest.subsystems.physics_module) {
+        files.insert(module.clone(), bundle.to_vec());
+    }
+    if let (Some(bundle), Some(module)) = (animation_bundle, &manifest.subsystems.animation_module)
+    {
         files.insert(module.clone(), bundle.to_vec());
     }
     files.insert(

@@ -18,6 +18,11 @@
  * the scene are created from the manifest (`physics/system.ts`, `spec/scenes.md` section 11 step 5); a module that
  * does not load, or an engine that does not start, rejects the mount with `physics-failed` (`E8102`, decision 0066).
  *
+ * A program whose manifest says `subsystems.animation` (a skinned mesh or `clips_from`) imports its animation module
+ * (`animation-module/load.ts`) the same way, in parallel, and hands the backend to the world before `init` runs; a
+ * program without skeletal animation never requests it. A module that does not load rejects the mount with
+ * `animation-failed` (`E8114`, decision 0225).
+ *
  * Every failure rejects with an `MtekMountError` of the documented kind, reports its diagnostics through
  * `onDiagnostic`, shows the overlay (unless `failureDisplay: "none"`), and leaves no live resource,
  * listener or device behind.
@@ -47,6 +52,7 @@ import { startScene } from "../render/startup.js";
 import { snapshotRendering } from "../render/environment.js";
 import { InputState } from "../input/input.js";
 import { loadPhysicsBackend, type PhysicsLoadResult } from "../physics/load.js";
+import { animationMismatch, loadAnimationBackend, type AnimationLoadResult } from "../animation-module/load.js";
 import { PhysicsSystem } from "../physics/system.js";
 import { Xoshiro128 } from "../random/xoshiro.js";
 import { AudioSystem, browserAudioBackend, type ListenerPose } from "../audio/audio.js";
@@ -276,6 +282,12 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
     const physicsLoad: Promise<PhysicsLoadResult> | undefined = manifest.subsystems.physics
       ? loadPhysicsBackend({ manifest, baseUrl: program.baseUrl, importModule: (url) => environment.importModule(url), phase: "runtime:mount" })
       : undefined;
+    // The animation module the same way, and only for a program with a skinned mesh or `clips_from` (decision 0225).
+    const unannounced = animationMismatch(manifest, structure.structure, "runtime:mount");
+    if (unannounced !== undefined) throw mountError([unannounced]);
+    const animationLoad: Promise<AnimationLoadResult> | undefined = manifest.subsystems.animation === true
+      ? loadAnimationBackend({ manifest, baseUrl: program.baseUrl, importModule: (url) => environment.importModule(url), phase: "runtime:mount" })
+      : undefined;
 
     // Device. Capabilities come from the adapter's features and limits, never from the user agent.
     const required = manifest.requiredCapabilities;
@@ -367,7 +379,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
     // loss; the verified asset bytes are retained for the same purpose (decision 0060). Every failure of
     // either is reported, shaders first.
     const fetchShaderFile = rememberingFetch(environment);
-    const [shaders, loadedAssets, loadedPhysics] = await Promise.all([
+    const [shaders, loadedAssets, loadedPhysics, loadedAnimation] = await Promise.all([
       loadStartupShaders({
         manifest,
         baseUrl: program.baseUrl,
@@ -383,9 +395,15 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
         ...(options.test?.onAssetState === undefined ? {} : { onState: options.test.onAssetState }),
       }),
       physicsLoad ?? Promise.resolve(undefined),
+      animationLoad ?? Promise.resolve(undefined),
     ]);
     images = loadedAssets.images;
-    const startupFailures = [...shaders.diagnostics, ...loadedAssets.diagnostics, ...(loadedPhysics?.ok === false ? loadedPhysics.diagnostics : [])];
+    const startupFailures = [
+      ...shaders.diagnostics,
+      ...loadedAssets.diagnostics,
+      ...(loadedPhysics?.ok === false ? loadedPhysics.diagnostics : []),
+      ...(loadedAnimation?.ok === false ? loadedAnimation.diagnostics : []),
+    ];
     if (startupFailures.length > 0) throw mountError(startupFailures);
     const assets: LoadedAssets = loadedAssets.assets;
 
@@ -490,6 +508,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
       started = await startScene({
         ...(options.rendering===undefined?{}:{rendering:options.rendering}),
         manifest,
+        ...(loadedAnimation?.ok === true ? { animation: loadedAnimation.backend } : {}),
         structure: structure.structure,
         program: checked.program,
         device,
@@ -612,6 +631,7 @@ export async function mountMtekWith<I = Record<string, unknown>, O = Record<stri
       scene: started.scene,
       physics,
       physicsModule: loadedPhysics?.ok === true ? { url: loadedPhysics.url, backend: loadedPhysics.backend } : undefined,
+      animationModule: loadedAnimation?.ok === true ? { url: loadedAnimation.url, backend: loadedAnimation.backend } : undefined,
       modules: new Map(shaders.modules),
       program: program as import("./types.js").MtekMountProgram<Record<string, unknown>>,
     });

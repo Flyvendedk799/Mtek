@@ -834,3 +834,27 @@ mounts:
   dedicated file.
 - Automatic mapping of non-humanoid rigs, facial animation and animation events beyond `crossed` are outside
   the area (decision 0219).
+
+## 5. Where the code lives: the animation module (decision 0225)
+
+The skeletal player, pose layers, blend spaces, IK, limb solving, humanoid mapping and retargeting and the
+`animation.*` commands of section 4 are not part of the core runtime (`runtime.<h16>.js`). They are the
+**animation module**, `animation/<h16>.js`, which `mtek build` writes and the runtime imports at mount with a
+dynamic `import()`, like the physics module (`spec/runtime-abi.md` section 5.2).
+
+- **When.** `subsystems.animation` is true exactly when the scene's manifest has a skinned mesh (a mesh entry with
+  a `skin`) or a non-empty `clipSources` (`clips_from`, 4.9). Rigid node clips (decision 0190), static glTF meshes
+  and the CPU/GPU skinning of the renderer do not need the module; a program without skinned meshes never requests
+  it and ships a runtime without a byte of the code above.
+- **What the core keeps.** Rigid node clips and the clip control API they share with skeletal players (`play`,
+  `pause`, `seek`, `fade`, `time`, `crossed`, ...; `scene/animation-players.ts`), the validation of a skin at mount
+  (`E8006`), and the renderer's skinning, which reads a player's palette through a type-only interface. Without
+  the module every `animation.*` command is dropped and returns `false`, as it is for an entity without a skeleton.
+- **Failure.** `E8114` (`spec/diagnostics.md`): the file is missing or does not parse, has no default export that
+  is a function, or its backend lacks `name`, `createPlayers`, `createCommands` or `retargetHumanoid`; a manifest
+  with a skinned mesh or `clips_from` that does not declare the module is `E8114` too. The mount fails with the
+  kind `animation-failed`; a hot reload that needs a module that does not load is refused.
+- **Host code.** The host API of this document (`createAnimationController`, `mapHumanoid`, `retargetHumanoid`,
+  `retargetSkin`, `deformSkin`, the types) is exported synchronously by the npm entry `@mtek/runtime-web`
+  (`dist/runtime.js`), which is the core plus this code, bundled by the host with what it imports. The
+  `runtime.<h16>.js` of a built game is the core only and does not export them.

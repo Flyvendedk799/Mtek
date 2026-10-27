@@ -3,6 +3,11 @@
 The local `@mtek/runtime-web` package exposes its supported declarations and ESM
 bundle at the package root. Compiled Mtek applications continue to carry their
 own relative runtime bundle; npm installation is not required for those apps.
+That bundle is the core runtime (`dist/core*.js`): it has no skeletal animation code. A compiled
+application with a skinned mesh or `clips_from` also carries the animation module `animation/<hash>.js`,
+which its runtime imports at mount (decision 0225). The package root exports the whole API, including
+`createAnimationController`, `mapHumanoid`, `retargetHumanoid`, `retargetSkin` and `deformSkin`,
+synchronously: host code bundles what it imports.
 The package remains private and has not been published to a registry. Local
 tarballs can be built with `npm run build -w @mtek/runtime-web` and
 `npm pack -w @mtek/runtime-web`. The public declarations are validated with TypeScript 6 browser DOM definitions

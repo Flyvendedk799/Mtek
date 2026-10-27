@@ -29,8 +29,8 @@ use mtek_compiler::emit_js::rt_ops;
 use mtek_compiler::project::ProjectRoot;
 use mtek_compiler::source::{MemFs, ProjectPath};
 use mtek_compiler::{
-    BuildMode, CompileOptions, Inspect, InspectFormat, STUB_PHYSICS_BUNDLE, TargetProfile, build,
-    inspect,
+    BuildMode, CompileOptions, Inspect, InspectFormat, STUB_ANIMATION_BUNDLE, STUB_PHYSICS_BUNDLE,
+    TargetProfile, build, inspect,
 };
 
 fn repo() -> PathBuf {
@@ -110,6 +110,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         // The physics fixture packages a physics module; the execution tests never load it.
         physics_bundle: Some(Arc::from(STUB_PHYSICS_BUNDLE)),
         force_physics_subsystem: false,
+        // Likewise for the animation fixtures: packaged, never loaded.
+        animation_bundle: Some(Arc::from(STUB_ANIMATION_BUNDLE)),
         loop_budget: None,
     };
 

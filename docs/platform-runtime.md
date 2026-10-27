@@ -75,6 +75,17 @@ mounted runtime keeps this state with the entity's `SkeletonPlayer`, so `player.
 `player.ik` and `player.blend` show and can change what a program set, and a hot reload starts it again
 (`spec/animation.md` section 4).
 
+**Where the code is loaded from (decision 0225).** The animation code is not in the runtime that
+`mtek build` writes as `runtime.<hash>.js`. A program with a skinned mesh or `clips_from` gets it as a
+second file, `animation/<hash>.js`, named in the manifest (`subsystems.animationModule`), and the
+runtime imports it while the game starts; a program without skins never requests it and its runtime is
+about 75 KB smaller. A host that serves a game, and any preview or itch.io upload, must serve the whole
+`dist/` folder, including `animation/` (and `physics/` for programs with bodies). A file that is
+missing or broken fails the mount with `animation-failed` (`E8114`). The functions above
+(`createAnimationController`, `retargetSkin`, `mapHumanoid`, `retargetHumanoid`, `deformSkin`) are
+exported by the npm entry `@mtek/runtime-web`, which host code bundles with what it imports; the
+built game's `runtime.<hash>.js` does not export them.
+
 For CPU inspection call `deformSkin(skin, player.palette, positions, normals,
 outPositions, outNormals)` with reusable output arrays. Normal output uses the
 inverse transpose of the blended skin matrix, including nonuniform scale.

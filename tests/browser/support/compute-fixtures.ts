@@ -27,7 +27,7 @@ function verifyPackage(program: string, source: string, config?: string): Accept
 export async function buildComputeAcceptance(out = join(BROWSER_ROOT, ".out", "compute")): Promise<AcceptanceBuild> {
   const program = join(out, "program"), shadow = join(out, "shadow"); mkdirSync(program, { recursive: true });
   const built = join(REPO_ROOT, "packages/runtime-web/dist");
-  const runtime = ["runtime.dev.js", "runtime.d.ts"].every((file) => existsSync(join(built, file))) ? built : join(REPO_ROOT, "crates/mtek-cli/prebuilt");
+  const runtime = ["core.dev.js", "runtime.d.ts"].every((file) => existsSync(join(built, file))) ? built : join(REPO_ROOT, "crates/mtek-cli/prebuilt");
   execFileSync("cargo", ["test", "-p", "mtek-compiler", "--locked", "-j", "2", "--test", "compute_lowering", "--", "--test-threads=2"], {
     cwd: REPO_ROOT, stdio: "pipe", windowsHide: true, env: { ...process.env, MTEK_COMPUTE_ACCEPTANCE_OUT: program, MTEK_COMPUTE_SHADOW_OUT: shadow, MTEK_COMPUTE_ACCEPTANCE_RUNTIME: runtime, MTEK_BLESS: "0" },
   });

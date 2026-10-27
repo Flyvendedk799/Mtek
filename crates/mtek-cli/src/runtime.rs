@@ -1,20 +1,29 @@
 //! The runtime bundles compiled into this binary by `build.rs` (`spec/tooling.md` section 1):
-//! `runtime.js`, `runtime.dev.js` and `runtime.d.ts` from `packages/runtime-web/dist/` when they
+//! the core runtime `core.js`, `core.dev.js` and `core.min.js`, `runtime.d.ts` and the animation
+//! module `animation.js` and `animation.min.js` from `packages/runtime-web/dist/` when they
 //! were built, else from the prebuilt copy in `crates/mtek-cli/prebuilt/` (decision 0131), or
 //! nothing if neither existed (`mtek build` then reports `E9030`); and, separately, `physics.js`
 //! from `packages/physics-rapier/dist/` or the prebuilt copy (decision 0063).
+//!
+//! The core runtime has no skeletal animation code (decision 0225): a program with a skinned mesh
+//! or `clips_from` also gets the animation module, written as `animation/<h16>.js`.
 
 /// The embedded runtime files.
 #[derive(Clone, Copy, Debug)]
 pub struct Runtime {
-    /// `runtime.js`, the unminified flavour without the development overlay, used by previews.
+    /// `core.js`, the unminified core flavour without the development overlay, used by previews.
     pub bundle: &'static [u8],
-    /// `runtime.dev.js`, the development flavour (overlay, GPU timing), written as
+    /// `core.dev.js`, the development flavour (overlay, GPU timing), written as
     /// `runtime.<h16>.js` by `dev` and `test` builds (decision 0055).
     pub dev_bundle: &'static [u8],
-    /// `runtime.min.js`, the minified flavour used by every release build, including game
+    /// `core.min.js`, the minified flavour used by every release build, including game
     /// packages (decision 0136).
     pub min_bundle: &'static [u8],
+    /// `animation.js`, the readable animation module, written as `animation/<h16>.js` by `dev`,
+    /// `test` and `preview` builds of programs with skeletal animation (decision 0225).
+    pub animation_bundle: &'static [u8],
+    /// `animation.min.js`, the minified animation module of release builds.
+    pub animation_min_bundle: &'static [u8],
     /// `runtime.d.ts`.
     pub declarations: &'static [u8],
     /// `packages/physics-rapier/dist/physics.js`, written as `physics/<h16>.js` by builds of
@@ -35,9 +44,11 @@ const PHYSICS_BUNDLE: Option<&[u8]> = None;
 #[cfg(mtek_runtime_embedded)]
 pub fn embedded() -> Option<Runtime> {
     Some(Runtime {
-        bundle: include_bytes!(concat!(env!("OUT_DIR"), "/runtime.js")),
-        dev_bundle: include_bytes!(concat!(env!("OUT_DIR"), "/runtime.dev.js")),
-        min_bundle: include_bytes!(concat!(env!("OUT_DIR"), "/runtime.min.js")),
+        bundle: include_bytes!(concat!(env!("OUT_DIR"), "/core.js")),
+        dev_bundle: include_bytes!(concat!(env!("OUT_DIR"), "/core.dev.js")),
+        min_bundle: include_bytes!(concat!(env!("OUT_DIR"), "/core.min.js")),
+        animation_bundle: include_bytes!(concat!(env!("OUT_DIR"), "/animation.js")),
+        animation_min_bundle: include_bytes!(concat!(env!("OUT_DIR"), "/animation.min.js")),
         declarations: include_bytes!(concat!(env!("OUT_DIR"), "/runtime.d.ts")),
         physics_bundle: PHYSICS_BUNDLE,
     })
@@ -61,15 +72,23 @@ mod tests {
         let dist = env!("MTEK_RUNTIME_ORIGIN_DIR");
         assert_eq!(
             runtime.bundle,
-            std::fs::read(format!("{dist}/runtime.js")).unwrap()
+            std::fs::read(format!("{dist}/core.js")).unwrap()
         );
         assert_eq!(
             runtime.dev_bundle,
-            std::fs::read(format!("{dist}/runtime.dev.js")).unwrap()
+            std::fs::read(format!("{dist}/core.dev.js")).unwrap()
         );
         assert_eq!(
             runtime.min_bundle,
-            std::fs::read(format!("{dist}/runtime.min.js")).unwrap()
+            std::fs::read(format!("{dist}/core.min.js")).unwrap()
+        );
+        assert_eq!(
+            runtime.animation_bundle,
+            std::fs::read(format!("{dist}/animation.js")).unwrap()
+        );
+        assert_eq!(
+            runtime.animation_min_bundle,
+            std::fs::read(format!("{dist}/animation.min.js")).unwrap()
         );
         assert_eq!(
             runtime.declarations,

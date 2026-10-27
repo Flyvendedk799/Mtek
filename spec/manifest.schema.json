@@ -44,11 +44,26 @@
           "type": "string",
           "pattern": "^physics/[0-9a-f]{16}\\.js$",
           "description": "The content-addressed physics bundle, relative to the program (decision 0066); present exactly when physics is true."
+        },
+        "animation": { "type": "boolean", "description": "True when the program needs the animation module: a skinned mesh or clips_from (decision 0225). Absent otherwise." },
+        "animationModule": {
+          "type": "string",
+          "pattern": "^animation/[0-9a-f]{16}\\.js$",
+          "description": "The content-addressed animation module, relative to the program (decision 0225); present exactly when animation is true."
         }
       },
-      "if": { "properties": { "physics": { "const": true }, "physicsModule": {} }, "required": ["physics"], "additionalProperties": false },
-      "then": { "properties": { "physics": {}, "physicsModule": {} }, "required": ["physicsModule"], "additionalProperties": false },
-      "else": { "properties": { "physics": {}, "physicsModule": false }, "additionalProperties": false }
+      "allOf": [
+        {
+          "if": { "properties": { "physics": { "const": true }, "physicsModule": {}, "animation": {}, "animationModule": {} }, "required": ["physics"], "additionalProperties": false },
+          "then": { "properties": { "physics": {}, "physicsModule": {}, "animation": {}, "animationModule": {} }, "required": ["physicsModule"], "additionalProperties": false },
+          "else": { "properties": { "physics": {}, "physicsModule": false, "animation": {}, "animationModule": {} }, "additionalProperties": false }
+        },
+        {
+          "if": { "properties": { "physics": {}, "physicsModule": {}, "animation": { "const": true }, "animationModule": {} }, "required": ["animation"], "additionalProperties": false },
+          "then": { "properties": { "physics": {}, "physicsModule": {}, "animation": {}, "animationModule": {} }, "required": ["animationModule"], "additionalProperties": false },
+          "else": { "properties": { "physics": {}, "physicsModule": {}, "animation": {}, "animationModule": false }, "additionalProperties": false }
+        }
+      ]
     },
     "runtimeConfig": { "$ref": "#/$defs/runtimeConfig" },
     "game": { "$ref": "#/$defs/game" },

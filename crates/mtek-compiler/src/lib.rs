@@ -41,8 +41,8 @@ mod check;
 mod hints;
 mod inspect;
 pub use build::{
-    BuildMode, BuildResult, CompileOptions, DEFAULT_LOOP_BUDGET, STUB_PHYSICS_BUNDLE,
-    STUB_RUNTIME_BUNDLE, STUB_RUNTIME_DECLARATIONS, TargetProfile, build,
+    BuildMode, BuildResult, CompileOptions, DEFAULT_LOOP_BUDGET, STUB_ANIMATION_BUNDLE,
+    STUB_PHYSICS_BUNDLE, STUB_RUNTIME_BUNDLE, STUB_RUNTIME_DECLARATIONS, TargetProfile, build,
 };
 pub use check::{
     Analysis, AnalyzeOptions, CheckResult, ModuleUnit, analyze, analyze_with,

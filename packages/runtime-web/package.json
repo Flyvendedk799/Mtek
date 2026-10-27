@@ -34,9 +34,13 @@
     "src/runtime.d.ts",
     "dist/runtime.js",
     "dist/runtime.js.map",
-    "dist/runtime.dev.js",
-    "dist/runtime.dev.js.map",
-    "dist/runtime.min.js",
+    "dist/core.js",
+    "dist/core.js.map",
+    "dist/core.dev.js",
+    "dist/core.dev.js.map",
+    "dist/core.min.js",
+    "dist/animation.js",
+    "dist/animation.min.js",
     "README.md"
   ],
   "license": "UNLICENSED"

@@ -31,7 +31,7 @@ mtek build --mode preview [--loop-budget N] [--out DIR] [PATH]
   The budget is set by whoever runs the compiler (`--loop-budget N`, N at least 1); a project file
   cannot raise it. It is recorded in the build (`program.manifest.json`: `"preview": { "loopBudget": N }`).
 * **A runtime that stays at home.** Because of that manifest key the runtime refuses every request
-  (`fetch`, asset bytes, the physics module's `import()`) whose URL is not below the program's
+  (`fetch`, asset bytes, the physics and animation modules' `import()`s) whose URL is not below the program's
   `baseUrl`: same scheme, host and port, a path under it after `.` and `..` are resolved, no
   credentials, no encoded dots or slashes. The refusal happens before the request is made and is
   reported by the code of the thing that failed to load. The compiler never produces such a URL; the
@@ -130,6 +130,6 @@ the sandbox attribute, with `securitypolicyviolation` listeners and your browser
 |---|---|
 | A loop past the budget during a frame | `E8080` at the loop in the overlay and in `onDiagnostic`; `app.state` is `"failed"`; no more frames |
 | A loop past the budget during `init` | `mountMtek` rejects, `error.kind === "budget-exceeded"`, `E8080`, the overlay |
-| A request outside `baseUrl` | the load that asked fails with its own code (`E8051`, `E7030`, `E8102`, `E8006`) and a message that starts `refused <url>` |
+| A request outside `baseUrl` | the load that asked fails with its own code (`E8051`, `E7030`, `E8102`, `E8114`, `E8006`) and a message that starts `refused <url>` |
 | A build that takes more than 10 s | `E9032`, exit code 1, nothing written |
 | The browser refuses something under the policy | a `securitypolicyviolation` event on the document and a console error; Mtek does not see it |
