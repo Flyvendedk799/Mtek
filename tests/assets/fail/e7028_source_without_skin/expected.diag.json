@@ -1,0 +1,32 @@
+[
+  {
+    "code": "MTEK-E7028",
+    "file": "src/main.mtek",
+    "startByte": 216,
+    "endByte": 235,
+    "message": "The clips_from file 'models/dancer.glb' of 'Marcher' has no skeleton with clips.",
+    "notes": [
+      "help: use a GLB that has a skin and at least one animation that moves it"
+    ]
+  },
+  {
+    "code": "MTEK-E7028",
+    "file": "src/main.mtek",
+    "startByte": 351,
+    "endByte": 370,
+    "message": "The clips_from file 'models/dancer.glb' of 'Actor' has no skeleton with clips.",
+    "notes": [
+      "help: use a GLB that has a skin and at least one animation that moves it"
+    ]
+  },
+  {
+    "code": "MTEK-E7028",
+    "file": "src/main.mtek",
+    "startByte": 461,
+    "endByte": 480,
+    "message": "The clips_from file 'models/dancer.glb' of 'Plain' has no skeleton with clips.",
+    "notes": [
+      "help: use a GLB that has a skin and at least one animation that moves it"
+    ]
+  }
+]

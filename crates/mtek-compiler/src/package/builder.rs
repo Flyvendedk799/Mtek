@@ -401,6 +401,7 @@ fn package_scene(
     let packed = pack_assets(input.assets, &plan, &mut spans)?;
 
     // The binding spans come before app.js too, for the same reason.
+    let clip_files = clip_source_files(scene, program);
     let manifest_scene = manifest_scene(
         scene,
         &plan,
@@ -409,10 +410,23 @@ fn package_scene(
         &host_inputs,
         &host_outputs,
         input.assets,
+        &clip_files,
     )
     .map_err(defect)?;
-    let manifest_prefabs =
-        manifest_prefabs(program, &plan, &packed, &mut spans, input.assets).map_err(defect)?;
+    let manifest_prefabs = manifest_prefabs(
+        program,
+        &plan,
+        &packed,
+        &mut spans,
+        input.assets,
+        &clip_files,
+    )
+    .map_err(defect)?;
+    let clip_sources = clip_files
+        .iter()
+        .map(|file| clip_source(file, input.assets))
+        .collect::<Result<Vec<_>, String>>()
+        .map_err(defect)?;
 
     // `app.js` last: the spans its run-time warnings report (clamped indices) follow every
     // other span, so a program's span ids do not depend on its function bodies.
@@ -505,6 +519,7 @@ fn package_scene(
         materials: manifest_materials,
         compute_programs,
         meshes: meshes(&plan, &packed, input.assets).map_err(defect)?,
+        clip_sources,
         assets: packed.assets.clone(),
         prefabs: manifest_prefabs,
         scene: manifest_scene,
@@ -960,6 +975,7 @@ fn manifest_scene(
     host_inputs: &[ResolvedHostInput],
     host_outputs: &[ResolvedHostOutput],
     assets: &AssetStore,
+    clip_files: &[String],
 ) -> Result<Scene, String> {
     let clear_color = match scene.fields.clear_color.source.as_const() {
         Some(ir::Value::Color(rgba)) => nums(rgba)?,
@@ -1076,6 +1092,7 @@ fn manifest_scene(
                 .map(manifest_particles)
                 .transpose()?,
             clip: manifest_clip(entity, assets)?,
+            clips_from: clips_from_index(entity, clip_files)?,
         });
     }
     let material_instances = plan
@@ -1177,6 +1194,7 @@ fn manifest_prefabs(
     packed: &Packed,
     spans: &mut SpanTable,
     assets: &AssetStore,
+    clip_files: &[String],
 ) -> Result<Vec<Prefab>, String> {
     let mut out = Vec::with_capacity(plan.prefabs.len());
     for planned in &plan.prefabs {
@@ -1249,6 +1267,7 @@ fn manifest_prefabs(
                 .map(manifest_particles)
                 .transpose()?,
             clip: manifest_clip(&item.entity, assets)?,
+            clips_from: clips_from_index(&item.entity, clip_files)?,
         });
     }
     Ok(out)
@@ -1263,6 +1282,57 @@ fn manifest_particles(particles: &ir::Particles) -> Result<Particles, String> {
         size: num(particles.size)?,
         gravity: num(particles.gravity)?,
     })
+}
+
+/// The GLB files whose skeletons entities and prefabs take clips from (`clips_from`, decision 0223),
+/// sorted and without repeats: the order of the manifest's `clipSources`.
+fn clip_source_files(scene: &ir::Scene, program: &Program) -> Vec<String> {
+    let mut files: Vec<String> = scene
+        .entities
+        .iter()
+        .chain(program.prefabs().map(|prefab| &prefab.entity))
+        .filter_map(|entity| entity.clips_from.clone())
+        .collect();
+    files.sort();
+    files.dedup();
+    files
+}
+
+/// The position of the entity's `clips_from` file in `clip_files`.
+fn clips_from_index(entity: &ir::Entity, clip_files: &[String]) -> Result<Option<u32>, String> {
+    let Some(file) = &entity.clips_from else {
+        return Ok(None);
+    };
+    let at = clip_files
+        .iter()
+        .position(|candidate| candidate == file)
+        .ok_or_else(|| {
+            format!(
+                "the clips_from '{file}' of '{}' was not collected",
+                entity.name
+            )
+        })?;
+    u32::try_from(at)
+        .map(Some)
+        .map_err(|_| "too many clip sources".to_owned())
+}
+
+/// The skeleton of `file` that supplies clips: its first skin with a clip, without the vertex
+/// influences (the manifest needs nodes, joints, inverse binds and clips only).
+fn clip_source(file: &str, assets: &AssetStore) -> Result<crate::assets::skin::Skin, String> {
+    let declared = assets
+        .glb(file)
+        .ok_or_else(|| format!("the clips_from '{file}' names a GLB that was not loaded"))?;
+    let mut skin = declared
+        .file
+        .skins
+        .iter()
+        .find(|skin| !skin.skin.clips.is_empty())
+        .map(|skin| skin.skin.clone())
+        .ok_or_else(|| format!("the clips_from '{file}' has no skeletal clips"))?;
+    skin.indices = Vec::new();
+    skin.weights = Vec::new();
+    Ok(skin)
 }
 
 /// The manifest's clip (decision 0156): keyframes copied out of the GLB, because lowering has
@@ -1283,6 +1353,25 @@ fn manifest_clip(entity: &ir::Entity, assets: &AssetStore) -> Result<Option<Clip
             entity.name
         ));
     };
+    if let Some(source) = &entity.clips_from {
+        // The name is one of the source skeleton's clips (decision 0223); the keyframes are retargeted at mount.
+        let skin = clip_source(source, assets)?;
+        let clip = skin
+            .clips
+            .iter()
+            .find(|clip| clip.name == *name)
+            .ok_or_else(|| {
+                format!(
+                    "the clip '{name}' of entity '{}' is not a clip of '{source}'",
+                    entity.name
+                )
+            })?;
+        return Ok(Some(Clip {
+            name: clip.name.clone(),
+            duration: num(clip.duration)?,
+            channels: Vec::new(),
+        }));
+    }
     let declared = assets.glb(file).ok_or_else(|| {
         format!(
             "the clip of entity '{}' names a GLB that was not loaded",

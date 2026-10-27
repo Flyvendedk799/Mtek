@@ -1,0 +1,32 @@
+[
+  {
+    "code": "MTEK-E7028",
+    "file": "src/main.mtek",
+    "startByte": 213,
+    "endByte": 232,
+    "message": "The clips_from of 'Marcher' needs a skeletal mesh on the same entity.",
+    "notes": [
+      "help: set `mesh` to a skinned mesh, e.g. `asset.glb(...).mesh(\"MeshName\")` of a file with a skin"
+    ]
+  },
+  {
+    "code": "MTEK-E7028",
+    "file": "src/main.mtek",
+    "startByte": 345,
+    "endByte": 364,
+    "message": "The clips_from of 'Actor' needs a skeletal mesh on the same entity.",
+    "notes": [
+      "help: set `mesh` to a skinned mesh, e.g. `asset.glb(...).mesh(\"MeshName\")` of a file with a skin"
+    ]
+  },
+  {
+    "code": "MTEK-E7028",
+    "file": "src/main.mtek",
+    "startByte": 452,
+    "endByte": 471,
+    "message": "The clips_from of 'Plain' needs a skeletal mesh on the same entity.",
+    "notes": [
+      "help: set `mesh` to a skinned mesh, e.g. `asset.glb(...).mesh(\"MeshName\")` of a file with a skin"
+    ]
+  }
+]

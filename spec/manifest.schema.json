@@ -70,6 +70,11 @@
     "materials": { "type": "array", "items": { "$ref": "#/$defs/material" } },
     "computePrograms": { "type": "array", "items": { "$ref": "#/$defs/computeProgram" }, "description": "Compute contract 1. Absent when no source compute declarations exist." },
     "meshes": { "type": "array", "items": { "$ref": "#/$defs/mesh" } },
+    "clipSources": {
+      "type": "array",
+      "description": "The skeletons whose clips entities play through `clips_from` (decision 0223): nodes, joints, inverse binds and clips, with empty vertex influences. Absent when no entity uses clips_from.",
+      "items": { "$ref": "#/$defs/skin" }
+    },
     "assets": { "type": "array", "items": { "$ref": "#/$defs/asset" } },
     "prefabs": {
       "type": "array",
@@ -725,7 +730,8 @@
         "fixedUpdate": { "type": "boolean", "description": "The entity declares fixed_update(dt)." },
         "tag": { "$ref": "#/$defs/tag", "description": "`tag: \"name\";` (decision 0150). Absent when the entity has none." },
         "particles": { "$ref": "#/$defs/emitter", "description": "`particles: Emitter { .. }` (decision 0155). Absent when the entity emits none." },
-        "clip": { "$ref": "#/$defs/clip", "description": "A glTF clip that moves this entity (decision 0156). Absent when it plays none." }
+        "clip": { "$ref": "#/$defs/clip", "description": "A glTF clip that moves this entity (decision 0156). Absent when it plays none." },
+        "clipsFrom": { "$ref": "#/$defs/index", "description": "Index into clipSources (decision 0223): the skeleton whose clips this entity plays, retargeted onto its own skeletal mesh at mount. Absent when it plays its own." }
       }
     },
     "body": {
@@ -909,7 +915,8 @@
         "span": { "$ref": "#/$defs/spanId", "description": "The declaration." },
         "tag": { "$ref": "#/$defs/tag", "description": "The tag every instance carries (decision 0150). Absent when the prefab has none." },
         "particles": { "$ref": "#/$defs/emitter", "description": "The emitter every instance starts with (decision 0155). Absent when the prefab has none." },
-        "clip": { "$ref": "#/$defs/clip", "description": "The clip every instance plays (decision 0156). Absent when the prefab plays none." }
+        "clip": { "$ref": "#/$defs/clip", "description": "The clip every instance plays (decision 0156). Absent when the prefab plays none." },
+        "clipsFrom": { "$ref": "#/$defs/index", "description": "Index into clipSources (decision 0223). Absent when the prefab plays its own clips." }
       }
     },
     "tag": {

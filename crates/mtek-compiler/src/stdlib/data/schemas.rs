@@ -235,6 +235,12 @@ fn objects() -> Vec<SchemaDef> {
                 C,
                 "A glTF animation name that moves this entity; the mesh must come from that file.",
             ),
+            field(
+                "clips_from",
+                TypeRef::GlbAsset,
+                C,
+                "GLB whose humanoid clips are retargeted onto this skeletal mesh; `clip` then names its clips.",
+            ),
         ],
     )
     // `spec/scenes.md` section 4.1: a material without a mesh is `E5020`.

@@ -1263,6 +1263,10 @@ pub struct Entity {
     /// the entity plays none. The keyframes live in the manifest, not here.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub clip: Option<String>,
+    /// `clips_from: asset.glb(..)` (decision 0223): the file whose humanoid skin supplies the clips
+    /// this entity plays, retargeted onto its own skeletal mesh at mount. Absent when it plays its own.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub clips_from: Option<String>,
 }
 
 /// A particle emitter (decision 0155): construction-only numbers. The runtime keeps at most

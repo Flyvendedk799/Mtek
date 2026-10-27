@@ -74,6 +74,8 @@ fn compile_time(
 fn animation_namespace() -> NamespaceDef {
     let target = p("target", exact(TypeRef::EntityRef));
     let boolean = exact(TypeRef::Bool);
+    let string = exact(TypeRef::String);
+    let vec3 = exact(TypeRef::Vec3);
     let member = |name, doc, params: Vec<_>, ret, mutation| {
         let f = function(
             name,
@@ -200,6 +202,139 @@ fn animation_namespace() -> NamespaceDef {
                 vec![target, p("marker", F32)],
                 boolean,
                 false,
+            ),
+            member(
+                "set_layer",
+                "Layer `id` plays `clip` at `weight` over the base; `mask` is the root joint of the moved subtree (\"\" = whole rig). The same clip keeps its phase.",
+                vec![
+                    target,
+                    p("id", string),
+                    p("clip", string),
+                    p("weight", F32),
+                    p("additive", boolean),
+                    p("mask", string),
+                ],
+                boolean,
+                true,
+            ),
+            member(
+                "fade_layer",
+                "Fades layer `id` to `weight` over `seconds`; false if absent.",
+                vec![target, p("id", string), p("weight", F32), p("seconds", F32)],
+                boolean,
+                true,
+            ),
+            member(
+                "remove_layer",
+                "Removes layer `id`.",
+                vec![target, p("id", string)],
+                boolean,
+                true,
+            ),
+            member(
+                "blend_sample",
+                "Adds `clip` at (x, y) to the pending blend space (up to 32 distinct points).",
+                vec![target, p("clip", string), p("x", F32), p("y", F32)],
+                boolean,
+                true,
+            ),
+            member(
+                "blend_play",
+                "Plays the pending blend space as the base pose; false if invalid.",
+                vec![target, p("looping", boolean), p("speed", F32)],
+                boolean,
+                true,
+            ),
+            member(
+                "blend_parameter",
+                "Moves the blend point; the phase stays.",
+                vec![target, p("x", F32), p("y", F32)],
+                boolean,
+                true,
+            ),
+            member(
+                "blend_clear",
+                "Drops the blend space and pending samples.",
+                vec![target],
+                boolean,
+                true,
+            ),
+            member(
+                "blend_phase",
+                "Blend cycle position 0..1.",
+                vec![target],
+                F32,
+                false,
+            ),
+            member(
+                "limb_goal",
+                "Reaches `limb` (`left_leg`, `right_leg`, `left_arm`, `right_arm`) to a world `goal`; humanoids only.",
+                vec![target, p("limb", string), p("goal", vec3), p("weight", F32)],
+                boolean,
+                true,
+            ),
+            member(
+                "clear_limb",
+                "Releases the goal of `limb`.",
+                vec![target, p("limb", string)],
+                boolean,
+                true,
+            ),
+            member(
+                "foot_placement",
+                "Plants feet on world ground points and normals, lowering the hips as needed; humanoids only.",
+                vec![
+                    target,
+                    p("left", vec3),
+                    p("right", vec3),
+                    p("left_normal", vec3),
+                    p("right_normal", vec3),
+                    p("weight", F32),
+                ],
+                boolean,
+                true,
+            ),
+            member(
+                "clear_foot_placement",
+                "Releases foot placement.",
+                vec![target],
+                boolean,
+                true,
+            ),
+            member(
+                "chain_goal",
+                "Bends the `length` joints ending at `end_joint` to a world `goal` (CCD).",
+                vec![
+                    target,
+                    p("id", string),
+                    p("end_joint", string),
+                    p("length", exact(TypeRef::I32)),
+                    p("goal", vec3),
+                    p("weight", F32),
+                ],
+                boolean,
+                true,
+            ),
+            member(
+                "clear_chain",
+                "Releases chain goal `id`.",
+                vec![target, p("id", string)],
+                boolean,
+                true,
+            ),
+            member(
+                "root_motion",
+                "`joint`'s translation drives the entity, not the mesh (\"\" = off); see `take_root_motion`.",
+                vec![target, p("joint", string)],
+                boolean,
+                true,
+            ),
+            member(
+                "take_root_motion",
+                "World root displacement since the last call; feed it to `move_character`.",
+                vec![target],
+                exact(TypeRef::Vec3),
+                true,
             ),
         ],
     )

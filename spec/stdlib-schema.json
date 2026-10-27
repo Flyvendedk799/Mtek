@@ -437,6 +437,18 @@
           "doc": "A glTF animation name that moves this entity; the mesh must come from that file."
         },
         {
+          "name": "clips_from",
+          "type": "glb_asset",
+          "default": null,
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "A GLB whose humanoid skeleton supplies the clips, retargeted onto this skeletal mesh; `clip` names are then that file's."
+        },
+        {
           "name": "collider",
           "type": "collider",
           "default": null,
@@ -2624,6 +2636,123 @@
       "doc": "Controls an entity's imported node clip (decision 0190).",
       "members": [
         {
+          "name": "blend_clear",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Drops the blend space and its pending samples."
+        },
+        {
+          "name": "blend_parameter",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, x: f32, y: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Moves the blend point; the weights follow, the cycle phase stays."
+        },
+        {
+          "name": "blend_phase",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Blend cycle position 0..1; zero without a blend."
+        },
+        {
+          "name": "blend_play",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, looping: bool, speed: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Starts the pending blend space as the base pose; false if it is invalid."
+        },
+        {
+          "name": "blend_sample",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, clip: string, x: f32, y: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Adds `clip` at point (x, y) to the entity's pending blend space (up to 32 distinct points)."
+        },
+        {
+          "name": "chain_goal",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, id: string, end_joint: string, length: i32, goal: vec3, weight: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Bends the `length` joints ending at `end_joint` toward a world-space `goal` (iterative IK)."
+        },
+        {
+          "name": "clear_chain",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, id: string) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Releases chain goal `id`."
+        },
+        {
+          "name": "clear_foot_placement",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Releases foot placement."
+        },
+        {
+          "name": "clear_limb",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, limb: string) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Releases the goal of `limb`."
+        },
+        {
           "name": "copy_pose",
           "kind": "function",
           "signatures": [
@@ -2676,6 +2805,19 @@
           "doc": "Blends clip weight toward a 0..1 target over seconds; zero applies at once."
         },
         {
+          "name": "fade_layer",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, id: string, weight: f32, seconds: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Fades layer `id` to a 0..1 weight over seconds, keeping its phase; false if absent."
+        },
+        {
           "name": "finished",
           "kind": "function",
           "signatures": [
@@ -2687,6 +2829,19 @@
           "cpuSemantics": "",
           "since": "M1",
           "doc": "Whether a one-shot clip reached its end."
+        },
+        {
+          "name": "foot_placement",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, left: vec3, right: vec3, left_normal: vec3, right_normal: vec3, weight: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Plants both feet on world-space ground points and normals, lowering the hips only as needed; humanoid rigs only."
         },
         {
           "name": "joint_position",
@@ -2713,6 +2868,19 @@
           "cpuSemantics": "",
           "since": "M1",
           "doc": "Joint rotation in skeletal mesh local space; identity if missing."
+        },
+        {
+          "name": "limb_goal",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, limb: string, goal: vec3, weight: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Reaches `limb` (\"left_leg\", \"right_leg\", \"left_arm\", \"right_arm\") to a world-space `goal`; humanoid rigs only."
         },
         {
           "name": "pause",
@@ -2754,6 +2922,19 @@
           "doc": "Whether clip time is advancing; false for an unavailable clip."
         },
         {
+          "name": "remove_layer",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, id: string) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Removes layer `id`."
+        },
+        {
           "name": "resume",
           "kind": "function",
           "signatures": [
@@ -2767,6 +2948,19 @@
           "doc": "Continues a paused clip; returns false for a finished clip."
         },
         {
+          "name": "root_motion",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, joint: string) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "The translation of `joint` moves the entity, not the mesh (\"\" = off); read it with `take_root_motion`."
+        },
+        {
           "name": "seek",
           "kind": "function",
           "signatures": [
@@ -2778,6 +2972,32 @@
           "cpuSemantics": "",
           "since": "M1",
           "doc": "Clamps time to the clip duration and applies the pose at once, crossing no markers and not resuming."
+        },
+        {
+          "name": "set_layer",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, id: string, clip: string, weight: f32, additive: bool, mask: string) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Plays `clip` as layer `id` over the base pose at weight 0..1; `mask` names the joint whose subtree it moves (\"\" = whole rig). Same clip keeps its phase."
+        },
+        {
+          "name": "take_root_motion",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref) -> vec3"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "World-space root displacement since the last call, consumed; feed it to `move_character`."
         },
         {
           "name": "time",

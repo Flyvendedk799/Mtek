@@ -1018,7 +1018,13 @@ impl FnLowering<'_, '_> {
             // The tag built-ins (decision 0150): `ctx.countTagged(tag)` and friends.
             ir::ExprKind::Builtin { function, args } if tag_member(function).is_some() => {
                 let member = tag_member(function).unwrap_or_default();
-                let arguments = self.exprs(args)?;
+                let mut arguments = self.exprs(args)?;
+                // The animation commands that can name something the entity lacks (decision 0223)
+                // carry the span of the call, so `E8110` to `E8113` point at the program.
+                if animation_reports(function) {
+                    let span_id = (self.span_id)(expr.span)?;
+                    arguments.push(Expr::Num(Number::U32(span_id)));
+                }
                 Expr::ident("ctx").member(member).call(arguments)
             }
             ir::ExprKind::Builtin { function, args } if function == "is_key_down" => {
@@ -2314,6 +2320,23 @@ pub fn emit_prefab_behaviors(
     Ok(emitted)
 }
 
+/// The composition commands of decision 0223 that report to the program (`E8110` to `E8113`): their
+/// last argument is the span id of the call.
+fn animation_reports(function: &str) -> bool {
+    matches!(
+        function,
+        "animation.set_layer"
+            | "animation.fade_layer"
+            | "animation.blend_sample"
+            | "animation.blend_play"
+            | "animation.limb_goal"
+            | "animation.clear_limb"
+            | "animation.foot_placement"
+            | "animation.chain_goal"
+            | "animation.root_motion"
+    )
+}
+
 /// The context member of a tag built-in (decision 0150).
 fn tag_member(function: &str) -> Option<&'static str> {
     Some(match function {
@@ -2339,6 +2362,22 @@ fn tag_member(function: &str) -> Option<&'static str> {
         "animation.playing" => "animationPlaying",
         "animation.finished" => "animationFinished",
         "animation.crossed" => "animationCrossed",
+        "animation.set_layer" => "animationSetLayer",
+        "animation.fade_layer" => "animationFadeLayer",
+        "animation.remove_layer" => "animationRemoveLayer",
+        "animation.blend_sample" => "animationBlendSample",
+        "animation.blend_play" => "animationBlendPlay",
+        "animation.blend_parameter" => "animationBlendParameter",
+        "animation.blend_clear" => "animationBlendClear",
+        "animation.blend_phase" => "animationBlendPhase",
+        "animation.limb_goal" => "animationLimbGoal",
+        "animation.clear_limb" => "animationClearLimb",
+        "animation.foot_placement" => "animationFootPlacement",
+        "animation.clear_foot_placement" => "animationClearFootPlacement",
+        "animation.chain_goal" => "animationChainGoal",
+        "animation.clear_chain" => "animationClearChain",
+        "animation.root_motion" => "animationRootMotion",
+        "animation.take_root_motion" => "animationTakeRootMotion",
         "gamepad.button" => "gamepadButton",
         "gamepad.connected" => "gamepadConnected",
         "first_tagged" => "firstTagged",
