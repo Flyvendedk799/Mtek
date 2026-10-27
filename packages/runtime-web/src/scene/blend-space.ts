@@ -38,7 +38,8 @@ export function blendWeights(points: readonly (readonly [number, number])[]): Bl
     throw new RangeError(`A blend space needs 1 to ${MAX_BLEND_SAMPLES} samples at finite points`);
   if (points.some((p, i) => points.some((q, j) => j < i && p[0] === q[0] && p[1] === q[1])))
     throw new RangeError("Blend samples must be at distinct points");
-  const X = points.map(p => p[0]), Y = points.map(p => p[1]);
+  // Work relative to the first sample so the lifted circle test keeps its precision far from the origin.
+  const ox = points[0]![0], oy = points[0]![1], X = points.map(p => p[0] - ox), Y = points.map(p => p[1] - oy);
   const L = Math.max(Math.max(...X) - Math.min(...X), Math.max(Math.max(...Y) - Math.min(...Y))) || 1;
   const Z = X.map((x, i) => x * x + Y[i]! * Y[i]!), W = X.map((_, i) => { // integer hash: generic and platform-independent, unlike an additive sequence
     let h = Math.imul(i + 1, 0x9e3779b1); h ^= h >>> 15; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13;
@@ -74,7 +75,7 @@ export function blendWeights(points: readonly (readonly [number, number])[]): Bl
     if (t.some((v, i) => i > 0 && v - t[i - 1]! <= 1e-12 * L))
       throw new RangeError("Blend samples must be at distinct points");
     return (x, y, out) => {
-      out.fill(0);
+      out.fill(0); x -= ox; y -= oy;
       const s = Math.min(t[n - 1]!, Math.max(t[0]!, along(x, y)));
       let k = 1;
       while (k < n && t[k]! < s) k++;
@@ -90,7 +91,7 @@ export function blendWeights(points: readonly (readonly [number, number])[]): Bl
   const areas = triangles.map(([a, b, c]) => (X[b]! - X[a]!) * (Y[c]! - Y[a]!) - (X[c]! - X[a]!) * (Y[b]! - Y[a]!));
   const hull = [...counts].filter(([, count]) => count === 1).map(([key]) => [Math.floor(key / 64), key % 64] as const);
   return (x, y, out) => {
-    out.fill(0);
+    out.fill(0); x -= ox; y -= oy;
     const cross = (p: number, q: number): number => (X[p]! - x) * (Y[q]! - y) - (Y[p]! - y) * (X[q]! - x);
     // The most-inside triangle, so a point on a shared edge or a rounding gap still gets valid weights.
     let best = -Infinity, at = 0, u = 0, v = 0, w = 0;

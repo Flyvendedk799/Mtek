@@ -105,6 +105,11 @@ describe("blend weights", () => {
     expect(cell.filter(v => v === 0.5).length).toBe(2);
     expect(cell.every((v, i) => v === 0 || [0, 1, 3, 4].includes(i))).toBe(true);
   });
+  it("is translation-independent, so layouts far from the origin keep their triangulation", () => {
+    const near = blendWeights(grid(4)), far = blendWeights(grid(4).map(([x, y]) => [x + 1e6, y - 3e5] as Point));
+    for (const [x, y] of [[0.3, 0.4], [1.5, 2.5], [2.9, 0.1], [-1, 5]] as const)
+      expect(weightsAt(far, 16, x + 1e6, y - 3e5).map(v => +v.toFixed(9))).toEqual(weightsAt(near, 16, x, y).map(v => +v.toFixed(9)));
+  });
   it("clamps to the nearest point of the hull", () => {
     const square = blendWeights([[0, 0], [1, 0], [1, 1], [0, 1]]);
     expect(weightsAt(square, 4, 5, 0.25)).toEqual(weightsAt(square, 4, 1, 0.25));
