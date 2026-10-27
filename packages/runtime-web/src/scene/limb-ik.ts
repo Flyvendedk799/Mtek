@@ -731,7 +731,7 @@ export class LimbIK {
     // End position and the lower bone's direction.
     for (let c = 0; c < 3; c++) lDir[c] = (gp[u * 3 + c]! + effective * ehat[c]!) - (gp[u * 3 + c]! + a * uDir[c]!);
     if (normalize3(lDir) < EPS) lDir.set(ehat);
-    // Upper bone: swing the animated chord onto the knee direction, then twist so its hinge lies across the bend plane.
+    // Upper bone: swing its animated direction onto the knee direction, then twist so its hinge lies across the bend plane.
     qfromto(swing, du, uDir, hs, tmp);
     qrotate(tmp, swing, 0, hc[0]!, hc[1]!, hc[2]!);
     cross(q, tmp, hs);
