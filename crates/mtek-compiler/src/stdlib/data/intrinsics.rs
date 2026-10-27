@@ -56,7 +56,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
         ),
         function(
             "overlap_boxes", Domain::Cpu, false, Milestone::M1,
-            "Oriented box intersection; world centers, full sizes and rotations. No physics required.",
+            "Oriented box intersection from world centres, full sizes and rotations. No physics needed.",
             vec![sig(&[p("a", vec3), p("size_a", vec3), p("rotation_a", exact(TypeRef::Quat)), p("b", vec3), p("size_b", vec3), p("rotation_b", exact(TypeRef::Quat))], exact(TypeRef::Bool))],
         ),
         function(
@@ -281,7 +281,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "Whether the key was down at the end of input handling in the current frame.",
+            "Whether the key was down at the end of input handling this frame.",
             vec![sig(&[p("key", exact(TypeRef::Enum("Key")))], exact(TypeRef::Bool))],
         ),
         // Input polling (decision 0153).
@@ -324,7 +324,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "Queues creation of a prefab instance as a root entity; the reference is valid immediately and `alive` turns true after the next lifecycle flush.",
+            "Queues a prefab instance as a root entity; the reference is valid at once and `alive` turns true after the next flush.",
             vec![sig(
                 &[p("prefab", exact(TypeRef::PrefabDescriptor))],
                 exact(TypeRef::EntityRef),
@@ -336,7 +336,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "Queues removal of a spawned entity; it counts as dead from the moment of the call.",
+            "Queues removal of a spawned entity; it counts as dead at once.",
             vec![sig(&[p("target", exact(TypeRef::EntityRef))], exact(TypeRef::Unit))],
         )
         .handlers_only(),
@@ -346,7 +346,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "Plays a sound once, at a volume (default 1.0, range 0..4) and a pitch (playback rate, default 1.0, range 0.0625..16).",
+            "Plays a sound once with `volume` (default 1.0, range 0..4) and `pitch` (rate, default 1.0, range 0.0625..16).",
             vec![
                 sig(&[p("sound", sound)], unit),
                 sig(&[p("sound", sound), p("volume", F32)], unit),
@@ -360,7 +360,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "Plays a sound once from a world position: it is quieter further from the active camera and panned left or right.",
+            "Plays a sound once at a world position: quieter with distance from the active camera, and panned.",
             vec![
                 sig(&[p("sound", sound), p("position", vec3)], unit),
                 sig(&[p("sound", sound), p("position", vec3), p("volume", F32)], unit),
@@ -373,7 +373,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "Starts a sound as looping music, replacing the music that plays (one music track at a time).",
+            "Starts a sound as looping music, replacing the current music.",
             vec![
                 sig(&[p("sound", sound)], unit),
                 sig(&[p("sound", sound), p("volume", F32)], unit),
@@ -529,7 +529,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "The first live entity with the tag in instance order; a dead reference (`alive` is false) if there is none.",
+            "The first live entity with the tag in instance order; a dead reference if there is none.",
             vec![sig(&[p("tag", exact(TypeRef::String))], exact(TypeRef::EntityRef))],
         ),
         function(
@@ -560,7 +560,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "The live entities with the tag, in instance order: only the iterable of a `for` loop (`for r in tagged(\"rock\") { .. }`).",
+            "The live entities with the tag in instance order; only a `for` iterable.",
             vec![sig(&[p("tag", exact(TypeRef::String))], exact(TypeRef::TaggedEntities))],
         )
         .cpu_semantics("The loop skips an entity that is destroyed before its turn and does not visit one spawned during the loop."),
@@ -569,7 +569,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "Queues removal of every live spawned entity with the tag; the tag must not be one a named entity has.",
+            "Queues removal of every live spawned entity with the tag (not a tag of a named entity).",
             vec![sig(&[p("tag", exact(TypeRef::String))], exact(TypeRef::Unit))],
         )
         .handlers_only(),

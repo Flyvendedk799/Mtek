@@ -31,8 +31,8 @@ The events of this build:
 
 | Event | Form | Allowed in | Meaning |
 |---|---|---|---|
-| `on collision_enter(...)` | one parameter of type `entity_ref` | entity, prefab (with a collider) | The entity's collider started touching another entity's collider; the parameter is the other entity. |
-| `on collision_exit(...)` | one parameter of type `entity_ref` | entity, prefab (with a collider) | The entity's collider stopped touching another entity's collider; the parameter is the other entity. |
+| `on collision_enter(...)` | one parameter of type `entity_ref` | entity, prefab (with a collider) | Its collider started touching another; the parameter is that entity. |
+| `on collision_exit(...)` | one parameter of type `entity_ref` | entity, prefab (with a collider) | Its collider stopped touching another; the parameter is that entity. |
 | `on key_down(...)` | a constant `Key` as filter | scene, entity, prefab | Delivered when the filtered key transitions to pressed. Auto-repeat is ignored. |
 | `on key_up(...)` | a constant `Key` as filter | scene, entity, prefab | Delivered when the filtered key is released. |
 | `on message(...)` | one parameter of type `string` | entity, prefab | A queued string sent to this entity; delivered before its next unpaused update. |

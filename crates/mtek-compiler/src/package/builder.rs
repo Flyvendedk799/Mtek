@@ -48,13 +48,13 @@ use crate::{
 use super::html::{BOOTSTRAP_JS, index_html, preview_bootstrap};
 use super::identity::{BuildIdentity, h16};
 use super::manifest::{
-    Binding, BindingDep, BindingTarget, Body, Camera, Clip, ClipChannel, Collider, Entity,
-    EntityMaterial, Game, GameScene, InstanceParam, Layout, Light as ManifestLight, LightClass,
-    LightClasses, LightKind as ManifestLightKind, MANIFEST_SCHEMA, Manifest, Material,
-    MaterialInstance, MaterialParam, MaterialResource, Mesh, MeshShape, Num,
-    ParamClass as ManifestClass, Particles, Prefab, PrefabMaterial, PrefabParam, Preview,
-    RequiredCapabilities, ResourceValue, RuntimeConfig, Scene, SceneFields, Shader, SourceEntry,
-    StateEntry, Subsystems, SymbolEntry, SymbolKind,
+    Binding, BindingDep, BindingTarget, Body, Camera, CharacterSettings, Clip, ClipChannel,
+    Collider, Entity, EntityMaterial, Game, GameScene, InstanceParam, Layout,
+    Light as ManifestLight, LightClass, LightClasses, LightKind as ManifestLightKind,
+    MANIFEST_SCHEMA, Manifest, Material, MaterialInstance, MaterialParam, MaterialResource, Mesh,
+    MeshShape, Num, ParamClass as ManifestClass, Particles, Prefab, PrefabMaterial, PrefabParam,
+    Preview, RequiredCapabilities, ResourceValue, RuntimeConfig, Scene, SceneFields, Shader,
+    SourceEntry, StateEntry, Subsystems, SymbolEntry, SymbolKind,
 };
 use super::spans::SpanTable;
 
@@ -711,15 +711,30 @@ fn num(value: f32) -> Result<Num, String> {
 pub(crate) fn manifest_body(body: &ir::Body) -> Result<Body, String> {
     Ok(match body.desc {
         ir::BodyDesc::Static => Body::Static,
-        ir::BodyDesc::Kinematic => Body::Kinematic,
+        ir::BodyDesc::Kinematic { character } => Body::Kinematic {
+            character: character
+                .map(|c| {
+                    Ok::<_, String>(CharacterSettings {
+                        max_slope: num(c.max_slope)?,
+                        step_height: num(c.step_height)?,
+                        step_min_width: num(c.step_min_width)?,
+                        snap_to_ground: num(c.snap_to_ground)?,
+                        skin: num(c.skin)?,
+                        carry: c.carry,
+                    })
+                })
+                .transpose()?,
+        },
         ir::BodyDesc::Dynamic {
             mass,
             linear_damping,
             angular_damping,
+            continuous,
         } => Body::Dynamic {
             mass: num(mass)?,
             linear_damping: num(linear_damping)?,
             angular_damping: num(angular_damping)?,
+            continuous,
         },
     })
 }
@@ -745,6 +760,19 @@ pub(crate) fn manifest_collider(collider: &ir::Collider) -> Result<Collider, Str
             restitution,
         } => Collider::Sphere {
             radius: num(radius)?,
+            sensor,
+            friction: num(friction)?,
+            restitution: num(restitution)?,
+        },
+        ir::ColliderDesc::Capsule {
+            radius,
+            height,
+            sensor,
+            friction,
+            restitution,
+        } => Collider::Capsule {
+            radius: num(radius)?,
+            height: num(height)?,
             sensor,
             friction: num(friction)?,
             restitution: num(restitution)?,

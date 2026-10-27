@@ -747,7 +747,26 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["kind"],
-      "properties": { "kind": { "const": "kinematic" } }
+      "properties": {
+        "kind": { "const": "kinematic" },
+        "character": {
+          "$ref": "#/$defs/characterSettings",
+          "description": "The `move_character` settings (decisions 0214, 0217). Present only when the program wrote at least one of the six fields; the runtime applies the defaults of spec/physics.md section 2 otherwise."
+        }
+      }
+    },
+    "characterSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxSlope", "stepHeight", "stepMinWidth", "snapToGround", "skin", "carry"],
+      "properties": {
+        "maxSlope": { "type": "number", "minimum": 0, "maximum": 1.5707964, "description": "Radians." },
+        "stepHeight": { "type": "number", "minimum": 0, "description": "Metres; 0 disables stepping." },
+        "stepMinWidth": { "type": "number", "exclusiveMinimum": 0, "description": "Metres." },
+        "snapToGround": { "type": "number", "minimum": 0, "description": "Metres; 0 disables snapping." },
+        "skin": { "type": "number", "exclusiveMinimum": 0, "description": "Metres." },
+        "carry": { "type": "boolean" }
+      }
     },
     "dynamicBody": {
       "type": "object",
@@ -757,12 +776,13 @@
         "kind": { "const": "dynamic" },
         "mass": { "type": "number", "exclusiveMinimum": 0 },
         "linearDamping": { "type": "number", "minimum": 0 },
-        "angularDamping": { "type": "number", "minimum": 0 }
+        "angularDamping": { "type": "number", "minimum": 0 },
+        "continuous": { "const": true, "description": "Continuous collision detection for this body (decision 0217). Present only when true." }
       }
     },
     "collider": {
       "type": "object",
-      "oneOf": [{ "$ref": "#/$defs/boxCollider" }, { "$ref": "#/$defs/sphereCollider" }],
+      "oneOf": [{ "$ref": "#/$defs/boxCollider" }, { "$ref": "#/$defs/sphereCollider" }, { "$ref": "#/$defs/capsuleCollider" }],
       "discriminator": { "propertyName": "kind" }
     },
     "boxCollider": {
@@ -784,6 +804,19 @@
       "properties": {
         "kind": { "const": "sphere" },
         "radius": { "type": "number", "exclusiveMinimum": 0 },
+        "sensor": { "type": "boolean" },
+        "friction": { "type": "number", "minimum": 0 },
+        "restitution": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "capsuleCollider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "radius", "height", "sensor", "friction", "restitution"],
+      "properties": {
+        "kind": { "const": "capsule" },
+        "radius": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0, "description": "Full height including both caps, along local Y; greater than twice the radius (E5124)." },
         "sensor": { "type": "boolean" },
         "friction": { "type": "number", "minimum": 0 },
         "restitution": { "type": "number", "minimum": 0, "maximum": 1 }

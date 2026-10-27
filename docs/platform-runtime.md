@@ -165,8 +165,58 @@ Image assets now have mipmaps, including NPOT textures. Color textures average
 in linear light; data textures retain linear data semantics. Straight-alpha mip
 filtering can show fringes around transparent texels.
 
-The independent Rapier adapter optionally exposes `castShape`, `moveCharacter`,
-`setCollisionGroups` and `contacts`. Test method presence on alternative adapters.
-Sweeps take displacement over the interval `[0, 1]`; character queries return a
-displacement for the caller to apply. Advance movement in fixed ticks and implement
-moving-platform carry in the host. CCD is opt-in and does not sweep teleports.
+A `.mtek` program moves a character itself: a `Kinematic` body with a
+`CapsuleCollider` calls `self.body.move_character(velocity * dt, rotation)` from
+`fixed_update`, reads `self.body.grounded` and `self.body.ground_normal`, and gets
+collide-and-slide, stair stepping, the slope limit, ground snapping and
+moving-platform carry (a kinematic platform under the character moves it by the
+platform's translation and yaw) without host code. The optional `Kinematic` fields
+`max_slope`, `step_height`, `step_min_width`, `snap_to_ground`, `skin` and `carry`
+tune it (`spec/physics.md` section 2). Gravity is not applied; add your own vertical
+motion. `Dynamic { continuous: true }` asks for continuous collision detection for
+one body; the `physics.continuousCollision` mount option enables it for every dynamic
+body. CCD is opt-in and does not sweep teleports.
+
+### Spatial queries from the host
+
+`app.physics` and `ExtensionContext.physics` are `undefined` when the running
+program has no physics, and otherwise one object with four methods that take and
+return entity IDs, the same opaque IDs as `inspectScene()` and `readTransforms()`
+(never adapter handles or slots):
+
+```ts
+const physics = app.physics;
+if (physics) {
+  const hit = physics.castRay({ x: 0, y: 5, z: 0 }, { x: 0, y: -1, z: 0 }, 20, {
+    exclude: playerId,            // an entity ID whose body the query ignores
+    includeSensors: false,        // the default
+    groups: { memberships: 0x0001, filter: 0xffff }  // optional 16-bit masks
+  });
+  if (hit) console.log(hit.entityId, hit.distance, hit.point, hit.normal);
+
+  const swept = physics.castShape(
+    { kind: "capsule", radius: 0.4, height: 1.8 },        // or sphere / box (full extents)
+    { position: { x: 0, y: 1, z: 0 } },                    // rotation defaults to identity
+    { x: 3, y: 0, z: 0 }                                   // displacement; fraction is 0..1
+  );
+  for (const contact of physics.contacts(bodyId)) console.log(contact.entityId, contact.distance);
+  physics.setCollisionGroups(bodyId, 0x0002, 0x0001);     // memberships, filter
+}
+```
+
+Queries read the world as of the last completed tick: they never step it, and
+nothing here moves a body, so the single pose authority of `spec/physics.md` holds
+(a program moves its own bodies; a host that wants to move one writes a host input
+the program reads). A collider added in a tick (a spawn) is seen from the next tick.
+Inputs are validated: a bad value throws a `RangeError` or `TypeError` and an unknown
+or stale ID, or an entity without a physics body, a `RangeError`. The methods are
+always present; one the loaded adapter does not implement throws a
+`MtekPhysicsUnsupportedError` that names the method and the adapter, so an alternative
+adapter is detected by catching it. `setCollisionGroups` lasts until the physics world
+is rebuilt by a hot reload. Types (`MtekPhysics`, `MtekQueryShape`, `MtekQueryOptions`,
+`MtekRayHit`, `MtekShapeHit`, `MtekContact`) are exported from `@mtek/runtime-web`.
+
+Alternative adapters implement the optional `castRay`, `castShape`, `moveCharacter`,
+`contacts` and `setCollisionGroups` of `spec/physics.md` section 5; without
+`moveCharacter` a `move_character` command is dropped with `MTEK-E8105`. Sweeps take
+displacement over the interval `[0, 1]`.

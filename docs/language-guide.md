@@ -273,7 +273,7 @@ on key_down(Key.Space) {
 }
 ```
 
-- A body and a collider come together (`MTEK-E5120`, `MTEK-E5121`), on root entities (`MTEK-E5091`), with scale 1 when dynamic or kinematic (`MTEK-E5122`). Commands: `apply_force`, `apply_impulse`, `set_kinematic_target`, `set_linear_velocity`, `teleport`; readable: `angular_velocity`, `linear_velocity`.
+- A body and a collider come together (`MTEK-E5120`, `MTEK-E5121`), on root entities (`MTEK-E5091`), with scale 1 when dynamic or kinematic (`MTEK-E5122`). Commands: `apply_force`, `apply_impulse`, `move_character`, `set_kinematic_target`, `set_linear_velocity`, `teleport`; readable: `angular_velocity`, `ground_normal`, `grounded`, `linear_velocity`.
 
 ## 10. Modules and host inputs
 

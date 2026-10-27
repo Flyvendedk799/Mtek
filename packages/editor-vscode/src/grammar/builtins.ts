@@ -56,6 +56,7 @@ export const BUILTINS: Builtins = {
     "Box",
     "BoxCollider",
     "Camera",
+    "CapsuleCollider",
     "DirectionalLight",
     "Dynamic",
     "Emitter",

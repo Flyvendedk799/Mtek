@@ -777,13 +777,19 @@ impl Tree<'_> {
             let location = self.location(body.span);
             let desc = match body.desc {
                 BodyDesc::Static => "Static {}".to_owned(),
-                BodyDesc::Kinematic => "Kinematic {}".to_owned(),
+                BodyDesc::Kinematic { character: None } => "Kinematic {}".to_owned(),
+                BodyDesc::Kinematic { character: Some(c) } => format!(
+                    "Kinematic {{ max_slope: {:?}, step_height: {:?}, step_min_width: {:?}, snap_to_ground: {:?}, skin: {:?}, carry: {} }}",
+                    c.max_slope, c.step_height, c.step_min_width, c.snap_to_ground, c.skin, c.carry
+                ),
                 BodyDesc::Dynamic {
                     mass,
                     linear_damping,
                     angular_damping,
+                    continuous,
                 } => format!(
-                    "Dynamic {{ mass: {mass:?}, linear_damping: {linear_damping:?}, angular_damping: {angular_damping:?} }}"
+                    "Dynamic {{ mass: {mass:?}, linear_damping: {linear_damping:?}, angular_damping: {angular_damping:?}{} }}",
+                    if continuous { ", continuous: true" } else { "" }
                 ),
             };
             self.line(
@@ -809,6 +815,15 @@ impl Tree<'_> {
                     restitution,
                 } => format!(
                     "SphereCollider {{ radius: {radius:?}, sensor: {sensor}, friction: {friction:?}, restitution: {restitution:?} }}"
+                ),
+                ColliderDesc::Capsule {
+                    radius,
+                    height,
+                    sensor,
+                    friction,
+                    restitution,
+                } => format!(
+                    "CapsuleCollider {{ radius: {radius:?}, height: {height:?}, sensor: {sensor}, friction: {friction:?}, restitution: {restitution:?} }}"
                 ),
             };
             self.line(

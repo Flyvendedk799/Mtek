@@ -539,6 +539,7 @@ fn every_rule_between_fields_is_stated_in_the_documentation_of_the_field() {
                 FieldRule::ExcludedBy {
                     field, excluded_by, ..
                 } => (field, excluded_by),
+                FieldRule::ExceedsMultiple { field, other, .. } => (field, other),
             };
             let text = schema.field(field).unwrap().doc;
             assert!(

@@ -1268,6 +1268,37 @@ impl Checker<'_> {
                         );
                     }
                 }
+                FieldRule::ExceedsMultiple {
+                    field,
+                    other,
+                    factor,
+                    code,
+                    help,
+                } => {
+                    if let (Some(w), Some(o)) = (find(field), find(other))
+                        && let (Some(value), Some(own), Some(base)) = (
+                            w.value,
+                            w.valid.as_ref().and_then(ConstValue::as_f32),
+                            o.valid.as_ref().and_then(ConstValue::as_f32),
+                        )
+                    {
+                        let limit = base * factor as f32;
+                        if own <= limit {
+                            self.sink.push(
+                                Diagnostic::new(
+                                    code,
+                                    format!(
+                                        "{} must be greater than {factor} * '{other}' ({limit:?}), but the value is {own:?}.",
+                                        holder.field_capitalised(field),
+                                    ),
+                                )
+                                .at(value.span)
+                                .related(o.name.span, format!("'{other}' is declared here"))
+                                .help(help),
+                            );
+                        }
+                    }
+                }
                 FieldRule::ExcludedBy {
                     field,
                     excluded_by,
@@ -1358,6 +1389,9 @@ impl Checker<'_> {
         depth: usize,
     ) -> Option<ConstValue> {
         let default = def.default.as_ref()?;
+        if def.flags.is_unset_when_omitted() {
+            return None;
+        }
         if let Some(sibling) = def.default_when_set
             && !present.contains(sibling)
         {

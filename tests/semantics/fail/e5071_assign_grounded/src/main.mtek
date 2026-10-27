@@ -1,0 +1,13 @@
+// grounded and ground_normal are read-only results of the last move_character.
+scene Demo {
+    camera Main {}
+    entity Hero {
+        mesh: Box {};
+        body: Kinematic {};
+        collider: CapsuleCollider { radius: 0.4; height: 1.8; };
+    }
+    update(dt: f32) {
+        Hero.body.grounded = true;
+        Hero.body.ground_normal = vec3(0.0, 1.0, 0.0);
+    }
+}

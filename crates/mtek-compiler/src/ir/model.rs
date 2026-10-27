@@ -1333,13 +1333,39 @@ pub struct Body {
 )]
 pub enum BodyDesc {
     Static,
-    Kinematic,
+    Kinematic {
+        /// The `move_character` settings, present only when the program wrote at least one of
+        /// them (decision 0217); the runtime applies the defaults otherwise.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        character: Option<CharacterDesc>,
+    },
     Dynamic {
         /// Kilograms; positive and finite.
         mass: f32,
         linear_damping: f32,
         angular_damping: f32,
+        /// Continuous collision detection for this body; listed only when true.
+        #[serde(skip_serializing_if = "is_false")]
+        continuous: bool,
     },
+}
+
+fn is_false(value: &bool) -> bool {
+    !*value
+}
+
+/// The character settings of a kinematic body (decisions 0214, 0217), every field with its
+/// default filled in.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CharacterDesc {
+    /// Steepest climbable slope in radians.
+    pub max_slope: f32,
+    pub step_height: f32,
+    pub step_min_width: f32,
+    pub snap_to_ground: f32,
+    pub skin: f32,
+    pub carry: bool,
 }
 
 impl BodyDesc {
@@ -1348,7 +1374,7 @@ impl BodyDesc {
     pub fn kind(&self) -> &'static str {
         match self {
             BodyDesc::Static => "static",
-            BodyDesc::Kinematic => "kinematic",
+            BodyDesc::Kinematic { .. } => "kinematic",
             BodyDesc::Dynamic { .. } => "dynamic",
         }
     }
@@ -1379,6 +1405,15 @@ pub enum ColliderDesc {
     },
     Sphere {
         radius: f32,
+        sensor: bool,
+        friction: f32,
+        restitution: f32,
+    },
+    /// A cylinder along local Y with a hemisphere on each end; `height` is the full height
+    /// including both caps and exceeds `2 * radius`.
+    Capsule {
+        radius: f32,
+        height: f32,
         sensor: bool,
         friction: f32,
         restitution: f32,

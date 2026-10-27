@@ -1,0 +1,24 @@
+// move_character, grounded and ground_normal apply to kinematic bodies only.
+scene Demo {
+    camera Main {}
+    entity Crate {
+        mesh: Box {};
+        body: Dynamic {};
+        collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
+        on key_down(Key.Space) {
+            self.body.move_character(vec3(0.0, 0.0, 1.0), quat.identity());
+        }
+    }
+    entity Wall {
+        mesh: Box {};
+        body: Static {};
+        collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
+        on key_down(Key.Space) {
+            Wall.body.move_character(vec3(0.0, 0.0, 1.0), quat.identity());
+        }
+    }
+    update(dt: f32) {
+        let up = Crate.body.grounded;
+        let normal = Wall.body.ground_normal;
+    }
+}

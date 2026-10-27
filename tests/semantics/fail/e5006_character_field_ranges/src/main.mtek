@@ -1,0 +1,20 @@
+// max_slope is between 0 and a quarter turn, step_height and snap_to_ground are not negative,
+// step_min_width and skin are positive, and a capsule has a positive radius and height.
+scene Demo {
+    camera Main {}
+    entity Steep {
+        mesh: Box {};
+        body: Kinematic { max_slope: 2.0; };
+        collider: CapsuleCollider { radius: 0.4; height: 1.8; };
+    }
+    entity Odd {
+        mesh: Box {};
+        body: Kinematic { step_height: -0.1; step_min_width: 0.0; snap_to_ground: -1.0; skin: 0.0; };
+        collider: CapsuleCollider { radius: 0.0; height: -1.0; };
+    }
+    entity Negative {
+        mesh: Box {};
+        body: Kinematic { max_slope: -0.5; };
+        collider: BoxCollider { size: vec3(1.0, 1.0, 1.0); };
+    }
+}

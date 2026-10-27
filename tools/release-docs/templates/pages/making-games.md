@@ -336,7 +336,7 @@ scene Play {
 }
 ```
 
-[Physics](concepts/physics.md) lists the body kinds, the commands and the limits.
+For a character that walks, climbs stairs and rides moving platforms, give a `Kinematic` body a `CapsuleCollider` and call `self.body.move_character(velocity * dt, rotation)` from `fixed_update`; `self.body.grounded` says whether it stands on something. [Physics](concepts/physics.md) lists the body kinds, the commands and the limits.
 
 ## The HUD: text, rectangles, buttons and fonts
 

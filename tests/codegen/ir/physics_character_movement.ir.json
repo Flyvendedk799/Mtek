@@ -1,0 +1,2759 @@
+{
+  "entryScene": "src/main.mtek::Demo",
+  "modules": [
+    {
+      "path": "src/main.mtek",
+      "file": 0,
+      "span": {"file": 0, "start": 0, "end": 2537},
+      "items": [
+        {
+          "kind": "scene",
+          "name": "Demo",
+          "symbol": "src/main.mtek::Demo",
+          "span": {"file": 0, "start": 215, "end": 2536},
+          "fields": {
+            "clearColor": {
+              "source": {
+                "const": {
+                  "color": [0.0, 0.0, 0.0, 1.0]
+                }
+              },
+              "origin": "default",
+              "span": {"file": 0, "start": 215, "end": 2536}
+            }
+          },
+          "constants": [],
+          "cameras": [
+            {
+              "name": "Main",
+              "symbol": "src/main.mtek::Demo.Main",
+              "span": {"file": 0, "start": 323, "end": 419},
+              "active": true,
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 4.0, 12.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 345, "end": 376}
+              },
+              "target": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 1.0, 0.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 385, "end": 413}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 323, "end": 419}
+              },
+              "exposure": {
+                "source": {
+                  "const": {"f32": -1.9145305}
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 323, "end": 419}
+              },
+              "projection": {
+                "desc": {
+                  "kind": "perspective",
+                  "fovY": 0.9,
+                  "near": 0.1,
+                  "far": 1000.0
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 323, "end": 419}
+              }
+            }
+          ],
+          "entities": [
+            {
+              "index": 0,
+              "name": "Floor",
+              "symbol": "src/main.mtek::Demo.Floor",
+              "parent": null,
+              "span": {"file": 0, "start": 424, "end": 583},
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 0.0, 0.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 424, "end": 583}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 424, "end": 583}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [1.0, 1.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 424, "end": 583}
+              },
+              "visible": {
+                "source": {
+                  "const": {
+                    "bool": true
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 424, "end": 583}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "box",
+                  "size": [40.0, 0.2, 40.0]
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 447, "end": 489}
+              },
+              "material": {
+                "material": "std/materials.mtek::Unlit",
+                "params": [
+                  {
+                    "name": "color",
+                    "type": "color",
+                    "source": {
+                      "const": {
+                        "color": [1.0, 1.0, 1.0, 1.0]
+                      }
+                    },
+                    "update": "initial",
+                    "span": {"file": 0, "start": 424, "end": 583}
+                  }
+                ],
+                "origin": "default",
+                "span": {"file": 0, "start": 424, "end": 583}
+              },
+              "body": {
+                "desc": {
+                  "kind": "static"
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 498, "end": 514}
+              },
+              "collider": {
+                "desc": {
+                  "kind": "box",
+                  "size": [40.0, 0.2, 40.0],
+                  "sensor": false,
+                  "friction": 0.5,
+                  "restitution": 0.0
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 523, "end": 577}
+              }
+            },
+            {
+              "index": 1,
+              "name": "Hero",
+              "symbol": "src/main.mtek::Demo.Hero",
+              "parent": null,
+              "span": {"file": 0, "start": 588, "end": 1405},
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [0.0, 1.0, 0.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 610, "end": 640}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 588, "end": 1405}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [1.0, 1.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 588, "end": 1405}
+              },
+              "visible": {
+                "source": {
+                  "const": {
+                    "bool": true
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 588, "end": 1405}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "box",
+                  "size": [0.8, 1.8, 0.8]
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 649, "end": 689}
+              },
+              "material": {
+                "material": "std/materials.mtek::Unlit",
+                "params": [
+                  {
+                    "name": "color",
+                    "type": "color",
+                    "source": {
+                      "const": {
+                        "color": [1.0, 1.0, 1.0, 1.0]
+                      }
+                    },
+                    "update": "initial",
+                    "span": {"file": 0, "start": 588, "end": 1405}
+                  }
+                ],
+                "origin": "default",
+                "span": {"file": 0, "start": 588, "end": 1405}
+              },
+              "body": {
+                "desc": {
+                  "kind": "kinematic",
+                  "character": {
+                    "maxSlope": 0.6,
+                    "stepHeight": 0.3,
+                    "stepMinWidth": 0.1,
+                    "snapToGround": 0.2,
+                    "skin": 0.01,
+                    "carry": true
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 698, "end": 765}
+              },
+              "collider": {
+                "desc": {
+                  "kind": "capsule",
+                  "radius": 0.4,
+                  "height": 1.8,
+                  "sensor": false,
+                  "friction": 0.0,
+                  "restitution": 0.0
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 774, "end": 845}
+              }
+            },
+            {
+              "index": 2,
+              "name": "Plain",
+              "symbol": "src/main.mtek::Demo.Plain",
+              "parent": null,
+              "span": {"file": 0, "start": 1410, "end": 1708},
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [3.0, 0.5, 0.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1433, "end": 1463}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1410, "end": 1708}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [1.0, 1.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1410, "end": 1708}
+              },
+              "visible": {
+                "source": {
+                  "const": {
+                    "bool": true
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1410, "end": 1708}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "sphere",
+                  "radius": 0.4,
+                  "segments": 32,
+                  "rings": 16
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1472, "end": 1501}
+              },
+              "material": {
+                "material": "std/materials.mtek::Unlit",
+                "params": [
+                  {
+                    "name": "color",
+                    "type": "color",
+                    "source": {
+                      "const": {
+                        "color": [1.0, 1.0, 1.0, 1.0]
+                      }
+                    },
+                    "update": "initial",
+                    "span": {"file": 0, "start": 1410, "end": 1708}
+                  }
+                ],
+                "origin": "default",
+                "span": {"file": 0, "start": 1410, "end": 1708}
+              },
+              "body": {
+                "desc": {
+                  "kind": "kinematic"
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1510, "end": 1529}
+              },
+              "collider": {
+                "desc": {
+                  "kind": "sphere",
+                  "radius": 0.4,
+                  "sensor": false,
+                  "friction": 0.5,
+                  "restitution": 0.0
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1538, "end": 1579}
+              }
+            },
+            {
+              "index": 3,
+              "name": "Elevator",
+              "symbol": "src/main.mtek::Demo.Elevator",
+              "parent": null,
+              "span": {"file": 0, "start": 1713, "end": 2091},
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [-4.0, 0.2, 0.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1739, "end": 1770}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1713, "end": 2091}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [1.0, 1.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1713, "end": 2091}
+              },
+              "visible": {
+                "source": {
+                  "const": {
+                    "bool": true
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 1713, "end": 2091}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "box",
+                  "size": [2.0, 0.2, 2.0]
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1779, "end": 1819}
+              },
+              "material": {
+                "material": "std/materials.mtek::Unlit",
+                "params": [
+                  {
+                    "name": "color",
+                    "type": "color",
+                    "source": {
+                      "const": {
+                        "color": [1.0, 1.0, 1.0, 1.0]
+                      }
+                    },
+                    "update": "initial",
+                    "span": {"file": 0, "start": 1713, "end": 2091}
+                  }
+                ],
+                "origin": "default",
+                "span": {"file": 0, "start": 1713, "end": 2091}
+              },
+              "body": {
+                "desc": {
+                  "kind": "kinematic",
+                  "character": {
+                    "maxSlope": 0.7853982,
+                    "stepHeight": 0.25,
+                    "stepMinWidth": 0.1,
+                    "snapToGround": 0.0,
+                    "skin": 0.02,
+                    "carry": true
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1828, "end": 1881}
+              },
+              "collider": {
+                "desc": {
+                  "kind": "box",
+                  "size": [2.0, 0.2, 2.0],
+                  "sensor": false,
+                  "friction": 0.5,
+                  "restitution": 0.0
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 1890, "end": 1942}
+              }
+            },
+            {
+              "index": 4,
+              "name": "Puck",
+              "symbol": "src/main.mtek::Demo.Puck",
+              "parent": null,
+              "span": {"file": 0, "start": 2096, "end": 2534},
+              "position": {
+                "source": {
+                  "const": {
+                    "vec3": [2.0, 2.0, 0.0]
+                  }
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 2118, "end": 2148}
+              },
+              "rotation": {
+                "source": {
+                  "const": {
+                    "quat": [0.0, 0.0, 0.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 2096, "end": 2534}
+              },
+              "scale": {
+                "source": {
+                  "const": {
+                    "vec3": [1.0, 1.0, 1.0]
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 2096, "end": 2534}
+              },
+              "visible": {
+                "source": {
+                  "const": {
+                    "bool": true
+                  }
+                },
+                "origin": "default",
+                "span": {"file": 0, "start": 2096, "end": 2534}
+              },
+              "mesh": {
+                "desc": {
+                  "kind": "sphere",
+                  "radius": 0.05,
+                  "segments": 32,
+                  "rings": 16
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 2157, "end": 2187}
+              },
+              "material": {
+                "material": "std/materials.mtek::Unlit",
+                "params": [
+                  {
+                    "name": "color",
+                    "type": "color",
+                    "source": {
+                      "const": {
+                        "color": [1.0, 1.0, 1.0, 1.0]
+                      }
+                    },
+                    "update": "initial",
+                    "span": {"file": 0, "start": 2096, "end": 2534}
+                  }
+                ],
+                "origin": "default",
+                "span": {"file": 0, "start": 2096, "end": 2534}
+              },
+              "body": {
+                "desc": {
+                  "kind": "dynamic",
+                  "mass": 0.1,
+                  "linearDamping": 0.0,
+                  "angularDamping": 0.05,
+                  "continuous": true
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 2196, "end": 2243}
+              },
+              "collider": {
+                "desc": {
+                  "kind": "sphere",
+                  "radius": 0.05,
+                  "sensor": false,
+                  "friction": 0.5,
+                  "restitution": 0.0
+                },
+                "origin": "written",
+                "span": {"file": 0, "start": 2252, "end": 2294}
+              }
+            }
+          ],
+          "state": [
+            {
+              "name": "vertical",
+              "symbol": "src/main.mtek::Demo.vertical",
+              "type": "f32",
+              "owner": {
+                "kind": "scene"
+              },
+              "init": {
+                "kind": "const",
+                "value": {"f32": 0.0},
+                "type": "f32",
+                "span": {"file": 0, "start": 254, "end": 257}
+              },
+              "span": {"file": 0, "start": 232, "end": 258}
+            },
+            {
+              "name": "landed",
+              "symbol": "src/main.mtek::Demo.landed",
+              "type": "bool",
+              "owner": {
+                "kind": "scene"
+              },
+              "init": {
+                "kind": "const",
+                "value": {
+                  "bool": false
+                },
+                "type": "bool",
+                "span": {"file": 0, "start": 284, "end": 289}
+              },
+              "span": {"file": 0, "start": 263, "end": 290}
+            },
+            {
+              "name": "slope",
+              "symbol": "src/main.mtek::Demo.slope",
+              "type": "f32",
+              "owner": {
+                "kind": "scene"
+              },
+              "init": {
+                "kind": "const",
+                "value": {"f32": 0.0},
+                "type": "f32",
+                "span": {"file": 0, "start": 314, "end": 317}
+              },
+              "span": {"file": 0, "start": 295, "end": 318}
+            }
+          ],
+          "behaviors": [
+            {
+              "kind": {
+                "kind": "fixedUpdate"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 1
+              },
+              "symbol": "src/main.mtek::Demo.Hero.fixed_update",
+              "locals": [
+                {
+                  "index": 0,
+                  "name": "dt",
+                  "type": "f32",
+                  "kind": "param",
+                  "span": {"file": 0, "start": 867, "end": 869}
+                }
+              ],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "if",
+                    "branches": [
+                      {
+                        "cond": {
+                          "kind": "bodyProperty",
+                          "target": {
+                            "kind": "entity",
+                            "entity": 1
+                          },
+                          "property": "grounded",
+                          "type": "bool",
+                          "span": {"file": 0, "start": 893, "end": 911}
+                        },
+                        "body": {
+                          "stmts": [
+                            {
+                              "kind": "assign",
+                              "target": {
+                                "root": {
+                                  "kind": "state",
+                                  "owner": {
+                                    "kind": "scene"
+                                  },
+                                  "name": "vertical",
+                                  "type": "f32",
+                                  "span": {"file": 0, "start": 930, "end": 938}
+                                },
+                                "steps": [],
+                                "type": "f32",
+                                "span": {"file": 0, "start": 930, "end": 938}
+                              },
+                              "op": "=",
+                              "value": {
+                                "kind": "const",
+                                "value": {"f32": 0.0},
+                                "type": "f32",
+                                "span": {"file": 0, "start": 941, "end": 944}
+                              },
+                              "span": {"file": 0, "start": 930, "end": 945}
+                            },
+                            {
+                              "kind": "assign",
+                              "target": {
+                                "root": {
+                                  "kind": "state",
+                                  "owner": {
+                                    "kind": "scene"
+                                  },
+                                  "name": "landed",
+                                  "type": "bool",
+                                  "span": {"file": 0, "start": 962, "end": 968}
+                                },
+                                "steps": [],
+                                "type": "bool",
+                                "span": {"file": 0, "start": 962, "end": 968}
+                              },
+                              "op": "=",
+                              "value": {
+                                "kind": "const",
+                                "value": {
+                                  "bool": true
+                                },
+                                "type": "bool",
+                                "span": {"file": 0, "start": 971, "end": 975}
+                              },
+                              "span": {"file": 0, "start": 962, "end": 976}
+                            },
+                            {
+                              "kind": "assign",
+                              "target": {
+                                "root": {
+                                  "kind": "state",
+                                  "owner": {
+                                    "kind": "scene"
+                                  },
+                                  "name": "slope",
+                                  "type": "f32",
+                                  "span": {"file": 0, "start": 993, "end": 998}
+                                },
+                                "steps": [],
+                                "type": "f32",
+                                "span": {"file": 0, "start": 993, "end": 998}
+                              },
+                              "op": "=",
+                              "value": {
+                                "kind": "components",
+                                "base": {
+                                  "kind": "bodyProperty",
+                                  "target": {
+                                    "kind": "entity",
+                                    "entity": 1
+                                  },
+                                  "property": "ground_normal",
+                                  "type": "vec3",
+                                  "span": {"file": 0, "start": 1001, "end": 1024}
+                                },
+                                "components": [1],
+                                "type": "f32",
+                                "span": {"file": 0, "start": 1001, "end": 1026}
+                              },
+                              "span": {"file": 0, "start": 993, "end": 1027}
+                            }
+                          ],
+                          "span": {"file": 0, "start": 912, "end": 1041}
+                        }
+                      }
+                    ],
+                    "else": {
+                      "stmts": [
+                        {
+                          "kind": "assign",
+                          "target": {
+                            "root": {
+                              "kind": "state",
+                              "owner": {
+                                "kind": "scene"
+                              },
+                              "name": "vertical",
+                              "type": "f32",
+                              "span": {"file": 0, "start": 1065, "end": 1073}
+                            },
+                            "steps": [],
+                            "type": "f32",
+                            "span": {"file": 0, "start": 1065, "end": 1073}
+                          },
+                          "op": "=",
+                          "value": {
+                            "kind": "binary",
+                            "op": "-",
+                            "lhs": {
+                              "kind": "state",
+                              "owner": {
+                                "kind": "scene"
+                              },
+                              "name": "vertical",
+                              "type": "f32",
+                              "span": {"file": 0, "start": 1076, "end": 1084}
+                            },
+                            "rhs": {
+                              "kind": "binary",
+                              "op": "*",
+                              "lhs": {
+                                "kind": "const",
+                                "value": {"f32": 9.81},
+                                "type": "f32",
+                                "span": {"file": 0, "start": 1087, "end": 1091}
+                              },
+                              "rhs": {
+                                "kind": "local",
+                                "local": 0,
+                                "name": "dt",
+                                "type": "f32",
+                                "span": {"file": 0, "start": 1094, "end": 1096}
+                              },
+                              "type": "f32",
+                              "span": {"file": 0, "start": 1087, "end": 1096}
+                            },
+                            "type": "f32",
+                            "span": {"file": 0, "start": 1076, "end": 1096}
+                          },
+                          "span": {"file": 0, "start": 1065, "end": 1097}
+                        }
+                      ],
+                      "span": {"file": 0, "start": 1047, "end": 1111}
+                    },
+                    "span": {"file": 0, "start": 890, "end": 1111}
+                  },
+                  {
+                    "kind": "expr",
+                    "expr": {
+                      "kind": "bodyCommand",
+                      "target": {
+                        "kind": "entity",
+                        "entity": 1
+                      },
+                      "command": "move_character",
+                      "args": [
+                        {
+                          "kind": "construct",
+                          "args": [
+                            {
+                              "kind": "binary",
+                              "op": "*",
+                              "lhs": {
+                                "kind": "const",
+                                "value": {"f32": 2.0},
+                                "type": "f32",
+                                "span": {"file": 0, "start": 1154, "end": 1157}
+                              },
+                              "rhs": {
+                                "kind": "local",
+                                "local": 0,
+                                "name": "dt",
+                                "type": "f32",
+                                "span": {"file": 0, "start": 1160, "end": 1162}
+                              },
+                              "type": "f32",
+                              "span": {"file": 0, "start": 1154, "end": 1162}
+                            },
+                            {
+                              "kind": "binary",
+                              "op": "*",
+                              "lhs": {
+                                "kind": "state",
+                                "owner": {
+                                  "kind": "scene"
+                                },
+                                "name": "vertical",
+                                "type": "f32",
+                                "span": {"file": 0, "start": 1164, "end": 1172}
+                              },
+                              "rhs": {
+                                "kind": "local",
+                                "local": 0,
+                                "name": "dt",
+                                "type": "f32",
+                                "span": {"file": 0, "start": 1175, "end": 1177}
+                              },
+                              "type": "f32",
+                              "span": {"file": 0, "start": 1164, "end": 1177}
+                            },
+                            {
+                              "kind": "const",
+                              "value": {"f32": 0.0},
+                              "type": "f32",
+                              "span": {"file": 0, "start": 1179, "end": 1182}
+                            }
+                          ],
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 1149, "end": 1183}
+                        },
+                        {
+                          "kind": "const",
+                          "value": {
+                            "quat": [0.0, 0.0, 0.0, 1.0]
+                          },
+                          "type": "quat",
+                          "span": {"file": 0, "start": 1185, "end": 1200}
+                        }
+                      ],
+                      "type": "()",
+                      "span": {"file": 0, "start": 1124, "end": 1201}
+                    },
+                    "span": {"file": 0, "start": 1124, "end": 1202}
+                  }
+                ],
+                "span": {"file": 0, "start": 876, "end": 1212}
+              },
+              "span": {"file": 0, "start": 854, "end": 1212}
+            },
+            {
+              "kind": {
+                "kind": "event",
+                "event": "key_down",
+                "filter": "Space"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 1
+              },
+              "symbol": "src/main.mtek::Demo.Hero.on_key_down_Space",
+              "locals": [],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "assign",
+                    "target": {
+                      "root": {
+                        "kind": "state",
+                        "owner": {
+                          "kind": "scene"
+                        },
+                        "name": "vertical",
+                        "type": "f32",
+                        "span": {"file": 0, "start": 1258, "end": 1266}
+                      },
+                      "steps": [],
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1258, "end": 1266}
+                    },
+                    "op": "=",
+                    "value": {
+                      "kind": "const",
+                      "value": {"f32": 5.0},
+                      "type": "f32",
+                      "span": {"file": 0, "start": 1269, "end": 1272}
+                    },
+                    "span": {"file": 0, "start": 1258, "end": 1273}
+                  }
+                ],
+                "span": {"file": 0, "start": 1244, "end": 1283}
+              },
+              "span": {"file": 0, "start": 1221, "end": 1283}
+            },
+            {
+              "kind": {
+                "kind": "event",
+                "event": "key_down",
+                "filter": "KeyR"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 1
+              },
+              "symbol": "src/main.mtek::Demo.Hero.on_key_down_R",
+              "locals": [],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "expr",
+                    "expr": {
+                      "kind": "bodyCommand",
+                      "target": {
+                        "kind": "entity",
+                        "entity": 1
+                      },
+                      "command": "teleport",
+                      "args": [
+                        {
+                          "kind": "const",
+                          "value": {
+                            "vec3": [0.0, 1.0, 0.0]
+                          },
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 1344, "end": 1363}
+                        },
+                        {
+                          "kind": "const",
+                          "value": {
+                            "quat": [0.0, 0.0, 0.0, 1.0]
+                          },
+                          "type": "quat",
+                          "span": {"file": 0, "start": 1365, "end": 1380}
+                        },
+                        {
+                          "kind": "const",
+                          "value": {
+                            "bool": false
+                          },
+                          "type": "bool",
+                          "span": {"file": 0, "start": 1382, "end": 1387}
+                        }
+                      ],
+                      "type": "()",
+                      "span": {"file": 0, "start": 1325, "end": 1388}
+                    },
+                    "span": {"file": 0, "start": 1325, "end": 1389}
+                  }
+                ],
+                "span": {"file": 0, "start": 1311, "end": 1399}
+              },
+              "span": {"file": 0, "start": 1292, "end": 1399}
+            },
+            {
+              "kind": {
+                "kind": "fixedUpdate"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 2
+              },
+              "symbol": "src/main.mtek::Demo.Plain.fixed_update",
+              "locals": [
+                {
+                  "index": 0,
+                  "name": "dt",
+                  "type": "f32",
+                  "kind": "param",
+                  "span": {"file": 0, "start": 1601, "end": 1603}
+                }
+              ],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "expr",
+                    "expr": {
+                      "kind": "bodyCommand",
+                      "target": {
+                        "kind": "entity",
+                        "entity": 2
+                      },
+                      "command": "move_character",
+                      "args": [
+                        {
+                          "kind": "construct",
+                          "args": [
+                            {
+                              "kind": "const",
+                              "value": {"f32": 0.0},
+                              "type": "f32",
+                              "span": {"file": 0, "start": 1655, "end": 1658}
+                            },
+                            {
+                              "kind": "binary",
+                              "op": "*",
+                              "lhs": {
+                                "kind": "const",
+                                "value": {"f32": -1.0},
+                                "type": "f32",
+                                "span": {"file": 0, "start": 1660, "end": 1664}
+                              },
+                              "rhs": {
+                                "kind": "local",
+                                "local": 0,
+                                "name": "dt",
+                                "type": "f32",
+                                "span": {"file": 0, "start": 1667, "end": 1669}
+                              },
+                              "type": "f32",
+                              "span": {"file": 0, "start": 1660, "end": 1669}
+                            },
+                            {
+                              "kind": "const",
+                              "value": {"f32": 0.0},
+                              "type": "f32",
+                              "span": {"file": 0, "start": 1671, "end": 1674}
+                            }
+                          ],
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 1650, "end": 1675}
+                        },
+                        {
+                          "kind": "entityField",
+                          "entity": 2,
+                          "field": "rotation",
+                          "type": "quat",
+                          "span": {"file": 0, "start": 1677, "end": 1690}
+                        }
+                      ],
+                      "type": "()",
+                      "span": {"file": 0, "start": 1624, "end": 1691}
+                    },
+                    "span": {"file": 0, "start": 1624, "end": 1692}
+                  }
+                ],
+                "span": {"file": 0, "start": 1610, "end": 1702}
+              },
+              "span": {"file": 0, "start": 1588, "end": 1702}
+            },
+            {
+              "kind": {
+                "kind": "fixedUpdate"
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 3
+              },
+              "symbol": "src/main.mtek::Demo.Elevator.fixed_update",
+              "locals": [
+                {
+                  "index": 0,
+                  "name": "dt",
+                  "type": "f32",
+                  "kind": "param",
+                  "span": {"file": 0, "start": 1964, "end": 1966}
+                }
+              ],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "expr",
+                    "expr": {
+                      "kind": "bodyCommand",
+                      "target": {
+                        "kind": "entity",
+                        "entity": 3
+                      },
+                      "command": "set_kinematic_target",
+                      "args": [
+                        {
+                          "kind": "construct",
+                          "args": [
+                            {
+                              "kind": "const",
+                              "value": {"f32": -4.0},
+                              "type": "f32",
+                              "span": {"file": 0, "start": 2023, "end": 2027}
+                            },
+                            {
+                              "kind": "binary",
+                              "op": "+",
+                              "lhs": {
+                                "kind": "const",
+                                "value": {"f32": 0.2},
+                                "type": "f32",
+                                "span": {"file": 0, "start": 2029, "end": 2032}
+                              },
+                              "rhs": {
+                                "kind": "builtin",
+                                "function": "sin",
+                                "args": [
+                                  {
+                                    "kind": "frame",
+                                    "member": "time",
+                                    "type": "f32",
+                                    "span": {"file": 0, "start": 2039, "end": 2049}
+                                  }
+                                ],
+                                "type": "f32",
+                                "span": {"file": 0, "start": 2035, "end": 2050}
+                              },
+                              "type": "f32",
+                              "span": {"file": 0, "start": 2029, "end": 2050}
+                            },
+                            {
+                              "kind": "const",
+                              "value": {"f32": 0.0},
+                              "type": "f32",
+                              "span": {"file": 0, "start": 2052, "end": 2055}
+                            }
+                          ],
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 2018, "end": 2056}
+                        },
+                        {
+                          "kind": "const",
+                          "value": {
+                            "quat": [0.0, 0.0, 0.0, 1.0]
+                          },
+                          "type": "quat",
+                          "span": {"file": 0, "start": 2058, "end": 2073}
+                        }
+                      ],
+                      "type": "()",
+                      "span": {"file": 0, "start": 1987, "end": 2074}
+                    },
+                    "span": {"file": 0, "start": 1987, "end": 2075}
+                  }
+                ],
+                "span": {"file": 0, "start": 1973, "end": 2085}
+              },
+              "span": {"file": 0, "start": 1951, "end": 2085}
+            },
+            {
+              "kind": {
+                "kind": "event",
+                "event": "collision_enter",
+                "filter": null
+              },
+              "owner": {
+                "kind": "entity",
+                "index": 4
+              },
+              "symbol": "src/main.mtek::Demo.Puck.on_collision_enter",
+              "locals": [
+                {
+                  "index": 0,
+                  "name": "other",
+                  "type": "entity_ref",
+                  "kind": "param",
+                  "span": {"file": 0, "start": 2322, "end": 2327}
+                },
+                {
+                  "index": 1,
+                  "name": "up",
+                  "type": "bool",
+                  "kind": "let",
+                  "span": {"file": 0, "start": 2436, "end": 2438}
+                },
+                {
+                  "index": 2,
+                  "name": "normal",
+                  "type": "vec3",
+                  "kind": "let",
+                  "span": {"file": 0, "start": 2478, "end": 2484}
+                }
+              ],
+              "body": {
+                "stmts": [
+                  {
+                    "kind": "expr",
+                    "expr": {
+                      "kind": "bodyCommand",
+                      "target": {
+                        "kind": "ref",
+                        "target": {
+                          "kind": "local",
+                          "local": 0,
+                          "name": "other",
+                          "type": "entity_ref",
+                          "span": {"file": 0, "start": 2355, "end": 2360}
+                        }
+                      },
+                      "command": "move_character",
+                      "args": [
+                        {
+                          "kind": "const",
+                          "value": {
+                            "vec3": [0.0, 0.0, 0.1]
+                          },
+                          "type": "vec3",
+                          "span": {"file": 0, "start": 2381, "end": 2400}
+                        },
+                        {
+                          "kind": "const",
+                          "value": {
+                            "quat": [0.0, 0.0, 0.0, 1.0]
+                          },
+                          "type": "quat",
+                          "span": {"file": 0, "start": 2402, "end": 2417}
+                        }
+                      ],
+                      "type": "()",
+                      "span": {"file": 0, "start": 2355, "end": 2418}
+                    },
+                    "span": {"file": 0, "start": 2355, "end": 2419}
+                  },
+                  {
+                    "kind": "let",
+                    "local": 1,
+                    "value": {
+                      "kind": "bodyProperty",
+                      "target": {
+                        "kind": "ref",
+                        "target": {
+                          "kind": "local",
+                          "local": 0,
+                          "name": "other",
+                          "type": "entity_ref",
+                          "span": {"file": 0, "start": 2441, "end": 2446}
+                        }
+                      },
+                      "property": "grounded",
+                      "type": "bool",
+                      "span": {"file": 0, "start": 2441, "end": 2460}
+                    },
+                    "span": {"file": 0, "start": 2432, "end": 2461}
+                  },
+                  {
+                    "kind": "let",
+                    "local": 2,
+                    "value": {
+                      "kind": "bodyProperty",
+                      "target": {
+                        "kind": "ref",
+                        "target": {
+                          "kind": "local",
+                          "local": 0,
+                          "name": "other",
+                          "type": "entity_ref",
+                          "span": {"file": 0, "start": 2493, "end": 2498}
+                        }
+                      },
+                      "property": "ground_normal",
+                      "type": "vec3",
+                      "span": {"file": 0, "start": 2493, "end": 2517}
+                    },
+                    "span": {"file": 0, "start": 2474, "end": 2518}
+                  }
+                ],
+                "span": {"file": 0, "start": 2341, "end": 2528}
+              },
+              "span": {"file": 0, "start": 2303, "end": 2528}
+            }
+          ],
+          "bindings": []
+        }
+      ]
+    },
+    {
+      "path": "std/materials.mtek",
+      "file": 1,
+      "span": {"file": 1, "start": 0, "end": 3366},
+      "items": [
+        {
+          "kind": "material",
+          "name": "Unlit",
+          "symbol": "std/materials.mtek::Unlit",
+          "params": [
+            {
+              "name": "color",
+              "type": "color",
+              "default": {
+                "color": [1.0, 1.0, 1.0, 1.0]
+              },
+              "span": {"file": 1, "start": 276, "end": 305}
+            }
+          ],
+          "layout": {
+            "id": "material:std/materials.mtek::Unlit",
+            "wgslStruct": "MtekParams_2b212d15_Unlit",
+            "size": 16,
+            "align": 16,
+            "root": {
+              "kind": "struct",
+              "name": "std/materials.mtek::Unlit",
+              "offset": 0,
+              "size": 16,
+              "align": 16,
+              "members": [
+                {
+                  "name": "color",
+                  "mtekType": "color",
+                  "node": {
+                    "kind": "vector",
+                    "offset": 0,
+                    "size": 16,
+                    "align": 16,
+                    "scalar": "f32",
+                    "components": 4
+                  }
+                }
+              ]
+            }
+          },
+          "fragment": {
+            "symbol": "std/materials.mtek::Unlit.fragment",
+            "surfaceInputs": [],
+            "result": "color",
+            "locals": [
+              {
+                "index": 0,
+                "name": "surface",
+                "type": "SurfaceInput",
+                "kind": "param",
+                "span": {"file": 1, "start": 319, "end": 326}
+              }
+            ],
+            "body": {
+              "stmts": [
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "param",
+                    "param": 0,
+                    "name": "color",
+                    "type": "color",
+                    "span": {"file": 1, "start": 360, "end": 365}
+                  },
+                  "span": {"file": 1, "start": 353, "end": 366}
+                }
+              ],
+              "span": {"file": 1, "start": 351, "end": 368}
+            },
+            "span": {"file": 1, "start": 310, "end": 368}
+          },
+          "span": {"file": 1, "start": 255, "end": 370}
+        },
+        {
+          "kind": "material",
+          "name": "Pbr",
+          "symbol": "std/materials.mtek::Pbr",
+          "params": [
+            {
+              "name": "base_color",
+              "type": "color",
+              "default": {
+                "color": [1.0, 1.0, 1.0, 1.0]
+              },
+              "span": {"file": 1, "start": 398, "end": 432}
+            },
+            {
+              "name": "metallic",
+              "type": "f32",
+              "default": {"f32": 0.0},
+              "span": {"file": 1, "start": 437, "end": 463}
+            },
+            {
+              "name": "roughness",
+              "type": "f32",
+              "default": {"f32": 0.5},
+              "span": {"file": 1, "start": 468, "end": 495}
+            },
+            {
+              "name": "base_color_texture",
+              "type": "texture",
+              "default": {
+                "texture": "texture.white"
+              },
+              "span": {"file": 1, "start": 500, "end": 552}
+            },
+            {
+              "name": "base_color_sampler",
+              "type": "sampler",
+              "default": {
+                "sampler": "sampler.linear_repeat"
+              },
+              "span": {"file": 1, "start": 557, "end": 617}
+            },
+            {
+              "name": "metallic_roughness_texture",
+              "type": "texture",
+              "default": {
+                "texture": "texture.white"
+              },
+              "span": {"file": 1, "start": 622, "end": 682}
+            },
+            {
+              "name": "metallic_roughness_sampler",
+              "type": "sampler",
+              "default": {
+                "sampler": "sampler.linear_repeat"
+              },
+              "span": {"file": 1, "start": 687, "end": 755}
+            },
+            {
+              "name": "normal_texture",
+              "type": "texture",
+              "default": {
+                "texture": "texture.white"
+              },
+              "span": {"file": 1, "start": 760, "end": 808}
+            },
+            {
+              "name": "normal_sampler",
+              "type": "sampler",
+              "default": {
+                "sampler": "sampler.linear_repeat"
+              },
+              "span": {"file": 1, "start": 813, "end": 869}
+            },
+            {
+              "name": "occlusion_texture",
+              "type": "texture",
+              "default": {
+                "texture": "texture.white"
+              },
+              "span": {"file": 1, "start": 874, "end": 925}
+            },
+            {
+              "name": "occlusion_sampler",
+              "type": "sampler",
+              "default": {
+                "sampler": "sampler.linear_repeat"
+              },
+              "span": {"file": 1, "start": 930, "end": 989}
+            },
+            {
+              "name": "emissive_texture",
+              "type": "texture",
+              "default": {
+                "texture": "texture.white"
+              },
+              "span": {"file": 1, "start": 994, "end": 1044}
+            },
+            {
+              "name": "emissive_sampler",
+              "type": "sampler",
+              "default": {
+                "sampler": "sampler.linear_repeat"
+              },
+              "span": {"file": 1, "start": 1049, "end": 1107}
+            },
+            {
+              "name": "normal_scale",
+              "type": "f32",
+              "default": {"f32": 0.0},
+              "span": {"file": 1, "start": 1280, "end": 1310}
+            },
+            {
+              "name": "occlusion_strength",
+              "type": "f32",
+              "default": {"f32": 1.0},
+              "span": {"file": 1, "start": 1315, "end": 1351}
+            },
+            {
+              "name": "emissive",
+              "type": "color",
+              "default": {
+                "color": [0.0, 0.0, 0.0, 1.0]
+              },
+              "span": {"file": 1, "start": 1356, "end": 1388}
+            }
+          ],
+          "layout": {
+            "id": "material:std/materials.mtek::Pbr",
+            "wgslStruct": "MtekParams_2b212d15_Pbr",
+            "size": 48,
+            "align": 16,
+            "root": {
+              "kind": "struct",
+              "name": "std/materials.mtek::Pbr",
+              "offset": 0,
+              "size": 48,
+              "align": 16,
+              "members": [
+                {
+                  "name": "base_color",
+                  "mtekType": "color",
+                  "node": {
+                    "kind": "vector",
+                    "offset": 0,
+                    "size": 16,
+                    "align": 16,
+                    "scalar": "f32",
+                    "components": 4
+                  }
+                },
+                {
+                  "name": "metallic",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 16,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                },
+                {
+                  "name": "roughness",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 20,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                },
+                {
+                  "name": "normal_scale",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 24,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                },
+                {
+                  "name": "occlusion_strength",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 28,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                },
+                {
+                  "name": "emissive",
+                  "mtekType": "color",
+                  "node": {
+                    "kind": "vector",
+                    "offset": 32,
+                    "size": 16,
+                    "align": 16,
+                    "scalar": "f32",
+                    "components": 4
+                  }
+                }
+              ]
+            }
+          },
+          "fragment": {
+            "symbol": "std/materials.mtek::Pbr.fragment",
+            "surfaceInputs": [
+              "world_position",
+              "world_normal",
+              "uv",
+              "world_tangent"
+            ],
+            "result": "color",
+            "locals": [
+              {
+                "index": 0,
+                "name": "surface",
+                "type": "SurfaceInput",
+                "kind": "param",
+                "span": {"file": 1, "start": 1402, "end": 1409}
+              },
+              {
+                "index": 1,
+                "name": "texel",
+                "type": "vec4",
+                "kind": "let",
+                "span": {"file": 1, "start": 1448, "end": 1453}
+              },
+              {
+                "index": 2,
+                "name": "albedo",
+                "type": "color",
+                "kind": "let",
+                "span": {"file": 1, "start": 1532, "end": 1538}
+              },
+              {
+                "index": 3,
+                "name": "mr",
+                "type": "vec4",
+                "kind": "let",
+                "span": {"file": 1, "start": 1609, "end": 1611}
+              },
+              {
+                "index": 4,
+                "name": "normal",
+                "type": "vec3",
+                "kind": "let",
+                "span": {"file": 1, "start": 1706, "end": 1712}
+              },
+              {
+                "index": 5,
+                "name": "ao",
+                "type": "f32",
+                "kind": "let",
+                "span": {"file": 1, "start": 1787, "end": 1789}
+              },
+              {
+                "index": 6,
+                "name": "emissive_texel",
+                "type": "vec3",
+                "kind": "let",
+                "span": {"file": 1, "start": 1868, "end": 1882}
+              },
+              {
+                "index": 7,
+                "name": "emission",
+                "type": "vec3",
+                "kind": "let",
+                "span": {"file": 1, "start": 1961, "end": 1969}
+              }
+            ],
+            "body": {
+              "stmts": [
+                {
+                  "kind": "let",
+                  "local": 1,
+                  "value": {
+                    "kind": "builtin",
+                    "function": "sample_mip",
+                    "args": [
+                      {
+                        "kind": "param",
+                        "param": 3,
+                        "name": "base_color_texture",
+                        "type": "texture",
+                        "span": {"file": 1, "start": 1467, "end": 1485}
+                      },
+                      {
+                        "kind": "param",
+                        "param": 4,
+                        "name": "base_color_sampler",
+                        "type": "sampler",
+                        "span": {"file": 1, "start": 1487, "end": 1505}
+                      },
+                      {
+                        "kind": "field",
+                        "base": {
+                          "kind": "local",
+                          "local": 0,
+                          "name": "surface",
+                          "type": "SurfaceInput",
+                          "span": {"file": 1, "start": 1507, "end": 1514}
+                        },
+                        "field": "uv",
+                        "index": 3,
+                        "type": "vec2",
+                        "span": {"file": 1, "start": 1507, "end": 1517}
+                      }
+                    ],
+                    "type": "vec4",
+                    "span": {"file": 1, "start": 1456, "end": 1518}
+                  },
+                  "span": {"file": 1, "start": 1444, "end": 1519}
+                },
+                {
+                  "kind": "let",
+                  "local": 2,
+                  "value": {
+                    "kind": "builtin",
+                    "function": "color.linear",
+                    "args": [
+                      {
+                        "kind": "binary",
+                        "op": "*",
+                        "lhs": {
+                          "kind": "components",
+                          "base": {
+                            "kind": "param",
+                            "param": 0,
+                            "name": "base_color",
+                            "type": "color",
+                            "span": {"file": 1, "start": 1554, "end": 1564}
+                          },
+                          "components": [0, 1, 2],
+                          "type": "vec3",
+                          "span": {"file": 1, "start": 1554, "end": 1568}
+                        },
+                        "rhs": {
+                          "kind": "components",
+                          "base": {
+                            "kind": "local",
+                            "local": 1,
+                            "name": "texel",
+                            "type": "vec4",
+                            "span": {"file": 1, "start": 1571, "end": 1576}
+                          },
+                          "components": [0, 1, 2],
+                          "type": "vec3",
+                          "span": {"file": 1, "start": 1571, "end": 1580}
+                        },
+                        "type": "vec3",
+                        "span": {"file": 1, "start": 1554, "end": 1580}
+                      },
+                      {
+                        "kind": "components",
+                        "base": {
+                          "kind": "param",
+                          "param": 0,
+                          "name": "base_color",
+                          "type": "color",
+                          "span": {"file": 1, "start": 1582, "end": 1592}
+                        },
+                        "components": [3],
+                        "type": "f32",
+                        "span": {"file": 1, "start": 1582, "end": 1594}
+                      }
+                    ],
+                    "type": "color",
+                    "span": {"file": 1, "start": 1541, "end": 1595}
+                  },
+                  "span": {"file": 1, "start": 1528, "end": 1596}
+                },
+                {
+                  "kind": "let",
+                  "local": 3,
+                  "value": {
+                    "kind": "builtin",
+                    "function": "sample_mip",
+                    "args": [
+                      {
+                        "kind": "param",
+                        "param": 5,
+                        "name": "metallic_roughness_texture",
+                        "type": "texture",
+                        "span": {"file": 1, "start": 1625, "end": 1651}
+                      },
+                      {
+                        "kind": "param",
+                        "param": 6,
+                        "name": "metallic_roughness_sampler",
+                        "type": "sampler",
+                        "span": {"file": 1, "start": 1653, "end": 1679}
+                      },
+                      {
+                        "kind": "field",
+                        "base": {
+                          "kind": "local",
+                          "local": 0,
+                          "name": "surface",
+                          "type": "SurfaceInput",
+                          "span": {"file": 1, "start": 1681, "end": 1688}
+                        },
+                        "field": "uv",
+                        "index": 3,
+                        "type": "vec2",
+                        "span": {"file": 1, "start": 1681, "end": 1691}
+                      }
+                    ],
+                    "type": "vec4",
+                    "span": {"file": 1, "start": 1614, "end": 1692}
+                  },
+                  "span": {"file": 1, "start": 1605, "end": 1693}
+                },
+                {
+                  "kind": "let",
+                  "local": 4,
+                  "value": {
+                    "kind": "components",
+                    "base": {
+                      "kind": "builtin",
+                      "function": "sample_mip",
+                      "args": [
+                        {
+                          "kind": "param",
+                          "param": 7,
+                          "name": "normal_texture",
+                          "type": "texture",
+                          "span": {"file": 1, "start": 1726, "end": 1740}
+                        },
+                        {
+                          "kind": "param",
+                          "param": 8,
+                          "name": "normal_sampler",
+                          "type": "sampler",
+                          "span": {"file": 1, "start": 1742, "end": 1756}
+                        },
+                        {
+                          "kind": "field",
+                          "base": {
+                            "kind": "local",
+                            "local": 0,
+                            "name": "surface",
+                            "type": "SurfaceInput",
+                            "span": {"file": 1, "start": 1758, "end": 1765}
+                          },
+                          "field": "uv",
+                          "index": 3,
+                          "type": "vec2",
+                          "span": {"file": 1, "start": 1758, "end": 1768}
+                        }
+                      ],
+                      "type": "vec4",
+                      "span": {"file": 1, "start": 1715, "end": 1769}
+                    },
+                    "components": [0, 1, 2],
+                    "type": "vec3",
+                    "span": {"file": 1, "start": 1715, "end": 1773}
+                  },
+                  "span": {"file": 1, "start": 1702, "end": 1774}
+                },
+                {
+                  "kind": "let",
+                  "local": 5,
+                  "value": {
+                    "kind": "components",
+                    "base": {
+                      "kind": "builtin",
+                      "function": "sample_mip",
+                      "args": [
+                        {
+                          "kind": "param",
+                          "param": 9,
+                          "name": "occlusion_texture",
+                          "type": "texture",
+                          "span": {"file": 1, "start": 1803, "end": 1820}
+                        },
+                        {
+                          "kind": "param",
+                          "param": 10,
+                          "name": "occlusion_sampler",
+                          "type": "sampler",
+                          "span": {"file": 1, "start": 1822, "end": 1839}
+                        },
+                        {
+                          "kind": "field",
+                          "base": {
+                            "kind": "local",
+                            "local": 0,
+                            "name": "surface",
+                            "type": "SurfaceInput",
+                            "span": {"file": 1, "start": 1841, "end": 1848}
+                          },
+                          "field": "uv",
+                          "index": 3,
+                          "type": "vec2",
+                          "span": {"file": 1, "start": 1841, "end": 1851}
+                        }
+                      ],
+                      "type": "vec4",
+                      "span": {"file": 1, "start": 1792, "end": 1852}
+                    },
+                    "components": [0],
+                    "type": "f32",
+                    "span": {"file": 1, "start": 1792, "end": 1854}
+                  },
+                  "span": {"file": 1, "start": 1783, "end": 1855}
+                },
+                {
+                  "kind": "let",
+                  "local": 6,
+                  "value": {
+                    "kind": "components",
+                    "base": {
+                      "kind": "builtin",
+                      "function": "sample_mip",
+                      "args": [
+                        {
+                          "kind": "param",
+                          "param": 11,
+                          "name": "emissive_texture",
+                          "type": "texture",
+                          "span": {"file": 1, "start": 1896, "end": 1912}
+                        },
+                        {
+                          "kind": "param",
+                          "param": 12,
+                          "name": "emissive_sampler",
+                          "type": "sampler",
+                          "span": {"file": 1, "start": 1914, "end": 1930}
+                        },
+                        {
+                          "kind": "field",
+                          "base": {
+                            "kind": "local",
+                            "local": 0,
+                            "name": "surface",
+                            "type": "SurfaceInput",
+                            "span": {"file": 1, "start": 1932, "end": 1939}
+                          },
+                          "field": "uv",
+                          "index": 3,
+                          "type": "vec2",
+                          "span": {"file": 1, "start": 1932, "end": 1942}
+                        }
+                      ],
+                      "type": "vec4",
+                      "span": {"file": 1, "start": 1885, "end": 1943}
+                    },
+                    "components": [0, 1, 2],
+                    "type": "vec3",
+                    "span": {"file": 1, "start": 1885, "end": 1947}
+                  },
+                  "span": {"file": 1, "start": 1864, "end": 1948}
+                },
+                {
+                  "kind": "let",
+                  "local": 7,
+                  "value": {
+                    "kind": "binary",
+                    "op": "*",
+                    "lhs": {
+                      "kind": "components",
+                      "base": {
+                        "kind": "param",
+                        "param": 15,
+                        "name": "emissive",
+                        "type": "color",
+                        "span": {"file": 1, "start": 1972, "end": 1980}
+                      },
+                      "components": [0, 1, 2],
+                      "type": "vec3",
+                      "span": {"file": 1, "start": 1972, "end": 1984}
+                    },
+                    "rhs": {
+                      "kind": "local",
+                      "local": 6,
+                      "name": "emissive_texel",
+                      "type": "vec3",
+                      "span": {"file": 1, "start": 1987, "end": 2001}
+                    },
+                    "type": "vec3",
+                    "span": {"file": 1, "start": 1972, "end": 2001}
+                  },
+                  "span": {"file": 1, "start": 1957, "end": 2002}
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "builtin",
+                    "function": "lighting.pbr_mapped",
+                    "args": [
+                      {
+                        "kind": "local",
+                        "local": 0,
+                        "name": "surface",
+                        "type": "SurfaceInput",
+                        "span": {"file": 1, "start": 2038, "end": 2045}
+                      },
+                      {
+                        "kind": "local",
+                        "local": 2,
+                        "name": "albedo",
+                        "type": "color",
+                        "span": {"file": 1, "start": 2047, "end": 2053}
+                      },
+                      {
+                        "kind": "binary",
+                        "op": "*",
+                        "lhs": {
+                          "kind": "param",
+                          "param": 1,
+                          "name": "metallic",
+                          "type": "f32",
+                          "span": {"file": 1, "start": 2055, "end": 2063}
+                        },
+                        "rhs": {
+                          "kind": "components",
+                          "base": {
+                            "kind": "local",
+                            "local": 3,
+                            "name": "mr",
+                            "type": "vec4",
+                            "span": {"file": 1, "start": 2066, "end": 2068}
+                          },
+                          "components": [2],
+                          "type": "f32",
+                          "span": {"file": 1, "start": 2066, "end": 2070}
+                        },
+                        "type": "f32",
+                        "span": {"file": 1, "start": 2055, "end": 2070}
+                      },
+                      {
+                        "kind": "binary",
+                        "op": "*",
+                        "lhs": {
+                          "kind": "param",
+                          "param": 2,
+                          "name": "roughness",
+                          "type": "f32",
+                          "span": {"file": 1, "start": 2072, "end": 2081}
+                        },
+                        "rhs": {
+                          "kind": "components",
+                          "base": {
+                            "kind": "local",
+                            "local": 3,
+                            "name": "mr",
+                            "type": "vec4",
+                            "span": {"file": 1, "start": 2084, "end": 2086}
+                          },
+                          "components": [1],
+                          "type": "f32",
+                          "span": {"file": 1, "start": 2084, "end": 2088}
+                        },
+                        "type": "f32",
+                        "span": {"file": 1, "start": 2072, "end": 2088}
+                      },
+                      {
+                        "kind": "local",
+                        "local": 4,
+                        "name": "normal",
+                        "type": "vec3",
+                        "span": {"file": 1, "start": 2090, "end": 2096}
+                      },
+                      {
+                        "kind": "param",
+                        "param": 13,
+                        "name": "normal_scale",
+                        "type": "f32",
+                        "span": {"file": 1, "start": 2098, "end": 2110}
+                      },
+                      {
+                        "kind": "binary",
+                        "op": "+",
+                        "lhs": {
+                          "kind": "const",
+                          "value": {"f32": 1.0},
+                          "type": "f32",
+                          "span": {"file": 1, "start": 2112, "end": 2115}
+                        },
+                        "rhs": {
+                          "kind": "binary",
+                          "op": "*",
+                          "lhs": {
+                            "kind": "builtin",
+                            "function": "clamp",
+                            "args": [
+                              {
+                                "kind": "param",
+                                "param": 14,
+                                "name": "occlusion_strength",
+                                "type": "f32",
+                                "span": {"file": 1, "start": 2124, "end": 2142}
+                              },
+                              {
+                                "kind": "const",
+                                "value": {"f32": 0.0},
+                                "type": "f32",
+                                "span": {"file": 1, "start": 2144, "end": 2147}
+                              },
+                              {
+                                "kind": "const",
+                                "value": {"f32": 1.0},
+                                "type": "f32",
+                                "span": {"file": 1, "start": 2149, "end": 2152}
+                              }
+                            ],
+                            "type": "f32",
+                            "span": {"file": 1, "start": 2118, "end": 2153}
+                          },
+                          "rhs": {
+                            "kind": "binary",
+                            "op": "-",
+                            "lhs": {
+                              "kind": "local",
+                              "local": 5,
+                              "name": "ao",
+                              "type": "f32",
+                              "span": {"file": 1, "start": 2157, "end": 2159}
+                            },
+                            "rhs": {
+                              "kind": "const",
+                              "value": {"f32": 1.0},
+                              "type": "f32",
+                              "span": {"file": 1, "start": 2162, "end": 2165}
+                            },
+                            "type": "f32",
+                            "span": {"file": 1, "start": 2157, "end": 2165}
+                          },
+                          "type": "f32",
+                          "span": {"file": 1, "start": 2118, "end": 2166}
+                        },
+                        "type": "f32",
+                        "span": {"file": 1, "start": 2112, "end": 2166}
+                      },
+                      {
+                        "kind": "local",
+                        "local": 7,
+                        "name": "emission",
+                        "type": "vec3",
+                        "span": {"file": 1, "start": 2168, "end": 2176}
+                      }
+                    ],
+                    "type": "color",
+                    "span": {"file": 1, "start": 2018, "end": 2177}
+                  },
+                  "span": {"file": 1, "start": 2011, "end": 2178}
+                }
+              ],
+              "span": {"file": 1, "start": 1434, "end": 2184}
+            },
+            "span": {"file": 1, "start": 1393, "end": 2184}
+          },
+          "span": {"file": 1, "start": 379, "end": 2186}
+        },
+        {
+          "kind": "material",
+          "name": "Sprite",
+          "symbol": "std/materials.mtek::Sprite",
+          "params": [
+            {
+              "name": "sheet",
+              "type": "texture",
+              "default": {
+                "texture": "texture.white"
+              },
+              "span": {"file": 1, "start": 2483, "end": 2522}
+            },
+            {
+              "name": "sheet_sampler",
+              "type": "sampler",
+              "default": {
+                "sampler": "sampler.nearest_clamp"
+              },
+              "span": {"file": 1, "start": 2527, "end": 2582}
+            },
+            {
+              "name": "tint",
+              "type": "color",
+              "default": {
+                "color": [1.0, 1.0, 1.0, 1.0]
+              },
+              "span": {"file": 1, "start": 2587, "end": 2615}
+            },
+            {
+              "name": "cell",
+              "type": "f32",
+              "default": {"f32": 0.0},
+              "span": {"file": 1, "start": 2620, "end": 2642}
+            },
+            {
+              "name": "columns",
+              "type": "f32",
+              "default": {"f32": 1.0},
+              "span": {"file": 1, "start": 2647, "end": 2672}
+            },
+            {
+              "name": "rows",
+              "type": "f32",
+              "default": {"f32": 1.0},
+              "span": {"file": 1, "start": 2677, "end": 2699}
+            }
+          ],
+          "layout": {
+            "id": "material:std/materials.mtek::Sprite",
+            "wgslStruct": "MtekParams_2b212d15_Sprite",
+            "size": 32,
+            "align": 16,
+            "root": {
+              "kind": "struct",
+              "name": "std/materials.mtek::Sprite",
+              "offset": 0,
+              "size": 32,
+              "align": 16,
+              "members": [
+                {
+                  "name": "tint",
+                  "mtekType": "color",
+                  "node": {
+                    "kind": "vector",
+                    "offset": 0,
+                    "size": 16,
+                    "align": 16,
+                    "scalar": "f32",
+                    "components": 4
+                  }
+                },
+                {
+                  "name": "cell",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 16,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                },
+                {
+                  "name": "columns",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 20,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                },
+                {
+                  "name": "rows",
+                  "mtekType": "f32",
+                  "node": {
+                    "kind": "scalar",
+                    "offset": 24,
+                    "size": 4,
+                    "align": 4,
+                    "scalar": "f32"
+                  }
+                }
+              ]
+            }
+          },
+          "fragment": {
+            "symbol": "std/materials.mtek::Sprite.fragment",
+            "surfaceInputs": [
+              "uv"
+            ],
+            "result": "color",
+            "locals": [
+              {
+                "index": 0,
+                "name": "surface",
+                "type": "SurfaceInput",
+                "kind": "param",
+                "span": {"file": 1, "start": 2713, "end": 2720}
+              },
+              {
+                "index": 1,
+                "name": "cols",
+                "type": "f32",
+                "kind": "let",
+                "span": {"file": 1, "start": 2876, "end": 2880}
+              },
+              {
+                "index": 2,
+                "name": "rws",
+                "type": "f32",
+                "kind": "let",
+                "span": {"file": 1, "start": 2929, "end": 2932}
+              },
+              {
+                "index": 3,
+                "name": "count",
+                "type": "f32",
+                "kind": "let",
+                "span": {"file": 1, "start": 2978, "end": 2983}
+              },
+              {
+                "index": 4,
+                "name": "index",
+                "type": "f32",
+                "kind": "let",
+                "span": {"file": 1, "start": 3010, "end": 3015}
+              },
+              {
+                "index": 5,
+                "name": "row",
+                "type": "f32",
+                "kind": "let",
+                "span": {"file": 1, "start": 3098, "end": 3101}
+              },
+              {
+                "index": 6,
+                "name": "column",
+                "type": "f32",
+                "kind": "let",
+                "span": {"file": 1, "start": 3137, "end": 3143}
+              },
+              {
+                "index": 7,
+                "name": "uv",
+                "type": "vec2",
+                "kind": "let",
+                "span": {"file": 1, "start": 3178, "end": 3180}
+              },
+              {
+                "index": 8,
+                "name": "texel",
+                "type": "vec4",
+                "kind": "let",
+                "span": {"file": 1, "start": 3247, "end": 3252}
+              }
+            ],
+            "body": {
+              "stmts": [
+                {
+                  "kind": "let",
+                  "local": 1,
+                  "value": {
+                    "kind": "builtin",
+                    "function": "clamp",
+                    "args": [
+                      {
+                        "kind": "builtin",
+                        "function": "floor",
+                        "args": [
+                          {
+                            "kind": "param",
+                            "param": 4,
+                            "name": "columns",
+                            "type": "f32",
+                            "span": {"file": 1, "start": 2895, "end": 2902}
+                          }
+                        ],
+                        "type": "f32",
+                        "span": {"file": 1, "start": 2889, "end": 2903}
+                      },
+                      {
+                        "kind": "const",
+                        "value": {"f32": 1.0},
+                        "type": "f32",
+                        "span": {"file": 1, "start": 2905, "end": 2908}
+                      },
+                      {
+                        "kind": "const",
+                        "value": {"f32": 64.0},
+                        "type": "f32",
+                        "span": {"file": 1, "start": 2910, "end": 2914}
+                      }
+                    ],
+                    "type": "f32",
+                    "span": {"file": 1, "start": 2883, "end": 2915}
+                  },
+                  "span": {"file": 1, "start": 2872, "end": 2916}
+                },
+                {
+                  "kind": "let",
+                  "local": 2,
+                  "value": {
+                    "kind": "builtin",
+                    "function": "clamp",
+                    "args": [
+                      {
+                        "kind": "builtin",
+                        "function": "floor",
+                        "args": [
+                          {
+                            "kind": "param",
+                            "param": 5,
+                            "name": "rows",
+                            "type": "f32",
+                            "span": {"file": 1, "start": 2947, "end": 2951}
+                          }
+                        ],
+                        "type": "f32",
+                        "span": {"file": 1, "start": 2941, "end": 2952}
+                      },
+                      {
+                        "kind": "const",
+                        "value": {"f32": 1.0},
+                        "type": "f32",
+                        "span": {"file": 1, "start": 2954, "end": 2957}
+                      },
+                      {
+                        "kind": "const",
+                        "value": {"f32": 64.0},
+                        "type": "f32",
+                        "span": {"file": 1, "start": 2959, "end": 2963}
+                      }
+                    ],
+                    "type": "f32",
+                    "span": {"file": 1, "start": 2935, "end": 2964}
+                  },
+                  "span": {"file": 1, "start": 2925, "end": 2965}
+                },
+                {
+                  "kind": "let",
+                  "local": 3,
+                  "value": {
+                    "kind": "binary",
+                    "op": "*",
+                    "lhs": {
+                      "kind": "local",
+                      "local": 1,
+                      "name": "cols",
+                      "type": "f32",
+                      "span": {"file": 1, "start": 2986, "end": 2990}
+                    },
+                    "rhs": {
+                      "kind": "local",
+                      "local": 2,
+                      "name": "rws",
+                      "type": "f32",
+                      "span": {"file": 1, "start": 2993, "end": 2996}
+                    },
+                    "type": "f32",
+                    "span": {"file": 1, "start": 2986, "end": 2996}
+                  },
+                  "span": {"file": 1, "start": 2974, "end": 2997}
+                },
+                {
+                  "kind": "let",
+                  "local": 4,
+                  "value": {
+                    "kind": "builtin",
+                    "function": "clamp",
+                    "args": [
+                      {
+                        "kind": "builtin",
+                        "function": "floor",
+                        "args": [
+                          {
+                            "kind": "binary",
+                            "op": "-",
+                            "lhs": {
+                              "kind": "param",
+                              "param": 3,
+                              "name": "cell",
+                              "type": "f32",
+                              "span": {"file": 1, "start": 3030, "end": 3034}
+                            },
+                            "rhs": {
+                              "kind": "binary",
+                              "op": "*",
+                              "lhs": {
+                                "kind": "local",
+                                "local": 3,
+                                "name": "count",
+                                "type": "f32",
+                                "span": {"file": 1, "start": 3037, "end": 3042}
+                              },
+                              "rhs": {
+                                "kind": "builtin",
+                                "function": "floor",
+                                "args": [
+                                  {
+                                    "kind": "binary",
+                                    "op": "/",
+                                    "lhs": {
+                                      "kind": "param",
+                                      "param": 3,
+                                      "name": "cell",
+                                      "type": "f32",
+                                      "span": {"file": 1, "start": 3051, "end": 3055}
+                                    },
+                                    "rhs": {
+                                      "kind": "local",
+                                      "local": 3,
+                                      "name": "count",
+                                      "type": "f32",
+                                      "span": {"file": 1, "start": 3058, "end": 3063}
+                                    },
+                                    "type": "f32",
+                                    "span": {"file": 1, "start": 3051, "end": 3063}
+                                  }
+                                ],
+                                "type": "f32",
+                                "span": {"file": 1, "start": 3045, "end": 3064}
+                              },
+                              "type": "f32",
+                              "span": {"file": 1, "start": 3037, "end": 3064}
+                            },
+                            "type": "f32",
+                            "span": {"file": 1, "start": 3030, "end": 3064}
+                          }
+                        ],
+                        "type": "f32",
+                        "span": {"file": 1, "start": 3024, "end": 3065}
+                      },
+                      {
+                        "kind": "const",
+                        "value": {"f32": 0.0},
+                        "type": "f32",
+                        "span": {"file": 1, "start": 3067, "end": 3070}
+                      },
+                      {
+                        "kind": "binary",
+                        "op": "-",
+                        "lhs": {
+                          "kind": "local",
+                          "local": 3,
+                          "name": "count",
+                          "type": "f32",
+                          "span": {"file": 1, "start": 3072, "end": 3077}
+                        },
+                        "rhs": {
+                          "kind": "const",
+                          "value": {"f32": 1.0},
+                          "type": "f32",
+                          "span": {"file": 1, "start": 3080, "end": 3083}
+                        },
+                        "type": "f32",
+                        "span": {"file": 1, "start": 3072, "end": 3083}
+                      }
+                    ],
+                    "type": "f32",
+                    "span": {"file": 1, "start": 3018, "end": 3084}
+                  },
+                  "span": {"file": 1, "start": 3006, "end": 3085}
+                },
+                {
+                  "kind": "let",
+                  "local": 5,
+                  "value": {
+                    "kind": "builtin",
+                    "function": "floor",
+                    "args": [
+                      {
+                        "kind": "binary",
+                        "op": "/",
+                        "lhs": {
+                          "kind": "local",
+                          "local": 4,
+                          "name": "index",
+                          "type": "f32",
+                          "span": {"file": 1, "start": 3110, "end": 3115}
+                        },
+                        "rhs": {
+                          "kind": "local",
+                          "local": 1,
+                          "name": "cols",
+                          "type": "f32",
+                          "span": {"file": 1, "start": 3118, "end": 3122}
+                        },
+                        "type": "f32",
+                        "span": {"file": 1, "start": 3110, "end": 3122}
+                      }
+                    ],
+                    "type": "f32",
+                    "span": {"file": 1, "start": 3104, "end": 3123}
+                  },
+                  "span": {"file": 1, "start": 3094, "end": 3124}
+                },
+                {
+                  "kind": "let",
+                  "local": 6,
+                  "value": {
+                    "kind": "binary",
+                    "op": "-",
+                    "lhs": {
+                      "kind": "local",
+                      "local": 4,
+                      "name": "index",
+                      "type": "f32",
+                      "span": {"file": 1, "start": 3146, "end": 3151}
+                    },
+                    "rhs": {
+                      "kind": "binary",
+                      "op": "*",
+                      "lhs": {
+                        "kind": "local",
+                        "local": 5,
+                        "name": "row",
+                        "type": "f32",
+                        "span": {"file": 1, "start": 3154, "end": 3157}
+                      },
+                      "rhs": {
+                        "kind": "local",
+                        "local": 1,
+                        "name": "cols",
+                        "type": "f32",
+                        "span": {"file": 1, "start": 3160, "end": 3164}
+                      },
+                      "type": "f32",
+                      "span": {"file": 1, "start": 3154, "end": 3164}
+                    },
+                    "type": "f32",
+                    "span": {"file": 1, "start": 3146, "end": 3164}
+                  },
+                  "span": {"file": 1, "start": 3133, "end": 3165}
+                },
+                {
+                  "kind": "let",
+                  "local": 7,
+                  "value": {
+                    "kind": "binary",
+                    "op": "/",
+                    "lhs": {
+                      "kind": "binary",
+                      "op": "+",
+                      "lhs": {
+                        "kind": "field",
+                        "base": {
+                          "kind": "local",
+                          "local": 0,
+                          "name": "surface",
+                          "type": "SurfaceInput",
+                          "span": {"file": 1, "start": 3184, "end": 3191}
+                        },
+                        "field": "uv",
+                        "index": 3,
+                        "type": "vec2",
+                        "span": {"file": 1, "start": 3184, "end": 3194}
+                      },
+                      "rhs": {
+                        "kind": "construct",
+                        "args": [
+                          {
+                            "kind": "local",
+                            "local": 6,
+                            "name": "column",
+                            "type": "f32",
+                            "span": {"file": 1, "start": 3202, "end": 3208}
+                          },
+                          {
+                            "kind": "local",
+                            "local": 5,
+                            "name": "row",
+                            "type": "f32",
+                            "span": {"file": 1, "start": 3210, "end": 3213}
+                          }
+                        ],
+                        "type": "vec2",
+                        "span": {"file": 1, "start": 3197, "end": 3214}
+                      },
+                      "type": "vec2",
+                      "span": {"file": 1, "start": 3184, "end": 3214}
+                    },
+                    "rhs": {
+                      "kind": "construct",
+                      "args": [
+                        {
+                          "kind": "local",
+                          "local": 1,
+                          "name": "cols",
+                          "type": "f32",
+                          "span": {"file": 1, "start": 3223, "end": 3227}
+                        },
+                        {
+                          "kind": "local",
+                          "local": 2,
+                          "name": "rws",
+                          "type": "f32",
+                          "span": {"file": 1, "start": 3229, "end": 3232}
+                        }
+                      ],
+                      "type": "vec2",
+                      "span": {"file": 1, "start": 3218, "end": 3233}
+                    },
+                    "type": "vec2",
+                    "span": {"file": 1, "start": 3183, "end": 3233}
+                  },
+                  "span": {"file": 1, "start": 3174, "end": 3234}
+                },
+                {
+                  "kind": "let",
+                  "local": 8,
+                  "value": {
+                    "kind": "builtin",
+                    "function": "sample",
+                    "args": [
+                      {
+                        "kind": "param",
+                        "param": 0,
+                        "name": "sheet",
+                        "type": "texture",
+                        "span": {"file": 1, "start": 3262, "end": 3267}
+                      },
+                      {
+                        "kind": "param",
+                        "param": 1,
+                        "name": "sheet_sampler",
+                        "type": "sampler",
+                        "span": {"file": 1, "start": 3269, "end": 3282}
+                      },
+                      {
+                        "kind": "local",
+                        "local": 7,
+                        "name": "uv",
+                        "type": "vec2",
+                        "span": {"file": 1, "start": 3284, "end": 3286}
+                      }
+                    ],
+                    "type": "vec4",
+                    "span": {"file": 1, "start": 3255, "end": 3287}
+                  },
+                  "span": {"file": 1, "start": 3243, "end": 3288}
+                },
+                {
+                  "kind": "return",
+                  "value": {
+                    "kind": "builtin",
+                    "function": "color.linear",
+                    "args": [
+                      {
+                        "kind": "binary",
+                        "op": "*",
+                        "lhs": {
+                          "kind": "components",
+                          "base": {
+                            "kind": "param",
+                            "param": 2,
+                            "name": "tint",
+                            "type": "color",
+                            "span": {"file": 1, "start": 3317, "end": 3321}
+                          },
+                          "components": [0, 1, 2],
+                          "type": "vec3",
+                          "span": {"file": 1, "start": 3317, "end": 3325}
+                        },
+                        "rhs": {
+                          "kind": "components",
+                          "base": {
+                            "kind": "local",
+                            "local": 8,
+                            "name": "texel",
+                            "type": "vec4",
+                            "span": {"file": 1, "start": 3328, "end": 3333}
+                          },
+                          "components": [0, 1, 2],
+                          "type": "vec3",
+                          "span": {"file": 1, "start": 3328, "end": 3337}
+                        },
+                        "type": "vec3",
+                        "span": {"file": 1, "start": 3317, "end": 3337}
+                      },
+                      {
+                        "kind": "binary",
+                        "op": "*",
+                        "lhs": {
+                          "kind": "components",
+                          "base": {
+                            "kind": "param",
+                            "param": 2,
+                            "name": "tint",
+                            "type": "color",
+                            "span": {"file": 1, "start": 3339, "end": 3343}
+                          },
+                          "components": [3],
+                          "type": "f32",
+                          "span": {"file": 1, "start": 3339, "end": 3345}
+                        },
+                        "rhs": {
+                          "kind": "components",
+                          "base": {
+                            "kind": "local",
+                            "local": 8,
+                            "name": "texel",
+                            "type": "vec4",
+                            "span": {"file": 1, "start": 3348, "end": 3353}
+                          },
+                          "components": [3],
+                          "type": "f32",
+                          "span": {"file": 1, "start": 3348, "end": 3355}
+                        },
+                        "type": "f32",
+                        "span": {"file": 1, "start": 3339, "end": 3355}
+                      }
+                    ],
+                    "type": "color",
+                    "span": {"file": 1, "start": 3304, "end": 3356}
+                  },
+                  "span": {"file": 1, "start": 3297, "end": 3357}
+                }
+              ],
+              "span": {"file": 1, "start": 2745, "end": 3363}
+            },
+            "span": {"file": 1, "start": 2704, "end": 3363}
+          },
+          "span": {"file": 1, "start": 2461, "end": 3365}
+        }
+      ]
+    }
+  ]
+}

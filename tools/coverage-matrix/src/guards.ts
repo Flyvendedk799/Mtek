@@ -166,8 +166,8 @@ export const AREAS: readonly Area[] = [
   {
     id: "physics",
     title: "Rigid bodies, colliders and body commands",
-    features: ["schema:Static", "schema:Dynamic", "schema:Kinematic", "schema:BoxCollider", "schema:SphereCollider", "body-command:*", "body-property:*", "entity/body", "entity/collider", "entity/sensor-collider", "expr/body-target:*", "project/physics-subsystem"],
-    codes: ["E5062", "E5071", "E5072", "E5091", "E5120", "E5121", "E5122", "E5123"],
+    features: ["schema:Static", "schema:Dynamic", "schema:Kinematic", "schema:BoxCollider", "schema:SphereCollider", "schema:CapsuleCollider", "body-command:*", "body-property:*", "entity/body", "entity/collider", "entity/sensor-collider", "expr/body-target:*", "project/physics-subsystem"],
+    codes: ["E5062", "E5071", "E5072", "E5091", "E5120", "E5121", "E5122", "E5123", "E5124"],
   },
   {
     id: "host-inputs",

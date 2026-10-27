@@ -4,7 +4,7 @@
     "file": "src/main.mtek",
     "startByte": 175,
     "endByte": 181,
-    "message": "Unknown field 'weight' on Dynamic. Valid fields: mass, linear_damping, angular_damping."
+    "message": "Unknown field 'weight' on Dynamic. Valid fields: mass, linear_damping, angular_damping, continuous."
   },
   {
     "code": "MTEK-E5001",

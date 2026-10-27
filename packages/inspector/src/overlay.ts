@@ -119,7 +119,15 @@ export function buildInspectorOverlay(snapshot: InspectorSpatialSnapshot, settin
     const shape = body.collider.shape, dashed = body.collider.sensor || !body.active;
     if (config.colliders) {
       if (shape.kind === "sphere") sphere("collider",body.entityId,body.position,shape.radius,dashed);
-      else {
+      else if (shape.kind === "capsule") {
+        // A cylinder along local Y with a hemisphere on each end: a sphere at each cap centre and four side lines.
+        const half = shape.height/2-shape.radius, centre = (y: number): Vector => add(body.position,rotated({x:0,y,z:0},body.rotation));
+        sphere("collider",body.entityId,centre(half),shape.radius,dashed); sphere("collider",body.entityId,centre(-half),shape.radius,dashed);
+        for (const [x,z] of [[1,0],[-1,0],[0,1],[0,-1]] as const) {
+          const side = (y: number): Vector => add(body.position,rotated({x:x*shape.radius,y,z:z*shape.radius},body.rotation));
+          line("collider",body.entityId,side(half),side(-half),dashed);
+        }
+      } else {
         const corners = Array.from({length:8},(_,i) => add(body.position,rotated({x:(i&1?1:-1)*shape.size.x/2,y:(i&2?1:-1)*shape.size.y/2,z:(i&4?1:-1)*shape.size.z/2},body.rotation)));
         for (let i=0;i<8;i++) for (const bit of [1,2,4]) if ((i&bit) === 0) line("collider",body.entityId,corners[i]!,corners[i|bit]!,dashed);
       }

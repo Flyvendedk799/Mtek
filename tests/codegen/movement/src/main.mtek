@@ -1,0 +1,72 @@
+// Character movement (decisions 0214 and 0217): a capsule character with settings, a kinematic
+// body without any, a platform, a dynamic body with continuous collision, a prefab whose bodies
+// are characters, move_character on `self`, a named entity and an entity_ref, and the reads
+// `grounded` and `ground_normal`.
+prefab Walker {
+    param origin: vec3 = vec3(0.0, 1.0, 0.0);
+    position: origin;
+    mesh: Box { size: vec3(0.5, 1.0, 0.5) };
+    material: Unlit { color: #6b5cff };
+    body: Kinematic { skin: 0.05; };
+    collider: CapsuleCollider { radius: 0.25; height: 1.0; sensor: true; };
+    fixed_update(dt: f32) {
+        self.body.move_character(vec3(0.0, -2.0 * dt, 0.0), self.rotation);
+    }
+}
+
+scene Playground {
+    state landed: bool = false;
+    state steepness: f32 = 0.0;
+    camera Main {
+        position: vec3(0.0, 4.0, 12.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+    entity Floor {
+        position: vec3(0.0, -0.5, 0.0);
+        mesh: Box { size: vec3(30.0, 1.0, 30.0) };
+        body: Static {};
+        collider: BoxCollider { size: vec3(30.0, 1.0, 30.0); };
+    }
+    entity Hero {
+        position: vec3(0.0, 1.0, 0.0);
+        mesh: Box { size: vec3(0.8, 1.8, 0.8) };
+        body: Kinematic { max_slope: 0.6; step_height: 0.3; step_min_width: 0.12; snap_to_ground: 0.25; skin: 0.02; carry: false; };
+        collider: CapsuleCollider { radius: 0.4; height: 1.8; friction: 0.1; };
+        fixed_update(dt: f32) {
+            if self.body.grounded {
+                landed = true;
+                steepness = self.body.ground_normal.y;
+            }
+            self.body.move_character(vec3(2.0 * dt, -1.0 * dt, 0.0), quat.identity());
+        }
+    }
+    entity Bare {
+        position: vec3(3.0, 0.5, 0.0);
+        mesh: Sphere { radius: 0.4 };
+        body: Kinematic {};
+        collider: SphereCollider { radius: 0.4 };
+        on key_down(Key.Space) {
+            Bare.body.move_character(vec3(0.0, 0.0, 1.0), quat.identity());
+        }
+    }
+    on key_down(Key.Enter) {
+        spawn(Walker { origin: vec3(1.0, 1.0, 0.0); });
+    }
+    entity Platform {
+        position: vec3(-4.0, 0.2, 0.0);
+        mesh: Box { size: vec3(2.0, 0.2, 2.0) };
+        body: Kinematic { carry: true; };
+        collider: BoxCollider { size: vec3(2.0, 0.2, 2.0) };
+    }
+    entity Puck {
+        position: vec3(2.0, 2.0, 0.0);
+        mesh: Sphere { radius: 0.05 };
+        body: Dynamic { mass: 0.1; continuous: true; };
+        collider: SphereCollider { radius: 0.05 };
+        on collision_enter(other: entity_ref) {
+            other.body.move_character(vec3(0.0, 0.0, 0.1), quat.identity());
+            let up = other.body.grounded;
+            let normal: vec3 = other.body.ground_normal;
+        }
+    }
+}
