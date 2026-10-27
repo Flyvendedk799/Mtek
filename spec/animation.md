@@ -241,6 +241,8 @@ Asserted bounds: limb error at most 0.02 degrees; uncorrected at least 25 degree
 - **Between keys**, rigs whose parent chains differ interpolate the composite linearly: the worst measured
   limb direction deviation from the source is 0.007 degrees (Unity Z-up with bone axes to plain; Mixamo
   A-pose walk to CesiumMan).
+- **Step channels**: the source is sampled with its own interpolation, but the result is written linear on
+  at most `maxKeyInterval` spacing, so a jump of a step channel becomes a ramp of up to that interval.
 - **Not carried**: scale tracks, translation of bones other than the hips, animation of non-humanoid
   (non-mapped) bones, morph targets, and any root rotation above the hips. Non-uniform scales are rejected.
   Skeletons other than bipeds (quadrupeds, creatures) are rejected by design.
