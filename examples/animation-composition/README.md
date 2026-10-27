@@ -40,7 +40,7 @@ The Guest dances beside the curb at x = -2.4 (on the right of the picture, seen 
 | An unplaced twin | `Ghost`: a hidden figure with the same blend and no goals. `animation.joint_position` reads the pose after goals, so the animated feet come from the twin |
 | Another humanoid with `clips_from` (0221, 0223) | `Guest`: `clips_from: HERO; clip: "Dance"`; the Hero's clips are retargeted to the Guest's bones, proportions and rest pose at mount |
 
-The animation clock runs on the frame time: the weights of a blend that moves differ a little between display rates, as decision 0224 and `spec/animation.md` section 5 explain. The parameter, the fades and the layer clocks do not.
+The animation clock runs on the frame time: the weights of a blend that moves differ a little between display rates, as decision 0224 and `spec/animation.md` section 6 explain. The parameter, the fades and the layer clocks do not.
 
 ## Run
 

@@ -107,17 +107,16 @@ Also observed and not changed: `FootGroundInspection.residual` includes the shor
 
 ## Package budget
 
-`budgets/small-games.json` gets an entry for `animation-composition`: measured folder 5,972,423 bytes and zip 5,974,225 bytes (`mtek build --release --itch`;
-the runtime with the animation surface of 0220 to 0223, the physics module (about 5 MB, as for `character-movement`) and the two models) plus 10 %, rounded up to 10 kB: **6,580,000** for both.
-This is measured before the lazily loaded animation module of 0225 is split out of the runtime, so the figure is an upper bound that 0225 may lower; no other
-budget changed. At this base the other rows already exceed their budgets by 0.3 % to 8 % (`scripts/game-budgets.mjs size` lists them): the
-runtime grew by 0220 to 0223 and the prebuilt of `crates/mtek-cli/prebuilt` is stale until the integrator regenerates it, which the budgets are measured with.
+`budgets/small-games.json` gets an entry for `animation-composition`: measured on the merged tree (after the lazily loaded animation module of 0225), folder 5,981,750 bytes and zip
+5,983,686 bytes (`mtek build --release --itch`: the core runtime, the animation module, the physics module (about 5 MB, as for `character-movement`) and the two models) plus 10 %, rounded up to 10 kB:
+**6,580,000** for the folder and **6,590,000** for the zip. (Measured before 0225 was merged, on the unsplit runtime of 0220 to 0223, it was 5,972,423 and 5,974,225 bytes: the split costs this example about 9 kB, which it
+pays back in every game without a skeleton.) No other budget changed, and every row holds on the merged tree.
 
 ## Documentation
 
 `docs/making-games.md` (template in `tools/release-docs/templates/pages/making-games.md`) has a section "Composing animation" that quotes the example verbatim
 (blocks `from=` checked against the source by `npm run check:release`); the limitations data adds the three limits above; `README.md` lists the example;
-`spec/animation.md` section 5 summarises the demonstration. The example's README has the controls and the verification commands.
+`spec/animation.md` section 6 summarises the demonstration. The example's README has the controls and the verification commands.
 
 ## Not done
 
