@@ -20,12 +20,12 @@ export type Step =
   | { kind: "tap"; key: string }
   | { kind: "wait"; ticks: number };
 
-/** A frame: the key changes made just before it and how long it lasts. `sample` asks the page for a snapshot after it. */
+/** A frame: the key changes made just before it and how long it lasts. `boundary` marks the last frame of a step. */
 export interface Frame {
   dt: number;
   press: readonly string[];
   release: readonly string[];
-  sample: boolean;
+  boundary: boolean;
 }
 
 export const hold = (keys: readonly string[], ticks: number): Step => ({ kind: "hold", keys, ticks });
@@ -73,8 +73,8 @@ export function plan(steps: readonly Step[], pattern: PatternName, jitterSeed = 
   let held: readonly string[] = [];
   let ticksDone = 0;
   let timeDone = 0;
-  let pendingPress: string[] = [];
-  let pendingRelease: string[] = [];
+  let pendingPress: readonly string[] = [];
+  let pendingRelease: readonly string[] = [];
 
   const advance = (ticks: number): void => {
     // A segment ends at tick `ticksDone + ticks`; in the tick pattern that is the time K * STEP, otherwise (K + 0.5) * STEP.
@@ -82,7 +82,7 @@ export function plan(steps: readonly Step[], pattern: PatternName, jitterSeed = 
     if (ticks === 0) return;
     if (pattern === "tick") {
       for (let i = 0; i < ticks; i += 1) {
-        frames.push({ dt: STEP, press: pendingPress, release: pendingRelease, sample: true });
+        frames.push({ dt: STEP, press: pendingPress, release: pendingRelease, boundary: i === ticks - 1 });
         pendingPress = [];
         pendingRelease = [];
       }
@@ -97,7 +97,7 @@ export function plan(steps: readonly Step[], pattern: PatternName, jitterSeed = 
       let dt = nominal ?? JITTER_MIN + random() * (JITTER_MAX - JITTER_MIN);
       if (dt >= left) dt = left;
       timeDone += dt;
-      frames.push({ dt, press: pendingPress, release: pendingRelease, sample: timeDone >= end });
+      frames.push({ dt, press: pendingPress, release: pendingRelease, boundary: timeDone >= end });
       pendingPress = [];
       pendingRelease = [];
     }
@@ -168,8 +168,8 @@ export interface DriveResult {
 export interface DriveArgs {
   frames: readonly Frame[];
   target: { width: number; height: number };
-  /** Snapshot after every frame (true) or only after frames that carry `sample` (false). */
-  everyFrame: boolean;
+  /** Snapshot after every frame, or only after the last frame of each step of the script. */
+  sample: "every" | "boundary";
   /** Entity names whose IDs to report (from an extension's `readTransforms`). */
   idNames: readonly string[];
 }
@@ -224,7 +224,7 @@ export async function drive(args: DriveArgs): Promise<DriveResult> {
     for (const key of frame.release) app.debug.releaseKey(key);
     app.debug.step(1, frame.dt);
     index += 1;
-    if (args.everyFrame || frame.sample) samples.push(snapshot(index));
+    if (args.sample === "every" || frame.boundary) samples.push(snapshot(index));
   }
   const counters = { ...app.debug.counters() };
   const stateAfter = app.state;

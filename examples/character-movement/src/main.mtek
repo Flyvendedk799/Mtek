@@ -289,14 +289,14 @@ scene Course {
         collider: CapsuleCollider { radius: 0.3; height: 1.8; friction: 0.0 };
         state vy: f32 = 0.0;
 
-        // The capsule's picture: an ellipsoid and a nose that shows which way the character faces.
+        // The capsule's picture: an ellipsoid and a nose that shows which way the character faces (+z at the start, towards the camera).
         entity Shape {
             scale: vec3(0.6, 1.8, 0.6);
             mesh: Sphere { radius: 0.5 };
             material: Pbr { base_color: #ff8a3d; roughness: 0.5 };
         }
         entity Nose {
-            position: vec3(0.0, 0.5, -0.3);
+            position: vec3(0.0, 0.5, 0.3);
             mesh: Box { size: vec3(0.2, 0.2, 0.3) };
             material: Unlit { color: #ffffff };
         }

@@ -69,7 +69,7 @@ describe("movement plans", () => {
       const frames = plan([wait(120)], pattern);
       expect(frames.slice(0, -1).every((f) => f.dt === dt), pattern).toBe(true);
       expect(frames.at(-1)?.dt ?? Number.NaN).toBeLessThanOrEqual(dt);
-      expect(frames.at(-1)?.sample).toBe(true);
+      expect(frames.at(-1)?.boundary).toBe(true);
     }
     const jitter = plan([wait(600)], "jitter", 7);
     const lengths = jitter.slice(0, -1).map((f) => f.dt);
@@ -80,10 +80,13 @@ describe("movement plans", () => {
     expect(plan([wait(600)], "jitter", 8)).not.toEqual(jitter);
   });
 
-  it("samples every frame of the tick pattern and the last frame of a segment otherwise", () => {
-    expect(plan([wait(5)], "tick").map((f) => f.sample)).toEqual([true, true, true, true, true]);
-    const frames = plan([wait(30), wait(30)], "60");
-    expect(frames.filter((f) => f.sample)).toHaveLength(2);
+  it("marks the last frame of every step as a boundary", () => {
+    for (const pattern of PATTERNS) {
+      const frames = plan([wait(30), wait(30), hold(["ArrowRight"], 5)], pattern);
+      expect(frames.filter((f) => f.boundary), pattern).toHaveLength(3);
+      expect(frames.at(-1)?.boundary, pattern).toBe(true);
+    }
+    expect(plan([wait(5)], "tick").map((f) => f.boundary)).toEqual([false, false, false, false, true]);
   });
 });
 
