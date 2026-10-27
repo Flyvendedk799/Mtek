@@ -1,0 +1,402 @@
+// Character movement (decision 0218): a capsule walks, jumps, climbs stairs and slopes, bumps into
+// walls and rides three kinds of moving platform. Everything is Mtek source; the host does nothing but
+// mount the program. The character is a `Kinematic` body that calls `move_character` every fixed
+// tick (decisions 0214 and 0217); the platforms are kinematic bodies that call `set_kinematic_target`.
+//
+//   Arrows / WASD   walk (in the world's x and z)
+//   Space           jump (only while grounded)
+//   R               back to the start
+//   1 .. 8          teleport to a station: 1 stairs, 2 ledge, 3 slope of 30 degrees, 4 slope of 60
+//                   degrees, 5 sliding platform, 6 lift, 7 turntable, 8 corner
+//
+// The course (x to the right, z towards the camera; the floor's top is y = 0):
+//
+//   x -10 .. 2     the start area, flat
+//   x   2 .. 8     four lanes, each walked towards +x: stairs (z = -9), ledge (z = -3),
+//                  ramp of 30 degrees (z = 3), ramp of 60 degrees (z = 9)
+//   x  12 .. 20    the platforms: a sliding platform over a chasm (z = -9), a lift (z = 1.5) and a
+//                  turntable (z = 9)
+//   x  26, z +-16  the walls of the arena; the corners are the places to walk into diagonally
+
+// Character settings: the capsule is 0.3 m in radius and 1.8 m tall.
+const WALK_SPEED: f32 = 4.0;
+const JUMP_SPEED: f32 = 5.0;
+const GRAVITY: f32 = 9.81;
+// Below this height the character fell into the chasm and starts again.
+const KILL_HEIGHT: f32 = -8.0;
+
+// A ramp is a slab tilted about the z axis. Its top face starts at (RAMP_X, 0), flush with the floor,
+// and rises towards +x. The slab's centre follows from the angle (the slab is RAMP_THICK thick).
+const RAMP_X: f32 = 2.0;
+const RAMP_THICK: f32 = 0.5;
+const GENTLE_ANGLE: f32 = 0.5235988;
+const GENTLE_LENGTH: f32 = 6.0;
+const STEEP_ANGLE: f32 = 1.0471976;
+const STEEP_LENGTH: f32 = 4.0;
+
+// The platforms. The lift and the turntable start with their top faces 0.2 m above the floor, a step the character
+// can take; the sliding platform is flush with the banks of the chasm.
+const SLIDER_X: f32 = 16.0;
+const SLIDER_Z: f32 = -9.0;
+const SLIDER_RANGE: f32 = 2.4;
+const SLIDER_PERIOD: f32 = 10.0;
+const LIFT_X: f32 = 16.0;
+const LIFT_Z: f32 = 1.5;
+const LIFT_TRAVEL: f32 = 3.0;
+const LIFT_PERIOD: f32 = 12.0;
+const TURN_X: f32 = 16.0;
+const TURN_Z: f32 = 9.0;
+const TURN_SPEED: f32 = 0.5;
+
+scene Course {
+    clear_color: #14181f;
+    ambient_color: #ffffff;
+    ambient_intensity: 0.2;
+
+    // What the character reports, for the HUD and for the browser spec.
+    state on_ground: bool = false;
+    state ground_up: f32 = 0.0;
+    state rise_speed: f32 = 0.0;
+    state air_ticks: i32 = 0;
+    state ticks: i32 = 0;
+
+    camera Main {
+        position: vec3(-6.0, 7.0, 12.0);
+        target: vec3(-6.0, 1.0, 0.0);
+        projection: Perspective { fov_y: 0.8; near: 0.1; far: 120.0 };
+        exposure: -0.2630344;
+    }
+
+    entity Sun {
+        rotation: quat.euler(-0.9, 0.4, 0.0);
+        light: DirectionalLight { color: #fff4e0; intensity: 3.0 };
+    }
+
+    // ---- the ground: one block for the start and the four lanes, blocks around the chasm ----
+
+    entity Ground {
+        position: vec3(1.0, -0.5, 0.0);
+        mesh: Box { size: vec3(22.0, 1.0, 32.0) };
+        material: Pbr { base_color: #3a4150; roughness: 0.9 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(22.0, 1.0, 32.0); friction: 0.8 };
+    }
+    entity GroundEast {
+        position: vec3(23.0, -0.5, 0.0);
+        mesh: Box { size: vec3(6.0, 1.0, 32.0) };
+        material: Pbr { base_color: #3a4150; roughness: 0.9 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(6.0, 1.0, 32.0); friction: 0.8 };
+    }
+    entity GroundNorth {
+        position: vec3(16.0, -0.5, -14.0);
+        mesh: Box { size: vec3(8.0, 1.0, 4.0) };
+        material: Pbr { base_color: #3a4150; roughness: 0.9 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(8.0, 1.0, 4.0); friction: 0.8 };
+    }
+    entity GroundSouth {
+        position: vec3(16.0, -0.5, 5.0);
+        mesh: Box { size: vec3(8.0, 1.0, 22.0) };
+        material: Pbr { base_color: #3a4150; roughness: 0.9 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(8.0, 1.0, 22.0); friction: 0.8 };
+    }
+
+    // ---- the walls of the arena, 3 m high ----
+
+    entity WallEast {
+        position: vec3(26.25, 1.5, 0.0);
+        mesh: Box { size: vec3(0.5, 3.0, 33.0) };
+        material: Pbr { base_color: #6a7284; roughness: 0.8 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(0.5, 3.0, 33.0) };
+    }
+    entity WallWest {
+        position: vec3(-10.25, 1.5, 0.0);
+        mesh: Box { size: vec3(0.5, 3.0, 33.0) };
+        material: Pbr { base_color: #6a7284; roughness: 0.8 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(0.5, 3.0, 33.0) };
+    }
+    entity WallNorth {
+        position: vec3(8.0, 1.5, -16.25);
+        mesh: Box { size: vec3(37.0, 3.0, 0.5) };
+        material: Pbr { base_color: #6a7284; roughness: 0.8 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(37.0, 3.0, 0.5) };
+    }
+    entity WallSouth {
+        position: vec3(8.0, 1.5, 16.25);
+        mesh: Box { size: vec3(37.0, 3.0, 0.5) };
+        material: Pbr { base_color: #6a7284; roughness: 0.8 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(37.0, 3.0, 0.5) };
+    }
+
+    // ---- lane 1: the stairs (z = -9). Step i is a block from its front to the landing, 0.2 (i + 1) m high
+    // and 0.4 m deeper than the next one: six risers of 0.2 m, under the character's step_height of 0.3 m. ----
+
+    entity Step1 {
+        position: vec3(4.2, 0.1, -9.0);
+        mesh: Box { size: vec3(4.4, 0.2, 3.0) };
+        material: Pbr { base_color: #c9a66b; roughness: 0.8 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(4.4, 0.2, 3.0) };
+    }
+    entity Step2 {
+        position: vec3(4.4, 0.2, -9.0);
+        mesh: Box { size: vec3(4.0, 0.4, 3.0) };
+        material: Pbr { base_color: #c9a66b; roughness: 0.8 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(4.0, 0.4, 3.0) };
+    }
+    entity Step3 {
+        position: vec3(4.6, 0.3, -9.0);
+        mesh: Box { size: vec3(3.6, 0.6, 3.0) };
+        material: Pbr { base_color: #c9a66b; roughness: 0.8 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(3.6, 0.6, 3.0) };
+    }
+    entity Step4 {
+        position: vec3(4.8, 0.4, -9.0);
+        mesh: Box { size: vec3(3.2, 0.8, 3.0) };
+        material: Pbr { base_color: #c9a66b; roughness: 0.8 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(3.2, 0.8, 3.0) };
+    }
+    entity Step5 {
+        position: vec3(5.0, 0.5, -9.0);
+        mesh: Box { size: vec3(2.8, 1.0, 3.0) };
+        material: Pbr { base_color: #c9a66b; roughness: 0.8 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(2.8, 1.0, 3.0) };
+    }
+    entity Step6 {
+        position: vec3(5.2, 0.6, -9.0);
+        mesh: Box { size: vec3(2.4, 1.2, 3.0) };
+        material: Pbr { base_color: #c9a66b; roughness: 0.8 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(2.4, 1.2, 3.0) };
+    }
+
+    // ---- lane 2: the ledge (z = -3), 0.6 m high: twice the step height, so the character has to jump ----
+
+    entity Ledge {
+        position: vec3(4.0, 0.3, -3.0);
+        mesh: Box { size: vec3(2.0, 0.6, 3.0) };
+        material: Pbr { base_color: #c9694b; roughness: 0.8 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(2.0, 0.6, 3.0) };
+    }
+
+    // ---- lane 3: the ramp of 30 degrees (z = 3) and the landing at its top ----
+
+    entity GentleRamp {
+        position: vec3(RAMP_X + 0.5 * GENTLE_LENGTH * cos(GENTLE_ANGLE) + 0.5 * RAMP_THICK * sin(GENTLE_ANGLE), 0.5 * GENTLE_LENGTH * sin(GENTLE_ANGLE) - 0.5 * RAMP_THICK * cos(GENTLE_ANGLE), 3.0);
+        rotation: quat.axis_angle(vec3(0.0, 0.0, 1.0), GENTLE_ANGLE);
+        mesh: Box { size: vec3(GENTLE_LENGTH, RAMP_THICK, 3.0) };
+        material: Pbr { base_color: #6fae77; roughness: 0.8 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(GENTLE_LENGTH, RAMP_THICK, 3.0) };
+    }
+    entity GentleLanding {
+        position: vec3(RAMP_X + GENTLE_LENGTH * cos(GENTLE_ANGLE) + 1.5, 0.5 * GENTLE_LENGTH * sin(GENTLE_ANGLE), 3.0);
+        mesh: Box { size: vec3(3.0, GENTLE_LENGTH * sin(GENTLE_ANGLE), 3.0) };
+        material: Pbr { base_color: #4e8a57; roughness: 0.8 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(3.0, GENTLE_LENGTH * sin(GENTLE_ANGLE), 3.0) };
+    }
+
+    // ---- lane 4: the ramp of 60 degrees (z = 9), too steep to climb, and the plateau behind it ----
+
+    entity SteepRamp {
+        position: vec3(RAMP_X + 0.5 * STEEP_LENGTH * cos(STEEP_ANGLE) + 0.5 * RAMP_THICK * sin(STEEP_ANGLE), 0.5 * STEEP_LENGTH * sin(STEEP_ANGLE) - 0.5 * RAMP_THICK * cos(STEEP_ANGLE), 9.0);
+        rotation: quat.axis_angle(vec3(0.0, 0.0, 1.0), STEEP_ANGLE);
+        mesh: Box { size: vec3(STEEP_LENGTH, RAMP_THICK, 3.0) };
+        material: Pbr { base_color: #c95b5b; roughness: 0.8 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(STEEP_LENGTH, RAMP_THICK, 3.0) };
+    }
+    entity SteepPlateau {
+        position: vec3(RAMP_X + STEEP_LENGTH * cos(STEEP_ANGLE) + 1.5, 0.5 * STEEP_LENGTH * sin(STEEP_ANGLE), 9.0);
+        mesh: Box { size: vec3(3.0, STEEP_LENGTH * sin(STEEP_ANGLE), 3.0) };
+        material: Pbr { base_color: #a24848; roughness: 0.8 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(3.0, STEEP_LENGTH * sin(STEEP_ANGLE), 3.0) };
+    }
+
+    // ---- the platforms: kinematic bodies that set their own target every tick ----
+
+    // Slides to and fro over the chasm (x in [12, 20], z in [-12, -6]); its top face is flush with the banks at
+    // the ends of its travel.
+    entity Slider {
+        position: vec3(SLIDER_X, -0.2, SLIDER_Z);
+        state clock: f32 = 0.0;
+        mesh: Box { size: vec3(3.0, 0.4, 3.0) };
+        material: Pbr { base_color: #4f86d9; roughness: 0.6 };
+        body: Kinematic {};
+        collider: BoxCollider { size: vec3(3.0, 0.4, 3.0); friction: 0.8 };
+        fixed_update(dt: f32) {
+            self.clock += dt;
+            let x = SLIDER_X + SLIDER_RANGE * sin(6.2831855 * self.clock / SLIDER_PERIOD);
+            self.body.set_kinematic_target(vec3(x, -0.2, SLIDER_Z), quat.identity());
+        }
+    }
+
+    // Rises from 0.2 m to 3.2 m above the floor and comes back; at the top it is next to the tall block.
+    entity Lift {
+        position: vec3(LIFT_X, 0.0, LIFT_Z);
+        state clock: f32 = 0.0;
+        mesh: Box { size: vec3(3.0, 0.4, 3.0) };
+        material: Pbr { base_color: #4f86d9; roughness: 0.6 };
+        body: Kinematic {};
+        collider: BoxCollider { size: vec3(3.0, 0.4, 3.0); friction: 0.8 };
+        fixed_update(dt: f32) {
+            self.clock += dt;
+            let rise = 0.5 * LIFT_TRAVEL * (1.0 - cos(6.2831855 * self.clock / LIFT_PERIOD));
+            self.body.set_kinematic_target(vec3(LIFT_X, rise, LIFT_Z), quat.identity());
+        }
+    }
+    entity LiftTower {
+        position: vec3(18.8, 1.6, LIFT_Z);
+        mesh: Box { size: vec3(2.4, 3.2, 3.0) };
+        material: Pbr { base_color: #3a4150; roughness: 0.9 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(2.4, 3.2, 3.0) };
+    }
+
+    // A bar that turns about the y axis at 0.5 rad/s; the character on it is carried round and turns with it.
+    entity Turntable {
+        position: vec3(TURN_X, 0.0, TURN_Z);
+        state clock: f32 = 0.0;
+        mesh: Box { size: vec3(5.0, 0.4, 2.0) };
+        material: Pbr { base_color: #4f86d9; roughness: 0.6 };
+        body: Kinematic {};
+        collider: BoxCollider { size: vec3(5.0, 0.4, 2.0); friction: 0.8 };
+        fixed_update(dt: f32) {
+            self.clock += dt;
+            self.body.set_kinematic_target(vec3(TURN_X, 0.0, TURN_Z), quat.axis_angle(vec3(0.0, 1.0, 0.0), TURN_SPEED * self.clock));
+        }
+    }
+
+    // ---- the character ----
+
+    entity Player {
+        position: vec3(-6.0, 0.95, 0.0);
+        // The solver owns the pose: the program moves the body only with move_character and teleport.
+        body: Kinematic { max_slope: 0.7853982; step_height: 0.3; };
+        collider: CapsuleCollider { radius: 0.3; height: 1.8; friction: 0.0 };
+        state vy: f32 = 0.0;
+
+        // The capsule's picture: an ellipsoid and a nose that shows which way the character faces.
+        entity Shape {
+            scale: vec3(0.6, 1.8, 0.6);
+            mesh: Sphere { radius: 0.5 };
+            material: Pbr { base_color: #ff8a3d; roughness: 0.5 };
+        }
+        entity Nose {
+            position: vec3(0.0, 0.5, -0.3);
+            mesh: Box { size: vec3(0.2, 0.2, 0.3) };
+            material: Unlit { color: #ffffff };
+        }
+
+        fixed_update(dt: f32) {
+            // grounded and ground_normal are the result of the last move_character.
+            let grounded = self.body.grounded;
+            on_ground = grounded;
+            ground_up = self.body.ground_normal.y;
+            ticks += 1;
+            if grounded {
+                if self.vy < 0.0 {
+                    self.vy = 0.0;
+                }
+                if is_key_down(Key.Space) {
+                    self.vy = JUMP_SPEED;
+                }
+            } else {
+                self.vy -= GRAVITY * dt;
+                air_ticks += 1;
+            }
+            rise_speed = self.vy;
+
+            var dx = 0.0;
+            var dz = 0.0;
+            if is_key_down(Key.ArrowRight) || is_key_down(Key.D) {
+                dx += 1.0;
+            }
+            if is_key_down(Key.ArrowLeft) || is_key_down(Key.A) {
+                dx -= 1.0;
+            }
+            if is_key_down(Key.ArrowDown) || is_key_down(Key.S) {
+                dz += 1.0;
+            }
+            if is_key_down(Key.ArrowUp) || is_key_down(Key.W) {
+                dz -= 1.0;
+            }
+            var walk = vec3(dx, 0.0, dz);
+            if length(walk) > 0.0 {
+                walk = normalize(walk) * WALK_SPEED;
+            }
+            // Passing the current rotation keeps the facing; a platform's yaw is added to it by the move.
+            self.body.move_character(vec3(walk.x * dt, self.vy * dt, walk.z * dt), self.rotation);
+
+            if self.position.y < KILL_HEIGHT {
+                self.vy = 0.0;
+                self.body.teleport(vec3(-6.0, 0.95, 0.0), quat.identity(), false);
+            }
+        }
+    }
+
+    // The camera follows the character at a fixed offset.
+    update(dt: f32) {
+        Main.position = Player.position + vec3(0.0, 6.0, 11.0);
+        Main.target = Player.position + vec3(0.0, 1.0, 0.0);
+    }
+
+    ui(dt: f32) {
+        hud.text("Arrows/WASD walk, Space jumps, R restarts, 1-8 stations", vec2(-0.95, 0.9), 16.0, #ffffff, 0.0, hud.pixel_font());
+        if on_ground {
+            hud.text("on the ground", vec2(-0.95, 0.8), 16.0, #8be28b, 0.0, hud.pixel_font());
+        } else {
+            hud.text("in the air", vec2(-0.95, 0.8), 16.0, #ffd040, 0.0, hud.pixel_font());
+        }
+    }
+
+    on key_down(Key.R) {
+        Player.vy = 0.0;
+        Player.body.teleport(vec3(-6.0, 0.95, 0.0), quat.identity(), false);
+    }
+    on key_down(Key.Digit1) {
+        Player.vy = 0.0;
+        Player.body.teleport(vec3(0.0, 0.95, -9.0), quat.identity(), false);
+    }
+    on key_down(Key.Digit2) {
+        Player.vy = 0.0;
+        Player.body.teleport(vec3(0.0, 0.95, -3.0), quat.identity(), false);
+    }
+    on key_down(Key.Digit3) {
+        Player.vy = 0.0;
+        Player.body.teleport(vec3(0.0, 0.95, 3.0), quat.identity(), false);
+    }
+    on key_down(Key.Digit4) {
+        Player.vy = 0.0;
+        Player.body.teleport(vec3(0.0, 0.95, 9.0), quat.identity(), false);
+    }
+    on key_down(Key.Digit5) {
+        Player.vy = 0.0;
+        Player.body.teleport(Slider.position + vec3(0.0, 1.15, 0.0), quat.identity(), false);
+    }
+    on key_down(Key.Digit6) {
+        Player.vy = 0.0;
+        Player.body.teleport(Lift.position + vec3(0.0, 1.15, 0.0), quat.identity(), false);
+    }
+    on key_down(Key.Digit7) {
+        Player.vy = 0.0;
+        Player.body.teleport(Turntable.position + vec3(1.5, 1.15, 0.0), quat.identity(), false);
+    }
+    on key_down(Key.Digit8) {
+        Player.vy = 0.0;
+        Player.body.teleport(vec3(24.0, 0.95, 13.0), quat.identity(), false);
+    }
+}
