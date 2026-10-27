@@ -30,7 +30,8 @@ function load(importModule: (url: string) => Promise<unknown>, m: MtekManifest =
 
 /** A backend of the right shape that does nothing. */
 function fakeBackend(): AnimationBackend {
-  return { name: "fake", createPlayers: createAnimationBackend().createPlayers, createCommands: createAnimationBackend().createCommands, retargetHumanoid: (_source, target) => target };
+  const real = createAnimationBackend();
+  return { name: "fake", createPlayers: () => real.createPlayers(), createCommands: (host) => real.createCommands(host), retargetHumanoid: (_source, target) => target };
 }
 
 describe("animationModuleUrl", () => {

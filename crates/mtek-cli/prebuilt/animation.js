@@ -977,27 +977,27 @@ function normalMatrixInto(out, offset, model) {
 var AnimationPlayers = class {
   nodes = new ClipPlayers();
   /** The skeletal player of `slot`: none without the animation module. */
-  skin(_slot) {
+  skin(slot) {
   }
-  share(_source, _targets) {
+  share(source, targets) {
     throw new RangeError("Animation sharing needs a skinned source");
   }
-  detach(_slot) {
+  detach(slot) {
     throw new RangeError("Animation detaching needs a skinned entity");
   }
   add(clip) {
     this.nodes.add(clip);
   }
-  addSkin(_slot, _skin, _clip) {
+  addSkin(slot, skin, clip) {
     throw new Error("A skinned mesh needs the animation module, which is not loaded");
   }
   remove(slot) {
     this.nodes.remove(slot);
   }
-  copyPose(_target, _source) {
+  copyPose(target, source) {
     return !1;
   }
-  transition(_slot, _name, _seconds, _looping, _speed) {
+  transition(slot, name, seconds, looping, speed) {
     return !1;
   }
   play(slot, looping, speed) {
@@ -1033,7 +1033,8 @@ var AnimationPlayers = class {
   crossed(slot, marker) {
     return this.nodes.crossed(slot, marker);
   }
-  advance(dt, apply, _distance) {
+  /** `distance` is the camera distance of a slot, which only skeletal update policies use. */
+  advance(dt, apply, distance) {
     this.nodes.advance(dt, apply);
   }
   pose(apply, time) {

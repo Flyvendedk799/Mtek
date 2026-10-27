@@ -55,7 +55,7 @@ From a clean checkout:
 | Command | Purpose |
 |---|---|
 | `npm ci` | install the exact locked npm dependencies |
-| `npm run build` | bundle `@mtek/runtime-web` to `packages/runtime-web/dist/runtime.js`, the Rapier adapter to `packages/physics-rapier/dist/physics.js` and the VS Code extension to `packages/editor-vscode/dist/extension.cjs`, then `cargo build -p mtek-cli --locked` |
+| `npm run build` | bundle `@mtek/runtime-web` to `packages/runtime-web/dist/` (the core runtime `core*.js` that `mtek` embeds, the animation module `animation*.js` for programs with skinned meshes, and the npm entry `runtime.js`), the Rapier adapter to `packages/physics-rapier/dist/physics.js` and the VS Code extension to `packages/editor-vscode/dist/extension.cjs`, then `cargo build -p mtek-cli --locked` |
 | `npm run check` | `cargo fmt --check`, `cargo clippy --workspace --all-targets --locked -- -D warnings`, `npm run check:ts`, `npm run lint`, `npm run check:naming`, `npm run check:tasks`, `npm run check:assets`, `npm run check:prebuilt` (the prebuilt runtime of `crates/mtek-cli/prebuilt` matches its sources, decision 0131) |
 | `npm run check:ts` | `tsc -b` over all TypeScript projects |
 | `npm run lint` | ESLint (`recommended-type-checked`, no `any`) |

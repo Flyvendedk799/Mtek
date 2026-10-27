@@ -142,8 +142,8 @@ The namespace is `easing`, not `ease`: built-in namespaces cannot be shadowed (`
 Automated (cheap, already green here):
 - `cargo test -p mtek-cli --bin mtek game_package`: CRC-32 check value, zip records and reproducibility, the itch limits (`E7104`), favicon content checks (`E7103`), packaging.
 - `cargo test -p mtek-compiler --lib package::html`: the game page (loading screen, favicon link, escaped title, no dev client).
-- `npx vitest run src/release-bundle.test.ts` in `packages/runtime-web`: the flavour file names, including `runtime.min.js`.
-- `npm run check:prebuilt`: the prebuilt copy includes `runtime.min.js`.
+- `npx vitest run src/release-bundle.test.ts` in `packages/runtime-web`: the bundle file names, including `core.min.js` and the animation module `animation.min.js`, and that the core contains no skeletal code.
+- `npm run check:prebuilt`: the prebuilt copy includes `core.min.js` and `animation.min.js`.
 - Done here by hand: `mtek build --release --itch --out /tmp/gp-out <copy of examples/hud-score>` printed `built 'hud-score' (release): 10 files in /tmp/gp-out and /tmp/gp-out-itch.zip`. Python `zipfile.testzip()` reported no bad entry. The names are at the root (`index.html`, `favicon.svg`, `runtime.<h16>.js` at 513 848 bytes against 843 265 unminified, `shaders/...`).
 
 Manual, in a WebGPU browser (not run here):

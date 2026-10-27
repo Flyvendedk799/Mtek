@@ -18,6 +18,11 @@
  * the scene are created from the manifest (`physics/system.ts`, `spec/scenes.md` section 11 step 5); a module that
  * does not load, or an engine that does not start, rejects the mount with `physics-failed` (`E8102`, decision 0066).
  *
+ * A program whose manifest says `subsystems.animation` (a skinned mesh or `clips_from`) imports its animation module
+ * (`animation-module/load.ts`) the same way, in parallel, and hands the backend to the world before `init` runs; a
+ * program without skeletal animation never requests it. A module that does not load rejects the mount with
+ * `animation-failed` (`E8114`, decision 0225).
+ *
  * Every failure rejects with an `MtekMountError` of the documented kind, reports its diagnostics through
  * `onDiagnostic`, shows the overlay (unless `failureDisplay: "none"`), and leaves no live resource,
  * listener or device behind.

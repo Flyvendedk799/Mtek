@@ -890,12 +890,12 @@ A feature has no diagnostic of its own that a tool could derive, so the features
 
 ## 8. Diagnostic codes
 
-The catalogue of `spec/diagnostics.md` section 5 has 259 codes. A code has a fixture when the expected diagnostics of some fixture contain it (for a warning, a passing program that lists it). `tests/semantics/code-coverage-exceptions.json` lists, with a reason, the codes that no fixture can produce; the compiler's own test (`every_catalogue_code_has_a_fixture_or_a_listed_reason`) and this tool read the same file.
+The catalogue of `spec/diagnostics.md` section 5 has 260 codes. A code has a fixture when the expected diagnostics of some fixture contain it (for a warning, a passing program that lists it). `tests/semantics/code-coverage-exceptions.json` lists, with a reason, the codes that no fixture can produce; the compiler's own test (`every_catalogue_code_has_a_fixture_or_a_listed_reason`) and this tool read the same file.
 
 | Negative test | Codes |
 |---|--:|
 | A fixture | 194 |
-| A named test, because a fixture cannot express the code (generated sizes, files the source manager rejects, runtime codes) | 59 |
+| A named test, because a fixture cannot express the code (generated sizes, files the source manager rejects, runtime codes) | 60 |
 | A named test, because only a compiler defect produces the code | 2 |
 | Reserved or not implemented, marked in the catalogue | 4 |
 | **None** | 0 |
@@ -965,6 +965,7 @@ None.
 | E8111 | unknown name in animation command | `packages/runtime-web/src/scene/animation-script.test.ts` | A runtime code of animation composition: an unknown clip, joint, layer or limb name (decision 0223). |
 | E8112 | limb command on a rig that is not a humanoid | `packages/runtime-web/src/scene/animation-script.test.ts` | A runtime code of animation composition: a limb or foot command on a rig that is not a humanoid (decision 0223). |
 | E8113 | animation command rejected | `packages/runtime-web/src/scene/animation-script.test.ts` | A runtime code of animation composition: a command the animation system refuses (decision 0223). |
+| E8114 | animation module failed to load | `packages/runtime-web/src/animation-module/load.test.ts` | A runtime code of the animation module: the lazily loaded module cannot be loaded (decision 0225). |
 | W8201 | audio value clamped | `packages/runtime-web/src/audio/audio.test.ts` | A runtime code of the audio subsystem (decision 0130). |
 | W8202 | sound could not be decoded | `packages/runtime-web/src/audio/audio.test.ts` | A runtime code of the audio subsystem (decision 0130). |
 | W8203 | too many HUD items | `packages/runtime-web/src/hud/hud.test.ts` | A runtime code of the HUD (decision 0134). |
