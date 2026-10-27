@@ -40,7 +40,10 @@ export function blendWeights(points: readonly (readonly [number, number])[]): Bl
     throw new RangeError("Blend samples must be at distinct points");
   const X = points.map(p => p[0]), Y = points.map(p => p[1]);
   const L = Math.max(Math.max(...X) - Math.min(...X), Math.max(Math.max(...Y) - Math.min(...Y))) || 1;
-  const Z = X.map((x, i) => x * x + Y[i]! * Y[i]!), W = X.map((_, i) => (i * 0.6180339887498949) % 1);
+  const Z = X.map((x, i) => x * x + Y[i]! * Y[i]!), W = X.map((_, i) => { // integer hash: generic and platform-independent, unlike an additive sequence
+    let h = Math.imul(i + 1, 0x9e3779b1); h ^= h >>> 15; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13;
+    return (h >>> 0) / 2 ** 32;
+  });
   // > 0 when point d lies inside the circle through counter-clockwise a, b, c (lift z).
   const inside = (a: number, b: number, c: number, d: number, z: readonly number[]): number => {
     const ax = X[a]! - X[d]!, ay = Y[a]! - Y[d]!, bx = X[b]! - X[d]!, by = Y[b]! - Y[d]!, cx = X[c]! - X[d]!, cy = Y[c]! - Y[d]!;
@@ -84,21 +87,22 @@ export function blendWeights(points: readonly (readonly [number, number])[]): Bl
     const key = Math.min(p, q) * 64 + Math.max(p, q);
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
+  const areas = triangles.map(([a, b, c]) => (X[b]! - X[a]!) * (Y[c]! - Y[a]!) - (X[c]! - X[a]!) * (Y[b]! - Y[a]!));
   const hull = [...counts].filter(([, count]) => count === 1).map(([key]) => [Math.floor(key / 64), key % 64] as const);
   return (x, y, out) => {
     out.fill(0);
     const cross = (p: number, q: number): number => (X[p]! - x) * (Y[q]! - y) - (Y[p]! - y) * (X[q]! - x);
-    let best = -Infinity, at = triangles[0]!, bary = [0, 0, 0];
-    for (const triangle of triangles) {
-      const [a, b, c] = triangle;
-      const area = (X[b]! - X[a]!) * (Y[c]! - Y[a]!) - (X[c]! - X[a]!) * (Y[b]! - Y[a]!);
-      const mine = [cross(b, c) / area, cross(c, a) / area, cross(a, b) / area];
-      const least = Math.min(...mine);
-      if (least > best) { best = least; at = triangle; bary = mine; }
-    }
+    // The most-inside triangle, so a point on a shared edge or a rounding gap still gets valid weights.
+    let best = -Infinity, at = 0, u = 0, v = 0, w = 0;
+    triangles.forEach(([a, b, c], t) => {
+      const p = cross(b, c) / areas[t]!, q = cross(c, a) / areas[t]!, r = cross(a, b) / areas[t]!, least = Math.min(p, q, r);
+      if (least > best) { best = least; at = t; u = p; v = q; w = r; }
+    });
     if (best >= -1e-9) {
-      const clamped = bary.map(w => Math.max(0, w)), sum = clamped[0]! + clamped[1]! + clamped[2]!;
-      at.forEach((index, i) => { out[index] = clamped[i]! / sum; });
+      const [a, b, c] = triangles[at]!;
+      u = Math.max(0, u); v = Math.max(0, v); w = Math.max(0, w);
+      const total = u + v + w;
+      out[a] = u / total; out[b] = v / total; out[c] = w / total;
       return;
     }
     let nearest = Infinity;
