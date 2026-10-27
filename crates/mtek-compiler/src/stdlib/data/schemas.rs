@@ -618,13 +618,11 @@ fn bodies() -> Vec<SchemaDef> {
                     CU,
                     "Steepest climbable slope in radians.",
                 )
-                .default(ConstValue::F32(0.785_398_2))
-                .range(
-                    ValueRange::bounded(
-                        Some(Bound::inclusive(Limit::Int(0))),
-                        Some(Bound::inclusive(Limit::Float(1.570_796_4))),
-                    ),
-                ),
+                .default(ConstValue::F32(std::f32::consts::FRAC_PI_4))
+                .range(ValueRange::bounded(
+                    Some(Bound::inclusive(Limit::Int(0))),
+                    Some(Bound::inclusive(Limit::Float(std::f32::consts::FRAC_PI_2))),
+                )),
                 field(
                     "step_height",
                     TypeRef::F32,
@@ -719,14 +717,9 @@ fn colliders() -> Vec<SchemaDef> {
             .range(ValueRange::non_negative().and_finite())
     };
     let restitution = || {
-        field(
-            "restitution",
-            TypeRef::F32,
-            C,
-            "Bounciness, 0 to 1.",
-        )
-        .default(ConstValue::F32(0.0))
-        .range(ValueRange::closed(0, 1))
+        field("restitution", TypeRef::F32, C, "Bounciness, 0 to 1.")
+            .default(ConstValue::F32(0.0))
+            .range(ValueRange::closed(0, 1))
     };
     vec![
         schema(

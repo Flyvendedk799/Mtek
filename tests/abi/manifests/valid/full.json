@@ -1367,7 +1367,8 @@
         "kind": "dynamic",
         "mass": 1,
         "linearDamping": 0,
-        "angularDamping": 0.05
+        "angularDamping": 0.05,
+        "continuous": true
       },
       "collider": {
         "kind": "box",
@@ -1502,11 +1503,20 @@
         "shareable": true
       },
       "body": {
-        "kind": "kinematic"
+        "kind": "kinematic",
+        "character": {
+          "maxSlope": 0.7853982,
+          "stepHeight": 0.25,
+          "stepMinWidth": 0.1,
+          "snapToGround": 0.2,
+          "skin": 0.01,
+          "carry": true
+        }
       },
       "collider": {
-        "kind": "sphere",
-        "radius": 0.5,
+        "kind": "capsule",
+        "radius": 0.25,
+        "height": 1,
         "sensor": true,
         "friction": 0.5,
         "restitution": 0.25
@@ -1629,7 +1639,8 @@
           "kind": "dynamic",
           "mass": 2,
           "linearDamping": 0,
-          "angularDamping": 0.05
+          "angularDamping": 0.05,
+          "continuous": true
         },
         "collider": {
           "kind": "box",
@@ -1747,15 +1758,20 @@
         "material": null,
         "light": 1,
         "body": {
-          "kind": "kinematic"
+          "kind": "kinematic",
+          "character": {
+            "maxSlope": 0.7853982,
+            "stepHeight": 0.25,
+            "stepMinWidth": 0.1,
+            "snapToGround": 0.2,
+            "skin": 0.01,
+            "carry": true
+          }
         },
         "collider": {
-          "kind": "box",
-          "size": [
-            0.2,
-            0.2,
-            0.2
-          ],
+          "kind": "capsule",
+          "radius": 0.1,
+          "height": 0.5,
           "sensor": false,
           "friction": 0.5,
           "restitution": 0

@@ -1148,7 +1148,7 @@ fn character_desc(schema: &str, fields: &Fields) -> Result<Option<CharacterDesc>
         }
     };
     Ok(Some(CharacterDesc {
-        max_slope: number("max_slope", 0.785_398_2)?,
+        max_slope: number("max_slope", std::f32::consts::FRAC_PI_4)?,
         step_height: number("step_height", 0.25)?,
         step_min_width: number("step_min_width", 0.1)?,
         snap_to_ground: number("snap_to_ground", 0.2)?,

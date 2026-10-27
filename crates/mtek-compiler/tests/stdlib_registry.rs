@@ -414,7 +414,14 @@ fn schema_rows() -> Vec<Row> {
             "RC",
             Some("> 0, finite"),
         ),
-        ("CapsuleCollider", "sensor", "bool", Some("false"), "C", None),
+        (
+            "CapsuleCollider",
+            "sensor",
+            "bool",
+            Some("false"),
+            "C",
+            None,
+        ),
         (
             "CapsuleCollider",
             "friction",
@@ -614,7 +621,11 @@ fn schemas_have_exactly_the_specified_fields() {
         want.sort_unstable();
         assert_eq!(have, want, "fields of {}", schema.name);
     }
-    assert!(registry.schema("Static").is_some_and(|s| s.fields.is_empty()));
+    assert!(
+        registry
+            .schema("Static")
+            .is_some_and(|s| s.fields.is_empty())
+    );
     // The six character fields of a kinematic body are absent from a completed descriptor unless
     // the program wrote them (decision 0217).
     let kinematic = registry.schema("Kinematic").unwrap();
@@ -1410,7 +1421,10 @@ fn body_commands_follow_the_physics_specification() {
         assert_eq!(property.ty, TypeRef::Vec3);
         assert_eq!(property.applies_to.len(), 2);
     }
-    for (name, ty) in [("grounded", TypeRef::Bool), ("ground_normal", TypeRef::Vec3)] {
+    for (name, ty) in [
+        ("grounded", TypeRef::Bool),
+        ("ground_normal", TypeRef::Vec3),
+    ] {
         let property = registry.body_property(name).unwrap();
         assert_eq!(property.ty, ty);
         let applies: Vec<&str> = property.applies_to.iter().map(|b| b.as_str()).collect();

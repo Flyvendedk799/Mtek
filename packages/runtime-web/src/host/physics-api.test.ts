@@ -309,11 +309,12 @@ describe("what a query sees", () => {
   it("an entity pending removal can still be hit and has an ID, but cannot be named as an argument", async () => {
     let ref: EntityRef | undefined;
     let during: { hit: string | undefined; named: unknown } | undefined;
-    let host: Mounted | undefined;
+    const held: { host?: Mounted } = {};
     const m = await mount({
       keys: {
         KeyQ: (ctx) => { ref = ctx.spawn(CRATE, { n: 1 }, 0); },
         KeyW: (ctx) => {
+          const host = held.host;
           if (ref === undefined || host === undefined) throw new Error("not ready");
           ctx.destroy(ref, 0);
           const slot = ref.slot;
@@ -325,7 +326,7 @@ describe("what a query sees", () => {
         },
       },
     });
-    host = m;
+    held.host = m;
     m.debug.pressKey("KeyQ");
     m.debug.step(1, STEP);
     m.debug.releaseKey("KeyQ");
