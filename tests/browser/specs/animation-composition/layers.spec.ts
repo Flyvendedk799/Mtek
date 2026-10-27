@@ -9,7 +9,7 @@
 //   phase   the layer's clock runs on through weight zero, so its time is the time since it was set, whatever the fades did.
 import { expect, test } from "../../support/fixtures.ts";
 import { animationConstant } from "../../support/animation-example.ts";
-import { dist, heroRig, smoothstep01, type V3 } from "../../support/animation-reference.ts";
+import { dist, heroRig, smoothstep01 } from "../../support/animation-reference.ts";
 import { collectProblems, figure, run, writeProbe } from "../../support/animation-harness.ts";
 import { hold, plan, wait, type PatternName, type Step } from "../../support/movement-drive.ts";
 
@@ -160,7 +160,7 @@ test.describe("upper-body layer of the example (decision 0224)", () => {
     const steps = [hold(["KeyP", "KeyT"], 1), wait(30), hold(F, 60)];
     const result = await run(page, steps, { model: ["Hips", "LeftFoot", "RightFoot"], ghost: ["Hips", "LeftFoot", "RightFoot"] });
     const last = result.samples.at(-1)!;
-    const same = (name: string): number => dist(figure(last, "model", name) as V3, figure(last, "ghost", name) as V3);
+    const same = (name: string): number => dist(figure(last, "model", name), figure(last, "ghost", name));
     expect(same("Hips")).toBeLessThan(1e-6);
     expect(same("LeftFoot")).toBeLessThan(1e-6);
     expect(same("RightFoot")).toBeLessThan(1e-6);

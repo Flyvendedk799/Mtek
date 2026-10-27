@@ -84,11 +84,11 @@ test.describe("clips_from: the Guest plays the Hero's clips (decision 0224)", ()
     expect(worstCpu, "largest joint distance between the mounted Guest and the CPU retarget (m)").toBeLessThan(1e-4);
     expect(worstLength, "bone length error (m)").toBeLessThan(1e-4);
     // Limb directions: the hierarchies differ (the Guest has clavicles and an upper chest, the Hero none), the rests differ by 45 degrees.
-    expect((worstAngle * 180) / Math.PI, "largest limb direction error (degrees)").toBeLessThan(0.5);
+    expect((worstAngle * 180) / Math.PI, "largest limb direction error (degrees)").toBeLessThan(0.25);
     void worstStance;
   });
 
-  test("the retargeted clip really is the Hero's: the bind poses differ by the rest pose, the playbacks agree", async () => {
+  test("the retargeted clip really is the Hero's: the bind poses differ by the rest pose, the playbacks agree", () => {
     // At time zero the Hero's arms are in the Dance pose, not the T-pose of its bind, and the Guest's, in its A-pose rest, are in that same pose.
     const hero = heroRig().skin, guest = guestRig().skin;
     const dance = cpuPose(hero, "Dance", 0.5).nodes;

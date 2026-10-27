@@ -44,25 +44,19 @@ test.describe("foot placement of the example (decision 0224)", () => {
     const result = await run(page, [tap("Digit3"), wait(30), hold(["KeyW"], 330), wait(30)], { model: "all", ghost: "all" });
     const rows: number[] = [];
     let onPlateau = 0, onRamp = 0, onRiser = 0, worstStance = 0, worstAll = 0, lowered = 0;
-    let worstReach = 0, worstAgreement = 0, lagBound = 0;
+    let worstReach = 0, lagBound = 0;
     for (const s of result.samples.slice(31)) {
       for (const side of ["Left", "Right"]) {
         const lf = figure(s, "ghost", `${side}Foot`);
         const foot = worldOf(s, figure(s, "model", `${side}Foot`));
         const ghostWorld = worldOf(s, lf);
-        const g = groundHeight(foot[0], foot[2]);
         const n = groundNormal(ghostWorld[0], ghostWorld[2]);
         // The target of the program: the ground at the animated foot's plane position, plus the lift the animation gives the foot, plus the sole offset along the normal.
         const lift = Math.max(lf[1] - SOLE, 0);
         const expected = groundHeight(ghostWorld[0], ghostWorld[2]) + lift + SOLE * n[1];
         const error = Math.abs(foot[1] - expected);
-        const target: V3 = [ghostWorld[0] + SOLE * n[0], expected, ghostWorld[2] + SOLE * n[2]];
-        const error3 = dist(foot, target);
         const fpNow = s.model.footPlacement;
         const lag = fpNow === null ? 0 : Math.abs(fpNow.requiredDrop - fpNow.drop);
-        const residual = fpNow === null ? 0 : (side === "Left" ? fpNow.left : fpNow.right).residual;
-        worstAgreement = Math.max(worstAgreement, Math.abs(error3 - residual));
-        void residual;
         lagBound = Math.max(lagBound, error - lag);
         worstAll = Math.max(worstAll, error);
         if (Math.abs(lf[1] - SOLE) < 1e-4) worstStance = Math.max(worstStance, error);
@@ -71,7 +65,6 @@ test.describe("foot placement of the example (decision 0224)", () => {
         if (z > 7.8 && z < 9.0) onRamp += 1;
         if ((z > 3.3 && z < 3.7) || (z > 4.3 && z < 4.7)) onRiser += 1;
         rows.push(error);
-        void g;
       }
       const fp = s.model.footPlacement;
       if (fp !== null) {
@@ -82,7 +75,7 @@ test.describe("foot placement of the example (decision 0224)", () => {
     // The miss of a target at full extension: 0.368 * softness * (cmax - cmin) of the leg (spec/animation.md 3.3).
     const reach = legReach(figure(result.samples[40]!, "ghost", "LeftUpLeg"), figure(result.samples[40]!, "ghost", "LeftLeg"), figure(result.samples[40]!, "ghost", "LeftFoot"), SOFTNESS, FLEXION_MAX);
     const bound = Math.exp(-1) * reach.w + 0.001;
-    writeProbe("feet-course", { worstAll, worstStance, bound, frames: { plateau: onPlateau, ramp: onRamp, riser: onRiser }, largestDrop: lowered, worstSolverResidual: worstReach, worstAgreement, worstErrorBeyondLag: lagBound, p50: [...rows].sort((a, b) => a - b)[Math.floor(rows.length / 2)], p99: [...rows].sort((a, b) => a - b)[Math.floor(rows.length * 0.99)] });
+    writeProbe("feet-course", { worstAll, worstStance, bound, frames: { plateau: onPlateau, ramp: onRamp, riser: onRiser }, largestDrop: lowered, worstSolverResidual: worstReach, worstErrorBeyondLag: lagBound, p50: [...rows].sort((a, b) => a - b)[Math.floor(rows.length / 2)], p99: [...rows].sort((a, b) => a - b)[Math.floor(rows.length * 0.99)] });
     expect(onPlateau, "foot samples on the plateau").toBeGreaterThan(100);
     expect(onRamp, "foot samples on the ramp").toBeGreaterThan(20);
     expect(onRiser, "foot samples on the risers").toBeGreaterThan(10);

@@ -12,7 +12,7 @@ import { expect, test } from "../../support/fixtures.ts";
 import { animationConstant } from "../../support/animation-example.ts";
 import { angleBetween, bendSide, dist, figureToWorld, norm, sub, type V3 } from "../../support/animation-reference.ts";
 import { collectProblems, figure, run, writeProbe } from "../../support/animation-harness.ts";
-import { hold, tap, wait } from "../../support/movement-drive.ts";
+import { hold, tap, wait, type Step } from "../../support/movement-drive.ts";
 import type { Sample } from "../../support/animation-drive.ts";
 
 const FIGURE_BASE = animationConstant("FIGURE_BASE");
@@ -89,7 +89,7 @@ test.describe("goals of the example (decision 0224)", () => {
     expect(wrongSide, "the elbow is never on the front side").toBeGreaterThanOrEqual(-1e-5);
   });
 
-  const RUNS: ReadonlyArray<{ name: string; steps: ReturnType<typeof tap>[] | ReturnType<typeof hold>[] }> = [
+  const RUNS: ReadonlyArray<{ name: string; steps: Step[] }> = [
     { name: "over the curb and across it", steps: [tap("Digit2"), wait(20), hold(["KeyW", "ShiftLeft"], 110), hold(["KeyW"], 60)] },
     { name: "up the stairs, over the plateau and down the ramp", steps: [tap("Digit3"), wait(20), hold(["KeyW", "ShiftLeft"], 190), hold(["KeyW"], 120)] },
   ];

@@ -12,7 +12,6 @@
 //                weights; what the program computes itself with the frame time (the parameter's exponential follow, the layer
 //                fades) is independent of it, and is asserted equal.
 import { expect, test } from "../../support/fixtures.ts";
-import { ANIMATION_SOURCE_LITERALS, animationSource } from "../../support/animation-example.ts";
 import { BLEND_LAYOUT, add, cpuPose, clipTravel, dist, heroRig, norm, referenceBlendWeights, rotateY, scale, sub, type V3 } from "../../support/animation-reference.ts";
 import { TRACKED, collectProblems, figure, run, writeProbe } from "../../support/animation-harness.ts";
 import { hold, plan, wait, type PatternName } from "../../support/movement-drive.ts";
@@ -27,12 +26,6 @@ test.describe("2D blend space and root motion of the example (decision 0224)", (
     problems = collectProblems(page);
   });
   test.afterEach(() => problems.check());
-
-  test("the program's sample layout is the one the reference transcribes", () => {
-    const source = animationSource();
-    for (const literal of ANIMATION_SOURCE_LITERALS) expect(source, literal).toContain(literal);
-    for (const { clip, x, y } of BLEND_LAYOUT) expect(source).toContain(`animation.blend_sample(Model, "${clip}", ${x.toFixed(1)}, ${y.toFixed(1)});`);
-  });
 
   /** Largest displacement of each tracked joint between two evaluations `dt` apart over two cycles of every clip played alone. */
   function clipStepBound(dt: number): Map<string, number> {

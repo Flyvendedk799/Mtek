@@ -405,7 +405,7 @@ function idlePose(t) {
 
 /** A whole-body pose (weight on one leg, feet apart, hips turned) with the right arm waving: a layer masked to the upper body takes only the waving. */
 function wavePose(t) {
-  const d = HERO_DIMS, phi = t / 1.6, w = TAU * 2.5 * phi;
+  const d = HERO_DIMS, phi = t / 1.6, w = TAU * 3 * phi;
   const hips = [0.05, d.ankle + 0.82 + d.hipDrop, 0];
   const legs = {}, arms = {};
   for (const [side, sign, z] of [["L", 1, 0.06], ["R", -1, -0.04]]) {
