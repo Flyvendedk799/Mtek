@@ -39,7 +39,7 @@ export function movementConstant(name: string, source: string = movementSource()
  */
 export const MOVEMENT_SOURCE_LITERALS = [
   "collider: CapsuleCollider { radius: 0.3; height: 1.8; friction: 0.0 };",
-  "body: Kinematic { max_slope: 0.7853982; step_height: 0.3; };",
+  "body: Kinematic { max_slope: 0.7853982; step_height: 0.3 };",
   "position: vec3(4.2, 0.1, -9.0);",
   "mesh: Box { size: vec3(2.4, 1.2, 3.0) };",
   "position: vec3(4.0, 0.3, -3.0);",

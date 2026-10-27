@@ -341,7 +341,7 @@ scene Play {
 A character that walks, jumps, climbs stairs and rides moving platforms is a `Kinematic` body with a `CapsuleCollider` that calls `move_character(displacement, rotation)` from `fixed_update`. The engine slides it along walls, steps it up risers under `step_height`, stops it at slopes steeper than `max_slope`, snaps it to the ground and carries it with the platform it stands on. It applies no gravity: the program keeps its own vertical speed and uses `grounded` (true when the last move ended on ground) to reset it and to allow a jump. A platform is a kinematic body that sets its own target every tick with `set_kinematic_target`; the character standing on it is carried by its movement and its turning.
 
 ```mtek from=examples/character-movement/src/main.mtek
-        body: Kinematic { max_slope: 0.7853982; step_height: 0.3; };
+        body: Kinematic { max_slope: 0.7853982; step_height: 0.3 };
         collider: CapsuleCollider { radius: 0.3; height: 1.8; friction: 0.0 };
 ```
 
