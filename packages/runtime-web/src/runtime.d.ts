@@ -303,7 +303,7 @@ export interface SceneSpatialEntity {
 }
 export interface ScenePhysicsBody {
   readonly entityId:string;readonly kind:"static"|"kinematic"|"dynamic";readonly active:boolean;
-  readonly collider:{readonly shape:{readonly kind:"box";readonly size:AnimationVector}|{readonly kind:"sphere";readonly radius:number};readonly sensor:boolean;readonly friction:number;readonly restitution:number};
+  readonly collider:{readonly shape:{readonly kind:"box";readonly size:AnimationVector}|{readonly kind:"sphere";readonly radius:number}|{readonly kind:"capsule";readonly radius:number;readonly height:number};readonly sensor:boolean;readonly friction:number;readonly restitution:number};
   readonly position:AnimationVector;readonly rotation:AnimationQuaternion;
   readonly contacts?:readonly {readonly otherId:string|null;readonly point:AnimationVector;readonly normal:AnimationVector;readonly distance:number}[];
 }
