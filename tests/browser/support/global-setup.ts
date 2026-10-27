@@ -8,7 +8,8 @@
 // fixture (`fixtures/m4/texture_sampling` into `.out/m4/`, support/m4-textures.ts), the material configurator example and its
 // variants (`examples/material-configurator` into `.out/m4-configurator/`, support/m4-configurator.ts), the M5-01 prefab
 // fixture (`fixtures/m5/*` into `.out/m5/`, support/m5-fixtures.ts), the physics playground example
-// (`examples/physics-playground` into `.out/m5-playground/`, support/m5-playground.ts), the M7-01 modular scene example
+// (`examples/physics-playground` into `.out/m5-playground/`, support/m5-playground.ts), the character movement example
+// (`examples/character-movement` into `.out/movement-example/`, support/movement-example.ts, decision 0218), the M7-01 modular scene example
 // (`examples/modular-scene` into `.out/m7-modular-scene/`, support/m7-modular-scene.ts), the M6-10 untrusted-preview
 // fixtures (`fixtures/preview/*` and the physics fixture, built with `--mode preview` into `.out/preview/`,
 // support/preview-fixtures.ts), the M6 fixtures (`fixtures/m6/*` into `.out/m6/`, support/m6-fixtures.ts),
@@ -30,6 +31,7 @@ import { buildM4Fixtures } from "./m4-fixtures.ts";
 import { buildM5Fixtures } from "./m5-fixtures.ts";
 import { buildM6Fixtures } from "./m6-fixtures.ts";
 import { buildPlayground } from "./m5-playground.ts";
+import { buildMovementExample } from "./movement-example.ts";
 import { buildModularScene } from "./m7-modular-scene.ts";
 import { buildPreviewFixtures } from "./preview-fixtures.ts";
 import { buildTextureSamplingFixture } from "./m4-textures.ts";
@@ -128,6 +130,8 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   buildM5Fixtures(cli);
   // M5-07: the physics playground example, in `.out/m5-playground/`.
   buildPlayground(cli);
+  // Decision 0218: the character movement example, in `.out/movement-example/`.
+  buildMovementExample(cli);
   // M7-01: the modular scene example (five modules), in `.out/m7-modular-scene/`.
   buildModularScene(cli);
   // M6-10: untrusted previews (loop budget, policy page, external bootstrap), in `.out/preview/`.
