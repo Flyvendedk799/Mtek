@@ -59,11 +59,11 @@ pub(super) fn events() -> Vec<EventDef> {
         ),
         collision(
             "collision_enter",
-            "The entity's collider started touching another entity's collider; the parameter is the other entity.",
+            "Its collider started touching another; the parameter is that entity.",
         ),
         collision(
             "collision_exit",
-            "The entity's collider stopped touching another entity's collider; the parameter is the other entity.",
+            "Its collider stopped touching another; the parameter is that entity.",
         ),
     ]
 }
@@ -137,6 +137,6 @@ pub(super) fn enums() -> Vec<EnumDef> {
             })
             .collect(),
         since: Milestone::M1,
-        doc: "A physical keyboard key, independent of the layout. Written `Key.<Member>` with exactly the members listed (`Key.Space`, `Key.ArrowUp`, `Key.A`, `Key.Digit1`); there is no `Key.Up`, `Key.KeyA` or `Key.Shift`. Maps from the DOM `KeyboardEvent.code`.",
+        doc: "A physical key, layout-independent. Written `Key.<Member>` with exactly the members listed (`Key.Space`, `Key.ArrowUp`, `Key.A`, `Key.Digit1`); there is no `Key.Up`, `Key.KeyA` or `Key.Shift`.",
     }]
 }

@@ -362,7 +362,7 @@ fn schema_rows() -> Vec<Row> {
             "f32",
             Some("0.7853982"),
             "C",
-            Some("0\u{2026}1.5707964, finite"),
+            Some("0\u{2026}1.5707964"),
         ),
         (
             "Kinematic",

@@ -85,14 +85,14 @@ pub(super) fn body_properties() -> Vec<BodyPropertyDef> {
             ty: TypeRef::Bool,
             applies_to: KINEMATIC,
             since: Milestone::M1,
-            doc: "Whether the last completed `move_character` found ground under the body; false before the first. Read-only.",
+            doc: "Ground found by the last completed `move_character`. Read-only.",
         },
         BodyPropertyDef {
             name: "ground_normal",
             ty: TypeRef::Vec3,
             applies_to: KINEMATIC,
             since: Milestone::M1,
-            doc: "The surface normal of the ground found by the last completed `move_character`; zero when not grounded. Read-only.",
+            doc: "Ground normal of the last `move_character`; zero in the air. Read-only.",
         },
     ]
 }
