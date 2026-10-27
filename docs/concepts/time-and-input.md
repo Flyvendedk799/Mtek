@@ -31,13 +31,13 @@ The events of this build:
 
 | Event | Form | Allowed in | Meaning |
 |---|---|---|---|
-| `on collision_enter(...)` | one parameter of type `entity_ref` | entity, prefab (with a collider) | Its collider started touching another; the parameter is that entity. |
-| `on collision_exit(...)` | one parameter of type `entity_ref` | entity, prefab (with a collider) | Its collider stopped touching another; the parameter is that entity. |
-| `on key_down(...)` | a constant `Key` as filter | scene, entity, prefab | Delivered when the filtered key transitions to pressed. Auto-repeat is ignored. |
+| `on collision_enter(...)` | one parameter of type `entity_ref` | entity, prefab (with a collider) | Its collider began touching the parameter entity. |
+| `on collision_exit(...)` | one parameter of type `entity_ref` | entity, prefab (with a collider) | Its collider stopped touching the parameter entity. |
+| `on key_down(...)` | a constant `Key` as filter | scene, entity, prefab | Delivered when the filtered key is pressed; auto-repeat is ignored. |
 | `on key_up(...)` | a constant `Key` as filter | scene, entity, prefab | Delivered when the filtered key is released. |
-| `on message(...)` | one parameter of type `string` | entity, prefab | A queued string sent to this entity; delivered before its next unpaused update. |
-| `on pointer_down(...)` | one parameter of type `PointerEvent` | scene, entity, prefab | A pointer button was pressed on the canvas. |
-| `on pointer_move(...)` | one parameter of type `PointerEvent` | scene, entity, prefab | The pointer moved; at most once per frame with the latest position. |
+| `on message(...)` | one parameter of type `string` | entity, prefab | A string sent to this entity; delivered before its next unpaused update. |
+| `on pointer_down(...)` | one parameter of type `PointerEvent` | scene, entity, prefab | A pointer button was pressed. |
+| `on pointer_move(...)` | one parameter of type `PointerEvent` | scene, entity, prefab | The pointer moved; at most once per frame, latest position. |
 | `on pointer_up(...)` | one parameter of type `PointerEvent` | scene, entity, prefab | A pointer button was released. |
 
 The settings of `mtek.toml` that change the clocks, shown with the values used in this example (the defaults are the numbers above):

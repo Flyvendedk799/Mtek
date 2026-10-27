@@ -1,0 +1,12 @@
+// chain_goal takes the id, the end joint, the number of joints (i32), a world-space goal and a weight;
+// limb_goal takes a limb name and a goal; foot_placement takes two points and two normals.
+scene Demo {
+    camera Main {}
+    entity Rig {}
+    on key_down(Key.Space) {
+        animation.chain_goal(Rig, "reach", "Hand", 3.0, vec3(0.0), 1.0);
+        animation.chain_goal(Rig, "reach", "Hand", 3, 1.0, 1.0);
+        animation.limb_goal(Rig, 2, vec3(0.0), 1.0);
+        animation.foot_placement(Rig, vec3(0.0), vec3(0.0), vec3(0.0, 1.0, 0.0), 1.0, 1.0);
+    }
+}

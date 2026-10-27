@@ -6,7 +6,7 @@
       "name": "Box",
       "category": "mesh",
       "since": "M1",
-      "doc": "An axis-aligned box centred on the origin.",
+      "doc": "Axis-aligned box centred on the origin.",
       "fields": [
         {
           "name": "size",
@@ -18,7 +18,7 @@
           "constructionOnly": true,
           "range": "every component > 0",
           "since": "M1",
-          "doc": "Full extents along X, Y and Z."
+          "doc": "Full extents."
         }
       ]
     },
@@ -38,7 +38,7 @@
           "constructionOnly": true,
           "range": "≥ 0, finite",
           "since": "M1",
-          "doc": "Coulomb friction coefficient."
+          "doc": "Friction coefficient."
         },
         {
           "name": "restitution",
@@ -62,7 +62,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "A sensor reports collisions but pushes nothing."
+          "doc": "Reports collisions, pushes nothing."
         },
         {
           "name": "size",
@@ -74,7 +74,7 @@
           "constructionOnly": true,
           "range": "every component > 0, finite",
           "since": "M1",
-          "doc": "Full extents along X, Y and Z."
+          "doc": "Full extents."
         }
       ]
     },
@@ -94,7 +94,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "Marks the active camera; optional with one camera, exactly one `active: true` with several."
+          "doc": "Marks the active camera: optional with one, exactly one `active: true` with several."
         },
         {
           "name": "exposure",
@@ -106,7 +106,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "EV100; lit materials scale by 1 / (1.2 * 2^exposure). Default -log2(1.2 * pi): white under 1 lux shows white; a sunny day (about 100 000 lux) is about 15."
+          "doc": "EV100; lit materials scale by 1 / (1.2 * 2^exposure). By default white under 1 lux shows white."
         },
         {
           "name": "position",
@@ -118,7 +118,7 @@
           "constructionOnly": false,
           "range": null,
           "since": "M1",
-          "doc": "Camera position in world space, in metres."
+          "doc": "World position in metres."
         },
         {
           "name": "projection",
@@ -174,7 +174,7 @@
           "constructionOnly": true,
           "range": "≥ 0, finite",
           "since": "M1",
-          "doc": "Coulomb friction coefficient."
+          "doc": "Friction coefficient."
         },
         {
           "name": "height",
@@ -222,7 +222,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "A sensor reports collisions but pushes nothing."
+          "doc": "Reports collisions, pushes nothing."
         }
       ]
     },
@@ -230,7 +230,7 @@
       "name": "DirectionalLight",
       "category": "light",
       "since": "M1",
-      "doc": "A light infinitely far away. Travels along the entity's world -Z axis; rotate the entity to aim it.",
+      "doc": "Infinitely distant light travelling along the entity's world -Z; rotate the entity to aim it.",
       "fields": [
         {
           "name": "color",
@@ -242,7 +242,7 @@
           "constructionOnly": false,
           "range": null,
           "since": "M1",
-          "doc": "Light colour (linear RGB; alpha is ignored)."
+          "doc": "Linear RGB colour; alpha is ignored."
         },
         {
           "name": "intensity",
@@ -262,7 +262,7 @@
       "name": "Dynamic",
       "category": "body",
       "since": "M1",
-      "doc": "A solver-controlled body; forces, impulses and teleports are explicit commands.",
+      "doc": "A solver-controlled body; forces, impulses and teleports are commands.",
       "fields": [
         {
           "name": "angular_damping",
@@ -274,7 +274,7 @@
           "constructionOnly": true,
           "range": "≥ 0, finite",
           "since": "M1",
-          "doc": "Rate at which angular velocity decays."
+          "doc": "Angular velocity decay rate."
         },
         {
           "name": "continuous",
@@ -286,7 +286,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "Continuous collision detection for this body."
+          "doc": "Continuous collision detection."
         },
         {
           "name": "linear_damping",
@@ -298,7 +298,7 @@
           "constructionOnly": true,
           "range": "≥ 0, finite",
           "since": "M1",
-          "doc": "Rate at which linear velocity decays."
+          "doc": "Linear velocity decay rate."
         },
         {
           "name": "mass",
@@ -318,7 +318,7 @@
       "name": "Emitter",
       "category": "emitter",
       "since": "M1",
-      "doc": "A bounded particle emitter: at most 64 particles, `rate` per second, in a hemisphere around the entity's up axis.",
+      "doc": "Bounded particle emitter: at most 64 particles, `rate` per second, in a hemisphere around the entity's up axis.",
       "fields": [
         {
           "name": "gravity",
@@ -330,7 +330,7 @@
           "constructionOnly": true,
           "range": "finite",
           "since": "M1",
-          "doc": "Downward acceleration in metres per second squared."
+          "doc": "Downward acceleration in m/s^2."
         },
         {
           "name": "lifetime",
@@ -342,7 +342,7 @@
           "constructionOnly": true,
           "range": "> 0, finite",
           "since": "M1",
-          "doc": "How long each particle lives, in seconds."
+          "doc": "Particle lifetime in seconds."
         },
         {
           "name": "rate",
@@ -354,7 +354,7 @@
           "constructionOnly": true,
           "range": "≥ 0",
           "since": "M1",
-          "doc": "Particles spawned per second. A fraction carries to the next frame."
+          "doc": "Particles per second; a fraction carries to the next frame."
         },
         {
           "name": "size",
@@ -378,7 +378,7 @@
           "constructionOnly": true,
           "range": "≥ 0",
           "since": "M1",
-          "doc": "Initial speed in metres per second."
+          "doc": "Initial speed in m/s."
         }
       ]
     },
@@ -398,7 +398,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; requires `collider`."
+          "doc": "A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; needs `collider`."
         },
         {
           "name": "bounds_center",
@@ -437,6 +437,18 @@
           "doc": "A glTF animation name that moves this entity; the mesh must come from that file."
         },
         {
+          "name": "clips_from",
+          "type": "glb_asset",
+          "default": null,
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "GLB whose humanoid clips play on this skeletal mesh; `clip` names its clips."
+        },
+        {
           "name": "collider",
           "type": "collider",
           "default": null,
@@ -458,7 +470,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "A light (`DirectionalLight`, `PointLight`); its fields are writable and bindable. Named entities only."
+          "doc": "A light (`DirectionalLight`, `PointLight`); fields writable and bindable. Named entities only."
         },
         {
           "name": "material",
@@ -471,7 +483,7 @@
           "constructionOnly": false,
           "range": null,
           "since": "M1",
-          "doc": "Material instance; a value-only one can be replaced by the same material type; params are writable and bindable. Requires `mesh`."
+          "doc": "Material instance; a value-only one can be replaced by the same type; params are writable and bindable. Needs `mesh`."
         },
         {
           "name": "mesh",
@@ -483,7 +495,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "The mesh drawn: a descriptor (`Box`, `Sphere`, `Plane`) or an asset mesh."
+          "doc": "The mesh: `Box`, `Sphere`, `Plane` or an asset mesh."
         },
         {
           "name": "particles",
@@ -495,7 +507,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "A particle emitter: up to 64 camera-facing billboards of this entity's mesh in its material's colour; counted even without a mesh."
+          "doc": "Particle emitter: up to 64 camera-facing billboards of the entity's mesh in its material's colour; counted without a mesh too."
         },
         {
           "name": "position",
@@ -543,7 +555,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "A group name (`\"rock\"`: lowercase letters, digits, `_`) for `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag` and `destroy_tagged`."
+          "doc": "Group name (lowercase letters, digits, `_`) for `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag`, `destroy_tagged`."
         },
         {
           "name": "visible",
@@ -563,7 +575,7 @@
       "name": "Kinematic",
       "category": "body",
       "since": "M1",
-      "doc": "Program-moved body: `set_kinematic_target`, or `move_character` with collisions. Fields tune `move_character`.",
+      "doc": "Program-moved body: `set_kinematic_target`, or `move_character` with collisions. Fields tune it.",
       "fields": [
         {
           "name": "carry",
@@ -655,7 +667,7 @@
           "constructionOnly": false,
           "range": "> near",
           "since": "M1",
-          "doc": "Distance to the far plane."
+          "doc": "Far plane."
         },
         {
           "name": "height",
@@ -667,7 +679,7 @@
           "constructionOnly": false,
           "range": "> 0",
           "since": "M1",
-          "doc": "Height of the view volume in world units; width follows the aspect ratio."
+          "doc": "View volume height in world units; width follows the aspect ratio."
         },
         {
           "name": "near",
@@ -679,7 +691,7 @@
           "constructionOnly": false,
           "range": "> 0",
           "since": "M1",
-          "doc": "Distance to the near plane."
+          "doc": "Near plane."
         }
       ]
     },
@@ -687,7 +699,7 @@
       "name": "Pbr",
       "category": "material",
       "since": "M1",
-      "doc": "Metallic-roughness PBR with optional scene shadows and environment lighting.",
+      "doc": "Metallic-roughness PBR; optional scene shadows and environment lighting.",
       "fields": [
         {
           "name": "base_color",
@@ -699,7 +711,7 @@
           "constructionOnly": false,
           "range": null,
           "since": "M1",
-          "doc": "Linear base colour multiplied with the base colour texture."
+          "doc": "Linear base colour, multiplied with the texture."
         },
         {
           "name": "base_color_sampler",
@@ -711,7 +723,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "Sampler for the base colour texture."
+          "doc": "Sampler."
         },
         {
           "name": "base_color_texture",
@@ -723,7 +735,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "Base colour texture."
+          "doc": "Texture."
         },
         {
           "name": "emissive",
@@ -747,7 +759,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "Sampler of the emissive map."
+          "doc": "Sampler."
         },
         {
           "name": "emissive_texture",
@@ -771,7 +783,7 @@
           "constructionOnly": false,
           "range": null,
           "since": "M1",
-          "doc": "Metalness; clamped to 0..1 by the lighting model."
+          "doc": "Metalness, clamped to 0..1."
         },
         {
           "name": "metallic_roughness_sampler",
@@ -783,7 +795,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "Sampler of the metallic_roughness map."
+          "doc": "Sampler."
         },
         {
           "name": "metallic_roughness_texture",
@@ -807,7 +819,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "Sampler of the normal map."
+          "doc": "Sampler."
         },
         {
           "name": "normal_scale",
@@ -843,7 +855,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "Sampler of the occlusion map."
+          "doc": "Sampler."
         },
         {
           "name": "occlusion_strength",
@@ -855,7 +867,7 @@
           "constructionOnly": false,
           "range": null,
           "since": "M1",
-          "doc": "Indirect-light occlusion strength, clamped to 0..1."
+          "doc": "Occlusion strength, clamped to 0..1."
         },
         {
           "name": "occlusion_texture",
@@ -879,7 +891,7 @@
           "constructionOnly": false,
           "range": null,
           "since": "M1",
-          "doc": "Perceptual roughness; clamped to 0.045..1 by the lighting model."
+          "doc": "Perceptual roughness, clamped to 0.045..1."
         }
       ]
     },
@@ -899,7 +911,7 @@
           "constructionOnly": false,
           "range": "> near",
           "since": "M1",
-          "doc": "Distance to the far plane."
+          "doc": "Far plane."
         },
         {
           "name": "fov_y",
@@ -923,7 +935,7 @@
           "constructionOnly": false,
           "range": "> 0",
           "since": "M1",
-          "doc": "Distance to the near plane."
+          "doc": "Near plane."
         }
       ]
     },
@@ -931,7 +943,7 @@
       "name": "Plane",
       "category": "mesh",
       "since": "M1",
-      "doc": "A single-sided horizontal plane at y = 0 facing +Y.",
+      "doc": "Single-sided plane at y = 0 facing +Y.",
       "fields": [
         {
           "name": "size",
@@ -951,7 +963,7 @@
       "name": "PointLight",
       "category": "light",
       "since": "M1",
-      "doc": "A light radiating from the entity's world position.",
+      "doc": "Light radiating from the entity's position.",
       "fields": [
         {
           "name": "color",
@@ -963,7 +975,7 @@
           "constructionOnly": false,
           "range": null,
           "since": "M1",
-          "doc": "Light colour (linear RGB; alpha is ignored)."
+          "doc": "Linear RGB colour; alpha is ignored."
         },
         {
           "name": "intensity",
@@ -1007,7 +1019,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "Colour of the ambient light; only RGB is used."
+          "doc": "Ambient light colour; only RGB is used."
         },
         {
           "name": "ambient_intensity",
@@ -1019,7 +1031,7 @@
           "constructionOnly": true,
           "range": "≥ 0",
           "since": "M1",
-          "doc": "Ambient light scale for lit materials; 0 is off. Multiplied by the camera's exposure scale (about 3.14 by default), so 0.3 is near full brightness on white. Unlit ignores it."
+          "doc": "Ambient light scale for lit materials; 0 is off. Times the camera's exposure scale (about 3.14), so 0.3 is near full brightness on white. Unlit ignores it."
         },
         {
           "name": "clear_color",
@@ -1031,7 +1043,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "Colour the canvas is cleared to; only RGB is used."
+          "doc": "Canvas clear colour; only RGB is used."
         },
         {
           "name": "gravity",
@@ -1107,7 +1119,7 @@
           "constructionOnly": true,
           "range": "≥ 0, finite",
           "since": "M1",
-          "doc": "Coulomb friction coefficient."
+          "doc": "Friction coefficient."
         },
         {
           "name": "radius",
@@ -1143,7 +1155,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "A sensor reports collisions but pushes nothing."
+          "doc": "Reports collisions, pushes nothing."
         }
       ]
     },
@@ -1163,7 +1175,7 @@
           "constructionOnly": false,
           "range": null,
           "since": "M1",
-          "doc": "Cell (animation frame) shown, from 0, row by row; floored and wrapped, so `bind(t * fps)` animates."
+          "doc": "Cell shown, from 0, row by row; floored and wrapped, so `bind(t * fps)` animates."
         },
         {
           "name": "columns",
@@ -1175,7 +1187,7 @@
           "constructionOnly": false,
           "range": "1…64",
           "since": "M1",
-          "doc": "Cells per row of the sheet."
+          "doc": "Cells per row."
         },
         {
           "name": "rows",
@@ -1187,7 +1199,7 @@
           "constructionOnly": false,
           "range": "1…64",
           "since": "M1",
-          "doc": "Rows of cells in the sheet."
+          "doc": "Rows of cells."
         },
         {
           "name": "sheet",
@@ -1211,7 +1223,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "Sampler of the sheet (default nearest, clamped)."
+          "doc": "Sampler."
         },
         {
           "name": "tint",
@@ -1231,7 +1243,7 @@
       "name": "Static",
       "category": "body",
       "since": "M1",
-      "doc": "An immovable body; its pose is fixed at creation from the entity transform.",
+      "doc": "An immovable body; its pose is fixed at creation.",
       "fields": []
     },
     {
@@ -1250,7 +1262,7 @@
           "constructionOnly": false,
           "range": null,
           "since": "M1",
-          "doc": "The colour written to the canvas."
+          "doc": "Colour."
         }
       ]
     }
@@ -1266,7 +1278,7 @@
       ],
       "requiresCollider": true,
       "since": "M1",
-      "doc": "Its collider started touching another; the parameter is that entity."
+      "doc": "Its collider began touching the parameter entity."
     },
     {
       "name": "collision_exit",
@@ -1278,7 +1290,7 @@
       ],
       "requiresCollider": true,
       "since": "M1",
-      "doc": "Its collider stopped touching another; the parameter is that entity."
+      "doc": "Its collider stopped touching the parameter entity."
     },
     {
       "name": "key_down",
@@ -1291,7 +1303,7 @@
       ],
       "requiresCollider": false,
       "since": "M1",
-      "doc": "Delivered when the filtered key transitions to pressed. Auto-repeat is ignored."
+      "doc": "Delivered when the filtered key is pressed; auto-repeat is ignored."
     },
     {
       "name": "key_up",
@@ -1316,7 +1328,7 @@
       ],
       "requiresCollider": false,
       "since": "M1",
-      "doc": "A queued string sent to this entity; delivered before its next unpaused update."
+      "doc": "A string sent to this entity; delivered before its next unpaused update."
     },
     {
       "name": "pointer_down",
@@ -1329,7 +1341,7 @@
       ],
       "requiresCollider": false,
       "since": "M1",
-      "doc": "A pointer button was pressed on the canvas."
+      "doc": "A pointer button was pressed."
     },
     {
       "name": "pointer_move",
@@ -1342,7 +1354,7 @@
       ],
       "requiresCollider": false,
       "since": "M1",
-      "doc": "The pointer moved; at most once per frame with the latest position."
+      "doc": "The pointer moved; at most once per frame, latest position."
     },
     {
       "name": "pointer_up",
@@ -1362,7 +1374,7 @@
     {
       "name": "Key",
       "since": "M1",
-      "doc": "A physical key, layout-independent. Written `Key.<Member>` with exactly the members listed (`Key.Space`, `Key.ArrowUp`, `Key.A`, `Key.Digit1`); there is no `Key.Up`, `Key.KeyA` or `Key.Shift`.",
+      "doc": "A physical key: `Key.<Member>` with exactly the members listed (e.g. `Key.ArrowUp`, `Key.Digit1`); there is no `Key.Up`, `Key.KeyA` or `Key.Shift`.",
       "members": [
         {
           "name": "A",
@@ -1658,7 +1670,7 @@
       "handlersOnly": false,
       "cpuSemantics": "",
       "since": "M1",
-      "doc": "Whether the entity reference points at a live entity."
+      "doc": "Whether the reference points at a live entity."
     },
     {
       "name": "asin",
@@ -1730,7 +1742,7 @@
       "handlersOnly": false,
       "cpuSemantics": "One draw of `random()`: index `floor(random() * N)`. `N` is at least 1.",
       "since": "M1",
-      "doc": "One element of an array, chosen uniformly."
+      "doc": "A uniformly chosen element."
     },
     {
       "name": "clamp",
@@ -1779,7 +1791,7 @@
       "handlersOnly": false,
       "cpuSemantics": "",
       "since": "M1",
-      "doc": "The number of live entities with the tag."
+      "doc": "Number of live entities with the tag."
     },
     {
       "name": "cross",
@@ -1827,7 +1839,7 @@
       "handlersOnly": true,
       "cpuSemantics": "",
       "since": "M1",
-      "doc": "Queues removal of every live spawned entity with the tag (not a tag of a named entity)."
+      "doc": "Queues removal of every live spawned entity with the tag (not named entities)."
     },
     {
       "name": "distance",
@@ -1887,7 +1899,7 @@
       "handlersOnly": false,
       "cpuSemantics": "",
       "since": "M1",
-      "doc": "The first live entity with the tag in instance order; a dead reference if there is none."
+      "doc": "The first live entity with the tag in instance order; a dead reference if none."
     },
     {
       "name": "floor",
@@ -1959,7 +1971,7 @@
       "handlersOnly": false,
       "cpuSemantics": "",
       "since": "M1",
-      "doc": "Whether the key was down at the end of input handling this frame."
+      "doc": "Whether the key is down. Sampled after this frame's input handling."
     },
     {
       "name": "is_muted",
@@ -1983,7 +1995,7 @@
       "handlersOnly": false,
       "cpuSemantics": "0 primary, 1 middle, 2 secondary. Any other button is false.",
       "since": "M1",
-      "doc": "Whether pointer button `button` was down at the end of input handling."
+      "doc": "Whether pointer button `button` is down after input handling."
     },
     {
       "name": "key_pressed",
@@ -1995,7 +2007,7 @@
       "handlersOnly": false,
       "cpuSemantics": "",
       "since": "M1",
-      "doc": "Whether the key went down during input handling of the current frame."
+      "doc": "Whether the key went down. Sampled after this frame's input handling."
     },
     {
       "name": "key_released",
@@ -2007,7 +2019,7 @@
       "handlersOnly": false,
       "cpuSemantics": "",
       "since": "M1",
-      "doc": "Whether the key went up during input handling of the current frame."
+      "doc": "Whether the key went up. Sampled after this frame's input handling."
     },
     {
       "name": "length",
@@ -2106,7 +2118,7 @@
       "handlersOnly": false,
       "cpuSemantics": "Ties go to the first in instance order.",
       "since": "M1",
-      "doc": "The live entity with the tag whose world position is nearest `point`; a dead reference if there is none."
+      "doc": "The live entity with the tag nearest `point` (world position); a dead reference if none."
     },
     {
       "name": "normalize",
@@ -2130,7 +2142,7 @@
       "handlersOnly": false,
       "cpuSemantics": "",
       "since": "M1",
-      "doc": "Oriented box intersection from world centres, full sizes and rotations. No physics needed."
+      "doc": "Oriented box intersection from world centres, full sizes and rotations."
     },
     {
       "name": "overlap_spheres",
@@ -2142,7 +2154,7 @@
       "handlersOnly": false,
       "cpuSemantics": "",
       "since": "M1",
-      "doc": "World-space sphere intersection, including touching. No physics required."
+      "doc": "World-space sphere intersection, touching included. No physics needed."
     },
     {
       "name": "particle_count",
@@ -2154,7 +2166,7 @@
       "handlersOnly": false,
       "cpuSemantics": "",
       "since": "M1",
-      "doc": "How many particles are alive."
+      "doc": "Live particle count."
     },
     {
       "name": "pause",
@@ -2192,7 +2204,7 @@
       "handlersOnly": true,
       "cpuSemantics": "Web Audio; silent until the first user input unlocks audio (spec/audio.md section 5).",
       "since": "M1",
-      "doc": "Plays a sound once with `volume` (default 1.0, range 0..4) and `pitch` (rate, default 1.0, range 0.0625..16)."
+      "doc": "Plays a sound once at `volume` (default 1, 0..4) and `pitch` (rate, default 1, 0.0625..16)."
     },
     {
       "name": "play_at",
@@ -2205,7 +2217,7 @@
       "handlersOnly": true,
       "cpuSemantics": "A Web Audio PannerNode (HRTF off, inverse distance, reference distance 1 m); the listener follows the active camera each frame.",
       "since": "M1",
-      "doc": "Plays a sound once at a world position: quieter with distance from the active camera, and panned."
+      "doc": "Plays a sound once at a world position, attenuated by distance from the camera and panned."
     },
     {
       "name": "play_music",
@@ -2230,7 +2242,7 @@
       "handlersOnly": false,
       "cpuSemantics": "`x` right, `y` up, both in `[-1, 1]`. `(0, 0)` until the pointer moves or a button changes.",
       "since": "M1",
-      "doc": "The pointer position at the end of input handling, in canvas NDC."
+      "doc": "The pointer position after input handling, in canvas NDC."
     },
     {
       "name": "pow",
@@ -2254,7 +2266,7 @@
       "handlersOnly": false,
       "cpuSemantics": "No-op in release builds.",
       "since": "M1",
-      "doc": "Writes a message to the development console."
+      "doc": "Writes to the development console."
     },
     {
       "name": "radians",
@@ -2278,7 +2290,7 @@
       "handlersOnly": false,
       "cpuSemantics": "Seeded PRNG (xoshiro128**, seed from the mount options); deterministic under a fixed seed.",
       "since": "M1",
-      "doc": "A pseudo-random number in `[0, 1)`."
+      "doc": "Pseudo-random in `[0, 1)`."
     },
     {
       "name": "random_int",
@@ -2446,7 +2458,7 @@
       "handlersOnly": true,
       "cpuSemantics": "",
       "since": "M1",
-      "doc": "Mutes or unmutes all audio; the volume is kept."
+      "doc": "Mutes or unmutes all audio, keeping the volume."
     },
     {
       "name": "set_volume",
@@ -2458,7 +2470,7 @@
       "handlersOnly": true,
       "cpuSemantics": "",
       "since": "M1",
-      "doc": "Sets the global volume of every sound and the music (default 1.0, range 0..4)."
+      "doc": "Global volume of all sound and music (default 1.0, range 0..4)."
     },
     {
       "name": "shuffle",
@@ -2470,7 +2482,7 @@
       "handlersOnly": false,
       "cpuSemantics": "Fisher-Yates: `N - 1` draws of `random()` (`N` below 2 draws none). Does not modify `items`.",
       "since": "M1",
-      "doc": "A new array with the same elements in a random order."
+      "doc": "A new array in random order."
     },
     {
       "name": "sign",
@@ -2518,7 +2530,7 @@
       "handlersOnly": true,
       "cpuSemantics": "",
       "since": "M1",
-      "doc": "Queues a prefab instance as a root entity; the reference is valid at once and `alive` turns true after the next flush."
+      "doc": "Queues a prefab instance as a root entity; the reference is valid now, `alive` after the next flush."
     },
     {
       "name": "sqrt",
@@ -2624,6 +2636,123 @@
       "doc": "Controls an entity's imported node clip (decision 0190).",
       "members": [
         {
+          "name": "blend_clear",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Drops the blend space and pending samples. False if none."
+        },
+        {
+          "name": "blend_parameter",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, x: f32, y: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Moves the blend point; the phase stays."
+        },
+        {
+          "name": "blend_phase",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref) -> f32"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Blend cycle position 0..1; zero if unavailable."
+        },
+        {
+          "name": "blend_play",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, looping: bool, speed: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Plays the pending blend space; false if invalid."
+        },
+        {
+          "name": "blend_sample",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, clip: string, x: f32, y: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Adds `clip` at (x, y) to the pending blend space."
+        },
+        {
+          "name": "chain_goal",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, id: string, end_joint: string, length: i32, goal: vec3, weight: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Bends the `length` joints ending at `end_joint` to a world `goal` (CCD)."
+        },
+        {
+          "name": "clear_chain",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, id: string) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Removes chain goal `id`. False if none."
+        },
+        {
+          "name": "clear_foot_placement",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Releases foot placement. False if none."
+        },
+        {
+          "name": "clear_limb",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, id: string) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Removes the goal of limb `id`. False if none."
+        },
+        {
           "name": "copy_pose",
           "kind": "function",
           "signatures": [
@@ -2634,7 +2763,7 @@
           "handlersOnly": true,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Copies and holds the displayed pose of a compatible skeleton; a later transition blends from it."
+          "doc": "Holds a copy of a compatible skeleton's pose; a later transition blends from it."
         },
         {
           "name": "crossed",
@@ -2647,7 +2776,7 @@
           "handlersOnly": false,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Whether a marker in (0, duration] was crossed in the latest update, including loop wraps. Not consumed by reading."
+          "doc": "Whether `marker` in (0, duration] was crossed in the latest update (wraps included)."
         },
         {
           "name": "duration",
@@ -2660,7 +2789,7 @@
           "handlersOnly": false,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Clip duration in seconds; zero for an unavailable clip."
+          "doc": "Clip duration in seconds; zero if unavailable."
         },
         {
           "name": "fade",
@@ -2673,7 +2802,20 @@
           "handlersOnly": true,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Blends clip weight toward a 0..1 target over seconds; zero applies at once."
+          "doc": "Fades clip weight to 0..1 over `duration`; zero is immediate."
+        },
+        {
+          "name": "fade_layer",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, id: string, weight: f32, seconds: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Fades layer `id` to `weight` over `seconds`; false if none."
         },
         {
           "name": "finished",
@@ -2689,6 +2831,19 @@
           "doc": "Whether a one-shot clip reached its end."
         },
         {
+          "name": "foot_placement",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, left: vec3, right: vec3, left_normal: vec3, right_normal: vec3, weight: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Plants feet on world ground points, lowering the hips as needed; humanoids only."
+        },
+        {
           "name": "joint_position",
           "kind": "function",
           "signatures": [
@@ -2699,7 +2854,7 @@
           "handlersOnly": false,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Joint position in the skeletal mesh local space; zero if missing."
+          "doc": "Joint position in mesh-local space; zero if missing."
         },
         {
           "name": "joint_rotation",
@@ -2712,7 +2867,20 @@
           "handlersOnly": false,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Joint rotation in skeletal mesh local space; identity if missing."
+          "doc": "Joint rotation in mesh-local space; identity if missing."
+        },
+        {
+          "name": "limb_goal",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, limb: string, goal: vec3, weight: f32) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Reaches `limb` (`left_leg`, `right_leg`, `left_arm`, `right_arm`) to a world `goal`; humanoids only."
         },
         {
           "name": "pause",
@@ -2725,7 +2893,7 @@
           "handlersOnly": true,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Freezes clip time; fades continue during scene updates."
+          "doc": "Freezes clip time (fades continue). False if none."
         },
         {
           "name": "play",
@@ -2738,7 +2906,7 @@
           "handlersOnly": true,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Restarts the clip. Speed must be finite and nonnegative. Returns false for an unavailable clip."
+          "doc": "Restarts the clip (speed >= 0); false if unavailable."
         },
         {
           "name": "playing",
@@ -2751,7 +2919,20 @@
           "handlersOnly": false,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Whether clip time is advancing; false for an unavailable clip."
+          "doc": "Whether clip time is advancing; false if unavailable."
+        },
+        {
+          "name": "remove_layer",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, id: string) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Removes layer `id`. False if none."
         },
         {
           "name": "resume",
@@ -2764,7 +2945,20 @@
           "handlersOnly": true,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Continues a paused clip; returns false for a finished clip."
+          "doc": "Continues a paused clip. False if none."
+        },
+        {
+          "name": "root_motion",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, joint: string) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "`joint`'s translation drives the entity, not the mesh (\"\" = off); see `take_root_motion`."
         },
         {
           "name": "seek",
@@ -2777,7 +2971,33 @@
           "handlersOnly": true,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Clamps time to the clip duration and applies the pose at once, crossing no markers and not resuming."
+          "doc": "Jumps to `time` (clamped) at once; crosses no markers, does not resume."
+        },
+        {
+          "name": "set_layer",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, id: string, clip: string, weight: f32, additive: bool, mask: string) -> bool"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Layer `id` plays `clip` over the base at `weight`; `mask` is the root of the moved subtree (\"\" = all); the same clip keeps its phase."
+        },
+        {
+          "name": "take_root_motion",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref) -> vec3"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": true,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "World root displacement since the last call; feed it to `move_character`."
         },
         {
           "name": "time",
@@ -2790,7 +3010,7 @@
           "handlersOnly": false,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Current clip time in seconds; zero for an unavailable clip."
+          "doc": "Current clip time in seconds; zero if unavailable."
         },
         {
           "name": "transition",
@@ -2803,7 +3023,7 @@
           "handlersOnly": true,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Selects a skeletal clip, crossfading from the current pose; the current name does not restart (use play)."
+          "doc": "Crossfades to a skeletal clip; the same clip is not restarted."
         },
         {
           "name": "weight",
@@ -2816,7 +3036,7 @@
           "handlersOnly": false,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Current clip weight; zero for an unavailable clip."
+          "doc": "Current clip weight; zero if unavailable."
         }
       ]
     },
@@ -2836,7 +3056,7 @@
           "handlersOnly": false,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "A font file (`.ttf`, `.otf`, `.woff` or `.woff2`) for `hud.text`."
+          "doc": "Font file (`.ttf`, `.otf`, `.woff`, `.woff2`) for `hud.text`."
         },
         {
           "name": "glb",
@@ -2849,7 +3069,7 @@
           "handlersOnly": false,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "A static GLB model; only in a `const`, used through its accessors."
+          "doc": "Static GLB model; only in a `const`, used through its accessors."
         },
         {
           "name": "linear_texture",
@@ -2875,7 +3095,7 @@
           "handlersOnly": false,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "A sound file (`.wav`, `.ogg` or `.mp3`) for `play`, `play_at` and `play_music`."
+          "doc": "Sound file (`.wav`, `.ogg`, `.mp3`) for `play`, `play_at`, `play_music`."
         },
         {
           "name": "texture",
@@ -2888,7 +3108,7 @@
           "handlersOnly": false,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "An sRGB colour texture."
+          "doc": "sRGB colour texture."
         }
       ]
     },
@@ -2908,7 +3128,7 @@
           "handlersOnly": false,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "A colour from linear-light components."
+          "doc": "Colour from linear components."
         },
         {
           "name": "srgb",
@@ -2921,7 +3141,7 @@
           "handlersOnly": false,
           "cpuSemantics": "Per channel `c <= 0.04045 ? c / 12.92 : powf((c + 0.055) / 1.055, 2.4)`, every operation rounded to `f32`; alpha unchanged. Constant folding uses `libm::powf` (deterministic); run time agrees within the CPU/GPU tolerance. `#rrggbb` literals use the exact `f64` conversion instead and may differ in the last bit.",
           "since": "M1",
-          "doc": "A colour from sRGB-encoded components, converted to linear light."
+          "doc": "Colour from sRGB components, converted to linear."
         }
       ]
     },
@@ -3065,7 +3285,7 @@
     {
       "name": "frame",
       "since": "M1",
-      "doc": "Per-frame CPU/`bind` values; route to GPU stages through material params. `update(dt)` gets the variable frame delta; `fixed_update(dt)` runs zero or more times per frame with a constant step (default 1/60 s).",
+      "doc": "Per-frame CPU/`bind` values; route to GPU stages through material params. `update(dt)` gets the variable delta; `fixed_update(dt)` runs zero or more times per frame at a constant step (default 1/60 s).",
       "members": [
         {
           "name": "delta",
@@ -3073,7 +3293,7 @@
           "type": "f32",
           "domain": "cpu",
           "since": "M1",
-          "doc": "The clamped frame delta passed to `update`."
+          "doc": "The clamped delta passed to `update`."
         },
         {
           "name": "index",
@@ -3081,7 +3301,7 @@
           "type": "u32",
           "domain": "cpu",
           "since": "M1",
-          "doc": "Rendered frame counter since mount, wrapping."
+          "doc": "Frame counter since mount, wrapping."
         },
         {
           "name": "time",
@@ -3089,7 +3309,7 @@
           "type": "f32",
           "domain": "cpu",
           "since": "M1",
-          "doc": "Active application time in seconds since mount, excluding paused time."
+          "doc": "Seconds since mount, excluding paused time."
         }
       ]
     },
@@ -3156,7 +3376,7 @@
           "handlersOnly": true,
           "cpuSemantics": "A DOM button over the canvas; clicks are queued and reported by the next frame's call.",
           "since": "M1",
-          "doc": "Draws a button centred at `at` (canvas NDC) labelled `label` (`size` CSS pixels, default 24.0). Returns true in the frame after a click, once per click; buttons are told apart by label and order."
+          "doc": "Draws a button at `at` (canvas NDC) labelled `label` (`size` CSS px, default 24.0). True once per click, in the next frame; buttons are told apart by label and order."
         },
         {
           "name": "pixel_font",
@@ -3169,7 +3389,7 @@
           "handlersOnly": true,
           "cpuSemantics": "Returns the built-in font; draws nothing.",
           "since": "M1",
-          "doc": "The built-in 5x7 pixel bitmap font of printable ASCII; other characters show as a box."
+          "doc": "Built-in 5x7 bitmap font of printable ASCII; others show as a box."
         },
         {
           "name": "rect",
@@ -3183,7 +3403,7 @@
           "handlersOnly": true,
           "cpuSemantics": "A DOM element over the canvas.",
           "since": "M1",
-          "doc": "Draws a filled rectangle of `size` CSS pixels at `at` (canvas NDC), aligned like `hud.text` (default centred)."
+          "doc": "Draws a filled rectangle of `size` CSS px at `at` (canvas NDC), aligned like `hud.text`."
         },
         {
           "name": "text",
@@ -3200,7 +3420,7 @@
           "handlersOnly": true,
           "cpuSemantics": "A DOM element over the canvas; the text is set as text, never as HTML.",
           "since": "M1",
-          "doc": "Draws a line of text at `at` (canvas NDC, y up): `size` CSS pixels (default 24.0), `tint` (default white), `align` 0.0 left edge, 0.5 centre (default), 1.0 right edge, `font` an `asset.font(..)` or `hud.pixel_font()` (default: page sans-serif). Centred vertically on `at`."
+          "doc": "Draws text at `at` (canvas NDC, y up) in `size` CSS px (default 24.0), `tint` (white), `align` 0 left, 0.5 centre (default), 1 right, and `font` (default: page sans-serif). Centred vertically."
         }
       ]
     },
@@ -3233,7 +3453,7 @@
           "handlersOnly": false,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Derivative normal, indirect occlusion, exposed emission; fragment initial straight-line code only."
+          "doc": "Derivative normal, occlusion and emission; fragment initial straight-line code only."
         }
       ]
     },
@@ -3325,7 +3545,7 @@
           "handlersOnly": false,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Rotation by `angle` radians about `axis` (normalised; a zero axis gives the identity on the CPU)."
+          "doc": "Rotation of `angle` radians about `axis` (normalised; zero axis: identity on the CPU)."
         },
         {
           "name": "euler",
@@ -3338,7 +3558,7 @@
           "handlersOnly": false,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Rotation about Z, then X, then Y, all about fixed world axes: `axis_angle(+Y, y) * axis_angle(+X, x) * axis_angle(+Z, z)`."
+          "doc": "Z, then X, then Y rotation about fixed world axes: `axis_angle(+Y, y) * axis_angle(+X, x) * axis_angle(+Z, z)`."
         },
         {
           "name": "identity",
@@ -3624,7 +3844,7 @@
       "kind": "record",
       "gpu": false,
       "since": "M1",
-      "doc": "A pointer event: `position` in canvas coordinates (x right, y up, -1..1) and the `button` (0 primary, 1 middle, 2 secondary).",
+      "doc": "`position` in canvas coordinates (x right, y up, -1..1); `button` 0 primary, 1 middle, 2 secondary.",
       "fields": [
         {
           "name": "position",
@@ -4115,7 +4335,7 @@
         "Kinematic"
       ],
       "since": "M1",
-      "doc": "Angular velocity as of the last completed tick. Read-only."
+      "doc": "Angular velocity as of the last tick. Read-only."
     },
     {
       "name": "ground_normal",
@@ -4143,7 +4363,7 @@
         "Kinematic"
       ],
       "since": "M1",
-      "doc": "Linear velocity as of the last completed tick. Read-only."
+      "doc": "Linear velocity as of the last tick. Read-only."
     }
   ],
   "typeClasses": [

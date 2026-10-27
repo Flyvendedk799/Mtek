@@ -1257,6 +1257,85 @@
       }
     }
   ],
+  "clipSources": [
+    {
+      "meshNode": 0,
+      "nodes": [
+        {
+          "name": "Hips",
+          "parent": -1,
+          "translation": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        }
+      ],
+      "joints": [
+        0
+      ],
+      "inverseBind": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          -1.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "indices": [],
+      "weights": [],
+      "clips": [
+        {
+          "name": "Spin",
+          "duration": 1.0,
+          "channels": [
+            {
+              "node": 0,
+              "path": "rotation",
+              "interpolation": "linear",
+              "times": [
+                0.0,
+                1.0
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                0.0,
+                1.0,
+                0.0,
+                0.0
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "assets": [
     {
       "url": "assets/b7f9a53a15a88547.bin",
@@ -1461,7 +1540,8 @@
             ]
           }
         ]
-      }
+      },
+      "clipsFrom": 0
     },
     {
       "symbol": "src/props.mtek::Marble",
@@ -1691,7 +1771,8 @@
               ]
             }
           ]
-        }
+        },
+        "clipsFrom": 0
       },
       {
         "index": 1,

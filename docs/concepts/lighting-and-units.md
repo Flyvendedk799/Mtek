@@ -32,14 +32,14 @@ The fields of the objects involved, as the compiler knows them:
 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
-| `color` | `color` | `#ffffff` | assignable, bindable |  | Light colour (linear RGB; alpha is ignored). |
+| `color` | `color` | `#ffffff` | assignable, bindable |  | Linear RGB colour; alpha is ignored. |
 | `intensity` | `f32` | `1.0` | assignable, bindable |  | Illuminance in lux. |
 
 **`PointLight`**
 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
-| `color` | `color` | `#ffffff` | assignable, bindable |  | Light colour (linear RGB; alpha is ignored). |
+| `color` | `color` | `#ffffff` | assignable, bindable |  | Linear RGB colour; alpha is ignored. |
 | `intensity` | `f32` | `1.0` | assignable, bindable |  | Luminous intensity in candela. |
 | `range` | `f32` | `0.0` | fixed at construction | ≥ 0 | Distance at which the light fades to nothing; 0 means unlimited. |
 
@@ -47,9 +47,9 @@ The fields of the objects involved, as the compiler knows them:
 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
-| `active` | `bool` | none | fixed at construction |  | Marks the active camera; optional with one camera, exactly one `active: true` with several. |
-| `exposure` | `f32` | `-1.9145305` | fixed at construction |  | EV100; lit materials scale by 1 / (1.2 * 2^exposure). Default -log2(1.2 * pi): white under 1 lux shows white; a sunny day (about 100 000 lux) is about 15. |
-| `position` | `vec3` | `vec3(0.0, 0.0, 5.0)` | assignable, bindable |  | Camera position in world space, in metres. |
+| `active` | `bool` | none | fixed at construction |  | Marks the active camera: optional with one, exactly one `active: true` with several. |
+| `exposure` | `f32` | `-1.9145305` | fixed at construction |  | EV100; lit materials scale by 1 / (1.2 * 2^exposure). By default white under 1 lux shows white. |
+| `position` | `vec3` | `vec3(0.0, 0.0, 5.0)` | assignable, bindable |  | World position in metres. |
 | `projection` | `projection` | `Perspective {}` | fixed at construction |  | `Perspective {..}` or `Orthographic {..}`; the kind is construction-only, its fields writable and bindable. |
 | `rotation` | `quat` | `quat.identity()` | assignable, bindable |  | Orientation when no `target` is declared. |
 | `target` | `vec3` | none | assignable, bindable |  | Optional point to look at (up is +Y); excludes `rotation`. |
@@ -58,9 +58,9 @@ The fields of the objects involved, as the compiler knows them:
 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
-| `ambient_color` | `color` | `#ffffff` | fixed at construction |  | Colour of the ambient light; only RGB is used. |
-| `ambient_intensity` | `f32` | `0.0` | fixed at construction | ≥ 0 | Ambient light scale for lit materials; 0 is off. Multiplied by the camera's exposure scale (about 3.14 by default), so 0.3 is near full brightness on white. Unlit ignores it. |
-| `clear_color` | `color` | `#000000` | fixed at construction |  | Colour the canvas is cleared to; only RGB is used. |
+| `ambient_color` | `color` | `#ffffff` | fixed at construction |  | Ambient light colour; only RGB is used. |
+| `ambient_intensity` | `f32` | `0.0` | fixed at construction | ≥ 0 | Ambient light scale for lit materials; 0 is off. Times the camera's exposure scale (about 3.14), so 0.3 is near full brightness on white. Unlit ignores it. |
+| `clear_color` | `color` | `#000000` | fixed at construction |  | Canvas clear colour; only RGB is used. |
 | `gravity` | `vec3` | `vec3(0.0, -9.81, 0.0)` | fixed at construction | finite | Gravitational acceleration in m/s^2; used only with physics bodies. |
 
 ## Why

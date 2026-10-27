@@ -1,0 +1,41 @@
+[
+  {
+    "code": "MTEK-E3041",
+    "file": "src/main.mtek",
+    "startByte": 326,
+    "endByte": 329,
+    "message": "The float literal 3.0 is not representable as i32: a float literal always has type f32.",
+    "expected": "i32",
+    "actual": "f32",
+    "notes": [
+      "help: write an integer literal, or convert explicitly: `i32(3.0)`"
+    ]
+  },
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 402,
+    "endByte": 405,
+    "message": "Argument 5 of `animation.chain_goal(target: entity_ref, id: string, end_joint: string, length: i32, goal: vec3, weight: f32)` expects vec3, but received f32.",
+    "expected": "vec3",
+    "actual": "f32"
+  },
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 446,
+    "endByte": 447,
+    "message": "Argument 2 of `animation.limb_goal(target: entity_ref, limb: string, goal: vec3, weight: f32)` expects string, but received i32.",
+    "expected": "string",
+    "actual": "i32"
+  },
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 547,
+    "endByte": 550,
+    "message": "Argument 5 of `animation.foot_placement(target: entity_ref, left: vec3, right: vec3, left_normal: vec3, right_normal: vec3, weight: f32)` expects vec3, but received f32.",
+    "expected": "vec3",
+    "actual": "f32"
+  }
+]

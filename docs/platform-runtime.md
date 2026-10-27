@@ -64,6 +64,17 @@ and unmapped bones keep their bind pose. See
 [decision 0221](../spec/decisions/0221-humanoid-mapping-and-retargeting.md) and
 [`spec/animation.md`](../spec/animation.md) for the rules and measured accuracy.
 
+A `.mtek` program reaches the same machinery without host code (decision 0223): the
+`animation.*` calls `set_layer`, `fade_layer`, `blend_sample`/`blend_play`/`blend_parameter`,
+`limb_goal`, `foot_placement`, `chain_goal`, `root_motion` and `take_root_motion` take world-space
+goals and return the root displacement in world space for `body.move_character`, and the entity
+field `clips_from: asset.glb("..")` plays another humanoid's clips through `retargetHumanoid` when
+the scene mounts. A name the entity lacks is `E8111`, a rig that is not a humanoid `E8110` or `E8112`,
+a refused argument `E8113`; each is reported once per entity and the call returns `false`. The
+mounted runtime keeps this state with the entity's `SkeletonPlayer`, so `player.layers`,
+`player.ik` and `player.blend` show and can change what a program set, and a hot reload starts it again
+(`spec/animation.md` section 4).
+
 For CPU inspection call `deformSkin(skin, player.palette, positions, normals,
 outPositions, outNormals)` with reusable output arrays. Normal output uses the
 inverse transpose of the blended skin matrix, including nonuniform scale.

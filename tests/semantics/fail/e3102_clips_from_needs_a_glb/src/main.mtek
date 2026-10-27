@@ -1,0 +1,7 @@
+// clips_from takes an `asset.glb(..)` constant, not a path.
+scene Demo {
+    camera Main {}
+    entity Rig {
+        clips_from: "models/dancer.glb";
+    }
+}

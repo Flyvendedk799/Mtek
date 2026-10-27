@@ -1,4 +1,6 @@
 import { AnimationPlayers, type SkeletonPlayer } from "./skeleton.js";
+import { AnimationScript, type ScriptCode } from "./animation-script.js";
+import { retargetHumanoid } from "./humanoid-retarget.js";
 /**
  * The CPU world of a mounted scene (`spec/runtime-abi.md` sections 4.2, 4.3 and 5.2; `spec/scenes.md`
  * sections 3, 11 and 12): entity records, the active camera record, the generated-code context (`ctx`)
@@ -12,7 +14,7 @@ import { AnimationPlayers, type SkeletonPlayer } from "./skeleton.js";
  * 0053). Any other member throws a `RuntimeInternalError` naming it: programs never use one (the
  * compiler gates them by milestone), so reaching one is a bug.
  */
-import type { MtekManifest } from "../abi/manifest-types.js";
+import type { MtekManifest, MtekSkin } from "../abi/manifest-types.js";
 import { overlapSpheres, overlapBoxes } from "../math/overlap.js";
 import { screenToWorld, worldToScreen } from "../math/screen.js";
 import type { Vec2 } from "../math/types.js";
@@ -114,6 +116,22 @@ export const CONTEXT_MEMBERS = [
   "animationPlaying",
   "animationFinished",
   "animationCrossed",
+  "animationSetLayer",
+  "animationFadeLayer",
+  "animationRemoveLayer",
+  "animationBlendSample",
+  "animationBlendPlay",
+  "animationBlendParameter",
+  "animationBlendClear",
+  "animationBlendPhase",
+  "animationLimbGoal",
+  "animationClearLimb",
+  "animationFootPlacement",
+  "animationClearFootPlacement",
+  "animationChainGoal",
+  "animationClearChain",
+  "animationRootMotion",
+  "animationTakeRootMotion",
   "gamepadButton",
   "gamepadConnected",
   "print",
@@ -423,6 +441,21 @@ export class World {
   private readonly particles = new ParticleSim();
   /** Playing glTF clips (decision 0156). */
   private readonly clips = new AnimationPlayers();
+  /** The composition commands of `animation.*` (decision 0223). */
+  private readonly script = new AnimationScript({
+    player: (slot) => this.clips.skin(slot),
+    world: (slot) => {
+      this.propagate();
+      return this.worlds[slot];
+    },
+    report: (code, slot, spanId, message) => {
+      this.reportScript(code, slot, spanId, message);
+    },
+  });
+  /** `clips_from` retargets by source and target skeleton (decision 0223): the skin to play, or why there is none. */
+  private readonly retargets = new Map<MtekSkin, Map<MtekSkin, MtekSkin | string>>();
+  /** The symbols that already reported `E8110`. */
+  private readonly retargetReported = new Set<string>();
   /** Per entity slot, the pose its clip last sampled; `undefined` for an entity without a clip. The local transform is the entity's own one times this (decision 0174). */
   private readonly clipPoses: (ClipPose | undefined)[] = [];
   private readonly clipBase = new Float32Array(16);
@@ -669,6 +702,31 @@ export class World {
       animationPlaying: (ref: unknown): boolean => this.dynamic.alive(ref) ? this.clips.playing((ref as EntityRef).slot) : false,
       animationFinished: (ref: unknown): boolean => this.dynamic.alive(ref) ? this.clips.finished((ref as EntityRef).slot) : false,
       animationCrossed: (ref: unknown, marker: number): boolean => this.dynamic.alive(ref) ? this.clips.crossed((ref as EntityRef).slot, marker) : false,
+      // Decision 0223: composition. The last argument of the commands that can report is the span of the call.
+      animationSetLayer: (ref: unknown, id: string, clip: string, weight: number, additive: boolean, mask: string, spanId: number): boolean =>
+        this.dynamic.alive(ref) && this.script.setLayer((ref as EntityRef).slot, id, clip, weight, additive, mask, spanId),
+      animationFadeLayer: (ref: unknown, id: string, weight: number, seconds: number, spanId: number): boolean =>
+        this.dynamic.alive(ref) && this.script.fadeLayer((ref as EntityRef).slot, id, weight, seconds, spanId),
+      animationRemoveLayer: (ref: unknown, id: string): boolean => this.dynamic.alive(ref) && this.script.removeLayer((ref as EntityRef).slot, id),
+      animationBlendSample: (ref: unknown, clip: string, x: number, y: number, spanId: number): boolean =>
+        this.dynamic.alive(ref) && this.script.blendSample((ref as EntityRef).slot, clip, x, y, spanId),
+      animationBlendPlay: (ref: unknown, looping: boolean, speed: number, spanId: number): boolean =>
+        this.dynamic.alive(ref) && this.script.blendPlay((ref as EntityRef).slot, looping, speed, spanId),
+      animationBlendParameter: (ref: unknown, x: number, y: number): boolean => this.dynamic.alive(ref) && this.script.blendParameter((ref as EntityRef).slot, x, y),
+      animationBlendClear: (ref: unknown): boolean => this.dynamic.alive(ref) && this.script.blendClear((ref as EntityRef).slot),
+      animationBlendPhase: (ref: unknown): number => this.dynamic.alive(ref) ? this.script.blendPhase((ref as EntityRef).slot) : 0,
+      animationLimbGoal: (ref: unknown, limb: string, goal: unknown, weight: number, spanId: number): boolean =>
+        this.dynamic.alive(ref) && this.script.limbGoal((ref as EntityRef).slot, limb, goal, weight, spanId),
+      animationClearLimb: (ref: unknown, limb: string, spanId: number): boolean => this.dynamic.alive(ref) && this.script.clearLimb((ref as EntityRef).slot, limb, spanId),
+      animationFootPlacement: (ref: unknown, left: unknown, right: unknown, leftNormal: unknown, rightNormal: unknown, weight: number, spanId: number): boolean =>
+        this.dynamic.alive(ref) && this.script.footPlacement((ref as EntityRef).slot, left, right, leftNormal, rightNormal, weight, spanId),
+      animationClearFootPlacement: (ref: unknown): boolean => this.dynamic.alive(ref) && this.script.clearFootPlacement((ref as EntityRef).slot),
+      animationChainGoal: (ref: unknown, id: string, endJoint: string, length: number, goal: unknown, weight: number, spanId: number): boolean =>
+        this.dynamic.alive(ref) && this.script.chainGoal((ref as EntityRef).slot, id, endJoint, length, goal, weight, spanId),
+      animationClearChain: (ref: unknown, id: string): boolean => this.dynamic.alive(ref) && this.script.clearChain((ref as EntityRef).slot, id),
+      animationRootMotion: (ref: unknown, joint: string, spanId: number): boolean =>
+        this.dynamic.alive(ref) && this.script.rootMotion((ref as EntityRef).slot, joint, spanId),
+      animationTakeRootMotion: (ref: unknown): Vec3 => this.dynamic.alive(ref) ? this.script.takeRootMotion((ref as EntityRef).slot) : ORIGIN,
       overlapSpheres,
       overlapBoxes,
       gamepadAxis: (pad: number, axis: number): number => services.gamepads?.axis(pad, axis) ?? 0,
@@ -1423,6 +1481,55 @@ export class World {
     const player = this.clips.detach(slot); this.visibility++; return player;
   }
 
+  /**
+   * The skin an entity plays: its own, or with `clips_from` (decision 0223) the clips of the source skeleton retargeted
+   * onto it. A skeleton that does not map, or a retarget that fails, is `E8110` once per declaration; the entity keeps
+   * its own clips.
+   */
+  private clipsFromSkin(resolved: ResolvedEntity, own: MtekSkin): MtekSkin {
+    const source = resolved.clipsFrom;
+    if (source === undefined) return own;
+    let byTarget = this.retargets.get(source);
+    if (byTarget === undefined) {
+      byTarget = new Map();
+      this.retargets.set(source, byTarget);
+    }
+    let result = byTarget.get(own);
+    if (result === undefined) {
+      try {
+        result = retargetHumanoid(source, own);
+      } catch (error) {
+        if (!(error instanceof RangeError)) throw error;
+        result = error.message;
+      }
+      byTarget.set(own, result);
+    }
+    if (typeof result !== "string") return result;
+    if (!this.retargetReported.has(resolved.symbol)) {
+      this.retargetReported.add(resolved.symbol);
+      const span = spanOfSymbol(this.manifest, resolved.symbol);
+      this.report(
+        makeRuntimeDiagnostic("E8110", {
+          phase: this.phase,
+          message: `The clips_from of '${resolved.name}' could not be retargeted: ${result}. The entity keeps its own clips.`,
+          source: span === undefined ? null : resolveSpan(this.manifest, span),
+        }),
+      );
+    }
+    return own;
+  }
+
+  /** A composition command's diagnostic, located at the call of the program. */
+  private reportScript(code: ScriptCode, slot: number, spanId: number, message: string): void {
+    this.report(
+      makeRuntimeDiagnostic(code, {
+        phase: this.phase,
+        message,
+        source: Number.isInteger(spanId) && spanId >= 0 ? resolveSpan(this.manifest, spanId) : this.entitySource(slot),
+      }),
+    );
+  }
+
   private trackMotion(slot: number, resolved: ResolvedEntity, spawned = false): void {
     if (resolved.particles !== undefined) {
       this.particles.add({
@@ -1439,7 +1546,7 @@ export class World {
     }
     const descriptor = resolved.mesh?.descriptor;
     if (descriptor?.kind === "asset" && descriptor.skin !== undefined) {
-      this.clips.addSkin(slot, descriptor.skin, resolved.clip?.name);
+      this.clips.addSkin(slot, this.clipsFromSkin(resolved, descriptor.skin), resolved.clip?.name);
       return;
     }
     if (resolved.clip !== undefined) {

@@ -156,12 +156,18 @@ export function projectDefault(configRs: string, name: string): string {
   return (m[1] ?? "").replace(/_/g, "");
 }
 
-/** `{{intrinsics DOMAIN}}`: the intrinsics and namespace functions that run in a domain (`both`, `cpu`, `gpu`), as code. */
+/**
+ * `{{intrinsics DOMAIN}}`: the intrinsics and namespace functions that run in a domain (`both`, `cpu`, `gpu`), as code. A
+ * namespace with at least three functions in the domain is one code span, `animation.{copy_pose, crossed, ...}`, so the
+ * guide stays within its size limit as namespaces grow (decisions 0118 and 0223).
+ */
 export function intrinsicsOf(registry: StdlibSchema, domain: string): string {
   if (domain !== "both" && domain !== "cpu" && domain !== "gpu") throw new Error(`{{intrinsics ${domain}}}: the domain is both, cpu or gpu`);
   const names = registry.intrinsics.filter((i) => i.domain === domain).map((i) => i.name);
   for (const ns of registry.namespaces) {
-    for (const m of ns.members) if (m.kind === "function" && m.domain === domain) names.push(`${ns.name}.${m.name}`);
+    const members = ns.members.filter((m) => m.kind === "function" && m.domain === domain).map((m) => m.name).sort();
+    if (members.length >= 3) names.push(`${ns.name}.{${members.join(", ")}}`);
+    else for (const member of members) names.push(`${ns.name}.${member}`);
   }
   return names.sort().map((n) => code(n)).join(", ");
 }

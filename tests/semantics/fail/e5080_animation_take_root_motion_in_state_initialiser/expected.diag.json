@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5080",
+    "file": "src/main.mtek",
+    "startByte": 161,
+    "endByte": 192,
+    "message": "`animation.take_root_motion` may be called only in lifecycle functions and event handlers, not in the initialiser of the state 'step'.",
+    "notes": [
+      "this operation is a lifecycle operation of the scene"
+    ]
+  }
+]

@@ -34,9 +34,9 @@ The fields of the scene itself:
 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
-| `ambient_color` | `color` | `#ffffff` | fixed at construction |  | Colour of the ambient light; only RGB is used. |
-| `ambient_intensity` | `f32` | `0.0` | fixed at construction | ≥ 0 | Ambient light scale for lit materials; 0 is off. Multiplied by the camera's exposure scale (about 3.14 by default), so 0.3 is near full brightness on white. Unlit ignores it. |
-| `clear_color` | `color` | `#000000` | fixed at construction |  | Colour the canvas is cleared to; only RGB is used. |
+| `ambient_color` | `color` | `#ffffff` | fixed at construction |  | Ambient light colour; only RGB is used. |
+| `ambient_intensity` | `f32` | `0.0` | fixed at construction | ≥ 0 | Ambient light scale for lit materials; 0 is off. Times the camera's exposure scale (about 3.14), so 0.3 is near full brightness on white. Unlit ignores it. |
+| `clear_color` | `color` | `#000000` | fixed at construction |  | Canvas clear colour; only RGB is used. |
 | `gravity` | `vec3` | `vec3(0.0, -9.81, 0.0)` | fixed at construction | finite | Gravitational acceleration in m/s^2; used only with physics bodies. |
 
 ## Why

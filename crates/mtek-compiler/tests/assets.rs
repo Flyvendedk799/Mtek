@@ -641,6 +641,73 @@ fn the_supported_project_takes_its_transforms_and_factors_from_the_file() {
     assert_eq!(tint.1, ConstValue::Color([0.75, 0.75, 0.75, 1.0]));
 }
 
+/// `clips_from` (decision 0223): the manifest carries the source skeleton once, without vertex influences, and the
+/// entities and the prefab that use it point at it; a `clip` named for it is a clip of that skeleton.
+#[test]
+fn clips_from_puts_the_source_skeleton_in_the_manifest_once() {
+    let result = build_project("pass", "clips_from");
+    assert!(
+        !result.has_errors(),
+        "{}",
+        diagnostics_json(&result.sources, &result.report.diagnostics)
+    );
+    let manifest = manifest_of(&result);
+    let sources = manifest["clipSources"].as_array().unwrap();
+    assert_eq!(
+        sources.len(),
+        1,
+        "two entities and a prefab share one source"
+    );
+    let source = &sources[0];
+    let clips: Vec<&str> = source["clips"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|clip| clip["name"].as_str().unwrap())
+        .collect();
+    assert_eq!(clips, ["March"]);
+    assert_eq!(source["joints"].as_array().unwrap().len(), 1);
+    assert!(source["indices"].as_array().unwrap().is_empty());
+    assert!(source["weights"].as_array().unwrap().is_empty());
+    let entities = manifest["scene"]["entities"].as_array().unwrap();
+    let pairs: Vec<(&str, Option<u64>, Option<&str>)> = entities
+        .iter()
+        .map(|entity| {
+            (
+                entity["name"].as_str().unwrap(),
+                entity["clipsFrom"].as_u64(),
+                entity["clip"]["name"].as_str(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        pairs,
+        [("Actor", Some(0), Some("March")), ("Plain", Some(0), None)]
+    );
+    // The clip of a clips_from entity names the source clip and carries no keyframes (the runtime retargets them).
+    assert!(
+        entities[0]["clip"]["channels"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    let prefab = &manifest["prefabs"][0];
+    assert_eq!(prefab["clipsFrom"].as_u64(), Some(0));
+    assert_eq!(prefab["clip"]["name"].as_str(), Some("March"));
+    // The entity's own skin keeps its vertex influences.
+    let skinned = manifest["meshes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|mesh| {
+            mesh["skin"]["indices"]
+                .as_array()
+                .is_some_and(|indices| !indices.is_empty())
+        })
+        .count();
+    assert_eq!(skinned, 1);
+}
+
 #[test]
 fn the_supported_project_builds_identically_every_time() {
     let first = build_project("pass", "assets_supported");

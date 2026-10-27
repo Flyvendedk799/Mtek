@@ -1,4 +1,5 @@
-//! `E5016`: a `clip` that cannot play (decision 0156).
+//! `E5016`: a `clip` that cannot play (decision 0156). `E7028`: a `clips_from` that cannot supply
+//! clips (decision 0223).
 //!
 //! A clip composes with the entity's own transform (decision 0174). The mesh must be a mesh of the same
 //! GLB, and the named animation must move that mesh. A scale keyframe of 0 or less is rejected
@@ -43,6 +44,10 @@ fn check_one(
     store: &AssetStore,
     sink: &mut Diagnostics,
 ) {
+    if let Some(source) = fields.iter().find(|field| field.name == "clips_from") {
+        check_clips_from(name, owner, fields, source, store, sink);
+        return;
+    }
     let Some(clip_field) = fields.iter().find(|field| field.name == "clip") else {
         return;
     };
@@ -121,6 +126,95 @@ fn check_one(
                 "keep every scale component greater than 0".to_owned(),
             );
         }
+    }
+}
+
+/// `clips_from: asset.glb(..)` (decision 0223): the entity needs a skeletal mesh, the file needs a skin
+/// with clips (`E7028`), and a `clip` names one of those clips (`E5016`). Whether the two skeletons
+/// are humanoid is a run-time question (`E8110`).
+fn check_clips_from(
+    name: &str,
+    owner: Span,
+    fields: &[CheckedField],
+    source: &CheckedField,
+    store: &AssetStore,
+    sink: &mut Diagnostics,
+) {
+    let span = match source.origin {
+        FieldOrigin::Written { span, .. } => span,
+        FieldOrigin::Default => owner,
+    };
+    let Some(ConstValue::GlbAsset(file)) = source.value.as_ref() else {
+        return;
+    };
+    let mut report = |code: Code, message: String, help: String| {
+        sink.push(Diagnostic::new(code, message).at(span).help(help));
+    };
+    let skeletal = fields
+        .iter()
+        .find(|field| field.name == "mesh")
+        .and_then(|field| match field.value.as_ref() {
+            Some(ConstValue::AssetMesh { file, mesh, .. }) => store
+                .glb(file)
+                .filter(|declared| declared.file.skins.iter().any(|skin| skin.mesh == *mesh)),
+            _ => None,
+        });
+    if skeletal.is_none() {
+        report(
+            Code::E7028,
+            format!("The clips_from of '{name}' needs a skeletal mesh on the same entity."),
+            "set `mesh` to a skinned mesh, e.g. `asset.glb(...).mesh(\"MeshName\")` of a file with a skin".to_owned(),
+        );
+    }
+    let Some(declared) = store.glb(file) else {
+        return;
+    };
+    let Some(skin) = declared
+        .file
+        .skins
+        .iter()
+        .find(|skin| !skin.skin.clips.is_empty())
+    else {
+        report(
+            Code::E7028,
+            format!("The clips_from file '{file}' of '{name}' has no skeleton with clips."),
+            "use a GLB that has a skin and at least one animation that moves it".to_owned(),
+        );
+        return;
+    };
+    let Some(ConstValue::Str(clip)) = fields
+        .iter()
+        .find(|field| field.name == "clip")
+        .and_then(|field| field.value.as_ref())
+    else {
+        return;
+    };
+    if skin.skin.clips.iter().all(|item| item.name != *clip) {
+        let known = skin
+            .skin
+            .clips
+            .iter()
+            .map(|item| format!("'{}'", item.name))
+            .collect::<Vec<_>>()
+            .join(", ");
+        let clip_span = fields
+            .iter()
+            .find(|field| field.name == "clip")
+            .and_then(|field| match field.origin {
+                FieldOrigin::Written { span, .. } => Some(span),
+                FieldOrigin::Default => None,
+            })
+            .unwrap_or(span);
+        sink.push(
+            Diagnostic::new(
+                Code::E5016,
+                format!(
+                    "The clip '{clip}' of '{name}' is not a clip of its clips_from file '{file}'."
+                ),
+            )
+            .at(clip_span)
+            .help(format!("the clips of '{file}' are {known}")),
+        );
     }
 }
 

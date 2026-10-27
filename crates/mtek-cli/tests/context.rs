@@ -231,9 +231,10 @@ fn max_bytes_truncates_and_says_so() {
     let project = scratch.project("proj", MAIN);
     let full = mtek(&project, &["context", "--entry", "src/main.mtek"]);
     let full_len = stdout(&full).len();
-    // The floor rose with particles, camera switching and clips (decisions 0154–0156).
-    // 12 000 still drops the four examples and stays under the full document.
-    assert!(full_len > 12_000, "{full_len}");
+    // The floor rose with particles, camera switching and clips (decisions 0154–0156) and with the sixteen
+    // composition functions of decision 0223 (12 000 before). 12 600 still drops the four examples and stays
+    // under the full document.
+    assert!(full_len > 12_600, "{full_len}");
     let out = mtek(
         &project,
         &[
@@ -241,11 +242,11 @@ fn max_bytes_truncates_and_says_so() {
             "--entry",
             "src/main.mtek",
             "--max-bytes",
-            "12000",
+            "12600",
         ],
     );
     let context = context_of(&out);
-    assert!(stdout(&out).len() <= 12_000, "{}", stdout(&out).len());
+    assert!(stdout(&out).len() <= 12_600, "{}", stdout(&out).len());
     let dropped = &context["truncated"]["examples"];
     assert_eq!(dropped["count"], 1);
     assert_eq!(dropped["names"].as_array().unwrap().len(), 1);

@@ -22,6 +22,7 @@ import type {
   MtekMaterialResource,
   MtekParticles,
   MtekShader,
+  MtekSkin,
   MtekStateEntry,
   MtekVertexAttribute,
 } from "../abi/manifest-types.js";
@@ -99,6 +100,8 @@ export interface ResolvedEntity {
   readonly particles?: MtekParticles;
   /** Present when the entity declares `clip` (decision 0156). */
   readonly clip?: MtekClip;
+  /** Present when the entity declares `clips_from` (decision 0223): the skeleton whose clips it plays. */
+  readonly clipsFrom?: MtekSkin;
 }
 
 /** The material instance of a prefab, before an instance exists: every instance starts with these classes. */
@@ -135,6 +138,8 @@ export interface ResolvedPrefab {
   readonly particles?: MtekParticles;
   /** The clip every instance plays (decision 0156). */
   readonly clip?: MtekClip;
+  /** The skeleton whose clips every instance plays (decision 0223). */
+  readonly clipsFrom?: MtekSkin;
 }
 
 /** A light of `scene.lights`: which entity carries it and what it was constructed with. */
@@ -353,6 +358,21 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
     meshes.push({ id: mesh.id, descriptor: mesh });
   });
   const meshById = new Map(meshes.map((mesh) => [mesh.id, mesh]));
+  // The skeletons that `clips_from` entities take their clips from (decision 0223).
+  const clipSources: (MtekSkin | undefined)[] = [];
+  (manifest.clipSources ?? []).forEach((skin, index) => {
+    const problem = skinProblem(skin, skin.indices.length);
+    if (problem !== undefined) diagnostics.push(broken(`clipSources[${String(index)}]`, problem));
+    else clipSources[index] = skin;
+  });
+  const clipSource = (field: string, owner: string, index: number | undefined): MtekSkin | null | undefined => {
+    if (index === undefined) return null;
+    const source = clipSources[index];
+    if (source === undefined && (manifest.clipSources ?? [])[index] === undefined) {
+      diagnostics.push(broken(`${field}.clipsFrom`, `${owner} takes clips from clipSources[${String(index)}], which the manifest lacks.`));
+    }
+    return source;
+  };
 
   const instances: ResolvedInstance[] = [];
   scene.materialInstances.forEach((instance, index) => {
@@ -431,6 +451,8 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
         return;
       }
     }
+    const clipsFrom = clipSource(field, `entity '${entity.name}'`, entity.clipsFrom);
+    if (clipsFrom === undefined) return;
     entities.push({
       index,
       name: entity.name,
@@ -440,6 +462,7 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
       instance,
       ...(entity.particles === undefined ? {} : { particles: entity.particles }),
       ...(entity.clip === undefined ? {} : { clip: entity.clip }),
+      ...(clipsFrom === null ? {} : { clipsFrom }),
     });
   });
 
@@ -552,6 +575,8 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
         diagnostics.push(broken(`${field}.material.params`, `the param '${param.name}' of prefab '${prefab.name}' names the missing binding ${String(param.binding)}.`));
       }
     }
+    const clipsFrom = clipSource(field, `prefab '${prefab.name}'`, prefab.clipsFrom);
+    if (clipsFrom === undefined) return;
     prefabs.push({
       symbol: prefab.symbol,
       name: prefab.name,
@@ -569,6 +594,7 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
       ...(prefab.tag === undefined ? {} : { tag: prefab.tag }),
       ...(prefab.particles === undefined ? {} : { particles: prefab.particles }),
       ...(prefab.clip === undefined ? {} : { clip: prefab.clip }),
+      ...(clipsFrom === null ? {} : { clipsFrom }),
     });
   });
 

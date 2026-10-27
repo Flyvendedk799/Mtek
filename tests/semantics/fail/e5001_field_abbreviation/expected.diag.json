@@ -4,7 +4,7 @@
     "file": "src/main.mtek",
     "startByte": 126,
     "endByte": 129,
-    "message": "Unknown field 'pos' on entity 'Floor'. Valid fields: position, rotation, scale, visible, bounds_center, bounds_radius, mesh, material, light, body, collider, tag, particles, clip.",
+    "message": "Unknown field 'pos' on entity 'Floor'. Valid fields: position, rotation, scale, visible, bounds_center, bounds_radius, mesh, material, light, body, collider, tag, particles, clip, clips_from.",
     "notes": [
       "help: did you mean 'position'?"
     ]

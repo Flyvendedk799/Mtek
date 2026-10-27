@@ -85,6 +85,18 @@ export class SkeletonPlayer {
   consumeRootMotion(): {x: number;y: number;z: number} {
     const result={x:this.rootDelta[0]!,y:this.rootDelta[1]!,z:this.rootDelta[2]!};this.rootDelta.fill(0);return result;
   }
+  /**
+   * Like `consumeRootMotion`, but the displacement is turned from the root node's parent space into the skeletal mesh
+   * local space of `jointPosition` (the linear part of the parent's displayed transform relative to the mesh node), so
+   * it can be carried to the world by the entity's transform alone (decision 0223).
+   */
+  consumeRootMotionLocal(): {x: number;y: number;z: number} {
+    const delta=this.consumeRootMotion();
+    if(this.rootNode<0) return delta;
+    const parent=this.skin.nodes[this.rootNode]!.parent,m=this.product;
+    if(parent<0) m.set(this.inverseMesh); else multiplyInto(m,this.inverseMesh,this.globals[parent]!);
+    return {x:m[0]!*delta.x+m[4]!*delta.y+m[8]!*delta.z,y:m[1]!*delta.x+m[5]!*delta.y+m[9]!*delta.z,z:m[2]!*delta.x+m[6]!*delta.y+m[10]!*delta.z};
+  }
   /** Final local-pose adjustment, after layers and before world matrices/sockets. */
   private override: ((pose: Float64Array) => void) | undefined;
   private evaluatedLayers = -1;

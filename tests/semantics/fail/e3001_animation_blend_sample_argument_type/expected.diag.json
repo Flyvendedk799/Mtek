@@ -1,0 +1,20 @@
+[
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 185,
+    "endByte": 188,
+    "message": "Argument 2 of `animation.blend_sample(target: entity_ref, clip: string, x: f32, y: f32)` expects string, but received f32.",
+    "expected": "string",
+    "actual": "f32"
+  },
+  {
+    "code": "MTEK-E3001",
+    "file": "src/main.mtek",
+    "startByte": 245,
+    "endByte": 259,
+    "message": "Argument 3 of `animation.blend_sample(target: entity_ref, clip: string, x: f32, y: f32)` expects f32, but received vec2.",
+    "expected": "f32",
+    "actual": "vec2"
+  }
+]

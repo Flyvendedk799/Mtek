@@ -1,0 +1,9 @@
+// set_layer takes the entity, the layer id, the clip, the weight, additive and the mask joint.
+scene Demo {
+    camera Main {}
+    entity Rig {}
+    on key_down(Key.Space) {
+        animation.set_layer(Rig, "wave", "Wave", 1.0, false);
+        animation.set_layer(Rig, "wave", "Wave", 1.0, false, "", 2.0);
+    }
+}

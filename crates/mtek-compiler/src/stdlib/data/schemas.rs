@@ -60,32 +60,22 @@ fn emitters() -> Vec<SchemaDef> {
         "Emitter",
         SchemaCategory::Emitter,
         Milestone::M1,
-        "A bounded particle emitter: at most 64 particles, `rate` per second, in a hemisphere around the entity's up axis.",
+        "Bounded particle emitter: at most 64 particles, `rate` per second, in a hemisphere around the entity's up axis.",
         vec![
             field(
                 "rate",
                 TypeRef::F32,
                 C,
-                "Particles spawned per second. A fraction carries to the next frame.",
+                "Particles per second; a fraction carries to the next frame.",
             )
             .default(ConstValue::F32(0.0))
             .range(ValueRange::non_negative()),
-            field(
-                "lifetime",
-                TypeRef::F32,
-                C,
-                "How long each particle lives, in seconds.",
-            )
-            .default(ConstValue::F32(1.0))
-            .range(ValueRange::positive().and_finite()),
-            field(
-                "speed",
-                TypeRef::F32,
-                C,
-                "Initial speed in metres per second.",
-            )
-            .default(ConstValue::F32(1.0))
-            .range(ValueRange::non_negative()),
+            field("lifetime", TypeRef::F32, C, "Particle lifetime in seconds.")
+                .default(ConstValue::F32(1.0))
+                .range(ValueRange::positive().and_finite()),
+            field("speed", TypeRef::F32, C, "Initial speed in m/s.")
+                .default(ConstValue::F32(1.0))
+                .range(ValueRange::non_negative()),
             field("size", TypeRef::F32, C, "Billboard size in metres.")
                 .default(ConstValue::F32(0.05))
                 .range(ValueRange::positive().and_finite()),
@@ -93,7 +83,7 @@ fn emitters() -> Vec<SchemaDef> {
                 "gravity",
                 TypeRef::F32,
                 C,
-                "Downward acceleration in metres per second squared.",
+                "Downward acceleration in m/s^2.",
             )
             .default(ConstValue::F32(0.0))
             .range(ValueRange::finite()),
@@ -112,21 +102,21 @@ fn objects() -> Vec<SchemaDef> {
                 "clear_color",
                 TypeRef::Color,
                 C,
-                "Colour the canvas is cleared to; only RGB is used.",
+                "Canvas clear colour; only RGB is used.",
             )
             .default(ConstValue::srgb(0x00, 0x00, 0x00)),
             field(
                 "ambient_color",
                 TypeRef::Color,
                 C,
-                "Colour of the ambient light; only RGB is used.",
+                "Ambient light colour; only RGB is used.",
             )
             .default(ConstValue::srgb(0xff, 0xff, 0xff)),
             field(
                 "ambient_intensity",
                 TypeRef::F32,
                 C,
-                "Ambient light scale for lit materials; 0 is off. Multiplied by the camera's exposure scale (about 3.14 by default), so 0.3 is near full brightness on white. Unlit ignores it.",
+                "Ambient light scale for lit materials; 0 is off. Times the camera's exposure scale (about 3.14), so 0.3 is near full brightness on white. Unlit ignores it.",
             )
             .default(ConstValue::F32(0.0))
             .range(ValueRange::non_negative()),
@@ -189,13 +179,13 @@ fn objects() -> Vec<SchemaDef> {
                 "mesh",
                 TypeRef::Mesh,
                 C,
-                "The mesh drawn: a descriptor (`Box`, `Sphere`, `Plane`) or an asset mesh.",
+                "The mesh: `Box`, `Sphere`, `Plane` or an asset mesh.",
             ),
             field(
                 "material",
                 TypeRef::Material,
                 FieldFlags::WRITABLE,
-                "Material instance; a value-only one can be replaced by the same material type; params are writable and bindable. Requires `mesh`.",
+                "Material instance; a value-only one can be replaced by the same type; params are writable and bindable. Needs `mesh`.",
             )
             .default(ConstValue::EmptyDescriptor("Unlit"))
             .default_when_set("mesh"),
@@ -203,13 +193,13 @@ fn objects() -> Vec<SchemaDef> {
                 "light",
                 TypeRef::Descriptor(SchemaCategory::Light),
                 C,
-                "A light (`DirectionalLight`, `PointLight`); its fields are writable and bindable. Named entities only.",
+                "A light (`DirectionalLight`, `PointLight`); fields writable and bindable. Named entities only.",
             ),
             field(
                 "body",
                 TypeRef::Descriptor(SchemaCategory::Body),
                 C,
-                "A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; requires `collider`.",
+                "A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; needs `collider`.",
             ),
             field(
                 "collider",
@@ -221,19 +211,25 @@ fn objects() -> Vec<SchemaDef> {
                 "tag",
                 TypeRef::String,
                 C,
-                "A group name (`\"rock\"`: lowercase letters, digits, `_`) for `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag` and `destroy_tagged`.",
+                "Group name (lowercase letters, digits, `_`) for `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag`, `destroy_tagged`.",
             ),
             field(
                 "particles",
                 TypeRef::Descriptor(SchemaCategory::Emitter),
                 C,
-                "A particle emitter: up to 64 camera-facing billboards of this entity's mesh in its material's colour; counted even without a mesh.",
+                "Particle emitter: up to 64 camera-facing billboards of the entity's mesh in its material's colour; counted without a mesh too.",
             ),
             field(
                 "clip",
                 TypeRef::String,
                 C,
                 "A glTF animation name that moves this entity; the mesh must come from that file.",
+            ),
+            field(
+                "clips_from",
+                TypeRef::GlbAsset,
+                C,
+                "GLB whose humanoid clips play on this skeletal mesh; `clip` names its clips.",
             ),
         ],
     )
@@ -269,7 +265,7 @@ fn objects() -> Vec<SchemaDef> {
                 "position",
                 TypeRef::Vec3,
                 writable_bindable(),
-                "Camera position in world space, in metres.",
+                "World position in metres.",
             )
             .default(ConstValue::Vec3([0.0, 0.0, 5.0])),
             field(
@@ -296,13 +292,13 @@ fn objects() -> Vec<SchemaDef> {
                 "active",
                 TypeRef::Bool,
                 C,
-                "Marks the active camera; optional with one camera, exactly one `active: true` with several.",
+                "Marks the active camera: optional with one, exactly one `active: true` with several.",
             ),
             field(
                 "exposure",
                 TypeRef::F32,
                 C,
-                "EV100; lit materials scale by 1 / (1.2 * 2^exposure). Default -log2(1.2 * pi): white under 1 lux shows white; a sunny day (about 100 000 lux) is about 15.",
+                "EV100; lit materials scale by 1 / (1.2 * 2^exposure). By default white under 1 lux shows white.",
             )
             .default(ConstValue::F32(CAMERA_DEFAULT_EV100)),
         ],
@@ -352,8 +348,8 @@ fn projections() -> Vec<SchemaDef> {
                 .default(ConstValue::F32(0.9))
                 .range(fov)
                 .range_code(Code::E5011),
-                near("Distance to the near plane."),
-                far("Distance to the far plane."),
+                near("Near plane."),
+                far("Far plane."),
             ],
         ),
         schema(
@@ -366,13 +362,13 @@ fn projections() -> Vec<SchemaDef> {
                     "height",
                     TypeRef::F32,
                     writable_bindable(),
-                    "Height of the view volume in world units; width follows the aspect ratio.",
+                    "View volume height in world units; width follows the aspect ratio.",
                 )
                 .default(ConstValue::F32(10.0))
                 .range(ValueRange::positive())
                 .range_code(Code::E5011),
-                near("Distance to the near plane."),
-                far("Distance to the far plane."),
+                near("Near plane."),
+                far("Far plane."),
             ],
         ),
     ]
@@ -384,9 +380,9 @@ fn meshes() -> Vec<SchemaDef> {
             "Box",
             SchemaCategory::Mesh,
             Milestone::M1,
-            "An axis-aligned box centred on the origin.",
+            "Axis-aligned box centred on the origin.",
             vec![
-                field("size", TypeRef::Vec3, C, "Full extents along X, Y and Z.")
+                field("size", TypeRef::Vec3, C, "Full extents.")
                     .default(ConstValue::splat3(1.0))
                     .range(ValueRange::positive()),
             ],
@@ -417,7 +413,7 @@ fn meshes() -> Vec<SchemaDef> {
             "Plane",
             SchemaCategory::Mesh,
             Milestone::M1,
-            "A single-sided horizontal plane at y = 0 facing +Y.",
+            "Single-sided plane at y = 0 facing +Y.",
             vec![
                 field("size", TypeRef::Vec2, C, "Extent along X and Z.")
                     .default(ConstValue::splat2(1.0))
@@ -439,7 +435,7 @@ fn materials() -> Vec<SchemaDef> {
                     "color",
                     TypeRef::Color,
                     writable_bindable(),
-                    "The colour written to the canvas.",
+                    "Colour.",
                 )
                 .default(ConstValue::srgb(0xff, 0xff, 0xff)),
             ],
@@ -448,34 +444,34 @@ fn materials() -> Vec<SchemaDef> {
             "Pbr",
             SchemaCategory::Material,
             Milestone::M1,
-            "Metallic-roughness PBR with optional scene shadows and environment lighting.",
+            "Metallic-roughness PBR; optional scene shadows and environment lighting.",
             vec![
                 field(
                     "base_color",
                     TypeRef::Color,
                     writable_bindable(),
-                    "Linear base colour multiplied with the base colour texture.",
+                    "Linear base colour, multiplied with the texture.",
                 )
                 .default(ConstValue::srgb(0xff, 0xff, 0xff)),
                 field(
                     "metallic",
                     TypeRef::F32,
                     writable_bindable(),
-                    "Metalness; clamped to 0..1 by the lighting model.",
+                    "Metalness, clamped to 0..1.",
                 )
                 .default(ConstValue::F32(0.0)),
                 field(
                     "roughness",
                     TypeRef::F32,
                     writable_bindable(),
-                    "Perceptual roughness; clamped to 0.045..1 by the lighting model.",
+                    "Perceptual roughness, clamped to 0.045..1.",
                 )
                 .default(ConstValue::F32(0.5)),
                 field(
                     "base_color_texture",
                     TypeRef::Texture,
                     C,
-                    "Base colour texture.",
+                    "Texture.",
                 )
                 .default(ConstValue::Texture(
                     crate::stdlib::value::BuiltinTexture::White,
@@ -484,30 +480,30 @@ fn materials() -> Vec<SchemaDef> {
                     "base_color_sampler",
                     TypeRef::Sampler,
                     C,
-                    "Sampler for the base colour texture.",
+                    "Sampler.",
                 )
                 .default(ConstValue::Sampler(
                     crate::stdlib::value::BuiltinSampler::LinearRepeat,
                 )),
                 field("metallic_roughness_texture", TypeRef::Texture, C, "Linear green roughness and blue metallic factors.")
                     .default(ConstValue::Texture(crate::stdlib::value::BuiltinTexture::White)),
-                field("metallic_roughness_sampler", TypeRef::Sampler, C, "Sampler of the metallic_roughness map.")
+                field("metallic_roughness_sampler", TypeRef::Sampler, C, "Sampler.")
                     .default(ConstValue::Sampler(crate::stdlib::value::BuiltinSampler::LinearRepeat)),
                 field("normal_texture", TypeRef::Texture, C, "Linear tangent-space normal map; enable with normal_scale.")
                     .default(ConstValue::Texture(crate::stdlib::value::BuiltinTexture::White)),
-                field("normal_sampler", TypeRef::Sampler, C, "Sampler of the normal map.")
+                field("normal_sampler", TypeRef::Sampler, C, "Sampler.")
                     .default(ConstValue::Sampler(crate::stdlib::value::BuiltinSampler::LinearRepeat)),
                 field("occlusion_texture", TypeRef::Texture, C, "Linear red indirect-light occlusion.")
                     .default(ConstValue::Texture(crate::stdlib::value::BuiltinTexture::White)),
-                field("occlusion_sampler", TypeRef::Sampler, C, "Sampler of the occlusion map.")
+                field("occlusion_sampler", TypeRef::Sampler, C, "Sampler.")
                     .default(ConstValue::Sampler(crate::stdlib::value::BuiltinSampler::LinearRepeat)),
                 field("emissive_texture", TypeRef::Texture, C, "sRGB emissive colour, multiplied by emissive.")
                     .default(ConstValue::Texture(crate::stdlib::value::BuiltinTexture::White)),
-                field("emissive_sampler", TypeRef::Sampler, C, "Sampler of the emissive map.")
+                field("emissive_sampler", TypeRef::Sampler, C, "Sampler.")
                     .default(ConstValue::Sampler(crate::stdlib::value::BuiltinSampler::LinearRepeat)),
                 field("normal_scale", TypeRef::F32, writable_bindable(), "Normal XY scale; zero suits the white fallback. GLB map default: one.")
                     .default(ConstValue::F32(0.0)),
-                field("occlusion_strength", TypeRef::F32, writable_bindable(), "Indirect-light occlusion strength, clamped to 0..1.")
+                field("occlusion_strength", TypeRef::F32, writable_bindable(), "Occlusion strength, clamped to 0..1.")
                     .default(ConstValue::F32(1.0)),
                 field("emissive", TypeRef::Color, writable_bindable(), "Linear emission before exposure.")
                     .default(ConstValue::srgb(0, 0, 0)),
@@ -522,17 +518,17 @@ fn materials() -> Vec<SchemaDef> {
             vec![
                 field("sheet", TypeRef::Texture, C, "The sprite sheet: `columns` x `rows` equal cells.")
                     .default(ConstValue::Texture(crate::stdlib::value::BuiltinTexture::White)),
-                field("sheet_sampler", TypeRef::Sampler, C, "Sampler of the sheet (default nearest, clamped).")
+                field("sheet_sampler", TypeRef::Sampler, C, "Sampler.")
                     .default(ConstValue::Sampler(crate::stdlib::value::BuiltinSampler::NearestClamp)),
                 field("tint", TypeRef::Color, writable_bindable(), "Multiplies the texel, alpha included.")
                     .default(ConstValue::srgb(0xff, 0xff, 0xff)),
-                field("cell", TypeRef::F32, writable_bindable(), "Cell (animation frame) shown, from 0, row by row; floored and wrapped, so `bind(t * fps)` animates.")
+                field("cell", TypeRef::F32, writable_bindable(), "Cell shown, from 0, row by row; floored and wrapped, so `bind(t * fps)` animates.")
                     .default(ConstValue::F32(0.0)),
-                field("columns", TypeRef::F32, writable_bindable(), "Cells per row of the sheet.")
+                field("columns", TypeRef::F32, writable_bindable(), "Cells per row.")
                     .default(ConstValue::F32(1.0))
                     .range(ValueRange::closed(1, 64))
                     .range_code(Code::E5701),
-                field("rows", TypeRef::F32, writable_bindable(), "Rows of cells in the sheet.")
+                field("rows", TypeRef::F32, writable_bindable(), "Rows of cells.")
                     .default(ConstValue::F32(1.0))
                     .range(ValueRange::closed(1, 64))
                     .range_code(Code::E5701),
@@ -549,7 +545,7 @@ fn lights() -> Vec<SchemaDef> {
             "color",
             TypeRef::Color,
             writable_bindable(),
-            "Light colour (linear RGB; alpha is ignored).",
+            "Linear RGB colour; alpha is ignored.",
         )
         .default(ConstValue::srgb(0xff, 0xff, 0xff))
     };
@@ -558,7 +554,7 @@ fn lights() -> Vec<SchemaDef> {
             "DirectionalLight",
             SchemaCategory::Light,
             Milestone::M1,
-            "A light infinitely far away. Travels along the entity's world -Z axis; rotate the entity to aim it.",
+            "Infinitely distant light travelling along the entity's world -Z; rotate the entity to aim it.",
             vec![
                 color(),
                 field(
@@ -574,7 +570,7 @@ fn lights() -> Vec<SchemaDef> {
             "PointLight",
             SchemaCategory::Light,
             Milestone::M1,
-            "A light radiating from the entity's world position.",
+            "Light radiating from the entity's position.",
             vec![
                 color(),
                 field(
@@ -603,14 +599,14 @@ fn bodies() -> Vec<SchemaDef> {
             "Static",
             SchemaCategory::Body,
             Milestone::M1,
-            "An immovable body; its pose is fixed at creation from the entity transform.",
+            "An immovable body; its pose is fixed at creation.",
             vec![],
         ),
         schema(
             "Kinematic",
             SchemaCategory::Body,
             Milestone::M1,
-            "Program-moved body: `set_kinematic_target`, or `move_character` with collisions. Fields tune `move_character`.",
+            "Program-moved body: `set_kinematic_target`, or `move_character` with collisions. Fields tune it.",
             vec![
                 field(
                     "max_slope",
@@ -668,7 +664,7 @@ fn bodies() -> Vec<SchemaDef> {
             "Dynamic",
             SchemaCategory::Body,
             Milestone::M1,
-            "A solver-controlled body; forces, impulses and teleports are explicit commands.",
+            "A solver-controlled body; forces, impulses and teleports are commands.",
             vec![
                 field("mass", TypeRef::F32, C, "Mass in kilograms.")
                     .default(ConstValue::F32(1.0))
@@ -677,7 +673,7 @@ fn bodies() -> Vec<SchemaDef> {
                     "linear_damping",
                     TypeRef::F32,
                     C,
-                    "Rate at which linear velocity decays.",
+                    "Linear velocity decay rate.",
                 )
                 .default(ConstValue::F32(0.0))
                 .range(ValueRange::non_negative().and_finite()),
@@ -685,7 +681,7 @@ fn bodies() -> Vec<SchemaDef> {
                     "angular_damping",
                     TypeRef::F32,
                     C,
-                    "Rate at which angular velocity decays.",
+                    "Angular velocity decay rate.",
                 )
                 .default(ConstValue::F32(0.05))
                 .range(ValueRange::non_negative().and_finite()),
@@ -693,7 +689,7 @@ fn bodies() -> Vec<SchemaDef> {
                     "continuous",
                     TypeRef::Bool,
                     C,
-                    "Continuous collision detection for this body.",
+                    "Continuous collision detection.",
                 )
                 .default(ConstValue::Bool(false)),
             ],
@@ -707,12 +703,12 @@ fn colliders() -> Vec<SchemaDef> {
             "sensor",
             TypeRef::Bool,
             C,
-            "A sensor reports collisions but pushes nothing.",
+            "Reports collisions, pushes nothing.",
         )
         .default(ConstValue::Bool(false))
     };
     let friction = || {
-        field("friction", TypeRef::F32, C, "Coulomb friction coefficient.")
+        field("friction", TypeRef::F32, C, "Friction coefficient.")
             .default(ConstValue::F32(0.5))
             .range(ValueRange::non_negative().and_finite())
     };
@@ -728,7 +724,7 @@ fn colliders() -> Vec<SchemaDef> {
             Milestone::M1,
             "A box collision shape.",
             vec![
-                field("size", TypeRef::Vec3, R_C, "Full extents along X, Y and Z.")
+                field("size", TypeRef::Vec3, R_C, "Full extents.")
                     .range(ValueRange::positive().and_finite()),
                 sensor(),
                 friction(),

@@ -646,6 +646,10 @@ impl<'a> Checker<'a> {
         };
         // A `bind(..)` is checked with the bindings of its scene or prefab.
         if let FieldValue::Expr(value) = &field.value {
+            // A field of type `glb_asset` (`clips_from`, decision 0223) takes the handle itself.
+            if expected == Some(TyId::GLB_ASSET) {
+                self.asset_state.glb_ok.insert(value.id);
+            }
             if self.current_prefab.is_some() {
                 self.prefab_field_value(field, value, expected);
                 return;
