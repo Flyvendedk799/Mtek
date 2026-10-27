@@ -337,14 +337,19 @@ class RapierWorld implements PhysicsWorld {
     }
 
     // Step 3: the controller resolves `displacement + carry`: slide on, autostep without dynamic bodies, slope climb and slide angle = `maxSlope`.
+    // A kinematic support is left out of the sweep and resolved in step 3c: Rapier cancels the contact nudge against kinematic
+    // bodies (a character resting within `offset` of one cannot slide along it: 20 time-of-impact-0 hits, no motion), adds the
+    // body's velocity of the previous step to the motion (a second carry), and sees it at its stale pose.
+    const supportCollider=supportBody!==null&&supportBody.isKinematic()&&supportHit!==null?supportHit.collider.handle:undefined;
     const controller=this.controller??=this.world.createCharacterController(offset);
     controller.setOffset(offset);controller.setSlideEnabled(true);controller.setMaxSlopeClimbAngle(slope);controller.setMinSlopeSlideAngle(slope);
-    if(snap>0)controller.enableSnapToGround(snap);else controller.disableSnapToGround();
+    if(snap>0&&supportCollider===undefined)controller.enableSnapToGround(snap);else controller.disableSnapToGround();
     if(step>0)controller.enableAutostep(step,width,false);else controller.disableAutostep();
-    controller.computeColliderMovement(this.world.getCollider(record.colliderHandle),{x:displacement.x+carried.x,y:displacement.y+carried.y,z:displacement.z+carried.z},flags,options.groups,collider=>collider.handle!==excludeCollider);
+    controller.computeColliderMovement(this.world.getCollider(record.colliderHandle),{x:displacement.x+carried.x,y:displacement.y+carried.y,z:displacement.z+carried.z},flags,options.groups,collider=>collider.handle!==excludeCollider&&collider.handle!==supportCollider);
     const contacts:ShapeHit[]=[];
     for(let i=0;i<controller.numComputedCollisions();i++) {const hit=controller.computedCollision(i);if(hit===null||hit.collider===null)continue;contacts.push({userId:this.userIds.get(hit.collider.handle)!,fraction:hit.toi,normal:toVec3(hit.normal1),point:toVec3(hit.witness1)});}
-    const moved=controller.computedMovement();let resolved:Vec3={x:moved.x,y:moved.y,z:moved.z},grounded=controller.computedGrounded();
+    const moved=controller.computedMovement();let resolved:{x:number;y:number;z:number}={x:moved.x,y:moved.y,z:moved.z},grounded=controller.computedGrounded();
+
     // Step 3b: stair assist. Rapier's autostep has two measured failure modes (decision 0215): its upward cast starts exactly
     // `offset` from the wall the character rests against, so float noise alone decides whether a flight can be climbed, and it
     // advances a character only by what is left of this tick's displacement, which cannot put a round shape (a capsule or a
@@ -359,6 +364,24 @@ class RapierWorld implements PhysicsWorld {
         if(wall&&progress<.25*wantLength){
           const hop=this.stairAssist(record,body,{x:position.x+moved.x,y:position.y+moved.y,z:position.z+moved.z},rotation,dir,{offset,step,width,slope},flags,options.groups,excludeCollider);
           if(hop!==undefined){resolved={x:resolved.x+hop.x,y:resolved.y+hop.y,z:resolved.z+hop.z};grounded=true;}
+        }
+      }
+    }
+
+    // Step 3c: the kinematic support, in its own (current) frame. The character's own motion there is the resolved motion
+    // without the carry; it rests on the support's top (`offset` above it), snaps down to it by at most `snapToGround` when it
+    // was not asked to rise, and is airborne above that. This is how a platform that descends is followed (the carry is the
+    // whole vertical motion) and one that ascends keeps the character grounded.
+    if(supportCollider!==undefined){
+      const own={x:resolved.x-carried.x,y:resolved.y-carried.y,z:resolved.z-carried.z},lift=offset+.05;
+      const from={x:position.x+own.x,y:position.y+Math.max(own.y,0)+lift,z:position.z+own.z};
+      const rest=this.world.castShape(from,current,{x:0,y:-1,z:0},record.shape,offset,lift+snap+Math.max(0,-own.y),false,RAPIER.QueryFilterFlags.EXCLUDE_SENSORS,options.groups,undefined,body,collider=>collider.handle===supportCollider);
+      grounded=false;
+      if(rest!==null){
+        const n=rest.normal1,length=Math.hypot(n.x,n.y,n.z),y=from.y-rest.time_of_impact-position.y;
+        if(length>0&&n.y/length>=Math.cos(slope)-1e-6&&(own.y<=y+1e-6||(own.y-y<=snap+1e-6&&displacement.y<=1e-6))){
+          resolved.y+=y-own.y;grounded=true;
+          contacts.push({userId:this.userIds.get(supportCollider)!,fraction:0,normal:{x:n.x/length,y:n.y/length,z:n.z/length},point:toVec3(rest.witness1)});
         }
       }
     }

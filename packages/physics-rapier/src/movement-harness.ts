@@ -249,7 +249,7 @@ export interface StairsParams {
 }
 
 /** Builds a flight of `steps` steps starting at x = 0 and a landing; returns the top height and the x of the top edge. */
-function buildStairs(rig: Rig, riser: number, tread: number, steps: number): { top: number; end: number } {
+export function buildStairs(rig: Rig, riser: number, tread: number, steps: number): { top: number; end: number } {
   solid(rig, v3(-8, -1, -3), v3(0, 0, 3));
   for (let i = 1; i <= steps; i++) solid(rig, v3((i - 1) * tread, -1, -3), v3(i * tread, i * riser, 3));
   const end = steps * tread;
@@ -328,7 +328,7 @@ export function stairsDown(backend: PhysicsBackend, shape: ShapeName, p: StairsP
 // ---------------------------------------------------------------------------------------------------------------------
 
 /** A ramp rising along +x at `angle` from the origin, on a flat floor that ends under it; returns its surface frame. */
-function buildRamp(rig: Rig, angle: number): { dir: Vec3; normal: Vec3 } {
+export function buildRamp(rig: Rig, angle: number): { dir: Vec3; normal: Vec3 } {
   const length = 14, thickness = 1;
   const dir = v3(Math.cos(angle), Math.sin(angle), 0);
   const normal = v3(-Math.sin(angle), Math.cos(angle), 0);
@@ -346,7 +346,7 @@ export interface SlopeClimbResult {
   readonly x: number;
 }
 
-/** Walks at the ramp at 2 m/s (horizontal) for 3.5 s. `climbed` means at least half the expected height was gained. */
+/** Walks at the ramp at 2 m/s (horizontal) for 3.5 s. `climbed` means at least half the height the projected walk predicts (`5.5 m * sin * cos`) was gained. */
 export function slopeClimb(backend: PhysicsBackend, shape: ShapeName, angleDeg: number, maxSlopeDeg: number, dt = DT): SlopeClimbResult {
   const spec = CHARACTERS[shape];
   const options: CharacterMoveOptions = { maxSlope: rad(maxSlopeDeg), stepHeight: 0 };
@@ -357,13 +357,14 @@ export function slopeClimb(backend: PhysicsBackend, shape: ShapeName, angleDeg: 
     const position = poseOf(rig).position;
     const gain = Math.max(0, position.y - standY(spec, 0));
     // The requested horizontal travel past the ramp's foot, turned into height by the slope.
-    const expected = Math.max(0, speed * seconds - 1.5) * Math.tan(rad(angleDeg));
+    // The horizontal request is projected onto the slope, so the horizontal progress shrinks by cos(angle) twice.
+    const expected = Math.max(0, speed * seconds - 1.5) * Math.sin(rad(angleDeg)) * Math.cos(rad(angleDeg));
     return { gain: r4(gain), expected: r4(expected), ratio: expected > 0 ? r4(gain / expected) : 0, climbed: gain >= 0.5 * expected && gain > 0.05, x: r4(position.x) };
   });
 }
 
 /** The height a character of this shape stands at on a surface with normal `n` through the point `p`. */
-function onSurface(spec: CharacterSpec, p: Vec3, n: Vec3, skin = SKIN): Vec3 {
+export function onSurface(spec: CharacterSpec, p: Vec3, n: Vec3, skin = SKIN): Vec3 {
   return add(p, scale(n, spec.support(n) + skin));
 }
 
@@ -428,7 +429,7 @@ export function slopeDescent(backend: PhysicsBackend, shape: ShapeName, angleDeg
 // ---------------------------------------------------------------------------------------------------------------------
 
 /** A tall static wall segment whose front face passes through `from` and runs along `along` for `lengthM`, facing `normal`. */
-function wallSegment(rig: Rig, from: Vec3, along: Vec3, normal: Vec3, lengthM: number, thickness = 0.5): void {
+export function wallSegment(rig: Rig, from: Vec3, along: Vec3, normal: Vec3, lengthM: number, thickness = 0.5): void {
   const yaw = Math.atan2(normal.z, -normal.x); // box-local x (the thickness axis) points along -normal
   const centre = v3(from.x + along.x * (lengthM / 2) - normal.x * (thickness / 2), 2, from.z + along.z * (lengthM / 2) - normal.z * (thickness / 2));
   solidBox(rig, v3(thickness, 4, lengthM), centre, quatY(yaw));
