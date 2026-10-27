@@ -18,7 +18,7 @@ import type {
   Pose,
   Quat,
   Vec3,
-  PhysicsQueryFilter,ShapeHit,CharacterMoveOptions,CharacterMovement,PhysicsContact,
+  PhysicsQueryFilter,ShapeHit,RayHit,CharacterMoveOptions,CharacterMovement,PhysicsContact,
 } from "../../runtime-web/src/physics/types.js";
 
 /**
@@ -31,6 +31,8 @@ export const BACKEND_NAME = "rapier3d-compat@0.21.0";
 interface BodyRecord {
   readonly body: RAPIER.RigidBody;
   readonly colliderHandle: number;
+  /** The collider's shape, kept for the support cast of `moveCharacter` (no allocation per call). */
+  readonly shape: RAPIER.Shape;
 }
 
 function requireFinite(value: number, what: string): void {
@@ -69,8 +71,48 @@ function toQuat(q: RAPIER.Rotation): Quat {
   return { x: q.x, y: q.y, z: q.z, w: q.w };
 }
 
+/** The twist angle of `q` about +Y, in (-pi, pi]: the swing-twist decomposition of decision 0214, resolution step 2. */
+function yawOf(q: Quat): number {
+  const sign = q.w < 0 ? -1 : 1;
+  return 2 * Math.atan2(sign * q.y, sign * q.w);
+}
+
+function yawQuat(angle: number): Quat {
+  return { x: 0, y: Math.sin(angle / 2), z: 0, w: Math.cos(angle / 2) };
+}
+
+function mulQuat(a: Quat, b: Quat): Quat {
+  return {
+    x: a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
+    y: a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x,
+    z: a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w,
+    w: a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,
+  };
+}
+
+function normQuat(q: Quat): Quat {
+  const n = Math.hypot(q.x, q.y, q.z, q.w);
+  return n > 0 && Number.isFinite(n) ? { x: q.x / n, y: q.y / n, z: q.z / n, w: q.w / n } : { x: 0, y: 0, z: 0, w: 1 };
+}
+
+function conjugate(q: Quat): Quat {
+  return { x: -q.x, y: -q.y, z: -q.z, w: q.w };
+}
+
+function rotateVec(q: Quat, v: Vec3): Vec3 {
+  // v' = v + 2w (u x v) + 2 u x (u x v), u = (q.x, q.y, q.z)
+  const tx = 2 * (q.y * v.z - q.z * v.y), ty = 2 * (q.z * v.x - q.x * v.z), tz = 2 * (q.x * v.y - q.y * v.x);
+  return {
+    x: v.x + q.w * tx + (q.y * tz - q.z * ty),
+    y: v.y + q.w * ty + (q.z * tx - q.x * tz),
+    z: v.z + q.w * tz + (q.x * ty - q.y * tx),
+  };
+}
+
 class RapierWorld implements PhysicsWorld {
   private readonly world: RAPIER.World;
+  /** One character controller per world, configured on every `moveCharacter` call (creating one per call is the cost this avoids). */
+  private controller: RAPIER.KinematicCharacterController | undefined;
   /** One queue per world; `true` drains it automatically before each step (section 5.1, "events"). */
   private readonly events = new RAPIER.EventQueue(true);
   /** Section 5.1, "collider handle -> entity": the user id of every live collider. */
@@ -112,6 +154,7 @@ class RapierWorld implements PhysicsWorld {
 
     // Section 5.1, rows "BoxCollider" (full extents become half-extents) and "SphereCollider".
     let colliderDesc: RAPIER.ColliderDesc;
+    let shape: RAPIER.Shape;
     switch (collider.shape.kind) {
       case "box": {
         const size = collider.shape.size;
@@ -119,15 +162,20 @@ class RapierWorld implements PhysicsWorld {
         requirePositive(size.y, "the box size y");
         requirePositive(size.z, "the box size z");
         colliderDesc = RAPIER.ColliderDesc.cuboid(size.x / 2, size.y / 2, size.z / 2);
+        shape = new RAPIER.Cuboid(size.x / 2, size.y / 2, size.z / 2);
         break;
       }
       case "sphere":
         requirePositive(collider.shape.radius, "the sphere radius");
         colliderDesc = RAPIER.ColliderDesc.ball(collider.shape.radius);
+        shape = new RAPIER.Ball(collider.shape.radius);
         break;
-      case "capsule":
-        colliderDesc = RAPIER.ColliderDesc.capsule(capsuleHalfHeight(collider.shape), collider.shape.radius);
+      case "capsule": {
+        const half = capsuleHalfHeight(collider.shape);
+        colliderDesc = RAPIER.ColliderDesc.capsule(half, collider.shape.radius);
+        shape = new RAPIER.Capsule(half, collider.shape.radius);
         break;
+      }
     }
 
     // Row "sensor, friction, restitution".
@@ -143,7 +191,7 @@ class RapierWorld implements PhysicsWorld {
     const body = this.world.createRigidBody(bodyDesc);
     const created = this.world.createCollider(colliderDesc, body);
     this.userIds.set(created.handle, userId);
-    this.bodies.set(body.handle, { body, colliderHandle: created.handle });
+    this.bodies.set(body.handle, { body, colliderHandle: created.handle, shape });
     return body.handle as BodyHandle;
   }
 
@@ -244,23 +292,61 @@ class RapierWorld implements PhysicsWorld {
     if(hit===null)return undefined;
     return {userId:this.userIds.get(hit.collider.handle)!,fraction:hit.time_of_impact,normal:toVec3(hit.normal1),point:toVec3(hit.witness1)};
   }
+  castRay(origin:Vec3,direction:Vec3,maxDistance:number,filter:PhysicsQueryFilter={}):RayHit|undefined {
+    this.alive();requireVec3(origin,"ray origin");requireVec3(direction,"ray direction");requireNonNegative(maxDistance,"ray distance");
+    const length=Math.hypot(direction.x,direction.y,direction.z);
+    if(!(length>0&&Number.isFinite(length)))throw new RangeError("physics: the ray direction must have a finite, non-zero length");
+    const unit={x:direction.x/length,y:direction.y/length,z:direction.z/length};
+    const flags=this.queryFlags(filter),exclude=filter.exclude===undefined?undefined:this.record(filter.exclude).body;
+    this.refreshQueries();
+    const hit=this.world.castRayAndGetNormal(new RAPIER.Ray(origin,unit),maxDistance,true,flags,filter.groups,undefined,exclude);
+    if(hit===null)return undefined;
+    const distance=hit.timeOfImpact;
+    return {userId:this.userIds.get(hit.collider.handle)!,distance,normal:toVec3(hit.normal),point:{x:origin.x+unit.x*distance,y:origin.y+unit.y*distance,z:origin.z+unit.z*distance}};
+  }
   moveCharacter(h:BodyHandle,displacement:Vec3,options:CharacterMoveOptions={}):CharacterMovement {
     this.alive();requireVec3(displacement,"character displacement");const record=this.record(h);
     if(!record.body.isKinematic())throw new RangeError("physics: character movement requires a kinematic body");
     const offset=options.offset??.01,slope=options.maxSlope??Math.PI/4,snap=options.snapToGround??0,step=options.stepHeight??0,width=options.stepMinWidth??.1;
     requirePositive(offset,"character offset");requireNonNegative(snap,"ground snap");requireNonNegative(step,"step height");requirePositive(width,"step width");
     if(!Number.isFinite(slope)||slope<0||slope>Math.PI/2)throw new RangeError("physics: slope angle must be in [0, pi/2]");
-    const flags=this.queryFlags(options),exclude=options.exclude===undefined?undefined:this.record(options.exclude).colliderHandle;
-    this.refreshQueries();const controller=this.world.createCharacterController(offset);
-    try {
-      controller.setMaxSlopeClimbAngle(slope);controller.setMinSlopeSlideAngle(slope);
-      if(snap>0)controller.enableSnapToGround(snap);if(step>0)controller.enableAutostep(step,width,false);
-      controller.computeColliderMovement(this.world.getCollider(record.colliderHandle),displacement,flags,options.groups,collider=>collider.handle!==exclude);
-      const contacts:ShapeHit[]=[];
-      for(let i=0;i<controller.numComputedCollisions();i++) {const hit=controller.computedCollision(i);if(hit?.collider===null||hit===null)continue;contacts.push({userId:this.userIds.get(hit.collider.handle)!,fraction:hit.toi,normal:toVec3(hit.normal1),point:toVec3(hit.witness1)});}
-      // Support, carry and rotation (decision 0214 steps 1-2) are decision 0215 work: no carry yet.
-      return {displacement:toVec3(controller.computedMovement()),grounded:controller.computedGrounded(),contacts,carried:{x:0,y:0,z:0},carriedYaw:0,rotation:options.rotation??toQuat(record.body.rotation())};
-    }finally{this.world.removeCharacterController(controller);}
+    if(options.rotation!==undefined){const q=options.rotation;requirePose({position:{x:0,y:0,z:0},rotation:q},"character rotation");if(!(Math.hypot(q.x,q.y,q.z,q.w)>0))throw new RangeError("physics: character rotation must not have zero length");}
+    const flags=this.queryFlags(options),excludeCollider=options.exclude===undefined?undefined:this.record(options.exclude).colliderHandle;
+    this.refreshQueries();
+    const body=record.body,position=body.translation(),current=toQuat(body.rotation());
+
+    // Decision 0214, resolution step 1: the support is the first thing a downward cast of the character's own shape hits
+    // within `offset + max(snap, 0.05)`, if its normal is within `maxSlope` of +Y. Sensors never support.
+    const castLength=offset+Math.max(snap,.05);
+    const supportHit=this.world.castShape(position,current,{x:0,y:-castLength,z:0},record.shape,0,1,true,RAPIER.QueryFilterFlags.EXCLUDE_SENSORS,options.groups,undefined,body,collider=>collider.handle!==excludeCollider);
+    let ground:{userId:number;normal:Vec3}|undefined,supportBody:RAPIER.RigidBody|null=null;
+    if(supportHit!==null){
+      const n=toVec3(supportHit.normal1),length=Math.hypot(n.x,n.y,n.z);
+      if(length>0&&n.y/length>=Math.cos(slope)-1e-6){ground={userId:this.userIds.get(supportHit.collider.handle)!,normal:{x:n.x/length,y:n.y/length,z:n.z/length}};supportBody=supportHit.collider.parent();}
+    }
+
+    // Step 2: carry by a kinematic support. The character is treated as a point attached to the support, which moves
+    // from its current pose to its pending one; the yaw part of the rotation change turns the requested rotation.
+    let carried:Vec3={x:0,y:0,z:0},carriedYaw=0,rotation=options.rotation??current;
+    if(options.carry===true&&supportBody!==null&&supportBody.isKinematic()){
+      const from=supportBody.translation(),to=supportBody.nextTranslation(),delta=normQuat(mulQuat(toQuat(supportBody.nextRotation()),conjugate(toQuat(supportBody.rotation()))));
+      const arm=rotateVec(delta,{x:position.x-from.x,y:position.y-from.y,z:position.z-from.z});
+      carried={x:to.x+arm.x-position.x,y:to.y+arm.y-position.y,z:to.z+arm.z-position.z};
+      carriedYaw=yawOf(delta);
+      rotation=normQuat(mulQuat(yawQuat(carriedYaw),rotation));
+    }
+
+    // Step 3: the controller resolves `displacement + carry`: slide on, autostep without dynamic bodies, slope climb and slide angle = `maxSlope`.
+    const controller=this.controller??=this.world.createCharacterController(offset);
+    controller.setOffset(offset);controller.setSlideEnabled(true);controller.setMaxSlopeClimbAngle(slope);controller.setMinSlopeSlideAngle(slope);
+    if(snap>0)controller.enableSnapToGround(snap);else controller.disableSnapToGround();
+    if(step>0)controller.enableAutostep(step,width,false);else controller.disableAutostep();
+    controller.computeColliderMovement(this.world.getCollider(record.colliderHandle),{x:displacement.x+carried.x,y:displacement.y+carried.y,z:displacement.z+carried.z},flags,options.groups,collider=>collider.handle!==excludeCollider);
+    const contacts:ShapeHit[]=[];
+    for(let i=0;i<controller.numComputedCollisions();i++) {const hit=controller.computedCollision(i);if(hit===null||hit.collider===null)continue;contacts.push({userId:this.userIds.get(hit.collider.handle)!,fraction:hit.toi,normal:toVec3(hit.normal1),point:toVec3(hit.witness1)});}
+    const result:{displacement:Vec3;grounded:boolean;contacts:ShapeHit[];carried:Vec3;carriedYaw:number;rotation:Quat;ground?:{userId:number;normal:Vec3}}={displacement:toVec3(controller.computedMovement()),grounded:controller.computedGrounded(),contacts,carried,carriedYaw,rotation};
+    if(ground!==undefined)result.ground=ground;
+    return result;
   }
   contacts(h:BodyHandle):readonly PhysicsContact[] {
     this.alive();const collider=this.world.getCollider(this.record(h).colliderHandle),result:PhysicsContact[]=[];
@@ -289,6 +375,8 @@ class RapierWorld implements PhysicsWorld {
     if (this.disposed) return;
     this.disposed = true;
     // Frees the world with every body and collider in it, then the event queue (spec section 4).
+    if (this.controller !== undefined) this.world.removeCharacterController(this.controller);
+    this.controller = undefined;
     this.world.free();
     this.events.free();
     this.userIds.clear();
