@@ -372,10 +372,15 @@ describe("runtime.d.ts agrees with the implementation", () => {
       controller.setLocomotion({samples:[{clip:"walk",threshold:1},{clip:"run",threshold:4}],parameter:2});
       controller.setLocomotionParameter(3);controller.update(0.016,false,25);
       controller.player.locomotion.pause();controller.player.locomotion.resume();
+      controller.setBlendSpace({samples:[{clip:"walk",x:0,y:0},{clip:"run",x:1,y:0},{clip:"turn",x:0,y:1}],parameter:{x:0.5,y:0.5},looping:false});
+      controller.setBlendParameter(1,0);controller.player.blend.setParameter(0.2);controller.player.blend.seek(0.5);
+      export const blendFade:boolean=controller.fadeLayer("action",0,0.3)&&controller.player.layers.fade("action",1,0.1);
+      export const blendWeights:D.AnimationInspection["blend"]=controller.player.inspect?.().blend??null;
       controller.setIK("foot",{chain:["hip","knee","foot"],target:[0,0,0],rotation:[0,0,0,1],limits:{knee:{axis:[1,0,0],min:0,max:2}}});
       export const retargeted:D.MtekSkin=A.retargetSkin(skin,skin,{}, {rotationSpace:"world",nodeTranslationScales:{hips:1.2}});
       type Mutual<X,Y>=[X] extends [Y]?([Y] extends [X]?true:false):false;
       export const optionsMatch:Mutual<D.LocomotionOptions,A.LocomotionOptions>=true;
+      export const blendOptionsMatch:Mutual<D.BlendOptions,A.BlendOptions>=true;
       export const limitsMatch:Mutual<D.IKConstraint,A.IKConstraint>=true;
       export const retargetMatch:Mutual<D.RetargetOptions,A.RetargetOptions>=true;
       export const delta=controller.player.consumeRootMotion();

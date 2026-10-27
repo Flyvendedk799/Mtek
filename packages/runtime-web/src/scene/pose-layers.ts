@@ -57,11 +57,13 @@ export function blendQuat(
   for (let i = 0; i < 4; i++) out[at + i] = out[at + i]! / length;
 }
 
+interface LayerFade { from: number; to: number; elapsed: number; duration: number }
+
 /** Ordered override/additive layers. Sampling storage and clocks are independent per actor. */
 export class PoseLayers {
   private readonly layers = new Map<
     string,
-    { options: AnimationLayer; mask: Float64Array; clock: ClipPlayers }
+    { options: AnimationLayer; mask: Float64Array; clock: ClipPlayers; weight: number; fade?: LayerFade }
   >();
   private readonly value = new Float64Array(4);
   private readonly rotation = new Float64Array(4);
@@ -70,7 +72,8 @@ export class PoseLayers {
   constructor(private readonly skin: MtekSkin) {}
 
   inspect(): readonly AnimationLayerInspection[] {
-    return [...this.layers].map(([id, { options, mask, clock }]) => ({ id, clip: options.clip, weight: options.weight,
+    return [...this.layers].map(([id, { options, mask, clock, weight, fade }]) => ({ id, clip: options.clip, weight,
+      targetWeight: fade?.to ?? weight, fadeRemaining: fade === undefined ? 0 : fade.duration - fade.elapsed,
       additive: options.additive ?? false, time: clock.time(0), duration: clock.duration(0), playing: clock.playing(0), mask: [...mask] }));
   }
 
@@ -113,8 +116,22 @@ export class PoseLayers {
       clock.play(0, options.looping ?? true, options.speed ?? 1);
       clock.seek(0, time);
     }
-    this.layers.set(id, { options: { ...options }, mask, clock });
+    this.layers.set(id, { options: { ...options }, mask, clock, weight: options.weight });
     this.revision++;
+  }
+  /**
+   * Move a layer's weight to `weight` over `seconds` along a smoothstep, from the weight it has now,
+   * replacing any fade in progress. The layer keeps its phase; zero seconds is immediate.
+   */
+  fade(id: string, weight: number, seconds: number): boolean {
+    if (!Number.isFinite(weight) || weight < 0 || weight > 1 || !Number.isFinite(seconds) || seconds < 0)
+      throw new RangeError("Invalid animation layer fade weight or duration");
+    const layer = this.layers.get(id);
+    if (layer === undefined) return false;
+    if (seconds === 0 || weight === layer.weight) { delete layer.fade; layer.weight = weight; }
+    else layer.fade = { from: layer.weight, to: weight, elapsed: 0, duration: seconds };
+    this.revision++;
+    return true;
   }
   remove(id: string): void {
     if (this.layers.delete(id)) this.revision++;
@@ -139,13 +156,20 @@ export class PoseLayers {
       const before = layer.clock.time(0);
       layer.clock.advance(dt, () => undefined);
       if (before !== layer.clock.time(0)) this.revision++;
+      const fade = layer.fade;
+      if (fade === undefined || dt === 0) continue;
+      fade.elapsed = Math.min(fade.duration, fade.elapsed + dt);
+      const t = fade.elapsed / fade.duration;
+      layer.weight = fade.elapsed === fade.duration ? fade.to : fade.from + (fade.to - fade.from) * t * t * (3 - 2 * t);
+      if (fade.elapsed === fade.duration) delete layer.fade;
+      this.revision++;
     }
   }
   apply(pose: Float64Array, bind: Float64Array): void {
-    for (const { options, mask, clock } of this.layers.values()) {
+    for (const { options, mask, clock, weight } of this.layers.values()) {
       const clip = this.skin.clips.find((c) => c.name === options.clip)!;
       for (const channel of clip.channels) {
-        const w = options.weight * mask[channel.node]!;
+        const w = weight * mask[channel.node]!;
         if (w === 0) continue;
         sampleChannelInto(channel, clock.time(0), this.value);
         const at =
