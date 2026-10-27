@@ -135,6 +135,100 @@ The numbers per lane and the derivations are in decision 0068 item 3.
 
 The second release demonstration, `examples/physics-playground/`, exercises impulses, spawn and destroy, sensor counts and the ownership rule together on the real engine (`tests/browser/specs/m5/playground.spec.ts`, and the failing fixture `tests/semantics/fail/e5071_playground_pose_writes`); see decision 0069.
 
+### 7.2 Character movement operating ranges
+
+<!-- movement-ranges:begin -->
+Generated from `evidence/movement/operating-ranges.json` (adapter rapier3d-compat@0.21.0, decision 0215) by `npm run ranges -w @mtek/physics-rapier`; do not edit by hand. Fixed step 1/60 s unless stated; options are the decision 0214 defaults (skin 0.01 m, snap 0.2 m, max slope 45 degrees, step height 0.25 m, minimum step width 0.1 m, carry on) unless a row varies them. Characters: capsule (radius 0.3 m, height 1.8 m), sphere (radius 0.5 m), box (0.6 x 1.8 x 0.6 m).
+
+**Stairs, ascending.** Six steps, walking 2 m/s. Each cell lists risers 0.05 to 0.50 m by 0.05: `C` reaches the landing within 1.3 times the unobstructed time, `S` reaches it more slowly, `-` does not. The last column is the largest riser that climbs cleanly with every smaller riser also clean, and the largest riser that climbs at all.
+
+| character | stepHeight (m) | tread 0.15 m | tread 0.30 m | tread 0.60 m | clean / any riser per tread (m) |
+|---|---|---|---|---|---|
+| capsule | 0.20 | `CC--------` | `CCCCC-----` | `CCCCC-----` | 0.10/0.10, 0.25/0.25, 0.25/0.25 |
+| capsule | 0.30 | `CCS-------` | `CCCCCCC---` | `CCCCCCC---` | 0.10/0.15, 0.35/0.35, 0.35/0.35 |
+| capsule | 0.40 | `CCC-------` | `CCCCCCCCC-` | `CCCCCCCCC-` | 0.15/0.15, 0.45/0.45, 0.45/0.45 |
+| sphere | 0.20 | `CC--------` | `CCCCCS----` | `CCCCCC----` | 0.10/0.10, 0.25/0.30, 0.30/0.30 |
+| sphere | 0.30 | `CC--------` | `CCCCCS----` | `CCCCCC----` | 0.10/0.10, 0.25/0.30, 0.30/0.30 |
+| sphere | 0.40 | `CCS-------` | `CCCCCC----` | `CCCCCCCC--` | 0.10/0.15, 0.30/0.30, 0.40/0.40 |
+| box | 0.20 | `CCCC------` | `CCCC------` | `CCCC------` | 0.20/0.20, 0.20/0.20, 0.20/0.20 |
+| box | 0.30 | `CCCCCC----` | `CCCCCC----` | `CCCCCC----` | 0.30/0.30, 0.30/0.30, 0.30/0.30 |
+| box | 0.40 | `CCCCCCCC--` | `CCCCCCCC--` | `CCCCCCCC--` | 0.40/0.40, 0.40/0.40, 0.40/0.40 |
+
+**Stairs, minimum step width** (stepHeight 0.3 m, risers 0.05 to 0.40 m).
+
+| character | tread (m) | stepMinWidth 0.10 m | stepMinWidth 0.30 m | stepMinWidth 0.60 m |
+|---|---|---|---|---|
+| capsule | 0.15 | `CCS-----` | `CS------` | `C-------` |
+| capsule | 0.30 | `CCCCCCC-` | `CC------` | `CC------` |
+| capsule | 0.60 | `CCCCCCC-` | `CCCCCC--` | `CC------` |
+| sphere | 0.15 | `CC------` | `CC------` | `CC------` |
+| sphere | 0.30 | `CCCCCS--` | `CCC-----` | `CCC-----` |
+| sphere | 0.60 | `CCCCCC--` | `CCCCCC--` | `CCC-----` |
+| box | 0.15 | `CCCCCC--` | `CCS-----` | `C-------` |
+| box | 0.30 | `CCCCCC--` | `CCC-SS--` | `CCS-----` |
+| box | 0.60 | `CCCCCC--` | `CCCCCC--` | `CCC-S---` |
+
+**Stairs, stepping disabled and descending.** `stepHeight` 0 on risers 0.05 to 0.50 m (tread 0.6 m); descending a flight (tread 0.4 m, stepHeight 0.25 m) with `G` grounded on every tick and `a` airborne on some tick, with snap-to-ground 0.2 m and 0.
+
+| character | stepHeight 0, climbed | descend, snap 0.2 m | descend, snap 0 |
+|---|---|---|---|
+| capsule | `CS--------` | `GGGGGGGGaa` | `aaaaaaaaaa` |
+| sphere | `CCC-------` | `GGGGGGGGGG` | `aaaaaaaaaa` |
+| box | `----------` | `GGGGaaaaaa` | `aaaaaaaaaa` |
+
+**Slopes.** A ramp rising along the walk; the character walks at 2 m/s for 3.5 s (climb) or is pushed down at 3 m/s for 1 s on it (slide). Angles 5 to 85 degrees by 5; `C` climbs, `S` slides 0.5 m or more downhill. The fine columns are measured on a 0.25 degree grid around the limit.
+
+| character | maxSlope (deg) | climbs (5..85) | slides (5..85) | climbs up to (deg) | slides from (deg) | height gained / predicted, 10 deg below limit |
+|---|---|---|---|---|---|---|
+| capsule | 30 | `CCCCC------------` | `......SSSSSSSSSSS` | 29.75 | 30.25 | 1.01 |
+| capsule | 45 | `CCCCCCCCC--------` | `.........SSSSSSSS` | 45 | 45.25 | 1.0177 |
+| capsule | 60 | `CCCCCCCCCCCC-----` | `............SSSSS` | 60 | 60.25 | 1.0262 |
+| sphere | 30 | `CCCCC------------` | `......SSSSSSSSSSS` | 29.75 | 30.25 | 1.0163 |
+| sphere | 45 | `CCCCCCCCC--------` | `.........SSSSSSSS` | 45 | 45.25 | 1.0292 |
+| sphere | 60 | `CCCCCCCCCCCC-----` | `............SSSSS` | 60 | 60.25 | 1.0432 |
+| box | 30 | `CCCCC------------` | `......SSSSSSSSSSS` | 29.75 | 30.25 | 1.0548 |
+| box | 45 | `CCCCCCCCC--------` | `.........SSSSSSSS` | 45 | 45.25 | 1.055 |
+| box | 60 | `CCCCCCCCCCCC-----` | `............SSSSS` | 60 | 60.25 | 1.0554 |
+
+| character | descent grounded, snap 0.2 m (5, 15, 25, 35, 45 deg) | descent grounded, snap 0 | largest ground-normal error (rad) |
+|---|---|---|---|
+| capsule | `GGGGG` | `aaaaa` | 0.0004 |
+| sphere | `GGGGG` | `aaaaa` | 0.0003 |
+| box | `GGGGG` | `aaaaa` | 0.0001 |
+
+**Walls and corners.** Walking at 3 m/s for 3 s into a wall whose normal is 0, 15, 45 or 75 degrees off the walking direction; then into an inside corner of 90, 45 and 30 degrees for 8 s (straight and 20 degrees to either side). Penetration is measured against the wall planes with the shape's own extent.
+
+| character | largest penetration | slide ratio at 0, 15, 45, 75 deg | jitter in the last 2 s at 90, 45, 30 deg |
+|---|---|---|---|
+| capsule | 0.0 mm | 0, 0.9812, 0.9982, 0.9987 | 1.7 mm, 0.0 mm, 0.0 mm |
+| sphere | 0.0 mm | 0, 1.0004, 0.9938, 0.9997 | 3.1 mm, 0.0 mm, 0.0 mm |
+| box | 0.0 mm | 0, 0.9741, 0.9874, 1 | 1.2 mm, 0.0 mm, 0.0 mm |
+
+**Ceilings, gaps, thin walls and bumps.** Passable thresholds are the smallest margin on a 5 mm grid over the character's height (ceiling) or width (gap). Thin walls are 0.01 m thick; the character is asked for the given distance per tick towards one, head-on and at 45 degrees, from eight phases each (16 runs); a pass is the centre ending beyond the wall. Bumps are 0.3 m deep blocks of 0.05 to 0.35 m (stepHeight 0.25 m) with gravity applied by the program.
+
+| character | ceiling passable from (m over height) | gap passable from (m over width) | no thin-wall pass up to (m per tick) | thin-wall passes at 2, 5, 25, 100 m per tick | bumps 0.05..0.35 (P passes) |
+|---|---|---|---|---|---|
+| capsule | 0.02 | 0.025 | 1 | 1/16, 0/16, 0/16, 1/16 | `PPPPPP-` |
+| sphere | 0.02 | 0.02 | 50 | 0/16, 0/16, 0/16, 2/16 | `PPPPPP-` |
+| box | 0.025 | 0.025 | 100 | 0/16, 0/16, 0/16, 0/16 | `PPPPP--` |
+
+**Moving platforms** (kinematic 12 x 12 m deck, carry on). The platform moves for 1.5 s and then rests for 1.5 s, so each run measures an abrupt start and an abrupt stop. Drift is the largest distance, in the platform's frame, between where the character stands and where it should stand (0 means exact to 0.1 mm). Horizontal 0.5 to 10 m/s, vertical up and down 0.5 to 5 m/s, yaw 0.1 to 3 rad/s with the character 0 to 4 m from the centre; walking runs add a character walking 1 to 1.5 m/s on the deck (and, for the vertical run, program gravity).
+
+| character | horizontal drift | vertical drift | yaw drift | walking drift | airborne ticks (all runs) | carry false: character moved while the platform moved 3 m |
+|---|---|---|---|---|---|---|
+| capsule | 0.0 mm | 0.0 mm | 0.1 mm | 0.1 mm | 0 | 0 m |
+| sphere | 0.0 mm | 0.0 mm | 0.2 mm | 0.2 mm | 0 | 0 m |
+| box | 0.0 mm | 0.0 mm | 0.0 mm | 0.0 mm | 0 | 0 m |
+
+**Variable fixed step.** The same velocity-driven course for 3 s at 1/30, 1/60, 1/120 and 1/144 s (displacement = velocity x step): flat walk at 4 m/s, a six-step flight at 2 m/s (riser 0.15 m, tread 0.3 m), a 25 degree ramp at 2 m/s, a platform at 2 m/s carrying a character walking 1 m/s. The spread is the largest difference between the four final positions.
+
+| character | flat | stairs | slope | platform |
+|---|---|---|---|---|
+| capsule | 1.0 mm | 346 mm | 0.0 mm | 0.0 mm |
+| sphere | 9.0 mm | 79 mm | 1.0 mm | 0.0 mm |
+| box | 5.0 mm | 327 mm | 2.0 mm | 0.0 mm |
+<!-- movement-ranges:end -->
+
 ## 8. Physics diagnostic codes
 
 Compile time (in `spec/diagnostics.md` §5.5, added by M5-03): `E5120` collider without body · `E5121` body without collider · `E5122` scaled dynamic or kinematic body · `E5123` command not valid for this body kind. Runtime (§5.8, catalogued by M5-03, reported by M5-05): `E8101` command not valid for the target's body kind · `E8102` physics module failed to load (mount fails with the dedicated kind `"physics-failed"`, added to `MtekMountError.kind` in M5) · `E8103` non-finite pose produced by the solver (body frozen, reported once) · `E8104` non-finite value given to a body (a command argument, or the initial pose of a body; decision 0066).

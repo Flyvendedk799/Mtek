@@ -228,8 +228,9 @@ export function platformRun(backend: PhysicsBackend, shape: ShapeName, p: Platfo
     const n = ticksFor(duration, dt);
     for (let i = 0; i < n; i++) {
       const t = (i + 1) * dt;
-      // The walk is in the platform frame: turn it into the world with the platform's yaw at the start of the tick.
-      const frame = rig.world.readPose(deck).rotation;
+      // The walk is in the platform frame: turn it into the world with the yaw the platform has at the end of this tick (the
+      // character is carried first, then walks in the frame it is carried to).
+      const frame = platformAt(t).rotation;
       const walk = p.walk === undefined ? v3() : rotate(frame, v3(p.walk * dt));
       const move = tick(rig, v3(walk.x, (p.gravity === true ? vy * dt : 0) + walk.y, walk.z), { targets: [[deck, platformAt(t)]] });
       if (!move.grounded) airborne++;

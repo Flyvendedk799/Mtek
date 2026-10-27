@@ -385,6 +385,20 @@ class RapierWorld implements PhysicsWorld {
         }
       }
     }
+    // Step 3d: overlap guard. Rapier's shape casts are iterative and stop early for some shape pairs: a sphere walking over a large
+    // box was left 2.9 cm inside it (measured, decision 0215). A resolved pose that overlaps geometry the start pose did not is
+    // never returned: it is lifted by the smallest of a few small amounts that clears it, else the move is halved until it does.
+    // The kinematic support is not tested (its collider is still at its pose from before the carry).
+    const overlaps=(at:Vec3):boolean=>this.world.intersectionWithShape(at,rotation,record.shape,flags,options.groups,undefined,body,collider=>collider.handle!==excludeCollider&&collider.handle!==supportCollider)!==null;
+    const at=(move:Vec3,dy=0):Vec3=>({x:position.x+move.x,y:position.y+move.y+dy,z:position.z+move.z});
+    if(overlaps(at(resolved))&&!overlaps(position)){
+      const lift=[.005,.01,.02,.04,.08].find(dy=>!overlaps(at(resolved,dy)));
+      if(lift!==undefined)resolved={x:resolved.x,y:resolved.y+lift,z:resolved.z};
+      else{
+        let t=.5;while(t>.02&&overlaps(at({x:resolved.x*t,y:resolved.y*t,z:resolved.z*t})))t/=2;
+        const k=t>.02?t:0;resolved={x:resolved.x*k,y:resolved.y*k,z:resolved.z*k};
+      }
+    }
     const result:{displacement:Vec3;grounded:boolean;contacts:ShapeHit[];carried:Vec3;carriedYaw:number;rotation:Quat;ground?:{userId:number;normal:Vec3}}={displacement:resolved,grounded,contacts,carried,carriedYaw,rotation};
     if(ground!==undefined)result.ground=ground;
     return result;

@@ -1,0 +1,902 @@
+{
+  "schema": 1,
+  "adapter": "rapier3d-compat@0.21.0",
+  "decision": "0215",
+  "tick": "1/60 s unless stated",
+  "options": {
+    "offset": 0.01,
+    "maxSlope": 0.7853982,
+    "snapToGround": 0.2,
+    "stepHeight": 0.25,
+    "stepMinWidth": 0.1,
+    "carry": true
+  },
+  "characters": {
+    "capsule": {
+      "collider": {
+        "kind": "capsule",
+        "radius": 0.3,
+        "height": 1.8
+      },
+      "height": 1.8,
+      "width": 0.6
+    },
+    "sphere": {
+      "collider": {
+        "kind": "sphere",
+        "radius": 0.5
+      },
+      "height": 1,
+      "width": 1
+    },
+    "box": {
+      "collider": {
+        "kind": "box",
+        "size": {
+          "x": 0.6,
+          "y": 1.8,
+          "z": 0.6
+        }
+      },
+      "height": 1.8,
+      "width": 0.6
+    }
+  },
+  "stairs": {
+    "riserSteps": "0.05 .. 0.50 by 0.05",
+    "climb": {
+      "capsule": {
+        "stepHeight 0.20": {
+          "tread 0.15": "CC--------",
+          "tread 0.30": "CCCCC-----",
+          "tread 0.60": "CCCCC-----"
+        },
+        "stepHeight 0.30": {
+          "tread 0.15": "CCS-------",
+          "tread 0.30": "CCCCCCC---",
+          "tread 0.60": "CCCCCCC---"
+        },
+        "stepHeight 0.40": {
+          "tread 0.15": "CCC-------",
+          "tread 0.30": "CCCCCCCCC-",
+          "tread 0.60": "CCCCCCCCC-"
+        }
+      },
+      "sphere": {
+        "stepHeight 0.20": {
+          "tread 0.15": "CC--------",
+          "tread 0.30": "CCCCCS----",
+          "tread 0.60": "CCCCCC----"
+        },
+        "stepHeight 0.30": {
+          "tread 0.15": "CC--------",
+          "tread 0.30": "CCCCCS----",
+          "tread 0.60": "CCCCCC----"
+        },
+        "stepHeight 0.40": {
+          "tread 0.15": "CCS-------",
+          "tread 0.30": "CCCCCC----",
+          "tread 0.60": "CCCCCCCC--"
+        }
+      },
+      "box": {
+        "stepHeight 0.20": {
+          "tread 0.15": "CCCC------",
+          "tread 0.30": "CCCC------",
+          "tread 0.60": "CCCC------"
+        },
+        "stepHeight 0.30": {
+          "tread 0.15": "CCCCCC----",
+          "tread 0.30": "CCCCCC----",
+          "tread 0.60": "CCCCCC----"
+        },
+        "stepHeight 0.40": {
+          "tread 0.15": "CCCCCCCC--",
+          "tread 0.30": "CCCCCCCC--",
+          "tread 0.60": "CCCCCCCC--"
+        }
+      }
+    },
+    "minWidth": {
+      "capsule": {
+        "tread 0.15": {
+          "stepMinWidth 0.10": "CCS-----",
+          "stepMinWidth 0.30": "CS------",
+          "stepMinWidth 0.60": "C-------"
+        },
+        "tread 0.30": {
+          "stepMinWidth 0.10": "CCCCCCC-",
+          "stepMinWidth 0.30": "CC------",
+          "stepMinWidth 0.60": "CC------"
+        },
+        "tread 0.60": {
+          "stepMinWidth 0.10": "CCCCCCC-",
+          "stepMinWidth 0.30": "CCCCCC--",
+          "stepMinWidth 0.60": "CC------"
+        }
+      },
+      "sphere": {
+        "tread 0.15": {
+          "stepMinWidth 0.10": "CC------",
+          "stepMinWidth 0.30": "CC------",
+          "stepMinWidth 0.60": "CC------"
+        },
+        "tread 0.30": {
+          "stepMinWidth 0.10": "CCCCCS--",
+          "stepMinWidth 0.30": "CCC-----",
+          "stepMinWidth 0.60": "CCC-----"
+        },
+        "tread 0.60": {
+          "stepMinWidth 0.10": "CCCCCC--",
+          "stepMinWidth 0.30": "CCCCCC--",
+          "stepMinWidth 0.60": "CCC-----"
+        }
+      },
+      "box": {
+        "tread 0.15": {
+          "stepMinWidth 0.10": "CCCCCC--",
+          "stepMinWidth 0.30": "CCS-----",
+          "stepMinWidth 0.60": "C-------"
+        },
+        "tread 0.30": {
+          "stepMinWidth 0.10": "CCCCCC--",
+          "stepMinWidth 0.30": "CCC-SS--",
+          "stepMinWidth 0.60": "CCS-----"
+        },
+        "tread 0.60": {
+          "stepMinWidth 0.10": "CCCCCC--",
+          "stepMinWidth 0.30": "CCCCCC--",
+          "stepMinWidth 0.60": "CCC-S---"
+        }
+      }
+    },
+    "stepHeightZero": {
+      "capsule": "CS--------",
+      "sphere": "CCC-------",
+      "box": "----------"
+    },
+    "descend": {
+      "capsule": {
+        "snap 0.20": "GGGGGGGGaa",
+        "snap 0.00": "aaaaaaaaaa"
+      },
+      "sphere": {
+        "snap 0.20": "GGGGGGGGGG",
+        "snap 0.00": "aaaaaaaaaa"
+      },
+      "box": {
+        "snap 0.20": "GGGGaaaaaa",
+        "snap 0.00": "aaaaaaaaaa"
+      }
+    }
+  },
+  "slopes": {
+    "byShape": {
+      "capsule": {
+        "maxSlope 30": {
+          "angles": "5 .. 85 by 5",
+          "climbs": "CCCCC------------",
+          "slides": "......SSSSSSSSSSS",
+          "climbsUpToDeg": 29.75,
+          "firstBlockedDeg": 30,
+          "slidesFromDeg": 30.25,
+          "heightRatioTenDegBelow": 1.01
+        },
+        "maxSlope 45": {
+          "angles": "5 .. 85 by 5",
+          "climbs": "CCCCCCCCC--------",
+          "slides": ".........SSSSSSSS",
+          "climbsUpToDeg": 45,
+          "firstBlockedDeg": 45.25,
+          "slidesFromDeg": 45.25,
+          "heightRatioTenDegBelow": 1.0177
+        },
+        "maxSlope 60": {
+          "angles": "5 .. 85 by 5",
+          "climbs": "CCCCCCCCCCCC-----",
+          "slides": "............SSSSS",
+          "climbsUpToDeg": 60,
+          "firstBlockedDeg": 60.25,
+          "slidesFromDeg": 60.25,
+          "heightRatioTenDegBelow": 1.0262
+        }
+      },
+      "sphere": {
+        "maxSlope 30": {
+          "angles": "5 .. 85 by 5",
+          "climbs": "CCCCC------------",
+          "slides": "......SSSSSSSSSSS",
+          "climbsUpToDeg": 29.75,
+          "firstBlockedDeg": 30,
+          "slidesFromDeg": 30.25,
+          "heightRatioTenDegBelow": 1.0163
+        },
+        "maxSlope 45": {
+          "angles": "5 .. 85 by 5",
+          "climbs": "CCCCCCCCC--------",
+          "slides": ".........SSSSSSSS",
+          "climbsUpToDeg": 45,
+          "firstBlockedDeg": 45.25,
+          "slidesFromDeg": 45.25,
+          "heightRatioTenDegBelow": 1.0292
+        },
+        "maxSlope 60": {
+          "angles": "5 .. 85 by 5",
+          "climbs": "CCCCCCCCCCCC-----",
+          "slides": "............SSSSS",
+          "climbsUpToDeg": 60,
+          "firstBlockedDeg": 60.25,
+          "slidesFromDeg": 60.25,
+          "heightRatioTenDegBelow": 1.0432
+        }
+      },
+      "box": {
+        "maxSlope 30": {
+          "angles": "5 .. 85 by 5",
+          "climbs": "CCCCC------------",
+          "slides": "......SSSSSSSSSSS",
+          "climbsUpToDeg": 29.75,
+          "firstBlockedDeg": 30,
+          "slidesFromDeg": 30.25,
+          "heightRatioTenDegBelow": 1.0548
+        },
+        "maxSlope 45": {
+          "angles": "5 .. 85 by 5",
+          "climbs": "CCCCCCCCC--------",
+          "slides": ".........SSSSSSSS",
+          "climbsUpToDeg": 45,
+          "firstBlockedDeg": 45.25,
+          "slidesFromDeg": 45.25,
+          "heightRatioTenDegBelow": 1.055
+        },
+        "maxSlope 60": {
+          "angles": "5 .. 85 by 5",
+          "climbs": "CCCCCCCCCCCC-----",
+          "slides": "............SSSSS",
+          "climbsUpToDeg": 60,
+          "firstBlockedDeg": 60.25,
+          "slidesFromDeg": 60.25,
+          "heightRatioTenDegBelow": 1.0554
+        }
+      }
+    },
+    "descent": {
+      "capsule": {
+        "snap 0.20": {
+          "angles": "5 15 25 35 45",
+          "grounded": "GGGGG",
+          "maxNormalErrorRad": 0.0004
+        },
+        "snap 0.00": {
+          "angles": "5 15 25 35 45",
+          "grounded": "aaaaa",
+          "maxNormalErrorRad": 0.0002
+        }
+      },
+      "sphere": {
+        "snap 0.20": {
+          "angles": "5 15 25 35 45",
+          "grounded": "GGGGG",
+          "maxNormalErrorRad": 0.0003
+        },
+        "snap 0.00": {
+          "angles": "5 15 25 35 45",
+          "grounded": "aaaaa",
+          "maxNormalErrorRad": 0.0001
+        }
+      },
+      "box": {
+        "snap 0.20": {
+          "angles": "5 15 25 35 45",
+          "grounded": "GGGGG",
+          "maxNormalErrorRad": 0.0001
+        },
+        "snap 0.00": {
+          "angles": "5 15 25 35 45",
+          "grounded": "aaaaa",
+          "maxNormalErrorRad": 0
+        }
+      }
+    }
+  },
+  "obstacles": {
+    "walls": {
+      "capsule": {
+        "incidence 0": {
+          "penetration": 0,
+          "gap": 0.01,
+          "slideRatio": 0
+        },
+        "incidence 15": {
+          "penetration": 0,
+          "gap": 0.01,
+          "slideRatio": 0.9812
+        },
+        "incidence 45": {
+          "penetration": 0,
+          "gap": 0.01,
+          "slideRatio": 0.9982
+        },
+        "incidence 75": {
+          "penetration": 0,
+          "gap": 0.0107,
+          "slideRatio": 0.9987
+        }
+      },
+      "sphere": {
+        "incidence 0": {
+          "penetration": 0,
+          "gap": 0.0097,
+          "slideRatio": 0
+        },
+        "incidence 15": {
+          "penetration": 0,
+          "gap": 0.0094,
+          "slideRatio": 1.0004
+        },
+        "incidence 45": {
+          "penetration": 0,
+          "gap": 0.0089,
+          "slideRatio": 0.9938
+        },
+        "incidence 75": {
+          "penetration": 0,
+          "gap": 0.0093,
+          "slideRatio": 0.9997
+        }
+      },
+      "box": {
+        "incidence 0": {
+          "penetration": 0,
+          "gap": 0.0091,
+          "slideRatio": 0
+        },
+        "incidence 15": {
+          "penetration": 0,
+          "gap": 0.0067,
+          "slideRatio": 0.9741
+        },
+        "incidence 45": {
+          "penetration": 0,
+          "gap": 0.0062,
+          "slideRatio": 0.9874
+        },
+        "incidence 75": {
+          "penetration": 0,
+          "gap": 0.01,
+          "slideRatio": 1
+        }
+      }
+    },
+    "corners": {
+      "capsule": {
+        "wedge 90": {
+          "penetration": 0,
+          "jitter": 0.0017,
+          "depth": 0.4383
+        },
+        "wedge 45": {
+          "penetration": 0,
+          "jitter": 0,
+          "depth": 0.8086
+        },
+        "wedge 30": {
+          "penetration": 0,
+          "jitter": 0,
+          "depth": 1.1967
+        }
+      },
+      "sphere": {
+        "wedge 90": {
+          "penetration": 0,
+          "jitter": 0.0031,
+          "depth": 0.7214
+        },
+        "wedge 45": {
+          "penetration": 0,
+          "jitter": 0,
+          "depth": 1.3275
+        },
+        "wedge 30": {
+          "penetration": 0,
+          "jitter": 0,
+          "depth": 1.9663
+        }
+      },
+      "box": {
+        "wedge 90": {
+          "penetration": 0,
+          "jitter": 0.0012,
+          "depth": 0.6143
+        },
+        "wedge 45": {
+          "penetration": 0,
+          "jitter": 0,
+          "depth": 1.0502
+        },
+        "wedge 30": {
+          "penetration": 0,
+          "jitter": 0,
+          "depth": 1.4575
+        }
+      }
+    },
+    "ceilings": {
+      "capsule": {
+        "minClearanceOverHeight": 0.02,
+        "blockedBelow": 0.015
+      },
+      "sphere": {
+        "minClearanceOverHeight": 0.02,
+        "blockedBelow": 0.015
+      },
+      "box": {
+        "minClearanceOverHeight": 0.025,
+        "blockedBelow": 0.02
+      }
+    },
+    "gaps": {
+      "capsule": {
+        "minGapOverWidth": 0.025,
+        "blockedBelow": 0.02
+      },
+      "sphere": {
+        "minGapOverWidth": 0.02,
+        "blockedBelow": 0.015
+      },
+      "box": {
+        "minGapOverWidth": 0.025,
+        "blockedBelow": 0.02
+      }
+    },
+    "thinWalls": {
+      "capsule": {
+        "passes": {
+          "0.05 m/tick": "0/16",
+          "0.1 m/tick": "0/16",
+          "0.25 m/tick": "0/16",
+          "0.5 m/tick": "0/16",
+          "1 m/tick": "0/16",
+          "2 m/tick": "1/16",
+          "5 m/tick": "0/16",
+          "10 m/tick": "0/16",
+          "25 m/tick": "0/16",
+          "50 m/tick": "0/16",
+          "100 m/tick": "1/16"
+        },
+        "noPassUpToMetresPerTick": 1
+      },
+      "sphere": {
+        "passes": {
+          "0.05 m/tick": "0/16",
+          "0.1 m/tick": "0/16",
+          "0.25 m/tick": "0/16",
+          "0.5 m/tick": "0/16",
+          "1 m/tick": "0/16",
+          "2 m/tick": "0/16",
+          "5 m/tick": "0/16",
+          "10 m/tick": "0/16",
+          "25 m/tick": "0/16",
+          "50 m/tick": "0/16",
+          "100 m/tick": "2/16"
+        },
+        "noPassUpToMetresPerTick": 50
+      },
+      "box": {
+        "passes": {
+          "0.05 m/tick": "0/16",
+          "0.1 m/tick": "0/16",
+          "0.25 m/tick": "0/16",
+          "0.5 m/tick": "0/16",
+          "1 m/tick": "0/16",
+          "2 m/tick": "0/16",
+          "5 m/tick": "0/16",
+          "10 m/tick": "0/16",
+          "25 m/tick": "0/16",
+          "50 m/tick": "0/16",
+          "100 m/tick": "0/16"
+        },
+        "noPassUpToMetresPerTick": 100
+      }
+    },
+    "bumps": {
+      "heights": "0.05 .. 0.35 by 0.05 (stepHeight 0.25)",
+      "byShape": {
+        "capsule": "PPPPPP-",
+        "sphere": "PPPPPP-",
+        "box": "PPPPP--"
+      }
+    }
+  },
+  "platforms": {
+    "capsule": {
+      "horizontal": {
+        "speeds": [
+          0.5,
+          1,
+          2,
+          5,
+          10
+        ],
+        "maxDrift": 0,
+        "maxYawDrift": 0,
+        "airborneTicks": 0
+      },
+      "vertical": {
+        "speeds": [
+          0.5,
+          1,
+          2,
+          5,
+          -0.5,
+          -1,
+          -2,
+          -5
+        ],
+        "maxDrift": 0,
+        "maxYawDrift": 0,
+        "airborneTicks": 0
+      },
+      "yaw": {
+        "speeds": [
+          0.1,
+          0.5,
+          1,
+          2,
+          3
+        ],
+        "radii": [
+          0,
+          1,
+          2,
+          4
+        ],
+        "maxDrift": 0.0001,
+        "maxYawDrift": 0,
+        "airborneTicks": 0
+      },
+      "walking": {
+        "maxDrift": 0.0001,
+        "maxYawDrift": 0,
+        "airborneTicks": 0
+      },
+      "carryFalse": {
+        "platformMetresMoved": 3,
+        "characterMetresMoved": 0
+      }
+    },
+    "sphere": {
+      "horizontal": {
+        "speeds": [
+          0.5,
+          1,
+          2,
+          5,
+          10
+        ],
+        "maxDrift": 0,
+        "maxYawDrift": 0,
+        "airborneTicks": 0
+      },
+      "vertical": {
+        "speeds": [
+          0.5,
+          1,
+          2,
+          5,
+          -0.5,
+          -1,
+          -2,
+          -5
+        ],
+        "maxDrift": 0,
+        "maxYawDrift": 0,
+        "airborneTicks": 0
+      },
+      "yaw": {
+        "speeds": [
+          0.1,
+          0.5,
+          1,
+          2,
+          3
+        ],
+        "radii": [
+          0,
+          1,
+          2,
+          4
+        ],
+        "maxDrift": 0.0002,
+        "maxYawDrift": 0,
+        "airborneTicks": 0
+      },
+      "walking": {
+        "maxDrift": 0.0002,
+        "maxYawDrift": 0,
+        "airborneTicks": 0
+      },
+      "carryFalse": {
+        "platformMetresMoved": 3,
+        "characterMetresMoved": 0
+      }
+    },
+    "box": {
+      "horizontal": {
+        "speeds": [
+          0.5,
+          1,
+          2,
+          5,
+          10
+        ],
+        "maxDrift": 0,
+        "maxYawDrift": 0,
+        "airborneTicks": 0
+      },
+      "vertical": {
+        "speeds": [
+          0.5,
+          1,
+          2,
+          5,
+          -0.5,
+          -1,
+          -2,
+          -5
+        ],
+        "maxDrift": 0,
+        "maxYawDrift": 0,
+        "airborneTicks": 0
+      },
+      "yaw": {
+        "speeds": [
+          0.1,
+          0.5,
+          1,
+          2,
+          3
+        ],
+        "radii": [
+          0,
+          1,
+          2,
+          4
+        ],
+        "maxDrift": 0,
+        "maxYawDrift": 0,
+        "airborneTicks": 0
+      },
+      "walking": {
+        "maxDrift": 0,
+        "maxYawDrift": 0,
+        "airborneTicks": 0
+      },
+      "carryFalse": {
+        "platformMetresMoved": 3,
+        "characterMetresMoved": 0
+      }
+    }
+  },
+  "variableStep": {
+    "steps": [
+      "1/30",
+      "1/60",
+      "1/120",
+      "1/144"
+    ],
+    "duration": "3 s",
+    "byShape": {
+      "capsule": {
+        "flat": {
+          "endX": [
+            12,
+            11.999,
+            12,
+            12
+          ],
+          "endY": [
+            0.909,
+            0.909,
+            0.908,
+            0.91
+          ],
+          "spreadX": 0,
+          "spreadY": 0.001,
+          "spreadZ": 0
+        },
+        "stairs": {
+          "endX": [
+            4.181,
+            3.969,
+            3.85,
+            3.835
+          ],
+          "endY": [
+            1.81,
+            1.81,
+            1.81,
+            1.81
+          ],
+          "spreadX": 0.346,
+          "spreadY": 0,
+          "spreadZ": 0
+        },
+        "slope": {
+          "endX": [
+            3.684,
+            3.684,
+            3.684,
+            3.684
+          ],
+          "endY": [
+            2.66,
+            2.66,
+            2.66,
+            2.66
+          ],
+          "spreadX": 0,
+          "spreadY": 0,
+          "spreadZ": 0
+        },
+        "platform": {
+          "endX": [
+            6,
+            6,
+            6,
+            6
+          ],
+          "endY": [
+            0.91,
+            0.91,
+            0.91,
+            0.91
+          ],
+          "spreadX": 0,
+          "spreadY": 0,
+          "spreadZ": 0
+        }
+      },
+      "sphere": {
+        "flat": {
+          "endX": [
+            12,
+            12,
+            12,
+            12
+          ],
+          "endY": [
+            0.501,
+            0.51,
+            0.508,
+            0.51
+          ],
+          "spreadX": 0,
+          "spreadY": 0.009,
+          "spreadZ": 0
+        },
+        "stairs": {
+          "endX": [
+            4.044,
+            4.062,
+            3.983,
+            3.995
+          ],
+          "endY": [
+            1.41,
+            1.41,
+            1.41,
+            1.409
+          ],
+          "spreadX": 0.079,
+          "spreadY": 0,
+          "spreadZ": 0
+        },
+        "slope": {
+          "endX": [
+            3.676,
+            3.676,
+            3.675,
+            3.676
+          ],
+          "endY": [
+            2.277,
+            2.277,
+            2.277,
+            2.277
+          ],
+          "spreadX": 0,
+          "spreadY": 0,
+          "spreadZ": 0.001
+        },
+        "platform": {
+          "endX": [
+            6,
+            6,
+            6,
+            6
+          ],
+          "endY": [
+            0.51,
+            0.51,
+            0.51,
+            0.51
+          ],
+          "spreadX": 0,
+          "spreadY": 0,
+          "spreadZ": 0
+        }
+      },
+      "box": {
+        "flat": {
+          "endX": [
+            12,
+            11.999,
+            12,
+            12
+          ],
+          "endY": [
+            0.905,
+            0.91,
+            0.906,
+            0.909
+          ],
+          "spreadX": 0.001,
+          "spreadY": 0.005,
+          "spreadZ": 0
+        },
+        "stairs": {
+          "endX": [
+            4.456,
+            4.488,
+            4.782,
+            4.741
+          ],
+          "endY": [
+            1.809,
+            1.81,
+            1.81,
+            1.81
+          ],
+          "spreadX": 0.327,
+          "spreadY": 0,
+          "spreadZ": 0.001
+        },
+        "slope": {
+          "endX": [
+            3.642,
+            3.642,
+            3.641,
+            3.64
+          ],
+          "endY": [
+            2.749,
+            2.749,
+            2.749,
+            2.748
+          ],
+          "spreadX": 0.002,
+          "spreadY": 0.001,
+          "spreadZ": 0.001
+        },
+        "platform": {
+          "endX": [
+            6,
+            6,
+            6,
+            6
+          ],
+          "endY": [
+            0.91,
+            0.91,
+            0.91,
+            0.91
+          ],
+          "spreadX": 0,
+          "spreadY": 0,
+          "spreadZ": 0
+        }
+      }
+    }
+  }
+}
