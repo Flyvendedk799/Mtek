@@ -288,6 +288,11 @@
       "test": "packages/runtime-web/src/scene/animation-script.test.ts"
     },
     {
+      "code": "E8114",
+      "reason": "A runtime code of the animation module: the lazily loaded module cannot be loaded (decision 0225).",
+      "test": "packages/runtime-web/src/animation-module/load.test.ts"
+    },
+    {
       "code": "W8201",
       "reason": "A runtime code of the audio subsystem (decision 0130).",
       "test": "packages/runtime-web/src/audio/audio.test.ts"

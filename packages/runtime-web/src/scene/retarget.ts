@@ -1,6 +1,6 @@
 import type { MtekSkin } from "../abi/manifest-types.js";
 import { multiplyQuat } from "./pose-layers.js";
-import { skinProblem } from "./skeleton.js";
+import { skinProblem } from "./skin-problem.js";
 import { numericallyUniformScale } from "./uniform-scale.js";
 
 export interface RetargetOptions {

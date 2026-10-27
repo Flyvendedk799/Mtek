@@ -655,8 +655,16 @@ export interface MtekManifest {
   /**
    * `physicsModule` is `physics/<h16>.js`, relative to the program, and present exactly when `physics` is true
    * (decision 0066): the file name is the hash of the bundle, which the runtime cannot derive.
+   * `animation` and `animationModule` are the same for skeletal animation (decision 0225): `animationModule` is
+   * `animation/<h16>.js` and present exactly when `animation` is true, which a program with a skinned mesh or
+   * `clips_from` has; both are absent from the manifests of programs without skeletal animation.
    */
-  readonly subsystems: { readonly physics: boolean; readonly physicsModule?: string };
+  readonly subsystems: {
+    readonly physics: boolean;
+    readonly physicsModule?: string;
+    readonly animation?: boolean;
+    readonly animationModule?: string;
+  };
   readonly runtimeConfig: MtekRuntimeConfig;
   /** Game-level data: the scenes `go_to` can load (decision 0141); absent for a single-scene program. */
   readonly game?: MtekGame;

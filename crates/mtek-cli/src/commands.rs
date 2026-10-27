@@ -415,6 +415,15 @@ pub fn compile_and_write(
             .and_then(|runtime| runtime.physics_bundle)
             .map(Arc::from),
         force_physics_subsystem: false,
+        // Likewise the animation module (decision 0225), written for programs with a skinned
+        // mesh or `clips_from`; release builds ship the minified one, like the runtime.
+        animation_bundle: context.runtime.map(|runtime| {
+            Arc::from(if mode == BuildMode::Release {
+                runtime.animation_min_bundle
+            } else {
+                runtime.animation_bundle
+            })
+        }),
         loop_budget,
     };
     // A preview is built against a clock as well as against the size limits of the compiler

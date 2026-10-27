@@ -65,6 +65,22 @@
       "code": "E8006",
       "field": "subsystems.physicsModule"
     },
+    "invalid/animation-not-boolean.json": {
+      "code": "E8006",
+      "field": "subsystems.animation"
+    },
+    "invalid/animation-module-missing.json": {
+      "code": "E8006",
+      "field": "subsystems.animationModule"
+    },
+    "invalid/animation-module-without-animation.json": {
+      "code": "E8006",
+      "field": "subsystems.animationModule"
+    },
+    "invalid/animation-module-bad-path.json": {
+      "code": "E8006",
+      "field": "subsystems.animationModule"
+    },
     "invalid/zero-fixed-step.json": {
       "code": "E8006",
       "field": "runtimeConfig.fixedStep"

@@ -1,6 +1,6 @@
 //! `mtek build --release`: the game package (decision 0136, `spec/tooling.md` section 2.1).
 //!
-//! A `release` build whose runtime is the minified flavour (`runtime.min.js`, chosen by the
+//! A `release` build whose runtime is the minified flavour (`core.min.js`, chosen by the
 //! caller), whose `index.html` is the compiler's game page ([`game_html`]: loading screen,
 //! favicon, title) and which carries a favicon: `assets/favicon.svg`, `.png` or `.ico` of the
 //! project (validated, `E7103`), or the built-in one. With `--itch` the folder is also written as

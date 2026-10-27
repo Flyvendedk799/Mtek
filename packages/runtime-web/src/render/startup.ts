@@ -19,6 +19,7 @@ import type { MtekManifest } from "../abi/manifest-types.js";
 import type { DecodedImages, LoadedAssets } from "../assets/loader.js";
 import { makeRuntimeDiagnostic, type MtekDiagnostic, type MtekRuntimePhase } from "../diagnostics/types.js";
 import type { ResourceRegistry } from "../gpu/registry.js";
+import type { AnimationBackend } from "../animation-module/backend.js";
 import type { CheckedProgram } from "../scene/program.js";
 import type { ResolvedMaterial, SceneStructure } from "../scene/structure.js";
 import { Bindings } from "../scene/bindings.js";
@@ -39,6 +40,8 @@ export interface SceneStartupOptions {
   /** Reject stale asynchronous candidate work before allocating or publishing scene resources. */
   readonly assertActive?: () => void;
   readonly manifest: MtekManifest;
+  /** The animation module's backend (decision 0225); `undefined` for a program without skeletal animation. */
+  readonly animation?: AnimationBackend;
   readonly structure: SceneStructure;
   readonly program: CheckedProgram;
   readonly device: Pick<GPUDevice, "queue" | "limits" | "pushErrorScope" | "popErrorScope"> & Partial<Pick<GPUDevice, "createCommandEncoder" | "createComputePipeline">>;
@@ -133,6 +136,7 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
         params: materials,
         report,
         prefabs: buildPrefabRuntimes(structure.prefabs, program.prefabs),
+        ...(options.animation === undefined ? {} : { animation: options.animation }),
         ...(services === undefined ? {} : { services }),
       });
       const freshBindings = new Bindings(manifest, program.scene.bindings, fresh);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { animatedSkin } from "../test-support/animated-skin.js";
-import { AnimationPlayers } from "./skeleton.js";
+import { SkeletalPlayers as AnimationPlayers } from "./skeleton.js";
 
 describe("explicit crowd pose cohorts", () => {
   it("advances shared clocks once and schedules using the closest member", () => {

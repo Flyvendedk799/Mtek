@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { MtekSkin } from "../abi/manifest-types.js";
 import { identity } from "../math/mat4.js";
 import { deformSkin } from "../mesh/skinning.js";
-import { AnimationPlayers, SkeletonPlayer, skinProblem } from "./skeleton.js";
+import { SkeletalPlayers as AnimationPlayers, SkeletonPlayer } from "./skeleton.js";
+import { skinProblem } from "./skin-problem.js";
 
 function fixture() {
   const node = (name: string, parent: number, x: number) => ({ name, parent,

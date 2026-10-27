@@ -12,10 +12,12 @@ use std::path::Path;
 use mtek_compiler::package::identity::sha256_hex;
 use serde_json::Value;
 
-const FILES: [&str; 5] = [
-    "runtime.js",
-    "runtime.dev.js",
-    "runtime.min.js",
+const FILES: [&str; 7] = [
+    "core.js",
+    "core.dev.js",
+    "core.min.js",
+    "animation.js",
+    "animation.min.js",
     "runtime.d.ts",
     "physics.js",
 ];
@@ -45,12 +47,25 @@ fn every_prebuilt_file_is_present_and_matches_its_provenance() {
 #[test]
 fn the_prebuilt_bundles_are_the_real_ones() {
     let read = |name: &str| fs::read(prebuilt().join(name)).unwrap();
-    let release = String::from_utf8_lossy(&read("runtime.js")).into_owned();
-    let dev = String::from_utf8_lossy(&read("runtime.dev.js")).into_owned();
+    let release = String::from_utf8_lossy(&read("core.js")).into_owned();
+    let dev = String::from_utf8_lossy(&read("core.dev.js")).into_owned();
     // The development flavour has the overlay and the release flavour does not (decision 0055).
     assert!(dev.contains("data-mtek-dev-overlay"));
     assert!(!release.contains("data-mtek-dev-overlay"));
     assert!(String::from_utf8_lossy(&read("runtime.d.ts")).contains("mountMtek"));
+    // The core runtimes have no skeletal player; the animation modules do (decision 0225).
+    for name in ["core.js", "core.dev.js", "core.min.js"] {
+        assert!(
+            !String::from_utf8_lossy(&read(name)).contains("Procedural pose contains"),
+            "prebuilt/{name} contains the skeletal player"
+        );
+    }
+    for name in ["animation.js", "animation.min.js"] {
+        assert!(
+            String::from_utf8_lossy(&read(name)).contains("Procedural pose contains"),
+            "prebuilt/{name} lacks the skeletal player"
+        );
+    }
     let physics = read("physics.js");
     assert!(
         physics.len() > 1_000_000,

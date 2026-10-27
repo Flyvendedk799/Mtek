@@ -19,7 +19,9 @@
   },
   "subsystems": {
     "physics": true,
-    "physicsModule": "physics/0123456789abcdef.js"
+    "physicsModule": "physics/0123456789abcdef.js",
+    "animation": true,
+    "animationModule": "animation/fedcba9876543210.js"
   },
   "runtimeConfig": {
     "fixedStep": 0.016666668,

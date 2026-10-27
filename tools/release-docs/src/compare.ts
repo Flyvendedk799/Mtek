@@ -269,7 +269,7 @@ export function checkAbiConstants(i: AbiInputs): Mismatch[] {
       { where: `program.manifest.json of ${m.project} (runtimeAbi)`, value: text(m.runtimeAbi) },
       { where: `app.js of ${m.project} (export const abi)`, value: m.appAbi },
       { where: "packages/runtime-web/src/abi/constants.ts (SUPPORTED_RUNTIME_ABI)", value: String(i.runtime.runtimeAbi) },
-      { where: "packages/runtime-web/src/index.ts (RUNTIME_ABI)", value: i.runtime.indexRuntimeAbi === null ? undefined : String(i.runtime.indexRuntimeAbi) },
+      { where: "packages/runtime-web/src/core.ts (RUNTIME_ABI)", value: i.runtime.indexRuntimeAbi === null ? undefined : String(i.runtime.indexRuntimeAbi) },
       { where: "packages/runtime-web/src/runtime.d.ts (readonly abi)", value: i.runtime.declaredAbi },
       { where: "spec/runtime-abi.md (status line)", value: spec.headerAbi },
       { where: "spec/runtime-abi.md section 5 (example manifest, runtimeAbi)", value: spec.exampleAbi },

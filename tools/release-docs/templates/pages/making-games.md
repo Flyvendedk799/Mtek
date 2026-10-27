@@ -646,7 +646,7 @@ $ mtek build --release
 $ mtek build --release --itch
 ```
 
-`--release` writes a game package into `dist`: the minified runtime, a page with a title, a favicon (put your own at `assets/favicon.svg`, `assets/favicon.png` or `assets/favicon.ico` in the project, or the built-in one is used) and one folder of files with relative paths, so any static host serves it. `--itch` also writes `dist-itch.zip` beside the folder, in the shape itch.io wants for an HTML5 game: `index.html` at the root, and under the limits of itch.io (`MTEK-E7104` when a limit is broken). Upload that zip, and mark the itch.io project "This file will be played in the browser". Add `/dist-itch.zip` to `.gitignore`; `mtek new` does this for you.
+`--release` writes a game package into `dist`: the minified runtime (a game with a skinned character also gets `animation/<hash>.js`, the animation module the runtime loads when the game starts, and a game with physics bodies `physics/<hash>.js`; serve the folder as it is), a page with a title, a favicon (put your own at `assets/favicon.svg`, `assets/favicon.png` or `assets/favicon.ico` in the project, or the built-in one is used) and one folder of files with relative paths, so any static host serves it. `--itch` also writes `dist-itch.zip` beside the folder, in the shape itch.io wants for an HTML5 game: `index.html` at the root, and under the limits of itch.io (`MTEK-E7104` when a limit is broken). Upload that zip, and mark the itch.io project "This file will be played in the browser". Add `/dist-itch.zip` to `.gitignore`; `mtek new` does this for you.
 
 Players need a browser with WebGPU; [Supported environments](supported-environments.md) says which.
 

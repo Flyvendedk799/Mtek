@@ -185,6 +185,19 @@ pub struct Subsystems {
         skip_serializing_if = "Option::is_none"
     )]
     pub physics_module: Option<String>,
+    /// True when the program needs the animation module: a skinned mesh or `clips_from`
+    /// (decision 0225). Omitted when false, so a manifest without skeletal animation is the
+    /// same text as before the module existed.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub animation: bool,
+    /// The content-addressed animation module (`animation/<h16>.js`), present exactly when
+    /// `animation` is true: the runtime cannot derive the hashed name.
+    #[serde(
+        rename = "animationModule",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub animation_module: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

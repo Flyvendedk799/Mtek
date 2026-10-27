@@ -47,9 +47,13 @@ const devSources = (built: Built): Array<[string, number]> => [...built.bytesByS
 
 describe("the runtime bundle flavours", () => {
   it("name their output files as the compiler expects", () => {
-    expect(FLAVOURS.release.outfile).toBe("dist/runtime.js");
-    expect(FLAVOURS.dev.outfile).toBe("dist/runtime.dev.js");
-    expect(FLAVOURS.min.outfile).toBe("dist/runtime.min.js");
+    expect(FLAVOURS.release.outfile).toBe("dist/core.js");
+    expect(FLAVOURS.dev.outfile).toBe("dist/core.dev.js");
+    expect(FLAVOURS.min.outfile).toBe("dist/core.min.js");
+    expect(FLAVOURS.animation.outfile).toBe("dist/animation.js");
+    expect(FLAVOURS.animationMin.outfile).toBe("dist/animation.min.js");
+    // The npm entry keeps its name: `@mtek/runtime-web` exports `dist/runtime.js` (package.json).
+    expect(FLAVOURS.full.outfile).toBe("dist/runtime.js");
   });
 
   it("the development bundle contains the overlay, the GPU timer and the statistics", async () => {
@@ -76,5 +80,65 @@ describe("the runtime bundle flavours", () => {
     expect(release.text).toContain("extractFrustumPlanes");
     expect(release.text).toContain("culledObjects");
     expect(release.text).toContain("drawCalls");
+  });
+});
+
+/**
+ * Skeletal animation is a module of its own (decision 0225): the sources only the skeletal player and the host
+ * animation API reach. A program without a skinned mesh must not pay for a byte of them.
+ */
+const SKELETAL_SOURCES = [
+  "src/scene/skeleton.ts",
+  "src/scene/pose-layers.ts",
+  "src/scene/pose-schedule.ts",
+  "src/scene/ik.ts",
+  "src/scene/limb-ik.ts",
+  "src/scene/blend-space.ts",
+  "src/scene/locomotion.ts",
+  "src/scene/humanoid.ts",
+  "src/scene/humanoid-rig.ts",
+  "src/scene/humanoid-retarget.ts",
+  "src/scene/retarget.ts",
+  "src/scene/animation-script.ts",
+  "src/animation.ts",
+] as const;
+
+/** The release `runtime.min.js` of games without skins was 689,466 bytes before composable animation (decisions 0219 to 0223). */
+const CORE_MIN_LIMIT = 689_466 + 6_000;
+
+const bytesOf = (built: Built, path: string): number => built.bytesBySource.get(path) ?? 0;
+
+describe("the animation module", () => {
+  it("the core runtime contains no skeletal animation code, in any flavour", async () => {
+    for (const flavour of ["release", "dev", "min"] as const) {
+      const core = await bundle(flavour);
+      for (const path of SKELETAL_SOURCES) expect(bytesOf(core, path), `${path} in the ${flavour} core`).toBe(0);
+      // The skeleton validation the mount runs stays; it is not skeletal playback.
+      expect(bytesOf(core, "src/scene/skin-problem.ts"), `skin-problem in the ${flavour} core`).toBeGreaterThan(0);
+    }
+  });
+
+  it("the animation module contains the skeletal player and what it composes", async () => {
+    for (const flavour of ["animation", "animationMin"] as const) {
+      const module = await bundle(flavour);
+      for (const path of ["src/scene/skeleton.ts", "src/scene/pose-layers.ts", "src/scene/ik.ts", "src/scene/limb-ik.ts", "src/scene/blend-space.ts", "src/scene/humanoid-retarget.ts", "src/scene/animation-script.ts"]) {
+        expect(bytesOf(module, path), `${path} in ${flavour}`).toBeGreaterThan(0);
+      }
+      // No development code, no renderer, no host: only animation.
+      expect([...module.bytesBySource].filter(([path, bytes]) => bytes > 0 && (path.startsWith("src/dev/") || path.startsWith("src/render/") || path.startsWith("src/host/")))).toEqual([]);
+    }
+  });
+
+  it("the npm entry keeps the host animation API: the full bundle has both the core and the skeletal code", async () => {
+    const full = await bundle("full");
+    expect(bytesOf(full, "src/scene/skeleton.ts")).toBeGreaterThan(0);
+    expect(bytesOf(full, "src/animation.ts")).toBeGreaterThan(0);
+    expect(bytesOf(full, "src/host/mount.ts")).toBeGreaterThan(0);
+    for (const name of ["createAnimationController", "retargetSkin", "mapHumanoid", "retargetHumanoid", "deformSkin"]) expect(full.text, name).toContain(name);
+  });
+
+  it(`the minified core stays within ${String(CORE_MIN_LIMIT)} bytes, so games without skins stay inside their size budgets`, async () => {
+    const min = await bundle("min");
+    expect(Buffer.byteLength(min.text)).toBeLessThanOrEqual(CORE_MIN_LIMIT);
   });
 });

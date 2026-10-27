@@ -1,6 +1,6 @@
-import { AnimationPlayers, type SkeletonPlayer } from "./skeleton.js";
-import { AnimationScript, type ScriptCode } from "./animation-script.js";
-import { retargetHumanoid } from "./humanoid-retarget.js";
+import { AnimationPlayers } from "./animation-players.js";
+import type { AnimationBackend, AnimationCommands, ScriptCode } from "../animation-module/backend.js";
+import type { SkeletonPlayer } from "./skeleton.js";
 /**
  * The CPU world of a mounted scene (`spec/runtime-abi.md` sections 4.2, 4.3 and 5.2; `spec/scenes.md`
  * sections 3, 11 and 12): entity records, the active camera record, the generated-code context (`ctx`)
@@ -280,6 +280,11 @@ export interface WorldOptions {
   readonly services?: CpuServices;
   /** The prefabs the program spawns (`manifest.prefabs`) with their code; none when the program spawns nothing. */
   readonly prefabs?: ReadonlyMap<string, PrefabRuntime>;
+  /**
+   * The animation module's backend (decision 0225): the skeletal players and the `animation.*` commands. Absent for a
+   * program without skeletal animation, whose world then has rigid clips only.
+   */
+  readonly animation?: AnimationBackend;
 }
 
 const CAMERA_FIELDS = [
@@ -439,19 +444,11 @@ export class World {
   private readonly cappedTimerSpans = new Set<number>();
   /** Living particles (decision 0155). */
   private readonly particles = new ParticleSim();
-  /** Playing glTF clips (decision 0156). */
-  private readonly clips = new AnimationPlayers();
-  /** The composition commands of `animation.*` (decision 0223). */
-  private readonly script = new AnimationScript({
-    player: (slot) => this.clips.skin(slot),
-    world: (slot) => {
-      this.propagate();
-      return this.worlds[slot];
-    },
-    report: (code, slot, spanId, message) => {
-      this.reportScript(code, slot, spanId, message);
-    },
-  });
+  /** Playing glTF clips (decision 0156); the skeletal ones come from the animation module (decision 0225). */
+  private readonly clips: AnimationPlayers;
+  /** The composition commands of `animation.*` (decision 0223); none without the animation module, where every one is dropped. */
+  private readonly script: AnimationCommands | undefined;
+  private readonly animation: AnimationBackend | undefined;
   /** `clips_from` retargets by source and target skeleton (decision 0223): the skin to play, or why there is none. */
   private readonly retargets = new Map<MtekSkin, Map<MtekSkin, MtekSkin | string>>();
   /** The symbols that already reported `E8110`. */
@@ -473,6 +470,18 @@ export class World {
     this.params = options.params;
     this.report = options.report;
     this.loopBudgetLimit = options.manifest.preview?.loopBudget;
+    this.animation = options.animation;
+    this.clips = options.animation?.createPlayers() ?? new AnimationPlayers();
+    this.script = options.animation?.createCommands({
+      player: (slot) => this.clips.skin(slot),
+      world: (slot) => {
+        this.propagate();
+        return this.worlds[slot];
+      },
+      report: (code, slot, spanId, message) => {
+        this.reportScript(code, slot, spanId, message);
+      },
+    });
 
     const materialParams = new Map(this.structure.materials.map((material) => [material.id, material.params]));
     this.materialParamTypes = materialParams;
@@ -704,29 +713,29 @@ export class World {
       animationCrossed: (ref: unknown, marker: number): boolean => this.dynamic.alive(ref) ? this.clips.crossed((ref as EntityRef).slot, marker) : false,
       // Decision 0223: composition. The last argument of the commands that can report is the span of the call.
       animationSetLayer: (ref: unknown, id: string, clip: string, weight: number, additive: boolean, mask: string, spanId: number): boolean =>
-        this.dynamic.alive(ref) && this.script.setLayer((ref as EntityRef).slot, id, clip, weight, additive, mask, spanId),
+        this.dynamic.alive(ref) && this.script?.setLayer((ref as EntityRef).slot, id, clip, weight, additive, mask, spanId) === true,
       animationFadeLayer: (ref: unknown, id: string, weight: number, seconds: number, spanId: number): boolean =>
-        this.dynamic.alive(ref) && this.script.fadeLayer((ref as EntityRef).slot, id, weight, seconds, spanId),
-      animationRemoveLayer: (ref: unknown, id: string): boolean => this.dynamic.alive(ref) && this.script.removeLayer((ref as EntityRef).slot, id),
+        this.dynamic.alive(ref) && this.script?.fadeLayer((ref as EntityRef).slot, id, weight, seconds, spanId) === true,
+      animationRemoveLayer: (ref: unknown, id: string): boolean => this.dynamic.alive(ref) && this.script?.removeLayer((ref as EntityRef).slot, id) === true,
       animationBlendSample: (ref: unknown, clip: string, x: number, y: number, spanId: number): boolean =>
-        this.dynamic.alive(ref) && this.script.blendSample((ref as EntityRef).slot, clip, x, y, spanId),
+        this.dynamic.alive(ref) && this.script?.blendSample((ref as EntityRef).slot, clip, x, y, spanId) === true,
       animationBlendPlay: (ref: unknown, looping: boolean, speed: number, spanId: number): boolean =>
-        this.dynamic.alive(ref) && this.script.blendPlay((ref as EntityRef).slot, looping, speed, spanId),
-      animationBlendParameter: (ref: unknown, x: number, y: number): boolean => this.dynamic.alive(ref) && this.script.blendParameter((ref as EntityRef).slot, x, y),
-      animationBlendClear: (ref: unknown): boolean => this.dynamic.alive(ref) && this.script.blendClear((ref as EntityRef).slot),
-      animationBlendPhase: (ref: unknown): number => this.dynamic.alive(ref) ? this.script.blendPhase((ref as EntityRef).slot) : 0,
+        this.dynamic.alive(ref) && this.script?.blendPlay((ref as EntityRef).slot, looping, speed, spanId) === true,
+      animationBlendParameter: (ref: unknown, x: number, y: number): boolean => this.dynamic.alive(ref) && this.script?.blendParameter((ref as EntityRef).slot, x, y) === true,
+      animationBlendClear: (ref: unknown): boolean => this.dynamic.alive(ref) && this.script?.blendClear((ref as EntityRef).slot) === true,
+      animationBlendPhase: (ref: unknown): number => this.dynamic.alive(ref) ? (this.script?.blendPhase((ref as EntityRef).slot) ?? 0) : 0,
       animationLimbGoal: (ref: unknown, limb: string, goal: unknown, weight: number, spanId: number): boolean =>
-        this.dynamic.alive(ref) && this.script.limbGoal((ref as EntityRef).slot, limb, goal, weight, spanId),
-      animationClearLimb: (ref: unknown, limb: string, spanId: number): boolean => this.dynamic.alive(ref) && this.script.clearLimb((ref as EntityRef).slot, limb, spanId),
+        this.dynamic.alive(ref) && this.script?.limbGoal((ref as EntityRef).slot, limb, goal, weight, spanId) === true,
+      animationClearLimb: (ref: unknown, limb: string, spanId: number): boolean => this.dynamic.alive(ref) && this.script?.clearLimb((ref as EntityRef).slot, limb, spanId) === true,
       animationFootPlacement: (ref: unknown, left: unknown, right: unknown, leftNormal: unknown, rightNormal: unknown, weight: number, spanId: number): boolean =>
-        this.dynamic.alive(ref) && this.script.footPlacement((ref as EntityRef).slot, left, right, leftNormal, rightNormal, weight, spanId),
-      animationClearFootPlacement: (ref: unknown): boolean => this.dynamic.alive(ref) && this.script.clearFootPlacement((ref as EntityRef).slot),
+        this.dynamic.alive(ref) && this.script?.footPlacement((ref as EntityRef).slot, left, right, leftNormal, rightNormal, weight, spanId) === true,
+      animationClearFootPlacement: (ref: unknown): boolean => this.dynamic.alive(ref) && this.script?.clearFootPlacement((ref as EntityRef).slot) === true,
       animationChainGoal: (ref: unknown, id: string, endJoint: string, length: number, goal: unknown, weight: number, spanId: number): boolean =>
-        this.dynamic.alive(ref) && this.script.chainGoal((ref as EntityRef).slot, id, endJoint, length, goal, weight, spanId),
-      animationClearChain: (ref: unknown, id: string): boolean => this.dynamic.alive(ref) && this.script.clearChain((ref as EntityRef).slot, id),
+        this.dynamic.alive(ref) && this.script?.chainGoal((ref as EntityRef).slot, id, endJoint, length, goal, weight, spanId) === true,
+      animationClearChain: (ref: unknown, id: string): boolean => this.dynamic.alive(ref) && this.script?.clearChain((ref as EntityRef).slot, id) === true,
       animationRootMotion: (ref: unknown, joint: string, spanId: number): boolean =>
-        this.dynamic.alive(ref) && this.script.rootMotion((ref as EntityRef).slot, joint, spanId),
-      animationTakeRootMotion: (ref: unknown): Vec3 => this.dynamic.alive(ref) ? this.script.takeRootMotion((ref as EntityRef).slot) : ORIGIN,
+        this.dynamic.alive(ref) && this.script?.rootMotion((ref as EntityRef).slot, joint, spanId) === true,
+      animationTakeRootMotion: (ref: unknown): Vec3 => this.dynamic.alive(ref) ? (this.script?.takeRootMotion((ref as EntityRef).slot) ?? ORIGIN) : ORIGIN,
       overlapSpheres,
       overlapBoxes,
       gamepadAxis: (pad: number, axis: number): number => services.gamepads?.axis(pad, axis) ?? 0,
@@ -1497,7 +1506,8 @@ export class World {
     let result = byTarget.get(own);
     if (result === undefined) {
       try {
-        result = retargetHumanoid(source, own);
+        if (this.animation === undefined) throw new RangeError("the animation module is not loaded");
+        result = this.animation.retargetHumanoid(source, own);
       } catch (error) {
         if (!(error instanceof RangeError)) throw error;
         result = error.message;

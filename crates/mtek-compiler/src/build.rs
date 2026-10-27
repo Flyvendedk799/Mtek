@@ -13,7 +13,9 @@
 //! [`STUB_RUNTIME_BUNDLE`] and [`STUB_RUNTIME_DECLARATIONS`], so goldens never change when the
 //! runtime is edited. A build without either fails with `E9030`. The physics bundle
 //! ([`CompileOptions::physics_bundle`], stub [`STUB_PHYSICS_BUNDLE`]) is different: it is only
-//! needed, and only written, for a program that uses physics (decision 0063).
+//! needed, and only written, for a program that uses physics (decision 0063); so is the animation
+//! module ([`CompileOptions::animation_bundle`], stub [`STUB_ANIMATION_BUNDLE`]), for a program
+//! with a skinned mesh or `clips_from` (decision 0225).
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -35,6 +37,11 @@ pub const STUB_RUNTIME_DECLARATIONS: &[u8] = b"// mtek test runtime declarations
 /// The physics bundle of compiler tests (decision 0063): present in the options of
 /// [`CompileOptions::with_stub_runtime`], written only for programs that use physics.
 pub const STUB_PHYSICS_BUNDLE: &[u8] = b"// mtek test physics stub\n";
+
+/// The animation module of compiler tests (decision 0225): present in the options of
+/// [`CompileOptions::with_stub_runtime`], written only for programs with a skinned mesh or
+/// `clips_from`.
+pub const STUB_ANIMATION_BUNDLE: &[u8] = b"// mtek test animation stub\n";
 
 /// The target profile (`spec/runtime-abi.md` section 5): v0.1 has exactly one.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -110,6 +117,11 @@ pub struct CompileOptions {
     /// the only way to produce a physics build; it exists for the packaging tests (decision 0063)
     /// and has no command-line spelling. It never turns physics off.
     pub force_physics_subsystem: bool,
+    /// The animation module (`packages/runtime-web/dist/animation.js`, or `animation.min.js` for
+    /// release builds; decision 0225), written as `animation/<h16>.js` only when the program has a
+    /// skinned mesh or uses `clips_from` (the manifest's `subsystems.animation`); ignored
+    /// otherwise. A program that needs it needs it: without it the build fails with `E9030`.
+    pub animation_bundle: Option<Arc<[u8]>>,
     /// `--mode preview` only: the loop budget, in iterations of CPU loops per frame; `None` is
     /// [`DEFAULT_LOOP_BUDGET`]. Ignored by every other mode. It is an option of the host that
     /// runs the compiler, never of the project: `mtek.toml` cannot raise it (decision 0075).
@@ -128,6 +140,7 @@ impl CompileOptions {
             runtime_declarations: Some(Arc::from(STUB_RUNTIME_DECLARATIONS)),
             physics_bundle: Some(Arc::from(STUB_PHYSICS_BUNDLE)),
             force_physics_subsystem: false,
+            animation_bundle: Some(Arc::from(STUB_ANIMATION_BUNDLE)),
             loop_budget: None,
         }
     }
@@ -225,6 +238,7 @@ pub fn build(root: &ProjectRoot, fs: &dyn Fs, options: &CompileOptions) -> Build
                     runtime_declarations: declarations,
                     physics_bundle: options.physics_bundle.as_deref(),
                     force_physics_subsystem: options.force_physics_subsystem,
+                    animation_bundle: options.animation_bundle.as_deref(),
                     loop_budget: options.loop_budget,
                     assets: &front.assets,
                 };
