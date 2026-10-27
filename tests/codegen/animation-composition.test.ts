@@ -45,12 +45,18 @@ it("passes the entity, the arguments and, where a command can report, the span o
     "FootPlacement", "ClearFootPlacement", "ChainGoal", "ClearChain", "RootMotion"]) {
     ctx["animation" + name] = (...args: unknown[]) => { calls.push([name, ...args]); return true; };
   }
+  const reads: unknown[][] = [];
+  ctx["animationAnimatedJointPosition"] = (target: unknown, name: string) => { reads.push([target, name]); return V(0, f(0.9), 0); };
   ctx["animationBlendPhase"] = (target: unknown) => { expect(target).toBe(rig); return 0.25; };
   ctx["animationTakeRootMotion"] = (target: unknown) => (target === rig ? V(1, 2, 3) : V(0, 0, f(0.5)));
   const moves: unknown[][] = [];
   ctx["body"] = (target: unknown, span: number) => ({ moveCharacter: (...args: unknown[]) => { moves.push([target, span, ...args]); } });
   scene.init(ctx);
   scene.events.key_down[0]?.fn(ctx, undefined);
+
+  // The read of the animated pose takes the entity and the joint, no span, and its value reaches the state.
+  expect(reads).toEqual([[rig, "Hips"]]);
+  expect(s["travel"]).toEqual(V(0, f(0.9), 0));
 
   // Reporting commands end with a span id; the others do not.
   const shaped = calls.map((call) => {
@@ -64,7 +70,7 @@ it("passes the entity, the arguments and, where a command can report, the span o
     [rig, "wave", "Wave", 1, false, "Spine"], [rig, "breath", "Breathe", f(0.4), true, ""], [rig, "wave", 0, f(0.3)], [rig, "breath"],
     [rig, "Idle", 0, 0], [rig, "Walk", 1, 0], [rig, "Strafe", 0, 1], [rig, true, 1], [rig, 0.5, 0.25], [rig],
     [rig, "left_leg", V(0, f(0.1), 0.5), 1], [rig, "left_leg"],
-    [rig, V(f(0.1), 0, 0), V(f(-0.1), f(0.2), 0), V(0, 1, 0), V(0, 1, 0), 1], [rig],
+    [rig, V(f(0.1), 0, 0), V(f(-0.1), f(0.2), 0), V(0, 1, 0), V(0, 1, 0), 1, 0], [rig],
     [rig, "reach", "Hand", 3, V(1, 1, 0), f(0.8)], [rig, "reach"], [rig, "Hips"],
   ]);
   // The span of a reporting command is its own call in the source.
