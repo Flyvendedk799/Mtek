@@ -103,9 +103,9 @@ function sampleChannelInto(channel, time, out) {
   }
   let t0 = times[lo] ?? 0, span = (times[hi] ?? t0) - t0, t = span === 0 ? 0 : (time - t0) / span, to = hi * comps;
   if (comps === 4) {
-    let dot2 = 0;
-    for (let i = 0; i < 4; i += 1) dot2 += (values[from + i] ?? 0) * (values[to + i] ?? 0);
-    let sign2 = dot2 < 0 ? -1 : 1, angle = Math.acos(Math.min(1, Math.abs(dot2))), sine = Math.sin(angle), aWeight = sine > 1e-6 ? Math.sin((1 - t) * angle) / sine : 1 - t, bWeight = sine > 1e-6 ? Math.sin(t * angle) / sine : t;
+    let dot4 = 0;
+    for (let i = 0; i < 4; i += 1) dot4 += (values[from + i] ?? 0) * (values[to + i] ?? 0);
+    let sign2 = dot4 < 0 ? -1 : 1, angle = Math.acos(Math.min(1, Math.abs(dot4))), sine = Math.sin(angle), aWeight = sine > 1e-6 ? Math.sin((1 - t) * angle) / sine : 1 - t, bWeight = sine > 1e-6 ? Math.sin(t * angle) / sine : t;
     for (let i = 0; i < 4; i += 1) {
       let a = values[from + i] ?? 0;
       out[i] = a * aWeight + sign2 * (values[to + i] ?? 0) * bWeight;
@@ -247,9 +247,9 @@ function multiplyQuat(out, at3, a, ai, b, bi) {
   out[at3] = w * u + x * t + y * s - z * v, out[at3 + 1] = w * v - x * s + y * t + z * u, out[at3 + 2] = w * s + x * v - y * u + z * t, out[at3 + 3] = w * t - x * u - y * v - z * s;
 }
 function blendQuat(out, at3, b, bi, weight) {
-  let dot2 = 0;
-  for (let i = 0; i < 4; i++) dot2 += out[at3 + i] * b[bi + i];
-  let angle = Math.acos(Math.min(1, Math.abs(dot2))), sine = Math.sin(angle), aWeight = sine > 1e-6 ? Math.sin((1 - weight) * angle) / sine : 1 - weight, bWeight = (sine > 1e-6 ? Math.sin(weight * angle) / sine : weight) * (dot2 < 0 ? -1 : 1);
+  let dot4 = 0;
+  for (let i = 0; i < 4; i++) dot4 += out[at3 + i] * b[bi + i];
+  let angle = Math.acos(Math.min(1, Math.abs(dot4))), sine = Math.sin(angle), aWeight = sine > 1e-6 ? Math.sin((1 - weight) * angle) / sine : 1 - weight, bWeight = (sine > 1e-6 ? Math.sin(weight * angle) / sine : weight) * (dot4 < 0 ? -1 : 1);
   for (let i = 0; i < 4; i++)
     out[at3 + i] = out[at3 + i] * aWeight + b[bi + i] * bWeight;
   let length2 = Math.hypot(out[at3], out[at3 + 1], out[at3 + 2], out[at3 + 3]);
@@ -266,10 +266,12 @@ var PoseLayers = class {
   inverse = new Float64Array(4);
   revision = 0;
   inspect() {
-    return [...this.layers].map(([id, { options, mask: mask2, clock }]) => ({
+    return [...this.layers].map(([id, { options, mask: mask2, clock, weight, fade }]) => ({
       id,
       clip: options.clip,
-      weight: options.weight,
+      weight,
+      targetWeight: fade?.to ?? weight,
+      fadeRemaining: fade === void 0 ? 0 : fade.duration - fade.elapsed,
       additive: options.additive ?? !1,
       time: clock.time(0),
       duration: clock.duration(0),
@@ -299,7 +301,17 @@ var PoseLayers = class {
       let time = clock.time(0);
       clock.play(0, options.looping ?? !0, options.speed ?? 1), clock.seek(0, time);
     }
-    this.layers.set(id, { options: { ...options }, mask: mask2, clock }), this.revision++;
+    this.layers.set(id, { options: { ...options }, mask: mask2, clock, weight: options.weight }), this.revision++;
+  }
+  /**
+   * Move a layer's weight to `weight` over `seconds` along a smoothstep, from the weight it has now,
+   * replacing any fade in progress. The layer keeps its phase; zero seconds is immediate.
+   */
+  fade(id, weight, seconds) {
+    if (!Number.isFinite(weight) || weight < 0 || weight > 1 || !Number.isFinite(seconds) || seconds < 0)
+      throw new RangeError("Invalid animation layer fade weight or duration");
+    let layer = this.layers.get(id);
+    return layer === void 0 ? !1 : (seconds === 0 || weight === layer.weight ? (delete layer.fade, layer.weight = weight) : layer.fade = { from: layer.weight, to: weight, elapsed: 0, duration: seconds }, this.revision++, !0);
   }
   remove(id) {
     this.layers.delete(id) && this.revision++;
@@ -319,13 +331,18 @@ var PoseLayers = class {
       let before = layer.clock.time(0);
       layer.clock.advance(dt, () => {
       }), before !== layer.clock.time(0) && this.revision++;
+      let fade = layer.fade;
+      if (fade === void 0 || dt === 0) continue;
+      fade.elapsed = Math.min(fade.duration, fade.elapsed + dt);
+      let t = fade.elapsed / fade.duration;
+      layer.weight = fade.elapsed === fade.duration ? fade.to : fade.from + (fade.to - fade.from) * t * t * (3 - 2 * t), fade.elapsed === fade.duration && delete layer.fade, this.revision++;
     }
   }
   apply(pose, bind) {
-    for (let { options, mask: mask2, clock } of this.layers.values()) {
+    for (let { options, mask: mask2, clock, weight } of this.layers.values()) {
       let clip = this.skin.clips.find((c) => c.name === options.clip);
       for (let channel of clip.channels) {
-        let w = options.weight * mask2[channel.node];
+        let w = weight * mask2[channel.node];
         if (w === 0) continue;
         sampleChannelInto(channel, clock.time(0), this.value);
         let at3 = channel.node * 10 + (channel.path === "translation" ? 0 : channel.path === "rotation" ? 3 : 7);
@@ -349,11 +366,488 @@ function numericallyUniformScale(x, y, z) {
   return Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z) && x > 0 && y > 0 && z > 0 && Math.abs(x / y - 1) <= FLOAT32_SCALE_ROUND_OFF && Math.abs(x / z - 1) <= FLOAT32_SCALE_ROUND_OFF;
 }
 
+// src/scene/limb-ik.ts
+var LIMB_NAMES = ["leftLeg", "rightLeg", "leftArm", "rightArm"], KNEE_MAX_FLEXION = 150 * Math.PI / 180, ELBOW_MAX_FLEXION = 145 * Math.PI / 180, DEFAULT_SOFTNESS = 0.05, MAX_FLEXION_LIMIT = 175 * Math.PI / 180, BONES = {
+  leftLeg: ["leftUpperLeg", "leftLowerLeg", "leftFoot"],
+  rightLeg: ["rightUpperLeg", "rightLowerLeg", "rightFoot"],
+  leftArm: ["leftUpperArm", "leftLowerArm", "leftHand"],
+  rightArm: ["rightUpperArm", "rightLowerArm", "rightHand"]
+}, isLeg = (limb) => limb === "leftLeg" || limb === "rightLeg", finite = (values) => Array.from(values).every(Number.isFinite), EPS = 1e-9;
+function reachLimits(a, b, minFlexion, maxFlexion, softness) {
+  let min2 = Math.sqrt(Math.max(0, a * a + b * b + 2 * a * b * Math.cos(maxFlexion))), max2 = Math.sqrt(Math.max(0, a * a + b * b + 2 * a * b * Math.cos(minFlexion))), width = softness * (max2 - min2);
+  return { min: min2, max: max2, softMin: min2 + width, softMax: max2 - width };
+}
+function softReach(distance2, limits) {
+  if (distance2 > limits.softMax) {
+    let width = limits.max - limits.softMax;
+    return width > 0 ? limits.softMax + width * (1 - Math.exp(-(distance2 - limits.softMax) / width)) : limits.max;
+  }
+  if (distance2 < limits.softMin) {
+    let width = limits.softMin - limits.min;
+    return width > 0 ? limits.softMin - width * (1 - Math.exp(-(limits.softMin - distance2) / width)) : limits.min;
+  }
+  return distance2;
+}
+function minimumDrop(toTarget, up, reach) {
+  let p = toTarget[0] * up[0] + toTarget[1] * up[1] + toTarget[2] * up[2], q = toTarget[0] ** 2 + toTarget[1] ** 2 + toTarget[2] ** 2 - reach * reach;
+  if (q <= 0) return 0;
+  let discriminant = p * p - q;
+  if (discriminant < 0) return Math.max(0, -p);
+  let root = Math.sqrt(discriminant);
+  return -p + root < 0 ? 0 : Math.max(0, -p - root);
+}
+var dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+function cross(o, a, b) {
+  let x = a[1] * b[2] - a[2] * b[1], y = a[2] * b[0] - a[0] * b[2], z = a[0] * b[1] - a[1] * b[0];
+  o[0] = x, o[1] = y, o[2] = z;
+}
+function length3(a) {
+  return Math.hypot(a[0], a[1], a[2]);
+}
+function normalize3(a) {
+  let length2 = length3(a);
+  return length2 > EPS && (a[0] = a[0] / length2, a[1] = a[1] / length2, a[2] = a[2] / length2), length2;
+}
+function perpendicular(o, a) {
+  let ax = Math.abs(a[0]), ay = Math.abs(a[1]), az = Math.abs(a[2]);
+  ax <= ay && ax <= az ? (o[0] = 0, o[1] = -a[2], o[2] = a[1]) : ay <= az ? (o[0] = a[2], o[1] = 0, o[2] = -a[0]) : (o[0] = -a[1], o[1] = a[0], o[2] = 0), normalize3(o);
+}
+function qmul(o, a, b) {
+  let ax = a[0], ay = a[1], az = a[2], aw = a[3], bx = b[0], by = b[1], bz = b[2], bw = b[3];
+  o[0] = aw * bx + ax * bw + ay * bz - az * by, o[1] = aw * by - ax * bz + ay * bw + az * bx, o[2] = aw * bz + ax * by - ay * bx + az * bw, o[3] = aw * bw - ax * bx - ay * by - az * bz;
+}
+function qconj(o, a) {
+  o[0] = -a[0], o[1] = -a[1], o[2] = -a[2], o[3] = a[3];
+}
+function qnormalize(o) {
+  let length2 = Math.hypot(o[0], o[1], o[2], o[3]);
+  length2 > EPS ? (o[0] = o[0] / length2, o[1] = o[1] / length2, o[2] = o[2] / length2, o[3] = o[3] / length2) : (o[0] = 0, o[1] = 0, o[2] = 0, o[3] = 1);
+}
+function qrotate(o, q, at3, x, y, z) {
+  let qx = q[at3], qy = q[at3 + 1], qz = q[at3 + 2], qw = q[at3 + 3], tx = 2 * (qy * z - qz * y), ty = 2 * (qz * x - qx * z), tz = 2 * (qx * y - qy * x);
+  o[0] = x + qw * tx + (qy * tz - qz * ty), o[1] = y + qw * ty + (qz * tx - qx * tz), o[2] = z + qw * tz + (qx * ty - qy * tx);
+}
+function qaxis(o, axis, angle) {
+  let s = Math.sin(angle / 2);
+  o[0] = axis[0] * s, o[1] = axis[1] * s, o[2] = axis[2] * s, o[3] = Math.cos(angle / 2);
+}
+function qfromto(o, from, to, prefer, scratch) {
+  let d = dot(from, to);
+  if (d < -1 + 1e-12) {
+    if (prefer !== void 0) {
+      let along = dot(prefer, from);
+      scratch[0] = prefer[0] - along * from[0], scratch[1] = prefer[1] - along * from[1], scratch[2] = prefer[2] - along * from[2];
+    } else scratch.fill(0);
+    normalize3(scratch) < 1e-6 && perpendicular(scratch, from), o[0] = scratch[0], o[1] = scratch[1], o[2] = scratch[2], o[3] = 0;
+    return;
+  }
+  cross(o, from, to), o[3] = 1 + d, qnormalize(o);
+}
+function qslerp(o, a, b, t) {
+  let cosine = a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3], sign2 = cosine < 0 ? -1 : 1;
+  cosine = Math.min(1, Math.abs(cosine));
+  let angle = Math.acos(cosine), sine = Math.sin(angle), wa = sine > 1e-6 ? Math.sin((1 - t) * angle) / sine : 1 - t, wb = (sine > 1e-6 ? Math.sin(t * angle) / sine : t) * sign2, x = a[0] * wa + b[0] * wb, y = a[1] * wa + b[1] * wb, z = a[2] * wa + b[2] * wb, w = a[3] * wa + b[3] * wb;
+  o[0] = x, o[1] = y, o[2] = z, o[3] = w, qnormalize(o);
+}
+var clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v)), LimbIK = class {
+  constructor(skin) {
+    this.skin = skin;
+    this.n = skin.nodes.length, this.parentOf = Int32Array.from(skin.nodes.map((node) => node.parent)), this.bind = new Float64Array(this.n * 10), skin.nodes.forEach((node, i) => {
+      this.bind.set(node.translation, i * 10);
+      let length2 = Math.hypot(...node.rotation);
+      this.bind.set(node.rotation.map((v) => v / length2), i * 10 + 3), this.bind.set(node.scale, i * 10 + 7);
+    }), this.gp = new Float64Array(this.n * 3), this.gq = new Float64Array(this.n * 4), this.gs = new Float64Array(this.n);
+    let seen = /* @__PURE__ */ new Set(), visit = (i) => {
+      if (seen.has(i)) return;
+      let parent = this.parentOf[i];
+      parent >= 0 && visit(parent), seen.add(i), this.order.push(i);
+    };
+    for (let i = 0; i < this.n; i++) visit(i);
+    for (let i = 0; i < LIMB_NAMES.length; i++) this.requests.push({ rig: void 0, weight: 1, softness: 0, min: 0, max: 0, target: new Float64Array(3), pole: new Float64Array(3), hasPole: !1, rotation: new Float64Array(4), hasRotation: !1, rotationWeight: 1 });
+  }
+  skin;
+  revision = 0;
+  n;
+  parentOf;
+  order = [];
+  bind;
+  /** Similarity transform of every node (decision 0209 uniform scale): position, rotation, scale. */
+  gp;
+  gq;
+  gs;
+  relevant = new Uint8Array(0);
+  map;
+  rigs = /* @__PURE__ */ new Map();
+  hips = -1;
+  up = new Float64Array([0, 0, 1]);
+  soleDefault = 0;
+  groundDefault = 0;
+  maxDropDefault = 0;
+  goals = /* @__PURE__ */ new Map();
+  byLimb = /* @__PURE__ */ new Map();
+  placement;
+  pendingDt = 0;
+  drop = 0;
+  dropReady = !1;
+  required = 0;
+  converging = !1;
+  states = /* @__PURE__ */ new Map();
+  // scratch
+  requests = [];
+  s = Array.from({ length: 16 }, () => new Float64Array(3));
+  r = Array.from({ length: 13 }, () => new Float64Array(4));
+  spare = new Float64Array(3);
+  local = new Float64Array(3);
+  get humanoid() {
+    return this.map;
+  }
+  /** True while the smoothed hips drop is still converging; the owner must keep evaluating. */
+  get animating() {
+    return this.converging;
+  }
+  get active() {
+    return this.goals.size > 0 || this.placement !== void 0;
+  }
+  /** Accumulates elapsed time for hips smoothing; consumed by the next evaluation. */
+  advance(dt) {
+    this.placement !== void 0 && (this.pendingDt += dt);
+  }
+  // ------------------------------------------------------------------ configuration
+  /** Resolves a map to skin nodes and derives each limb's hinge from the bind pose. `undefined` removes every goal. */
+  setHumanoid(map) {
+    if (map === void 0) {
+      this.map = void 0, this.rigs = /* @__PURE__ */ new Map(), this.goals.clear(), this.byLimb.clear(), this.placement = void 0, this.resetState(), this.revision++;
+      return;
+    }
+    let index = (bone) => {
+      let name = map.bones[bone], found = name === void 0 ? -1 : this.skin.nodes.findIndex((node) => node.name === name);
+      if (found < 0) throw new RangeError(`Humanoid map needs ${bone} to name a skin node`);
+      return found;
+    }, descends = (node, ancestor) => {
+      for (let i = this.parentOf[node]; i >= 0; i = this.parentOf[i]) if (i === ancestor) return !0;
+      return !1;
+    }, up = Float64Array.from(map.up), forward = Float64Array.from(map.forward);
+    if (!finite(map.up) || !finite(map.forward) || map.up.length !== 3 || map.forward.length !== 3 || normalize3(up) < 1e-8 || normalize3(forward) < 1e-8)
+      throw new RangeError("Humanoid map needs finite non-zero up and forward vectors");
+    let hips = index("hips"), nodes = /* @__PURE__ */ new Map();
+    for (let limb of LIMB_NAMES) {
+      let [u, l, e] = BONES[limb].map(index);
+      if (!descends(l, u) || !descends(e, l)) throw new RangeError(`Humanoid map: ${limb} bones must descend upper, lower, end`);
+      nodes.set(limb, [u, l, e]);
+    }
+    this.compute(this.bind, !1);
+    let meshQ = this.skin.meshNode * 4, meshP = this.skin.meshNode * 3, meshS = this.gs[this.skin.meshNode], forwardG = new Float64Array(3), upG = new Float64Array(3);
+    qrotate(forwardG, this.gq, meshQ, forward[0], forward[1], forward[2]), normalize3(forwardG), qrotate(upG, this.gq, meshQ, up[0], up[1], up[2]), normalize3(upG);
+    let rigs = /* @__PURE__ */ new Map(), heights = {};
+    for (let limb of LIMB_NAMES) {
+      let [u, l, e] = nodes.get(limb), pu = this.gp.subarray(u * 3, u * 3 + 3), pl = this.gp.subarray(l * 3, l * 3 + 3), pe = this.gp.subarray(e * 3, e * 3 + 3), axis = new Float64Array([pe[0] - pu[0], pe[1] - pu[1], pe[2] - pu[2]]), upper = new Float64Array([pl[0] - pu[0], pl[1] - pu[1], pl[2] - pu[2]]), total = length3(upper) + Math.hypot(pe[0] - pl[0], pe[1] - pl[1], pe[2] - pl[2]);
+      normalize3(axis) < EPS && axis.set(upper), normalize3(axis);
+      let along = dot(upper, axis), offset = new Float64Array([upper[0] - along * axis[0], upper[1] - along * axis[1], upper[2] - along * axis[2]]), sign2 = isLeg(limb) ? 1 : -1, anatomical = new Float64Array([sign2 * forwardG[0], sign2 * forwardG[1], sign2 * forwardG[2]]), side2 = dot(anatomical, axis);
+      for (let c = 0; c < 3; c++) anatomical[c] = anatomical[c] - side2 * axis[c];
+      let anatomicalLength = normalize3(anatomical), offsetLength = normalize3(offset), bend = new Float64Array(3);
+      if (offsetLength > 3e-3 * total) {
+        if (bend.set(offset), anatomicalLength > 1e-3 && dot(bend, anatomical) < -0.25) for (let c = 0; c < 3; c++) bend[c] = -bend[c];
+      } else if (anatomicalLength > 1e-3) bend.set(anatomical);
+      else {
+        let rise = dot(upG, axis);
+        for (let c = 0; c < 3; c++) bend[c] = upG[c] - rise * axis[c];
+        normalize3(bend) < 1e-3 && perpendicular(bend, axis);
+      }
+      let hingeWorld = new Float64Array(3);
+      cross(hingeWorld, bend, axis), normalize3(hingeWorld);
+      let conj = new Float64Array(4);
+      qconj(conj, this.gq.subarray(u * 4, u * 4 + 4));
+      let hinge = new Float64Array(3);
+      qrotate(hinge, conj, 0, hingeWorld[0], hingeWorld[1], hingeWorld[2]);
+      let singularWorld = new Float64Array(3);
+      if (isLeg(limb)) singularWorld.set(upG);
+      else {
+        let left = new Float64Array(3);
+        cross(left, upG, forwardG), normalize3(left);
+        let outward = limb === "leftArm" ? 1 : -1;
+        for (let c = 0; c < 3; c++) singularWorld[c] = -outward * left[c] - forwardG[c];
+        normalize3(singularWorld);
+      }
+      let parentConj = new Float64Array(4), singular = new Float64Array(3), parent = this.parentOf[u];
+      qconj(parentConj, this.gq.subarray(parent * 4, parent * 4 + 4)), qrotate(singular, parentConj, 0, singularWorld[0], singularWorld[1], singularWorld[2]), rigs.set(limb, { limb, u, l, e, hinge, singular, reach: total / meshS, maxFlexion: isLeg(limb) ? KNEE_MAX_FLEXION : ELBOW_MAX_FLEXION });
+    }
+    let height = (node) => {
+      let dx = this.gp[node * 3] - this.gp[meshP], dy = this.gp[node * 3 + 1] - this.gp[meshP + 1], dz = this.gp[node * 3 + 2] - this.gp[meshP + 2];
+      return (dx * upG[0] + dy * upG[1] + dz * upG[2]) / meshS;
+    };
+    heights.left = height(nodes.get("leftLeg")[2]), heights.right = height(nodes.get("rightLeg")[2]), this.groundDefault = 0, this.soleDefault = Math.max(0, Math.min(heights.left, heights.right)), this.maxDropDefault = 0.5 * Math.min(rigs.get("leftLeg").reach, rigs.get("rightLeg").reach);
+    let relevant = new Uint8Array(this.n), mark = (node) => {
+      for (let i = node; i >= 0 && relevant[i] === 0; i = this.parentOf[i]) relevant[i] = 1;
+    };
+    mark(this.skin.meshNode), mark(hips);
+    for (let [u, l, e] of nodes.values())
+      mark(u), mark(l), mark(e);
+    this.relevant = relevant, this.map = map, this.rigs = rigs, this.hips = hips, this.up = up, this.resetState(), this.revision++;
+  }
+  resetState() {
+    this.drop = 0, this.dropReady = !1, this.required = 0, this.converging = !1, this.pendingDt = 0, this.states.clear();
+  }
+  /** Sets (or replaces) the goal `id`. At most one goal drives each limb, and foot placement owns both legs while it is set. */
+  set(id, goal) {
+    if (this.map === void 0) throw new RangeError("Limb IK needs a humanoid map: call setHumanoid first");
+    if (id === "" || !LIMB_NAMES.includes(goal.limb)) throw new RangeError("A limb goal needs an ID and a limb name");
+    if (this.placement !== void 0 && isLeg(goal.limb)) throw new RangeError("Foot placement owns both legs; clear it before setting a leg goal");
+    let holder = this.byLimb.get(goal.limb);
+    if (holder !== void 0 && holder !== id) throw new RangeError(`Limb ${goal.limb} is already driven by goal ${holder}`);
+    let weight = goal.weight ?? 1, rotationWeight = goal.rotationWeight ?? 1, softness = goal.softness ?? DEFAULT_SOFTNESS, min2 = goal.flexion?.min ?? 0, max2 = goal.flexion?.max ?? (isLeg(goal.limb) ? KNEE_MAX_FLEXION : ELBOW_MAX_FLEXION);
+    if (goal.target.length !== 3 || !finite(goal.target) || !Number.isFinite(weight) || weight < 0 || weight > 1 || !Number.isFinite(rotationWeight) || rotationWeight < 0 || rotationWeight > 1 || !Number.isFinite(softness) || softness < 0 || softness > 0.5)
+      throw new RangeError("Invalid limb target, weight, rotation weight or softness");
+    if (!Number.isFinite(min2) || !Number.isFinite(max2) || min2 < 0 || min2 >= max2 || max2 > MAX_FLEXION_LIMIT)
+      throw new RangeError("Invalid limb flexion range: need 0 <= min < max <= 175 degrees");
+    let pole;
+    if (goal.pole !== void 0) {
+      let length2 = Math.hypot(...goal.pole);
+      if (goal.pole.length !== 3 || !finite(goal.pole) || !Number.isFinite(length2) || length2 < 1e-8) throw new RangeError("Invalid limb pole direction");
+      pole = goal.pole.map((v) => v / length2);
+    }
+    let rotation2;
+    if (goal.rotation !== void 0) {
+      let length2 = Math.hypot(...goal.rotation);
+      if (goal.rotation.length !== 4 || !finite(goal.rotation) || !Number.isFinite(length2) || length2 < 1e-8) throw new RangeError("Invalid limb orientation quaternion");
+      rotation2 = goal.rotation.map((v) => v / length2);
+      let end = this.rigs.get(goal.limb).e;
+      for (let node = this.skin.meshNode; node >= 0; node = this.parentOf[node])
+        if (node === end) throw new RangeError("Limb orientation mesh frame cannot descend from the end effector");
+    }
+    holder === void 0 && this.byLimb.set(goal.limb, id), this.goals.set(id, { id, limb: goal.limb, target: [...goal.target], weight, pole, rotation: rotation2, rotationWeight, softness, min: min2, max: max2 }), this.revision++;
+  }
+  /** Sets or (with `undefined`) clears foot placement. State such as the smoothed drop survives replacement. */
+  setFootPlacement(placement2) {
+    if (placement2 === void 0) {
+      this.placement !== void 0 && (this.placement = void 0, this.resetState(), this.revision++);
+      return;
+    }
+    if (this.map === void 0) throw new RangeError("Foot placement needs a humanoid map: call setHumanoid first");
+    if (this.byLimb.has("leftLeg") || this.byLimb.has("rightLeg")) throw new RangeError("Foot placement owns both legs; remove leg goals first");
+    let smoothing = placement2.smoothing ?? 0.1, softness = placement2.softness ?? DEFAULT_SOFTNESS, soleOffset = placement2.soleOffset ?? this.soleDefault, groundLevel = placement2.groundLevel ?? this.groundDefault, maxDrop = placement2.maxDrop ?? this.maxDropDefault;
+    if (!Number.isFinite(smoothing) || smoothing < 0 || !Number.isFinite(softness) || softness < 0 || softness > 0.5 || !Number.isFinite(soleOffset) || soleOffset < 0 || !Number.isFinite(groundLevel) || !Number.isFinite(maxDrop) || maxDrop < 0)
+      throw new RangeError("Invalid foot placement smoothing, softness, sole offset, ground level or maximum drop");
+    let ground = (side2, g) => {
+      let weight = g.weight ?? 1;
+      if (g.height === void 0 == (g.point === void 0)) throw new RangeError(`Foot placement ${side2} needs exactly one of height or point`);
+      if (g.height !== void 0 && !Number.isFinite(g.height)) throw new RangeError(`Foot placement ${side2} height must be finite`);
+      if (g.point !== void 0 && (g.point.length !== 3 || !finite(g.point))) throw new RangeError(`Foot placement ${side2} point must be three finite numbers`);
+      if (!Number.isFinite(weight) || weight < 0 || weight > 1) throw new RangeError(`Foot placement ${side2} weight must be in [0, 1]`);
+      let normal;
+      if (g.normal !== void 0) {
+        let length2 = Math.hypot(...g.normal);
+        if (g.normal.length !== 3 || !finite(g.normal) || !Number.isFinite(length2) || length2 < 1e-8) throw new RangeError(`Foot placement ${side2} normal must be a finite non-zero vector`);
+        normal = g.normal.map((v) => v / length2);
+      }
+      return { height: g.height, point: g.point === void 0 ? void 0 : [...g.point], normal, weight };
+    }, left = ground("left", placement2.left), right = ground("right", placement2.right);
+    this.placement = { left, right, smoothing, soleOffset, groundLevel, maxDrop, softness }, this.revision++;
+  }
+  remove(id) {
+    let goal = this.goals.get(id);
+    return goal === void 0 ? !1 : (this.goals.delete(id), this.byLimb.delete(goal.limb), this.states.delete(goal.limb), this.revision++, !0);
+  }
+  has(id) {
+    return this.goals.has(id);
+  }
+  /** Removes every goal and foot placement; the humanoid map stays. */
+  clear() {
+    this.goals.size === 0 && this.placement === void 0 || (this.goals.clear(), this.byLimb.clear(), this.placement = void 0, this.resetState(), this.revision++);
+  }
+  inspect() {
+    let vec = (v) => ({ x: v[0], y: v[1], z: v[2] }), limbs = [...this.goals.values()].map((goal) => {
+      let rig = this.rigs.get(goal.limb), state = this.states.get(goal.limb);
+      return {
+        id: goal.id,
+        limb: goal.limb,
+        nodes: [rig.u, rig.l, rig.e],
+        target: vec(goal.target),
+        weight: goal.weight,
+        ...goal.rotation === void 0 ? {} : { rotation: { x: goal.rotation[0], y: goal.rotation[1], z: goal.rotation[2], w: goal.rotation[3] } },
+        rotationWeight: goal.rotationWeight,
+        ...goal.pole === void 0 ? {} : { pole: vec(goal.pole) },
+        softness: goal.softness,
+        flexionRange: { min: goal.min, max: goal.max },
+        flexion: state?.flexion ?? null,
+        residual: state?.residual ?? null
+      };
+    }), ground = (g, limb) => ({
+      ...g.height === void 0 ? {} : { height: g.height },
+      ...g.point === void 0 ? {} : { point: vec(g.point) },
+      ...g.normal === void 0 ? {} : { normal: vec(g.normal) },
+      weight: g.weight,
+      flexion: this.states.get(limb)?.flexion ?? null,
+      residual: this.states.get(limb)?.residual ?? null
+    }), p = this.placement;
+    return { limbs, footPlacement: p === void 0 ? null : {
+      left: ground(p.left, "leftLeg"),
+      right: ground(p.right, "rightLeg"),
+      smoothing: p.smoothing,
+      soleOffset: p.soleOffset,
+      groundLevel: p.groundLevel,
+      maxDrop: p.maxDrop,
+      softness: p.softness,
+      requiredDrop: this.required,
+      drop: this.drop
+    } };
+  }
+  // ------------------------------------------------------------------ evaluation
+  /** Global similarity transforms (position, rotation, uniform scale) of the pose, in double precision. */
+  compute(pose, check) {
+    for (let i of this.order) {
+      let at3 = i * 10, parent = this.parentOf[i], sx = pose[at3 + 7];
+      if (check && this.relevant[i] === 1 && !numericallyUniformScale(sx, pose[at3 + 8], pose[at3 + 9]))
+        throw new RangeError("Limb IK requires uniform ancestor scales");
+      if (parent < 0) {
+        this.gp[i * 3] = pose[at3], this.gp[i * 3 + 1] = pose[at3 + 1], this.gp[i * 3 + 2] = pose[at3 + 2];
+        for (let c = 0; c < 4; c++) this.gq[i * 4 + c] = pose[at3 + 3 + c];
+        this.gs[i] = sx;
+      } else {
+        let scale = this.gs[parent];
+        qrotate(this.spare, this.gq, parent * 4, pose[at3], pose[at3 + 1], pose[at3 + 2]), this.gp[i * 3] = this.gp[parent * 3] + scale * this.spare[0], this.gp[i * 3 + 1] = this.gp[parent * 3 + 1] + scale * this.spare[1], this.gp[i * 3 + 2] = this.gp[parent * 3 + 2] + scale * this.spare[2];
+        let q = this.r[9];
+        q[0] = pose[at3 + 3], q[1] = pose[at3 + 4], q[2] = pose[at3 + 5], q[3] = pose[at3 + 6], qmul(q, this.gq.subarray(parent * 4, parent * 4 + 4), q);
+        for (let c = 0; c < 4; c++) this.gq[i * 4 + c] = q[c];
+        this.gs[i] = scale * sx;
+      }
+    }
+  }
+  apply(pose) {
+    let rigs = this.rigs;
+    if (this.map === void 0 || this.goals.size === 0 && this.placement === void 0) {
+      this.converging = !1;
+      return;
+    }
+    this.compute(pose, !0);
+    let mesh = this.skin.meshNode, requests = [], used = this.requests, slot = 0, prepare = (rig) => {
+      let r = used[slot++];
+      return r.rig = rig, r;
+    };
+    if (this.placement !== void 0) {
+      let left = prepare(rigs.get("leftLeg")), right = prepare(rigs.get("rightLeg"));
+      this.placeFeet(pose, left, right), left.weight > 0 && requests.push(left), right.weight > 0 && requests.push(right);
+    }
+    for (let limb of LIMB_NAMES) {
+      let id = this.byLimb.get(limb);
+      if (id === void 0) continue;
+      let goal = this.goals.get(id);
+      if (goal.weight === 0) continue;
+      let r = prepare(rigs.get(limb));
+      r.weight = goal.weight, r.softness = goal.softness, r.min = goal.min, r.max = goal.max, r.rotationWeight = goal.rotationWeight, qrotate(r.target, this.gq, mesh * 4, goal.target[0], goal.target[1], goal.target[2]);
+      for (let c = 0; c < 3; c++) r.target[c] = this.gp[mesh * 3 + c] + this.gs[mesh] * r.target[c];
+      r.hasPole = goal.pole !== void 0, goal.pole !== void 0 && (qrotate(r.pole, this.gq, mesh * 4, goal.pole[0], goal.pole[1], goal.pole[2]), normalize3(r.pole)), r.hasRotation = goal.rotation !== void 0, goal.rotation !== void 0 && qmul(r.rotation, this.gq.subarray(mesh * 4, mesh * 4 + 4), goal.rotation), requests.push(r);
+    }
+    for (let request of requests) this.solve(pose, request);
+  }
+  /** Foot targets, minimum hips drop, hips shift and (re)computed transforms; fills the two leg requests. */
+  placeFeet(pose, left, right) {
+    let placement2 = this.placement, mesh = this.skin.meshNode, meshQ = mesh * 4, sMesh = this.gs[mesh], upG = this.s[0];
+    qrotate(upG, this.gq, meshQ, this.up[0], this.up[1], this.up[2]), normalize3(upG);
+    let required = 0, toTarget = this.s[1], normalG = this.s[2], targetG = this.s[3];
+    for (let [request, ground] of [[left, placement2.left], [right, placement2.right]]) {
+      let rig = request.rig, u = rig.u, e = rig.e;
+      request.weight = ground.weight, request.softness = placement2.softness, request.min = 0, request.max = KNEE_MAX_FLEXION, request.rotationWeight = 1, request.hasPole = !1, request.hasRotation = !0;
+      let hasNormal = !1;
+      ground.normal !== void 0 && (qrotate(normalG, this.gq, meshQ, ground.normal[0], ground.normal[1], ground.normal[2]), normalize3(normalG), hasNormal = !0);
+      let pe = e * 3;
+      if (ground.point !== void 0) {
+        let clearance = placement2.soleOffset, n = hasNormal ? ground.normal : this.up;
+        qrotate(targetG, this.gq, meshQ, ground.point[0] + n[0] * clearance, ground.point[1] + n[1] * clearance, ground.point[2] + n[2] * clearance);
+        for (let c = 0; c < 3; c++) targetG[c] = this.gp[mesh * 3 + c] + sMesh * targetG[c];
+      } else {
+        let height = ground.height, animated = ((this.gp[pe] - this.gp[mesh * 3]) * upG[0] + (this.gp[pe + 1] - this.gp[mesh * 3 + 1]) * upG[1] + (this.gp[pe + 2] - this.gp[mesh * 3 + 2]) * upG[2]) / sMesh, slope = hasNormal ? Math.max(0.5, dot(normalG, upG)) : 1, lifted = animated + (height - placement2.groundLevel), floor2 = height + placement2.soleOffset / slope, wanted2 = Math.max(lifted, floor2);
+        for (let c = 0; c < 3; c++) targetG[c] = this.gp[pe + c] + upG[c] * sMesh * (wanted2 - animated);
+      }
+      for (let c = 0; c < 3; c++) request.target[c] = targetG[c];
+      let qe = this.r[0], tilt = this.r[1];
+      for (let c = 0; c < 4; c++) qe[c] = this.gq[e * 4 + c];
+      hasNormal ? (qfromto(tilt, upG, normalG, void 0, this.spare), qmul(request.rotation, tilt, qe)) : request.rotation.set(qe);
+      let a = Math.hypot(this.gp[rig.l * 3] - this.gp[u * 3], this.gp[rig.l * 3 + 1] - this.gp[u * 3 + 1], this.gp[rig.l * 3 + 2] - this.gp[u * 3 + 2]), b = Math.hypot(this.gp[pe] - this.gp[rig.l * 3], this.gp[pe + 1] - this.gp[rig.l * 3 + 1], this.gp[pe + 2] - this.gp[rig.l * 3 + 2]), limits = reachLimits(a, b, 0, KNEE_MAX_FLEXION, placement2.softness);
+      for (let c = 0; c < 3; c++) toTarget[c] = targetG[c] - this.gp[u * 3 + c];
+      required = Math.max(required, ground.weight * minimumDrop(toTarget, upG, limits.softMax) / sMesh);
+    }
+    this.required = required;
+    let wanted = Math.min(required, placement2.maxDrop);
+    if (!this.dropReady || placement2.smoothing === 0 ? (this.drop = wanted, this.dropReady = !0) : this.drop += (wanted - this.drop) * (1 - Math.exp(-this.pendingDt / placement2.smoothing)), this.pendingDt = 0, this.converging = Math.abs(this.drop - wanted) > 1e-9, this.converging || (this.drop = wanted), this.drop > 0 && this.hips >= 0) {
+      let displacement = this.drop * sMesh, parent = this.parentOf[this.hips], delta = this.local;
+      if (delta[0] = -upG[0] * displacement, delta[1] = -upG[1] * displacement, delta[2] = -upG[2] * displacement, parent >= 0) {
+        let conj = this.r[2];
+        qconj(conj, this.gq.subarray(parent * 4, parent * 4 + 4)), qrotate(delta, conj, 0, delta[0], delta[1], delta[2]);
+        let scale = this.gs[parent];
+        for (let c = 0; c < 3; c++) delta[c] = delta[c] / scale;
+      }
+      for (let c = 0; c < 3; c++) pose[this.hips * 10 + c] = pose[this.hips * 10 + c] + delta[c];
+      this.compute(pose, !1);
+    }
+  }
+  /** Solves one limb in skeleton-root space and writes the blended local rotations of upper, lower and (optionally) end. */
+  solve(pose, request) {
+    let { rig } = request, { u, l, e } = rig, gp = this.gp, gq = this.gq, [du, dl, ehat, hc, hs, q, uDir, lDir, tmp] = [this.s[4], this.s[5], this.s[6], this.s[7], this.s[8], this.s[9], this.s[10], this.s[11], this.s[12]], reference = this.s[13], chord = this.s[14], work3 = this.s[15];
+    for (let c = 0; c < 3; c++)
+      du[c] = gp[l * 3 + c] - gp[u * 3 + c], dl[c] = gp[e * 3 + c] - gp[l * 3 + c];
+    let a = normalize3(du), b = normalize3(dl);
+    if (!(a > EPS && b > EPS)) return;
+    for (let c = 0; c < 3; c++) ehat[c] = request.target[c] - gp[u * 3 + c];
+    let distance2 = normalize3(ehat);
+    if (distance2 <= EPS) {
+      for (let c = 0; c < 3; c++) ehat[c] = gp[e * 3 + c] - gp[u * 3 + c];
+      normalize3(ehat) <= EPS && ehat.set(du);
+    }
+    let limits = reachLimits(a, b, request.min, request.max, request.softness), effective = Math.max(softReach(distance2, limits), 1e-12), flexion = Math.acos(clamp((effective * effective - a * a - b * b) / (2 * a * b), -1, 1)), hipAngle = Math.acos(clamp((a * a + effective * effective - b * b) / (2 * a * effective), -1, 1));
+    qrotate(hc, gq, u * 4, rig.hinge[0], rig.hinge[1], rig.hinge[2]);
+    let explicit = !1;
+    if (request.hasPole) {
+      let along = dot(request.pole, ehat);
+      for (let c = 0; c < 3; c++) q[c] = request.pole[c] - along * ehat[c];
+      normalize3(q) > 1e-3 && (cross(hs, q, ehat), explicit = !0);
+    }
+    let swing = this.r[3], turn = this.r[4], upper = this.r[5], lower = this.r[6], work = this.r[7], work2 = this.r[8];
+    if (!explicit) {
+      let parent = this.parentOf[u];
+      for (let c = 0; c < 3; c++) chord[c] = gp[e * 3 + c] - gp[u * 3 + c];
+      normalize3(chord) <= EPS && chord.set(du);
+      let across = dot(hc, chord);
+      for (let c = 0; c < 3; c++) work3[c] = hc[c] - across * chord[c];
+      normalize3(work3) < 1e-6 && perpendicular(work3, chord), qrotate(reference, gq, parent * 4, rig.singular[0], rig.singular[1], rig.singular[2]);
+      for (let c = 0; c < 3; c++) reference[c] = -reference[c];
+      qfromto(swing, chord, reference, work3, tmp), qrotate(hs, swing, 0, work3[0], work3[1], work3[2]), qfromto(swing, reference, ehat, hs, tmp), qrotate(hs, swing, 0, hs[0], hs[1], hs[2]);
+      let along = dot(hs, ehat);
+      for (let c = 0; c < 3; c++) hs[c] = hs[c] - along * ehat[c];
+      normalize3(hs) < 1e-6 && perpendicular(hs, ehat);
+    }
+    cross(q, ehat, hs);
+    let sine = Math.sin(hipAngle), cosine = Math.cos(hipAngle);
+    for (let c = 0; c < 3; c++) uDir[c] = cosine * ehat[c] + sine * q[c];
+    for (let c = 0; c < 3; c++) lDir[c] = gp[u * 3 + c] + effective * ehat[c] - (gp[u * 3 + c] + a * uDir[c]);
+    normalize3(lDir) < EPS && lDir.set(ehat), qfromto(swing, du, uDir, hs, tmp), qrotate(tmp, swing, 0, hc[0], hc[1], hc[2]), cross(q, tmp, hs);
+    let twist = Math.atan2(dot(uDir, q), dot(tmp, hs));
+    qaxis(turn, uDir, twist), qmul(upper, turn, swing), qrotate(tmp, upper, 0, dl[0], dl[1], dl[2]), qfromto(lower, tmp, lDir, hs, this.spare);
+    let w = request.weight, parentU = this.parentOf[u], parentL = this.parentOf[l], parentE = this.parentOf[e], animatedParent = this.r[0], solved = this.r[1], write = (node, rotation2, weight) => {
+      let at3 = node * 10 + 3;
+      for (let c = 0; c < 4; c++) animatedParent[c] = pose[at3 + c];
+      qslerp(solved, animatedParent, rotation2, weight);
+      for (let c = 0; c < 4; c++) pose[at3 + c] = solved[c];
+    };
+    parentU >= 0 ? qconj(work, gq.subarray(parentU * 4, parentU * 4 + 4)) : (work[0] = 0, work[1] = 0, work[2] = 0, work[3] = 1), qmul(work2, upper, gq.subarray(u * 4, u * 4 + 4));
+    let lowerCarry = this.r[2], endCarry = this.r[9];
+    qmul(work2, work, work2), qnormalize(work2);
+    let upperLocal = this.r[10];
+    upperLocal.set(work2), qmul(lowerCarry, lower, upper), qnormalize(lowerCarry), qmul(work, upper, gq.subarray(parentL * 4, parentL * 4 + 4)), qconj(work, work), qmul(work2, lowerCarry, gq.subarray(l * 4, l * 4 + 4)), qmul(work2, work, work2), qnormalize(work2);
+    let lowerLocal = this.r[11];
+    lowerLocal.set(work2);
+    let endLocal = this.r[12];
+    request.hasRotation && (qmul(endCarry, lowerCarry, gq.subarray(parentE * 4, parentE * 4 + 4)), qconj(endCarry, endCarry), qmul(endLocal, endCarry, request.rotation), qnormalize(endLocal)), write(u, upperLocal, w), write(l, lowerLocal, w), request.hasRotation && write(e, endLocal, w * request.rotationWeight);
+    let reachError = 0;
+    for (let c = 0; c < 3; c++) reachError += (request.target[c] - (gp[u * 3 + c] + effective * ehat[c])) ** 2;
+    this.states.set(rig.limb, { flexion, residual: Math.sqrt(reachError) / this.gs[this.skin.meshNode] });
+  }
+};
+
 // src/scene/ik.ts
 var PoseIK = class {
   constructor(skin) {
     this.skin = skin;
-    this.globals = skin.nodes.map(() => identity());
+    this.limbs = new LimbIK(skin), this.globals = skin.nodes.map(() => identity());
     let seen = /* @__PURE__ */ new Set(), visit = (i) => {
       if (seen.has(i)) return;
       let p = skin.nodes[i].parent;
@@ -362,6 +856,7 @@ var PoseIK = class {
     skin.nodes.forEach((_, i) => visit(i));
   }
   skin;
+  limbs;
   constraints = /* @__PURE__ */ new Map();
   globals;
   local = identity();
@@ -373,7 +868,28 @@ var PoseIK = class {
   parentRotation = new Float64Array(4);
   bindRotation = new Float64Array(4);
   relative = new Float64Array(4);
-  revision = 0;
+  ccdRevision = 0;
+  /** Changes whenever any constraint, limb goal, foot placement or humanoid map changes. */
+  get revision() {
+    return this.ccdRevision + this.limbs.revision;
+  }
+  /** True while foot-placement smoothing is still converging, so a held clock must keep evaluating. */
+  get animating() {
+    return this.limbs.animating;
+  }
+  advance(dt) {
+    this.limbs.advance(dt);
+  }
+  setHumanoid(map) {
+    this.limbs.setHumanoid(map);
+  }
+  /** Sets or replaces the anatomical limb goal `id`; an ID is shared with `set`, and the newest definition wins. */
+  setLimb(id, goal) {
+    this.limbs.set(id, goal), this.constraints.delete(id) && this.ccdRevision++;
+  }
+  setFootPlacement(placement2) {
+    this.limbs.setFootPlacement(placement2);
+  }
   inspect() {
     return [...this.constraints].map(([id, { indices, options, limits }]) => ({
       id,
@@ -417,7 +933,7 @@ var PoseIK = class {
       for (let node = this.skin.meshNode; node >= 0; node = this.skin.nodes[node].parent)
         if (node === indices.at(-1)) throw new RangeError("IK orientation mesh frame cannot descend from the end effector");
     }
-    this.constraints.set(id, {
+    this.limbs.remove(id), this.constraints.set(id, {
       indices,
       limits,
       options: {
@@ -426,7 +942,7 @@ var PoseIK = class {
         target: [...options.target],
         chain: [...options.chain]
       }
-    }), this.revision++;
+    }), this.ccdRevision++;
   }
   constrain(pose, node, limit) {
     let at3 = node * 10 + 3, bind = this.skin.nodes[node].rotation, length2 = Math.hypot(...bind);
@@ -448,10 +964,11 @@ var PoseIK = class {
     }
   }
   remove(id) {
-    this.constraints.delete(id) && this.revision++;
+    this.constraints.delete(id) && this.ccdRevision++, this.limbs.remove(id);
   }
+  /** Removes every CCD constraint, limb goal and foot placement. The humanoid map is configuration and stays. */
   clear() {
-    this.constraints.size > 0 && (this.constraints.clear(), this.revision++);
+    this.constraints.size > 0 && (this.constraints.clear(), this.ccdRevision++), this.limbs.clear();
   }
   matrices(pose) {
     for (let i of this.order) {
@@ -468,6 +985,7 @@ var PoseIK = class {
     }
   }
   apply(pose) {
+    this.limbs.apply(pose);
     for (let { indices, options, limits } of this.constraints.values()) {
       let weight = options.weight ?? 1;
       if (weight === 0) continue;
@@ -510,15 +1028,84 @@ var PoseIK = class {
   }
 };
 
-// src/scene/locomotion.ts
-var LocomotionBlend = class {
+// src/scene/blend-space.ts
+var MAX_BLEND_SAMPLES = 32;
+function blendWeights(points) {
+  let n = points.length;
+  if (n < 1 || n > MAX_BLEND_SAMPLES || points.some((p) => !Number.isFinite(p[0]) || !Number.isFinite(p[1])))
+    throw new RangeError(`A blend space needs 1 to ${MAX_BLEND_SAMPLES} samples at finite points`);
+  if (points.some((p, i) => points.some((q, j) => j < i && p[0] === q[0] && p[1] === q[1])))
+    throw new RangeError("Blend samples must be at distinct points");
+  let ox = points[0][0], oy = points[0][1], X = points.map((p) => p[0] - ox), Y = points.map((p) => p[1] - oy), L = Math.max(Math.max(...X) - Math.min(...X), Math.max(Math.max(...Y) - Math.min(...Y))) || 1, Z = X.map((x, i) => x * x + Y[i] * Y[i]), W = X.map((_, i) => {
+    let h = Math.imul(i + 1, 2654435761);
+    return h ^= h >>> 15, h = Math.imul(h, 2246822507), h ^= h >>> 13, (h >>> 0) / 2 ** 32;
+  }), inside = (a, b, c, d, z) => {
+    let ax = X[a] - X[d], ay = Y[a] - Y[d], bx = X[b] - X[d], by = Y[b] - Y[d], cx = X[c] - X[d], cy = Y[c] - Y[d], az = z[a] - z[d], bz = z[b] - z[d], cz = z[c] - z[d];
+    return ax * (by * cz - bz * cy) - ay * (bx * cz - bz * cx) + az * (bx * cy - by * cx);
+  }, triangles = [];
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) for (let k = j + 1; k < n; k++) {
+    let area = (X[j] - X[i]) * (Y[k] - Y[i]) - (X[k] - X[i]) * (Y[j] - Y[i]);
+    if (Math.abs(area) <= 1e-12 * L * L) continue;
+    let [b, c] = area > 0 ? [j, k] : [k, j], empty = !0;
+    for (let d = 0; d < n && empty; d++) {
+      if (d === i || d === j || d === k) continue;
+      let lifted = inside(i, b, c, d, Z);
+      empty = !(lifted > 1e-11 * L ** 4 || lifted >= -1e-11 * L ** 4 && inside(i, b, c, d, W) > 0);
+    }
+    empty && triangles.push([i, b, c]);
+  }
+  if (triangles.length === 0) {
+    let order = X.map((_, i) => i).sort((a, b) => X[a] - X[b] || Y[a] - Y[b]), first = order[0], last = order[n - 1], length2 = Math.hypot(X[last] - X[first], Y[last] - Y[first]), dx = n > 1 ? (X[last] - X[first]) / length2 : 0, dy = n > 1 ? (Y[last] - Y[first]) / length2 : 0, along = (x, y) => (x - X[first]) * dx + (y - Y[first]) * dy, t = order.map((i) => along(X[i], Y[i]));
+    if (t.some((v, i) => i > 0 && v - t[i - 1] <= 1e-12 * L))
+      throw new RangeError("Blend samples must be at distinct points");
+    return (x, y, out) => {
+      out.fill(0), x -= ox, y -= oy;
+      let s = Math.min(t[n - 1], Math.max(t[0], along(x, y))), k = 1;
+      for (; k < n && t[k] < s; ) k++;
+      if (k === n) out[order[0]] = 1;
+      else {
+        let w = (s - t[k - 1]) / (t[k] - t[k - 1]);
+        out[order[k - 1]] = 1 - w, out[order[k]] = w;
+      }
+    };
+  }
+  let counts = /* @__PURE__ */ new Map();
+  for (let [a, b, c] of triangles) for (let [p, q] of [[a, b], [b, c], [c, a]]) {
+    let key = Math.min(p, q) * 64 + Math.max(p, q);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  let areas = triangles.map(([a, b, c]) => (X[b] - X[a]) * (Y[c] - Y[a]) - (X[c] - X[a]) * (Y[b] - Y[a])), hull = [...counts].filter(([, count]) => count === 1).map(([key]) => [Math.floor(key / 64), key % 64]);
+  return (x, y, out) => {
+    out.fill(0), x -= ox, y -= oy;
+    let cross5 = (p, q) => (X[p] - x) * (Y[q] - y) - (Y[p] - y) * (X[q] - x), best = -1 / 0, at3 = 0, u = 0, v = 0, w = 0;
+    if (triangles.forEach(([a, b, c], t) => {
+      let p = cross5(b, c) / areas[t], q = cross5(c, a) / areas[t], r = cross5(a, b) / areas[t], least = Math.min(p, q, r);
+      least > best && (best = least, at3 = t, u = p, v = q, w = r);
+    }), best >= -1e-9) {
+      let [a, b, c] = triangles[at3];
+      u = Math.max(0, u), v = Math.max(0, v), w = Math.max(0, w);
+      let total = u + v + w;
+      out[a] = u / total, out[b] = v / total, out[c] = w / total;
+      return;
+    }
+    let nearest = 1 / 0;
+    for (let [a, b] of hull) {
+      let ex = X[b] - X[a], ey = Y[b] - Y[a], t = Math.min(1, Math.max(0, ((x - X[a]) * ex + (y - Y[a]) * ey) / (ex * ex + ey * ey))), distance2 = Math.hypot(X[a] + ex * t - x, Y[a] + ey * t - y);
+      distance2 < nearest && (nearest = distance2, out.fill(0), out[a] = 1 - t, out[b] = t);
+    }
+  };
+}
+var BlendSpace = class {
   constructor(skin) {
     this.skin = skin;
     this.other = new Float64Array(skin.nodes.length * 10);
   }
   skin;
   samples = [];
-  parameterValue = 0;
+  solver;
+  key = "";
+  px = 0;
+  py = 0;
   speed = 1;
   phaseValue = 0;
   previous = 0;
@@ -526,7 +1113,10 @@ var LocomotionBlend = class {
   ended = !1;
   looping = !0;
   wraps = 0;
-  lastPair;
+  current = new Float64Array(MAX_BLEND_SAMPLES);
+  last = new Float64Array(MAX_BLEND_SAMPLES);
+  fresh = !1;
+  lastValid = !1;
   other;
   value = new Float64Array(4);
   revision = 0;
@@ -537,7 +1127,7 @@ var LocomotionBlend = class {
     return this.phaseValue;
   }
   get parameter() {
-    return this.parameterValue;
+    return { x: this.px, y: this.py };
   }
   get playing() {
     return this.active && this.running;
@@ -545,21 +1135,27 @@ var LocomotionBlend = class {
   get finished() {
     return this.active && this.ended;
   }
-  inspect() {
-    if (!this.active) return null;
-    let right = this.samples.findIndex((sample) => sample.threshold >= this.parameterValue);
-    right < 0 && (right = this.samples.length - 1);
-    let left = Math.max(0, right - 1), a = this.samples[left], b = this.samples[right], weight = left === right ? 0 : Math.max(0, Math.min(1, (this.parameterValue - a.threshold) / (b.threshold - a.threshold)));
-    return { phase: this.phase, parameter: this.parameter, samples: this.samples.map((sample, index) => ({
-      clip: sample.clip.name,
-      threshold: sample.threshold,
-      weight: left === right ? +(index === left) : index === left ? 1 - weight : index === right ? weight : 0
-    })) };
+  /** Current weights, one per sample in the order given to `set`. Do not retain the array. */
+  weights() {
+    return !this.fresh && this.solver !== void 0 && (this.solver(this.px, this.py, this.current), this.fresh = !0), this.current;
+  }
+  rate(w) {
+    let rate = 0;
+    return this.samples.forEach((sample, i) => {
+      rate += w[i] / sample.clip.duration;
+    }), rate;
   }
   get duration() {
-    if (!this.active) return 0;
-    let [a, b, weight] = this.pair();
-    return 1 / ((1 - weight) / a.duration + weight / b.duration);
+    return this.active ? 1 / this.rate(this.weights()) : 0;
+  }
+  inspect() {
+    if (!this.active) return null;
+    let w = this.weights();
+    return {
+      phase: this.phase,
+      parameter: this.parameter,
+      samples: this.samples.map((s, i) => ({ clip: s.clip.name, x: s.x, y: s.y, weight: w[i] }))
+    };
   }
   pause() {
     return this.active ? (this.running = !1, !0) : !1;
@@ -572,56 +1168,49 @@ var LocomotionBlend = class {
   }
   set(options) {
     if (options === void 0) {
-      this.samples = [], this.wraps = 0, this.lastPair = void 0, this.revision++;
+      this.samples = [], this.solver = void 0, this.key = "", this.wraps = 0, this.lastValid = !1, this.revision++;
       return;
     }
     let samples = options.samples.map((sample) => {
       let clip = this.skin.clips.find((clip2) => clip2.name === sample.clip);
-      if (clip === void 0 || clip.duration <= 0 || !Number.isFinite(sample.threshold))
-        throw new RangeError("Locomotion samples need existing nonzero-duration clips and finite thresholds");
-      return { threshold: sample.threshold, clip };
-    });
-    if (samples.length < 2 || samples.some((sample, i) => i > 0 && sample.threshold <= samples[i - 1].threshold))
-      throw new RangeError("Locomotion needs at least two samples with strictly increasing thresholds");
-    let parameter = options.parameter ?? samples[0].threshold, phase = options.phase ?? 0, speed = options.speed ?? 1;
-    if (!Number.isFinite(parameter) || !Number.isFinite(speed) || speed < 0 || !Number.isFinite(phase) || phase < 0 || phase >= 1)
-      throw new RangeError("Invalid locomotion parameter, speed or phase");
-    this.samples = samples, this.parameterValue = parameter, this.speed = speed, this.running = !0, this.ended = !1, this.looping = options.looping ?? !0, this.phaseValue = phase, this.previous = phase, this.wraps = 0, this.lastPair = void 0, this.revision++;
+      if (clip === void 0 || clip.duration <= 0)
+        throw new RangeError("Blend samples need existing nonzero-duration clips");
+      return { x: sample.x, y: sample.y, clip };
+    }), key = samples.map((s) => `${s.x},${s.y}`).join(";"), solver = key === this.key && this.solver !== void 0 ? this.solver : blendWeights(samples.map((s) => [s.x, s.y])), px = options.parameter?.x ?? samples[0].x, py = options.parameter?.y ?? samples[0].y, phase = options.phase ?? 0, speed = options.speed ?? 1;
+    if (!Number.isFinite(px) || !Number.isFinite(py) || !Number.isFinite(speed) || speed < 0 || !Number.isFinite(phase) || phase < 0 || phase >= 1)
+      throw new RangeError("Invalid blend parameter, speed or phase");
+    this.samples = samples, this.solver = solver, this.key = key, this.px = px, this.py = py, this.fresh = !1, this.speed = speed, this.running = !0, this.ended = !1, this.looping = options.looping ?? !0, this.phaseValue = phase, this.previous = phase, this.wraps = 0, this.lastValid = !1, this.revision++;
   }
-  setParameter(value) {
-    if (!Number.isFinite(value)) throw new RangeError("Locomotion parameter must be finite");
-    value !== this.parameterValue && (this.parameterValue = value, this.revision++);
+  setParameter(x, y = 0) {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) throw new RangeError("Blend parameter must be finite");
+    (x !== this.px || y !== this.py) && (this.px = x, this.py = y, this.fresh = !1, this.revision++);
   }
   seek(phase) {
     if (!Number.isFinite(phase) || phase < 0 || phase > 1)
-      throw new RangeError("Locomotion phase must be in [0,1]");
-    this.phaseValue = phase, this.previous = phase, this.wraps = 0, this.lastPair = void 0, this.revision++, this.ended = !1;
-  }
-  pair() {
-    let right = this.samples.findIndex((sample) => sample.threshold >= this.parameterValue);
-    right < 0 && (right = this.samples.length - 1);
-    let b = this.samples[right], a = this.samples[Math.max(0, right - 1)], weight = a === b ? 0 : Math.max(0, Math.min(1, (this.parameterValue - a.threshold) / (b.threshold - a.threshold)));
-    return [a.clip, b.clip, weight];
+      throw new RangeError("Blend phase must be in [0,1]");
+    this.phaseValue = phase, this.previous = phase, this.wraps = 0, this.lastValid = !1, this.revision++, this.ended = !1;
   }
   advance(dt) {
-    if (!Number.isFinite(dt) || dt < 0) throw new RangeError("Locomotion delta must be finite and nonnegative");
+    if (!Number.isFinite(dt) || dt < 0) throw new RangeError("Blend delta must be finite and nonnegative");
     if (this.previous = this.phaseValue, this.wraps = 0, !this.active || !this.running || dt === 0) {
-      this.lastPair = void 0;
+      this.lastValid = !1;
       return;
     }
-    let [a, b, weight] = this.lastPair = this.pair(), next = this.phaseValue + dt * this.speed * ((1 - weight) / a.duration + weight / b.duration);
+    let w = this.weights();
+    this.last.set(w), this.lastValid = !0;
+    let next = this.phaseValue + dt * this.speed * this.rate(w);
     if (!Number.isFinite(next) || next > Number.MAX_SAFE_INTEGER)
-      throw new RangeError("Locomotion update exceeds the supported cycle range");
+      throw new RangeError("Blend update exceeds the supported cycle range");
     !this.looping && next >= 1 ? (this.phaseValue = 1, this.running = !1, this.ended = !0) : (this.wraps = Math.floor(next), this.phaseValue = next - this.wraps), dt > 0 && this.speed > 0 && this.revision++;
   }
   /** Marker seconds in a contributing clip; crossings remain available between pose updates. */
   crossed(name, seconds) {
-    if (!this.active || this.lastPair === void 0 || !Number.isFinite(seconds) || seconds < 0) return !1;
-    let [a, b, weight] = this.lastPair, clip = a.name === name && weight < 1 ? a : b.name === name && weight > 0 ? b : void 0;
-    return clip === void 0 || seconds > clip.duration ? !1 : this.crossedPhase(seconds / clip.duration);
+    if (!this.active || !this.lastValid || !Number.isFinite(seconds) || seconds < 0) return !1;
+    let at3 = this.samples.findIndex((sample, i) => sample.clip.name === name && this.last[i] > 0);
+    return at3 < 0 || seconds > this.samples[at3].clip.duration ? !1 : this.crossedPhase(seconds / this.samples[at3].clip.duration);
   }
   crossedPhase(marker) {
-    return this.lastPair === void 0 || !Number.isFinite(marker) || marker < 0 || marker > 1 ? !1 : this.wraps > 1 || (this.wraps === 1 ? marker > this.previous || marker <= this.phaseValue : marker > this.previous && marker <= this.phaseValue);
+    return !this.lastValid || !Number.isFinite(marker) || marker < 0 || marker > 1 ? !1 : this.wraps > 1 || (this.wraps === 1 ? marker > this.previous || marker <= this.phaseValue : marker > this.previous && marker <= this.phaseValue);
   }
   sample(clip, out, bind) {
     out.set(bind);
@@ -631,28 +1220,107 @@ var LocomotionBlend = class {
       out.set(this.value.subarray(0, channel.path === "rotation" ? 4 : 3), at3);
     }
   }
+  /** Weighted pose: clips in sample order, each blended in by its share of the weight so far. */
   apply(out, bind) {
-    let [a, b, weight] = this.pair();
-    if (this.sample(a, out, bind), weight !== 0) {
-      this.sample(b, this.other, bind);
-      for (let at3 = 0; at3 < out.length; at3 += 10) {
-        for (let c of [0, 1, 2, 7, 8, 9]) out[at3 + c] = out[at3 + c] + (this.other[at3 + c] - out[at3 + c]) * weight;
-        blendQuat(out, at3 + 3, this.other, at3 + 3, weight);
+    let w = this.weights(), total = 0;
+    this.samples.forEach((sample, i) => {
+      if (w[i] === 0) return;
+      if (total === 0) {
+        this.sample(sample.clip, out, bind), total = w[i];
+        return;
       }
-    }
+      this.sample(sample.clip, this.other, bind);
+      let t = w[i] / (total + w[i]);
+      total += w[i];
+      for (let at3 = 0; at3 < out.length; at3 += 10) {
+        for (let c of [0, 1, 2, 7, 8, 9]) out[at3 + c] = out[at3 + c] + (this.other[at3 + c] - out[at3 + c]) * t;
+        blendQuat(out, at3 + 3, this.other, at3 + 3, t);
+      }
+    });
   }
   /** Accumulate displacement across every wrap, independently of pose evaluation cadence. */
   rootDelta(node, out) {
-    let [a, b, weight] = this.pair();
-    for (let [clip, influence] of [[a, 1 - weight], [b, weight]]) {
-      if (influence === 0) continue;
-      let channel = clip.channels.find((channel2) => channel2.node === node && channel2.path === "translation");
+    let w = this.weights();
+    this.samples.forEach(({ clip }, i) => {
+      let influence = w[i], channel = influence === 0 ? void 0 : clip.channels.find((channel2) => channel2.node === node && channel2.path === "translation");
       if (channel !== void 0)
         for (let [time, factor] of [[this.previous * clip.duration, -1], [this.phaseValue * clip.duration, 1], [0, -this.wraps], [clip.duration, this.wraps]]) {
           sampleChannelInto(channel, time, this.value);
           for (let c = 0; c < 3; c++) out[c] = out[c] + this.value[c] * influence * factor;
         }
+    });
+  }
+};
+
+// src/scene/locomotion.ts
+var LocomotionBlend = class {
+  constructor(space) {
+    this.space = space;
+  }
+  space;
+  get active() {
+    return this.space.active;
+  }
+  get phase() {
+    return this.space.phase;
+  }
+  get parameter() {
+    return this.space.parameter.x;
+  }
+  get playing() {
+    return this.space.playing;
+  }
+  get finished() {
+    return this.space.finished;
+  }
+  get duration() {
+    return this.space.duration;
+  }
+  get revision() {
+    return this.space.revision;
+  }
+  inspect() {
+    let blend = this.space.inspect();
+    return blend === null || blend.samples.some((sample) => sample.y !== 0) ? null : {
+      phase: blend.phase,
+      parameter: blend.parameter.x,
+      samples: blend.samples.map((sample) => ({ clip: sample.clip, threshold: sample.x, weight: sample.weight }))
+    };
+  }
+  pause() {
+    return this.space.pause();
+  }
+  resume() {
+    return this.space.resume();
+  }
+  play(looping = !0, speed = 1) {
+    return this.space.play(looping, speed);
+  }
+  set(options) {
+    if (options === void 0) {
+      this.space.set(void 0);
+      return;
     }
+    let { samples } = options;
+    if (samples.length < 2 || samples.some((sample, i) => i > 0 && sample.threshold <= samples[i - 1].threshold))
+      throw new RangeError("Locomotion needs at least two samples with strictly increasing thresholds");
+    this.space.set({
+      ...options,
+      samples: samples.map((sample) => ({ clip: sample.clip, x: sample.threshold, y: 0 })),
+      parameter: { x: options.parameter ?? samples[0].threshold, y: 0 }
+    });
+  }
+  setParameter(value) {
+    this.space.setParameter(value, this.space.parameter.y);
+  }
+  seek(phase) {
+    this.space.seek(phase);
+  }
+  crossed(name, seconds) {
+    return this.space.crossed(name, seconds);
+  }
+  crossedPhase(marker) {
+    return this.space.crossedPhase(marker);
   }
 };
 
@@ -687,12 +1355,12 @@ var PoseSchedule = class {
 function skinProblem(skin, vertices) {
   let n = skin.nodes.length;
   if (n > 256 || skin.joints.length > 128) return "skin exceeds the 256-node or 128-joint profile";
-  let index = (i, max2) => Number.isInteger(i) && i >= 0 && i < max2, finite5 = (values, length2) => values.length === length2 && values.every(Number.isFinite);
-  if (!index(skin.meshNode, n) || skin.joints.length === 0 || skin.joints.some((j) => !index(j, n)) || skin.inverseBind.length !== skin.joints.length || skin.inverseBind.some((m) => !finite5(m, 16))) return "skin node or inverse-bind count is invalid";
+  let index = (i, max2) => Number.isInteger(i) && i >= 0 && i < max2, finite6 = (values, length2) => values.length === length2 && values.every(Number.isFinite);
+  if (!index(skin.meshNode, n) || skin.joints.length === 0 || skin.joints.some((j) => !index(j, n)) || skin.inverseBind.length !== skin.joints.length || skin.inverseBind.some((m) => !finite6(m, 16))) return "skin node or inverse-bind count is invalid";
   if (skin.indices.length !== vertices || skin.weights.length !== vertices) return "skin influences do not match the vertex count";
   for (let i = 0; i < n; i++) {
     let node = skin.nodes[i];
-    if (node.parent !== -1 && !index(node.parent, n) || !finite5(node.translation, 3) || !finite5(node.rotation, 4) || !finite5(node.scale, 3) || node.scale.some((v) => v <= 0) || Math.hypot(...node.rotation) < 1e-8) return "invalid skeletal bind transform";
+    if (node.parent !== -1 && !index(node.parent, n) || !finite6(node.translation, 3) || !finite6(node.rotation, 4) || !finite6(node.scale, 3) || node.scale.some((v) => v <= 0) || Math.hypot(...node.rotation) < 1e-8) return "invalid skeletal bind transform";
     let parent = i;
     for (let depth = 0; parent >= 0; depth++) {
       if (!index(parent, n)) return "invalid skeletal bind transform";
@@ -702,7 +1370,7 @@ function skinProblem(skin, vertices) {
   }
   for (let i = 0; i < vertices; i++) {
     let weights = skin.weights[i];
-    if (skin.indices[i].length !== 4 || skin.indices[i].some((j) => !index(j, skin.joints.length)) || !finite5(weights, 4) || weights.some((w) => w < 0) || Math.abs(weights.reduce((a, b) => a + b, 0) - 1) > 1e-3) return "invalid vertex joint indices or weights";
+    if (skin.indices[i].length !== 4 || skin.indices[i].some((j) => !index(j, skin.joints.length)) || !finite6(weights, 4) || weights.some((w) => w < 0) || Math.abs(weights.reduce((a, b) => a + b, 0) - 1) > 1e-3) return "invalid vertex joint indices or weights";
   }
   let names = /* @__PURE__ */ new Set();
   for (let clip of skin.clips) {
@@ -721,9 +1389,9 @@ function skinProblem(skin, vertices) {
   }
 }
 function slerp(out, at3, a, b, t) {
-  let dot2 = 0;
-  for (let i = 0; i < 4; i++) dot2 += a[at3 + i] * b[at3 + i];
-  let sign2 = dot2 < 0 ? -1 : 1, angle = Math.acos(Math.min(1, Math.abs(dot2))), sin2 = Math.sin(angle), wa = sin2 > 1e-6 ? Math.sin((1 - t) * angle) / sin2 : 1 - t, wb = sin2 > 1e-6 ? Math.sin(t * angle) / sin2 : t;
+  let dot4 = 0;
+  for (let i = 0; i < 4; i++) dot4 += a[at3 + i] * b[at3 + i];
+  let sign2 = dot4 < 0 ? -1 : 1, angle = Math.acos(Math.min(1, Math.abs(dot4))), sin2 = Math.sin(angle), wa = sin2 > 1e-6 ? Math.sin((1 - t) * angle) / sin2 : 1 - t, wb = sin2 > 1e-6 ? Math.sin(t * angle) / sin2 : t;
   for (let i = 0; i < 4; i++) out[at3 + i] = a[at3 + i] * wa + b[at3 + i] * wb * sign2;
   let norm = Math.hypot(out[at3], out[at3 + 1], out[at3 + 2], out[at3 + 3]);
   for (let i = 0; i < 4; i++) out[at3 + i] = out[at3 + i] / norm;
@@ -731,7 +1399,7 @@ function slerp(out, at3, a, b, t) {
 var SkeletonPlayer = class {
   constructor(skin, initial) {
     this.skin = skin;
-    this.layers = new PoseLayers(skin), this.ik = new PoseIK(skin), this.locomotion = new LocomotionBlend(skin), this.bind = new Float64Array(skin.nodes.length * 10), skin.nodes.forEach((node, i) => {
+    this.layers = new PoseLayers(skin), this.ik = new PoseIK(skin), this.blend = new BlendSpace(skin), this.locomotion = new LocomotionBlend(this.blend), this.bind = new Float64Array(skin.nodes.length * 10), skin.nodes.forEach((node, i) => {
       this.bind.set(node.translation, i * 10);
       let q = node.rotation, norm = Math.hypot(...q);
       this.bind.set(q.map((v) => v / norm), i * 10 + 3), this.bind.set(node.scale, i * 10 + 7);
@@ -746,6 +1414,9 @@ var SkeletonPlayer = class {
   skin;
   layers;
   ik;
+  /** The phase-synchronized 1D/2D blend that replaces the base clip while active (decision 0220). */
+  blend;
+  /** The 1D view of `blend`: thresholds are x with y = 0 (decision 0196). */
   locomotion;
   schedule = new PoseSchedule();
   evaluatedLocomotion = -1;
@@ -770,6 +1441,10 @@ var SkeletonPlayer = class {
   override;
   evaluatedLayers = -1;
   evaluatedIK = -1;
+  /** Supplies the canonical humanoid bones that limb goals and foot placement use (decision 0222); undefined removes them. */
+  setHumanoid(map) {
+    this.ik.setHumanoid(map);
+  }
   setProceduralOverride(override) {
     this.override = override, this.evaluatedTime = NaN;
   }
@@ -805,7 +1480,7 @@ var SkeletonPlayer = class {
   inspect() {
     let progress = this.blendDuration === 0 ? 1 : Math.min(1, this.blendTime / this.blendDuration);
     return {
-      mode: this.held ? "held" : this.locomotion.active ? "locomotion" : this.name === "" ? "bind" : "clip",
+      mode: this.held ? "held" : this.blend.active ? "locomotion" : this.name === "" ? "bind" : "clip",
       clip: this.name || null,
       transition: { elapsed: this.blendTime, duration: this.blendDuration, progress, outgoingClip: this.outgoing?.name ?? null, fromSnapshot: progress < 1 && this.outgoing === void 0 },
       rootMotionNode: this.rootNode < 0 ? null : this.rootNode,
@@ -819,6 +1494,8 @@ var SkeletonPlayer = class {
       })),
       layers: this.layers.inspect(),
       ik: this.ik.inspect(),
+      ...this.ik.limbs.inspect(),
+      blend: this.blend.inspect(),
       locomotion: this.locomotion.inspect()
     };
   }
@@ -849,14 +1526,14 @@ var SkeletonPlayer = class {
   }
   transition(name, seconds, looping, speed) {
     let clip = this.skin.clips.find((c) => c.name === name);
-    return clip === void 0 || !Number.isFinite(seconds) || seconds < 0 || !Number.isFinite(speed) || speed < 0 ? !1 : (this.locomotion.active && (this.locomotion.set(void 0), this.name = ""), name === this.name || (this.outgoing = this.name !== "" && !this.held && this.blendTime >= this.blendDuration ? { name: this.name, clock: this.clock } : void 0, this.from.set(this.sample), this.held = !1, this.clock = new ClipPlayers(), this.name = name, this.evaluatedTime = NaN, this.blendTime = 0, this.blendDuration = seconds, this.clock.add({ slot: 0, duration: clip.duration, channels: [] }), this.clock.play(0, looping, speed), this.evaluate()), !0);
+    return clip === void 0 || !Number.isFinite(seconds) || seconds < 0 || !Number.isFinite(speed) || speed < 0 ? !1 : (this.blend.active && (this.blend.set(void 0), this.name = ""), name === this.name || (this.outgoing = this.name !== "" && !this.held && this.blendTime >= this.blendDuration ? { name: this.name, clock: this.clock } : void 0, this.from.set(this.sample), this.held = !1, this.clock = new ClipPlayers(), this.name = name, this.evaluatedTime = NaN, this.blendTime = 0, this.blendDuration = seconds, this.clock.add({ slot: 0, duration: clip.duration, channels: [] }), this.clock.play(0, looping, speed), this.evaluate()), !0);
   }
   /** Snapshot only: the destination owns its pose and never follows source lifetime. */
   copyPose(source) {
     return this.skin.meshNode !== source.skin.meshNode || this.skin.nodes.length !== source.skin.nodes.length || this.skin.nodes.some((n, i) => {
       let other = source.skin.nodes[i];
       return n.name !== other.name || n.parent !== other.parent || n.translation.some((v, k) => v !== other.translation[k]) || n.rotation.some((v, k) => v !== other.rotation[k]) || n.scale.some((v, k) => v !== other.scale[k]);
-    }) ? !1 : (this.locomotion.set(void 0), this.from.set(source.pose), this.pose.set(source.pose), this.held = !0, this.name = "", this.outgoing = void 0, this.blendDuration = 0, this.blendTime = 0, this.evaluatedTime = NaN, this.clock = new ClipPlayers(), this.clock.add({ slot: 0, duration: 0, channels: [] }), this.clock.pause(0), this.evaluate(), !0);
+    }) ? !1 : (this.blend.set(void 0), this.from.set(source.pose), this.pose.set(source.pose), this.held = !0, this.name = "", this.outgoing = void 0, this.blendDuration = 0, this.blendTime = 0, this.evaluatedTime = NaN, this.clock = new ClipPlayers(), this.clock.add({ slot: 0, duration: 0, channels: [] }), this.clock.pause(0), this.evaluate(), !0);
   }
   samplePose(name, time, out) {
     out.set(this.bind);
@@ -868,8 +1545,8 @@ var SkeletonPlayer = class {
     }
   }
   play(looping, speed) {
-    if (this.locomotion.active) {
-      let ok2 = this.locomotion.play(looping, speed);
+    if (this.blend.active) {
+      let ok2 = this.blend.play(looping, speed);
       return ok2 && this.evaluate(), ok2;
     }
     let ok = this.clock.play(0, looping, speed);
@@ -880,8 +1557,8 @@ var SkeletonPlayer = class {
     let previous = this.clock.time(0), outgoingTime = this.outgoing?.clock.time(0) ?? 0, oldBlend = this.blendTime;
     if (this.clock.advance(dt, () => {
     }), this.outgoing?.clock.advance(dt, () => {
-    }), this.layers.advance(dt), this.locomotion.advance(dt), this.blendTime = Math.min(this.blendDuration, this.blendTime + dt), this.rootNode >= 0 && this.locomotion.active) {
-      this.rootSample.fill(0), this.locomotion.rootDelta(this.rootNode, this.rootSample);
+    }), this.layers.advance(dt), this.ik.advance(dt), this.blend.advance(dt), this.blendTime = Math.min(this.blendDuration, this.blendTime + dt), this.rootNode >= 0 && this.blend.active) {
+      this.rootSample.fill(0), this.blend.rootDelta(this.rootNode, this.rootSample);
       for (let c = 0; c < 3; c++) this.rootDelta[c] = this.rootDelta[c] + this.rootSample[c] * this.clock.weight(0);
     } else if (this.rootNode >= 0) {
       let integral = (t) => t * t * t - 0.5 * t * t * t * t, duration = this.blendDuration, blend = 1;
@@ -911,8 +1588,8 @@ var SkeletonPlayer = class {
   }
   evaluate() {
     let time = this.clock.time(0), weight = this.clock.weight(0);
-    if (this.override === void 0 && time === this.evaluatedTime && this.blendTime === this.evaluatedBlend && weight === this.evaluatedWeight && this.evaluatedLayers === this.layers.revision && this.evaluatedIK === this.ik.revision && this.evaluatedLocomotion === this.locomotion.revision) return;
-    if (this.evaluatedTime = time, this.evaluatedBlend = this.blendTime, this.evaluatedWeight = weight, this.evaluatedLayers = this.layers.revision, this.evaluatedIK = this.ik.revision, this.evaluatedLocomotion = this.locomotion.revision, this.held ? this.sample.set(this.from) : this.samplePose(this.name, time, this.sample), this.outgoing !== void 0) {
+    if (this.override === void 0 && time === this.evaluatedTime && this.blendTime === this.evaluatedBlend && weight === this.evaluatedWeight && this.evaluatedLayers === this.layers.revision && this.evaluatedIK === this.ik.revision && !this.ik.animating && this.evaluatedLocomotion === this.blend.revision) return;
+    if (this.evaluatedTime = time, this.evaluatedBlend = this.blendTime, this.evaluatedWeight = weight, this.evaluatedLayers = this.layers.revision, this.evaluatedIK = this.ik.revision, this.evaluatedLocomotion = this.blend.revision, this.held ? this.sample.set(this.from) : this.samplePose(this.name, time, this.sample), this.outgoing !== void 0) {
       this.samplePose(this.outgoing.name, this.outgoing.clock.time(0), this.from);
       let oldWeight = this.outgoing.clock.weight(0);
       for (let i = 0; i < this.skin.nodes.length; i++) {
@@ -929,8 +1606,8 @@ var SkeletonPlayer = class {
       for (let c of [0, 1, 2, 7, 8, 9]) this.pose[at3 + c] = this.bind[at3 + c] + (this.pose[at3 + c] - this.bind[at3 + c]) * weight;
       slerp(this.pose, at3 + 3, this.bind, this.pose, weight);
     }
-    if (this.locomotion.active) {
-      this.locomotion.apply(this.pose, this.bind);
+    if (this.blend.active) {
+      this.blend.apply(this.pose, this.bind);
       for (let at3 = 0; at3 < this.pose.length; at3 += 10) {
         for (let c of [0, 1, 2, 7, 8, 9]) this.pose[at3 + c] = this.bind[at3 + c] + (this.pose[at3 + c] - this.bind[at3 + c]) * weight;
         slerp(this.pose, at3 + 3, this.bind, this.pose, weight);
@@ -1188,6 +1865,524 @@ function retargetSkin(source, target, mapping, options = 1) {
   return result;
 }
 
+// src/scene/humanoid-rig.ts
+var REQUIRED_HUMANOID_BONES = [
+  "hips",
+  "spine",
+  "head",
+  "leftUpperLeg",
+  "leftLowerLeg",
+  "leftFoot",
+  "rightUpperLeg",
+  "rightLowerLeg",
+  "rightFoot",
+  "leftUpperArm",
+  "leftLowerArm",
+  "leftHand",
+  "rightUpperArm",
+  "rightLowerArm",
+  "rightHand"
+], OPTIONAL_HUMANOID_BONES = [
+  "chest",
+  "upperChest",
+  "neck",
+  "leftShoulder",
+  "rightShoulder",
+  "leftToes",
+  "rightToes"
+], sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], mul = (a, s) => [a[0] * s, a[1] * s, a[2] * s], dot2 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2], cross2 = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]], len = (a) => Math.hypot(a[0], a[1], a[2]), unit = (a) => {
+  let l = len(a);
+  return l < 1e-12 ? [0, 0, 0] : [a[0] / l, a[1] / l, a[2] / l];
+}, orth = (a, n) => sub(a, mul(n, dot2(a, n))), qmul2 = (a, b) => [
+  a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1],
+  a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0],
+  a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3],
+  a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]
+], qconj2 = (q) => [-q[0], -q[1], -q[2], q[3]], qnorm = (q) => {
+  let l = Math.hypot(q[0], q[1], q[2], q[3]);
+  return [q[0] / l, q[1] / l, q[2] / l, q[3] / l];
+}, qrot = (q, v) => {
+  let t = mul(cross2(q, v), 2);
+  return add(add(v, mul(t, q[3])), cross2(q, t));
+};
+function qarc(a, b) {
+  let d = dot2(a, b);
+  if (d < -1 + 1e-9) {
+    let axis = unit(len(cross2(a, [1, 0, 0])) > 1e-3 ? cross2(a, [1, 0, 0]) : cross2(a, [0, 1, 0]));
+    return [axis[0], axis[1], axis[2], 0];
+  }
+  let c = cross2(a, b);
+  return qnorm([c[0], c[1], c[2], 1 + d]);
+}
+function qbasis(x, y, z) {
+  let [m00, m10, m20] = [x[0], x[1], x[2]], [m01, m11, m21] = [y[0], y[1], y[2]], [m02, m12, m22] = [z[0], z[1], z[2]], t = m00 + m11 + m22;
+  if (t > 0) {
+    let s2 = Math.sqrt(t + 1) * 2;
+    return qnorm([(m21 - m12) / s2, (m02 - m20) / s2, (m10 - m01) / s2, s2 / 4]);
+  }
+  if (m00 > m11 && m00 > m22) {
+    let s2 = Math.sqrt(1 + m00 - m11 - m22) * 2;
+    return qnorm([s2 / 4, (m01 + m10) / s2, (m02 + m20) / s2, (m21 - m12) / s2]);
+  }
+  if (m11 > m22) {
+    let s2 = Math.sqrt(1 + m11 - m00 - m22) * 2;
+    return qnorm([(m01 + m10) / s2, s2 / 4, (m12 + m21) / s2, (m02 - m20) / s2]);
+  }
+  let s = Math.sqrt(1 + m22 - m00 - m11) * 2;
+  return qnorm([(m02 + m20) / s, (m12 + m21) / s, s / 4, (m10 - m01) / s]);
+}
+function worldSimilarity(skin, order, local) {
+  let rot = [], scale = [], pos = [];
+  for (let i of order) {
+    let { t, r, s } = local(i), p = skin.nodes[i].parent;
+    p < 0 ? (rot[i] = qnorm(r), scale[i] = s, pos[i] = [t[0], t[1], t[2]]) : (rot[i] = qnorm(qmul2(rot[p], r)), scale[i] = scale[p] * s, pos[i] = add(pos[p], mul(qrot(rot[p], t), scale[p])));
+  }
+  return { rot, scale, pos };
+}
+function nodeOrder(skin) {
+  let seen = /* @__PURE__ */ new Set(), out = [], visit = (i) => {
+    if (seen.has(i)) return;
+    let p = skin.nodes[i].parent;
+    p >= 0 && visit(p), seen.add(i), out.push(i);
+  };
+  return skin.nodes.forEach((_, i) => visit(i)), out;
+}
+function analyse(skin) {
+  let n = skin.nodes.length, order = nodeOrder(skin), bind = worldSimilarity(skin, order, (i) => {
+    let node = skin.nodes[i];
+    return { t: node.translation, r: node.rotation, s: node.scale[0] };
+  }), m = skin.meshNode, inv = qconj2(bind.rot[m]), P = bind.pos.map((p) => mul(qrot(inv, sub(p, bind.pos[m])), 1 / bind.scale[m])), Q = bind.rot.map((r) => qnorm(qmul2(inv, r))), S = bind.scale.map((s) => s / bind.scale[m]), isJoint = skin.nodes.map((_, i) => skin.joints.includes(i)), jp = skin.nodes.map((_, i) => {
+    let p = skin.nodes[i].parent;
+    for (; p >= 0 && !isJoint[p]; ) p = skin.nodes[p].parent;
+    return p;
+  }), kids = skin.nodes.map(() => []);
+  for (let i = 0; i < n; i++) isJoint[i] && jp[i] >= 0 && kids[jp[i]].push(i);
+  let height = new Array(n).fill(0), size = new Array(n).fill(1);
+  for (let k = order.length - 1; k >= 0; k--) {
+    let i = order[k];
+    !isJoint[i] || jp[i] < 0 || (height[jp[i]] = Math.max(height[jp[i]], height[i] + 1), size[jp[i]] = size[jp[i]] + size[i]);
+  }
+  return { skin, count: n, order, isJoint, P, Q, S, meshRot: bind.rot[m], origin: { pos: mul(qrot(inv, mul(bind.pos[m], -1)), 1 / bind.scale[m]), scale: 1 / bind.scale[m] }, jp, kids, height, size };
+}
+var uniformScales = (skin) => skin.nodes.every((n) => numericallyUniformScale(n.scale[0], n.scale[1], n.scale[2])), NAME_TABLE_SPEC = "hips:hips hip pelvis waist cog;torso:spine chest upperchest uppchest torso abdomen back ribcage;neck:neck;head:head;leg.upper:thigh upleg upperleg uleg femur;leg.lower:calf shin lowerleg lowleg knee tibia;leg.foot:ankle foot;leg.toe:toe toes toebase ball;leg:leg;arm.shoulder:shoulder clavicle collar collarbone clav;arm.upper:upperarm uparm humerus;arm.lower:forearm lowerarm lowarm elbow ulna;arm.hand:hand wrist;arm:arm", NAME_TABLE = /* @__PURE__ */ new Map();
+for (let row of NAME_TABLE_SPEC.split(";")) {
+  let [key, words] = row.split(":"), [family, role] = key.split(".");
+  for (let word of words.split(" ")) NAME_TABLE.set(word, role === void 0 ? { family } : { family, role });
+}
+var NOISE_WORDS = "mixamorig mixamo def org mch j b bip valvebiped cc base bone joint skeleton armature rig c", NOISE = new Set(NOISE_WORDS.split(" "));
+function parseName(name) {
+  let words = name.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2").split(/[^A-Za-z]+/).filter((w) => w !== "").map((w) => w.toLowerCase()), side2 = "", stem = [];
+  for (let w of words)
+    NOISE.has(w) || (w === "left" || w === "l" ? side2 = "l" : w === "right" || w === "r" ? side2 = "r" : stem.push(w));
+  let key = stem.join(""), found = key === "hip" ? side2 === "" ? { family: "hips" } : { family: "leg", role: "upper" } : NAME_TABLE.get(key);
+  return found === void 0 || (found.family === "leg" || found.family === "arm") != (side2 !== "") ? { side: side2 } : found.role === void 0 ? { family: found.family, side: side2 } : { family: found.family, role: found.role, side: side2 };
+}
+
+// src/scene/humanoid.ts
+var ankleBend = Math.cos(50 * Math.PI / 180);
+function continuation(g, from, kids) {
+  let far = (k) => len(sub(g.P[k], g.P[from]));
+  return [...kids].sort((a, b) => g.height[b] - g.height[a] || far(b) - far(a) || a - b)[0];
+}
+function limbChain(g, start, names) {
+  let out = [start];
+  for (let cur = start; ; ) {
+    let kids = g.kids[cur], role = names[cur].role;
+    if (kids.length === 0 || role === "hand" || role === "toe" || kids.filter((k) => g.height[k] >= 1).length >= 2) return out;
+    cur = continuation(g, cur, kids), out.push(cur);
+  }
+}
+var pathLength = (g, c, from, to) => {
+  let sum = 0;
+  for (let i = from; i < to; i++) sum += len(sub(g.P[c[i + 1]], g.P[c[i]]));
+  return sum;
+}, hint = (names, joint, role) => names[joint].role === void 0 ? 0 : names[joint].role === role ? -0.7 : 0.7;
+function splitLeg(g, c, names) {
+  let n = c.length - 1;
+  if (n < 2) return;
+  let a = c.findIndex((j, i) => i >= 2 && names[j].role === "foot");
+  if (a < 0) {
+    a = n;
+    for (let i = 2; i < n; i++)
+      if (dot2(unit(sub(g.P[c[i + 1]], g.P[c[i]])), unit(sub(g.P[c[i]], g.P[c[0]]))) < ankleBend) {
+        a = i;
+        break;
+      }
+    a === n && n >= 3 && pathLength(g, c, n - 1, n) < 0.5 * pathLength(g, c, n - 2, n - 1) && (a = n - 1);
+  }
+  let k = -1, cost = 1 / 0;
+  for (let i = 1; i < a; i++) {
+    let upper = pathLength(g, c, 0, i), lower = pathLength(g, c, i, a);
+    if (upper < 1e-9 || lower < 1e-9) continue;
+    let here = Math.abs(Math.log(upper / lower)) + hint(names, c[i], "lower");
+    here < cost && (cost = here, k = i);
+  }
+  if (!(k < 0))
+    return a < n ? { upper: c[0], lower: c[k], foot: c[a], toes: c[a + 1] } : { upper: c[0], lower: c[k], foot: c[a] };
+}
+function splitArm(g, whole, names) {
+  let last = whole.length - 1;
+  for (let i = 2; i < last; i++)
+    if (dot2(unit(sub(g.P[whole[i + 1]], g.P[whole[i]])), unit(sub(g.P[whole[i]], g.P[whole[0]]))) < 0.5) {
+      last = i;
+      break;
+    }
+  let c = whole.slice(0, last + 1), best, cost = 1 / 0;
+  for (let u = 0; u <= 1; u++)
+    for (let e = u + 1; e < last; e++)
+      for (let n = e + 1; n <= last; n++) {
+        let upper = pathLength(g, c, u, e), lower = pathLength(g, c, e, n);
+        if (upper < 1e-9 || lower < 1e-9) continue;
+        let here = Math.abs(Math.log(upper / lower)) + 0.1 * (n - e - 1) + hint(names, c[u], "upper") + hint(names, c[e], "lower") + hint(names, c[n], "hand") + (u === 1 ? hint(names, c[0], "shoulder") : names[c[0]].role === "shoulder" ? 0.7 : 0);
+        here < cost && (cost = here, best = u === 1 ? { shoulder: c[0], upper: c[1], lower: c[e], hand: c[n] } : { upper: c[0], lower: c[e], hand: c[n] });
+      }
+  return best;
+}
+function mirrorError(g, a, b, n) {
+  let m = Math.min(3, a.length, b.length), mid = mul(add(g.P[a[0]], g.P[b[0]]), 0.5), scale = len(sub(g.P[a[m - 1]], g.P[a[0]]));
+  if (scale < 1e-9) return 1 / 0;
+  let sum = 0;
+  for (let j = 0; j < m; j++) {
+    let p = g.P[a[j]], mirrored = sub(p, mul(n, 2 * dot2(sub(p, mid), n)));
+    sum += len(sub(mirrored, g.P[b[j]]));
+  }
+  return sum / m / scale;
+}
+function spinePath(g, s, up, lat, names) {
+  let path = [s], arms, top = -1, pick = (cur, list) => list.filter((k) => {
+    let o = sub(g.P[k], g.P[cur]);
+    return Math.abs(dot2(o, lat)) <= 0.35 * len(o);
+  }).sort((a, b) => g.height[b] - g.height[a] || dot2(up, sub(g.P[b], g.P[a])))[0];
+  for (let cur = s; ; ) {
+    let kids = g.kids[cur];
+    if (kids.length === 0) break;
+    let rest = kids;
+    if (arms === void 0) {
+      let limbs = kids.filter((k) => g.height[k] >= 2);
+      for (let i = 0; i < limbs.length && arms === void 0; i++)
+        for (let j = i + 1; j < limbs.length && arms === void 0; j++) {
+          let p = limbs[i], q = limbs[j], sp = dot2(sub(g.P[p], g.P[cur]), lat), sq = dot2(sub(g.P[q], g.P[cur]), lat);
+          sp * sq < 0 && Math.abs(sp + sq) <= 0.35 * Math.max(Math.abs(sp), Math.abs(sq)) && mirrorError(g, limbChain(g, p, names), limbChain(g, q, names), lat) <= 0.35 && (arms = [p, q], top = cur);
+        }
+      arms !== void 0 && (rest = kids.filter((k) => k !== arms[0] && k !== arms[1]));
+    }
+    let next = pick(cur, rest);
+    if (next === void 0) break;
+    path.push(next), cur = next;
+  }
+  if (arms === void 0) return;
+  let above = path.slice(path.indexOf(top) + 1), m = above.length;
+  if (m === 0) return;
+  let head = above[m - 1];
+  return (m >= 2 && g.kids[above[m - 2]].length >= 2 || m >= 3 && g.kids[head].length === 0 && len(sub(g.P[head], g.P[above[m - 2]])) > 1.5 * len(sub(g.P[above[m - 2]], g.P[above[m - 3]]))) && (head = above[m - 2]), { arms, head };
+}
+function structure(g, names) {
+  let best, bestKey = -1;
+  for (let h = 0; h < g.count; h++) {
+    if (!g.isJoint[h]) continue;
+    let limbs = g.kids[h].filter((k) => g.height[k] >= 2);
+    if (!(limbs.length < 3))
+      for (let i = 0; i < limbs.length; i++)
+        for (let j = i + 1; j < limbs.length; j++) {
+          let a = limbs[i], b = limbs[j], A = limbChain(g, a, names), B = limbChain(g, b, names);
+          if (A.length < 3 || B.length < 3) continue;
+          let n = unit(sub(g.P[a], g.P[b]));
+          if (mirrorError(g, A, B, n) > 0.2) continue;
+          let dA = unit(sub(g.P[A[2]], g.P[a])), dB = unit(sub(g.P[B[2]], g.P[b]));
+          if (dot2(dA, dB) < 0.8) continue;
+          let up = unit(mul(add(dA, dB), -1)), lat = unit(orth(n, up));
+          for (let s of limbs) {
+            if (s === a || s === b) continue;
+            let sp = spinePath(g, s, up, lat, names);
+            if (sp === void 0 || dot2(unit(sub(g.P[sp.head], g.P[h])), up) < 0.6) continue;
+            let key = g.size[h] * 1e3 + g.size[s];
+            key > bestKey && (bestKey = key, best = { legs: [a, b], arms: sp.arms, head: sp.head });
+          }
+        }
+  }
+  return best;
+}
+function nameAnchors(g, names) {
+  let joints = names.map((_, i) => i).filter((i) => g.isJoint[i]), top = (family, side2) => {
+    let same = (i) => names[i].family === family && names[i].side === side2, tops = joints.filter((i) => same(i) && !(g.jp[i] >= 0 && same(g.jp[i])));
+    return tops.length === 1 ? tops[0] : void 0;
+  }, out = {}, [ll, lr, al, ar] = [top("leg", "l"), top("leg", "r"), top("arm", "l"), top("arm", "r")];
+  ll !== void 0 && lr !== void 0 && (out.legs = [ll, lr]), al !== void 0 && ar !== void 0 && (out.arms = [al, ar]);
+  let heads = joints.filter((i) => names[i].family === "head");
+  if (heads.length === 1) out.head = heads[0];
+  else if (heads.length === 0) {
+    let necks = joints.filter((i) => names[i].family === "neck"), tips = necks.filter((i) => !necks.some((o) => g.jp[o] === i));
+    necks.length >= 2 && tips.length === 1 && (out.head = tips[0]);
+  }
+  return out;
+}
+var ancestors = (g, i) => {
+  let out = [];
+  for (let c = i; c >= 0; c = g.jp[c]) out.push(c);
+  return out;
+};
+function lca(g, of) {
+  let common = ancestors(g, of[0]);
+  for (let i of of) {
+    let up = new Set(ancestors(g, i));
+    common = common.filter((c) => up.has(c));
+  }
+  return common[0] ?? -1;
+}
+var COSINE_UPRIGHT = 0.75;
+function build(g, names, an, sided) {
+  let hips = lca(g, [an.legs[0], an.legs[1], an.head]);
+  if (hips < 0 || [an.legs[0], an.legs[1], an.head].includes(hips)) return "the legs and the head do not meet at a hips joint";
+  let legs = an.legs.map((s) => splitLeg(g, limbChain(g, s, names), names)), arms = an.arms.map((s) => splitArm(g, limbChain(g, s, names), names));
+  if (legs[0] === void 0 || legs[1] === void 0) return "a leg chain has fewer than hip, knee and ankle joints";
+  if (arms[0] === void 0 || arms[1] === void 0) return "an arm chain has fewer than shoulder, elbow and wrist joints";
+  let above0 = ancestors(g, an.head), path = above0.slice(0, above0.indexOf(hips) + 1).reverse(), top = lca(g, [g.jp[an.arms[0]], g.jp[an.arms[1]]]);
+  for (; top >= 0 && !path.includes(top); ) top = g.jp[top];
+  let ti = path.indexOf(top);
+  if (ti < 1 || ti >= path.length - 1) return "the arms do not attach to a spine between the hips and the head";
+  let torso = path.slice(1, ti + 1), above = path.slice(ti + 1, path.length - 1), up = unit(sub(g.P[an.head], g.P[hips])), axis = (l) => unit(sub(g.P[l.foot], g.P[l.upper])), legPair = [legs[0], legs[1]], upright = -dot2(up, unit(add(axis(legs[0]), axis(legs[1]))));
+  if (upright < COSINE_UPRIGHT) return "the spine is not opposed to the legs (not an upright biped)";
+  if ([legs[0], legs[1]].some((l) => dot2(sub(g.P[l.foot], g.P[hips]), up) >= 0) || dot2(sub(g.P[an.head], g.P[top]), up) <= 0)
+    return "the feet are not below the hips or the head is not above the arms";
+  let vote = (f) => {
+    let scale = (pathLength(g, [legs[0].upper, legs[0].lower, legs[0].foot], 0, 2) + pathLength(g, [legs[1].upper, legs[1].lower, legs[1].foot], 0, 2)) / 2, toes = 0, knees = 0;
+    for (let l of legPair) {
+      l.toes !== void 0 && (toes += dot2(orth(sub(g.P[l.toes], g.P[l.foot]), up), f));
+      let u = g.P[l.upper], w = g.P[l.foot], k = g.P[l.lower], t = len(sub(k, u)) / (len(sub(k, u)) + len(sub(w, k)));
+      knees += dot2(sub(k, add(u, mul(sub(w, u), t))), f);
+    }
+    return Math.abs(toes) > 0.1 * scale ? { sign: Math.sign(toes), source: 1 } : Math.abs(knees) > 0.02 * scale ? { sign: Math.sign(knees), source: 0.95 } : { sign: dot2(qrot(qconj2(g.meshRot), [0, 0, 1]), f) >= 0 ? 1 : -1, source: 0.85 };
+  }, left, factor;
+  if (sided.legs || sided.arms) {
+    let pair = sided.legs ? an.legs : an.arms;
+    left = unit(orth(sub(g.P[pair[0]], g.P[pair[1]]), up)), factor = sided.legs && sided.arms && dot2(left, unit(orth(sub(g.P[an.arms[0]], g.P[an.arms[1]]), up))) <= 0 ? 0.5 : 1;
+    let v = vote(unit(cross2(left, up)));
+    v.source === 1 && v.sign < 0 && (factor *= 0.5);
+  } else {
+    let provisional = unit(orth(sub(g.P[an.legs[0]], g.P[an.legs[1]]), up)), v = vote(unit(cross2(provisional, up)));
+    left = v.sign < 0 ? mul(provisional, -1) : provisional, factor = v.source;
+  }
+  let forward = unit(cross2(left, up)), order = (pair, about, named) => named || dot2(sub(g.P[pair[0]], g.P[about]), left) >= dot2(sub(g.P[pair[1]], g.P[about]), left) ? [0, 1] : [1, 0], [ll, rl] = order(an.legs, hips, sided.legs), [la, ra] = order(an.arms, top, sided.arms), [LL, RL, LA, RA] = [legs[ll], legs[rl], arms[la], arms[ra]], bones = {
+    hips,
+    spine: torso[0],
+    head: an.head,
+    leftUpperLeg: LL.upper,
+    leftLowerLeg: LL.lower,
+    leftFoot: LL.foot,
+    rightUpperLeg: RL.upper,
+    rightLowerLeg: RL.lower,
+    rightFoot: RL.foot,
+    leftUpperArm: LA.upper,
+    leftLowerArm: LA.lower,
+    leftHand: LA.hand,
+    rightUpperArm: RA.upper,
+    rightLowerArm: RA.lower,
+    rightHand: RA.hand
+  }, optional = [
+    ["chest", torso[1]],
+    ["upperChest", torso.length >= 3 ? torso[torso.length - 1] : void 0],
+    ["neck", above.find((j) => names[j].family === "neck") ?? above[0]],
+    ["leftShoulder", LA.shoulder],
+    ["rightShoulder", RA.shoulder],
+    ["leftToes", LL.toes],
+    ["rightToes", RL.toes]
+  ];
+  for (let [bone, joint] of optional) joint !== void 0 && (bones[bone] = joint);
+  let tilt = upright >= 0.95 ? 1 : 0.6 + 0.4 * (upright - COSINE_UPRIGHT) / (0.95 - COSINE_UPRIGHT);
+  return { bones, up, forward, factor: factor * tilt };
+}
+function nameMatch(g, names, bone, joint) {
+  let p = names[joint], side2 = bone.startsWith("left") ? "l" : bone.startsWith("right") ? "r" : "", rest = side2 === "" ? bone : bone.slice(side2 === "l" ? 4 : 5), part = rest[0].toLowerCase() + rest.slice(1);
+  if (p.family === void 0 || p.side !== side2) return 0;
+  switch (part) {
+    case "hips":
+      return p.family === "hips" ? 2 : p.family === "torso" && !(g.jp[joint] >= 0 && names[g.jp[joint]].family === "torso") ? 1 : 0;
+    case "spine":
+    case "chest":
+    case "upperChest":
+      return p.family === "torso" ? 2 : 0;
+    case "neck":
+      return p.family === "neck" ? 2 : 0;
+    case "head":
+      return p.family === "head" ? 2 : p.family === "neck" ? 1 : 0;
+    default: {
+      let [family, role] = {
+        upperArm: ["arm", "upper"],
+        lowerArm: ["arm", "lower"],
+        hand: ["arm", "hand"],
+        shoulder: ["arm", "shoulder"],
+        upperLeg: ["leg", "upper"],
+        lowerLeg: ["leg", "lower"],
+        foot: ["leg", "foot"],
+        toes: ["leg", "toe"]
+      }[part];
+      return p.family !== family ? 0 : p.role === role ? 2 : p.role === void 0 ? 1 : 0;
+    }
+  }
+}
+function mapHumanoid(skin) {
+  try {
+    if (skin.joints.length < REQUIRED_HUMANOID_BONES.length) return { error: `a humanoid needs at least ${REQUIRED_HUMANOID_BONES.length} joints, the skin has ${skin.joints.length}` };
+    let g = analyse(skin), names = skin.nodes.map((n) => parseName(n.name)), byName = nameAnchors(g, names), byShape = structure(g, names), attempts = [], legs = byName.legs ?? byShape?.legs, arms = byName.arms ?? byShape?.arms, head = byName.head ?? byShape?.head;
+    legs !== void 0 && arms !== void 0 && head !== void 0 && attempts.push([{ legs, arms, head }, { legs: byName.legs !== void 0, arms: byName.arms !== void 0 }]), byShape !== void 0 && (attempts.length === 0 || attempts[0][0].legs !== byShape.legs || attempts[0][0].arms !== byShape.arms) && attempts.push([byShape, { legs: !1, arms: !1 }]);
+    let failure2 = "no leg pair, arm pair and head found by name or by structure";
+    for (let [anchors, sided] of attempts) {
+      let built = build(g, names, anchors, sided);
+      if (typeof built == "string") {
+        anchors === attempts[0][0] && (failure2 = built);
+        continue;
+      }
+      let bones = {}, evidence = {}, sum = 0;
+      for (let [bone, joint] of Object.entries(built.bones)) {
+        let name = skin.nodes[joint].name;
+        if (skin.nodes.filter((n) => n.name === name).length !== 1) return { error: `the bone name ${JSON.stringify(name)} is not unique` };
+        let match = nameMatch(g, names, bone, joint);
+        bones[bone] = name, evidence[bone] = match > 0 ? "name" : "structure", REQUIRED_HUMANOID_BONES.includes(bone) && (sum += match === 2 ? 1 : match === 1 ? 0.9 : 0.75);
+      }
+      return {
+        bones,
+        evidence,
+        confidence: Math.round(Math.min(1, sum / REQUIRED_HUMANOID_BONES.length * built.factor) * 1e3) / 1e3,
+        unmapped: OPTIONAL_HUMANOID_BONES.filter((b) => bones[b] === void 0),
+        up: built.up,
+        forward: built.forward
+      };
+    }
+    return { error: failure2 };
+  } catch (e) {
+    return { error: `the skin could not be analysed: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+// src/scene/humanoid-retarget.ts
+var ALL_BONES = [...REQUIRED_HUMANOID_BONES, ...OPTIONAL_HUMANOID_BONES], CHAINS = [
+  ["hips", "spine", "chest", "upperChest", "neck", "head"],
+  ["leftShoulder", "leftUpperArm", "leftLowerArm", "leftHand"],
+  ["rightShoulder", "rightUpperArm", "rightLowerArm", "rightHand"],
+  ["leftUpperLeg", "leftLowerLeg", "leftFoot", "leftToes"],
+  ["rightUpperLeg", "rightLowerLeg", "rightFoot", "rightToes"]
+], CANONICAL = {
+  hips: [0, 1, 0],
+  spine: [0, 1, 0],
+  chest: [0, 1, 0],
+  upperChest: [0, 1, 0],
+  neck: [0, 1, 0],
+  leftShoulder: [1, 0, 0],
+  leftUpperArm: [1, 0, 0],
+  leftLowerArm: [1, 0, 0],
+  rightShoulder: [-1, 0, 0],
+  rightUpperArm: [-1, 0, 0],
+  rightLowerArm: [-1, 0, 0],
+  leftUpperLeg: [0, -1, 0],
+  leftLowerLeg: [0, -1, 0],
+  rightUpperLeg: [0, -1, 0],
+  rightLowerLeg: [0, -1, 0],
+  leftFoot: [0, 0, 1],
+  rightFoot: [0, 0, 1]
+};
+function side(skin, map, what) {
+  let problem = skinProblem(skin, skin.indices.length);
+  if (problem !== void 0) throw new RangeError(`${what}: ${problem}`);
+  if (!uniformScales(skin)) throw new RangeError(`${what}: humanoid retargeting requires uniform bind scales`);
+  let index = /* @__PURE__ */ new Map();
+  skin.nodes.forEach((n, i) => index.set(n.name, i));
+  let up = unit(map.up), forward = unit(map.forward), left = cross2(up, forward);
+  return {
+    skin,
+    rig: analyse(skin),
+    map,
+    basis: qbasis(left, up, forward),
+    left,
+    up,
+    forward,
+    node: (bone) => index.get(map.bones[bone])
+  };
+}
+function mapOf(skin, given, what) {
+  let map = given ?? mapHumanoid(skin);
+  if ("error" in map) throw new RangeError(`Humanoid mapping failed for the ${what}: ${map.error}`);
+  return map;
+}
+function restOrientations(s, shared, correct) {
+  let out = /* @__PURE__ */ new Map(), turn = /* @__PURE__ */ new Map();
+  for (let chain of CHAINS) {
+    let members = chain.filter((b) => shared.includes(b));
+    members.forEach((bone, i) => {
+      let next = members[i + 1], canonical2 = CANONICAL[bone], rotation2 = [0, 0, 0, 1];
+      if (correct && next !== void 0 && canonical2 !== void 0) {
+        let bind = sub(s.rig.P[s.node(next)], s.rig.P[s.node(bone)]);
+        len(bind) > 1e-9 && (rotation2 = qarc(unit(bind), qrot(s.basis, canonical2)));
+      } else correct && i > 0 && (rotation2 = turn.get(members[i - 1]));
+      turn.set(bone, rotation2), out.set(bone, qnorm(qmul2(rotation2, s.rig.Q[s.node(bone)])));
+    });
+  }
+  return out;
+}
+var legLength = (s) => {
+  let sum = 0;
+  for (let prefix of ["left", "right"]) {
+    let [u, l, f] = ["UpperLeg", "LowerLeg", "Foot"].map((p) => s.rig.P[s.node(`${prefix}${p}`)]);
+    sum += len(sub(l, u)) + len(sub(f, l));
+  }
+  return sum / 2;
+}, dotv = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+function retargetHumanoid(source, target, options = {}) {
+  let { translationScale, restCorrection = !0, maxKeyInterval = 1 / 30 } = options;
+  if (translationScale !== void 0 && !(Number.isFinite(translationScale) && translationScale > 0)) throw new RangeError("Retarget translation scale must be positive");
+  if (!(Number.isFinite(maxKeyInterval) && maxKeyInterval > 0)) throw new RangeError("The retarget key interval must be positive");
+  let S = side(source, mapOf(source, options.sourceMap, "source"), "source"), T = side(target, mapOf(target, options.targetMap, "target"), "target"), shared = ALL_BONES.filter((b) => S.map.bones[b] !== void 0 && T.map.bones[b] !== void 0), restS = restOrientations(S, shared, restCorrection), restT = restOrientations(T, shared, restCorrection), B = qmul2(T.basis, qconj2(S.basis)), sourceOf = /* @__PURE__ */ new Map(), targetOf = /* @__PURE__ */ new Map();
+  for (let b of shared)
+    sourceOf.set(S.node(b), b), targetOf.set(T.node(b), b);
+  let ratio = translationScale ?? legLength(T) / legLength(S), hipsS = S.node("hips"), hipsT = T.node("hips"), ground = (x) => ["leftFoot", "rightFoot"].reduce((sum, b) => sum + dotv(x.rig.P[x.node(b)], x.up), 0) / 2, reference = (x, bone) => [dotv(x.rig.P[bone], x.left), dotv(x.rig.P[bone], x.up), dotv(x.rig.P[bone], x.forward)], bindS = reference(S, hipsS), bindT = reference(T, hipsT), groundS = ground(S), groundT = ground(T), pelvis = (x) => dotv(x.rig.P[x.node("hips")], x.up) - (dotv(x.rig.P[x.node("leftUpperLeg")], x.up) + dotv(x.rig.P[x.node("rightUpperLeg")], x.up)) / 2, pelvisS = pelvis(S), pelvisT = pelvis(T), orderS = S.rig.order, orderT = T.rig.order, tNode = (i) => T.skin.nodes[i], hipsParent = tNode(hipsT).parent, hipsParentScale = hipsParent < 0 ? T.rig.origin.scale : T.rig.S[hipsParent], clips = S.skin.clips.map((clip) => {
+    let rotation2 = /* @__PURE__ */ new Map(), translation2 = /* @__PURE__ */ new Map();
+    for (let c of clip.channels) (c.path === "rotation" ? rotation2 : c.path === "translation" ? translation2 : /* @__PURE__ */ new Map()).set(c.node, c);
+    let stamps = /* @__PURE__ */ new Set([0, clip.duration]);
+    for (let c of clip.channels) for (let t of c.times) stamps.add(t);
+    let times = [...stamps].filter((t) => t >= 0 && t <= clip.duration).sort((a, b) => a - b), dense = [];
+    times.forEach((t, i) => {
+      dense.push(t);
+      let gap = times[i + 1] === void 0 ? 0 : times[i + 1] - t, steps = Math.ceil(gap / maxKeyInterval - 1e-9);
+      for (let k = 1; k < steps; k++) dense.push(t + gap * k / steps);
+    }), times = dense;
+    let scratch = new Float64Array(4), sample = (map, node, t, bind) => {
+      let c = map.get(node);
+      return c === void 0 ? bind : (sampleChannelInto(c, t, scratch), scratch);
+    }, rotations = /* @__PURE__ */ new Map(), hips = [];
+    for (let b of shared) rotations.set(T.node(b), []);
+    let animatedHips = [...translation2.keys()].some((n) => {
+      for (let c = hipsS; c >= 0; c = S.skin.nodes[c].parent) if (c === n) return !0;
+      return !1;
+    }), Qs = [], Qt = [], meshInverseT = qconj2(T.rig.meshRot);
+    for (let t of times) {
+      let world = worldSimilarity(S.skin, orderS, (i) => {
+        let n = S.skin.nodes[i], r = sample(rotation2, i, t, n.rotation), q = [r[0], r[1], r[2], r[3]], p = sample(translation2, i, t, n.translation);
+        return { t: [p[0], p[1], p[2]], r: q, s: n.scale[0] };
+      }), inverseMesh = qconj2(world.rot[S.skin.meshNode]);
+      for (let i of orderS) Qs[i] = qnorm(qmul2(inverseMesh, world.rot[i]));
+      for (let i of orderT) {
+        let parent = tNode(i).parent, base = parent < 0 ? meshInverseT : Qt[parent], bone = targetOf.get(i);
+        if (bone === void 0) {
+          Qt[i] = qnorm(qmul2(base, tNode(i).rotation));
+          continue;
+        }
+        let a = S.node(bone), delta = qmul2(Qs[a], qconj2(restS.get(bone)));
+        Qt[i] = qnorm(qmul2(qmul2(qmul2(B, delta), qconj2(B)), restT.get(bone)));
+        let local = qnorm(qmul2(qconj2(base), Qt[i])), list = rotations.get(i), at3 = list.length - 4, flip = at3 >= 0 && list[at3] * local[0] + list[at3 + 1] * local[1] + list[at3 + 2] * local[2] + list[at3 + 3] * local[3] < 0 ? -1 : 1;
+        list.push(local[0] * flip, local[1] * flip, local[2] * flip, local[3] * flip);
+      }
+      if (animatedHips) {
+        let meshPos = world.pos[S.skin.meshNode], p = mul3(qrot(inverseMesh, sub(world.pos[hipsS], meshPos)), 1 / world.scale[S.skin.meshNode]), c = [dotv(p, S.left), dotv(p, S.up), dotv(p, S.forward)], l = bindT[0] + ratio * (c[0] - bindS[0]), u = groundT + pelvisT + ratio * (c[1] - pelvisS - groundS), f = bindT[2] + ratio * (c[2] - bindS[2]), mine = [T.left[0] * l + T.up[0] * u + T.forward[0] * f, T.left[1] * l + T.up[1] * u + T.forward[1] * f, T.left[2] * l + T.up[2] * u + T.forward[2] * f], parentPos = hipsParent < 0 ? T.rig.origin.pos : T.rig.P[hipsParent], parentRot = hipsParent < 0 ? meshInverseT : Qt[hipsParent], local = mul3(qrot(qconj2(parentRot), sub(mine, parentPos)), 1 / hipsParentScale);
+        hips.push(local[0], local[1], local[2]);
+      }
+    }
+    let channels = [...rotations].map(([node, values]) => ({ node, path: "rotation", interpolation: "linear", times, values }));
+    return animatedHips && channels.push({ node: hipsT, path: "translation", interpolation: "linear", times, values: hips }), { name: clip.name, duration: clip.duration, channels };
+  }), result = { ...target, clips }, problem = skinProblem(result, result.indices.length);
+  if (problem !== void 0) throw new RangeError(`Humanoid retargeting produced an invalid skin: ${problem}`);
+  return result;
+}
+var mul3 = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
+
 // src/mesh/skinning.ts
 function deformSkin(skin, palette, positions, normals, outPositions, outNormals, tangents, outTangents) {
   if (tangents === void 0 != (outTangents === void 0) || tangents !== void 0 && (normals === void 0 || tangents.length !== skin.indices.length * 4 || outTangents.length !== tangents.length)) throw new RangeError("tangent skinning requires normals and matching packed vec4 input/output");
@@ -1247,11 +2442,32 @@ var AnimationController = class {
   setLocomotionParameter(value) {
     this.active(), this.player.locomotion.setParameter(value);
   }
+  /** Configure (or with `undefined` clear) the 2D blend space that drives the base pose. */
+  setBlendSpace(options) {
+    this.active(), this.player.blend.set(options);
+  }
+  setBlendParameter(x, y) {
+    this.active(), this.player.blend.setParameter(x, y);
+  }
   setLayer(id, layer) {
     this.active(), this.player.layers.set(id, layer);
   }
+  /** Fade a layer's weight over `seconds`; false when the layer does not exist. */
+  fadeLayer(id, weight, seconds) {
+    return this.active(), this.player.layers.fade(id, weight, seconds);
+  }
   setIK(id, constraint) {
     this.active(), this.player.ik.set(id, constraint);
+  }
+  /** Names the canonical humanoid bones used by limb goals and foot placement (decision 0222). `undefined` removes the map and every limb goal. */
+  setHumanoid(map) {
+    this.active(), this.player.setHumanoid(map);
+  }
+  setLimb(id, goal) {
+    this.active(), this.player.ik.setLimb(id, goal);
+  }
+  setFootPlacement(placement2) {
+    this.active(), this.player.ik.setFootPlacement(placement2);
   }
   update(dt, force = !1, distance2 = 0) {
     if (this.active(), !Number.isFinite(dt) || dt < 0)
@@ -1268,7 +2484,7 @@ var AnimationController = class {
     }
   }
   dispose() {
-    this.disposed || (this.disposed = !0, this.targets = [], this.player.layers.clear(), this.player.locomotion.set(void 0), this.player.ik.clear(), this.player.setProceduralOverride(void 0));
+    this.disposed || (this.disposed = !0, this.targets = [], this.player.layers.clear(), this.player.blend.set(void 0), this.player.ik.clear(), this.player.setProceduralOverride(void 0));
   }
 };
 function createAnimationController(skin, options) {
@@ -1603,7 +2819,7 @@ var ENVIRONMENT_QUALITY = {
 function quality(value) {
   if (value !== void 0 && !Object.hasOwn(ENVIRONMENT_QUALITY, value)) throw new RangeError("Lighting quality must be low, medium or high");
 }
-function finite(value, name, minimum = 0) {
+function finite2(value, name, minimum = 0) {
   if (value !== void 0 && (!Number.isFinite(Math.fround(value)) || value < minimum)) throw new RangeError(`${name} must fit a finite f32 and be at least ${String(minimum)}`);
 }
 function snapshotRendering(options) {
@@ -1611,12 +2827,12 @@ function snapshotRendering(options) {
   let { environment: env, shadows: shadow } = options, environment;
   if (shadow !== void 0) {
     if (quality(shadow.quality), typeof shadow.light != "string" || shadow.light.length === 0) throw new RangeError("A shadow light name is required");
-    for (let name of ["size", "distance", "near", "far"]) finite(shadow[name], `shadows.${name}`, 1e-6);
-    if (finite(shadow.bias, "shadows.bias"), finite(shadow.normalBias, "shadows.normalBias"), (shadow.far ?? 40) <= (shadow.near ?? 0.1)) throw new RangeError("shadows.far must exceed near");
+    for (let name of ["size", "distance", "near", "far"]) finite2(shadow[name], `shadows.${name}`, 1e-6);
+    if (finite2(shadow.bias, "shadows.bias"), finite2(shadow.normalBias, "shadows.normalBias"), (shadow.far ?? 40) <= (shadow.near ?? 0.1)) throw new RangeError("shadows.far must exceed near");
     if (shadow.center !== void 0 && (shadow.center.length !== 3 || shadow.center.some((x) => !Number.isFinite(Math.fround(x))))) throw new RangeError("shadows.center must have three finite f32 coordinates");
   }
   if (env !== void 0) {
-    if (quality(env.quality), finite(env.intensity, "environment.intensity"), env.rotation !== void 0 && !Number.isFinite(env.rotation)) throw new RangeError("environment.rotation must be finite");
+    if (quality(env.quality), finite2(env.intensity, "environment.intensity"), env.rotation !== void 0 && !Number.isFinite(env.rotation)) throw new RangeError("environment.rotation must be finite");
     if (!Number.isInteger(env.width) || !Number.isInteger(env.height) || env.width < 1 || env.height < 1 || env.width > 4096 || env.height > 2048) throw new RangeError("Environment dimensions must be positive integers, at most 4096 x 2048");
     if (!(env.data instanceof Float32Array) || env.data.length !== env.width * env.height * 4) throw new RangeError("Environment data must be width * height * 4 linear RGBA floats");
     let data = env.data.slice();
@@ -9549,7 +10765,7 @@ function checkedPositionBounds(bounds) {
 function record(value) {
   return typeof value == "object" && value !== null && !Array.isArray(value) && !ArrayBuffer.isView(value);
 }
-function finite2(value) {
+function finite3(value) {
   if (typeof value != "number" || !Number.isFinite(value) || !Number.isFinite(Math.fround(value))) throw new TypeError("compute parameter requires a finite f32");
   return Math.fround(value);
 }
@@ -9560,21 +10776,21 @@ function normalized(node, type, value) {
         if (typeof value != "boolean") throw new TypeError("compute parameter requires a bool");
         return value;
       }
-      if (node.scalar === "f32") return finite2(value);
+      if (node.scalar === "f32") return finite3(value);
       if (typeof value != "number" || !Number.isInteger(value) || value < (node.scalar === "i32" ? -2147483648 : 0) || value > (node.scalar === "i32" ? 2147483647 : 4294967295)) throw new TypeError(`compute parameter requires ${node.scalar}`);
       return value;
     case "vector": {
       let keys = (type === "color" ? ["r", "g", "b", "a"] : ["x", "y", "z", "w"]).slice(0, node.components);
       if (Array.isArray(value)) {
         if (value.length !== keys.length) throw new TypeError("compute vector parameter has wrong length");
-        return Object.fromEntries(keys.map((key, i) => [key, finite2(value[i])]));
+        return Object.fromEntries(keys.map((key, i) => [key, finite3(value[i])]));
       }
       if (!record(value) || Object.keys(value).length !== keys.length || keys.some((key) => !Object.hasOwn(value, key))) throw new TypeError("compute vector parameter has wrong components");
-      return Object.fromEntries(keys.map((key) => [key, finite2(value[key])]));
+      return Object.fromEntries(keys.map((key) => [key, finite3(value[key])]));
     }
     case "matrix":
       if (!Array.isArray(value) && !(value instanceof Float32Array) || value.length !== 16) throw new TypeError("compute mat4 parameter requires 16 column-major values");
-      return Array.from(value, finite2);
+      return Array.from(value, finite3);
     case "array": {
       if (!Array.isArray(value) || value.length !== node.length) throw new TypeError("compute array parameter has wrong length");
       let split = type.lastIndexOf(","), elementType = type.startsWith("array<") && split >= 0 ? type.slice(6, split).trim() : "";
@@ -9803,8 +11019,8 @@ function isMappedKeyCode(code) {
 
 // src/input/dom.ts
 function pointerPosition(canvas, clientX, clientY) {
-  let rect = canvas.getBoundingClientRect(), width = rect.width > 0 ? rect.width : 1, height = rect.height > 0 ? rect.height : 1, clamp3 = (v) => Math.fround(Math.min(1, Math.max(-1, v)));
-  return { x: clamp3((clientX - rect.left) / width * 2 - 1), y: clamp3(1 - (clientY - rect.top) / height * 2) };
+  let rect = canvas.getBoundingClientRect(), width = rect.width > 0 ? rect.width : 1, height = rect.height > 0 ? rect.height : 1, clamp4 = (v) => Math.fround(Math.min(1, Math.max(-1, v)));
+  return { x: clamp4((clientX - rect.left) / width * 2 - 1), y: clamp4(1 - (clientY - rect.top) / height * 2) };
 }
 function attachInputListeners(input, targets) {
   let { canvas, registry, handledKeys } = targets, style = canvas.style;
@@ -10638,10 +11854,10 @@ function copy2(value) {
 }
 
 // src/math/overlap.ts
-function dot(a, b) {
+function dot3(a, b) {
   return a.x * b.x + a.y * b.y + a.z * b.z;
 }
-function cross(a, b) {
+function cross3(a, b) {
   return { x: a.y * b.z - a.z * b.y, y: a.z * b.x - a.x * b.z, z: a.x * b.y - a.y * b.x };
 }
 function valid(v) {
@@ -10658,9 +11874,9 @@ function axes(q) {
 }
 function overlapBoxes(a, sizeA, rotationA, b, sizeB, rotationB) {
   if (![a, sizeA, b, sizeB].every(valid) || [sizeA, sizeB].some((s) => s.x < 0 || s.y < 0 || s.z < 0)) return !1;
-  let aa = axes(rotationA), bb = axes(rotationB), delta = { x: b.x - a.x, y: b.y - a.y, z: b.z - a.z }, extent = (basis, size, axis) => basis.reduce((sum, v, i) => sum + Math.abs(dot(v, axis)) * ([size.x, size.y, size.z][i] ?? 0) * 0.5, 0);
-  for (let axis of [...aa, ...bb, ...aa.flatMap((x) => bb.map((y) => cross(x, y)))])
-    if (!(dot(axis, axis) < 1e-12) && Math.abs(dot(delta, axis)) > extent(aa, sizeA, axis) + extent(bb, sizeB, axis))
+  let aa = axes(rotationA), bb = axes(rotationB), delta = { x: b.x - a.x, y: b.y - a.y, z: b.z - a.z }, extent = (basis, size, axis) => basis.reduce((sum, v, i) => sum + Math.abs(dot3(v, axis)) * ([size.x, size.y, size.z][i] ?? 0) * 0.5, 0);
+  for (let axis of [...aa, ...bb, ...aa.flatMap((x) => bb.map((y) => cross3(x, y)))])
+    if (!(dot3(axis, axis) < 1e-12) && Math.abs(dot3(delta, axis)) > extent(aa, sizeA, axis) + extent(bb, sizeB, axis))
       return !1;
   return !0;
 }
@@ -10710,7 +11926,7 @@ var SILENT_AUDIO = Object.freeze({
   },
   isMuted: () => !1
 });
-function finite3(value) {
+function finite4(value) {
   return typeof value == "number" && Number.isFinite(value) ? value : void 0;
 }
 var AudioSystem = class {
@@ -10808,7 +12024,7 @@ var AudioSystem = class {
   }
   clamp(spanId, value, fallback, range, what) {
     if (value === void 0) return fallback;
-    let number = finite3(value), [lo, hi] = range;
+    let number = finite4(value), [lo, hi] = range;
     if (number !== void 0 && number >= lo && number <= hi) return number;
     let used = number === void 0 ? fallback : Math.min(hi, Math.max(lo, number));
     return this.options.report(
@@ -10897,17 +12113,17 @@ var AudioSystem = class {
   }
 };
 function relativeToListener(position, pose) {
-  let p = position, px = finite3(p?.x) ?? 0, py = finite3(p?.y) ?? 0, pz = finite3(p?.z) ?? 0;
+  let p = position, px = finite4(p?.x) ?? 0, py = finite4(p?.y) ?? 0, pz = finite4(p?.z) ?? 0;
   if (pose === void 0) return [px, py, pz];
   let d = [px - pose.position.x, py - pose.position.y, pz - pose.position.z], { x, y, z, w } = pose.rotation, right = [1 - 2 * (y * y + z * z), 2 * (x * y + w * z), 2 * (x * z - w * y)], up = [2 * (x * y - w * z), 1 - 2 * (x * x + z * z), 2 * (y * z + w * x)], forward = [-2 * (x * z + w * y), -2 * (y * z - w * x), -(1 - 2 * (x * x + y * y))];
   if (pose.target !== null) {
     let f = normalize([pose.target.x - pose.position.x, pose.target.y - pose.position.y, pose.target.z - pose.position.z]);
-    f !== void 0 && (forward = f, right = normalize(cross2(f, [0, 1, 0])) ?? [1, 0, 0], up = cross2(right, f));
+    f !== void 0 && (forward = f, right = normalize(cross4(f, [0, 1, 0])) ?? [1, 0, 0], up = cross4(right, f));
   }
-  let dot2 = (a, b) => (a[0] ?? 0) * (b[0] ?? 0) + (a[1] ?? 0) * (b[1] ?? 0) + (a[2] ?? 0) * (b[2] ?? 0);
-  return [dot2(d, right), dot2(d, up), -dot2(d, forward)];
+  let dot4 = (a, b) => (a[0] ?? 0) * (b[0] ?? 0) + (a[1] ?? 0) * (b[1] ?? 0) + (a[2] ?? 0) * (b[2] ?? 0);
+  return [dot4(d, right), dot4(d, up), -dot4(d, forward)];
 }
-function cross2(a, b) {
+function cross4(a, b) {
   return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 }
 function normalize(v) {
@@ -11434,25 +12650,25 @@ var TEXT_SIZE_RANGE = [1, 512], RECT_SIZE_RANGE = [0, 8192], MAX_HUD_ITEMS = 512
   },
   button: () => !1
 }), DEFAULT_FAMILY = "system-ui,-apple-system,'Segoe UI',sans-serif", TEXT_STYLE = "position:absolute;white-space:pre;line-height:1.2;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;text-shadow:0 1px 2px rgba(0,0,0,.65);user-select:none;pointer-events:none", RECT_STYLE = "position:absolute;pointer-events:none", BUTTON_STYLE = "position:absolute;white-space:pre;line-height:1.2;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;padding:.3em .9em;border:1px solid rgba(255,255,255,.5);border-radius:.4em;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;user-select:none;pointer-events:auto;transform:translate(-50%,-50%)";
-function finite4(value) {
+function finite5(value) {
   return typeof value == "number" && Number.isFinite(value) ? value : void 0;
 }
-function clamp(value, lo, hi) {
+function clamp2(value, lo, hi) {
   return Math.min(hi, Math.max(lo, value));
 }
 function linearToSrgb(c) {
-  let v = clamp(c, 0, 1);
+  let v = clamp2(c, 0, 1);
   return v <= 31308e-7 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055;
 }
 function cssColor(value) {
   if (typeof value != "object" || value === null) return "rgba(255,255,255,1)";
-  let c = value, channel = (x) => String(Math.round(linearToSrgb(finite4(x) ?? 1) * 255)), alpha = clamp(finite4(c.a) ?? 1, 0, 1);
+  let c = value, channel = (x) => String(Math.round(linearToSrgb(finite5(x) ?? 1) * 255)), alpha = clamp2(finite5(c.a) ?? 1, 0, 1);
   return `rgba(${channel(c.r)},${channel(c.g)},${channel(c.b)},${String(Math.round(alpha * 1e3) / 1e3)})`;
 }
 function point(value) {
   if (typeof value != "object" || value === null) return { x: 0, y: 0 };
   let v = value;
-  return { x: finite4(v.x) ?? 0, y: finite4(v.y) ?? 0 };
+  return { x: finite5(v.x) ?? 0, y: finite5(v.y) ?? 0 };
 }
 function placement(x, y) {
   return {
@@ -11494,9 +12710,9 @@ var HudSystem = class {
       content: typeof content == "string" ? content : "",
       x,
       y,
-      size: clamp(finite4(size) ?? DEFAULT_SIZE, ...TEXT_SIZE_RANGE),
+      size: clamp2(finite5(size) ?? DEFAULT_SIZE, ...TEXT_SIZE_RANGE),
       tint: cssColor(tint),
-      align: clamp(finite4(align) ?? 0.5, 0, 1)
+      align: clamp2(finite5(align) ?? 0.5, 0, 1)
     });
   }
   /** `hud.pixel_font()` (decision 0139). */
@@ -11509,10 +12725,10 @@ var HudSystem = class {
       kind: "rect",
       x,
       y,
-      width: clamp(extent.x, ...RECT_SIZE_RANGE),
-      height: clamp(extent.y, ...RECT_SIZE_RANGE),
+      width: clamp2(extent.x, ...RECT_SIZE_RANGE),
+      height: clamp2(extent.y, ...RECT_SIZE_RANGE),
       tint: cssColor(tint),
-      align: clamp(finite4(align) ?? 0.5, 0, 1)
+      align: clamp2(finite5(align) ?? 0.5, 0, 1)
     });
   }
   button(spanId, label, at3, size) {
@@ -11524,7 +12740,7 @@ var HudSystem = class {
       content,
       x,
       y,
-      size: clamp(finite4(size) ?? DEFAULT_SIZE, ...TEXT_SIZE_RANGE),
+      size: clamp2(finite5(size) ?? DEFAULT_SIZE, ...TEXT_SIZE_RANGE),
       key
     }), this.pendingClicks.delete(key);
   }
@@ -13991,22 +15207,22 @@ function resourceSignature(instance) {
 }
 var MaterialStore = class {
   /** `images`: the decoded image files that instances' texture params may name (`spec/assets.md` section 5). */
-  constructor(device, registry, plan, structure, writers, textures, images = /* @__PURE__ */ new Map(), mipmaps) {
+  constructor(device, registry, plan, structure2, writers, textures, images = /* @__PURE__ */ new Map(), mipmaps) {
     this.device = device;
     this.registry = registry;
     this.plan = plan;
     this.writers = writers;
     this.mipmaps = mipmaps;
     this.builtins = new BuiltinResources(registry, device.queue, textures), this.assetTextures = new AssetTextures(registry, device.queue, images, mipmaps);
-    for (let prefab of structure.prefabs ?? [])
+    for (let prefab of structure2.prefabs ?? [])
       for (let resource of prefab.material?.resources ?? [])
         "asset" in resource && this.assetTextures.textureView(resource.asset);
     let counts = /* @__PURE__ */ new Map();
-    for (let instance of structure.instances) {
+    for (let instance of structure2.instances) {
       let layout = instance.material.layout;
       layout !== null && counts.set(layout.id, (counts.get(layout.id) ?? 0) + 1);
     }
-    for (let instance of structure.instances)
+    for (let instance of structure2.instances)
       this.add(instance, counts.get(instance.material.layout?.id ?? "") ?? 1);
   }
   device;
@@ -14395,10 +15611,10 @@ function skinWorldScale(matrix) {
   for (let row = 0; row < 3; row++) {
     let sum = 0;
     for (let col = 0; col < 3; col++) {
-      let dot2 = 0;
+      let dot4 = 0;
       for (let k = 0; k < 3; k++)
-        dot2 += matrix[row * 4 + k] * matrix[col * 4 + k];
-      sum += Math.abs(dot2);
+        dot4 += matrix[row * 4 + k] * matrix[col * 4 + k];
+      sum += Math.abs(dot4);
     }
     maximum = Math.max(maximum, sum);
   }
@@ -14831,9 +16047,9 @@ function putBatch(out, index, start, count, firstInstance) {
   let existing = out[index];
   existing === void 0 ? out.push({ start, count, firstInstance }) : (existing.start = start, existing.count = count, existing.firstInstance = firstInstance);
 }
-function instancingCandidates(structure, blockOf, pipelineKeyOf) {
+function instancingCandidates(structure2, blockOf, pipelineKeyOf) {
   let groups = /* @__PURE__ */ new Map();
-  for (let entity of structure.entities) {
+  for (let entity of structure2.entities) {
     if (entity.mesh === null || entity.instance === null) continue;
     let { material } = entity.instance;
     if (material.shader.instancedVertexEntry === void 0) continue;
@@ -14843,12 +16059,12 @@ function instancingCandidates(structure, blockOf, pipelineKeyOf) {
   let materials = /* @__PURE__ */ new Set(), capacity = 0;
   for (let group of groups.values())
     group.count < 2 || (materials.add(group.material), capacity += group.count);
-  for (let entity of structure.entities) {
+  for (let entity of structure2.entities) {
     if (entity.particles === void 0 || entity.mesh === null || entity.instance === null) continue;
     let { material } = entity.instance;
     material.shader.instancedVertexEntry !== void 0 && materials.add(material.id);
   }
-  for (let prefab of structure.prefabs) {
+  for (let prefab of structure2.prefabs) {
     let material = prefab.material?.material;
     prefab.mesh === null || material === void 0 || material.shader.instancedVertexEntry === void 0 || materials.add(material.id);
   }
@@ -15595,31 +16811,31 @@ var Renderer = class {
   failedMaterials = /* @__PURE__ */ new Set();
   constructor(options) {
     this.options = options;
-    let { device, registry, structure, writers, manifest } = options;
+    let { device, registry, structure: structure2, writers, manifest } = options;
     if (options.blendedSeed !== void 0) for (let [id, made] of options.blendedSeed) this.blended.set(id, made);
-    for (let material of structure.materials) this.materialsById.set(material.id, material);
-    let frameWriters = writers.get(structure.frameLayout.id), objectWriters = writers.get(structure.objectLayout.id);
+    for (let material of structure2.materials) this.materialsById.set(material.id, material);
+    let frameWriters = writers.get(structure2.frameLayout.id), objectWriters = writers.get(structure2.objectLayout.id);
     if (frameWriters === void 0 || objectWriters === void 0) throw new Error("internal error: no writers for the built-in blocks");
-    this.writeViewProj = fieldWriter(frameWriters, "view_proj", structure.frameLayout.id), this.writeCameraPosition = fieldWriter(frameWriters, "camera_position", structure.frameLayout.id), this.writeLightCount = fieldWriter(frameWriters, "light_count", structure.frameLayout.id), this.writeAmbient = fieldWriter(frameWriters, "ambient", structure.frameLayout.id), this.writeExposure = fieldWriter(frameWriters, "exposure", structure.frameLayout.id), this.writeLights = fieldWriter(frameWriters, "lights", structure.frameLayout.id), this.packedLights = emptyPackedLights(structure.lightCapacity), this.lightSource = {
+    this.writeViewProj = fieldWriter(frameWriters, "view_proj", structure2.frameLayout.id), this.writeCameraPosition = fieldWriter(frameWriters, "camera_position", structure2.frameLayout.id), this.writeLightCount = fieldWriter(frameWriters, "light_count", structure2.frameLayout.id), this.writeAmbient = fieldWriter(frameWriters, "ambient", structure2.frameLayout.id), this.writeExposure = fieldWriter(frameWriters, "exposure", structure2.frameLayout.id), this.writeLights = fieldWriter(frameWriters, "lights", structure2.frameLayout.id), this.packedLights = emptyPackedLights(structure2.lightCapacity), this.lightSource = {
       light: (entity) => {
         let light = options.world.entities[entity]?.light;
         if (light == null) throw new Error(`internal error: entity ${String(entity)} has no light record`);
         return light;
       },
       worldMatrix: (entity) => options.world.worldMatrix(entity)
-    }, this.writeModel = fieldWriter(objectWriters, "model", structure.objectLayout.id), this.writeNormalMatrix = fieldWriter(objectWriters, "normal_matrix", structure.objectLayout.id);
+    }, this.writeModel = fieldWriter(objectWriters, "model", structure2.objectLayout.id), this.writeNormalMatrix = fieldWriter(objectWriters, "normal_matrix", structure2.objectLayout.id);
     let { ambientColor, ambientIntensity } = manifest.scene.fields;
-    this.ambient = Object.freeze({ x: ambientColor[0] * ambientIntensity, y: ambientColor[1] * ambientIntensity, z: ambientColor[2] * ambientIntensity }), this.frameArena = new UniformArena(device, registry, structure.frameLayout, { initialCapacity: 1 }), this.frameSlot = this.frameArena.allocate();
-    let drawable = structure.entities.filter((entity) => entity.mesh !== null);
-    this.objectArena = new UniformArena(device, registry, structure.objectLayout, { dynamicOffset: !0, initialCapacity: Math.max(1, drawable.length) });
+    this.ambient = Object.freeze({ x: ambientColor[0] * ambientIntensity, y: ambientColor[1] * ambientIntensity, z: ambientColor[2] * ambientIntensity }), this.frameArena = new UniformArena(device, registry, structure2.frameLayout, { initialCapacity: 1 }), this.frameSlot = this.frameArena.allocate();
+    let drawable = structure2.entities.filter((entity) => entity.mesh !== null);
+    this.objectArena = new UniformArena(device, registry, structure2.objectLayout, { dynamicOffset: !0, initialCapacity: Math.max(1, drawable.length) });
     for (let entity of drawable) {
       this.objectSlots[entity.index] = this.objectArena.allocate();
       let centre = entity.mesh === null ? void 0 : options.meshes.get(entity.mesh.id).boundingCenter;
       centre !== void 0 && (centre[0] !== 0 || centre[1] !== 0 || centre[2] !== 0) && (this.localCentres[entity.index] = centre);
     }
-    this.sphereCentres = new Float64Array(structure.entities.length * 3), this.sphereScales = new Float64Array(structure.entities.length), this.entityMatrices = new Float32Array(structure.entities.length * INSTANCE_FLOATS), this.entityWords = new Uint32Array(this.entityMatrices.buffer), this.objectStale = new Uint8Array(structure.entities.length).fill(1), this.recordOf = new Int32Array(structure.entities.length).fill(-1);
+    this.sphereCentres = new Float64Array(structure2.entities.length * 3), this.sphereScales = new Float64Array(structure2.entities.length), this.entityMatrices = new Float32Array(structure2.entities.length * INSTANCE_FLOATS), this.entityWords = new Uint32Array(this.entityMatrices.buffer), this.objectStale = new Uint8Array(structure2.entities.length).fill(1), this.recordOf = new Int32Array(structure2.entities.length).fill(-1);
     let candidates = options.instancing === !1 ? void 0 : instancingCandidates(
-      structure,
+      structure2,
       (instance) => options.materials.blockOf(instance),
       (material) => options.pipelines.get(material.id)?.key ?? ""
     ), capacity = candidates?.capacity ?? 0;
@@ -15722,11 +16938,11 @@ var Renderer = class {
         if (record2 === void 0 || !this.options.meshes.positionsAvailable(draw.entity)) return [];
         let computed = draw.gpuMesh.computedPositions === !0, authored = record2.bounds_radius > 0 && !computed, source = authored ? "authored" : computed ? "compute" : draw.vertexDeformation === 1 ? "unbounded" : skin === void 0 ? "mesh" : "animated", unavailable = source === "unbounded" || !authored && skin !== void 0 && !this.options.meshes.skinBoundsCurrent(draw.entity, skin), sphere = { x: 0, y: 0, z: 0, radius: 0 }, model = world.worldMatrix(draw.entity), center = authored ? [record2.bounds_center.x, record2.bounds_center.y, record2.bounds_center.z] : draw.gpuMesh.boundingCenter;
         worldBoundingSphere(model, authored ? record2.bounds_radius : draw.gpuMesh.boundingRadius, sphere, center), (authored || computed || skin !== void 0) && (sphere.radius = (authored ? record2.bounds_radius : draw.gpuMesh.boundingRadius) * skinWorldScale(model));
-        let finite5 = !unavailable && [sphere.x, sphere.y, sphere.z, sphere.radius].every(Number.isFinite);
+        let finite6 = !unavailable && [sphere.x, sphere.y, sphere.z, sphere.radius].every(Number.isFinite);
         return [{ slot: draw.entity, value: {
           source,
-          sphere: finite5 ? { center: { x: sphere.x, y: sphere.y, z: sphere.z }, radius: sphere.radius } : null,
-          culled: this.cullingEnabled && finite5 && !sphereIntersectsFrustum(planes, sphere.x, sphere.y, sphere.z, sphere.radius)
+          sphere: finite6 ? { center: { x: sphere.x, y: sphere.y, z: sphere.z }, radius: sphere.radius } : null,
+          culled: this.cullingEnabled && finite6 && !sphereIntersectsFrustum(planes, sphere.x, sphere.y, sphere.z, sphere.radius)
         } }];
       })
     };
@@ -15758,7 +16974,7 @@ var Renderer = class {
   }
   /** The current draw list (rebuilt when visibility or the set of failed materials changed). */
   drawList() {
-    let { world, structure, pipelines, meshes, materials } = this.options;
+    let { world, structure: structure2, pipelines, meshes, materials } = this.options;
     if (meshes.refreshPositions(), this.drawsPositionVersion !== meshes.positionVersion && (this.positionBoundsDirty = !0, this.cullDirty = !0), this.drawsVersion === world.visibilityVersion && this.drawsBlockVersion === materials.blockVersion && this.drawsPopulation === world.dynamic.version && this.drawsPositionVersion === meshes.positionVersion && this.drawsBlendedVersion === this.blendedVersion)
       return this.draws;
     let items = [], list = (entity, visible, order) => {
@@ -15785,8 +17001,8 @@ var Renderer = class {
         ...blended === void 0 ? {} : { translucent: !0 }
       });
     };
-    for (let entity of structure.entities) list(entity, world.entities[entity.index]?.visible, entity.index);
-    for (let spawned of world.dynamic.live) list(spawned.resolved, spawned.record.visible, structure.entities.length + spawned.order);
+    for (let entity of structure2.entities) list(entity, world.entities[entity.index]?.visible, entity.index);
+    for (let spawned of world.dynamic.live) list(spawned.resolved, spawned.record.visible, structure2.entities.length + spawned.order);
     return this.draws = items.sort(compareDraws), this.drawsVersion = world.visibilityVersion, this.drawsPositionVersion = meshes.positionVersion, this.drawsBlockVersion = materials.blockVersion, this.drawsPopulation = world.dynamic.version, this.drawsBlendedVersion = this.blendedVersion, this.draws;
   }
   /** Renders one frame (phase 7). Returns false when the target has no pixels (nothing is drawn or uploaded). */
@@ -16374,20 +17590,20 @@ function missingModule(material, phase) {
   };
 }
 async function startScene(options) {
-  let { manifest, structure, program, device, registry, surface, modules, report, services } = options, lightingProblem = sceneLightingProblem(manifest, options.rendering);
+  let { manifest, structure: structure2, program, device, registry, surface, modules, report, services } = options, lightingProblem = sceneLightingProblem(manifest, options.rendering);
   if (lightingProblem !== void 0) return { ok: !1, diagnostics: [makeRuntimeDiagnostic("E8051", { phase: "runtime:mount", message: lightingProblem })] };
   let additive = new Set(options.rendering?.additiveMaterials ?? []), blendMode = (material) => additive.has(material.id) ? "additive" : "alpha";
   options.assertActive?.();
-  let generation = registry.generation, plan = options.bindingPlan ?? new BindingPlan(registry, structure.frameLayout, structure.objectLayout), mipmaps = device.createCommandEncoder !== void 0 && device.createComputePipeline !== void 0 && [...options.assets?.images.values() ?? []].some((image) => image.width > 1 || image.height > 1) ? new MipmapGenerator({ queue: device.queue, createCommandEncoder: device.createCommandEncoder.bind(device) }, registry) : void 0, materials = new MaterialStore(device, registry, plan, structure, program.writers, options.textures, options.assets?.images, mipmaps), meshes, renderer, lighting, committed = !1;
+  let generation = registry.generation, plan = options.bindingPlan ?? new BindingPlan(registry, structure2.frameLayout, structure2.objectLayout), mipmaps = device.createCommandEncoder !== void 0 && device.createComputePipeline !== void 0 && [...options.assets?.images.values() ?? []].some((image) => image.width > 1 || image.height > 1) ? new MipmapGenerator({ queue: device.queue, createCommandEncoder: device.createCommandEncoder.bind(device) }, registry) : void 0, materials = new MaterialStore(device, registry, plan, structure2, program.writers, options.textures, options.assets?.images, mipmaps), meshes, renderer, lighting, committed = !1;
   try {
     let { recover } = options, world, bindings;
     if (recover === void 0) {
       let fresh = new World({
         manifest,
-        structure,
+        structure: structure2,
         params: materials,
         report,
-        prefabs: buildPrefabRuntimes(structure.prefabs, program.prefabs),
+        prefabs: buildPrefabRuntimes(structure2.prefabs, program.prefabs),
         ...services === void 0 ? {} : { services }
       }), freshBindings = new Bindings(manifest, program.scene.bindings, fresh);
       options.onWorld?.(fresh), fresh.initialise(program.scene.init, () => {
@@ -16395,11 +17611,11 @@ async function startScene(options) {
       }), world = fresh, bindings = freshBindings;
     } else
       ({ world, bindings } = recover), world.rebindParams(materials);
-    if (options.assertActive?.(), materials.shareIdentical(), meshes = new MeshStore(registry, device.queue, void 0, device.limits.maxBufferSize, structure.meshes.some((m) => m.descriptor.kind === "asset" && m.descriptor.skin !== void 0) ? device : void 0, structure.materials.some((m) => m.shader.vertexAttributes.includes("tangent"))), meshes.upload(structure.meshes, options.assets?.files), structure.materials.some((material) => material.shader.lighting === 1)) {
+    if (options.assertActive?.(), materials.shareIdentical(), meshes = new MeshStore(registry, device.queue, void 0, device.limits.maxBufferSize, structure2.meshes.some((m) => m.descriptor.kind === "asset" && m.descriptor.skin !== void 0) ? device : void 0, structure2.materials.some((m) => m.shader.vertexAttributes.includes("tangent"))), meshes.upload(structure2.meshes, options.assets?.files), structure2.materials.some((material) => material.shader.lighting === 1)) {
       device.pushErrorScope("validation");
       let validation;
       try {
-        lighting = new SceneLighting(device, registry, plan, manifest, options.rendering, { structure, modules });
+        lighting = new SceneLighting(device, registry, plan, manifest, options.rendering, { structure: structure2, modules });
       } finally {
         validation = await device.popErrorScope();
       }
@@ -16408,18 +17624,18 @@ async function startScene(options) {
     }
     let pipelines = options.pipelineCache ?? new PipelineCache(device, registry, plan, manifest), phase = recover === void 0 ? void 0 : "runtime:device", instanced = new Set(
       options.instancing === !1 ? [] : instancingCandidates(
-        structure,
+        structure2,
         (instance) => materials.blockOf(instance),
         (material) => materialPipelineKey(material, surface.colorFormat)
       ).materials
     ), emitterMaterials = /* @__PURE__ */ new Map();
-    for (let entity of structure.entities)
+    for (let entity of structure2.entities)
       entity.particles !== void 0 && entity.instance !== null && emitterMaterials.set(entity.instance.material.id, entity.instance.material);
-    for (let prefab of structure.prefabs)
+    for (let prefab of structure2.prefabs)
       prefab.particles !== void 0 && prefab.material !== null && emitterMaterials.set(prefab.material.material.id, prefab.material.material);
     for (let [id, material] of emitterMaterials) material.shader.instancedVertexEntry !== void 0 && instanced.add(id);
     let results = await Promise.all(
-      structure.materials.map(async (material) => {
+      structure2.materials.map(async (material) => {
         let module = modules.get(material.shader.hash);
         if (module === void 0) {
           if (recover !== void 0) return missingModule(material, phase);
@@ -16438,7 +17654,7 @@ async function startScene(options) {
     options.assertActive?.();
     let failed = [], byMaterial = /* @__PURE__ */ new Map();
     if (results.forEach((result, index) => {
-      let material = structure.materials[index];
+      let material = structure2.materials[index];
       material !== void 0 && (result.ok ? byMaterial.set(material.id, {
         key: result.key,
         pipeline: result.pipeline,
@@ -16449,12 +17665,12 @@ async function startScene(options) {
     let blendedSeed = /* @__PURE__ */ new Map(), wanted = /* @__PURE__ */ new Map(), want = (material, instancedVariant) => {
       !canBlend(material) && !additive.has(material.id) || modules.get(material.shader.hash) === void 0 || !byMaterial.has(material.id) || instancedVariant && material.shader.instancedVertexEntry === void 0 || wanted.set(blendedKey(material.id, instancedVariant), { material, instanced: instancedVariant });
     };
-    for (let entity of structure.entities) {
+    for (let entity of structure2.entities) {
       if (entity.mesh === null || entity.instance === null) continue;
       let { material } = entity.instance;
       !alwaysBlends(material) && !materials.isTranslucent(entity.instance.index) && !additive.has(material.id) || (want(material, !1), entity.particles !== void 0 && want(material, !0));
     }
-    for (let prefab of structure.prefabs) {
+    for (let prefab of structure2.prefabs) {
       let material = prefab.material?.material;
       prefab.mesh === null || material === void 0 || !alwaysBlends(material) && !additive.has(material.id) || (want(material, !1), prefab.particles !== void 0 && want(material, !0));
     }
@@ -16470,7 +17686,7 @@ async function startScene(options) {
       registry,
       surface,
       manifest,
-      structure,
+      structure: structure2,
       world,
       writers: program.writers,
       plan,
@@ -18390,10 +19606,10 @@ var MountedApp = class {
           return assertActive(), await this.prepareProgram(programOfModule(module), { kind: "reload", followScene: !1 }, report);
         }
       }
-      let structure = resolveStructure(manifest);
-      if (!structure.ok) {
-        for (let diagnostic2 of structure.diagnostics) report(diagnostic2);
-        return { ok: !1, diagnostics: structure.diagnostics };
+      let structure2 = resolveStructure(manifest);
+      if (!structure2.ok) {
+        for (let diagnostic2 of structure2.diagnostics) report(diagnostic2);
+        return { ok: !1, diagnostics: structure2.diagnostics };
       }
       let checked = checkProgram(candidate, manifest);
       if (!checked.ok) {
@@ -18473,7 +19689,7 @@ var MountedApp = class {
           ...this.deps.rendering === void 0 ? {} : { rendering: this.deps.rendering },
           assertActive,
           manifest,
-          structure: structure.structure,
+          structure: structure2.structure,
           program: checked.program,
           device,
           registry,
@@ -18733,8 +19949,8 @@ var MountedApp = class {
     }), { device } = acquired, committed = !1;
     try {
       this.ensureRecovering(), registry.recycle(device), surface.recover(device), await surface.preparePostProcessing();
-      let manifest = this.deps.manifest, structure = resolveStructure(manifest);
-      if (!structure.ok) throw new Error(structure.diagnostics.map((diagnostic2) => diagnostic2.message).join(" "));
+      let manifest = this.deps.manifest, structure2 = resolveStructure(manifest);
+      if (!structure2.ok) throw new Error(structure2.diagnostics.map((diagnostic2) => diagnostic2.message).join(" "));
       let checked = checkProgram(this.deps.program, manifest);
       if (!checked.ok) throw new Error(checked.diagnostics.map((diagnostic2) => diagnostic2.message).join(" "));
       let shaders = await loadStartupShaders({
@@ -18761,7 +19977,7 @@ var MountedApp = class {
         let { world, bindings } = this.deps.scene, started = await startScene({
           ...this.deps.rendering === void 0 ? {} : { rendering: this.deps.rendering },
           manifest,
-          structure: structure.structure,
+          structure: structure2.structure,
           program: checked.program,
           device,
           registry,
@@ -19397,8 +20613,8 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
         ]);
       environment = restrictToBase(environment, program.baseUrl);
     }
-    let structure = resolveStructure(manifest);
-    if (!structure.ok) throw mountError(structure.diagnostics);
+    let structure2 = resolveStructure(manifest);
+    if (!structure2.ok) throw mountError(structure2.diagnostics);
     let checked = checkProgram(program, manifest);
     if (!checked.ok) throw mountError(checked.diagnostics);
     let physicsLoad = manifest.subsystems.physics ? loadPhysicsBackend({ manifest, baseUrl: program.baseUrl, importModule: (url) => environment.importModule(url), phase: "runtime:mount" }) : void 0, required = manifest.requiredCapabilities;
@@ -19549,7 +20765,7 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
       started = await startScene({
         ...options.rendering === void 0 ? {} : { rendering: options.rendering },
         manifest,
-        structure: structure.structure,
+        structure: structure2.structure,
         program: checked.program,
         device,
         registry,
@@ -19687,7 +20903,7 @@ function min(a, b) {
 function max(a, b) {
   return b > a || a !== a ? b : a;
 }
-function clamp2(x, lo, hi) {
+function clamp3(x, lo, hi) {
   return min(max(x, lo), hi);
 }
 function saturate(x) {
@@ -19700,7 +20916,7 @@ function step(edge, x) {
   return x >= edge ? 1 : 0;
 }
 function smoothstep(e0, e1, x) {
-  let t = clamp2(fr2(fr2(x - e0) / fr2(e1 - e0)), 0, 1);
+  let t = clamp3(fr2(fr2(x - e0) / fr2(e1 - e0)), 0, 1);
   return fr2(fr2(t * t) * fr2(3 - fr2(2 * t)));
 }
 function sqrt(x) {
@@ -19966,7 +21182,7 @@ var v3divs = zip3s(fdiv), v3neg = map3(fneg), v4add = zip4(fadd), v4sub = zip4(f
 function v4smul(scale, v) {
   return v4scale(v, scale);
 }
-var v4divs = zip4s(fdiv), v4neg = map4(fneg), v2abs = map2(abs), v3abs = map3(abs), v4abs = map4(abs), v2min = zip2(min), v3min = zip3(min), v4min = zip4(min), v2max = zip2(max), v3max = zip3(max), v4max = zip4(max), v2clamp = tri2(clamp2), v3clamp = tri3(clamp2), v4clamp = tri4(clamp2), v2saturate = map2(saturate), v3saturate = map3(saturate), v4saturate = map4(saturate), v2mix = tri2(mix), v3mix = tri3(mix), v4mix = tri4(mix), v2mixs = tri2s(mix), v3mixs = tri3s(mix), v4mixs = tri4s(mix), v2step = zip2(step), v3step = zip3(step), v4step = zip4(step), v2smoothstep = tri2(smoothstep), v3smoothstep = tri3(smoothstep), v4smoothstep = tri4(smoothstep), v2sqrt = map2(sqrt), v3sqrt = map3(sqrt), v4sqrt = map4(sqrt), v2inverseSqrt = map2(inverseSqrt), v3inverseSqrt = map3(inverseSqrt), v4inverseSqrt = map4(inverseSqrt), v2pow = zip2(pow), v3pow = zip3(pow), v4pow = zip4(pow), v2exp = map2(exp), v3exp = map3(exp), v4exp = map4(exp), v2exp2 = map2(exp2), v3exp2 = map3(exp2), v4exp2 = map4(exp2), v2log = map2(log), v3log = map3(log), v4log = map4(log), v2log2 = map2(log2), v3log2 = map3(log2), v4log2 = map4(log2), v2sin = map2(sin), v3sin = map3(sin), v4sin = map4(sin), v2cos = map2(cos), v3cos = map3(cos), v4cos = map4(cos), v2tan = map2(tan), v3tan = map3(tan), v4tan = map4(tan), v2asin = map2(asin), v3asin = map3(asin), v4asin = map4(asin), v2acos = map2(acos), v3acos = map3(acos), v4acos = map4(acos), v2atan = map2(atan), v3atan = map3(atan), v4atan = map4(atan), v2atan2 = zip2(atan2), v3atan2 = zip3(atan2), v4atan2 = zip4(atan2), v2floor = map2(floor), v3floor = map3(floor), v4floor = map4(floor), v2ceil = map2(ceil), v3ceil = map3(ceil), v4ceil = map4(ceil), v2trunc = map2(trunc), v3trunc = map3(trunc), v4trunc = map4(trunc), v2fract = map2(fract), v3fract = map3(fract), v4fract = map4(fract), v2sign = map2(sign), v3sign = map3(sign), v4sign = map4(sign), v2round = map2(round), v3round = map3(round), v4round = map4(round), v2radians = map2(radians), v3radians = map3(radians), v4radians = map4(radians), v2degrees = map2(degrees), v3degrees = map3(degrees), v4degrees = map4(degrees);
+var v4divs = zip4s(fdiv), v4neg = map4(fneg), v2abs = map2(abs), v3abs = map3(abs), v4abs = map4(abs), v2min = zip2(min), v3min = zip3(min), v4min = zip4(min), v2max = zip2(max), v3max = zip3(max), v4max = zip4(max), v2clamp = tri2(clamp3), v3clamp = tri3(clamp3), v4clamp = tri4(clamp3), v2saturate = map2(saturate), v3saturate = map3(saturate), v4saturate = map4(saturate), v2mix = tri2(mix), v3mix = tri3(mix), v4mix = tri4(mix), v2mixs = tri2s(mix), v3mixs = tri3s(mix), v4mixs = tri4s(mix), v2step = zip2(step), v3step = zip3(step), v4step = zip4(step), v2smoothstep = tri2(smoothstep), v3smoothstep = tri3(smoothstep), v4smoothstep = tri4(smoothstep), v2sqrt = map2(sqrt), v3sqrt = map3(sqrt), v4sqrt = map4(sqrt), v2inverseSqrt = map2(inverseSqrt), v3inverseSqrt = map3(inverseSqrt), v4inverseSqrt = map4(inverseSqrt), v2pow = zip2(pow), v3pow = zip3(pow), v4pow = zip4(pow), v2exp = map2(exp), v3exp = map3(exp), v4exp = map4(exp), v2exp2 = map2(exp2), v3exp2 = map3(exp2), v4exp2 = map4(exp2), v2log = map2(log), v3log = map3(log), v4log = map4(log), v2log2 = map2(log2), v3log2 = map3(log2), v4log2 = map4(log2), v2sin = map2(sin), v3sin = map3(sin), v4sin = map4(sin), v2cos = map2(cos), v3cos = map3(cos), v4cos = map4(cos), v2tan = map2(tan), v3tan = map3(tan), v4tan = map4(tan), v2asin = map2(asin), v3asin = map3(asin), v4asin = map4(asin), v2acos = map2(acos), v3acos = map3(acos), v4acos = map4(acos), v2atan = map2(atan), v3atan = map3(atan), v4atan = map4(atan), v2atan2 = zip2(atan2), v3atan2 = zip3(atan2), v4atan2 = zip4(atan2), v2floor = map2(floor), v3floor = map3(floor), v4floor = map4(floor), v2ceil = map2(ceil), v3ceil = map3(ceil), v4ceil = map4(ceil), v2trunc = map2(trunc), v3trunc = map3(trunc), v4trunc = map4(trunc), v2fract = map2(fract), v3fract = map3(fract), v4fract = map4(fract), v2sign = map2(sign), v3sign = map3(sign), v4sign = map4(sign), v2round = map2(round), v3round = map3(round), v4round = map4(round), v2radians = map2(radians), v3radians = map3(radians), v4radians = map4(radians), v2degrees = map2(degrees), v3degrees = map3(degrees), v4degrees = map4(degrees);
 function v2dot(a, b) {
   return fr3(fr3(a.x * b.x) + fr3(a.y * b.y));
 }
@@ -20002,16 +21218,16 @@ function v3cross(a, b) {
   };
 }
 function v2normalize(v) {
-  let len = v2length(v);
-  return len === 0 ? { x: 0, y: 0 } : { x: fr3(v.x / len), y: fr3(v.y / len) };
+  let len2 = v2length(v);
+  return len2 === 0 ? { x: 0, y: 0 } : { x: fr3(v.x / len2), y: fr3(v.y / len2) };
 }
 function v3normalize(v) {
-  let len = v3length(v);
-  return len === 0 ? { x: 0, y: 0, z: 0 } : { x: fr3(v.x / len), y: fr3(v.y / len), z: fr3(v.z / len) };
+  let len2 = v3length(v);
+  return len2 === 0 ? { x: 0, y: 0, z: 0 } : { x: fr3(v.x / len2), y: fr3(v.y / len2), z: fr3(v.z / len2) };
 }
 function v4normalize(v) {
-  let len = v4length(v);
-  return len === 0 ? { x: 0, y: 0, z: 0, w: 0 } : { x: fr3(v.x / len), y: fr3(v.y / len), z: fr3(v.z / len), w: fr3(v.w / len) };
+  let len2 = v4length(v);
+  return len2 === 0 ? { x: 0, y: 0, z: 0, w: 0 } : { x: fr3(v.x / len2), y: fr3(v.y / len2), z: fr3(v.z / len2), w: fr3(v.w / len2) };
 }
 function v2reflect(i, n) {
   let t = fr3(2 * v2dot(n, i));
@@ -20039,7 +21255,7 @@ function quat2(x, y, z, w) {
 function qidentity() {
   return { x: 0, y: 0, z: 0, w: 1 };
 }
-function qmul(a, b) {
+function qmul3(a, b) {
   let { x: ax, y: ay, z: az, w: aw } = a, { x: bx, y: by, z: bz, w: bw } = b;
   return {
     x: fr4(fr4(fr4(fr4(aw * bx) + fr4(ax * bw)) + fr4(ay * bz)) - fr4(az * by)),
@@ -20048,7 +21264,7 @@ function qmul(a, b) {
     w: fr4(fr4(fr4(fr4(aw * bw) - fr4(ax * bx)) - fr4(ay * by)) - fr4(az * bz))
   };
 }
-function qrotate(q, v) {
+function qrotate2(q, v) {
   let { x: qx, y: qy, z: qz, w } = q, tx = fr4(2 * fr4(fr4(qy * v.z) - fr4(qz * v.y))), ty = fr4(2 * fr4(fr4(qz * v.x) - fr4(qx * v.z))), tz = fr4(2 * fr4(fr4(qx * v.y) - fr4(qy * v.x))), cx = fr4(fr4(qy * tz) - fr4(qz * ty)), cy = fr4(fr4(qz * tx) - fr4(qx * tz)), cz = fr4(fr4(qx * ty) - fr4(qy * tx));
   return {
     x: fr4(fr4(v.x + fr4(w * tx)) + cx),
@@ -20063,12 +21279,12 @@ function qaxisAngle(axis, angle) {
   ay > largest && (largest = ay);
   let az = Math.abs(axis.z);
   if (az > largest && (largest = az), largest === 0) return qidentity();
-  let sx = fr4(axis.x / largest), sy = fr4(axis.y / largest), sz = fr4(axis.z / largest), len = fr4(Math.sqrt(fr4(fr4(fr4(sx * sx) + fr4(sy * sy)) + fr4(sz * sz)))), nx = fr4(sx / len), ny = fr4(sy / len), nz = fr4(sz / len), half = fr4(angle * 0.5), sinHalf = fr4(Math.sin(half)), cosHalf = fr4(Math.cos(half));
+  let sx = fr4(axis.x / largest), sy = fr4(axis.y / largest), sz = fr4(axis.z / largest), len2 = fr4(Math.sqrt(fr4(fr4(fr4(sx * sx) + fr4(sy * sy)) + fr4(sz * sz)))), nx = fr4(sx / len2), ny = fr4(sy / len2), nz = fr4(sz / len2), half = fr4(angle * 0.5), sinHalf = fr4(Math.sin(half)), cosHalf = fr4(Math.cos(half));
   return { x: fr4(nx * sinHalf), y: fr4(ny * sinHalf), z: fr4(nz * sinHalf), w: cosHalf };
 }
 var AXIS_X = { x: 1, y: 0, z: 0 }, AXIS_Y = { x: 0, y: 1, z: 0 }, AXIS_Z = { x: 0, y: 0, z: 1 };
 function qeuler(x, y, z) {
-  return qmul(qmul(qaxisAngle(AXIS_Y, y), qaxisAngle(AXIS_X, x)), qaxisAngle(AXIS_Z, z));
+  return qmul3(qmul3(qaxisAngle(AXIS_Y, y), qaxisAngle(AXIS_X, x)), qaxisAngle(AXIS_Z, z));
 }
 
 // src/math/color.ts
@@ -20270,7 +21486,7 @@ export {
   checkCompatibility,
   checkDeviceCapabilities,
   checkManifest,
-  clamp2 as clamp,
+  clamp3 as clamp,
   clampIndex,
   clinear,
   color,
@@ -20333,6 +21549,7 @@ export {
   m4translation,
   m4transpose,
   makeRuntimeDiagnostic,
+  mapHumanoid,
   max,
   min,
   mix,
@@ -20342,11 +21559,12 @@ export {
   qaxisAngle,
   qeuler,
   qidentity,
-  qmul,
-  qrotate,
+  qmul3 as qmul,
+  qrotate2 as qrotate,
   quat2 as quat,
   radians,
   refEq,
+  retargetHumanoid,
   retargetSkin,
   round,
   roundUp,

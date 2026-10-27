@@ -235,5 +235,6 @@ recorded here before code depends on it (blueprint §15).
 | 0222 | [Anatomical limb solving](0222-anatomical-limb-solving.md): two-bone limbs, anatomical ranges and foot placement |
 | 0223 | [Composable animation in programs](0223-composable-animation-language.md): layers, blend spaces, IK, root motion and clips_from in Mtek source |
 | 0224 | [Composable animation demonstration](0224-composable-animation-demonstration.md): example, browser acceptance and documentation |
+| 0225 | [Lazily loaded animation module](0225-lazily-loaded-animation-module.md): skeletal animation in `animation/<h16>.js`, fetched only by programs with skins |
 
 Numbers 0157-0169 are unused: the sprites record is 0170 and no record has been written in between. (Earlier versions of this index listed ghost rows 0160-0162 for what are records 0130-0132; they were removed.)
