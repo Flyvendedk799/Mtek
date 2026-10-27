@@ -16,5 +16,5 @@
     "noEmit": true,
     "allowImportingTsExtensions": true
   },
-  "include": ["src", "scripts/measure-movement-ranges.ts", "vitest.config.ts", "../runtime-web/src/physics/types.ts"]
+  "include": ["src", "scripts/measure-movement-ranges.ts", "scripts/measure-ccd-lanes.ts", "vitest.config.ts", "../runtime-web/src/physics/types.ts"]
 }

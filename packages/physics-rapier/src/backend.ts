@@ -27,12 +27,65 @@ import type {
  */
 export const BACKEND_NAME = "rapier3d-compat@0.21.0";
 
+/**
+ * The allowed linear error (m) of a world that has continuous bodies, decision 0216. Rapier 0.21 defaults to 5 mm and
+ * its CCD uses that value twice: a swept body is stopped 5 mm INSIDE the obstacle, and a pair whose surfaces are less
+ * than prediction distance + 5 mm apart is left to the discrete contact test, which only sees the pair below the
+ * prediction distance (0.02 m). A box that starts a step in that 5 mm band before a thin obstacle is therefore seen by
+ * neither (measured with the default: 5 % of the start phases of a cube against a plate at 6 m/s, 1.5 % at 20 m/s,
+ * with CCD on), and a 240 m/s ball that the sweep stops 5 mm inside a 1 cm heavy plate is carried through by the
+ * contact step that follows. Both shrink with the value; 0.1 mm leaves a 0.1 mm band, which `CCD_CONTACT_SKIN`
+ * covers (the fine scan of `spec/physics.md` section 7.1). The setting alone has no measurable effect on resting
+ * contacts (the rest poses of a stack of crates were identical for every value tried) and is applied only when a
+ * continuous body is created, so a world without continuous collision keeps Rapier's defaults.
+ */
+const CCD_ALLOWED_LINEAR_ERROR = 0.0001;
+
+/**
+ * The contact skin (m) of the collider of a continuous body, decision 0216: twice the allowed linear error. A contact
+ * skin widens the range in which the discrete test sees a pair by the skin, so the band of `CCD_ALLOWED_LINEAR_ERROR`
+ * that the sweep leaves to the discrete test is covered by it (measured with the allowed error alone: 3 of 9 000 cube
+ * lanes against a static wall at 20.0 to 20.1 mm; with this skin on the shot or on the wall, none). Every skin keeps
+ * resting surfaces this far apart: 0.2 mm between a continuous body and static geometry, 0.4 mm between two continuous
+ * bodies (a stack of four crates stands 1.4 mm higher, `ccd-matrix.test.ts`). A skin of the size of the old 5 mm error
+ * would close the band too but would keep every resting body 1 cm off the ground.
+ */
+const CCD_CONTACT_SKIN = 0.0002;
+
+/**
+ * How far past its own smallest half-extent (m) a body moves in one step before it gets the sweep flag (decision
+ * 0216). Two requirements meet in this one number, for obstacles that move up to about 1 m/s (1.7 cm per step):
+ *  - a body without the flag must not be able to skip an obstacle: the contact window of a thin plate is
+ *    `plate half-thickness + own half-extent + prediction distance (2 cm)` and the obstacle's own advance eats into it,
+ *    so the margin must stay under about 2.5 cm minus that advance;
+ *  - an obstacle with the flag is never swept against (see `updateContinuousFlags`), so a 1 cm plate (half-extent
+ *    5 mm) that moves 1 m/s must stay under `5 mm + margin`: the margin must exceed about 1.2 cm.
+ * Measured on a dense speed scan (1.5 to 14 m/s in steps of 0.125, then to 260 m/s) against obstacles at rest and
+ * moving 0.5 and 1 m/s: 11.5 mm lets 1 m/s dynamic plates through at shot speeds of 3.75 to 14 m/s, 13 mm lets 1 m/s
+ * walls through at 3.75 m/s, and 12 mm and 12.5 mm leave only the speeds above 250 m/s in the table of
+ * `spec/physics.md` section 7.1. The window is narrow; `ccd-matrix.test.ts` asserts the scan.
+ */
+const CCD_FLAG_MARGIN = 0.0125;
+
+/**
+ * What the adapter remembers about a body that asked for continuous collision (decision 0216): the two lengths the
+ * engine's own "moves fast" test uses, taken from the body's single collider.
+ */
+interface ContinuousShape {
+  /** The smallest half-extent (box) or the radius (ball, capsule): Rapier's CCD thickness. */
+  readonly thickness: number;
+  /** The farthest point of the shape from its centre: a rotation of `w` rad/s moves it `w * reach` m/s. */
+  readonly reach: number;
+}
+
 /** What the adapter remembers about one body. */
 interface BodyRecord {
   readonly body: RAPIER.RigidBody;
   readonly colliderHandle: number;
   /** The collider's shape, kept for the support cast of `moveCharacter` (no allocation per call). */
   readonly shape: RAPIER.Shape;
+  /** Set only for a dynamic body created with `continuousCollision`. */
+  readonly continuous?: ContinuousShape;
 }
 
 function requireFinite(value: number, what: string): void {
@@ -120,6 +173,9 @@ class RapierWorld implements PhysicsWorld {
   private readonly bodies = new Map<number, BodyRecord>();
   /** Bodies that got `addForceForNextStep` since the last step: their forces are cleared after it. */
   private readonly forced = new Set<number>();
+  /** The dynamic bodies that asked for continuous collision (decision 0216): their sweep flag is set before each step. */
+  private readonly continuous = new Set<number>();
+  private readonly dt: number;
   private disposed = false;
 
   constructor(gravity: Vec3, fixedStep: number) {
@@ -127,6 +183,7 @@ class RapierWorld implements PhysicsWorld {
     requirePositive(fixedStep, "the fixed step");
     this.world = new RAPIER.World(gravity);
     this.world.timestep = fixedStep;
+    this.dt = fixedStep;
   }
 
   addBody(desc: BodyDesc, collider: ColliderDesc, pose: Pose, userId: number): BodyHandle {
@@ -147,7 +204,9 @@ class RapierWorld implements PhysicsWorld {
         requireNonNegative(desc.linearDamping, "linearDamping");
         requireNonNegative(desc.angularDamping, "angularDamping");
         bodyDesc = RAPIER.RigidBodyDesc.dynamic().setLinearDamping(desc.linearDamping).setAngularDamping(desc.angularDamping);
-        bodyDesc.setCcdEnabled(desc.continuousCollision??false);
+        // Decision 0216: the sweep flag is not fixed at creation. Rapier skips a pair in which the obstacle has the flag
+        // too (a flagged obstacle that is not itself moving fast is never swept against), so `step` sets the flag only
+        // on the bodies that move fast enough to need it.
         break;
     }
     bodyDesc.setTranslation(pose.position.x, pose.position.y, pose.position.z).setRotation(pose.rotation);
@@ -188,10 +247,19 @@ class RapierWorld implements PhysicsWorld {
     // never even tested, so a kinematic body entering a fixed sensor would raise nothing.
     colliderDesc.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS).setActiveCollisionTypes(RAPIER.ActiveCollisionTypes.ALL);
 
+    const continuous = desc.kind === "dynamic" && desc.continuousCollision === true ? continuousShape(collider.shape) : undefined;
+    // Decision 0216: the contact skin of a continuous body (see the constant) closes the band the allowed error leaves.
+    if (continuous !== undefined) colliderDesc.setContactSkin(CCD_CONTACT_SKIN);
+
     const body = this.world.createRigidBody(bodyDesc);
     const created = this.world.createCollider(colliderDesc, body);
     this.userIds.set(created.handle, userId);
-    this.bodies.set(body.handle, { body, colliderHandle: created.handle, shape });
+    this.bodies.set(body.handle, continuous === undefined ? { body, colliderHandle: created.handle, shape } : { body, colliderHandle: created.handle, shape, continuous });
+    if (continuous !== undefined) {
+      this.continuous.add(body.handle);
+      // Decision 0216: a world that uses continuous collision gets the small allowed linear error (see the constant).
+      this.world.integrationParameters.normalizedAllowedLinearError = CCD_ALLOWED_LINEAR_ERROR;
+    }
     return body.handle as BodyHandle;
   }
 
@@ -205,6 +273,7 @@ class RapierWorld implements PhysicsWorld {
     this.userIds.delete(record.colliderHandle);
     this.bodies.delete(h);
     this.forced.delete(h);
+    this.continuous.delete(h);
   }
 
   applyImpulse(h: BodyHandle, v: Vec3): void {
@@ -251,8 +320,34 @@ class RapierWorld implements PhysicsWorld {
     }
   }
 
+  /**
+   * Decision 0216. Rapier sweeps only a body whose CCD flag is set, and it skips a pair in which the obstacle has the
+   * flag too (measured: a ball with the flag flies through a plate with the flag that a flag-free plate stops, so
+   * enabling the flag on every dynamic body, as the host option used to, left every dynamic-against-dynamic pair
+   * unswept). The flag is therefore set only on a body that can skip something: one that moves more than its own
+   * smallest half-extent plus `CCD_FLAG_MARGIN` in one step. The test is longer than Rapier's own "moves fast" test
+   * (a tenth of the thickness), so a flagged body is always one the engine sweeps.
+   */
+  private updateContinuousFlags(): void {
+    for (const h of this.continuous) {
+      const record = this.bodies.get(h);
+      const shape = record?.continuous;
+      if (record === undefined || shape === undefined) continue;
+      const body = record.body;
+      let fast = false;
+      if (!body.isSleeping()) {
+        const v = body.linvel();
+        const w = body.angvel();
+        const moved = (Math.hypot(v.x, v.y, v.z) + Math.hypot(w.x, w.y, w.z) * shape.reach) * this.dt;
+        fast = moved > shape.thickness + CCD_FLAG_MARGIN;
+      }
+      if (body.isCcdEnabled() !== fast) body.enableCcd(fast);
+    }
+  }
+
   step(): void {
     this.alive();
+    this.updateContinuousFlags();
     this.world.step(this.events);
     // Row "force for next step": the forces added since the previous step have been integrated by this one.
     for (const h of this.forced) this.bodies.get(h)?.body.resetForces(true);
@@ -461,6 +556,7 @@ class RapierWorld implements PhysicsWorld {
     this.userIds.clear();
     this.bodies.clear();
     this.forced.clear();
+    this.continuous.clear();
   }
 
   private alive(): void {
@@ -480,6 +576,22 @@ function shapeExtent(shape:RAPIER.Shape,rotation:Quat,dir:Vec3):number {
   if(shape instanceof RAPIER.Capsule)return shape.radius;
   if(shape instanceof RAPIER.Cuboid){const l=rotateVec(conjugate(rotation),dir),h=shape.halfExtents;return h.x*Math.abs(l.x)+h.y*Math.abs(l.y)+h.z*Math.abs(l.z);}
   return 0;
+}
+
+/** The lengths of Rapier's "moves fast" test for a collider shape (decision 0216). */
+function continuousShape(shape: ColliderDesc["shape"]): ContinuousShape {
+  switch (shape.kind) {
+    case "sphere":
+      return { thickness: shape.radius, reach: shape.radius };
+    case "capsule":
+      return { thickness: shape.radius, reach: shape.height / 2 };
+    case "box": {
+      const hx = shape.size.x / 2;
+      const hy = shape.size.y / 2;
+      const hz = shape.size.z / 2;
+      return { thickness: Math.min(hx, hy, hz), reach: Math.hypot(hx, hy, hz) };
+    }
+  }
 }
 
 /** Rapier's capsule half-height: the cylindrical half-segment of a capsule whose full height includes both caps. */
