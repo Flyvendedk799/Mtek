@@ -3,7 +3,7 @@
 //
 //   Hero.glb   a lizard-like biped, 1.84 m tall, T-pose, Mixamo-style joint names, a motion root above the hips, a four
 //              joint tail and seven clips: Idle, Walk, Run, StrafeLeft, StrafeRight (travel in the "Root" joint, left foot
-//              strikes at phase 0), Wave (right arm and head only), Dance (in place).
+//              strikes at phase 0), Wave (a whole-body pose with the right arm waving), Dance (in place).
 //   Guest.glb  a shorter-armed, longer-legged biped, A-pose, Unreal-style joint names, clavicles and an upper chest,
 //              no clips. It plays the clips of Hero.glb through `clips_from` (decision 0223).
 //
@@ -403,16 +403,17 @@ function idlePose(t) {
   return { root: [0, 0, 0], hips, hipsYaw: 0.03 * Math.sin(TAU * phi), spineYaw: [0, 0], spinePitch: [0.01 * Math.sin(TAU * phi), 0.02 * Math.sin(TAU * phi), -0.01], legs, arms, footPitch, tail: tailPose(phi, 0.18, 1), head: [0.12 * Math.sin(TAU * phi), 0] };
 }
 
+/** A whole-body pose (weight on one leg, feet apart, hips turned) with the right arm waving: a layer masked to the upper body takes only the waving. */
 function wavePose(t) {
-  const base = idlePose(t);
-  const phi = t / 1.6, w = TAU * 2.5 * phi;
-  return {
-    ...base,
-    arms: { L: base.arms.L, R: [unit([-0.86, 0.5, 0.1]), unit([-0.16 - 0.55 * Math.sin(w), 0.97, 0.06 + 0.12 * Math.cos(w)])] },
-    spineYaw: [0, -0.18],
-    spinePitch: [0, 0, 0.04],
-    head: [-0.25 + 0.05 * Math.sin(w), 0.1],
-  };
+  const d = HERO_DIMS, phi = t / 1.6, w = TAU * 2.5 * phi;
+  const hips = [0.05, d.ankle + 0.82 + d.hipDrop, 0];
+  const legs = {}, arms = {};
+  for (const [side, sign, z] of [["L", 1, 0.06], ["R", -1, -0.04]]) {
+    legs[side] = legIK(add(hips, [sign * d.hipHalf, -d.hipDrop, 0]), [sign * (d.hipHalf + 0.09), d.ankle, z], d.thigh, d.shin);
+  }
+  arms.L = [unit([0.3, -1, 0.1]), unit([0.25, -1, 0.3])];
+  arms.R = [unit([-0.86, 0.5, 0.1]), unit([-0.16 - 0.55 * Math.sin(w), 0.97, 0.06 + 0.12 * Math.cos(w)])];
+  return { root: [0, 0, 0], hips, hipsYaw: 0.08, spineYaw: [0.03, -0.18], spinePitch: [0, 0, 0.04], legs, arms, footPitch: { L: 0, R: 0 }, tail: tailPose(phi, 0.2, 1), head: [-0.25 + 0.05 * Math.sin(w), 0.1] };
 }
 
 function dancePose(t) {
@@ -436,7 +437,7 @@ export const HERO_CLIPS = [
   { name: "Run", duration: 0.7, pose: gait({ period: 0.7, duty: 0.38, half: 0.38, axis: [0, 0, 1], hipVertical: 0.765, bob: 0.03, lift: 0.16, armSwing: 0.7, elbow: 1.0, lean: 0.2, twist: 0.12, tailSway: 0.2 }), driven: "all" },
   { name: "StrafeLeft", duration: 0.8, pose: gait({ period: 0.8, duty: 0.6, half: 0.2, spread: 0.13, axis: [1, 0, 0], hipVertical: 0.8, bob: 0.01, lift: 0.05, armSwing: 0.12, elbow: 0.2, lean: 0, twist: 0.03, tailSway: 0.1 }), driven: "all" },
   { name: "StrafeRight", duration: 0.8, pose: gait({ period: 0.8, duty: 0.6, half: 0.2, spread: 0.13, axis: [-1, 0, 0], hipVertical: 0.8, bob: 0.01, lift: 0.05, armSwing: 0.12, elbow: 0.2, lean: 0, twist: 0.03, tailSway: 0.1 }), driven: "all" },
-  { name: "Wave", duration: 1.6, pose: wavePose, driven: ["chest", "neck", "head", "upperArm.R", "lowerArm.R"] },
+  { name: "Wave", duration: 1.6, pose: wavePose, driven: "all" },
   { name: "Dance", duration: 2, pose: dancePose, driven: "all" },
 ];
 

@@ -62,8 +62,8 @@ scene Stage {
     state feet_on: bool = true;
 
     camera Main {
-        position: vec3(0.0, 2.0, -7.0);
-        target: vec3(0.0, 0.8, -3.0);
+        position: vec3(0.0, 2.0, -12.0);
+        target: vec3(0.0, 0.8, -8.0);
         projection: Perspective { fov_y: 0.8; near: 0.1; far: 120.0 };
         exposure: -0.2630344;
     }
@@ -85,7 +85,7 @@ scene Stage {
     entity Curb {
         position: vec3(1.5, 0.1, 1.0);
         mesh: Box { size: vec3(3.0, 0.2, 2.0) };
-        material: Pbr { base_color: #c9694b; roughness: 0.8 };
+        material: Pbr { base_color: #7b6fd0; roughness: 0.8 };
         body: Static {};
         collider: BoxCollider { size: vec3(3.0, 0.2, 2.0); friction: 0.8 };
     }
@@ -115,7 +115,7 @@ scene Stage {
     // ---- the target of the left hand ----
 
     entity Orb {
-        position: vec3(0.36, 1.25, -2.7);
+        position: vec3(0.36, 1.25, -7.7);
         mesh: Sphere { radius: 0.05 };
         material: Unlit { color: #ffd040 };
     }
@@ -134,7 +134,7 @@ scene Stage {
     // ---- the Hero: a capsule moved by the clips' root travel, and its figure ----
 
     entity Hero {
-        position: vec3(0.0, FIGURE_BASE, -3.0);
+        position: vec3(0.0, FIGURE_BASE, -8.0);
         body: Kinematic { max_slope: 0.7853982; step_height: 0.3 };
         collider: CapsuleCollider { radius: 0.3; height: 1.8; friction: 0.0 };
         state vy: f32 = 0.0;
@@ -291,7 +291,7 @@ scene Stage {
     on key_down(Key.Digit1) {
         Hero.vy = 0.0;
         heading = 0.0;
-        Hero.body.teleport(vec3(0.0, FIGURE_BASE, -3.0), quat.identity(), false);
+        Hero.body.teleport(vec3(0.0, FIGURE_BASE, -8.0), quat.identity(), false);
     }
     on key_down(Key.Digit2) {
         Hero.vy = 0.0;
