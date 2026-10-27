@@ -10,6 +10,8 @@ export type { MtekComputeBounds, MtekComputePositionAttachment } from "./compute
 export {EXTENSION_API_VERSION} from "./host/extensions.js";
 export type {MtekExtension,ExtensionContext,SceneTransform,TransformUpdate} from "./host/extensions.js";
 export type {SceneInspection,SceneSpatialEntity,SceneRenderBounds,ScenePhysicsBody} from "./host/inspection.js";
+export {MtekPhysicsUnsupportedError} from "./host/physics-api.js";
+export type {MtekPhysics,MtekQueryShape,MtekQueryOptions,MtekCollisionGroups,MtekRayHit,MtekShapeHit,MtekContact} from "./host/physics-api.js";
 export type {MtekRenderingOptions,PostEffect,LightingQuality,LinearEnvironment,EnvironmentLightingOptions,DirectionalShadowOptions} from "./render/options.js";
 export { decodeRadiance } from "./render/environment.js";
 export {AssetPool} from "./assets/pool.js";

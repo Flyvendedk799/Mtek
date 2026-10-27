@@ -236,6 +236,11 @@ export interface MtekApp<I = Record<string, unknown>, O = Record<string, unknown
   /** Synchronous release. */
   dispose(): void;
   readonly state: "running" | "paused" | "recovering" | "failed" | "disposed";
+  /**
+   * Ray and shape casts, contacts and collision groups by entity ID (the IDs of `inspectScene`); `undefined` while
+   * the running program has no physics. Queries see the world as of the last completed tick.
+   */
+  readonly physics?: MtekPhysics | undefined;
   /** Present only when options.test is set. */
   readonly debug?: MtekDebug;
   /** Present only in dev builds. */
@@ -303,7 +308,7 @@ export interface SceneSpatialEntity {
 }
 export interface ScenePhysicsBody {
   readonly entityId:string;readonly kind:"static"|"kinematic"|"dynamic";readonly active:boolean;
-  readonly collider:{readonly shape:{readonly kind:"box";readonly size:AnimationVector}|{readonly kind:"sphere";readonly radius:number};readonly sensor:boolean;readonly friction:number;readonly restitution:number};
+  readonly collider:{readonly shape:{readonly kind:"box";readonly size:AnimationVector}|{readonly kind:"sphere";readonly radius:number}|{readonly kind:"capsule";readonly radius:number;readonly height:number};readonly sensor:boolean;readonly friction:number;readonly restitution:number};
   readonly position:AnimationVector;readonly rotation:AnimationQuaternion;
   readonly contacts?:readonly {readonly otherId:string|null;readonly point:AnimationVector;readonly normal:AnimationVector;readonly distance:number}[];
 }
@@ -328,7 +333,35 @@ export interface ExtensionContext {
   animation(id:string):AnimationPlayer|undefined;
   shareAnimation(source:string,targets:readonly string[]):void;detachAnimation(id:string):AnimationPlayer;
   service<T>(name:string):T|undefined;
+  /** Optional API 1 capability: the host's physics queries by entity ID; `undefined` while the running program has no physics. */
+  readonly physics?:MtekPhysics|undefined;
 }
+/** A query shape; sizes are full extents, a capsule's height includes both caps and exceeds `2 * radius`. */
+export type MtekQueryShape =
+  | {readonly kind:"sphere";readonly radius:number}
+  | {readonly kind:"box";readonly size:AnimationVector}
+  | {readonly kind:"capsule";readonly radius:number;readonly height:number};
+/** 16-bit collision groups: the groups a body is in and the groups it collides with. */
+export interface MtekCollisionGroups {readonly memberships:number;readonly filter:number}
+export interface MtekQueryOptions {
+  /** Only bodies whose groups interact with these. */
+  readonly groups?:MtekCollisionGroups;
+  /** Sensors are skipped unless this is true. */
+  readonly includeSensors?:boolean;
+  /** An entity whose body the query ignores. */
+  readonly exclude?:string;
+}
+export interface MtekRayHit {readonly entityId:string;readonly distance:number;readonly point:AnimationVector;readonly normal:AnimationVector}
+export interface MtekShapeHit {readonly entityId:string;readonly fraction:number;readonly point:AnimationVector;readonly normal:AnimationVector}
+export interface MtekContact {readonly entityId:string|null;readonly point:AnimationVector;readonly normal:AnimationVector;readonly distance:number}
+/** The host's physics queries. Invalid input throws a RangeError or TypeError; a method the adapter lacks throws MtekPhysicsUnsupportedError. */
+export interface MtekPhysics {
+  castRay(origin:AnimationVector,direction:AnimationVector,maxDistance:number,options?:MtekQueryOptions):MtekRayHit|undefined;
+  castShape(shape:MtekQueryShape,pose:{readonly position:AnimationVector;readonly rotation?:AnimationQuaternion},displacement:AnimationVector,options?:MtekQueryOptions):MtekShapeHit|undefined;
+  contacts(entityId:string):readonly MtekContact[];
+  setCollisionGroups(entityId:string,memberships:number,filter:number):void;
+}
+export declare class MtekPhysicsUnsupportedError extends Error {readonly method:string;readonly adapter:string;constructor(method:string,adapter:string)}
 export interface MtekExtension {
   readonly id:string;readonly apiVersion:1;
   setup(context:ExtensionContext):void|(()=>void);

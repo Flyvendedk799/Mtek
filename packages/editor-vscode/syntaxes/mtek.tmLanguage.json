@@ -791,7 +791,7 @@
     },
     "schema": {
       "name": "support.class.schema.mtek",
-      "match": "(?<![A-Za-z0-9_.])(?:DirectionalLight|SphereCollider|Orthographic|BoxCollider|Perspective|PointLight|Kinematic|Dynamic|Emitter|Camera|Entity|Sphere|Sprite|Static|Plane|Scene|Unlit|Box|Pbr)(?![A-Za-z0-9_])"
+      "match": "(?<![A-Za-z0-9_.])(?:DirectionalLight|CapsuleCollider|SphereCollider|Orthographic|BoxCollider|Perspective|PointLight|Kinematic|Dynamic|Emitter|Camera|Entity|Sphere|Sprite|Static|Plane|Scene|Unlit|Box|Pbr)(?![A-Za-z0-9_])"
     },
     "call": {
       "match": "(?<![A-Za-z0-9_.])([A-Za-z_][A-Za-z0-9_]*)\\s*(?=\\()",

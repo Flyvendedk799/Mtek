@@ -28,7 +28,20 @@ import { describeValue, isFiniteQuat, isFiniteVec3, isQuat, isVec3 } from "../sc
 import type { BodyService, EntityRecord, World } from "../scene/world.js";
 import { CommandQueue, type QueuedCommand } from "./commands.js";
 import { collisionPair, sortCollisions, type CollisionPair } from "./events.js";
-import type { BodyDesc, BodyHandle, ColliderDesc, PhysicsBackend, PhysicsWorld, Pose, Quat, Vec3 } from "./types.js";
+import type {
+  BodyDesc,
+  BodyHandle,
+  ColliderDesc,
+  PhysicsBackend,
+  PhysicsContact,
+  PhysicsQueryFilter,
+  PhysicsWorld,
+  Pose,
+  Quat,
+  RayHit,
+  ShapeHit,
+  Vec3,
+} from "./types.js";
 import type { BodyInspection } from "../host/inspection.js";
 
 export type BodyKind = "static" | "kinematic" | "dynamic";
@@ -51,6 +64,38 @@ export interface PhysicsOptions {
   readonly deliver: (kind: CollisionEventName, slot: number, other: EntityRef) => void;
 }
 
+/** The spatial queries of the adapter, for the host API (`PhysicsSystem.queries`); user ids are entity slots. */
+export interface PhysicsQueries {
+  readonly adapter: string;
+  supports(method: "castRay" | "castShape" | "contacts" | "setCollisionGroups"): boolean;
+  /** The body of the entity in `slot` of generation `generation`, or `undefined` (no body, frozen, stale). */
+  handleOf(slot: number, generation: number): BodyHandle | undefined;
+  castRay(origin: Vec3, direction: Vec3, maxDistance: number, filter?: PhysicsQueryFilter): RayHit | undefined;
+  castShape(shape: ColliderDesc["shape"], pose: Pose, displacement: Vec3, filter?: PhysicsQueryFilter): ShapeHit | undefined;
+  contacts(handle: BodyHandle): readonly PhysicsContact[];
+  setCollisionGroups(handle: BodyHandle, memberships: number, filter: number): void;
+}
+
+/** The `move_character` settings of a kinematic body (`spec/physics.md` section 2): radians and metres. */
+export interface CharacterSettings {
+  readonly maxSlope: number;
+  readonly stepHeight: number;
+  readonly stepMinWidth: number;
+  readonly snapToGround: number;
+  readonly skin: number;
+  readonly carry: boolean;
+}
+
+/** What a kinematic body gets when the program wrote none of the six fields (decisions 0214, 0217). */
+export const CHARACTER_DEFAULTS: CharacterSettings = Object.freeze({
+  maxSlope: 0.7853982,
+  stepHeight: 0.25,
+  stepMinWidth: 0.1,
+  snapToGround: 0.2,
+  skin: 0.01,
+  carry: true,
+});
+
 /** What the system knows about one entity that has a body. */
 interface BodyEntry {
   readonly collider: ColliderDesc;
@@ -63,6 +108,20 @@ interface BodyEntry {
   /** The velocities as of the last completed tick (`spec/physics.md` section 3): zero before the first. */
   linear: Vec3;
   angular: Vec3;
+  /** Kinematic bodies: the settings of `move_character`, defaults applied. */
+  readonly character: CharacterSettings | undefined;
+  /** As of the last completed `move_character` (false and zero before the first and for a body never moved so). */
+  grounded: boolean;
+  groundNormal: Vec3;
+  /** `E8105` was reported for this body: the loaded adapter cannot move characters (once per body). */
+  unsupportedReported: boolean;
+}
+
+/** A character move of one body in one tick: the displacements of its commands summed, the last rotation. */
+interface PendingMove {
+  displacement: Vec3;
+  rotation: Quat;
+  applied: boolean;
 }
 
 const ZERO: Vec3 = Object.freeze({ x: 0, y: 0, z: 0 });
@@ -71,17 +130,30 @@ const f32 = Math.fround;
 /** Rotations shorter than this cannot be normalised by the solver without producing NaN (`E8104`). */
 const MIN_ROTATION_LENGTH_SQUARED = 1e-20;
 
-function bodyDesc(body: MtekBody): BodyDesc {
+/** The body descriptor; `continuous` is the host option `physics.continuousCollision` (every dynamic body) or the body's own. */
+function bodyDesc(body: MtekBody, continuous: boolean): BodyDesc {
   return body.kind === "dynamic"
-    ? { kind: "dynamic", mass: body.mass, linearDamping: body.linearDamping, angularDamping: body.angularDamping }
+    ? {
+        kind: "dynamic",
+        mass: body.mass,
+        linearDamping: body.linearDamping,
+        angularDamping: body.angularDamping,
+        ...(continuous || body.continuous === true ? { continuousCollision: true } : {}),
+      }
     : { kind: body.kind };
+}
+
+function characterSettings(body: MtekBody): CharacterSettings | undefined {
+  return body.kind === "kinematic" ? Object.freeze({ ...CHARACTER_DEFAULTS, ...body.character }) : undefined;
 }
 
 function colliderDesc(collider: MtekCollider): ColliderDesc {
   const shape =
     collider.kind === "box"
       ? ({ kind: "box", size: { x: collider.size[0], y: collider.size[1], z: collider.size[2] } } as const)
-      : ({ kind: "sphere", radius: collider.radius } as const);
+      : collider.kind === "capsule"
+        ? ({ kind: "capsule", radius: collider.radius, height: collider.height } as const)
+        : ({ kind: "sphere", radius: collider.radius } as const);
   return { shape, sensor: collider.sensor, friction: collider.friction, restitution: collider.restitution };
 }
 
@@ -99,9 +171,12 @@ const SUPPORTED: Readonly<Record<string, readonly BodyKind[]>> = {
   apply_force: ["dynamic"],
   set_linear_velocity: ["dynamic"],
   set_kinematic_target: ["kinematic"],
+  move_character: ["kinematic"],
   teleport: ["dynamic", "kinematic"],
   linear_velocity: ["dynamic", "kinematic"],
   angular_velocity: ["dynamic", "kinematic"],
+  grounded: ["kinematic"],
+  ground_normal: ["kinematic"],
 };
 
 /** The setter of the generated-code context a pose is written through (it marks the transform dirty). */
@@ -168,15 +243,26 @@ export class PhysicsSystem implements BodyService {
   }
 
   private addBody(ref: EntityRef, record: EntityRecord, body: MtekBody, collider: MtekCollider, name: string): void {
-    const entry: BodyEntry = { ref, kind: body.kind, name, collider: colliderDesc(collider), handle: undefined, linear: ZERO, angular: ZERO };
+    const entry: BodyEntry = {
+      ref,
+      kind: body.kind,
+      name,
+      collider: colliderDesc(collider),
+      handle: undefined,
+      linear: ZERO,
+      angular: ZERO,
+      character: characterSettings(body),
+      grounded: false,
+      groundNormal: ZERO,
+      unsupportedReported: false,
+    };
     this.bodies[ref.slot] = entry;
     const pose: Pose = { position: record.position, rotation: record.rotation };
     if (!isFiniteVec3(pose.position) || !finiteRotation(pose.rotation)) {
       this.report("E8104", ref.slot, `The body of '${name}' was not created: its pose ${describeValue(pose.position)} / ${describeValue(pose.rotation)} is not finite. The entity keeps its pose and does not take part in the simulation.`);
       return;
     }
-    const description=bodyDesc(body);
-    entry.handle = this.physics.addBody(description.kind==="dynamic"&&this.options.continuousCollision===true?{...description,continuousCollision:true}:description, entry.collider, pose, ref.slot);
+    entry.handle = this.physics.addBody(bodyDesc(body, this.options.continuousCollision === true), entry.collider, pose, ref.slot);
   }
 
   // ---- ctx.body ----
@@ -260,15 +346,53 @@ export class PhysicsSystem implements BodyService {
     this.queue.push(command);
   }
 
+  /**
+   * Queues `move_character`. A loaded adapter without `moveCharacter` cannot run it: the command is dropped and `E8105`
+   * is reported, once per body. @internal Used by the handle only.
+   */
+  enqueueMove(entry: BodyEntry, spanId: number, displacement: Vec3, rotation: Quat): void {
+    if (this.physics.moveCharacter === undefined) {
+      if (entry.unsupportedReported) return;
+      entry.unsupportedReported = true;
+      this.reportAt(
+        "E8105",
+        spanId,
+        `The command move_character on '${entry.name}' was dropped: the physics adapter '${this.options.backend.name}' cannot move characters.`,
+        ["the adapter must implement moveCharacter; the body keeps the pose its other commands give it"],
+      );
+      return;
+    }
+    this.enqueue(entry, spanId, "move_character", { category: "characterMove", target: entry.ref, displacement, rotation }, [displacement, rotation]);
+  }
+
   // ---- the tick ----
 
-  /** Step 2 of the tick: the queued commands, once, by category and issue order (`./commands.ts`). */
+  /**
+   * Step 2 of the tick: the queued commands, once, by category and issue order (`./commands.ts`). The character
+   * moves of one body are one move: displacements summed, the last rotation, resolved where the first of them
+   * stands in the order (after every kinematic target, which a move of the same body replaces).
+   */
   applyCommands(): void {
-    for (const command of this.queue.take()) {
+    const batch = this.queue.take();
+    const moves = new Map<BodyEntry, PendingMove>();
+    for (const command of batch) {
+      if (command.category !== "characterMove") continue;
+      const entry = this.liveEntry(command.target);
+      if (entry === undefined) continue;
+      const pending = moves.get(entry);
+      if (pending === undefined) {
+        moves.set(entry, { displacement: command.displacement, rotation: command.rotation, applied: false });
+      } else {
+        const { displacement: sum } = pending;
+        pending.displacement = frozenVec3(sum.x + command.displacement.x, sum.y + command.displacement.y, sum.z + command.displacement.z);
+        pending.rotation = command.rotation;
+      }
+    }
+    for (const command of batch) {
       // The entity may have been destroyed (and its body removed at a flush) since the command was issued: it was
       // valid then, so it is dropped here without a diagnostic. A reused slot has a new generation.
-      const entry = this.bodies[command.target.slot];
-      if (entry === undefined || entry.handle === undefined || entry.ref.gen !== command.target.gen) continue;
+      const entry = this.liveEntry(command.target);
+      if (entry === undefined || entry.handle === undefined) continue;
       const handle = entry.handle;
       switch (command.category) {
         case "teleport":
@@ -279,8 +403,17 @@ export class PhysicsSystem implements BodyService {
           this.physics.setLinearVelocity(handle, command.vector);
           break;
         case "kinematicTarget":
-          this.physics.setKinematicTarget(handle, command.pose);
+          // A character move of the same body in the same tick replaces it.
+          if (!moves.has(entry)) this.physics.setKinematicTarget(handle, command.pose);
           break;
+        case "characterMove": {
+          const move = moves.get(entry);
+          if (move !== undefined && !move.applied) {
+            move.applied = true;
+            this.resolveMove(entry, handle, move);
+          }
+          break;
+        }
         case "impulse":
           this.physics.applyImpulse(handle, command.vector);
           break;
@@ -289,6 +422,42 @@ export class PhysicsSystem implements BodyService {
           break;
       }
     }
+  }
+
+  /** The entry of a body that still exists and is in the simulation, for a command aimed at `target`. */
+  private liveEntry(target: EntityRef): BodyEntry | undefined {
+    const entry = this.bodies[target.slot];
+    return entry === undefined || entry.handle === undefined || entry.ref.gen !== target.gen ? undefined : entry;
+  }
+
+  /**
+   * One character move (decision 0214, "Resolution of one move"): the adapter resolves the displacement from the
+   * pose the body has now (after a teleport of this tick), and the resolved pose becomes the kinematic target the
+   * step reaches. `grounded` and `ground_normal` are recorded for the reads.
+   */
+  private resolveMove(entry: BodyEntry, handle: BodyHandle, move: PendingMove): void {
+    const settings = entry.character ?? CHARACTER_DEFAULTS;
+    const from = this.physics.readPose(handle);
+    const result = this.physics.moveCharacter?.(handle, move.displacement, {
+      offset: settings.skin,
+      maxSlope: settings.maxSlope,
+      snapToGround: settings.snapToGround,
+      stepHeight: settings.stepHeight,
+      stepMinWidth: settings.stepMinWidth,
+      carry: settings.carry,
+      rotation: move.rotation,
+    });
+    if (result === undefined) return;
+    const position = frozenVec3(from.position.x + result.displacement.x, from.position.y + result.displacement.y, from.position.z + result.displacement.z);
+    const rotation = result.rotation;
+    if (!isFiniteVec3(position) || !isFiniteQuat(rotation)) {
+      this.freeze(entry, { position, rotation });
+      return;
+    }
+    this.physics.setKinematicTarget(handle, { position, rotation });
+    entry.grounded = result.grounded;
+    const normal = result.grounded ? result.ground?.normal : undefined;
+    entry.groundNormal = normal === undefined || !isFiniteVec3(normal) ? ZERO : frozenVec3(normal.x, normal.y, normal.z);
   }
 
   /** Steps 4 to 6 of the tick: `step`, the write-back and the velocities, then the collision events. */
@@ -331,6 +500,8 @@ export class PhysicsSystem implements BodyService {
     entry.handle = undefined;
     entry.linear = ZERO;
     entry.angular = ZERO;
+    entry.grounded = false;
+    entry.groundNormal = ZERO;
     this.frozenCount += 1;
     this.report(
       "E8103",
@@ -378,6 +549,29 @@ export class PhysicsSystem implements BodyService {
         collider: structuredClone(entry.collider), position: { ...pose.position }, rotation: { ...pose.rotation },
         ...(contacts === undefined ? {} : { contacts: structuredClone(contacts) }) }];
     });
+  }
+
+  /**
+   * The spatial queries of the loaded adapter for the host API (decision 0217), in terms of body references. They
+   * see the world as of the last completed tick (nothing here steps or moves a body); the host layer turns user ids
+   * (entity slots) into entity IDs. @internal
+   */
+  get queries(): PhysicsQueries {
+    const world = this.physics;
+    return {
+      adapter: this.options.backend.name,
+      supports: (method) => !this.disposed && typeof world[method] === "function",
+      handleOf: (slot, generation) => {
+        const entry = this.bodies[slot];
+        return entry === undefined || entry.ref.gen !== generation ? undefined : entry.handle;
+      },
+      castRay: (origin, direction, maxDistance, filter) => world.castRay?.(origin, direction, maxDistance, filter),
+      castShape: (shape, pose, displacement, filter) => world.castShape?.(shape, pose, displacement, filter),
+      contacts: (handle) => world.contacts?.(handle) ?? [],
+      setCollisionGroups: (handle, memberships, filter) => {
+        world.setCollisionGroups?.(handle, memberships, filter);
+      },
+    };
   }
 
   /** Bodies and colliders in the backend's world (both 0 after {@link dispose}). */
@@ -430,7 +624,7 @@ export class PhysicsSystem implements BodyService {
   }
 
   /** A diagnostic located at the command or property of the program that caused it (`spanId` of `ctx.body`). */
-  private reportAt(code: "E8101" | "E8104", spanId: number, message: string, notes: readonly string[]): void {
+  private reportAt(code: "E8101" | "E8104" | "E8105", spanId: number, message: string, notes: readonly string[]): void {
     this.options.report(makeRuntimeDiagnostic(code, { phase: this.phase(), message, notes, source: resolveSpan(this.options.manifest, spanId) }));
   }
 }
@@ -475,6 +669,14 @@ class BodyHandleImpl {
     this.system.enqueue(entry, this.span, "set_kinematic_target", { category: "kinematicTarget", target: entry.ref, pose }, [pose.position, pose.rotation]);
   }
 
+  moveCharacter(displacement: unknown, rotation: unknown): void {
+    const entry = this.system.entryFor(this.ref, this.span, "move_character");
+    if (entry === undefined) return;
+    const vector = this.vec3(displacement, "move_character");
+    if (!isQuat(rotation)) throw new RuntimeInternalError(`ctx.body(..) move_character got ${describeValue(rotation)} for the rotation; expected a quat.`);
+    this.system.enqueueMove(entry, this.span, vector, rotation);
+  }
+
   teleport(position: unknown, rotation: unknown, keepVelocity: unknown): void {
     const entry = this.system.entryFor(this.ref, this.span, "teleport");
     if (entry === undefined) return;
@@ -489,6 +691,14 @@ class BodyHandleImpl {
 
   get angularVelocity(): Vec3 {
     return this.system.entryForRead(this.ref, this.span, "angular_velocity")?.angular ?? ZERO;
+  }
+
+  get grounded(): boolean {
+    return this.system.entryForRead(this.ref, this.span, "grounded")?.grounded ?? false;
+  }
+
+  get groundNormal(): Vec3 {
+    return this.system.entryForRead(this.ref, this.span, "ground_normal")?.groundNormal ?? ZERO;
   }
 
   private vec3(value: unknown, command: string): Vec3 {

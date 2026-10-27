@@ -302,6 +302,7 @@ export const IR_VARIANTS: Readonly<Record<string, string>> = {
   "BodyDesc.Dynamic": "schema:Dynamic",
   "ColliderDesc.Box": "schema:BoxCollider",
   "ColliderDesc.Sphere": "schema:SphereCollider",
+  "ColliderDesc.Capsule": "schema:CapsuleCollider",
 };
 
 /** The IR enums the facts read (the first part of the keys of [`IR_VARIANTS`]). */

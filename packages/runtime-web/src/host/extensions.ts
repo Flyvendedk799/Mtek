@@ -2,6 +2,8 @@ import type { Vec3, Quat } from "../math/types.js";
 import type { SkeletonPlayer } from "../scene/skeleton.js";
 import type { World, EntityRecord } from "../scene/world.js";
 import type { SceneInspection, BodyInspection, RenderInspection } from "./inspection.js";
+import { EntityIds } from "./entity-ids.js";
+import type { MtekPhysics } from "./physics-api.js";
 
 export const EXTENSION_API_VERSION = 1;
 export interface SceneTransform {
@@ -36,6 +38,11 @@ export interface ExtensionContext {
   detachAnimation(id: string): SkeletonPlayer;
   /** Explicitly supplied host services (for example a loader or navigation adapter). */
   service<T>(name: string): T | undefined;
+  /**
+   * Optional additive API 1 capability (decision 0217): ray and shape casts, contacts and collision groups by
+   * entity ID. `undefined` while the running program has no physics.
+   */
+  readonly physics?: MtekPhysics | undefined;
 }
 export interface MtekExtension {
   readonly id: string;
@@ -68,28 +75,9 @@ export function sceneAccess(
   getWorld: () => World,
   active: () => void,
   inspect?: () => RenderInspection & { readonly bodies: readonly BodyInspection[] },
+  ids: EntityIds = new EntityIds(getWorld),
 ): Pick<ExtensionContext, "readTransforms" | "inspectScene" | "writeTransforms" | "animation" | "shareAnimation" | "detachAnimation"> {
-  const epochs = new WeakMap<World, number>();
-  let nextEpoch = 0;
-  const records = (): Map<string, EntityRecord> => {
-    const world = getWorld(),
-      entries = new Map<string, EntityRecord>();
-    if (!epochs.has(world)) epochs.set(world, ++nextEpoch);
-    const prefix = `scene:${String(epochs.get(world))}:`;
-    for (let slot = 0; slot < world.entities.length; slot++) {
-      const entity = world.resolvedAt(slot),
-        record = world.recordAt(slot);
-      if (entity !== undefined && record !== undefined)
-        entries.set(prefix + entity.symbol, record);
-    }
-    for (const entity of world.dynamic.live)
-      if (!entity.removing)
-        entries.set(
-          `${prefix}spawn:${String(entity.ref.slot)}:${String(entity.ref.gen)}`,
-          entity.record,
-        );
-    return entries;
-  };
+  const records = (): Map<string, EntityRecord> => ids.records();
   return {
     inspectScene: () => {
       active();

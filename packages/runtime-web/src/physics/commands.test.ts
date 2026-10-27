@@ -12,14 +12,16 @@ function command(category: QueuedCommand["category"], target = A): QueuedCommand
       return { category, target, pose: POSE, keepVelocity: false };
     case "kinematicTarget":
       return { category, target, pose: POSE };
+    case "characterMove":
+      return { category, target, displacement: V, rotation: POSE.rotation };
     default:
       return { category, target, vector: V };
   }
 }
 
 describe("CommandQueue (spec/physics.md section 4, step 2)", () => {
-  it("applies teleports, linear velocities, kinematic targets, impulses, forces, in that order", () => {
-    expect([...COMMAND_CATEGORIES]).toEqual(["teleport", "linearVelocity", "kinematicTarget", "impulse", "force"]);
+  it("applies teleports, linear velocities, kinematic targets, character moves, impulses, forces, in that order", () => {
+    expect([...COMMAND_CATEGORIES]).toEqual(["teleport", "linearVelocity", "kinematicTarget", "characterMove", "impulse", "force"]);
     const queue = new CommandQueue();
     // Pushed in the opposite order on purpose: a teleport issued after an impulse still comes first.
     for (const category of [...COMMAND_CATEGORIES].reverse()) queue.push(command(category));
