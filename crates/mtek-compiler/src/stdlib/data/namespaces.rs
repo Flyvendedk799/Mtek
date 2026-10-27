@@ -92,7 +92,7 @@ fn animation_namespace() -> NamespaceDef {
         vec![
             member(
                 "copy_pose",
-                "Copies the displayed pose from a compatible skeleton and holds it. A subsequent transition blends from that pose.",
+                "Copies and holds the displayed pose of a compatible skeleton; a later transition blends from it.",
                 vec![target, p("source", exact(TypeRef::EntityRef))],
                 boolean,
                 true,
@@ -113,7 +113,7 @@ fn animation_namespace() -> NamespaceDef {
             ),
             member(
                 "transition",
-                "Selects a skeletal clip, crossfading from the current pose. Repeating the current name does not restart it; use play to restart.",
+                "Selects a skeletal clip, crossfading from the current pose; the current name does not restart (use play).",
                 vec![
                     target,
                     p("name", exact(TypeRef::String)),
@@ -147,14 +147,14 @@ fn animation_namespace() -> NamespaceDef {
             ),
             member(
                 "seek",
-                "Clamps time to the clip duration and applies the pose immediately, without crossing markers or resuming.",
+                "Clamps time to the clip duration and applies the pose at once, crossing no markers and not resuming.",
                 vec![target, p("time", F32)],
                 boolean,
                 true,
             ),
             member(
                 "fade",
-                "Smoothly blends clip weight toward a clamped 0..1 target over seconds; zero applies immediately.",
+                "Blends clip weight toward a 0..1 target over seconds; zero applies at once.",
                 vec![target, p("weight", F32), p("duration", F32)],
                 boolean,
                 true,
@@ -227,7 +227,7 @@ fn hud_namespace() -> NamespaceDef {
         vec![
             member(
                 "text",
-                "Draws a line of text at `at` (canvas NDC, y up): `size` in CSS pixels (default 24.0), `tint` (default white), `align` 0.0 puts the left edge at `at`, 0.5 the centre (default), 1.0 the right edge, `font` an `asset.font(..)` or `hud.pixel_font()` (default: the page's sans-serif). The line is centred vertically on `at`.",
+                "Draws a line of text at `at` (canvas NDC, y up): `size` CSS pixels (default 24.0), `tint` (default white), `align` 0.0 left edge, 0.5 centre (default), 1.0 right edge, `font` an `asset.font(..)` or `hud.pixel_font()` (default: page sans-serif). Centred vertically on `at`.",
                 vec![
                     sig(&[p("content", string), p("at", vec2)], unit),
                     sig(&[p("content", string), p("at", vec2), p("size", F32)], unit),
@@ -266,13 +266,13 @@ fn hud_namespace() -> NamespaceDef {
             ),
             member(
                 "pixel_font",
-                "The built-in font: a 5x7 pixel bitmap of printable ASCII, the same in every browser (decision 0139). Other characters show as a box.",
+                "The built-in 5x7 pixel bitmap font of printable ASCII; other characters show as a box.",
                 vec![sig(&[], font)],
                 "Returns the built-in font; draws nothing.",
             ),
             member(
                 "rect",
-                "Draws a filled rectangle of `size` CSS pixels at `at` (canvas NDC), aligned like `hud.text` (default centred). For panels and bars.",
+                "Draws a filled rectangle of `size` CSS pixels at `at` (canvas NDC), aligned like `hud.text` (default centred).",
                 vec![
                     sig(&[p("at", vec2), p("size", vec2), p("tint", tint)], unit),
                     sig(
@@ -289,7 +289,7 @@ fn hud_namespace() -> NamespaceDef {
             ),
             member(
                 "button",
-                "Draws a button centred at `at` (canvas NDC) with the label `label` (`size` in CSS pixels, default 24.0). Returns true in the frame after the button was clicked, once per click; buttons are told apart by their label and their order among buttons with that label.",
+                "Draws a button centred at `at` (canvas NDC) labelled `label` (`size` CSS pixels, default 24.0). Returns true in the frame after a click, once per click; buttons are told apart by label and order.",
                 vec![
                     sig(&[p("label", string), p("at", vec2)], boolean),
                     sig(
@@ -400,7 +400,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                 pure(
                     "axis_angle",
                     Milestone::M1,
-                    "Rotation by `angle` radians about `axis`. The axis is normalised; a zero axis gives the identity on the CPU.",
+                    "Rotation by `angle` radians about `axis` (normalised; a zero axis gives the identity on the CPU).",
                     &[p("axis", vec3), p("angle", F32)],
                     TypeRef::Quat,
                 ),
@@ -475,7 +475,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                         Domain::Both,
                         true,
                         Milestone::M1,
-                        "A colour from sRGB-encoded components, converted to linear light with the sRGB transfer function.",
+                        "A colour from sRGB-encoded components, converted to linear light.",
                         vec![sig(&[p("rgb", vec3), p("a", F32)], exact(TypeRef::Color))],
                     )
                     .cpu_semantics(
@@ -532,7 +532,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
         namespace(
             "frame",
             Milestone::M1,
-            "Per-frame CPU/`bind` values; route to GPU stages through material params. `update(dt)` gets variable frame delta; `fixed_update(dt)` runs zero or more times per frame with a constant fixed step (default 1/60 s).",
+            "Per-frame CPU/`bind` values; route to GPU stages through material params. `update(dt)` gets the variable frame delta; `fixed_update(dt)` runs zero or more times per frame with a constant step (default 1/60 s).",
             vec![
                 value(
                     "time",
@@ -542,7 +542,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                 value(
                     "delta",
                     TypeRef::F32,
-                    "The clamped frame delta of the current rendered frame; the value passed to `update`.",
+                    "The clamped frame delta passed to `update`.",
                 ),
                 value(
                     "index",
@@ -561,7 +561,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                 NamespaceMember::Function(compile_time(
                     "glb",
                     Milestone::M1,
-                    "A static GLB model. May be stored only in a `const` and used through its accessors.",
+                    "A static GLB model; only in a `const`, used through its accessors.",
                     &[p("path", string)],
                     TypeRef::GlbAsset,
                 )),
@@ -802,7 +802,7 @@ pub(super) fn types() -> Vec<TypeDef> {
             TypeKind::Color,
             Milestone::M1,
             true,
-            "Linear-light RGBA with straight alpha; distinct from `vec4`. A literal `#rrggbb` is sRGB-encoded and converted; `color.linear(rgb, a)` takes linear components, `color.srgb(rgb, a)` sRGB ones. Fields `.r .g .b .a` and `.rgb`; no arithmetic.",
+            "Linear RGBA, straight alpha; not a `vec4`. A literal `#rrggbb` is sRGB, converted; `color.linear(rgb, a)` takes linear components, `color.srgb(rgb, a)` sRGB ones. Fields `.r .g .b .a`, `.rgb`; no arithmetic.",
         ),
         simple(
             "array",
@@ -961,7 +961,7 @@ pub(super) fn types() -> Vec<TypeDef> {
                 TypeKind::Record,
                 Milestone::M1,
                 false,
-                "A pointer event: `position` in normalised canvas coordinates (x right, y up, both in -1..1) and the `button` (0 primary, 1 middle, 2 secondary).",
+                "A pointer event: `position` in canvas coordinates (x right, y up, -1..1) and the `button` (0 primary, 1 middle, 2 secondary).",
             )
         },
     ]

@@ -356,14 +356,29 @@ export interface MtekCamera {
   readonly exposure: number;
 }
 
+/**
+ * The `move_character` settings of a kinematic body (decisions 0214, 0217): all six fields, present
+ * only when the program wrote at least one of them. Radians and metres.
+ */
+export interface MtekCharacterSettings {
+  readonly maxSlope: number;
+  readonly stepHeight: number;
+  readonly stepMinWidth: number;
+  readonly snapToGround: number;
+  readonly skin: number;
+  readonly carry: boolean;
+}
+
 export type MtekBody =
   | { readonly kind: "static" }
-  | { readonly kind: "kinematic" }
+  | { readonly kind: "kinematic"; readonly character?: MtekCharacterSettings }
   | {
       readonly kind: "dynamic";
       readonly mass: number;
       readonly linearDamping: number;
       readonly angularDamping: number;
+      /** Per-body continuous collision detection (decision 0217); present only when true. */
+      readonly continuous?: true;
     };
 
 export interface MtekBoxCollider {
@@ -382,7 +397,17 @@ export interface MtekSphereCollider {
   readonly restitution: number;
 }
 
-export type MtekCollider = MtekBoxCollider | MtekSphereCollider;
+/** A cylinder along local Y with a hemisphere on each end; `height` is the full height and exceeds `2 * radius`. */
+export interface MtekCapsuleCollider {
+  readonly kind: "capsule";
+  readonly radius: number;
+  readonly height: number;
+  readonly sensor: boolean;
+  readonly friction: number;
+  readonly restitution: number;
+}
+
+export type MtekCollider = MtekBoxCollider | MtekSphereCollider | MtekCapsuleCollider;
 
 export interface MtekEntity {
   /** Static entity index in stable instance order (depth-first pre-order). */

@@ -39,6 +39,15 @@ describe("world-space diagnostic overlays", () => {
     const points = geometry.lines.flatMap(line => [line.start,line.end]);
     expect(Math.max(...points.map(p => p.x))).toBeCloseTo(.4); expect(Math.max(...points.map(p => p.y))).toBeCloseTo(.2);
   });
+  it("renders a capsule collider as two cap spheres and four side lines, along the body's up axis", () => {
+    const s = scene(); s.entities = [{id:"actor",parentId:null,worldMatrix:identity}];
+    s.bodies = [{entityId:"actor",kind:"kinematic",active:true,position:{x:0,y:0,z:.5},rotation:{x:0,y:0,z:0,w:1},collider:{shape:{kind:"capsule",radius:.1,height:.6},sensor:false,friction:0,restitution:0}}];
+    const geometry = buildInspectorOverlay(snapshot(s),{bounds:false,skeleton:false,ik:false,contacts:false});
+    expect(geometry.lines).toHaveLength(2*3*32+4); expect(geometry.lines.every(line => line.kind === "collider" && !line.dashed)).toBe(true);
+    const points = geometry.lines.flatMap(line => [line.start,line.end]);
+    expect(Math.max(...points.map(p => p.y))).toBeCloseTo(.3); expect(Math.min(...points.map(p => p.y))).toBeCloseTo(-.3);
+    expect(Math.max(...points.map(p => p.x))).toBeCloseTo(.1);
+  });
   it("combines supplied world bounds, IK targets and contacts, with a strict output limit", () => {
     const s = scene(), a = animation();
     s.entities = [{id:"actor",parentId:null,worldMatrix:identity,bounds:{source:"authored",culled:false,sphere:{center:{x:0,y:0,z:.5},radius:.2}}}];

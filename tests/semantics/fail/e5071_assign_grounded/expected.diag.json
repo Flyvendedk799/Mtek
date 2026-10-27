@@ -1,0 +1,24 @@
+[
+  {
+    "code": "MTEK-E5071",
+    "file": "src/main.mtek",
+    "startByte": 281,
+    "endByte": 299,
+    "message": "`body.grounded` belongs to the physics subsystem and is read-only.",
+    "notes": [
+      "`grounded` is the result of the last completed `move_character`",
+      "help: move the body with `move_character(displacement, rotation)`; it is grounded when the move finds ground within `snap_to_ground`"
+    ]
+  },
+  {
+    "code": "MTEK-E5071",
+    "file": "src/main.mtek",
+    "startByte": 316,
+    "endByte": 339,
+    "message": "`body.ground_normal` belongs to the physics subsystem and is read-only.",
+    "notes": [
+      "`ground_normal` is the result of the last completed `move_character`, zero when not grounded",
+      "help: move the body with `move_character(displacement, rotation)`"
+    ]
+  }
+]

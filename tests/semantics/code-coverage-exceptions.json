@@ -263,6 +263,11 @@
       "test": "packages/runtime-web/src/physics/system.test.ts"
     },
     {
+      "code": "E8105",
+      "reason": "A runtime code of the physics subsystem (decision 0217).",
+      "test": "packages/runtime-web/src/physics/character.test.ts"
+    },
+    {
       "code": "W8201",
       "reason": "A runtime code of the audio subsystem (decision 0130).",
       "test": "packages/runtime-web/src/audio/audio.test.ts"

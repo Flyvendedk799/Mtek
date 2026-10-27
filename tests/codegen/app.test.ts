@@ -239,6 +239,7 @@ describe("the generated program module", () => {
       "light_bindings",
       "light_bindings_edited",
       "lights",
+      "movement",
       "numeric_cpu_table",
       "physics",
       "prefabs",

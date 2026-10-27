@@ -336,7 +336,31 @@ scene Play {
 }
 ```
 
-[Physics](concepts/physics.md) lists the body kinds, the commands and the limits.
+## Character movement
+
+A character that walks, jumps, climbs stairs and rides moving platforms is a `Kinematic` body with a `CapsuleCollider` that calls `move_character(displacement, rotation)` from `fixed_update`. The engine slides it along walls, steps it up risers under `step_height`, stops it at slopes steeper than `max_slope`, snaps it to the ground and carries it with the platform it stands on. It applies no gravity: the program keeps its own vertical speed and uses `grounded` (true when the last move ended on ground) to reset it and to allow a jump. A platform is a kinematic body that sets its own target every tick with `set_kinematic_target`; the character standing on it is carried by its movement and its turning.
+
+```mtek from=examples/character-movement/src/main.mtek
+        body: Kinematic { max_slope: 0.7853982; step_height: 0.3 };
+        collider: CapsuleCollider { radius: 0.3; height: 1.8; friction: 0.0 };
+```
+
+```mtek from=examples/character-movement/src/main.mtek
+            if grounded {
+                if self.vy < 0.0 {
+                    self.vy = 0.0;
+                }
+                if is_key_down(Key.Space) {
+                    self.vy = JUMP_SPEED;
+                }
+            }
+```
+
+```mtek from=examples/character-movement/src/main.mtek
+            self.body.move_character(vec3(walk.x * dt, self.vy * dt, walk.z * dt), self.rotation);
+```
+
+Do all of it in `fixed_update`: the fixed tick is what makes the result the same at 30, 60 or 144 frames per second. Passing `self.rotation` keeps the facing and lets a turning platform turn the character. `examples/character-movement` has a stair flight, a ledge, a gentle and a steep slope, a corner, a sliding platform, a lift and a turntable; a browser test walks it on both local backends. From the host, `app.physics.castRay`, `castShape`, `contacts` and `setCollisionGroups` ask the same world about entities by ID. [Physics](concepts/physics.md) lists the body kinds, the commands and the limits.
 
 ## The HUD: text, rectangles, buttons and fonts
 
@@ -543,6 +567,6 @@ Players need a browser with WebGPU; [Supported environments](supported-environme
 
 ## See also
 
-- The examples: `examples/small-game` (the template), `examples/lane-runner` (three scenes, saved score, difficulty setting), `examples/hud-score` (HUD, timer bar, easing), `examples/arcade-audio`, `examples/sprite-pop` and `examples/stage-show` (cameras, particles, a GLB clip).
+- The examples: `examples/small-game` (the template), `examples/character-movement` (a walking character on stairs, slopes and moving platforms), `examples/lane-runner` (three scenes, saved score, difficulty setting), `examples/hud-score` (HUD, timer bar, easing), `examples/arcade-audio`, `examples/sprite-pop` and `examples/stage-show` (cameras, particles, a GLB clip).
 - [Time and input](concepts/time-and-input.md), [Physics](concepts/physics.md) and [State and bindings](concepts/state-and-bindings.md).
 - [Limitations](limitations.md): what is not there yet.

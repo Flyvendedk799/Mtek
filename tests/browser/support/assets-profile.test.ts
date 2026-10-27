@@ -88,7 +88,7 @@ describe("the documented GLB profile and its failing fixtures (spec/assets.md se
   it("lists the codes the table and section 2.1 document", () => {
     expect(documented).toEqual([
       "E7001", "E7002", "E7003", "E7004", "E7005", "E7006", "E7007", "E7008", "E7009", "E7011", "E7013",
-      "E7014", "E7015", "E7016", "E7017", "E7018", "E7019", "E7025",
+      "E7014", "E7015", "E7016", "E7017", "E7018", "E7019", "E7025", "E7027",
     ]);
   });
 

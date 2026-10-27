@@ -1,0 +1,9 @@
+[project]
+name = "character-movement"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Course"
+
+[build]
+target = "web"
+title = "Character Movement"

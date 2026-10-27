@@ -53,8 +53,11 @@ export interface FakeBodyHandle {
   setKinematicTarget(position: FakeVector, rotation: unknown): void;
   teleport(position: FakeVector, rotation: unknown, keepVelocity: boolean): void;
   setLinearVelocity(v: FakeVector): void;
+  moveCharacter(displacement: FakeVector, rotation: unknown): void;
   readonly linearVelocity: FakeVector;
   readonly angularVelocity: FakeVector;
+  readonly grounded: boolean;
+  readonly groundNormal: FakeVector;
 }
 
 export interface FakeContext {
@@ -89,11 +92,14 @@ export function createFakeContext(
   bodyCalls: BodyCall[];
   /** The velocities `ctx.body(entity)` reads, by entity index (zero when absent). */
   velocities: Map<number, { linear: FakeVector; angular: FakeVector }>;
+  /** What `grounded` and `groundNormal` read, by entity index (false and zero when absent). */
+  grounds: Map<number, { grounded: boolean; normal: FakeVector }>;
 } {
   const calls: SetterCall[] = [];
   const warnings: WarningCall[] = [];
   const bodyCalls: BodyCall[] = [];
   const velocities = new Map<number, { linear: FakeVector; angular: FakeVector }>();
+  const grounds = new Map<number, { grounded: boolean; normal: FakeVector }>();
   const zero: FakeVector = { x: 0, y: 0, z: 0 };
   const e: FakeEntityRecord[] = Array.from({ length: entityCount }, (_, index) =>
     Object.freeze({
@@ -136,14 +142,18 @@ export function createFakeContext(
         bodyCalls.push({ target: key, method, args, span: spanId });
       };
       const velocity = typeof key === "number" ? velocities.get(key) : undefined;
+      const ground = typeof key === "number" ? grounds.get(key) : undefined;
       return {
         applyImpulse: record("applyImpulse"),
         applyForce: record("applyForce"),
         setKinematicTarget: record("setKinematicTarget"),
         teleport: record("teleport"),
         setLinearVelocity: record("setLinearVelocity"),
+        moveCharacter: record("moveCharacter"),
         linearVelocity: velocity?.linear ?? zero,
         angularVelocity: velocity?.angular ?? zero,
+        grounded: ground?.grounded ?? false,
+        groundNormal: ground?.normal ?? zero,
       };
     },
     warn(code: string, spanId: number): void {
@@ -151,5 +161,5 @@ export function createFakeContext(
     },
     budget: { n: budget },
   });
-  return { ctx, calls, warnings, bodyCalls, velocities };
+  return { ctx, calls, warnings, bodyCalls, velocities, grounds };
 }

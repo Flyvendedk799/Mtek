@@ -11,6 +11,8 @@
 import type {
   BodyDesc,
   BodyHandle,
+  CharacterMoveOptions,
+  CharacterMovement,
   ColliderDesc,
   PhysicsBackend,
   PhysicsWorld,
@@ -23,6 +25,15 @@ export const IDENTITY = { x: 0, y: 0, z: 0, w: 1 } as const;
 
 export function vec(x: number, y: number, z: number): Vec3 {
   return { x, y, z };
+}
+
+/** One call of the recording `moveCharacter`: what the runtime asked for. */
+export interface FakeMove {
+  readonly userId: number;
+  readonly displacement: Vec3;
+  readonly options: CharacterMoveOptions | undefined;
+  /** The pose the body had when the move was asked for. */
+  readonly from: Pose;
 }
 
 /** A body the fake world holds. `pose`, `linear` and `angular` are what `readPose`/`readVelocities` answer. */
@@ -48,6 +59,13 @@ export class FakePhysicsWorld implements PhysicsWorld {
   readonly collisions: [number, number, boolean][] = [];
   /** Runs inside every `step`, after it is logged: scripts what the solver did (poses, velocities, events). */
   onStep: ((world: FakePhysicsWorld) => void) | undefined;
+  /** Every `moveCharacter` call, oldest first. */
+  readonly moves: FakeMove[] = [];
+  /**
+   * Scripts what `moveCharacter` answers; by default the displacement as asked, not grounded, no ground, the
+   * requested rotation. Delete the method (`world.moveCharacter = undefined`) to make an adapter without it.
+   */
+  onMove: ((body: FakeBody, displacement: Vec3, options: CharacterMoveOptions | undefined) => CharacterMovement) | undefined;
   steps = 0;
   disposed = false;
   private next = 1;
@@ -105,8 +123,27 @@ export class FakePhysicsWorld implements PhysicsWorld {
     this.log.push(`kinematic:${String(this.known(h).userId)}:${text(pose.position)}`);
   }
 
+  moveCharacter?(h: BodyHandle, displacement: Vec3, options?: CharacterMoveOptions): CharacterMovement {
+    this.alive();
+    const body = this.known(h);
+    this.log.push(`move:${String(body.userId)}:${text(displacement)}`);
+    this.moves.push({ userId: body.userId, displacement, options, from: body.pose });
+    return (
+      this.onMove?.(body, displacement, options) ?? {
+        displacement,
+        grounded: false,
+        contacts: [],
+        carried: ORIGIN,
+        carriedYaw: 0,
+        rotation: options?.rotation ?? body.pose.rotation,
+      }
+    );
+  }
+
   teleport(h: BodyHandle, pose: Pose, keepVelocity: boolean): void {
     this.alive();
+    // Like the engine, a teleport takes effect at once: the pose the next read (or move) starts from.
+    this.known(h).pose = pose;
     this.log.push(`teleport:${String(this.known(h).userId)}:${text(pose.position)}:${keepVelocity ? "keep" : "reset"}`);
   }
 

@@ -1,0 +1,13 @@
+// The displacement is a vec3 and the rotation a quat.
+scene Demo {
+    camera Main {}
+    entity Hero {
+        mesh: Box {};
+        body: Kinematic {};
+        collider: CapsuleCollider { radius: 0.4; height: 1.8; };
+        on key_down(Key.Space) {
+            self.body.move_character(1.0, quat.identity());
+            self.body.move_character(vec3(0.0), vec3(0.0));
+        }
+    }
+}

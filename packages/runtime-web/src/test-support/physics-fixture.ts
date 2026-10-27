@@ -58,8 +58,11 @@ export interface Handle {
   setLinearVelocity(v: unknown): void;
   setKinematicTarget(position: unknown, rotation: unknown): void;
   teleport(position: unknown, rotation: unknown, keepVelocity: unknown): void;
+  moveCharacter(displacement: unknown, rotation: unknown): void;
   readonly linearVelocity: Vec3;
   readonly angularVelocity: Vec3;
+  readonly grounded: boolean;
+  readonly groundNormal: Vec3;
 }
 
 export interface Self {

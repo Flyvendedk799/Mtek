@@ -271,6 +271,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e5121"></a>E5121 | body without collider | a `body` without a `collider`; the body would have no shape |
 | <a id="mtek-e5122"></a>E5122 | scaled dynamic or kinematic body | `scale` of a `Dynamic` or `Kinematic` body that is not the constant `vec3(1.0)` |
 | <a id="mtek-e5123"></a>E5123 | command not valid for this body kind | `Name.body.<command>(..)` or `Name.body.<velocity>` that the entity's body kind does not support, or on an entity without a body |
+| <a id="mtek-e5124"></a>E5124 | capsule collider not taller than its caps | a `CapsuleCollider` whose `height` is not greater than `2 * radius`; the height is the full height including both caps, so the cylinder part would have no length; help: increase `height` or decrease `radius` (decision 0214) |
 | <a id="mtek-e5201"></a>E5201 | go_to target is not a scene | the argument of `go_to` is not the name of a scene of the program; a note lists the scenes (decision 0141) |
 | <a id="mtek-e5202"></a>E5202 | shared state outside a scene | `shared state` in an entity or a prefab; only a scene's state carries over to another scene (decision 0141) |
 | <a id="mtek-e5203"></a>E5203 | shared state of a type that cannot carry over | a `shared state` whose type holds an `entity_ref`, a resource or a descriptor, which belong to one scene (decision 0141) |
@@ -376,13 +377,14 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e8102"></a>E8102 | physics module failed to load | mount fails with the kind `physics-failed`; a reload whose physics module cannot load is refused (decision 0066) |
 | <a id="mtek-e8103"></a>E8103 | non-finite pose produced by the solver | the body is frozen (taken out of the simulation, the entity keeps its last finite pose) and the code is reported once per body (decision 0066) |
 | <a id="mtek-e8104"></a>E8104 | non-finite value given to a body | a body command with an argument that is not finite (a rotation of zero length counts), or a body whose initial pose is not finite; the command is dropped, the body is not created (decision 0066) |
+| <a id="mtek-e8105"></a>E8105 | physics adapter cannot move characters | a `move_character` command for a body whose loaded physics adapter has no `moveCharacter`; the command is dropped and the code is reported once per body (decision 0217) |
 | <a id="mtek-w8201"></a>W8201 | audio value clamped | runtime: a volume or pitch outside its range, or not finite, was given to an audio call; the nearest valid value is used (`spec/audio.md` §3) |
 | <a id="mtek-w8202"></a>W8202 | sound could not be decoded | runtime: the browser could not decode a sound file; playing it does nothing and the program keeps running (`spec/audio.md` §5) |
 | <a id="mtek-w8203"></a>W8203 | too many HUD items | runtime: a frame drew more than 512 `hud` items; the rest of that frame is not shown (reported once per call site, decision 0134) |
 | <a id="mtek-w8204"></a>W8204 | font could not be loaded | the browser rejected an `asset.font` file when the HUD first used it; the text uses the default family (decision 0139) |
 | <a id="mtek-w8205"></a>W8205 | too many timers | runtime: a scene already has 4096 live timers, and the timer a call site tried to start is not started; reported once per call site (decision 0177) |
 | <a id="mtek-w8210"></a>W8210 | too many particles | runtime: more than 4096 particles are alive in a frame; only the first 4096 are drawn (reported once per scene run, decision 0173) |
-| (E8105–E8199) | further physics runtime codes | reserved; added with the feature that needs them |
+| (E8106–E8199) | further physics runtime codes | reserved; added with the feature that needs them |
 
 ### 5.9 Project and internal (`9xxx`)
 | Code | Title | Trigger |

@@ -1,0 +1,24 @@
+[
+  {
+    "code": "MTEK-E3002",
+    "file": "src/main.mtek",
+    "startByte": 265,
+    "endByte": 310,
+    "message": "`move_character` takes 2 arguments (displacement: vec3, rotation: quat), but 1 was given.",
+    "notes": [
+      "signature: body.move_character(displacement: vec3, rotation: quat)",
+      "help: add the missing argument `rotation: quat`"
+    ]
+  },
+  {
+    "code": "MTEK-E3002",
+    "file": "src/main.mtek",
+    "startByte": 324,
+    "endByte": 382,
+    "message": "`move_character` takes 2 arguments (displacement: vec3, rotation: quat), but 3 were given.",
+    "notes": [
+      "signature: body.move_character(displacement: vec3, rotation: quat)",
+      "help: remove the last argument; the parameters are `displacement: vec3, rotation: quat`"
+    ]
+  }
+]

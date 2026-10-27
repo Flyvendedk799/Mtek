@@ -357,6 +357,88 @@ fn schema_rows() -> Vec<Row> {
         ),
         // 3.7 Bodies and colliders
         (
+            "Kinematic",
+            "max_slope",
+            "f32",
+            Some("0.7853982"),
+            "C",
+            Some("0\u{2026}1.5707964"),
+        ),
+        (
+            "Kinematic",
+            "step_height",
+            "f32",
+            Some("0.25"),
+            "C",
+            Some("\u{2265} 0, finite"),
+        ),
+        (
+            "Kinematic",
+            "step_min_width",
+            "f32",
+            Some("0.1"),
+            "C",
+            Some("> 0, finite"),
+        ),
+        (
+            "Kinematic",
+            "snap_to_ground",
+            "f32",
+            Some("0.2"),
+            "C",
+            Some("\u{2265} 0, finite"),
+        ),
+        (
+            "Kinematic",
+            "skin",
+            "f32",
+            Some("0.01"),
+            "C",
+            Some("> 0, finite"),
+        ),
+        ("Kinematic", "carry", "bool", Some("true"), "C", None),
+        ("Dynamic", "continuous", "bool", Some("false"), "C", None),
+        (
+            "CapsuleCollider",
+            "radius",
+            "f32",
+            None,
+            "RC",
+            Some("> 0, finite"),
+        ),
+        (
+            "CapsuleCollider",
+            "height",
+            "f32",
+            None,
+            "RC",
+            Some("> 0, finite"),
+        ),
+        (
+            "CapsuleCollider",
+            "sensor",
+            "bool",
+            Some("false"),
+            "C",
+            None,
+        ),
+        (
+            "CapsuleCollider",
+            "friction",
+            "f32",
+            Some("0.5"),
+            "C",
+            Some("\u{2265} 0, finite"),
+        ),
+        (
+            "CapsuleCollider",
+            "restitution",
+            "f32",
+            Some("0.0"),
+            "C",
+            Some("0\u{2026}1"),
+        ),
+        (
             "Dynamic",
             "mass",
             "f32",
@@ -520,6 +602,7 @@ fn schemas_have_exactly_the_specified_fields() {
         "Kinematic",
         "BoxCollider",
         "SphereCollider",
+        "CapsuleCollider",
         "Emitter",
     ];
     let mut registered: Vec<&str> = registry.schemas.iter().map(|s| s.name).collect();
@@ -538,9 +621,20 @@ fn schemas_have_exactly_the_specified_fields() {
         want.sort_unstable();
         assert_eq!(have, want, "fields of {}", schema.name);
     }
-    for name in ["Static", "Kinematic"] {
-        assert!(registry.schema(name).is_some_and(|s| s.fields.is_empty()));
-    }
+    assert!(
+        registry
+            .schema("Static")
+            .is_some_and(|s| s.fields.is_empty())
+    );
+    // The six character fields of a kinematic body are absent from a completed descriptor unless
+    // the program wrote them (decision 0217).
+    let kinematic = registry.schema("Kinematic").unwrap();
+    assert!(
+        kinematic
+            .fields
+            .iter()
+            .all(|f| f.flags.is_unset_when_omitted())
+    );
 }
 
 #[test]
@@ -565,6 +659,7 @@ fn schema_categories_match_the_specification() {
         ("Kinematic", SchemaCategory::Body),
         ("BoxCollider", SchemaCategory::Collider),
         ("SphereCollider", SchemaCategory::Collider),
+        ("CapsuleCollider", SchemaCategory::Collider),
         ("Emitter", SchemaCategory::Emitter),
     ];
     for (name, category) in expected {
@@ -635,7 +730,7 @@ fn field_rules_and_range_codes_follow_the_scene_specification() {
                 requires: "collider",
                 code: Code::E5121,
                 help: Some(
-                    "add a `collider: BoxCollider { size: ... }` or `SphereCollider { radius: ... }` that gives the body its shape"
+                    "add a `collider: BoxCollider { size: ... }`, `SphereCollider { radius: ... }` or `CapsuleCollider { radius: ...; height: ... }` that gives the body its shape"
                 ),
             }
         ]
@@ -650,7 +745,7 @@ fn field_rules_and_range_codes_follow_the_scene_specification() {
     );
     let mut dedicated = Vec::new();
     for schema in &registry.schemas {
-        if schema.name != "Entity" && schema.name != "Camera" {
+        if !["Entity", "Camera", "CapsuleCollider"].contains(&schema.name) {
             assert!(schema.rules.is_empty(), "{}", schema.name);
         }
         for field in &schema.fields {
@@ -1296,12 +1391,13 @@ fn language_summary_lists_the_same_math_intrinsics() {
 #[test]
 fn body_commands_follow_the_physics_specification() {
     let registry = registry();
-    let expected: [(&str, &str, &[&str]); 5] = [
+    let expected: [(&str, &str, &[&str]); 6] = [
         ("apply_impulse", "(vec3)", &["Dynamic"]),
         ("apply_force", "(vec3)", &["Dynamic"]),
         ("set_kinematic_target", "(vec3, quat)", &["Kinematic"]),
         ("teleport", "(vec3, quat, bool)", &["Dynamic", "Kinematic"]),
         ("set_linear_velocity", "(vec3)", &["Dynamic"]),
+        ("move_character", "(vec3, quat)", &["Kinematic"]),
     ];
     assert_eq!(registry.body_commands.len(), expected.len());
     for (name, params, bodies) in expected {
@@ -1325,7 +1421,26 @@ fn body_commands_follow_the_physics_specification() {
         assert_eq!(property.ty, TypeRef::Vec3);
         assert_eq!(property.applies_to.len(), 2);
     }
-    assert_eq!(registry.body_properties.len(), 2);
+    for (name, ty) in [
+        ("grounded", TypeRef::Bool),
+        ("ground_normal", TypeRef::Vec3),
+    ] {
+        let property = registry.body_property(name).unwrap();
+        assert_eq!(property.ty, ty);
+        let applies: Vec<&str> = property.applies_to.iter().map(|b| b.as_str()).collect();
+        assert_eq!(applies, ["Kinematic"], "{name}");
+    }
+    assert_eq!(registry.body_properties.len(), 4);
+    assert_eq!(
+        registry.schema("CapsuleCollider").unwrap().rules,
+        vec![FieldRule::ExceedsMultiple {
+            field: "height",
+            other: "radius",
+            factor: 2,
+            code: Code::E5124,
+            help: "increase `height` or decrease `radius`; the height includes both caps, so a straight part needs `height > 2 * radius`",
+        }]
+    );
     assert_eq!(
         registry.body_command("teleport").unwrap().params[2].name,
         "keep_velocity"

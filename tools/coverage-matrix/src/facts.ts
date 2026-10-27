@@ -27,7 +27,7 @@ const MESH_SCHEMAS: Record<string, string> = { box: "Box", sphere: "Sphere", pla
 const PROJECTION_SCHEMAS: Record<string, string> = { perspective: "Perspective", orthographic: "Orthographic" };
 const LIGHT_SCHEMAS: Record<string, string> = { directional: "DirectionalLight", point: "PointLight" };
 const BODY_SCHEMAS: Record<string, string> = { static: "Static", dynamic: "Dynamic", kinematic: "Kinematic" };
-const COLLIDER_SCHEMAS: Record<string, string> = { box: "BoxCollider", sphere: "SphereCollider" };
+const COLLIDER_SCHEMAS: Record<string, string> = { box: "BoxCollider", sphere: "SphereCollider", capsule: "CapsuleCollider" };
 
 interface Context {
   facts: FactSet;

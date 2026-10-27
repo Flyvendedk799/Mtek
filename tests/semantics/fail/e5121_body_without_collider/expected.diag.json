@@ -7,7 +7,7 @@
     "message": "Entity 'Ball' declares 'body' without 'collider'.",
     "notes": [
       "'body' is used only together with 'collider'",
-      "help: add a `collider: BoxCollider { size: ... }` or `SphereCollider { radius: ... }` that gives the body its shape"
+      "help: add a `collider: BoxCollider { size: ... }`, `SphereCollider { radius: ... }` or `CapsuleCollider { radius: ...; height: ... }` that gives the body its shape"
     ]
   }
 ]

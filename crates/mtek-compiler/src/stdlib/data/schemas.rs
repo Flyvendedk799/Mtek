@@ -9,6 +9,8 @@ use crate::stdlib::model::{
 use crate::stdlib::value::{Bound, ConstValue, Limit, ValueRange};
 
 const C: FieldFlags = FieldFlags::CONSTRUCTION_ONLY;
+/// Construction-only, and absent from a completed descriptor unless the program wrote it.
+const CU: FieldFlags = FieldFlags::CONSTRUCTION_ONLY.union(FieldFlags::UNSET_WHEN_OMITTED);
 /// The default `Camera.exposure`, `-log2(1.2 * pi)` (decision 0081): the exposure scale
 /// `1 / (1.2 * 2^EV100)` is then pi, so a white Lambertian surface under 1 lux is 1.0.
 pub(crate) const CAMERA_DEFAULT_EV100: f32 = -1.914_530_5;
@@ -58,7 +60,7 @@ fn emitters() -> Vec<SchemaDef> {
         "Emitter",
         SchemaCategory::Emitter,
         Milestone::M1,
-        "A bounded particle emitter: at most 64 particles, spawned at `rate` per second in a hemisphere around the entity's up axis.",
+        "A bounded particle emitter: at most 64 particles, `rate` per second, in a hemisphere around the entity's up axis.",
         vec![
             field(
                 "rate",
@@ -104,27 +106,27 @@ fn objects() -> Vec<SchemaDef> {
         "Scene",
         SchemaCategory::Object,
         Milestone::M1,
-        "The fields of a scene declaration. All are construction-only and must be constant expressions.",
+        "The fields of a scene: all construction-only constant expressions.",
         vec![
             field(
                 "clear_color",
                 TypeRef::Color,
                 C,
-                "Colour the canvas is cleared to. Only the RGB channels are used.",
+                "Colour the canvas is cleared to; only RGB is used.",
             )
             .default(ConstValue::srgb(0x00, 0x00, 0x00)),
             field(
                 "ambient_color",
                 TypeRef::Color,
                 C,
-                "Colour of the ambient light term of lit materials. Only the RGB channels are used.",
+                "Colour of the ambient light; only RGB is used.",
             )
             .default(ConstValue::srgb(0xff, 0xff, 0xff)),
             field(
                 "ambient_intensity",
                 TypeRef::F32,
                 C,
-                "Scale of the ambient light term of lit materials; 0 turns ambient light off. Like every lit result it is multiplied by the camera's exposure scale (about 3.14 at the default exposure), so 0.3 already gives nearly full brightness on white. Unlit materials ignore it.",
+                "Ambient light scale for lit materials; 0 is off. Multiplied by the camera's exposure scale (about 3.14 by default), so 0.3 is near full brightness on white. Unlit ignores it.",
             )
             .default(ConstValue::F32(0.0))
             .range(ValueRange::non_negative()),
@@ -132,7 +134,7 @@ fn objects() -> Vec<SchemaDef> {
                 "gravity",
                 TypeRef::Vec3,
                 C,
-                "Gravitational acceleration in metres per second squared. Used only when the scene has physics bodies.",
+                "Gravitational acceleration in m/s^2; used only with physics bodies.",
             )
             .default(ConstValue::Vec3([0.0, -9.81, 0.0]))
             .range(ValueRange::finite()),
@@ -163,7 +165,7 @@ fn objects() -> Vec<SchemaDef> {
                 "scale",
                 TypeRef::Vec3,
                 writable_bindable(),
-                "Parent-local scale. Bodies require construction-only scale; dynamic/kinematic bodies require `vec3(1.0)`.",
+                "Parent-local scale; construction-only on bodies, `vec3(1.0)` on dynamic and kinematic ones.",
             )
             .default(ConstValue::splat3(1.0))
             .range(ValueRange::positive().and_finite())
@@ -187,13 +189,13 @@ fn objects() -> Vec<SchemaDef> {
                 "mesh",
                 TypeRef::Mesh,
                 C,
-                "The mesh drawn for this entity: a mesh descriptor (`Box`, `Sphere`, `Plane`) or an asset mesh.",
+                "The mesh drawn: a descriptor (`Box`, `Sphere`, `Plane`) or an asset mesh.",
             ),
             field(
                 "material",
                 TypeRef::Material,
                 FieldFlags::WRITABLE,
-                "Material instance. Value-only instances can be replaced by the same material type; parameters are writable and bindable. Requires `mesh`.",
+                "Material instance; a value-only one can be replaced by the same material type; params are writable and bindable. Requires `mesh`.",
             )
             .default(ConstValue::EmptyDescriptor("Unlit"))
             .default_when_set("mesh"),
@@ -201,7 +203,7 @@ fn objects() -> Vec<SchemaDef> {
                 "light",
                 TypeRef::Descriptor(SchemaCategory::Light),
                 C,
-                "A light component (`DirectionalLight`, `PointLight`). Its fields are writable and bindable as their schemas say. Named entities only.",
+                "A light (`DirectionalLight`, `PointLight`); its fields are writable and bindable. Named entities only.",
             ),
             field(
                 "body",
@@ -213,25 +215,25 @@ fn objects() -> Vec<SchemaDef> {
                 "collider",
                 TypeRef::Descriptor(SchemaCategory::Collider),
                 C,
-                "A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`.",
+                "A collision shape (`BoxCollider`, `SphereCollider`, `CapsuleCollider`). Requires `body`.",
             ),
             field(
                 "tag",
                 TypeRef::String,
                 C,
-                "A group name (`\"rock\"`) that `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag` and `destroy_tagged` look the entity up by (decision 0150). A string literal of lowercase letters, digits and `_`.",
+                "A group name (`\"rock\"`: lowercase letters, digits, `_`) for `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag` and `destroy_tagged`.",
             ),
             field(
                 "particles",
                 TypeRef::Descriptor(SchemaCategory::Emitter),
                 C,
-                "A particle emitter (decision 0155). Up to 64 particles live at once. They are drawn with this entity's mesh as camera-facing billboards, in the colour of its material. Without a mesh the particles are still counted.",
+                "A particle emitter: up to 64 camera-facing billboards of this entity's mesh in its material's colour; counted even without a mesh.",
             ),
             field(
                 "clip",
                 TypeRef::String,
                 C,
-                "The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. It composes with the entity's own transform (decision 0174).",
+                "A glTF animation name that moves this entity; the mesh must come from that file.",
             ),
         ],
     )
@@ -254,14 +256,14 @@ fn objects() -> Vec<SchemaDef> {
         field: "body",
         requires: "collider",
         code: Code::E5121,
-        help: Some("add a `collider: BoxCollider { size: ... }` or `SphereCollider { radius: ... }` that gives the body its shape"),
+        help: Some("add a `collider: BoxCollider { size: ... }`, `SphereCollider { radius: ... }` or `CapsuleCollider { radius: ...; height: ... }` that gives the body its shape"),
     });
 
     let camera = schema(
         "Camera",
         SchemaCategory::Object,
         Milestone::M1,
-        "The fields of a `camera` scene object. Looks along its local -Z axis, or at `target` when one is declared.",
+        "The fields of a `camera`. Looks along local -Z, or at `target` when declared.",
         vec![
             field(
                 "position",
@@ -274,7 +276,7 @@ fn objects() -> Vec<SchemaDef> {
                 "target",
                 TypeRef::Vec3,
                 writable_bindable(),
-                "Optional point to look at (up is +Y). When declared, `rotation` must not be.",
+                "Optional point to look at (up is +Y); excludes `rotation`.",
             ),
             field(
                 "rotation",
@@ -287,20 +289,20 @@ fn objects() -> Vec<SchemaDef> {
                 "projection",
                 TypeRef::Descriptor(SchemaCategory::Projection),
                 C,
-                "`Perspective {..}` or `Orthographic {..}`. The projection kind is construction-only; the fields of the descriptor are writable and bindable.",
+                "`Perspective {..}` or `Orthographic {..}`; the kind is construction-only, its fields writable and bindable.",
             )
             .default(ConstValue::EmptyDescriptor("Perspective")),
             field(
                 "active",
                 TypeRef::Bool,
                 C,
-                "Marks the active camera. Optional when the scene has exactly one camera; with several cameras exactly one must declare `active: true`.",
+                "Marks the active camera; optional with one camera, exactly one `active: true` with several.",
             ),
             field(
                 "exposure",
                 TypeRef::F32,
                 C,
-                "Exposure value EV100; lit materials are scaled by 1 / (1.2 * 2^exposure). The default, -log2(1.2 * pi), shows a white Lambertian surface under a 1 lux light as white; a sunny day (about 100 000 lux) is about 15.",
+                "EV100; lit materials scale by 1 / (1.2 * 2^exposure). Default -log2(1.2 * pi): white under 1 lux shows white; a sunny day (about 100 000 lux) is about 15.",
             )
             .default(ConstValue::F32(CAMERA_DEFAULT_EV100)),
         ],
@@ -364,7 +366,7 @@ fn projections() -> Vec<SchemaDef> {
                     "height",
                     TypeRef::F32,
                     writable_bindable(),
-                    "Height of the view volume in world units; the width follows from the aspect ratio.",
+                    "Height of the view volume in world units; width follows the aspect ratio.",
                 )
                 .default(ConstValue::F32(10.0))
                 .range(ValueRange::positive())
@@ -520,11 +522,11 @@ fn materials() -> Vec<SchemaDef> {
             vec![
                 field("sheet", TypeRef::Texture, C, "The sprite sheet: `columns` x `rows` equal cells.")
                     .default(ConstValue::Texture(crate::stdlib::value::BuiltinTexture::White)),
-                field("sheet_sampler", TypeRef::Sampler, C, "Sampler of the sheet (default nearest, clamped: crisp pixels).")
+                field("sheet_sampler", TypeRef::Sampler, C, "Sampler of the sheet (default nearest, clamped).")
                     .default(ConstValue::Sampler(crate::stdlib::value::BuiltinSampler::NearestClamp)),
                 field("tint", TypeRef::Color, writable_bindable(), "Multiplies the texel, alpha included.")
                     .default(ConstValue::srgb(0xff, 0xff, 0xff)),
-                field("cell", TypeRef::F32, writable_bindable(), "The cell (animation frame) shown, from 0, left to right then top to bottom; floored and wrapped, so `bind(t * fps)` animates.")
+                field("cell", TypeRef::F32, writable_bindable(), "Cell (animation frame) shown, from 0, row by row; floored and wrapped, so `bind(t * fps)` animates.")
                     .default(ConstValue::F32(0.0)),
                 field("columns", TypeRef::F32, writable_bindable(), "Cells per row of the sheet.")
                     .default(ConstValue::F32(1.0))
@@ -608,8 +610,59 @@ fn bodies() -> Vec<SchemaDef> {
             "Kinematic",
             SchemaCategory::Body,
             Milestone::M1,
-            "A body whose pose the program sets with `set_kinematic_target`.",
-            vec![],
+            "Program-moved body: `set_kinematic_target`, or `move_character` with collisions. Fields tune `move_character`.",
+            vec![
+                field(
+                    "max_slope",
+                    TypeRef::F32,
+                    CU,
+                    "Steepest climbable slope in radians.",
+                )
+                .default(ConstValue::F32(std::f32::consts::FRAC_PI_4))
+                .range(ValueRange::bounded(
+                    Some(Bound::inclusive(Limit::Int(0))),
+                    Some(Bound::inclusive(Limit::Float(std::f32::consts::FRAC_PI_2))),
+                )),
+                field(
+                    "step_height",
+                    TypeRef::F32,
+                    CU,
+                    "Highest step climbed in metres; 0 disables.",
+                )
+                .default(ConstValue::F32(0.25))
+                .range(ValueRange::non_negative().and_finite()),
+                field(
+                    "step_min_width",
+                    TypeRef::F32,
+                    CU,
+                    "Narrowest tread stepped onto in metres.",
+                )
+                .default(ConstValue::F32(0.1))
+                .range(ValueRange::positive().and_finite()),
+                field(
+                    "snap_to_ground",
+                    TypeRef::F32,
+                    CU,
+                    "Longest snap-down in metres; 0 disables.",
+                )
+                .default(ConstValue::F32(0.2))
+                .range(ValueRange::non_negative().and_finite()),
+                field(
+                    "skin",
+                    TypeRef::F32,
+                    CU,
+                    "Gap kept from contacts in metres.",
+                )
+                .default(ConstValue::F32(0.01))
+                .range(ValueRange::positive().and_finite()),
+                field(
+                    "carry",
+                    TypeRef::Bool,
+                    CU,
+                    "Moving platforms carry the character.",
+                )
+                .default(ConstValue::Bool(true)),
+            ],
         ),
         schema(
             "Dynamic",
@@ -636,6 +689,13 @@ fn bodies() -> Vec<SchemaDef> {
                 )
                 .default(ConstValue::F32(0.05))
                 .range(ValueRange::non_negative().and_finite()),
+                field(
+                    "continuous",
+                    TypeRef::Bool,
+                    C,
+                    "Continuous collision detection for this body.",
+                )
+                .default(ConstValue::Bool(false)),
             ],
         ),
     ]
@@ -647,7 +707,7 @@ fn colliders() -> Vec<SchemaDef> {
             "sensor",
             TypeRef::Bool,
             C,
-            "A sensor reports collisions but does not push other bodies.",
+            "A sensor reports collisions but pushes nothing.",
         )
         .default(ConstValue::Bool(false))
     };
@@ -657,14 +717,9 @@ fn colliders() -> Vec<SchemaDef> {
             .range(ValueRange::non_negative().and_finite())
     };
     let restitution = || {
-        field(
-            "restitution",
-            TypeRef::F32,
-            C,
-            "Bounciness, 0 (none) to 1 (perfect).",
-        )
-        .default(ConstValue::F32(0.0))
-        .range(ValueRange::closed(0, 1))
+        field("restitution", TypeRef::F32, C, "Bounciness, 0 to 1.")
+            .default(ConstValue::F32(0.0))
+            .range(ValueRange::closed(0, 1))
     };
     vec![
         schema(
@@ -693,5 +748,32 @@ fn colliders() -> Vec<SchemaDef> {
                 restitution(),
             ],
         ),
+        schema(
+            "CapsuleCollider",
+            SchemaCategory::Collider,
+            Milestone::M1,
+            "A capsule shape: a cylinder along local Y capped by hemispheres.",
+            vec![
+                field("radius", TypeRef::F32, R_C, "Radius in metres.")
+                    .range(ValueRange::positive().and_finite()),
+                field(
+                    "height",
+                    TypeRef::F32,
+                    R_C,
+                    "Full height including both caps; > 2 * `radius`.",
+                )
+                .range(ValueRange::positive().and_finite()),
+                sensor(),
+                friction(),
+                restitution(),
+            ],
+        )
+        .rule(FieldRule::ExceedsMultiple {
+            field: "height",
+            other: "radius",
+            factor: 2,
+            code: Code::E5124,
+            help: "increase `height` or decrease `radius`; the height includes both caps, so a straight part needs `height > 2 * radius`",
+        }),
     ]
 }

@@ -759,6 +759,8 @@ function blockCounters(fixture: string, instances: number): { ownedParamBlocks: 
   // `physics`: Floor, Ball and Mover have the default `Unlit {}` and share one block; the crates `A` and `B` have
   // different tints (the default and `#ff4040`), so each owns one.
   if (fixture === "physics") return { ownedParamBlocks: 2, sharedParamBlocks: 1 };
+  // `movement`: every entity has the default `Unlit {}`, so all of them share one block.
+  if (fixture === "movement") return { ownedParamBlocks: 0, sharedParamBlocks: 1 };
   return { ownedParamBlocks: instances, sharedParamBlocks: 0 };
 }
 

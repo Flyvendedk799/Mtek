@@ -224,5 +224,10 @@ recorded here before code depends on it (blueprint §15).
 | 0211 | [Tangent-frame deformation](0211-tangent-frame-deformation.md): optional CPU/GPU frame skinning and ownership foundation; import/material integration remains open |
 | 0212 | [Authored tangent integration](0212-authored-tangent-integration.md): original asset streams, source fields, mapped PBR and production-product acceptance; broader validation in progress |
 | 0213 | [Qualified material measurements](0213-qualified-material-measurements.md): separate CPU/GPU/count/native ETW instruments, verified artifacts and resumable qualification; full-run acceptance pending |
+| 0214 | [Complete character movement](0214-complete-character-movement.md): acceptance contract for scorecard area 6 (met: area 6 done), language/host surface and move resolution |
+| 0215 | [Character movement corpus and operating ranges](0215-character-movement-corpus.md): capsule, ray, support/carry, real-engine corpus and published ranges |
+| 0216 | [Continuous collision coverage](0216-continuous-collision-coverage.md): CCD lane matrix and envelope |
+| 0217 | [Character movement in programs and hosts](0217-character-movement-language-and-host.md): move_character, grounded, CapsuleCollider, continuous, host queries |
+| 0218 | [Character movement demonstration](0218-character-movement-demonstration.md): example, browser acceptance and documentation |
 
 Numbers 0157-0169 are unused: the sprites record is 0170 and no record has been written in between. (Earlier versions of this index listed ghost rows 0160-0162 for what are records 0130-0132; they were removed.)

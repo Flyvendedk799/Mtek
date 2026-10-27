@@ -111,6 +111,7 @@ describe("compiled manifests (tests/codegen/*/expected)", () => {
       "light_bindings",
       "light_bindings_edited",
       "lights",
+      "movement",
       "numeric_cpu_table",
       "physics",
       "prefabs",

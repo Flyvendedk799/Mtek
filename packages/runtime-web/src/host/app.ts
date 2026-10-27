@@ -35,6 +35,8 @@ import { resolveSpan, type DiagnosticSink } from "./failures.js";
 import { GameSaves, MemorySaveStorage, persistentEntries, type SaveProblem, type SaveStorage } from "../scene/saves.js";
 import { HostOutputs } from "./outputs.js";
 import {ExtensionHost,sceneAccess,type MtekExtension} from "./extensions.js";
+import { EntityIds } from "./entity-ids.js";
+import { createHostPhysics, type MtekPhysics } from "./physics-api.js";
 import type {MtekRenderingOptions} from "../render/options.js";
 import { HostInputs, unknownInputResult } from "./inputs.js";
 import type { FailureOverlay } from "./overlay.js";
@@ -198,10 +200,27 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       }, () => this.deps.scene);
   }
   private extensions: ExtensionHost | undefined;
+  /** The entity IDs of the host boundary, shared by the extensions and `physics` so they agree. */
+  private readonly entityIds = new EntityIds(() => this.deps.scene.world);
+  private hostPhysics: MtekPhysics | undefined;
+  private assertUsable(): void {
+    if (this.current === "disposed" || this.current === "failed") throw new Error(`The application is ${this.current}`);
+  }
+  /** `MtekApp.physics`: the host's queries by entity ID, `undefined` while the program has no physics. */
+  get physics(): MtekPhysics | undefined {
+    if (this.deps.physics === undefined) return undefined;
+    this.hostPhysics ??= createHostPhysics({
+      queries: () => this.deps.physics?.queries,
+      ids: this.entityIds,
+      active: () => { this.assertUsable(); },
+    });
+    return this.hostPhysics;
+  }
   installExtensions(extensions: readonly MtekExtension[],services:Readonly<Record<string,unknown>>={}):void {
-    const access=sceneAccess(()=>this.deps.scene.world,()=>{if(this.current==="disposed"||this.current==="failed")throw new Error(`The application is ${this.current}`);},
-      () => ({ ...this.deps.scene.renderer.inspect(), bodies: this.deps.physics?.inspect() ?? [] }));
-    this.extensions=new ExtensionHost({apiVersion:1,...access,service:<T>(name:string)=>services[name] as T|undefined},(id,error)=>{
+    const access=sceneAccess(()=>this.deps.scene.world,()=>{this.assertUsable();},
+      () => ({ ...this.deps.scene.renderer.inspect(), bodies: this.deps.physics?.inspect() ?? [] }), this.entityIds);
+    const physics = (): MtekPhysics | undefined => this.physics;
+    this.extensions=new ExtensionHost({apiVersion:1,...access,service:<T>(name:string)=>services[name] as T|undefined,get physics(){return physics();}},(id,error)=>{
       this.report(makeRuntimeDiagnostic("E8050",{phase:"runtime:update",message:`Extension '${id}' failed and was disabled: ${errorText(error)}`}));
     });
     this.extensions.install(extensions);

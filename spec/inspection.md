@@ -31,6 +31,8 @@ enclosures and unbounded authored shaders report a null sphere. Pending compute
 output is not presented as a completed draw. A bound is an enclosure supplied to
 the renderer, not proof that arbitrary authored vertex arithmetic stays inside it.
 
+The host can also ask the physics world questions (ray and shape casts, contacts, collision groups) by the same entity IDs: `app.physics` and `ExtensionContext.physics`, decision [0217](decisions/0217-character-movement-language-and-host.md) and `docs/platform-runtime.md`.
+
 Physics records contain actual backend body poses, the validated collider passed
 to that backend, active state and optional contacts. Mesh/entity scale must not be
 applied again to the nominal collider dimensions. Contacts are world-space and

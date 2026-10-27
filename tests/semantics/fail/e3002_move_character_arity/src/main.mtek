@@ -1,0 +1,13 @@
+// move_character takes a displacement and a rotation.
+scene Demo {
+    camera Main {}
+    entity Hero {
+        mesh: Box {};
+        body: Kinematic {};
+        collider: CapsuleCollider { radius: 0.4; height: 1.8; };
+        on key_down(Key.Space) {
+            self.body.move_character(vec3(0.0, 0.0, 1.0));
+            self.body.move_character(vec3(0.0), quat.identity(), true);
+        }
+    }
+}

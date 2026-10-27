@@ -5,6 +5,7 @@
  */
 import type { MtekDiagnostic } from "../diagnostics/types.js";
 import type { MtekExtension } from "./extensions.js";
+import type { MtekPhysics } from "./physics-api.js";
 import type {MtekRenderingOptions} from "../render/options.js";
 import type { MtekComputeHandle } from "../compute/host.js";
 
@@ -140,6 +141,11 @@ export interface MtekApp<I = Record<string, unknown>, O = Record<string, unknown
   /** Synchronous release (`spec/runtime-abi.md` section 9.3). */
   dispose(): void;
   readonly state: MtekAppState;
+  /**
+   * Ray and shape casts, contacts and collision groups by entity ID (decision 0217); `undefined` while the running
+   * program has no physics. Queries see the world as of the last completed tick.
+   */
+  readonly physics?: MtekPhysics | undefined;
   readonly debug?: MtekDebug;
   replaceProgram?(
     candidate: MtekMountProgram<I, O>,

@@ -1,0 +1,20 @@
+// The height of a capsule is the full height including both caps: it must be greater than twice
+// the radius, or the cylinder part has no length.
+scene Demo {
+    camera Main {}
+    entity Short {
+        mesh: Box {};
+        body: Kinematic {};
+        collider: CapsuleCollider { radius: 0.5; height: 0.8; };
+    }
+    entity Pill {
+        mesh: Box {};
+        body: Kinematic {};
+        collider: CapsuleCollider { radius: 0.5; height: 1.0; };
+    }
+    entity Fine {
+        mesh: Box {};
+        body: Kinematic {};
+        collider: CapsuleCollider { radius: 0.5; height: 1.2; };
+    }
+}

@@ -310,6 +310,9 @@ impl Registry {
                     excluded_by,
                     code,
                 } => (field, excluded_by, code),
+                FieldRule::ExceedsMultiple {
+                    field, other, code, ..
+                } => (field, other, code),
             };
             let at = format!("{}: rule on `{field}`", schema.name);
             for name in [field, other] {
