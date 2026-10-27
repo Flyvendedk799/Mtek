@@ -60,7 +60,7 @@ export interface TestRig {
   readonly names: Readonly<Record<HumanoidBone, string>>;
   /** Straight chord lengths in rig units: [upper, lower] per limb. */
   readonly lengths: { readonly leftLeg: readonly [number, number]; readonly rightLeg: readonly [number, number]; readonly leftArm: readonly [number, number]; readonly rightArm: readonly [number, number] };
-  readonly nodeIndex: (bone: HumanoidBone | string) => number;
+  readonly nodeIndex: (bone: string) => number;
   /** Mesh-local bind position of a bone (rig units, mesh frame). */
   readonly bindPosition: (bone: HumanoidBone) => V;
   /** Rig unit to mesh-local factor (the mesh node has no scale of its own, so 1) and the mesh-local up and forward. */
@@ -76,7 +76,7 @@ const ALL: readonly HumanoidBone[] = ["hips", "spine", "chest", "upperChest", "n
 export function humanoidRig(options: RigOptions = {}): TestRig {
   const [ulL, ulR] = pair(options.upperLeg, 0.45), [llL, llR] = pair(options.lowerLeg, 0.42);
   const [uaL, uaR] = pair(options.upperArm, 0.30), [laL, laR] = pair(options.lowerArm, 0.27);
-  const [kneeL, kneeR] = pair(options.kneeBind as number | readonly [number, number] | undefined, 0);
+  const [kneeL, kneeR] = pair(options.kneeBind, 0);
   const ankle = options.ankle ?? 0.08, footLength = options.footLength ?? 0.22, elbow = options.elbowBind ?? 0;
   const rad = (d: number): number => (d * Math.PI) / 180;
   // World positions (canonical rig frame).

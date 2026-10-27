@@ -42,13 +42,13 @@ for (const { name, file, clip } of assets) {
       // Mesh-local axes from the bind pose: up from hips to head, forward from ankle to toes (made horizontal).
       const up = unit(sub(pos("head"), pos("hips"))), toes = sub(pos("leftToes"), pos("leftFoot"));
       const forward = unit(sub(toes, mul(up, dot(toes, up))));
-      const map: HumanoidMap = { bones: names as HumanoidMap["bones"], evidence: {}, confidence: 1, unmapped: ["upperChest", "leftShoulder", "rightShoulder"], up, forward };
+      const map: HumanoidMap = { bones: names, evidence: {}, confidence: 1, unmapped: ["upperChest", "leftShoulder", "rightShoulder"], up, forward };
       player.setHumanoid(map);
       return { player, map, pos };
     };
     it("resolves the hand-written map and finds a mesh-local up that is vertical in the model", () => {
       const { map } = make();
-      expect(Math.abs(map.up[2]!)).toBeGreaterThan(0.95); // CesiumMan is authored Z-up in mesh space
+      expect(Math.abs(map.up[2])).toBeGreaterThan(0.95); // CesiumMan is authored Z-up in mesh space
     });
     it("meets reachable foot and hand targets, bends knees forward and keeps the elbows on the bind bend side", () => {
       const { player, map, pos } = make();
@@ -101,7 +101,7 @@ for (const { name, file, clip } of assets) {
           player.advance(1 / 12); twin.advance(1 / 12);
           const uppers: V[] = [twinPos("leftUpperLeg"), twinPos("rightUpperLeg")], animated: V[] = [twinPos("leftFoot"), twinPos("rightFoot")];
           // Height mode keeps the animated lift and follows the ground change, but never goes below ground + sole offset.
-          const targets = [left, right].map((h, i) => add(animated[i]!, mul(up, Math.max(h, h + info0.soleOffset - dot(animated[i]!, up))))) as V[];
+          const targets = [left, right].map((h, i): V => add(animated[i]!, mul(up, Math.max(h, h + info0.soleOffset - dot(animated[i]!, up)))));
           const drop = dot(sub(twinPos("hips"), pos("hips")), up), expected = referenceDrop(uppers, targets, up, reaches);
           const info = player.inspect().footPlacement!;
           expect(drop).toBeCloseTo(expected, 4);

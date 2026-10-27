@@ -105,7 +105,7 @@ export function mountInspectorPanel(controller: InspectorController, container: 
     const animation = snapshot.animation; animationSection.hidden = animation === null;
     if (animation !== null) {
       const data = animation.diagnostics;
-      diagnosisSummary.textContent = data === null ? "Animation diagnostics unavailable" : `Transitions, layers (${data.layers.length}) and IK (${data.ik.length})`;
+      diagnosisSummary.textContent = data === null ? "Animation diagnostics unavailable" : `Transitions, layers (${data.layers.length}) and IK (${data.ik.length + (data.limbs?.length ?? 0)})`;
       diagnosis.hidden = false;
       transition.textContent = data === null ? "This animation provider does not expose diagnostic snapshots." : data.transition.progress < 1
         ? `${data.transition.outgoingClip ?? (data.transition.fromSnapshot ? "Pose snapshot" : "Bind pose")} → ${data.clip ?? data.mode} · ${(data.transition.progress * 100).toFixed(1)}% · ${data.transition.elapsed.toFixed(3)} / ${data.transition.duration.toFixed(3)} s`
@@ -118,6 +118,8 @@ export function mountInspectorPanel(controller: InspectorController, container: 
           const error = node === undefined ? null : Math.hypot(node.position.x - target.x, node.position.y - target.y, node.position.z - target.z);
           return make("p", `${ik.id} · ${ik.chain.map(i => data.nodes.find(n => n.index === i)?.name ?? i).join(" → ")} · position error ${error === null ? "unavailable" : error.toFixed(4)} · tolerance ${ik.tolerance} · weight ${ik.weight} · ${ik.limits.length} hinge limit(s)${ik.rotation === undefined ? "" : " · orientation target"}`);
         }),
+        ...(data.limbs ?? []).map(limb => make("p", `${limb.id} · ${limb.limb} · ${limb.nodes.map(i => data.nodes.find(n => n.index === i)?.name ?? i).join(" → ")} · weight ${limb.weight} · flexion ${limb.flexion === null ? "unavailable" : `${(limb.flexion * 180 / Math.PI).toFixed(1)}°`} (range ${(limb.flexionRange.min * 180 / Math.PI).toFixed(0)}°–${(limb.flexionRange.max * 180 / Math.PI).toFixed(0)}°) · miss ${limb.residual === null ? "unavailable" : limb.residual.toFixed(4)}${limb.rotation === undefined ? "" : " · orientation target"}`)),
+        ...(data.footPlacement == null ? [] : [make("p", `Foot placement · hips drop ${data.footPlacement.drop.toFixed(4)} (minimum ${data.footPlacement.requiredDrop.toFixed(4)}, limit ${data.footPlacement.maxDrop.toFixed(4)}) · smoothing ${data.footPlacement.smoothing} s · left miss ${data.footPlacement.left.residual === null ? "unavailable" : data.footPlacement.left.residual.toFixed(4)} · right miss ${data.footPlacement.right.residual === null ? "unavailable" : data.footPlacement.right.residual.toFixed(4)}`)]),
       ]));
       animationStatus.textContent = `${animation.mode} · ${animation.playing ? "playing" : "paused"} · ${animation.time.toFixed(3)} / ${animation.duration.toFixed(3)} s`;
       const nextClips = JSON.stringify(animation.clips);

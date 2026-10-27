@@ -54,7 +54,7 @@ export function glbSkin(file: string): MtekSkin | undefined {
     const channels = animation.channels.map(channel => {
       const sampler = animation.samplers[channel.sampler]!;
       return { node: channel.target.node, path: channel.target.path as "translation" | "rotation" | "scale",
-        interpolation: (sampler.interpolation === "STEP" ? "step" : "linear") as "linear" | "step", times: read(sampler.input), values: read(sampler.output) };
+        interpolation: sampler.interpolation === "STEP" ? "step" as const : "linear" as const, times: read(sampler.input), values: read(sampler.output) };
     });
     const duration = Math.max(0, ...channels.map(c => c.times.at(-1) ?? 0));
     return { name: animation.name ?? `clip${i}`, duration, channels };

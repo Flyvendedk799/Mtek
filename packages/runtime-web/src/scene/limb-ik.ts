@@ -442,7 +442,7 @@ export class LimbIK {
     heights.left = height(nodes.get("leftLeg")![2]); heights.right = height(nodes.get("rightLeg")![2]);
     // The bind pose stands on the mesh-local ground level 0 along up: the lower foot joint's height is the sole offset.
     this.groundDefault = 0;
-    this.soleDefault = Math.max(0, Math.min(heights.left!, heights.right!));
+    this.soleDefault = Math.max(0, Math.min(heights.left, heights.right));
     this.maxDropDefault = 0.5 * Math.min(rigs.get("leftLeg")!.reach, rigs.get("rightLeg")!.reach);
     // Ancestry that must be numerically uniform at run time.
     const relevant = new Uint8Array(this.n);
@@ -669,7 +669,7 @@ export class LimbIK {
       if (parent >= 0) {
         const conj = this.r[2]!;
         qconj(conj, this.gq.subarray(parent * 4, parent * 4 + 4));
-        qrotate(delta, conj, 0, delta[0]!, delta[1]!, delta[2]!);
+        qrotate(delta, conj, 0, delta[0], delta[1], delta[2]);
         const scale = this.gs[parent]!;
         for (let c = 0; c < 3; c++) delta[c] = delta[c]! / scale;
       }

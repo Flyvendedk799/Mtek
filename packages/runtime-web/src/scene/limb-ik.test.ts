@@ -33,7 +33,7 @@ describe("humanoid map and goal validation", () => {
     const player = new SkeletonPlayer(rig.skin);
     const map = (bones: HumanoidMap["bones"], rest: Partial<HumanoidMap> = {}): HumanoidMap => ({ ...rig.map, bones, ...rest });
     expect(() => player.setHumanoid(map({ ...rig.map.bones, leftFoot: "missing" }))).toThrow(/leftFoot/);
-    const { hips: _hips, ...noHips } = rig.map.bones;
+    const noHips = Object.fromEntries(Object.entries(rig.map.bones).filter(([bone]) => bone !== "hips"));
     expect(() => player.setHumanoid(map(noHips))).toThrow(/hips/);
     expect(() => player.setHumanoid(map({ ...rig.map.bones, leftUpperLeg: rig.names.leftLowerLeg, leftLowerLeg: rig.names.leftUpperLeg }))).toThrow(/descend/);
     expect(() => player.setHumanoid(map(rig.map.bones, { up: [0, 0, 0] }))).toThrow(/up and forward/);
@@ -314,7 +314,7 @@ describe("foot placement", () => {
     for (const [left, right] of [[-0.1, 0], [0, -0.2], [-0.3, -0.05], [-0.15, -0.15], [0.1, 0], [0.2, 0.3]] as const) {
       h.player.ik.setFootPlacement({ left: { height: left }, right: { height: right }, smoothing: 0 });
       h.player.evaluate();
-      const targets = [left, right].map((height, i) => add(ankles[i]!, mul(up, Math.max(height, height + 0.04 - dot(ankles[i]!, up))))) as V[];
+      const targets = [left, right].map((height, i): V => add(ankles[i]!, mul(up, Math.max(height, height + 0.04 - dot(ankles[i]!, up)))));
       const expected = referenceDrop(uppers, targets, up, reaches), drop = dot(sub(animated, h.pos("hips")), up);
       expect(drop, `${left} ${right}`).toBeCloseTo(expected, 5);
       expect(drop).toBeGreaterThanOrEqual(-1e-7);
@@ -409,7 +409,7 @@ describe("foot placement", () => {
     expect(h.player.pose).toEqual(pose);
   });
   it("validates the placement description", () => {
-    const h = new LimbHarness(stance()), place = (left: object, right: object = { height: 0 }, extra: object = {}): void => h.player.ik.setFootPlacement({ left, right, ...extra } as never);
+    const h = new LimbHarness(stance()), place = (left: object, right: object = { height: 0 }, extra: object = {}): void => h.player.ik.setFootPlacement({ left, right, ...extra });
     expect(() => place({})).toThrow(/exactly one/);
     expect(() => place({ height: 0, point: [0, 0, 0] })).toThrow(/exactly one/);
     expect(() => place({ height: Number.NaN })).toThrow(/finite/);

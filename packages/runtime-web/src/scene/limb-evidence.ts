@@ -71,7 +71,7 @@ export class LimbHarness {
   reach(limb: LimbName): number { const [a, b] = this.lengths(limb); return a + b; }
   maxFlexion(limb: LimbName): number { return isLeg(limb) ? KNEE_MAX_FLEXION : ELBOW_MAX_FLEXION; }
   set(limb: LimbName, target: V, options: object = {}): void {
-    this.player.ik.setLimb(limb, { limb, target, ...options } as never);
+    this.player.ik.setLimb(limb, { limb, target, ...options });
     this.player.evaluate();
   }
   /** Bind frame of a limb: axis (hip to ankle), the side the knee/elbow points to, and the flexion hinge, all mesh-local. */
@@ -301,7 +301,7 @@ export function measurePlacement(c: LimbCase): PlacementResult {
     cases++;
   };
   const place = (left: object, right: object, extra: object = {}): void => {
-    h.player.ik.setFootPlacement({ left, right, smoothing: 0, ...extra } as never);
+    h.player.ik.setFootPlacement({ left, right, smoothing: 0, ...extra });
     h.player.evaluate();
   };
   // Steps up and down of 0 to 0.3 under either or both feet (height mode keeps the animated plane position and lift).
