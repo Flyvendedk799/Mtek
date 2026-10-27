@@ -6,7 +6,7 @@ import { retargetHumanoid } from "./humanoid-retarget.js";
 import { SkeletonPlayer, skinProblem } from "./skeleton.js";
 import { BOUNDS, buildEvidence, formatEvidence, retargetRows } from "../test-support/humanoid-evidence.js";
 import { PROCEDURAL_CLIPS, buildHumanoid, loadRealSkins, withClips, type HumanoidSpec } from "../test-support/humanoid-fixtures.js";
-import { frameOf, posesOf } from "../test-support/humanoid-metrics.js";
+import { frameOf, measureRetarget, posesOf } from "../test-support/humanoid-metrics.js";
 import type { MtekSkin } from "../abi/manifest-types.js";
 
 const root = path.resolve(import.meta.dirname, "../../../..");
@@ -119,11 +119,50 @@ describe("retargetHumanoid", () => {
     expect(() => retargetHumanoid(skewed, target.skin)).toThrow(/uniform/);
   });
 
+  const composition = loadRealSkins(root).composition;
+  it.skipIf(composition === undefined)("retargets every clip of the prepared character-composition models, folding the root trajectory into the hips", () => {
+    const { source, longLegs } = composition!, sourceMap = mapOf(source), targetMap = mapOf(longLegs);
+    const result = retargetHumanoid(source, longLegs, { sourceMap, targetMap });
+    expect(result.clips.map((c) => c.name)).toEqual(source.clips.map((c) => c.name));
+    const hips = nodeIndex(longLegs, "Skeleton_torso_joint_1");
+    const travel = result.clips.find((c) => c.name === "Travel")!.channels.find((c) => c.node === hips && c.path === "translation")!;
+    // The MotionRoot above the hips travels 0.3 per second for the clip's duration; the target's legs are 1.2 times longer.
+    const last = travel.values.length - 3, first = travel.values.slice(0, 3);
+    expect(Math.hypot(travel.values[last]! - first[0]!, travel.values[last + 1]! - first[1]!, travel.values[last + 2]! - first[2]!)).toBeCloseTo(0.3 * source.clips.find((c) => c.name === "Travel")!.duration * 1.2, 2);
+    for (const clip of source.clips) {
+      const rows = measureRetarget(source, sourceMap, result, targetMap, clip.name);
+      expect(rows.maxLimbErrorDeg, clip.name).toBeLessThanOrEqual(BOUNDS.limbErrorDeg);
+    }
+  });
+
   it("handles a source clip without any rotation or translation channels", () => {
     const rig = buildHumanoid({ convention: "mixamo" }), still: MtekSkin = { ...rig.skin, clips: [{ name: "still", duration: 0, channels: [] }] };
     const result = retargetHumanoid(still, buildHumanoid({ convention: "unity", rest: "A" }).skin);
     expect(result.clips[0]!.channels.every((c) => c.times.length === 1 && c.times[0] === 0)).toBe(true);
     expect(result.clips[0]!.channels.some((c) => c.path === "translation")).toBe(false);
+  });
+});
+
+describe("foot planting", () => {
+  const measure = (a: HumanoidSpec, b: HumanoidSpec) => {
+    const source = walker(a), target = buildHumanoid(b);
+    return measureRetarget(source.skin, mapOf(source.skin), retargetHumanoid(source.skin, target.skin), mapOf(target.skin), "walk");
+  };
+  it("plants the feet exactly when the target is a uniformly scaled copy of the source", () => {
+    for (const scale of [0.5, 0.8333, 2, 100]) {
+      const m = measure({ convention: "vrm", rest: "T" }, { convention: "unreal", rest: "A", scale, frame: "zup", axes: "bone" });
+      expect(m.stanceFrames).toBeGreaterThan(30);
+      expect(m.maxStanceSlide, String(scale)).toBeLessThan(1e-6);
+      expect(m.maxStanceHeightError, String(scale)).toBeLessThan(1e-6);
+    }
+  });
+  it("slides in proportion to the pelvis width not following the leg ratio (what foot IK is for)", () => {
+    // Longer or shorter legs on an unchanged pelvis: the hip joints move differently from the scaled hips.
+    const slide = (legs: number) => measure({ convention: "vrm" }, { convention: "vrm", legs }).maxStanceSlide;
+    expect(slide(0.8333)).toBeGreaterThan(0.005);
+    expect(slide(0.5)).toBeGreaterThan(slide(0.8333));
+    expect(slide(2)).toBeGreaterThan(slide(0.8333));
+    expect(slide(0.8333)).toBeLessThan(0.02);
   });
 });
 
