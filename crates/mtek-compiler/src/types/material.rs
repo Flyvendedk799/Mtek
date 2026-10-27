@@ -613,6 +613,7 @@ impl<'a> Checker<'a> {
             let valid = match name.as_str() {
                 "position" | "normal" => field_ty == TyId::VEC3,
                 "uv" => field_ty == TyId::VEC2,
+                "tangent" => field_ty == TyId::VEC4,
                 _ => matches!(
                     self.out.interner.get(field_ty),
                     Ty::Bool
@@ -628,7 +629,7 @@ impl<'a> Checker<'a> {
             };
             if !valid {
                 self.sink.push(Diagnostic::new(Code::E4021, format!(
-                    "Vertex output field '{name}' has unsupported type {}; position/normal require vec3, uv requires vec2, and payload fields are scalar or vector values.", self.display(field_ty))).at(span));
+                    "Vertex output field '{name}' has unsupported type {}; position/normal require vec3, uv requires vec2, tangent requires vec4, and payload fields are scalar or vector values.", self.display(field_ty))).at(span));
             }
         }
         true
@@ -748,7 +749,7 @@ impl<'a> Checker<'a> {
             .enumerate()
             .filter(|(_, field)| {
                 matches!(field.name, "world_position" | "world_normal")
-                    || (mapped && field.name == "uv")
+                    || (mapped && matches!(field.name, "uv" | "world_tangent"))
             })
             .map(|(index, _)| index)
             .collect();

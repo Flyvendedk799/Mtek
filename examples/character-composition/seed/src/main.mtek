@@ -1,0 +1,15 @@
+const SOURCE = asset.glb("../models/Source.glb");
+
+const TARGET = asset.glb("../models/LongLegs.glb");
+
+scene Demo {
+    camera Main {}
+    entity Original {
+        mesh: SOURCE.mesh("Cesium_Man");
+        material: Unlit { color: #ffffff };
+    }
+    entity Longer {
+        mesh: TARGET.mesh("Cesium_Man");
+        material: Unlit { color: #ffffff };
+    }
+}

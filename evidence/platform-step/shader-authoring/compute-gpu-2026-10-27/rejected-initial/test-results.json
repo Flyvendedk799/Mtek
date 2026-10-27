@@ -1,0 +1,235 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Users\\tobia\\AppData\\Local\\hermes\\node\\node.exe",
+      "C:\\Users\\tobia\\Mtek\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config=compute.config.ts",
+      "--project=hardware"
+    ],
+    "configFile": "C:\\Users\\tobia\\Mtek\\tests\\browser\\compute.config.ts",
+    "rootDir": "C:/Users/tobia/Mtek/tests/browser/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "C:\\Users\\tobia\\Mtek\\tests\\browser\\support\\compute-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/tobia/Mtek/tests/browser/results/2026-10-26T23-38-10-754Z/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "hardware",
+        "name": "hardware",
+        "testDir": "C:/Users/tobia/Mtek/tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "compute/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Users/tobia/Mtek/tests/browser/results/2026-10-26T23-38-10-754Z/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "software",
+        "name": "software",
+        "testDir": "C:/Users/tobia/Mtek/tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "compute/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "C:\\Users\\tobia\\Mtek\\tests\\browser\\results\\2026-10-26T23-38-10-754Z\\test-results.json"
+        }
+      ],
+      [
+        "C:\\Users\\tobia\\Mtek\\tests\\browser\\support\\not-run-reporter.ts",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "compute\\acceptance.spec.ts",
+      "file": "compute/acceptance.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "source compute matches CPU and independent WGSL, including tails and all invocation fields",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 608,
+                  "error": {
+                    "message": "Error: liveEntities\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m2\u001b[39m",
+                    "stack": "Error: liveEntities\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m2\u001b[39m\n    at released (C:\\Users\\tobia\\Mtek\\tests\\browser\\specs\\compute\\acceptance.spec.ts:8:57)\n    at C:\\Users\\tobia\\Mtek\\tests\\browser\\specs\\compute\\acceptance.spec.ts:19:84",
+                    "location": {
+                      "file": "C:\\Users\\tobia\\Mtek\\tests\\browser\\specs\\compute\\acceptance.spec.ts",
+                      "column": 57,
+                      "line": 8
+                    },
+                    "snippet": "   6 |   const live = Object.entries(counters).filter(([name]) => name.startsWith(\"live\"));\n   7 |   expect(live.length).toBeGreaterThan(4);\n>  8 |   for (const [name, value] of live) expect(value, name).toBe(0);\n     |                                                         ^\n   9 | }\n  10 |\n  11 | test(\"source compute matches CPU and independent WGSL, including tails and all invocation fields\", async ({ page, gpu }) => {"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\tobia\\Mtek\\tests\\browser\\specs\\compute\\acceptance.spec.ts",
+                        "column": 57,
+                        "line": 8
+                      },
+                      "message": "Error: liveEntities\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m2\u001b[39m\n\n   6 |   const live = Object.entries(counters).filter(([name]) => name.startsWith(\"live\"));\n   7 |   expect(live.length).toBeGreaterThan(4);\n>  8 |   for (const [name, value] of live) expect(value, name).toBe(0);\n     |                                                         ^\n   9 | }\n  10 |\n  11 | test(\"source compute matches CPU and independent WGSL, including tails and all invocation fields\", async ({ page, gpu }) => {\n    at released (C:\\Users\\tobia\\Mtek\\tests\\browser\\specs\\compute\\acceptance.spec.ts:8:57)\n    at C:\\Users\\tobia\\Mtek\\tests\\browser\\specs\\compute\\acceptance.spec.ts:19:84"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-26T23:38:12.100Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\tobia\\Mtek\\tests\\browser\\results\\2026-10-26T23-38-10-754Z\\artifacts\\compute-acceptance-source--276be-s-and-all-invocation-fields-hardware\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\tobia\\Mtek\\tests\\browser\\specs\\compute\\acceptance.spec.ts",
+                    "column": 57,
+                    "line": 8
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "6b84eede0fe390243265-137a5cfe49a2c1a61f3b",
+          "file": "compute/acceptance.spec.ts",
+          "line": 11,
+          "column": 1
+        },
+        {
+          "title": "computed geometry matches CPU/direct-WGSL pixels through recovery, detach and reset",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 514,
+                  "error": {
+                    "message": "Error: liveEntities\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m2\u001b[39m",
+                    "stack": "Error: liveEntities\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m2\u001b[39m\n    at released (C:\\Users\\tobia\\Mtek\\tests\\browser\\specs\\compute\\acceptance.spec.ts:8:57)\n    at C:\\Users\\tobia\\Mtek\\tests\\browser\\specs\\compute\\acceptance.spec.ts:33:44",
+                    "location": {
+                      "file": "C:\\Users\\tobia\\Mtek\\tests\\browser\\specs\\compute\\acceptance.spec.ts",
+                      "column": 57,
+                      "line": 8
+                    },
+                    "snippet": "   6 |   const live = Object.entries(counters).filter(([name]) => name.startsWith(\"live\"));\n   7 |   expect(live.length).toBeGreaterThan(4);\n>  8 |   for (const [name, value] of live) expect(value, name).toBe(0);\n     |                                                         ^\n   9 | }\n  10 |\n  11 | test(\"source compute matches CPU and independent WGSL, including tails and all invocation fields\", async ({ page, gpu }) => {"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\tobia\\Mtek\\tests\\browser\\specs\\compute\\acceptance.spec.ts",
+                        "column": 57,
+                        "line": 8
+                      },
+                      "message": "Error: liveEntities\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m2\u001b[39m\n\n   6 |   const live = Object.entries(counters).filter(([name]) => name.startsWith(\"live\"));\n   7 |   expect(live.length).toBeGreaterThan(4);\n>  8 |   for (const [name, value] of live) expect(value, name).toBe(0);\n     |                                                         ^\n   9 | }\n  10 |\n  11 | test(\"source compute matches CPU and independent WGSL, including tails and all invocation fields\", async ({ page, gpu }) => {\n    at released (C:\\Users\\tobia\\Mtek\\tests\\browser\\specs\\compute\\acceptance.spec.ts:8:57)\n    at C:\\Users\\tobia\\Mtek\\tests\\browser\\specs\\compute\\acceptance.spec.ts:33:44"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-26T23:38:14.510Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\tobia\\Mtek\\tests\\browser\\results\\2026-10-26T23-38-10-754Z\\artifacts\\compute-acceptance-compute-4a417-h-recovery-detach-and-reset-hardware\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\tobia\\Mtek\\tests\\browser\\specs\\compute\\acceptance.spec.ts",
+                    "column": 57,
+                    "line": 8
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "6b84eede0fe390243265-0f71ae959f7e2e2e59cd",
+          "file": "compute/acceptance.spec.ts",
+          "line": 22,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-26T23:38:10.832Z",
+    "duration": 5155.614,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}

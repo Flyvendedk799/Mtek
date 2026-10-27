@@ -1,0 +1,37 @@
+{
+  "args": [
+    "--process_id",
+    "5540",
+    "--session_name",
+    "MtekMaterialProbe-14856-1",
+    "--output_file",
+    ".out/presentmon-material-probe-v2/render/presentmon.csv",
+    "--v2_metrics",
+    "--qpc_time",
+    "--write_display_time",
+    "--write_frame_id",
+    "--write_display_metadata",
+    "--track_etw_status",
+    "--no_track_gpu",
+    "--no_track_input",
+    "--no_console_stats",
+    "--timed",
+    "120",
+    "--terminate_after_timed"
+  ],
+  "pid": 5540,
+  "sessionName": "MtekMaterialProbe-14856-1",
+  "readiness": {
+    "code": 0,
+    "stdout": "\r\nName:                 MtekMaterialProbe-14856-1\r\nStatus:               Running\r\nRoot Path:            %systemdrive%\\PerfLogs\r\nSegment:              Off\r\nSchedules:            On\r\n\r\nName:                 MtekMaterialProbe-14856-1\\MtekMaterialProbe-14856-1\r\nType:                 Trace\r\nAppend:               Off\r\nCircular:             Off\r\nOverwrite:            Off\r\nBuffer Size:          64\r\nBuffers Lost:         0\r\nBuffers Written:      0\r\nBuffer Flush Timer:   1\r\nClock Type:           Performance\r\nFile Mode:            Real-time\r\n\r\nProvider:\r\nName:                 Microsoft-Windows-D3D9\r\nProvider Guid:        {783ACA0A-790E-4D7F-8451-AA850511C6B9}\r\nLevel:                255\r\nKeywordsAll:          0x8000000000000002 (Events,Microsoft-Windows-Direct3D9/Analytic)\r\nKeywordsAny:          0x8000000000000002 (Events,Microsoft-Windows-Direct3D9/Analytic)\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 Microsoft-Windows-DxgKrnl\r\nProvider Guid:        {802EC45A-1E99-4B83-9920-87C98277BA9D}\r\nLevel:                4 (win:Informational)\r\nKeywordsAll:          0x1 (Base)\r\nKeywordsAny:          0x8000001 (Base,Present)\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 Microsoft-Windows-Dwm-Core\r\nProvider Guid:        {9E9BBA3C-2E38-40CB-99F4-9E8281425164}\r\nLevel:                5 (win:Verbose)\r\nKeywordsAll:          0x0\r\nKeywordsAny:          0x8000000000000081 (Composition,Scheduling,Microsoft-Windows-Dwm-Core/Diagnostic)\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 {8C9DD1AD-E6E5-4B07-B455-684A9D879900}\r\nProvider Guid:        {8C9DD1AD-E6E5-4B07-B455-684A9D879900}\r\nLevel:                5\r\nKeywordsAll:          0x0\r\nKeywordsAny:          0xffffffffffffffff\r\nProperties:           64\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 {AE4F8626-8265-40D1-A70B-11B64240E8E9}\r\nProvider Guid:        {AE4F8626-8265-40D1-A70B-11B64240E8E9}\r\nLevel:                4\r\nKeywordsAll:          0x1000000000000000\r\nKeywordsAny:          0x1000000000000000\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 {65CD4C8A-0848-4583-92A0-31C0FBAF00C0}\r\nProvider Guid:        {65CD4C8A-0848-4583-92A0-31C0FBAF00C0}\r\nLevel:                4\r\nKeywordsAll:          0x0\r\nKeywordsAny:          0x0\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 Microsoft-Windows-DXGI\r\nProvider Guid:        {CA11C036-0102-4A2D-A6AD-F03CFED5D3C9}\r\nLevel:                255\r\nKeywordsAll:          0x8000000000000002 (Events,Microsoft-Windows-DXGI/Analytic)\r\nKeywordsAny:          0x8000000000000002 (Events,Microsoft-Windows-DXGI/Analytic)\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 Microsoft-Windows-Win32k\r\nProvider Guid:        {8C416C79-D49B-4F01-A467-E56D3AA8234C}\r\nLevel:                4 (win:Informational)\r\nKeywordsAll:          0x8000000000001000 (Updates,Microsoft-Windows-Win32k/Tracing)\r\nKeywordsAny:          0x8000000400001000 (Updates,Visualization,Microsoft-Windows-Win32k/Tracing)\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nThe command completed successfully.\r\n",
+    "stderr": ""
+  },
+  "code": 0,
+  "stdout": "Started recording.\r\n[ETW Status] BufferFillPct=7.0% BuffersInUse=18 TotalBuffers=256 EventsLost=0 BuffersLost=0, OverflowedPresents=0\r\n",
+  "stderr": "warning: PresentMon requires elevated privilege in order to query processes that are\r\n         short-running or started on another account.  Without it, those processes will\r\n         be listed as '<unknown>' and they can't be targeted by --process_name nor trigger\r\n         --terminate_on_proc_exit.\r\n",
+  "stop": {
+    "code": 0,
+    "stdout": "",
+    "stderr": "warning: --terminate_existing_session exits without capturing anything; ignoring all other options.\r\nwarning: --no_console_stats added because stdout does not support statistics reporting.\r\n"
+  }
+}

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Character composition workshop · Mtek</title>
+<style>
+  body{margin:2rem auto;max-width:1440px;padding:0 1rem;background:#101b25;color:#edf3f7;font:16px/1.5 system-ui}h1{margin-bottom:.3rem}p{color:#b9cad7}.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:1rem;align-items:start}.controls{display:flex;flex-wrap:wrap;gap:1rem;background:#1c303f;padding:1rem;border-radius:10px}label{display:flex;flex-direction:column;gap:.3rem}button,select{font:inherit;background:#294355;color:inherit;border:1px solid #526d80;padding:.4rem;border-radius:4px}canvas{display:block;width:100%;aspect-ratio:4/3;border-radius:10px;background:#17232f;margin:1rem 0}pre{white-space:pre-wrap;color:#ffc1b1}output{display:block;font-variant-numeric:tabular-nums}aside{max-height:1050px;overflow:auto}a{color:#91d3ff}@media(max-width:1000px){.layout{grid-template-columns:1fr}aside{max-height:600px}}
+</style>
+<h1>One motion, different proportions</h1>
+<p>Original CesiumMan geometry and a generated longer-leg variant share a validated clip mapping. Both combine locomotion, an upper-body action, additive motion, procedural pelvis control, foot planting and a two-hand prop grip.</p>
+<div class="layout"><main>
+<div class="controls">
+  <label>Locomotion <input id="speed" type="range" min="0" max="1" step=".01" value=".55"></label>
+  <label>Upper-body action <input id="action" type="range" min="0" max="1" step=".01" value=".7"></label>
+  <label>Neck adjustment <input id="procedural" type="range" min="0" max="1" step=".01" value=".5"></label>
+  <label><span><input id="additive" type="checkbox"> Additive action</span></label>
+  <label><span><input id="feet" type="checkbox" checked> Ground feet</span></label>
+  <label><span><input id="grip" type="checkbox" checked> Two-hand grip</span></label>
+  <label><span><input id="root" type="checkbox"> Host-owned travel</span></label>
+  <label><span><input id="overlay" type="checkbox" checked> Skeleton / IK overlays</span></label>
+  <button id="run" type="button">Interrupt with Run</button><button id="idle" type="button">Interrupt with Idle</button><button id="blend" type="button">Resume locomotion</button>
+  <button id="pause" type="button">Pause</button><button id="reset" type="button">Reset</button>
+</div>
+<canvas width="900" height="675" aria-label="Original and longer-leg characters carrying props over unequal foot heights"></canvas>
+<output id="status" role="status">Preparing…</output><pre id="errors" role="alert"></pre>
+<p>The host owns actor and prop transforms. The raised track is 15 cm high; ankle targets include each mesh’s sole offset. Root travel has a separate trajectory node so the pelvis can adapt independently. Reset returns actors to their starting positions.</p>
+<p>UpperAction, Nod, Idle, Run and Travel are labelled generated demo motions; Walk retains the original animation. See the README for mapping, licences, operating bounds and reproduction.</p>
+</main><aside id="inspector"></aside></div>
+<script type="module" src="./composition.js"></script>
+</html>

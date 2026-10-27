@@ -17,9 +17,9 @@ use super::capabilities::{feature_name, prelude_feature};
 use crate::resolve::{Construct, DefId, DefKind, PreludeItem, Res, Resolution};
 use crate::source::{SourceFile, Span};
 use crate::syntax::ast::{
-    ConstDecl, EntityDecl, EntityMember, EnumDecl, FnDecl, Ident, Item, ItemKind, MaterialDecl,
-    MaterialMember, Module, NodeId, ParamDecl, SceneDecl, SceneMember, SceneObject, StateDecl,
-    StructDecl, Type,
+    ComputeDecl, ComputeMember, ConstDecl, EntityDecl, EntityMember, EnumDecl, FnDecl, Ident, Item,
+    ItemKind, MaterialDecl, MaterialMember, Module, NodeId, ParamDecl, SceneDecl, SceneMember,
+    SceneObject, StateDecl, StructDecl, Type,
 };
 use crate::syntax::{Lexed, NodeInfo, lex, walk_module};
 use crate::types::{CallKind, Typeck};
@@ -197,8 +197,7 @@ impl Collector<'_, '_> {
             ItemKind::Struct(decl) => self.structure(item, decl),
             ItemKind::Enum(decl) => self.enumeration(item, decl),
             ItemKind::Material(decl) => self.material(item, decl),
-            // Keep unsupported compute out of the implemented context surface.
-            ItemKind::Compute(_) => {}
+            ItemKind::Compute(decl) => self.compute(item, decl),
             ItemKind::Prefab(decl) => {
                 let index = self.push(Spec {
                     parent: None,
@@ -345,6 +344,53 @@ impl Collector<'_, '_> {
             extent: param.span,
             features: Vec::new(),
         });
+    }
+
+    fn compute(&mut self, item: &Item, decl: &ComputeDecl) {
+        let parent = self.push(Spec {
+            parent: None,
+            name: &decl.name,
+            node: decl.id,
+            kind: "compute",
+            ty: "compute".to_owned(),
+            start: item.span.start,
+            extent: item.span,
+            features: vec![feature_name(Construct::Compute)],
+        });
+        for member in &decl.members {
+            match member {
+                ComputeMember::Param(param) => self.param(parent, param),
+                ComputeMember::Input(buffer) | ComputeMember::Output(buffer) => {
+                    self.push(Spec {
+                        parent: Some(parent),
+                        name: &buffer.name,
+                        node: buffer.id,
+                        kind: if matches!(member, ComputeMember::Input(_)) {
+                            "input"
+                        } else {
+                            "output"
+                        },
+                        ty: self.ctx.type_text(&buffer.ty),
+                        start: buffer.span.start,
+                        extent: buffer.span,
+                        features: Vec::new(),
+                    });
+                }
+                ComputeMember::Stage(stage) => {
+                    self.push(Spec {
+                        parent: Some(parent),
+                        name: &stage.name,
+                        node: stage.id,
+                        kind: "kernel",
+                        ty: self.signature(&stage.params, stage.ret.as_ref()),
+                        start: stage.span.start,
+                        extent: stage.span,
+                        features: Vec::new(),
+                    });
+                }
+                ComputeMember::Workgroup(_) | ComputeMember::Error(_) => {}
+            }
+        }
     }
 
     fn state(&mut self, parent: usize, state: &StateDecl) {

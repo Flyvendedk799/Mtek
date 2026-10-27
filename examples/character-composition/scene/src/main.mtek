@@ -1,0 +1,98 @@
+const SOURCE = asset.glb("../models/Source.glb");
+
+const TARGET = asset.glb("../models/LongLegs.glb");
+
+struct CharacterVertex {
+    position: vec3;
+    normal: vec3;
+    uv: vec2;
+    mask: f32;
+}
+
+material Character {
+    param image: texture;
+    param filter: sampler = sampler.linear_repeat();
+    vertex(input: VertexInput) -> CharacterVertex {
+        return CharacterVertex {
+            position: input.position * vec3(1.03, 1.0, 1.0);
+            normal: normalize(input.normal / vec3(1.03, 1.0, 1.0));
+            uv: input.uv;
+            mask: input.uv.x;
+        };
+    }
+    fragment(surface: SurfaceInput, data: CharacterVertex) -> color {
+        let rgb = sample(image, filter, surface.uv).xyz * (0.85 + 0.15 * data.mask);
+        return lighting.pbr(surface, color.linear(rgb, 1.0), 0.0, 0.7);
+    }
+}
+
+// Fragment-only comparison path. The hidden seed below packages this shader for
+// the independent CPU-skinned reference harness; the live characters use Character.
+material Reference {
+    param image: texture;
+    param filter: sampler = sampler.linear_repeat();
+    fragment(surface: SurfaceInput) -> color {
+        let rgb = sample(image, filter, surface.uv).xyz * (0.85 + 0.15 * surface.uv.x);
+        return lighting.pbr(surface, color.linear(rgb, 1.0), 0.0, 0.7);
+    }
+}
+
+scene Workshop {
+    clear_color: #17232f;
+    ambient_intensity: 0.2;
+    camera Main {
+        position: vec3(6.0, 4.0, 9.0);
+        target: vec3(0.0, 1.3, 0.0);
+        projection: Perspective { fov_y: 0.7; near: 0.1; far: 60.0 };
+        exposure: -0.2630344;
+    }
+    entity Sun {
+        rotation: quat.euler(-0.8, 0.6, 0.0);
+        light: DirectionalLight { intensity: 3.0 };
+    }
+    entity Floor {
+        position: vec3(0.0, -0.1, 0.0);
+        mesh: Box { size: vec3(16.0, 0.2, 16.0) };
+        material: Pbr { base_color: #485465; roughness: 0.9 };
+    }
+    entity ReferenceShaderSeed {
+        visible: false;
+        mesh: Box { size: vec3(0.1) };
+        material: Reference { image: SOURCE.material_texture("Cesium_Man-effect") };
+    }
+    entity Original {
+        position: vec3(-1.6, 0.0, 0.0);
+        rotation: quat.euler(-1.5707963, 0.0, 0.0);
+        scale: vec3(2.0);
+        bounds_center: vec3(0.0, 0.0, 0.8);
+        bounds_radius: 2.4;
+        mesh: SOURCE.mesh("Cesium_Man");
+        clip: "Walk";
+        material: Character { image: SOURCE.material_texture("Cesium_Man-effect") };
+    }
+    entity Longer {
+        position: vec3(1.6, 0.0, 0.0);
+        rotation: quat.euler(-1.5707963, 0.0, 0.0);
+        scale: vec3(2.0);
+        bounds_center: vec3(0.0, 0.0, 0.9);
+        bounds_radius: 2.8;
+        mesh: TARGET.mesh("Cesium_Man");
+        clip: "Walk";
+        material: Character { image: TARGET.material_texture("Cesium_Man-effect") };
+    }
+    entity RaisedTrack {
+        position: vec3(4.0, 0.075, -0.165);
+        mesh: Box { size: vec3(16.0, 0.15, 0.3) };
+        material: Pbr { base_color: #608070; roughness: 0.8 };
+    }
+    entity OriginalProp {
+        position: vec3(-1.05, 1.9, 0.0);
+        mesh: Box { size: vec3(0.25, 0.16, 0.65) };
+        material: Pbr { base_color: #e5b06e; roughness: 0.7 };
+    }
+    entity LongerProp {
+        position: vec3(2.15, 2.12, 0.0);
+        mesh: Box { size: vec3(0.25, 0.16, 0.65) };
+        material: Pbr { base_color: #e5b06e; roughness: 0.7 };
+    }
+}

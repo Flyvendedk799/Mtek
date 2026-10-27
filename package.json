@@ -16,6 +16,7 @@
     "benchmarks",
     "benchmarks/baselines/m0-bridge",
     "benchmarks/runtime",
+    "benchmarks/material-lighting",
     "tools/ai-eval",
     "tools/coverage-matrix",
     "tools/release-docs",

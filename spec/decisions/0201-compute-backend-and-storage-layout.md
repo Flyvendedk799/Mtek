@@ -1,6 +1,6 @@
 # 0201: Compute backend and storage-array layout
 
-Status: accepted, 2026-10-26. Implements compiler infrastructure for the required
+Status: accepted, 2026-10-26; temporary source/runtime boundary superseded by [0207](0207-source-compute-acceptance-and-capabilities.md). Implements compiler infrastructure for the required
 [shader-authoring track](../../evidence/platform-step/shader-authoring-plan.md).
 It does not introduce source syntax or a runtime dispatch API.
 

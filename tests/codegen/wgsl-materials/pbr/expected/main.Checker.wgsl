@@ -146,7 +146,7 @@ fn mtek_lighting_pbr(mtek_surface: MtekSurfaceInput, mtek_base_color: vec4<f32>,
             }
         }
     }
-    return vec4<f32>((mtek_rgb + (((mtek_c * (1.0 - mtek_m)) * mtek_frame.ambient) + mtek_environment_light(mtek_n, mtek_v, mtek_c, mtek_m, mtek_r, mtek_f0, mtek_nv))) * mtek_frame.exposure, 1.0);
+    return vec4<f32>((mtek_rgb + (((mtek_c * (1.0 - mtek_m)) * mtek_frame.ambient) + mtek_environment_light(mtek_n, mtek_v, mtek_c, mtek_m, mtek_r, mtek_f0, mtek_nv))) * mtek_frame.exposure, mtek_base_color.w);
 }
 
 fn mtek_fragment(u_p_input: MtekSurfaceInput) -> vec4<f32> {

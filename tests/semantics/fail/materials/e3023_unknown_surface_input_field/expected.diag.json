@@ -6,7 +6,7 @@
     "endByte": 101,
     "message": "The type SurfaceInput has no field 'uvw'.",
     "notes": [
-      "the fields of SurfaceInput are local_position, world_position, world_normal, uv",
+      "the fields of SurfaceInput are local_position, world_position, world_normal, uv, world_tangent",
       "help: did you mean 'uv'?"
     ]
   }

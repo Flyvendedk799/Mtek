@@ -695,13 +695,28 @@ fail("e7009_vertex_colour", (() => {
   });
   return m.glb();
 })());
-fail("e7009_tangent", (() => {
+project("pass/assets_tangent", (() => {
   const m = tri();
   primitive0(m).attributes.TANGENT = m.accessor(f32(1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1), {
     componentType: FLOAT, type: "VEC4", count: 3,
   });
   return m.glb();
 })());
+for (const [name, options] of [
+  ["e7027_tangent_handedness", { w: 0 }],
+  ["e7027_tangent_direction", { x: 2 }],
+  ["e7010_tangent_without_normal", { noNormal: true }],
+  ["e7025_tangent_count", { count: 2 }],
+  ["e7007_tangent_type", { type: "VEC3" }],
+  ["e7025_tangent_nonfinite", { x: Infinity }],
+]) {
+  const m = tri();
+  if (options.noNormal) delete primitive0(m).attributes.NORMAL;
+  primitive0(m).attributes.TANGENT = m.accessor(f32(...Array.from({ length: 3 }, () => [options.x ?? 1, 0, 0, options.w ?? 1]).flat()), {
+    componentType: FLOAT, type: options.type ?? "VEC4", count: options.count ?? 3,
+  });
+  fail(name, m.glb());
+}
 fail("e7009_second_uv_set", (() => {
   const m = tri();
   primitive0(m).attributes.TEXCOORD_1 = m.vec2s([0, 0, 1, 0, 0, 1]);
@@ -883,7 +898,7 @@ fail("e7009_texcoord_1_texture", (() => {
 
 // Core channel corpus: one image reused as colour and as data must yield distinct
 // colour-space assets, while MR and AO share the same linear upload.
-function mappedMaterialModel(uvKind = "regular") {
+function mappedMaterialModel(uvKind = "regular", frame = {}) {
   const m = new Model();
   const attributes = {
     POSITION: m.positions([-1,-1,0, 1,-1,0, -1,1,0, 1,1,0]),
@@ -891,16 +906,37 @@ function mappedMaterialModel(uvKind = "regular") {
     TEXCOORD_0: m.vec2s(uvKind === "degenerate" ? [0,0,0,0,0,0,0,0] :
       uvKind === "mirrored" ? [1,0,0,0,1,1,0,1] : [0,0,1,0,0,1,1,1]),
   };
+  if (frame.tangent) attributes.TANGENT = m.accessor(f32(...(frame.vertexTangents ?? Array.from({length:4},()=>frame.tangent).flat())), {componentType:FLOAT,type:"VEC4",count:4});
+  if (frame.skin) {
+    attributes.JOINTS_0 = m.accessor(u8(...Array.from({length:4},()=>[0,0,0,0]).flat()), {componentType:UNSIGNED_BYTE,type:"VEC4",count:4});
+    attributes.WEIGHTS_0 = m.accessor(f32(...Array.from({length:4},()=>[1,0,0,0]).flat()), {componentType:FLOAT,type:"VEC4",count:4});
+  }
   const data = m.image(png(1,1,[[128,64,192,255]]), "image/png");
-  const normal = m.image(png(1,1,[[218,128,218,255]]), "image/png");
+  const normal = m.image(png(1,1,[frame.normal ?? [218,128,218,255]]), "image/png");
   m.json.textures = [{source: data}, {source: normal}];
   m.json.materials.push({name: "Mapped", pbrMetallicRoughness: {
     baseColorFactor: [0.7,0.6,0.5,1], metallicFactor: 0.6, roughnessFactor: 0.8,
     baseColorTexture: {index:0}, metallicRoughnessTexture: {index:0},
   }, normalTexture: {index:1}, occlusionTexture: {index:0,strength:0.75},
   emissiveTexture: {index:0}, emissiveFactor: [0.2,0.1,0.05]});
+  if (frame.tangent) {
+    const material = m.json.materials[0];
+    material.pbrMetallicRoughness.baseColorFactor = [1,1,1,1];
+    material.pbrMetallicRoughness.metallicFactor = 0;
+    material.pbrMetallicRoughness.roughnessFactor = 0.6;
+    delete material.pbrMetallicRoughness.metallicRoughnessTexture;
+    material.occlusionTexture.strength = 0; material.emissiveFactor = [0,0,0];
+  }
   const mesh = m.mesh("Quad", [{attributes,indices:m.indices16([0,1,2,2,1,3]),material:0}]);
   m.node({name:"Quad",mesh},true);
+  if (frame.skin) {
+    const joint = m.node({name:"Joint",scale:[1.4,0.7,1]},true);
+    const inverseBindMatrices = m.accessor(f32(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1), {componentType:FLOAT,type:"MAT4",count:1});
+    m.json.skins = [{joints:[joint],skeleton:joint,inverseBindMatrices}]; m.json.nodes[0].skin = 0;
+    const input = m.accessor(f32(0,1), {componentType:FLOAT,type:"SCALAR",count:2,min:[0],max:[1]});
+    const output = m.accessor(f32(0,0,Math.sin(-0.2),Math.cos(-0.2),0,0,Math.sin(-0.2),Math.cos(-0.2)), {componentType:FLOAT,type:"VEC4",count:2});
+    m.json.animations = [{name:"Pose",samplers:[{input,output,interpolation:"LINEAR"}],channels:[{sampler:0,target:{node:joint,path:"rotation"}}]}];
+  }
   return m.glb();
 }
 const mappedMain = `const MODEL = asset.glb("../models/model.glb");
@@ -942,6 +978,53 @@ for (const kind of ["regular","mirrored","degenerate"]) {
   project(`../browser/fixtures/m4/pbr_maps_${kind}`, mappedMaterialModel(kind), {main:mappedMain,toml:mappedToml});
 }
 project("pass/pbr_all_maps", mappedMaterialModel(), {main:mappedMain,toml:mappedToml});
+
+// Tangent bases deliberately differ from the derivative frame so these cases
+// detect a discarded source stream. Production-product bytes are kept separately.
+const tangentNormal = [200,180,230,255];
+const tangentMain = mappedMain.replace('state sun: f32 = 0.2','state sun: f32 = 3.0')
+  .replace('vec3(0.7,0.6,0.5)','vec3(1.0)').replace('state ao_strength: f32 = 0.75','state ao_strength: f32 = 0.0')
+  .replace('state metal: f32 = 0.6','state metal: f32 = 0.0').replace('state rough: f32 = 0.8','state rough: f32 = 0.6')
+  .replace('vec3(0.2,0.1,0.05)','vec3(0.0)').replace('quat.euler(0.0,-0.6,0.0)','quat.euler(-0.4,-0.6,0.0)');
+for (const [kind, uv, tangent, skin] of [
+  ["regular","regular",[0,1,0,1],false],
+  ["mirrored","mirrored",[0,1,0,-1],false],
+  ["degenerate","degenerate",[0,1,0,1],false],
+  ["transform","regular",[Math.SQRT1_2,Math.SQRT1_2,0,1],false],
+  ["skin","regular",[Math.SQRT1_2,Math.SQRT1_2,0,1],true],
+  ["varying","regular",[1,0,0,1],false],
+]) {
+  let main = tangentMain;
+  if (kind === "transform" || kind === "varying") main = main.replace('entity Part { mesh:', 'entity Part { rotation: quat.euler(0.0,0.0,-0.4); scale: vec3(1.4,0.7,1.0); mesh:');
+  if (skin) main = main.replace('entity Part { mesh:', 'entity Part { clip: "Pose"; mesh:');
+  const vertexTangents = kind === "varying" ? [1,0,0,1, 1,0,0,1, 0,1,0,1, 0,1,0,1] : undefined;
+  project(`../browser/fixtures/m4/pbr_tangent_${kind}`, mappedMaterialModel(uv, {tangent,vertexTangents,skin,normal:tangentNormal}), {main,toml:mappedToml});
+}
+for (const explicit of [false,true]) {
+  const main = `const MODEL = asset.glb("../models/model.glb");
+struct Shape { position: vec3; normal: vec3; uv: vec2; ${explicit?"tangent: vec4;":""} }
+material Authored {
+    vertex(v: VertexInput) -> Shape {
+        return Shape { position: vec3(-v.position.x,-v.position.y,v.position.z); normal: v.normal; uv: v.uv; ${explicit?"tangent: vec4(-v.tangent.x,-v.tangent.y,v.tangent.z,v.tangent.w);":""} };
+    }
+    fragment(s: SurfaceInput) -> color {
+        return lighting.pbr_mapped(s,color.linear(vec3(0.3,0.4,0.5),1.0),0.0,0.6,vec3(200.0/255.0,180.0/255.0,230.0/255.0),1.0,1.0,vec3(0.0));
+    }
+}
+scene AuthoredFrame {
+    ambient_intensity: 0.3;
+    camera Main { position: vec3(0.0,0.0,2.0); target: vec3(0.0); projection: Orthographic {height:2.0}; exposure: -0.2630344; }
+    entity Sun { rotation: quat.euler(-0.4,-0.6,0.0); light: DirectionalLight {intensity:3.0}; }
+    entity Part { mesh: MODEL.mesh("Quad"); material: Authored {}; }
+}
+`;
+  project(`../browser/fixtures/m4/pbr_tangent_${explicit?"authored":"fallback"}`, mappedMaterialModel("regular",{tangent:[0,1,0,1],normal:tangentNormal}), {main});
+}
+const tangentInstancedMain = tangentMain.slice(0,tangentMain.indexOf("    update(dt:")) + "}\n";
+project("../browser/fixtures/m4/pbr_tangent_instanced",mappedMaterialModel("regular",{tangent:[Math.SQRT1_2,Math.SQRT1_2,0,1],normal:tangentNormal}),{
+  main:tangentInstancedMain.replace('entity Part { mesh:', 'entity Part { position: vec3(-1.0,0.0,0.0); rotation: quat.euler(0.0,0.0,0.8); scale: vec3(0.56,0.28,0.4); mesh:').replace(
+    '\n}\n','\n    entity Twin { position: vec3(1.0,0.0,0.0); rotation: quat.euler(0.0,0.0,-1.0); scale: vec3(0.28,0.56,0.4); mesh: MODEL.mesh("Quad"); material: MODEL.material("Mapped"); }\n}\n'),toml:mappedToml,
+});
 
 // ----- row 9: images ---------------------------------------------------------
 
@@ -1357,7 +1440,7 @@ textureProject("e7002_texture_file_too_large", bigPng(2000, 2000), `${TOML}\n[as
 const BROWSER_FIXTURES = "../browser/fixtures/m4";
 
 // A one-joint animated quad: an off-camera skin must still deform for the shadow pass.
-function shadowSkinModel() {
+function shadowSkinModel(withTangents = false) {
   const m = new Model();
   const attributes = {
     POSITION: m.positions([-0.5, 0, -0.5, -0.5, 0, 0.5, 0.5, 0, 0.5, 0.5, 0, -0.5]),
@@ -1367,6 +1450,7 @@ function shadowSkinModel() {
     WEIGHTS_0: m.accessor(f32(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0), { componentType: FLOAT, type: "VEC4", count: 4 }),
   };
   m.json.meshes.push({ name: "Caster", primitives: [{ attributes, indices: m.indices16([0, 1, 2, 0, 2, 3]) }] });
+  if (withTangents) attributes.TANGENT = m.accessor(f32(...Array.from({length:4},()=>[1,0,0,1]).flat()), {componentType:FLOAT,type:"VEC4",count:4});
   m.node({ name: "Mesh", mesh: 0, skin: 0 }); m.node({ name: "Joint" });
   m.json.skins = [{ joints: [1], skeleton: 1 }];
   const time = m.accessor(f32(0, 1), { componentType: FLOAT, type: "SCALAR", count: 2, min: [0], max: [1] });
@@ -1376,6 +1460,17 @@ function shadowSkinModel() {
 }
 put(`${BROWSER_FIXTURES}/shadow_skin/models/caster.glb`, shadowSkinModel());
 put(`${BROWSER_FIXTURES}/animation_crowd/models/caster.glb`, shadowSkinModel());
+for (const reference of [false,true]) {
+  const name = `pbr_tangent_shadow_${reference?"reference":"skin"}`;
+  let source = readFileSync(join(root,`${BROWSER_FIXTURES}/shadow_skin/src/main.mtek`),"utf8")
+    .replace('scene Demo {','scene Demo {\n    state caster_x: f32 = 5.0;\n    state caster_visible: bool = true;')
+    .replace('entity Caster {','entity Caster {\n        visible: bind(caster_visible);')
+    .replace('position: vec3(5.0, 3.0, 0.0);','position: bind(vec3(caster_x, 3.0, 0.0));');
+  if (reference) source = source.replace(/^[ \t]*clip: "Slide";\r?\n/m,'');
+  project(`${BROWSER_FIXTURES}/${name}`,shadowSkinModel(true),{main:source,toml:`${TOML}\n[host.inputs]\ncaster_x = "Demo.caster_x"\ncaster_visible = "Demo.caster_visible"\n`});
+  // The base fixture names this file caster.glb, while project() writes model.glb.
+  put(`${BROWSER_FIXTURES}/${name}/src/main.mtek`,source.replace('../models/caster.glb','../models/model.glb'));
+}
 for (const [name, source, files] of [
   ["lit_texture_boundary", "lit_resource_boundary", ["mtek.toml", "src/main.mtek"]],
   ["lit_sampler_boundary", "lit_sampler_boundary", ["mtek.toml", "src/main.mtek", "src/shade.mtek"]],

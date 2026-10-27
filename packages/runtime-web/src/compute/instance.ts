@@ -173,6 +173,11 @@ export class ComputeInstance {
   /** Internal renderer bridge only. Call again after recovery; ownership stays here. */
   renderBuffer(): GPUBuffer { return this.ready().output; }
 
+  /** Pending/failed output must never be consumed by rendering. */
+  renderReadyBuffer(): GPUBuffer | undefined {
+    return this.current === "ready" && !this.dispatchPending && this.completed !== undefined ? this.resources?.output : undefined;
+  }
+
   /** Recovery rebuilds the last completed output, then restores later staged uploads. */
   async recover(device: ComputeDevice, registry: ResourceRegistry, module: GPUShaderModule): Promise<void> {
     if (this.current !== "lost") throw new Error(`compute: cannot recover an instance that is ${this.current}`);

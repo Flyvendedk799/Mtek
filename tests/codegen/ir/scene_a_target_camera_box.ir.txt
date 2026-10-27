@@ -41,7 +41,7 @@ program (entry scene src/main.mtek::Gallery)
       param #14 occlusion_strength: f32 = 1.0 @27:5-27:41
       param #15 emissive: color = color(0.0, 0.0, 0.0, 1.0) @28:5-28:37
       block material:std/materials.mtek::Pbr MtekParams_2b212d15_Pbr (size 48, align 16)
-      fragment -> color [std/materials.mtek::Pbr.fragment] reads world_position, world_normal, uv @29:5-38:6
+      fragment -> color [std/materials.mtek::Pbr.fragment] reads world_position, world_normal, uv, world_tangent @29:5-38:6
         local #0 surface: SurfaceInput (param) @29:14-29:21
         local #1 texel: vec4 (let) @30:13-30:18
         local #2 albedo: color (let) @31:13-31:19
@@ -51,7 +51,7 @@ program (entry scene src/main.mtek::Gallery)
         local #6 emissive_texel: vec3 (let) @35:13-35:27
         local #7 emission: vec3 (let) @36:13-36:21
         let texel#1 = (sample_mip(param base_color_texture#3, param base_color_sampler#4, (surface#0.uv): vec2)): vec4 @30:9-30:84
-        let albedo#2 = (color.linear(((param base_color#0.rgb): vec3 * (texel#1.xyz): vec3): vec3, 1.0)): color @31:9-31:68
+        let albedo#2 = (color.linear(((param base_color#0.rgb): vec3 * (texel#1.xyz): vec3): vec3, (param base_color#0.a): f32)): color @31:9-31:77
         let mr#3 = (sample_mip(param metallic_roughness_texture#5, param metallic_roughness_sampler#6, (surface#0.uv): vec2)): vec4 @32:9-32:97
         let normal#4 = ((sample_mip(param normal_texture#7, param normal_sampler#8, (surface#0.uv): vec2)): vec4.xyz): vec3 @33:9-33:81
         let ao#5 = ((sample_mip(param occlusion_texture#9, param occlusion_sampler#10, (surface#0.uv): vec2)): vec4.x): f32 @34:9-34:81

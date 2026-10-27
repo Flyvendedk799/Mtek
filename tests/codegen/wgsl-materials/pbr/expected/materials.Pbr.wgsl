@@ -43,12 +43,14 @@ struct MtekVertexOutput {
     @location(1) world_position: vec3<f32>,
     @location(2) world_normal: vec3<f32>,
     @location(3) uv: vec2<f32>,
+    @location(4) world_tangent: vec4<f32>,
 }
 
 struct MtekSurfaceInput {
     world_position: vec3<f32>,
     world_normal: vec3<f32>,
     uv: vec2<f32>,
+    world_tangent: vec4<f32>,
 }
 
 @group(0) @binding(0) var<uniform> mtek_frame: MtekFrame;
@@ -131,7 +133,15 @@ fn mtek_mapped_normal(mtek_surface: MtekSurfaceInput, mtek_texel: vec3<f32>, mte
     let mtek_map = (mtek_texel * 2.0) - vec3<f32>(1.0);
     let mtek_result = (((mtek_t * mtek_map.x) + (mtek_b * mtek_map.y)) * (mtek_scale * mtek_inv)) + (mtek_n * mtek_map.z);
     let mtek_len2 = dot(mtek_result, mtek_result);
-    return select(mtek_n, mtek_result * inverseSqrt(max(mtek_len2, 1e-20)), (mtek_len2 > 1e-16) && (mtek_area2 > 1e-20));
+    let mtek_derivative_normal = select(mtek_n, mtek_result * inverseSqrt(max(mtek_len2, 1e-20)), (mtek_len2 > 1e-16) && (mtek_area2 > 1e-20));
+    let mtek_authored = mtek_surface.world_tangent;
+    let mtek_authored_orthogonal = mtek_authored.xyz - (mtek_n * dot(mtek_n, mtek_authored.xyz));
+    let mtek_authored_length2 = dot(mtek_authored_orthogonal, mtek_authored_orthogonal);
+    let mtek_authored_t = mtek_authored_orthogonal * inverseSqrt(max(mtek_authored_length2, 1e-20));
+    let mtek_authored_b = cross(mtek_n, mtek_authored_t) * sign(mtek_authored.w);
+    let mtek_authored_result = (((mtek_authored_t * mtek_map.x) + (mtek_authored_b * mtek_map.y)) * mtek_scale) + (mtek_n * mtek_map.z);
+    let mtek_authored_result_length2 = dot(mtek_authored_result, mtek_authored_result);
+    return select(mtek_derivative_normal, mtek_authored_result * inverseSqrt(max(mtek_authored_result_length2, 1e-20)), (abs(mtek_authored.w) > 0.5) && ((mtek_authored_length2 > 1e-20) && (mtek_authored_result_length2 > 1e-16)));
 }
 
 fn mtek_lighting_pbr_mapped(mtek_surface: MtekSurfaceInput, mtek_base_color: vec4<f32>, mtek_metallic: f32, mtek_roughness: f32, mtek_normal_texel: vec3<f32>, mtek_normal_scale: f32, mtek_occlusion: f32, mtek_emissive: vec3<f32>) -> vec4<f32> {
@@ -179,12 +189,12 @@ fn mtek_lighting_pbr_mapped(mtek_surface: MtekSurfaceInput, mtek_base_color: vec
             }
         }
     }
-    return vec4<f32>((mtek_rgb + (((((mtek_c * (1.0 - mtek_m)) * mtek_frame.ambient) + mtek_environment_light(mtek_n, mtek_v, mtek_c, mtek_m, mtek_r, mtek_f0, mtek_nv)) * clamp(mtek_occlusion, 0.0, 1.0)) + mtek_emissive)) * mtek_frame.exposure, 1.0);
+    return vec4<f32>((mtek_rgb + (((((mtek_c * (1.0 - mtek_m)) * mtek_frame.ambient) + mtek_environment_light(mtek_n, mtek_v, mtek_c, mtek_m, mtek_r, mtek_f0, mtek_nv)) * clamp(mtek_occlusion, 0.0, 1.0)) + mtek_emissive)) * mtek_frame.exposure, mtek_base_color.w);
 }
 
 fn mtek_fragment(u_p_surface: MtekSurfaceInput) -> vec4<f32> {
     let u_l_texel = textureSample(mtek_texture_base_color_texture, mtek_sampler_base_color_sampler, u_p_surface.uv);
-    let u_l_albedo = vec4<f32>(mtek_params.u_base_color.xyz * u_l_texel.xyz, 1.0);
+    let u_l_albedo = vec4<f32>(mtek_params.u_base_color.xyz * u_l_texel.xyz, mtek_params.u_base_color.w);
     let u_l_mr = textureSample(mtek_texture_metallic_roughness_texture, mtek_sampler_metallic_roughness_sampler, u_p_surface.uv);
     let u_l_normal = textureSample(mtek_texture_normal_texture, mtek_sampler_normal_sampler, u_p_surface.uv).xyz;
     let u_l_ao = textureSample(mtek_texture_occlusion_texture, mtek_sampler_occlusion_sampler, u_p_surface.uv).x;
@@ -194,22 +204,26 @@ fn mtek_fragment(u_p_surface: MtekSurfaceInput) -> vec4<f32> {
 }
 
 @vertex
-fn mtek_vs(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>, @location(2) mtek_uv: vec2<f32>) -> MtekVertexOutput {
+fn mtek_vs(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>, @location(2) mtek_uv: vec2<f32>, @location(11) mtek_tangent: vec4<f32>) -> MtekVertexOutput {
+    let mtek_tangent_model = mtek_object.model;
     let mtek_world = mtek_object.model * vec4<f32>(mtek_position, 1.0);
     let mtek_world_normal = normalize((mtek_object.normal_matrix * vec4<f32>(mtek_normal, 0.0)).xyz);
-    return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal, mtek_uv);
+    let mtek_world_tangent_direction = (mtek_tangent_model * vec4<f32>(mtek_tangent.xyz, 0.0)).xyz;
+    return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal, mtek_uv, vec4<f32>(mtek_world_tangent_direction * inverseSqrt(max(dot(mtek_world_tangent_direction, mtek_world_tangent_direction), 1e-20)), mtek_tangent.w * sign(dot(mtek_tangent_model[0u].xyz, cross(mtek_tangent_model[1u].xyz, mtek_tangent_model[2u].xyz)))));
 }
 
 @vertex
-fn mtek_vs_instanced(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>, @location(2) mtek_uv: vec2<f32>, @location(3) mtek_model_c0: vec4<f32>, @location(4) mtek_model_c1: vec4<f32>, @location(5) mtek_model_c2: vec4<f32>, @location(6) mtek_model_c3: vec4<f32>, @location(7) mtek_normal_c0: vec4<f32>, @location(8) mtek_normal_c1: vec4<f32>, @location(9) mtek_normal_c2: vec4<f32>, @location(10) mtek_normal_c3: vec4<f32>) -> MtekVertexOutput {
+fn mtek_vs_instanced(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>, @location(2) mtek_uv: vec2<f32>, @location(11) mtek_tangent: vec4<f32>, @location(3) mtek_model_c0: vec4<f32>, @location(4) mtek_model_c1: vec4<f32>, @location(5) mtek_model_c2: vec4<f32>, @location(6) mtek_model_c3: vec4<f32>, @location(7) mtek_normal_c0: vec4<f32>, @location(8) mtek_normal_c1: vec4<f32>, @location(9) mtek_normal_c2: vec4<f32>, @location(10) mtek_normal_c3: vec4<f32>) -> MtekVertexOutput {
+    let mtek_tangent_model = mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3);
     let mtek_world = mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3) * vec4<f32>(mtek_position, 1.0);
     let mtek_world_normal = normalize((mat4x4<f32>(mtek_normal_c0, mtek_normal_c1, mtek_normal_c2, mtek_normal_c3) * vec4<f32>(mtek_normal, 0.0)).xyz);
-    return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal, mtek_uv);
+    let mtek_world_tangent_direction = (mtek_tangent_model * vec4<f32>(mtek_tangent.xyz, 0.0)).xyz;
+    return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal, mtek_uv, vec4<f32>(mtek_world_tangent_direction * inverseSqrt(max(dot(mtek_world_tangent_direction, mtek_world_tangent_direction), 1e-20)), mtek_tangent.w * sign(dot(mtek_tangent_model[0u].xyz, cross(mtek_tangent_model[1u].xyz, mtek_tangent_model[2u].xyz)))));
 }
 
 @fragment
 fn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {
-    let mtek_surface = MtekSurfaceInput(mtek_in.world_position, normalize(mtek_in.world_normal), mtek_in.uv);
+    let mtek_surface = MtekSurfaceInput(mtek_in.world_position, normalize(mtek_in.world_normal), mtek_in.uv, mtek_in.world_tangent);
     let mtek_color = mtek_fragment(mtek_surface);
     return mtek_color;
 }

@@ -37,6 +37,7 @@ const INPUTS = [
   "scripts/gen-manifest-validator.mjs",
   "scripts/manifest-validation-schema.ts",
   "scripts/standalone-schema-data.ts",
+  "scripts/standalone-diagnostic-strings.ts",
   "package-lock.json",
 ];
 

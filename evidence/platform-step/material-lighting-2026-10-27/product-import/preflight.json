@@ -1,0 +1,81 @@
+{
+  "format": "mtek-product-import-preflight/1",
+  "status": "rejected-import-not-accepted",
+  "upstreamCommit": "8f492390ddc7a2ae221a1369ef560589cf8c70fb",
+  "upstream": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/8f492390ddc7a2ae221a1369ef560589cf8c70fb/Models/WaterBottle/glTF-Binary/WaterBottle.glb",
+  "license": {
+    "spdx": "CC0-1.0",
+    "artist": "Microsoft",
+    "year": 2017,
+    "source": "https://github.com/KhronosGroup/glTF-Sample-Assets/blob/8f492390ddc7a2ae221a1369ef560589cf8c70fb/Models/WaterBottle/metadata.json"
+  },
+  "bytes": 8966700,
+  "sha256": "b337e526fd6a162013c2984aeec163f5fbb4f717252724dfc3f3458bd51df94b",
+  "gitBlob": "27894ec0ce010ba689e04e4801520ebb5ccc849f",
+  "cliSha256": "db283467bb8c5322890c0420a7d47f22f094269d02fd3238051598555afdcc11",
+  "exitCode": 1,
+  "meshes": [
+    {
+      "name": "WaterBottle",
+      "primitives": [
+        {
+          "attributes": {
+            "TEXCOORD_0": 0,
+            "NORMAL": 1,
+            "TANGENT": 2,
+            "POSITION": 3
+          },
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "name": "BottleMat",
+      "normalTexture": {
+        "index": 2
+      },
+      "alphaMode": "OPAQUE"
+    }
+  ],
+  "diagnostics": {
+    "schemaVersion": 1,
+    "tool": "mtek",
+    "compilerVersion": "0.1.0-dev",
+    "languageVersion": "0.1",
+    "project": "waterbottle-preflight",
+    "diagnostics": [
+      {
+        "schemaVersion": 1,
+        "code": "MTEK-E7009",
+        "severity": "error",
+        "title": "unsupported vertex attribute",
+        "message": "The mesh 'WaterBottle' (meshes[0]), primitive 0 has the attribute TANGENT; the profile supports POSITION, NORMAL and TEXCOORD_0.",
+        "source": {
+          "file": "src/main.mtek",
+          "startByte": 24,
+          "endByte": 44,
+          "startLine": 1,
+          "startColumn": 25,
+          "endLine": 1,
+          "endColumn": 45
+        },
+        "related": [],
+        "notes": [
+          "the problem is in the file 'WaterBottle.glb'",
+          "help: remove vertex colours, tangents and further UV sets when exporting"
+        ],
+        "suggestedEdits": [],
+        "phase": "check",
+        "docs": "spec/diagnostics.md#mtek-e7009"
+      }
+    ],
+    "summary": {
+      "errors": 1,
+      "warnings": 0,
+      "notes": 0,
+      "suppressed": 0
+    }
+  }
+}

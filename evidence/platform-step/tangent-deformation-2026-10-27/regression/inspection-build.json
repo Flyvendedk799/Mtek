@@ -1,0 +1,30 @@
+{
+  "format": "mtek-inspection-studio-build/1",
+  "asset": {
+    "model": "Fox",
+    "commit": "8f492390ddc7a2ae221a1369ef560589cf8c70fb",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/8f492390ddc7a2ae221a1369ef560589cf8c70fb/Models/Fox/glTF-Binary/Fox.glb",
+    "sha256": "d97044e701822bac5a62696459b27d7b375aada5de8574ed4362edbba94771f7",
+    "bytes": 162852
+  },
+  "sourceSha256": "b5a3f982366aa43162049c26db0750dc30ad33d284bb97cc946a9019db7e5b64",
+  "files": {
+    ".out/app.d.ts": "1e2c321120fd6b194839a6d06b808f0d7e78c3dd3b6aada8aba9c167bd45943f",
+    ".out/app.js": "ed9ecfe01c5b9cd1f49828bd01958125f54c8abaf8626f2ffedee34702ed7bc2",
+    ".out/app.js.map": "6c18ffb22c79131ef0125b3366f290b2c65f2fda4dbe34fd941693007cab289f",
+    ".out/assets/0e0415b9b475ffa3.png": "61c8b109ee7f8bf262791933380fafb1465f7b51cbe6472c2d21eff0b31f83a1",
+    ".out/assets/aee7288ee5741835.bin": "682941fb26a4d249bce083945e2a38571d8c626b454e1f7f7a82b5c8e5b716b9",
+    ".out/index.html": "9d01ed384b9632120966962b03af41b2bbc5256dba348e354ca094eb57acd4b1",
+    ".out/inspector.js": "8814fb962617792d134d1cb40e26874ddcbf5755dbd8368cdbffe2d782f65896",
+    ".out/physics/5bf6a0597ba2872d.js": "5bf6a0597ba2872d5394eb96421e526cf6bf76ab55a27c5fe226bc74be4d7526",
+    ".out/program.manifest.json": "68a31797c79be1f9479cee73edb1422a469792832e73214a80a11832c12877dd",
+    ".out/runtime.63cf347e276624e7.js": "63cf347e276624e7b434159b169c535ad952d68421c6c12605c448b74558ebca",
+    ".out/runtime.d.ts": "767560890951b19969928c2fe1d68a2142751512c2bc031d360a30e569878c97",
+    ".out/shaders/129cd7ce40a66297.mtek-map.json": "c93590f0a508d9d66ef7338087fd43e156a8e47e1a8f55c30d23acfef07920c8",
+    ".out/shaders/129cd7ce40a66297.wgsl": "129cd7ce40a66297e7870fb90b11d9392a4aa52d13da8dcf3dc74d0116f21825",
+    ".out/shaders/f4a15271ed437862.mtek-map.json": "6ca354eb918357fe093a14ed5b8ac91e55fcdc181be0031d887a917bb22c093a",
+    ".out/shaders/f4a15271ed437862.wgsl": "f4a15271ed437862e78c74676c09f0136e8367d980ccea26eb8d5a644d85d220",
+    "index.html": "8a55b2791f93ba821fd005406cbd7dc822a739380723a1d31fa252a52baa91eb",
+    "studio.js": "cdfc0469bc42d70bb5b5896542e382ba4be01faf720f362f1e0cc9dc40d21990"
+  }
+}

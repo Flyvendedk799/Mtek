@@ -1,0 +1,1124 @@
+{
+  "job": {
+    "scene": "product",
+    "quality": "low",
+    "pass": "cpu",
+    "implementation": "three",
+    "repeat": 0
+  },
+  "attempt": 1,
+  "startedAt": "2026-10-27T10:38:23.207Z",
+  "status": "interference",
+  "pageErrors": [],
+  "setup": {
+    "startupCreationMs": 690.3649999946356,
+    "implementation": "three",
+    "scene": "product",
+    "quality": "low",
+    "pass": "cpu",
+    "adapter": {
+      "vendor": "amd",
+      "architecture": "rdna-3",
+      "device": "0x744c",
+      "description": "AMD Radeon RX 7900 XTX",
+      "isFallbackAdapter": false
+    },
+    "deviceFeatures": [
+      "bgra8unorm-storage",
+      "clip-distances",
+      "core-features-and-limits",
+      "depth-clip-control",
+      "depth32float-stencil8",
+      "dual-source-blending",
+      "float32-blendable",
+      "float32-filterable",
+      "indirect-first-instance",
+      "rg11b10ufloat-renderable",
+      "shader-f16",
+      "subgroups",
+      "texture-compression-bc",
+      "texture-compression-bc-sliced-3d",
+      "texture-formats-tier1",
+      "texture-formats-tier2",
+      "timestamp-query"
+    ],
+    "crossOriginIsolated": true,
+    "minimumClockDelta": 0.004999995231628418,
+    "resources": [
+      {
+        "path": "/page.js",
+        "decodedBodySize": 23196
+      },
+      {
+        "path": "/chunks/chunk-JFF2QFK4.js",
+        "decodedBodySize": 11771
+      },
+      {
+        "path": "/chunks/three-HW3WV2UU.js",
+        "decodedBodySize": 2762504
+      },
+      {
+        "path": "/content.glb",
+        "decodedBodySize": 65480
+      },
+      {
+        "path": "/WaterBottle.glb",
+        "decodedBodySize": 8966700
+      }
+    ],
+    "unknownTextureFormats": []
+  },
+  "warmup": {
+    "frames": 30,
+    "info": {
+      "frames": 30,
+      "particles": 0,
+      "render": {
+        "calls": 107,
+        "frameCalls": 3,
+        "drawCalls": 11,
+        "triangles": 10013,
+        "points": 0,
+        "lines": 0,
+        "timestamp": 0
+      },
+      "memory": {
+        "attributes": 27,
+        "attributesSize": 134412,
+        "geometries": 13,
+        "indexAttributes": 3,
+        "indexAttributesSize": 56952,
+        "indirectStorageAttributes": 0,
+        "indirectStorageAttributesSize": 0,
+        "programs": 20,
+        "programsSize": 146459,
+        "readbackBuffers": 0,
+        "readbackBuffersSize": 0,
+        "renderTargets": 5,
+        "storageAttributes": 0,
+        "storageAttributesSize": 0,
+        "textures": 14,
+        "texturesSize": 96879092,
+        "uniformBuffers": 35,
+        "uniformBuffersSize": 4704,
+        "total": 97221619
+      },
+      "opaqueBatches": 5,
+      "productIdentity": {
+        "sourceSha256": "b337e526fd6a162013c2984aeec163f5fbb4f717252724dfc3f3458bd51df94b",
+        "mesh": "WaterBottle",
+        "material": "BottleMat",
+        "vertices": 2549,
+        "indices": 13530,
+        "tangentComponents": 4,
+        "nodeRotation": [
+          0,
+          1,
+          0,
+          0
+        ],
+        "normalMap": {
+          "width": 2048,
+          "height": 2048,
+          "type": 1009,
+          "format": 1023,
+          "colorSpace": "",
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "scale": [
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "counters": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 0,
+      "renderPassesBegun": 0,
+      "computePassesBegun": 0,
+      "submits": 0,
+      "drawCalls": 0,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 0,
+      "setPipeline": 0,
+      "setBindGroup": 0,
+      "setVertexBuffer": 0,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 0,
+      "writeBufferBytes": 0,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 0
+    },
+    "lastFrameDraws": []
+  },
+  "browserGpu": {
+    "pid": 6604,
+    "processes": [
+      {
+        "type": "browser",
+        "id": 22388,
+        "cpuTime": 1.666925
+      },
+      {
+        "type": "renderer",
+        "id": 16636,
+        "cpuTime": 0.058247
+      },
+      {
+        "type": "renderer",
+        "id": 22480,
+        "cpuTime": 0.6023
+      },
+      {
+        "type": "renderer",
+        "id": 25424,
+        "cpuTime": 0.271203
+      },
+      {
+        "type": "GPU",
+        "id": 6604,
+        "cpuTime": 1.385092
+      },
+      {
+        "type": "network.mojom.NetworkService",
+        "id": 5600,
+        "cpuTime": 0.270991
+      },
+      {
+        "type": "storage.mojom.StorageService",
+        "id": 6776,
+        "cpuTime": 0.035107
+      }
+    ]
+  },
+  "hostLoad": {
+    "quiet": false,
+    "busyBeforePercent": 18.64104749360812,
+    "gpuBeforePercent": 0,
+    "waitedMs": 60754,
+    "observations": [
+      {
+        "cpu": 21.900860303154445,
+        "cpuBefore": {
+          "idle": 1104199334,
+          "total": 1385144307
+        },
+        "cpuAfter": {
+          "idle": 1104208866,
+          "total": 1385156512
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689590316845,
+          "id": 40,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689593997050,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 21.85326036545775,
+        "cpuBefore": {
+          "idle": 1104225490,
+          "total": 1385177121
+        },
+        "cpuAfter": {
+          "idle": 1104233915,
+          "total": 1385187902
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689606706624,
+          "id": 41,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689609830234,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 25.55207789949574,
+        "cpuBefore": {
+          "idle": 1104250818,
+          "total": 1385208621
+        },
+        "cpuAfter": {
+          "idle": 1104259381,
+          "total": 1385220123
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689622459642,
+          "id": 42,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689625761624,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 20.130442446677243,
+        "cpuBefore": {
+          "idle": 1104275523,
+          "total": 1385240778
+        },
+        "cpuAfter": {
+          "idle": 1104284585,
+          "total": 1385252124
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689638450013,
+          "id": 43,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689641553422,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 21.136659436008678,
+        "cpuBefore": {
+          "idle": 1104300914,
+          "total": 1385272623
+        },
+        "cpuAfter": {
+          "idle": 1104310003,
+          "total": 1385284148
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689654246306,
+          "id": 44,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689657568247,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 36.568188054513854,
+        "cpuBefore": {
+          "idle": 1104325321,
+          "total": 1385304561
+        },
+        "cpuAfter": {
+          "idle": 1104332256,
+          "total": 1385315494
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689670107131,
+          "id": 45,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689673190755,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 43.146509341199604,
+        "cpuBefore": {
+          "idle": 1104345727,
+          "total": 1385334953
+        },
+        "cpuAfter": {
+          "idle": 1104351509,
+          "total": 1385345123
+        },
+        "gpu": 1,
+        "rawGpu": {
+          "qpc": 689685870440,
+          "id": 46,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689688996336,
+          "nonzero": [
+            {
+              "name": "pid_4_luid_0x00000000_0x00013585_phys_0_eng_3_engtype_Copy",
+              "percent": 1
+            }
+          ]
+        }
+      },
+      {
+        "cpu": 49.73784125836196,
+        "cpuBefore": {
+          "idle": 1104367258,
+          "total": 1385367793
+        },
+        "cpuAfter": {
+          "idle": 1104372818,
+          "total": 1385378855
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689701677258,
+          "id": 47,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689704781358,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 39.950372208436725,
+        "cpuBefore": {
+          "idle": 1104382598,
+          "total": 1385398136
+        },
+        "cpuAfter": {
+          "idle": 1104389616,
+          "total": 1385409823
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689717321861,
+          "id": 48,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689720592045,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 48.93310265282584,
+        "cpuBefore": {
+          "idle": 1104402068,
+          "total": 1385431246
+        },
+        "cpuAfter": {
+          "idle": 1104407381,
+          "total": 1385441650
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689733274422,
+          "id": 49,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689736344724,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 43.713897383622154,
+        "cpuBefore": {
+          "idle": 1104419710,
+          "total": 1385462381
+        },
+        "cpuAfter": {
+          "idle": 1104426336,
+          "total": 1385474153
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689748914204,
+          "id": 50,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689752028394,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 43.700144161460834,
+        "cpuBefore": {
+          "idle": 1104436273,
+          "total": 1385493466
+        },
+        "cpuAfter": {
+          "idle": 1104442131,
+          "total": 1385503871
+        },
+        "gpu": 1,
+        "rawGpu": {
+          "qpc": 689764705584,
+          "id": 51,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689767859509,
+          "nonzero": [
+            {
+              "name": "pid_4_luid_0x00000000_0x00013585_phys_0_eng_3_engtype_Copy",
+              "percent": 1
+            }
+          ]
+        }
+      },
+      {
+        "cpu": 40.835868981564346,
+        "cpuBefore": {
+          "idle": 1104456536,
+          "total": 1385526336
+        },
+        "cpuAfter": {
+          "idle": 1104463147,
+          "total": 1385537510
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689780548173,
+          "id": 52,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689783792482,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 35.18322139743137,
+        "cpuBefore": {
+          "idle": 1104476881,
+          "total": 1385556727
+        },
+        "cpuAfter": {
+          "idle": 1104482382,
+          "total": 1385565214
+        },
+        "gpu": 3,
+        "rawGpu": {
+          "qpc": 689796473658,
+          "id": 53,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689799572807,
+          "nonzero": [
+            {
+              "name": "pid_4_luid_0x00000000_0x00013585_phys_0_eng_3_engtype_Copy",
+              "percent": 3
+            }
+          ]
+        }
+      },
+      {
+        "cpu": 25.276720857834658,
+        "cpuBefore": {
+          "idle": 1104501164,
+          "total": 1385589399
+        },
+        "cpuAfter": {
+          "idle": 1104509805,
+          "total": 1385600963
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689812136248,
+          "id": 54,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689815244935,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 32.34271523178808,
+        "cpuBefore": {
+          "idle": 1104524101,
+          "total": 1385621166
+        },
+        "cpuAfter": {
+          "idle": 1104532274,
+          "total": 1385633246
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689827944717,
+          "id": 55,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689831104730,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 24.75567742389088,
+        "cpuBefore": {
+          "idle": 1104544806,
+          "total": 1385651185
+        },
+        "cpuAfter": {
+          "idle": 1104555508,
+          "total": 1385665408
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689843760049,
+          "id": 56,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689847069059,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 19.90307770787281,
+        "cpuBefore": {
+          "idle": 1104571805,
+          "total": 1385685735
+        },
+        "cpuAfter": {
+          "idle": 1104581226,
+          "total": 1385697497
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689859878197,
+          "id": 57,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689863041661,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 21.795738924585727,
+        "cpuBefore": {
+          "idle": 1104596819,
+          "total": 1385717011
+        },
+        "cpuAfter": {
+          "idle": 1104606069,
+          "total": 1385728839
+        },
+        "gpu": 2,
+        "rawGpu": {
+          "qpc": 689875721934,
+          "id": 58,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689878844572,
+          "nonzero": [
+            {
+              "name": "pid_4_luid_0x00000000_0x00013585_phys_0_eng_3_engtype_Copy",
+              "percent": 2
+            }
+          ]
+        }
+      },
+      {
+        "cpu": 21.43510054844607,
+        "cpuBefore": {
+          "idle": 1104622099,
+          "total": 1385749040
+        },
+        "cpuAfter": {
+          "idle": 1104630694,
+          "total": 1385759980
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689891514209,
+          "id": 59,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689894811215,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 18.243826627525472,
+        "cpuBefore": {
+          "idle": 1104647257,
+          "total": 1385780948
+        },
+        "cpuAfter": {
+          "idle": 1104656726,
+          "total": 1385792530
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689907356863,
+          "id": 60,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689910648213,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 18.773102634683443,
+        "cpuBefore": {
+          "idle": 1104671788,
+          "total": 1385811530
+        },
+        "cpuAfter": {
+          "idle": 1104682116,
+          "total": 1385824245
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689923259808,
+          "id": 61,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689926381460,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 25.01854402882272,
+        "cpuBefore": {
+          "idle": 1104698134,
+          "total": 1385844105
+        },
+        "cpuAfter": {
+          "idle": 1104705210,
+          "total": 1385853542
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689938965806,
+          "id": 62,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689942002200,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 23.018965965185764,
+        "cpuBefore": {
+          "idle": 1104723429,
+          "total": 1385875620
+        },
+        "cpuAfter": {
+          "idle": 1104732318,
+          "total": 1385887167
+        },
+        "gpu": 3,
+        "rawGpu": {
+          "qpc": 689954682807,
+          "id": 63,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689957934352,
+          "nonzero": [
+            {
+              "name": "pid_4_luid_0x00000000_0x00013585_phys_0_eng_3_engtype_Copy",
+              "percent": 3
+            }
+          ]
+        }
+      },
+      {
+        "cpu": 21.852019972764413,
+        "cpuBefore": {
+          "idle": 1104747787,
+          "total": 1385907509
+        },
+        "cpuAfter": {
+          "idle": 1104756395,
+          "total": 1385918524
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689970489031,
+          "id": 64,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689973630882,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 24.36242233144765,
+        "cpuBefore": {
+          "idle": 1104772977,
+          "total": 1385939045
+        },
+        "cpuAfter": {
+          "idle": 1104781133,
+          "total": 1385949828
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 689986253464,
+          "id": 65,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 689989352632,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 21.28870870352799,
+        "cpuBefore": {
+          "idle": 1104798102,
+          "total": 1385970811
+        },
+        "cpuAfter": {
+          "idle": 1104807227,
+          "total": 1385982404
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 690002028335,
+          "id": 66,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 690005258809,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 19.543533389687237,
+        "cpuBefore": {
+          "idle": 1104823397,
+          "total": 1386002654
+        },
+        "cpuAfter": {
+          "idle": 1104832915,
+          "total": 1386014484
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 690017985165,
+          "id": 67,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 690021241907,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 19.581387303234735,
+        "cpuBefore": {
+          "idle": 1104848975,
+          "total": 1386034747
+        },
+        "cpuAfter": {
+          "idle": 1104858273,
+          "total": 1386046309
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 690033926579,
+          "id": 68,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 690037201654,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 18.684163542224603,
+        "cpuBefore": {
+          "idle": 1104874350,
+          "total": 1386066608
+        },
+        "cpuAfter": {
+          "idle": 1104883459,
+          "total": 1386077810
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 690049858717,
+          "id": 69,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 690052986288,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 17.29276135205082,
+        "cpuBefore": {
+          "idle": 1104898398,
+          "total": 1386096763
+        },
+        "cpuAfter": {
+          "idle": 1104908944,
+          "total": 1386109514
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 690065646064,
+          "id": 70,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 690068793431,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 22.13634389926183,
+        "cpuBefore": {
+          "idle": 1104924725,
+          "total": 1386129669
+        },
+        "cpuAfter": {
+          "idle": 1104933691,
+          "total": 1386141184
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 690081312526,
+          "id": 71,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 690084488221,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 20.63837189076361,
+        "cpuBefore": {
+          "idle": 1104950007,
+          "total": 1386161373
+        },
+        "cpuAfter": {
+          "idle": 1104959132,
+          "total": 1386172871
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 690097176233,
+          "id": 72,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 690100278008,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 18.940747068416556,
+        "cpuBefore": {
+          "idle": 1104974803,
+          "total": 1386192306
+        },
+        "cpuAfter": {
+          "idle": 1104985241,
+          "total": 1386205183
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 690112962413,
+          "id": 73,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 690116431800,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 28.396842909276074,
+        "cpuBefore": {
+          "idle": 1104999898,
+          "total": 1386225121
+        },
+        "cpuAfter": {
+          "idle": 1105008335,
+          "total": 1386236904
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 690129022225,
+          "id": 74,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 690132138453,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 24.104437711637853,
+        "cpuBefore": {
+          "idle": 1105021145,
+          "total": 1386255558
+        },
+        "cpuAfter": {
+          "idle": 1105029662,
+          "total": 1386266780
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 690144710705,
+          "id": 75,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 690147798935,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 20.53107723236723,
+        "cpuBefore": {
+          "idle": 1105047194,
+          "total": 1386288607
+        },
+        "cpuAfter": {
+          "idle": 1105056681,
+          "total": 1386300545
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 690160424802,
+          "id": 76,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 690163717855,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 20.31514288257812,
+        "cpuBefore": {
+          "idle": 1105072024,
+          "total": 1386320699
+        },
+        "cpuAfter": {
+          "idle": 1105080975,
+          "total": 1386331932
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 690176423440,
+          "id": 77,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 690179578353,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 18.64104749360812,
+        "cpuBefore": {
+          "idle": 1105095708,
+          "total": 1386350868
+        },
+        "cpuAfter": {
+          "idle": 1105106209,
+          "total": 1386363775
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 690192179264,
+          "id": 78,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 690195267011,
+          "nonzero": []
+        }
+      }
+    ]
+  },
+  "error": "Error: CPU/external GPU did not become quiet; pass retained without running known-unqualified work",
+  "disposed": {
+    "result": {
+      "frames": 30,
+      "particles": 0
+    },
+    "before": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 0,
+      "renderPassesBegun": 0,
+      "computePassesBegun": 0,
+      "submits": 0,
+      "drawCalls": 0,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 0,
+      "setPipeline": 0,
+      "setBindGroup": 0,
+      "setVertexBuffer": 0,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 0,
+      "writeBufferBytes": 0,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 0
+    },
+    "after": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 0,
+      "renderPassesBegun": 0,
+      "computePassesBegun": 0,
+      "submits": 0,
+      "drawCalls": 0,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 0,
+      "setPipeline": 0,
+      "setBindGroup": 0,
+      "setVertexBuffer": 0,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 0,
+      "writeBufferBytes": 0,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 1
+    },
+    "validation": [],
+    "losses": [],
+    "allDevicesDestroyed": true
+  },
+  "finishedAt": "2026-10-27T10:39:25.034Z",
+  "qualification": {
+    "qualified": false,
+    "errors": [
+      "Measurement did not complete",
+      "Missing setup, samples or disposal"
+    ]
+  },
+  "artifacts": []
+}

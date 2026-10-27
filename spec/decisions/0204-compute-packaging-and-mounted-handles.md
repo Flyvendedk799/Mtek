@@ -1,6 +1,6 @@
 # 0204: Compute packaging and mounted handles
 
-Status: accepted, 2026-10-26. Extends 0203. Development integration only;
+Status: accepted, 2026-10-26; temporary public gate superseded by [0207](0207-source-compute-acceptance-and-capabilities.md). Extends 0203. Development integration only;
 ordinary source analysis/build still rejects compute declarations with E4901.
 
 ## Package and inspection contract

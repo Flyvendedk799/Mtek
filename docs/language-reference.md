@@ -346,9 +346,9 @@ CPU-only intrinsics in v0.1: `random() -> f32` in `[0, 1)` (seeded per applicati
 
 ### 11. What is not in v0.1
 
-Each of these is rejected with a diagnostic; `docs/limitations.md` gives the code of each. Only the reserved words (`E0013`), the bitwise operators (`E1901`) and compute stages (`E4901`) have an unsupported-feature code of their own; the others are rejected by the general rule that names the construct (an unknown type is `E3003`, a numeric suffix or a hexadecimal literal `E0021`, `+` on strings `E3014`, and so on; decision 0102).
+Each of these is rejected with a diagnostic; `docs/limitations.md` gives the code of each. Only the reserved words (`E0013`), the bitwise operators (`E1901`) and material-local compute stages (`E4901`) have an unsupported-feature code of their own; the others are rejected by the general rule that names the construct (an unknown type is `E3003`, a numeric suffix or a hexadecimal literal `E0021`, `+` on strings `E3014`, and so on; decision 0102).
 
-`loop` (write `while true`, §7.10); bitwise operators; integer/boolean vectors; `mat2`/`mat3`; `f16`/`f64`; numeric suffixes and hexadecimal literals; Unicode identifiers; closures and function values; generics; methods and `impl`; enum variants that carry data, explicit enum discriminants and conversions between enums and numbers (§5.7); optional/result types in the language; string concatenation (`+` on `string` is `E3014`; interpolation, §5.8, builds strings); recursion; compute stages; storage buffers; patterns other than an enum variant and `_` (no literal, binding, range or guard patterns, no destructuring, §6.11). The unsupported-feature codes are the `x9xx` codes of each range (`spec/diagnostics.md` §3).
+`loop` (write `while true`, §7.10); bitwise operators; integer/boolean vectors; `mat2`/`mat3`; `f16`/`f64`; numeric suffixes and hexadecimal literals; Unicode identifiers; closures and function values; generics; methods and `impl`; enum variants that carry data, explicit enum discriminants and conversions between enums and numbers (§5.7); optional/result types in the language; string concatenation (`+` on `string` is `E3014`; interpolation, §5.8, builds strings); recursion; material-local compute stages; unrestricted storage buffers (bounded standalone compute is specified in `spec/compute.md`); patterns other than an enum variant and `_` (no literal, binding, range or guard patterns, no destructuring, §6.11). The unsupported-feature codes are the `x9xx` codes of each range (`spec/diagnostics.md` §3).
 
 ## Part B. The standard library
 
@@ -358,10 +358,10 @@ Generated from [spec/stdlib-schema.json](../spec/stdlib-schema.json) (registry v
 
 | Type | Kind | GPU | Fields | Methods | Description |
 |---|---|---|---|---|---|
-| `ComputeInput` | record | yes | index: u32; global_x: u32; global_y: u32; global_z: u32; local_x: u32; local_y: u32; local_z: u32; group_x: u32; group_y: u32; group_z: u32; group_count_x: u32; group_count_y: u32; group_count_z: u32; local_index: u32 |  | Compute invocation IDs (dispatch unavailable). |
+| `ComputeInput` | record | yes | index: u32; global_x: u32; global_y: u32; global_z: u32; local_x: u32; local_y: u32; local_z: u32; group_x: u32; group_y: u32; group_z: u32; group_count_x: u32; group_count_y: u32; group_count_z: u32; local_index: u32 |  | Compute invocation IDs. |
 | `PointerEvent` | record | no | position: vec2; button: i32 |  | A pointer event: `position` in normalised canvas coordinates (x right, y up, both in -1..1) and the `button` (0 primary, 1 middle, 2 secondary). |
-| `SurfaceInput` | record | yes | local_position: vec3; world_position: vec3; world_normal: vec3; uv: vec2 |  | Interpolated fragment inputs. |
-| `VertexInput` | record | yes | position: vec3; normal: vec3; uv: vec2 |  | Skinned local vertex inputs. |
+| `SurfaceInput` | record | yes | local_position: vec3; world_position: vec3; world_normal: vec3; uv: vec2; world_tangent: vec4 |  | Interpolated fragment inputs. |
+| `VertexInput` | record | yes | position: vec3; normal: vec3; uv: vec2; tangent: vec4 |  | Skinned local vertex inputs. |
 | `array` | array | yes |  |  | The generic `array<T, N>`: a fixed-length array of `N` (1 to 65536) elements of type `T`. |
 | `bool` | scalar | yes |  |  | Truth value. |
 | `color` | color | yes |  |  | Linear-light RGBA with straight alpha; distinct from `vec4`. A literal `#rrggbb` is sRGB-encoded and converted; `color.linear(rgb, a)` takes linear components, `color.srgb(rgb, a)` sRGB ones. Fields `.r .g .b .a` and `.rgb`; no arithmetic. |
@@ -758,7 +758,7 @@ Easing curves for tweens: `mix(a, b, easing.out_cubic(t))` moves from `a` to `b`
 
 #### `frame`
 
-Per-frame values, readable in CPU code and in `bind` expressions, not in GPU stage code (route them through material parameters). `update(dt)` gets the frame delta, which varies from frame to frame; `fixed_update(dt)` runs zero or more times per frame and gets the constant fixed step, 1/60 s by default.
+Per-frame CPU/`bind` values; route to GPU stages through material params. `update(dt)` gets variable frame delta; `fixed_update(dt)` runs zero or more times per frame with a constant fixed step (default 1/60 s).
 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
@@ -950,13 +950,13 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `angular_velocity` | `vec3` | Dynamic, Kinematic | Angular velocity as of the last completed tick. Read-only. |
 | `linear_velocity` | `vec3` | Dynamic, Kinematic | Linear velocity as of the last completed tick. Read-only. |
 
-## Part C. Features of this build (262)
+## Part C. Features of this build (263)
 
 The list below is `supported.features` of `mtek context`, printed by the compiler this document was generated with. It is derived by the compiler from its construct table and from the registry, never typed in. A feature is supported when a test that would fail without it passes in a recorded environment (`spec/testing.md`); `docs/coverage-matrix.md` shows which program or fixture exercises each one.
 
-### Language constructs (32)
+### Language constructs (33)
 
-`imports` `exports` `constants` `body-constants` `functions` `cpu-functions` `structs` `enums` `materials` `prefabs` `scenes` `scene-fields` `state` `scene-objects` `entities` `entity-fields` `prefab-instances` `lifecycle-functions` `handlers` `bind` `self` `descriptors` `strings` `arrays` `indexing` `negation` `arithmetic` `remainder` `comparison` `equality` `logical` `match`
+`imports` `exports` `constants` `body-constants` `functions` `cpu-functions` `structs` `enums` `materials` `compute-programs` `prefabs` `scenes` `scene-fields` `state` `scene-objects` `entities` `entity-fields` `prefab-instances` `lifecycle-functions` `handlers` `bind` `self` `descriptors` `strings` `arrays` `indexing` `negation` `arithmetic` `remainder` `comparison` `equality` `logical` `match`
 
 ### Body commands (5)
 
@@ -1004,7 +1004,7 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 What the build does **not** support is on [limitations.md](limitations.md); `supported.notSupported` of `mtek context` has the same list.
 
-## Part D. Diagnostics (251 codes)
+## Part D. Diagnostics (252 codes)
 
 Every diagnostic has a stable code: `E` for an error, `W` for a warning, then four digits; the first digit is the area. The full catalogue, the JSON form (`mtek check --format json`), the human rendering and the suggested edits are in [spec/diagnostics.md](../spec/diagnostics.md).
 
@@ -1017,7 +1017,7 @@ Every diagnostic has a stable code: `E` for an error, `W` for a warning, then fo
 | `4xxx` | functions, effects, execution domains, material stages | 20 |
 | `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 65 |
 | `6xxx` | GPU layout, target profile, generated-shader validation | 4 |
-| `7xxx` | assets | 36 |
+| `7xxx` | assets | 37 |
 | `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 35 |
 | `9xxx` | project, configuration, tooling, internal | 13 |
 

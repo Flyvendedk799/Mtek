@@ -32,8 +32,9 @@ actor.dispose();
 Rig translation is in local coordinates; IK targets and socket queries are
 mesh-local. Layers modify only authored channels. A layer mask does not implicitly
 include descendants: name every bone to include. Updating a layer retains its clock.
-Use an ordered full-weight locomotion layer followed by a weighted second clip for
-a two-clip locomotion blend, then add masked action layers.
+Use `player.locomotion.set({ samples: [{ clip: "walk", threshold: 0 },
+{ clip: "run", threshold: 1 }], parameter: 0.5 })` for a synchronized locomotion
+blend, then add masked action layers. Changing its parameter retains cycle phase.
 
 `player.setProceduralOverride(pose => ...)` runs after layers. The array stores
 translation XYZ, quaternion XYZW and scale XYZ per node. Keep it pure; the runtime
@@ -57,6 +58,22 @@ compatible bone axes/rest semantics; arbitrary-rig humanoid inference is not pro
 For CPU inspection call `deformSkin(skin, player.palette, positions, normals,
 outPositions, outNormals)` with reusable output arrays. Normal output uses the
 inverse transpose of the blended skin matrix, including nonuniform scale.
+Optional paired `tangents`/`outTangents` arguments preserve authored vec4 frames;
+normal output is required too. Tangents use the linear transform and are
+re-orthogonalized against normals, with reflected handedness and a zero marker
+for unavailable or collapsed frames. Mounted imported meshes share immutable
+source streams and deform tangents only for material consumers that need them.
+See [decision 0212](../spec/decisions/0212-authored-tangent-integration.md) for
+source fields, mapped PBR, derivative fallback and buffer ownership.
+
+The [character composition workshop](../examples/character-composition/README.md)
+demonstrates the mounted workflow on original CesiumMan geometry and a generated
+compatible proportion variant. It combines locomotion, masked override/additive
+actions, procedural pelvis adaptation, feet on unequal heights, two hand grips and
+host-owned travel, with authored vertex deformation and shadows. Run
+`node examples/character-composition/serve.mjs` and open `http://127.0.0.1:5189/`.
+Its README identifies generated motions, explicit rig assumptions, numeric limits,
+recovery behavior and reproducible CPU/GPU checks.
 
 ## Mounted-scene extensions
 

@@ -66,15 +66,28 @@ pinned. The original runtime freeze, matched-animation definitions/report and
 frozen AI archive are preserved. The inspector is opt-in and is not included in
 compiled application payloads automatically.
 
-## Remaining and deferred
+## Rendered follow-up, 2026-10-27
 
-- **Deferred:** independent-character CPU/GPU optimization identified by the
-  matched animation report, and its required new measurements.
-- **Deferred:** real rendered lighting-studio inspector checks and broader hardware
-  regressions while CPU/GPU-heavy work is active.
-- Still needed for the wider inspection/authoring roadmap: world-space skeleton,
-  IK/collision overlays, transition/layer diagnostics, resource provenance/history,
-  persistent authored IDs and complete authoring workflows.
+The user re-enabled CPU/GPU testing and animation optimization, including while
+doing other work. The new [animation checkpoint](animation-optimization-2026-10-27/checkpoint.md)
+retains 35 passing hardware and 35 passing software checks. These include the
+actual lighting studio's inspector: select Ceramic, move its Y position from 1
+to 3, undo, redo, reset to a fresh scene/history and remove the panel. The
+screenshot was visually inspected. No browser errors occur. The browser fixture
+now serves the separately built inspector module already used by the standalone
+dev server; its omission caused the retained first studio failure.
+
+## Remaining
+
+- An independent-character animation optimization now has full matched before /
+  after measurements: GPU time/buffers decrease, while whole-frame CPU evidence
+  remains mixed. Further CPU investigation and wider device evidence remain.
+- A subsequent [spatial inspection increment](inspection-2026-10-27/checkpoint.md)
+  adds copied world/camera/physics and animation diagnostics, world-space bounds,
+  skeleton/IK/collision/contact overlays and transition/layer diagnosis. Its actual
+  character studio passes four checks on each desktop backend. Resource
+  provenance/history, persistent authored IDs and complete authoring workflows
+  remain open.
 - SDK release publication, independent-developer adoption and wider environment
   guarantees are separate from the local package/API proof obtained here.
 

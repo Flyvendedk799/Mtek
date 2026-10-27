@@ -1,0 +1,1607 @@
+{
+  "format": "mtek-material-lighting-calibration-summary/1",
+  "accepted": {
+    "hardware": {
+      "cases": 10,
+      "passed": true,
+      "visualPrerequisitesPassed": true,
+      "performanceEligible": false,
+      "pngs": 32,
+      "summary": [
+        {
+          "scene": "product",
+          "quality": "low",
+          "comparisons": [
+            {
+              "frame": 1,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 640,
+                  "height": 360,
+                  "projectedSamples": null,
+                  "pixels": 122453,
+                  "meanAbsoluteRgb8": 0.8926962453621662,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0.0002858239487803484,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product0",
+                  "x": 210,
+                  "y": 115,
+                  "width": 82,
+                  "height": 74,
+                  "projectedSamples": null,
+                  "pixels": 5739,
+                  "meanAbsoluteRgb8": 0.3634198757042458,
+                  "p95MaximumChannelError8": 1,
+                  "fractionOver24": 0.0003484927687750479,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product1",
+                  "x": 280,
+                  "y": 125,
+                  "width": 76,
+                  "height": 82,
+                  "projectedSamples": null,
+                  "pixels": 5375,
+                  "meanAbsoluteRgb8": 2.194604651162791,
+                  "p95MaximumChannelError8": 13,
+                  "fractionOver24": 0.0065116279069767444,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product2",
+                  "x": 363,
+                  "y": 138,
+                  "width": 93,
+                  "height": 93,
+                  "projectedSamples": null,
+                  "pixels": 7176,
+                  "meanAbsoluteRgb8": 0.8683574879227053,
+                  "p95MaximumChannelError8": 3,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            }
+          ],
+          "particleContributions": {}
+        },
+        {
+          "scene": "product",
+          "quality": "standard",
+          "comparisons": [
+            {
+              "frame": 1,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 720,
+                  "projectedSamples": null,
+                  "pixels": 489988,
+                  "meanAbsoluteRgb8": 1.0325110002693945,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0.00005714425659403904,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product0",
+                  "x": 420,
+                  "y": 230,
+                  "width": 163,
+                  "height": 147,
+                  "projectedSamples": null,
+                  "pixels": 22717,
+                  "meanAbsoluteRgb8": 0.38724303385130077,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0.0001320596909803231,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product1",
+                  "x": 561,
+                  "y": 251,
+                  "width": 150,
+                  "height": 162,
+                  "projectedSamples": null,
+                  "pixels": 21138,
+                  "meanAbsoluteRgb8": 1.6057179802567256,
+                  "p95MaximumChannelError8": 8,
+                  "fractionOver24": 0.0013246286309016937,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product2",
+                  "x": 726,
+                  "y": 277,
+                  "width": 185,
+                  "height": 184,
+                  "projectedSamples": null,
+                  "pixels": 28470,
+                  "meanAbsoluteRgb8": 0.8831986886781408,
+                  "p95MaximumChannelError8": 3,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            }
+          ],
+          "particleContributions": {}
+        },
+        {
+          "scene": "indoor",
+          "quality": "low",
+          "comparisons": [
+            {
+              "frame": 1,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 640,
+                  "height": 360,
+                  "projectedSamples": null,
+                  "pixels": 175229,
+                  "meanAbsoluteRgb8": 1.3384903944742783,
+                  "p95MaximumChannelError8": 4,
+                  "fractionOver24": 0.0001483772663200726,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product0",
+                  "x": 210,
+                  "y": 115,
+                  "width": 82,
+                  "height": 74,
+                  "projectedSamples": null,
+                  "pixels": 6068,
+                  "meanAbsoluteRgb8": 0.7002856515051638,
+                  "p95MaximumChannelError8": 4,
+                  "fractionOver24": 0.00016479894528675015,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product1",
+                  "x": 280,
+                  "y": 125,
+                  "width": 76,
+                  "height": 82,
+                  "projectedSamples": null,
+                  "pixels": 6052,
+                  "meanAbsoluteRgb8": 2.6301498127340825,
+                  "p95MaximumChannelError8": 14,
+                  "fractionOver24": 0.004130865829477859,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product2",
+                  "x": 363,
+                  "y": 138,
+                  "width": 93,
+                  "height": 93,
+                  "projectedSamples": null,
+                  "pixels": 8029,
+                  "meanAbsoluteRgb8": 0.9286752189977996,
+                  "p95MaximumChannelError8": 3,
+                  "fractionOver24": 0.00012454851164528583,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            }
+          ],
+          "particleContributions": {}
+        },
+        {
+          "scene": "indoor",
+          "quality": "standard",
+          "comparisons": [
+            {
+              "frame": 1,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 720,
+                  "projectedSamples": null,
+                  "pixels": 700935,
+                  "meanAbsoluteRgb8": 1.401843252227382,
+                  "p95MaximumChannelError8": 4,
+                  "fractionOver24": 0.000028533316213343605,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product0",
+                  "x": 420,
+                  "y": 230,
+                  "width": 163,
+                  "height": 147,
+                  "projectedSamples": null,
+                  "pixels": 23961,
+                  "meanAbsoluteRgb8": 0.7369475397520971,
+                  "p95MaximumChannelError8": 4,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product1",
+                  "x": 561,
+                  "y": 251,
+                  "width": 150,
+                  "height": 162,
+                  "projectedSamples": null,
+                  "pixels": 23638,
+                  "meanAbsoluteRgb8": 1.8655836647206476,
+                  "p95MaximumChannelError8": 9,
+                  "fractionOver24": 0.0008460952703274389,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product2",
+                  "x": 726,
+                  "y": 277,
+                  "width": 185,
+                  "height": 184,
+                  "projectedSamples": null,
+                  "pixels": 31756,
+                  "meanAbsoluteRgb8": 0.9144623588193307,
+                  "p95MaximumChannelError8": 3,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            }
+          ],
+          "particleContributions": {}
+        },
+        {
+          "scene": "outdoor",
+          "quality": "low",
+          "comparisons": [
+            {
+              "frame": 1,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 640,
+                  "height": 360,
+                  "projectedSamples": null,
+                  "pixels": 121176,
+                  "meanAbsoluteRgb8": 0.9125844501661495,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0.0010563147818049778,
+                  "silhouetteIoU": 0.9999834950815343,
+                  "passed": true
+                },
+                {
+                  "id": "Sculpture1_2",
+                  "x": 233,
+                  "y": 158,
+                  "width": 64,
+                  "height": 70,
+                  "projectedSamples": null,
+                  "pixels": 4480,
+                  "meanAbsoluteRgb8": 1.2988095238095239,
+                  "p95MaximumChannelError8": 7,
+                  "fractionOver24": 0.002455357142857143,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            }
+          ],
+          "particleContributions": {}
+        },
+        {
+          "scene": "outdoor",
+          "quality": "standard",
+          "comparisons": [
+            {
+              "frame": 1,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 720,
+                  "projectedSamples": null,
+                  "pixels": 484755,
+                  "meanAbsoluteRgb8": 0.9987863284889618,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0.00010727068312859073,
+                  "silhouetteIoU": 0.9999938113067426,
+                  "passed": true
+                },
+                {
+                  "id": "Sculpture1_2",
+                  "x": 467,
+                  "y": 317,
+                  "width": 127,
+                  "height": 138,
+                  "projectedSamples": null,
+                  "pixels": 17526,
+                  "meanAbsoluteRgb8": 0.8513446688729126,
+                  "p95MaximumChannelError8": 4,
+                  "fractionOver24": 0.0003994065959146411,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            }
+          ],
+          "particleContributions": {}
+        },
+        {
+          "scene": "transparency",
+          "quality": "low",
+          "comparisons": [
+            {
+              "frame": 1,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 640,
+                  "height": 360,
+                  "projectedSamples": null,
+                  "pixels": 124093,
+                  "meanAbsoluteRgb8": 0.8600109057991453,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0.00019340333459582731,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "BehindGlass",
+                  "x": 289,
+                  "y": 111,
+                  "width": 102,
+                  "height": 102,
+                  "projectedSamples": null,
+                  "pixels": 9559,
+                  "meanAbsoluteRgb8": 0.35906824284269623,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Pane0",
+                  "x": 226,
+                  "y": 112,
+                  "width": 50,
+                  "height": 113,
+                  "projectedSamples": null,
+                  "pixels": 5454,
+                  "meanAbsoluteRgb8": 1.2486859797090821,
+                  "p95MaximumChannelError8": 10,
+                  "fractionOver24": 0.0018335166850018336,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Pane1",
+                  "x": 254,
+                  "y": 113,
+                  "width": 59,
+                  "height": 113,
+                  "projectedSamples": null,
+                  "pixels": 6476,
+                  "meanAbsoluteRgb8": 0.5740168828494956,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0.00015441630636195183,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Pane2",
+                  "x": 284,
+                  "y": 114,
+                  "width": 68,
+                  "height": 112,
+                  "projectedSamples": null,
+                  "pixels": 7383,
+                  "meanAbsoluteRgb8": 0.40335906812948663,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Pane3",
+                  "x": 315,
+                  "y": 116,
+                  "width": 76,
+                  "height": 111,
+                  "projectedSamples": null,
+                  "pixels": 8125,
+                  "meanAbsoluteRgb8": 0.38248205128205126,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            }
+          ],
+          "particleContributions": {}
+        },
+        {
+          "scene": "transparency",
+          "quality": "standard",
+          "comparisons": [
+            {
+              "frame": 1,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 720,
+                  "projectedSamples": null,
+                  "pixels": 496389,
+                  "meanAbsoluteRgb8": 1.0266269666195933,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0.00003424733424793861,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "BehindGlass",
+                  "x": 579,
+                  "y": 223,
+                  "width": 203,
+                  "height": 203,
+                  "projectedSamples": null,
+                  "pixels": 38038,
+                  "meanAbsoluteRgb8": 0.38313440945019894,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Pane0",
+                  "x": 452,
+                  "y": 224,
+                  "width": 99,
+                  "height": 226,
+                  "projectedSamples": null,
+                  "pixels": 21612,
+                  "meanAbsoluteRgb8": 0.9913782466530939,
+                  "p95MaximumChannelError8": 6,
+                  "fractionOver24": 0.0005089764945400703,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Pane1",
+                  "x": 509,
+                  "y": 227,
+                  "width": 117,
+                  "height": 224,
+                  "projectedSamples": null,
+                  "pixels": 25581,
+                  "meanAbsoluteRgb8": 0.6323443180485516,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Pane2",
+                  "x": 569,
+                  "y": 229,
+                  "width": 135,
+                  "height": 223,
+                  "projectedSamples": null,
+                  "pixels": 29329,
+                  "meanAbsoluteRgb8": 0.45170309250230145,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Pane3",
+                  "x": 631,
+                  "y": 232,
+                  "width": 151,
+                  "height": 221,
+                  "projectedSamples": null,
+                  "pixels": 32131,
+                  "meanAbsoluteRgb8": 0.399811189609204,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            }
+          ],
+          "particleContributions": {}
+        },
+        {
+          "scene": "particles",
+          "quality": "low",
+          "comparisons": [
+            {
+              "frame": 60,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 640,
+                  "height": 360,
+                  "projectedSamples": null,
+                  "pixels": 119841,
+                  "meanAbsoluteRgb8": 0.8611187601349566,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "ParticlePixels",
+                  "x": 0,
+                  "y": 0,
+                  "width": 640,
+                  "height": 360,
+                  "projectedSamples": 3323,
+                  "pixels": 3323,
+                  "meanAbsoluteRgb8": 0.4343464740696158,
+                  "p95MaximumChannelError8": 1,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            },
+            {
+              "frame": 90,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 640,
+                  "height": 360,
+                  "projectedSamples": null,
+                  "pixels": 119841,
+                  "meanAbsoluteRgb8": 0.8607376996742907,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "ParticlePixels",
+                  "x": 0,
+                  "y": 0,
+                  "width": 640,
+                  "height": 360,
+                  "projectedSamples": 5870,
+                  "pixels": 5870,
+                  "meanAbsoluteRgb8": 0.5274843838727995,
+                  "p95MaximumChannelError8": 1,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            },
+            {
+              "frame": 120,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 640,
+                  "height": 360,
+                  "projectedSamples": null,
+                  "pixels": 119841,
+                  "meanAbsoluteRgb8": 0.8599143865621949,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "ParticlePixels",
+                  "x": 0,
+                  "y": 0,
+                  "width": 640,
+                  "height": 360,
+                  "projectedSamples": 5627,
+                  "pixels": 5627,
+                  "meanAbsoluteRgb8": 0.5083822048456845,
+                  "p95MaximumChannelError8": 1,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            }
+          ],
+          "particleContributions": {
+            "mtek": [
+              1311,
+              1575,
+              1780
+            ],
+            "three": [
+              1311,
+              1575,
+              1780
+            ]
+          }
+        },
+        {
+          "scene": "particles",
+          "quality": "standard",
+          "comparisons": [
+            {
+              "frame": 60,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 720,
+                  "projectedSamples": null,
+                  "pixels": 479360,
+                  "meanAbsoluteRgb8": 1.047208082999555,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0.0000020861148197596796,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "ParticlePixels",
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 720,
+                  "projectedSamples": 27537,
+                  "pixels": 27537,
+                  "meanAbsoluteRgb8": 0.4649017685296147,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0.00003631477648255075,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            },
+            {
+              "frame": 90,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 720,
+                  "projectedSamples": null,
+                  "pixels": 479360,
+                  "meanAbsoluteRgb8": 1.0422048842901646,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "ParticlePixels",
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 720,
+                  "projectedSamples": 42589,
+                  "pixels": 42589,
+                  "meanAbsoluteRgb8": 0.6196044362002708,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            },
+            {
+              "frame": 120,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 720,
+                  "projectedSamples": null,
+                  "pixels": 479360,
+                  "meanAbsoluteRgb8": 1.0427688306631064,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "ParticlePixels",
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 720,
+                  "projectedSamples": 43107,
+                  "pixels": 43107,
+                  "meanAbsoluteRgb8": 0.6471570742570812,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            }
+          ],
+          "particleContributions": {
+            "mtek": [
+              15087,
+              18377,
+              19196
+            ],
+            "three": [
+              15087,
+              18377,
+              19196
+            ]
+          }
+        }
+      ]
+    },
+    "software": {
+      "cases": 10,
+      "passed": true,
+      "visualPrerequisitesPassed": true,
+      "performanceEligible": false,
+      "pngs": 32,
+      "summary": [
+        {
+          "scene": "product",
+          "quality": "low",
+          "comparisons": [
+            {
+              "frame": 1,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 640,
+                  "height": 360,
+                  "projectedSamples": null,
+                  "pixels": 122453,
+                  "meanAbsoluteRgb8": 0.9252502320618251,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0.00030215674585351115,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product0",
+                  "x": 210,
+                  "y": 115,
+                  "width": 82,
+                  "height": 74,
+                  "projectedSamples": null,
+                  "pixels": 5741,
+                  "meanAbsoluteRgb8": 0.37717006328746444,
+                  "p95MaximumChannelError8": 1,
+                  "fractionOver24": 0.0005225570458108344,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product1",
+                  "x": 280,
+                  "y": 125,
+                  "width": 76,
+                  "height": 82,
+                  "projectedSamples": null,
+                  "pixels": 5375,
+                  "meanAbsoluteRgb8": 2.20768992248062,
+                  "p95MaximumChannelError8": 14,
+                  "fractionOver24": 0.006883720930232558,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product2",
+                  "x": 363,
+                  "y": 138,
+                  "width": 93,
+                  "height": 93,
+                  "projectedSamples": null,
+                  "pixels": 7177,
+                  "meanAbsoluteRgb8": 0.9248060935395477,
+                  "p95MaximumChannelError8": 3,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            }
+          ],
+          "particleContributions": {}
+        },
+        {
+          "scene": "product",
+          "quality": "standard",
+          "comparisons": [
+            {
+              "frame": 1,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 720,
+                  "projectedSamples": null,
+                  "pixels": 489978,
+                  "meanAbsoluteRgb8": 1.0645464354181888,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0.00005102269897832148,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product0",
+                  "x": 420,
+                  "y": 230,
+                  "width": 163,
+                  "height": 147,
+                  "projectedSamples": null,
+                  "pixels": 22716,
+                  "meanAbsoluteRgb8": 0.3956975993426073,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0.00013206550449022716,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product1",
+                  "x": 561,
+                  "y": 251,
+                  "width": 150,
+                  "height": 162,
+                  "projectedSamples": null,
+                  "pixels": 21136,
+                  "meanAbsoluteRgb8": 1.6012648246278072,
+                  "p95MaximumChannelError8": 8,
+                  "fractionOver24": 0.0011355034065102195,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product2",
+                  "x": 726,
+                  "y": 277,
+                  "width": 185,
+                  "height": 184,
+                  "projectedSamples": null,
+                  "pixels": 28469,
+                  "meanAbsoluteRgb8": 0.9014366503916541,
+                  "p95MaximumChannelError8": 3,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            }
+          ],
+          "particleContributions": {}
+        },
+        {
+          "scene": "indoor",
+          "quality": "low",
+          "comparisons": [
+            {
+              "frame": 1,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 640,
+                  "height": 360,
+                  "projectedSamples": null,
+                  "pixels": 175225,
+                  "meanAbsoluteRgb8": 1.3335844390545488,
+                  "p95MaximumChannelError8": 4,
+                  "fractionOver24": 0.00015408760165501497,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product0",
+                  "x": 210,
+                  "y": 115,
+                  "width": 82,
+                  "height": 74,
+                  "projectedSamples": null,
+                  "pixels": 6068,
+                  "meanAbsoluteRgb8": 0.6917710393320149,
+                  "p95MaximumChannelError8": 4,
+                  "fractionOver24": 0.0003295978905735003,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product1",
+                  "x": 280,
+                  "y": 125,
+                  "width": 76,
+                  "height": 82,
+                  "projectedSamples": null,
+                  "pixels": 6052,
+                  "meanAbsoluteRgb8": 2.6428728794888743,
+                  "p95MaximumChannelError8": 14,
+                  "fractionOver24": 0.004296100462656973,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product2",
+                  "x": 363,
+                  "y": 138,
+                  "width": 93,
+                  "height": 93,
+                  "projectedSamples": null,
+                  "pixels": 8029,
+                  "meanAbsoluteRgb8": 0.929671607090962,
+                  "p95MaximumChannelError8": 3,
+                  "fractionOver24": 0.00012454851164528583,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            }
+          ],
+          "particleContributions": {}
+        },
+        {
+          "scene": "indoor",
+          "quality": "standard",
+          "comparisons": [
+            {
+              "frame": 1,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 720,
+                  "projectedSamples": null,
+                  "pixels": 700929,
+                  "meanAbsoluteRgb8": 1.4049045385956829,
+                  "p95MaximumChannelError8": 4,
+                  "fractionOver24": 0.000029960238483498328,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product0",
+                  "x": 420,
+                  "y": 230,
+                  "width": 163,
+                  "height": 147,
+                  "projectedSamples": null,
+                  "pixels": 23961,
+                  "meanAbsoluteRgb8": 0.7237872654174144,
+                  "p95MaximumChannelError8": 4,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product1",
+                  "x": 561,
+                  "y": 251,
+                  "width": 150,
+                  "height": 162,
+                  "projectedSamples": null,
+                  "pixels": 23639,
+                  "meanAbsoluteRgb8": 1.881805490926012,
+                  "p95MaximumChannelError8": 9,
+                  "fractionOver24": 0.000803756504082237,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Product2",
+                  "x": 726,
+                  "y": 277,
+                  "width": 185,
+                  "height": 184,
+                  "projectedSamples": null,
+                  "pixels": 31754,
+                  "meanAbsoluteRgb8": 0.923243265940249,
+                  "p95MaximumChannelError8": 3,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            }
+          ],
+          "particleContributions": {}
+        },
+        {
+          "scene": "outdoor",
+          "quality": "low",
+          "comparisons": [
+            {
+              "frame": 1,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 640,
+                  "height": 360,
+                  "projectedSamples": null,
+                  "pixels": 121169,
+                  "meanAbsoluteRgb8": 0.9342213492449939,
+                  "p95MaximumChannelError8": 3,
+                  "fractionOver24": 0.0010398699337289242,
+                  "silhouetteIoU": 0.999975241192054,
+                  "passed": true
+                },
+                {
+                  "id": "Sculpture1_2",
+                  "x": 233,
+                  "y": 158,
+                  "width": 64,
+                  "height": 70,
+                  "projectedSamples": null,
+                  "pixels": 4480,
+                  "meanAbsoluteRgb8": 1.2980654761904762,
+                  "p95MaximumChannelError8": 7,
+                  "fractionOver24": 0.002455357142857143,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            }
+          ],
+          "particleContributions": {}
+        },
+        {
+          "scene": "outdoor",
+          "quality": "standard",
+          "comparisons": [
+            {
+              "frame": 1,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 720,
+                  "projectedSamples": null,
+                  "pixels": 484747,
+                  "meanAbsoluteRgb8": 1.0323089501671319,
+                  "p95MaximumChannelError8": 3,
+                  "fractionOver24": 0.00010314658987059229,
+                  "silhouetteIoU": 0.9999958741364052,
+                  "passed": true
+                },
+                {
+                  "id": "Sculpture1_2",
+                  "x": 467,
+                  "y": 317,
+                  "width": 127,
+                  "height": 138,
+                  "projectedSamples": null,
+                  "pixels": 17526,
+                  "meanAbsoluteRgb8": 0.856365780364411,
+                  "p95MaximumChannelError8": 4,
+                  "fractionOver24": 0.0003994065959146411,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            }
+          ],
+          "particleContributions": {}
+        },
+        {
+          "scene": "transparency",
+          "quality": "low",
+          "comparisons": [
+            {
+              "frame": 1,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 640,
+                  "height": 360,
+                  "projectedSamples": null,
+                  "pixels": 124092,
+                  "meanAbsoluteRgb8": 0.8854505796774437,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0.0002498146536440705,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "BehindGlass",
+                  "x": 289,
+                  "y": 111,
+                  "width": 102,
+                  "height": 102,
+                  "projectedSamples": null,
+                  "pixels": 9559,
+                  "meanAbsoluteRgb8": 0.38016528925619836,
+                  "p95MaximumChannelError8": 1,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Pane0",
+                  "x": 226,
+                  "y": 112,
+                  "width": 50,
+                  "height": 113,
+                  "projectedSamples": null,
+                  "pixels": 5455,
+                  "meanAbsoluteRgb8": 1.2439963336388635,
+                  "p95MaximumChannelError8": 10,
+                  "fractionOver24": 0.002933088909257562,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Pane1",
+                  "x": 254,
+                  "y": 113,
+                  "width": 59,
+                  "height": 113,
+                  "projectedSamples": null,
+                  "pixels": 6477,
+                  "meanAbsoluteRgb8": 0.6015130461633472,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0.0003087849312953528,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Pane2",
+                  "x": 284,
+                  "y": 114,
+                  "width": 68,
+                  "height": 112,
+                  "projectedSamples": null,
+                  "pixels": 7384,
+                  "meanAbsoluteRgb8": 0.4373420007222824,
+                  "p95MaximumChannelError8": 1,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Pane3",
+                  "x": 315,
+                  "y": 116,
+                  "width": 76,
+                  "height": 111,
+                  "projectedSamples": null,
+                  "pixels": 8124,
+                  "meanAbsoluteRgb8": 0.3931560807483998,
+                  "p95MaximumChannelError8": 1,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            }
+          ],
+          "particleContributions": {}
+        },
+        {
+          "scene": "transparency",
+          "quality": "standard",
+          "comparisons": [
+            {
+              "frame": 1,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 720,
+                  "projectedSamples": null,
+                  "pixels": 496384,
+                  "meanAbsoluteRgb8": 1.0550850416881554,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0.00003223310985043837,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "BehindGlass",
+                  "x": 579,
+                  "y": 223,
+                  "width": 203,
+                  "height": 203,
+                  "projectedSamples": null,
+                  "pixels": 38044,
+                  "meanAbsoluteRgb8": 0.36757438755125643,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Pane0",
+                  "x": 452,
+                  "y": 224,
+                  "width": 99,
+                  "height": 226,
+                  "projectedSamples": null,
+                  "pixels": 21610,
+                  "meanAbsoluteRgb8": 0.9626716026530927,
+                  "p95MaximumChannelError8": 6,
+                  "fractionOver24": 0.00037019898195279964,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Pane1",
+                  "x": 509,
+                  "y": 227,
+                  "width": 117,
+                  "height": 224,
+                  "projectedSamples": null,
+                  "pixels": 25582,
+                  "meanAbsoluteRgb8": 0.602441821072108,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Pane2",
+                  "x": 569,
+                  "y": 229,
+                  "width": 135,
+                  "height": 223,
+                  "projectedSamples": null,
+                  "pixels": 29331,
+                  "meanAbsoluteRgb8": 0.41687406952825795,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "Pane3",
+                  "x": 631,
+                  "y": 232,
+                  "width": 151,
+                  "height": 221,
+                  "projectedSamples": null,
+                  "pixels": 32135,
+                  "meanAbsoluteRgb8": 0.380052901820445,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            }
+          ],
+          "particleContributions": {}
+        },
+        {
+          "scene": "particles",
+          "quality": "low",
+          "comparisons": [
+            {
+              "frame": 60,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 640,
+                  "height": 360,
+                  "projectedSamples": null,
+                  "pixels": 119841,
+                  "meanAbsoluteRgb8": 0.8858292793506952,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "ParticlePixels",
+                  "x": 0,
+                  "y": 0,
+                  "width": 640,
+                  "height": 360,
+                  "projectedSamples": 3323,
+                  "pixels": 3323,
+                  "meanAbsoluteRgb8": 0.3894071622028288,
+                  "p95MaximumChannelError8": 1,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            },
+            {
+              "frame": 90,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 640,
+                  "height": 360,
+                  "projectedSamples": null,
+                  "pixels": 119841,
+                  "meanAbsoluteRgb8": 0.8855511330290412,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "ParticlePixels",
+                  "x": 0,
+                  "y": 0,
+                  "width": 640,
+                  "height": 360,
+                  "projectedSamples": 5870,
+                  "pixels": 5870,
+                  "meanAbsoluteRgb8": 0.5264622373651334,
+                  "p95MaximumChannelError8": 1,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            },
+            {
+              "frame": 120,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 640,
+                  "height": 360,
+                  "projectedSamples": null,
+                  "pixels": 119841,
+                  "meanAbsoluteRgb8": 0.8848307340559575,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "ParticlePixels",
+                  "x": 0,
+                  "y": 0,
+                  "width": 640,
+                  "height": 360,
+                  "projectedSamples": 5627,
+                  "pixels": 5627,
+                  "meanAbsoluteRgb8": 0.4878857887565902,
+                  "p95MaximumChannelError8": 1,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            }
+          ],
+          "particleContributions": {
+            "mtek": [
+              1323,
+              1574,
+              1775
+            ],
+            "three": [
+              1323,
+              1574,
+              1775
+            ]
+          }
+        },
+        {
+          "scene": "particles",
+          "quality": "standard",
+          "comparisons": [
+            {
+              "frame": 60,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 720,
+                  "projectedSamples": null,
+                  "pixels": 479343,
+                  "meanAbsoluteRgb8": 1.078646536335498,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "ParticlePixels",
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 720,
+                  "projectedSamples": 27537,
+                  "pixels": 27537,
+                  "meanAbsoluteRgb8": 0.4126205953202358,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            },
+            {
+              "frame": 90,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 720,
+                  "projectedSamples": null,
+                  "pixels": 479343,
+                  "meanAbsoluteRgb8": 1.0738510836707744,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "ParticlePixels",
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 720,
+                  "projectedSamples": 42589,
+                  "pixels": 42589,
+                  "meanAbsoluteRgb8": 0.5987305016162233,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            },
+            {
+              "frame": 120,
+              "passed": true,
+              "regions": [
+                {
+                  "id": "foreground",
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 720,
+                  "projectedSamples": null,
+                  "pixels": 479343,
+                  "meanAbsoluteRgb8": 1.0746709558708483,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0.000002086188804259163,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                },
+                {
+                  "id": "ParticlePixels",
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 720,
+                  "projectedSamples": 43107,
+                  "pixels": 43107,
+                  "meanAbsoluteRgb8": 0.6323644265045893,
+                  "p95MaximumChannelError8": 2,
+                  "fractionOver24": 0.00002319808847750945,
+                  "silhouetteIoU": 1,
+                  "passed": true
+                }
+              ]
+            }
+          ],
+          "particleContributions": {
+            "mtek": [
+              15070,
+              18378,
+              19191
+            ],
+            "three": [
+              15070,
+              18378,
+              19191
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

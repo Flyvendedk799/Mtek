@@ -1,0 +1,1 @@
+The first HTTP harness wrote headers before awaiting file reads. A missing reference file threw; the error handler then raised ERR_HTTP_HEADERS_SENT. Node terminated before its initially empty result file could be completed. The server now reads bytes before sending headers.

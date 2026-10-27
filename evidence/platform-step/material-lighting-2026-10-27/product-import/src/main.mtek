@@ -1,0 +1,5 @@
+const MODEL = asset.glb("../WaterBottle.glb");
+scene Product {
+    camera Main { position: vec3(0.0, 0.0, 1.0); }
+    entity Bottle { mesh: MODEL.mesh("WaterBottle"); material: MODEL.material("BottleMat"); }
+}

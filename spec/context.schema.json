@@ -212,7 +212,7 @@
           "minLength": 1
         },
         "kind": {
-          "description": "scene, entity, prefab, material, struct, fn, cpu_fn, const, state, param, or the keyword of a scene object (camera).",
+          "description": "scene, entity, prefab, material, compute, input, output, kernel, struct, fn, cpu_fn, const, state, param, or the keyword of a scene object (camera).",
           "type": "string",
           "minLength": 1
         },

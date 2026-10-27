@@ -22,6 +22,7 @@ import type { SkeletonPlayer } from "../scene/skeleton.js";
 import { deformSkin } from "../mesh/skinning.js";
 import { SkinBounds } from "../mesh/skin-bounds.js";
 import { GpuSkinning, type GpuSkinSource, type GpuSkinInstance } from "./gpu-skinning.js";
+import { checkedPositionBounds, type MtekComputeBounds } from "../compute/positions.js";
 
 // WebGPU buffer usage flags (constants of the standard; the globals do not exist outside a browser).
 const BUFFER_USAGE_COPY_DST = 0x08;
@@ -29,6 +30,7 @@ const BUFFER_USAGE_INDEX = 0x10;
 const BUFFER_USAGE_VERTEX = 0x20;
 
 export interface GpuMesh {
+  readonly computedPositions?: true;
   /** The canonical descriptor key (`meshKey`). */
   readonly key: string;
   /** Upload order: a stable number for sorting the draw list by mesh. */
@@ -48,8 +50,17 @@ export interface GpuMesh {
 const ORIGIN: readonly [number, number, number] = [0, 0, 0];
 type SkinMesh = Omit<GpuMesh, "boundingCenter" | "boundingRadius"> & { boundingCenter: [number, number, number]; boundingRadius: number };
 interface SkinInstance {
-  mesh: SkinMesh; sourceKey: string; player: SkeletonPlayer; references: number;
-  positions: Float32Array; normals: Float32Array; revision: number; boundsRevision: number; gpu?: GpuSkinInstance;
+  mesh: SkinMesh; sourceKey: string; cohortKey: string; withNormals: boolean; withTangents: boolean; player: SkeletonPlayer; references: number;
+  positions: Float32Array; normals: Float32Array; tangents: Float32Array; revision: number; boundsRevision: number; gpu?: GpuSkinInstance;
+}
+interface PositionBinding {
+  readonly id: string;
+  readonly original: GpuMesh;
+  readonly read: () => GPUBuffer | undefined;
+  readonly bounds: MtekComputeBounds;
+  readonly order: number;
+  buffer?: GPUBuffer;
+  mesh?: GpuMesh;
 }
 export type SkinDevice = Pick<GPUDevice, "queue"> & Partial<Pick<GPUDevice, "createCommandEncoder" | "createComputePipeline">>;
 
@@ -80,37 +91,80 @@ export function uploadBuffer(registry: ResourceRegistry, queue: GPUQueue, label:
 export class MeshStore {
   private readonly byKey = new Map<string, GpuMesh>();
   private readonly byId = new Map<string, GpuMesh>();
-  private readonly skinSources = new Map<string, { positions: Float32Array; normals?: Float32Array; bounds: SkinBounds; gpu?: GpuSkinSource }>();
+  private readonly skinSources = new Map<string, { positions: Float32Array; normals?: Float32Array; tangents?: Float32Array; bounds: SkinBounds; gpu?: GpuSkinSource }>();
   private readonly skinInstances = new Map<number, SkinInstance>();
   private readonly skinCohorts = new WeakMap<SkeletonPlayer, Map<string,SkinInstance>>();
   private nextSkinOrder = -1;
   private gpuSkinning: GpuSkinning | undefined;
+  private readonly positions = new Map<number, PositionBinding>();
+  private positionsRevision = 0;
 
-  forEntity(id: string, slot: number, player?: SkeletonPlayer): GpuMesh {
+  get positionVersion(): number { return this.positionsRevision; }
+  positionsAvailable(slot: number): boolean { const binding = this.positions.get(slot); return binding === undefined || binding.mesh !== undefined; }
+
+  /** Scene-local lease; the compute owner owns every borrowed output buffer. */
+  attachPositions(slot: number, id: string, vertexCount: number, read: () => GPUBuffer | undefined, bounds: MtekComputeBounds): () => void {
+    const original = this.get(id), sphere = checkedPositionBounds(bounds);
+    if (original.vertexCount !== vertexCount) throw new RangeError("compute position count must equal the entity mesh vertex count");
+    if (this.skinSources.has(original.key) || this.skinInstances.has(slot)) throw new Error("compute positions cannot replace a skinned mesh");
+    if (this.positions.has(slot)) throw new Error("entity already has a compute position attachment");
+    const binding: PositionBinding = { id, original, read, bounds: sphere, order: this.nextSkinOrder-- };
+    this.positions.set(slot, binding); this.positionsRevision++;
+    return () => { if (this.positions.get(slot) === binding) { this.positions.delete(slot); this.positionsRevision++; } };
+  }
+
+  /** Reacquire after recovery; never retain an output from a retired device. */
+  refreshPositions(): void {
+    for (const [slot, binding] of this.positions) {
+      const buffer = binding.read();
+      if (binding.buffer === buffer) continue;
+      if (buffer === undefined) { delete binding.buffer; delete binding.mesh; }
+      else {
+        binding.buffer = buffer;
+        binding.mesh = { ...binding.original, computedPositions: true, key: `${binding.original.key}@compute:${slot}`, order: binding.order,
+          vertexBuffers: { ...binding.original.vertexBuffers, position: buffer }, boundingCenter: binding.bounds.center, boundingRadius: binding.bounds.radius };
+      }
+      this.positionsRevision++;
+    }
+  }
+
+  forEntity(id: string, slot: number, player?: SkeletonPlayer, needsNormals = true, needsTangents = false): GpuMesh {
+    const binding = this.positions.get(slot);
+    if (binding !== undefined) {
+      if (binding.id !== id || player !== undefined || binding.mesh === undefined) throw new Error("compute position attachment is unavailable for this entity");
+      return binding.mesh;
+    }
     const source = this.get(id);
     if (player === undefined) return source;
+    const authoredTangents = this.skinSources.get(source.key)?.tangents !== undefined;
+    const withTangents = needsTangents && authoredTangents;
+    const withNormals = (needsNormals || withTangents) && source.vertexBuffers.normal !== undefined;
+    const cohortKey = `${source.key}:${withTangents ? "tangent" : withNormals ? "normal" : "position"}`;
     const existing = this.skinInstances.get(slot);
-    if (existing !== undefined && existing.player === player && existing.sourceKey === source.key) return existing.mesh;
+    if (existing !== undefined && existing.player === player && existing.sourceKey === source.key && existing.withNormals === withNormals && existing.withTangents === withTangents) return existing.mesh;
     if (existing !== undefined) this.releaseSkin(slot);
     let cohorts = this.skinCohorts.get(player);
-    const shared = cohorts?.get(source.key);
+    const shared = cohorts?.get(cohortKey);
     if (shared !== undefined) {
       shared.references++; this.skinInstances.set(slot,shared); return shared.mesh;
     }
     if (cohorts === undefined) { cohorts = new Map(); this.skinCohorts.set(player,cohorts); }
-    const positions=new Float32Array(this.gpuSkinning===undefined?source.vertexCount*3:0), normals=new Float32Array(this.gpuSkinning===undefined?source.vertexCount*3:0);
+    const positions=new Float32Array(this.gpuSkinning===undefined?source.vertexCount*3:0), normals=new Float32Array(this.gpuSkinning===undefined && withNormals?source.vertexCount*3:0);
+    const tangents=new Float32Array(this.gpuSkinning===undefined && withTangents?source.vertexCount*4:0);
     const usage = BUFFER_USAGE_VERTEX | (this.gpuSkinning === undefined ? 0 : 0x80);
-    const output=(label:string,data:Float32Array):GPUBuffer=>this.gpuSkinning===undefined
+    const output=(label:string,data:Float32Array,components=3):GPUBuffer=>this.gpuSkinning===undefined
       ?uploadBuffer(this.registry,this.queue,label,usage,data)
-      :this.registry.createBuffer({label,size:source.vertexCount*12,usage});
-    const mesh: SkinMesh={...source, order:this.nextSkinOrder--, key:source.key+"@"+String(slot), boundingCenter: [0,0,0], boundingRadius:Infinity,
-      vertexBuffers:{...source.vertexBuffers,
-        position:output("skin positions",positions),
-        ...(source.vertexBuffers.normal===undefined?{}:{normal:output("skin normals",normals)})}};
+      :this.registry.createBuffer({label,size:source.vertexCount*components*4,usage});
+    const vertexBuffers: Partial<Record<MtekVertexAttribute, GPUBuffer>> = { ...source.vertexBuffers, position: output("skin positions", positions) };
+    if (withNormals) vertexBuffers.normal = output("skin normals", normals);
+    else delete vertexBuffers.normal;
+    if (withTangents) vertexBuffers.tangent = output("skin tangents", tangents, 4);
+    else if (authoredTangents) delete vertexBuffers.tangent;
+    const mesh: SkinMesh={...source, order:this.nextSkinOrder--, key:source.key+"@"+String(slot), boundingCenter: [0,0,0], boundingRadius:Infinity, vertexBuffers};
     const gpuSource = this.skinSources.get(source.key)?.gpu;
-    const gpu = gpuSource === undefined ? undefined : this.gpuSkinning!.instance(gpuSource, source.vertexBuffers.position!, mesh.vertexBuffers.position!, mesh.vertexBuffers.normal, source.vertexCount, player.skin.joints.length);
-    const instance: SkinInstance = {mesh,sourceKey:source.key,player,references:1,positions,normals,revision:-1,boundsRevision:-1,...(gpu === undefined ? {} : {gpu})};
-    cohorts.set(source.key,instance); this.skinInstances.set(slot,instance);
+    const gpu = gpuSource === undefined ? undefined : this.gpuSkinning!.instance(gpuSource, source.vertexBuffers.position!, mesh.vertexBuffers.position!, mesh.vertexBuffers.normal, source.vertexCount, player.skin.joints.length, withTangents ? mesh.vertexBuffers.tangent : undefined);
+    const instance: SkinInstance = {mesh,sourceKey:source.key,cohortKey,withNormals,withTangents,player,references:1,positions,normals,tangents,revision:-1,boundsRevision:-1,...(gpu === undefined ? {} : {gpu})};
+    cohorts.set(cohortKey,instance); this.skinInstances.set(slot,instance);
     return mesh;
   }
 
@@ -124,13 +178,16 @@ export class MeshStore {
       instance.revision = player.revision;
       return;
     }
-    deformSkin(player.skin,player.palette,source.positions,source.normals,instance.positions,instance.normals);
+    deformSkin(player.skin,player.palette,source.positions,instance.withNormals ? source.normals : undefined,instance.positions,instance.normals,instance.withTangents ? source.tangents : undefined,instance.withTangents ? instance.tangents : undefined);
     this.registry.writeBuffer(this.queue,instance.mesh.vertexBuffers.position!,0,instance.positions.buffer as ArrayBuffer,0,instance.positions.byteLength);
     if(instance.mesh.vertexBuffers.normal!==undefined) this.registry.writeBuffer(this.queue,instance.mesh.vertexBuffers.normal,0,instance.normals.buffer as ArrayBuffer,0,instance.normals.byteLength);
+    if(instance.withTangents) this.registry.writeBuffer(this.queue,instance.mesh.vertexBuffers.tangent!,0,instance.tangents.buffer as ArrayBuffer,0,instance.tangents.byteLength);
     instance.revision=player.revision;
   }
 
   /** Bounds are evaluated before culling; deformation only runs for visible actors. */
+  skinBoundsCurrent(slot: number, player: SkeletonPlayer): boolean { return this.skinInstances.get(slot)?.boundsRevision === player.revision; }
+
   updateSkinBounds(slot: number, player: SkeletonPlayer): boolean {
     const instance = this.skinInstances.get(slot);
     if (instance === undefined || instance.boundsRevision === player.revision) return false;
@@ -148,10 +205,11 @@ export class MeshStore {
     if(instance===undefined) return;
     this.skinInstances.delete(slot);
     if (--instance.references > 0) return;
-    this.skinCohorts.get(instance.player)?.delete(instance.sourceKey);
+    this.skinCohorts.get(instance.player)?.delete(instance.cohortKey);
     if (instance.gpu !== undefined) this.gpuSkinning!.release(instance.gpu);
     this.registry.release(instance.mesh.vertexBuffers.position!);
     if(instance.mesh.vertexBuffers.normal!==undefined) this.registry.release(instance.mesh.vertexBuffers.normal);
+    if(instance.withTangents) this.registry.release(instance.mesh.vertexBuffers.tangent!);
   }
 
   constructor(
@@ -161,6 +219,7 @@ export class MeshStore {
     /** The device's `maxBufferSize`: a region of an asset mesh above it is an allocation failure (`E8063`). */
     private readonly maxBufferSize: number = Infinity,
     device?: SkinDevice,
+    private readonly needsTangentFallback = false,
   ) {
     if (device?.createComputePipeline !== undefined && device.createCommandEncoder !== undefined) this.gpuSkinning = new GpuSkinning({ queue: device.queue, createCommandEncoder: device.createCommandEncoder.bind(device) }, registry);
   }
@@ -197,6 +256,7 @@ export class MeshStore {
         position: uploadBuffer(this.registry, this.queue, `${label} position`, BUFFER_USAGE_VERTEX, data.positions),
         normal: uploadBuffer(this.registry, this.queue, `${label} normal`, BUFFER_USAGE_VERTEX, data.normals),
         uv: uploadBuffer(this.registry, this.queue, `${label} uv`, BUFFER_USAGE_VERTEX, data.uvs),
+        ...(this.needsTangentFallback ? { tangent: this.zeroTangents(data.positions.length / 3) } : {}),
       },
       indexBuffer: uploadBuffer(this.registry, this.queue, `${label} index`, BUFFER_USAGE_INDEX, data.indices),
       indexFormat: data.indices instanceof Uint16Array ? "uint16" : "uint32",
@@ -213,9 +273,9 @@ export class MeshStore {
     const bytes = assets.bytes(source.asset);
     const { layout } = source;
     if(source.skin!==undefined) {
-      const floats=(offset: number): Float32Array => new Float32Array(bytes.slice(offset,offset+layout.vertexCount*12).buffer);
+      const floats=(offset: number,components=3): Float32Array => new Float32Array(bytes.slice(offset,offset+layout.vertexCount*components*4).buffer);
       const positions = floats(layout.offsets.position);
-      this.skinSources.set(key,{positions,bounds:new SkinBounds(source.skin,positions),...(layout.offsets.normal===undefined?{}:{normals:floats(layout.offsets.normal)})});
+      this.skinSources.set(key,{positions,bounds:new SkinBounds(source.skin,positions),...(layout.offsets.normal===undefined?{}:{normals:floats(layout.offsets.normal)}),...(layout.offsets.tangent===undefined?{}:{tangents:floats(layout.offsets.tangent,4)})});
     }
     const label = `mtek mesh ${key}`;
     const regions = meshRegions(layout);
@@ -236,7 +296,8 @@ export class MeshStore {
       else vertexBuffers[region.name] = uploadBuffer(this.registry, this.queue, `${label} ${region.name}`, BUFFER_USAGE_VERTEX | (source.skin === undefined || this.gpuSkinning === undefined || region.name === "uv" ? 0 : 0x80), data);
     }
     if (indexBuffer === undefined) throw new Error("internal error: meshRegions returned no index region");
-    if (source.skin !== undefined && this.gpuSkinning !== undefined) this.skinSources.get(key)!.gpu = this.gpuSkinning.source(source.skin, vertexBuffers.normal, layout.vertexCount);
+    if (source.skin !== undefined && this.gpuSkinning !== undefined) this.skinSources.get(key)!.gpu = this.gpuSkinning.source(source.skin, vertexBuffers.normal, layout.vertexCount, vertexBuffers.tangent);
+    if (vertexBuffers.tangent === undefined && this.needsTangentFallback) vertexBuffers.tangent = this.zeroTangents(layout.vertexCount);
     return {
       key,
       order: this.byKey.size,
@@ -250,6 +311,17 @@ export class MeshStore {
     };
   }
 
+  private zeroTangents(vertices: number): GPUBuffer {
+    const size = vertices * 16;
+    if (size > this.maxBufferSize) {
+      this.registry.reportAllocationFailure(`Allocating the tangent fallback (${String(size)} bytes) exceeds maxBufferSize (${String(this.maxBufferSize)}).`);
+      throw new RangeError("tangent fallback exceeds maxBufferSize");
+    }
+    // WebGPU initializes new buffers to zero; w=0 explicitly selects the
+    // derivative frame. No CPU array or per-frame upload is needed.
+    return this.registry.createBuffer({ label: "mtek unavailable tangent frames", size, usage: BUFFER_USAGE_VERTEX });
+  }
+
   /** The uploaded mesh of a manifest mesh id. */
   get(id: string): GpuMesh {
     const mesh = this.byId.get(id);
@@ -259,6 +331,7 @@ export class MeshStore {
 
   /** Releases every uploaded buffer (hot reload: discard a retired scene). */
   dispose(): void {
+    this.positions.clear(); this.positionsRevision++;
     for(const slot of this.skinInstances.keys()) this.releaseSkin(slot);
     for (const source of this.skinSources.values()) if (source.gpu !== undefined) this.gpuSkinning!.releaseSource(source.gpu);
     this.skinSources.clear();

@@ -6,6 +6,8 @@ import {
   normalMatrixInto,
 } from "../math/mat4.js";
 import { blendQuat, multiplyQuat } from "./pose-layers.js";
+import type { IKInspection } from "./animation-inspection.js";
+import { numericallyUniformScale } from "./uniform-scale.js";
 
 export interface IKHingeLimit {
   /** Hinge axis in the node's bind-local frame. Other rotational degrees of freedom are locked. */
@@ -23,7 +25,7 @@ export interface IKConstraint {
   readonly weight?: number;
   readonly iterations?: number;
   readonly tolerance?: number;
-  /** End-effector orientation in mesh-local space. Requires uniform positive ancestor scales. */
+  /** End-effector orientation in mesh-local space. Requires numerically uniform positive ancestor scales (decision 0209). */
   readonly rotation?: readonly [number, number, number, number];
   readonly rotationWeight?: number;
   readonly limits?: Readonly<Record<string, IKHingeLimit>>;
@@ -46,6 +48,14 @@ export class PoseIK {
   private readonly bindRotation = new Float64Array(4);
   private readonly relative = new Float64Array(4);
   revision = 0;
+  inspect(): readonly IKInspection[] {
+    return [...this.constraints].map(([id, { indices, options, limits }]) => ({ id, chain: [...indices],
+      target: { x: options.target[0], y: options.target[1], z: options.target[2] }, weight: options.weight ?? 1,
+      iterations: options.iterations ?? 12, tolerance: options.tolerance ?? 0.001, rotationWeight: options.rotationWeight ?? 1,
+      ...(options.rotation === undefined ? {} : { rotation: { x: options.rotation[0], y: options.rotation[1], z: options.rotation[2], w: options.rotation[3] } }),
+      limits: [...limits].map(([node, limit]) => ({ node, limit: { ...limit, axis: [...limit.axis] as [number, number, number] } })),
+    }));
+  }
   constructor(private readonly skin: MtekSkin) {
     this.globals = skin.nodes.map(() => identity());
     const seen = new Set<number>();
@@ -139,7 +149,7 @@ export class PoseIK {
     out.set([0, 0, 0, 1]);
     for (let i = node; i >= 0; i = this.skin.nodes[i]!.parent) {
       const at = i * 10;
-      if (Math.abs(pose[at + 7]! / pose[at + 8]! - 1) > 1e-6 || Math.abs(pose[at + 7]! / pose[at + 9]! - 1) > 1e-6)
+      if (!numericallyUniformScale(pose[at + 7]!, pose[at + 8]!, pose[at + 9]!))
         throw new RangeError("IK orientation requires uniform ancestor scales");
       multiplyQuat(out, 0, pose, at + 3, out, 0);
     }

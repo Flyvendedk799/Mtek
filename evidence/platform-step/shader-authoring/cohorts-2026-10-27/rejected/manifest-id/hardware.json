@@ -1,0 +1,38 @@
+{
+  "contract": "authored production-character deformation with shared-pose instancing",
+  "backend": "hardware",
+  "launchArgs": [
+    "--enable-unsafe-webgpu",
+    "--ignore-gpu-blocklist",
+    "--enable-webgpu-developer-features"
+  ],
+  "startedAt": "2026-10-27T03:29:23.531Z",
+  "status": "failed",
+  "originalAssets": [
+    {
+      "model": "Fox",
+      "commit": "8f492390ddc7a2ae221a1369ef560589cf8c70fb",
+      "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/8f492390ddc7a2ae221a1369ef560589cf8c70fb/Models/Fox/glTF-Binary/Fox.glb",
+      "sha256": "d97044e701822bac5a62696459b27d7b375aada5de8574ed4362edbba94771f7",
+      "bytes": 162852
+    },
+    {
+      "model": "CesiumMan",
+      "commit": "8f492390ddc7a2ae221a1369ef560589cf8c70fb",
+      "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/8f492390ddc7a2ae221a1369ef560589cf8c70fb/Models/CesiumMan/glTF-Binary/CesiumMan.glb",
+      "sha256": "b7001eaeea8254bd44773bcd247e78696d94169388fbb2a1800fc69434e777d9",
+      "bytes": 438044
+    }
+  ],
+  "browser": "153.0.8010.12",
+  "failure": "Error: page.evaluate: MtekMountError: MTEK-E8006: Invalid manifest at `meshes[3].id`: must match pattern \"^mesh:[0-9]+$\".\n    at mountError (http://127.0.0.1:53769/runtime.261be44f22fd2d22.js:1890:33)\n    at loadManifest (http://127.0.0.1:53769/runtime.261be44f22fd2d22.js:19051:25)\n    at async mountMtekWith (http://127.0.0.1:53769/runtime.261be44f22fd2d22.js:19084:20)\n    at async capture (<anonymous>:182:21)\n    at async Object.runCohortsProbe (<anonymous>:200:108)\n    at async <anonymous>:337:30",
+  "partial": {
+    "cases": [],
+    "lifetime": [],
+    "diagnostics": [
+      "MTEK-E8006",
+      "MTEK-E8006"
+    ]
+  },
+  "finishedAt": "2026-10-27T03:29:24.937Z"
+}

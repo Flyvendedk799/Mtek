@@ -1,0 +1,673 @@
+{
+  "format": "mtek-tangent-material-package/1",
+  "cli": ".out/tangent-integration-tools/mtek.exe",
+  "cliSha256": "50230745037ff2cb5c5f5bc305ddb505747d94d12e8772eb208d050d0f961c42",
+  "fixtures": [
+    {
+      "name": "pbr_tangent_authored",
+      "source": [
+        {
+          "path": "models/model.glb",
+          "bytes": 1852,
+          "sha256": "89aa50d9e43a7dfaf53d713361c294c4114f80d48d7c0cf66342d7f608bfa522"
+        },
+        {
+          "path": "mtek.toml",
+          "bytes": 44,
+          "sha256": "79f978e1a7f8e6f867b4f4b020df892917e699fd5bcf9188790d8274fd02b40b"
+        },
+        {
+          "path": "src/main.mtek",
+          "bytes": 900,
+          "sha256": "d1f8399f1a52354bbb2dec89482a3ed91a4c15b159ef339bd1f99e806a977742"
+        }
+      ],
+      "package": [
+        {
+          "path": "app.d.ts",
+          "bytes": 285,
+          "sha256": "72436a45b082d4975bde4c42d22b246f74c8a632495313c29be4473833a51788"
+        },
+        {
+          "path": "app.js",
+          "bytes": 6559,
+          "sha256": "f12f246e4082e1b977ade3fe9d31859b0f878f80d06e20b4744044fd564f1e89"
+        },
+        {
+          "path": "app.js.map",
+          "bytes": 276,
+          "sha256": "cbabc048d09efbe3c9c548f40c5c6faf5a6ce7dca28b4be4caabf9139cc91480"
+        },
+        {
+          "path": "assets/f4a0929f26f2e60f.bin",
+          "bytes": 204,
+          "sha256": "8ee71c97c4df4d88919b07fe7de225166166437ea16ed292edaec9f5e5e7a20b"
+        },
+        {
+          "path": "index.html",
+          "bytes": 359,
+          "sha256": "b2d9af7a2e017f4fb4b7f202da21fa311def577b1cb7558cd8ddf3b7201d9a1e"
+        },
+        {
+          "path": "program.manifest.json",
+          "bytes": 18601,
+          "sha256": "e0ef0797cdda05e45bd68ce553230b88bde870a19fa9bbd6588c20cf75cbb50e"
+        },
+        {
+          "path": "runtime.b9e5bf85fb743513.js",
+          "bytes": 1192594,
+          "sha256": "b9e5bf85fb7435136d855fa4d912ebba929c1e5187f0814ffde57515fccc278b"
+        },
+        {
+          "path": "runtime.d.ts",
+          "bytes": 17640,
+          "sha256": "767560890951b19969928c2fe1d68a2142751512c2bc031d360a30e569878c97"
+        },
+        {
+          "path": "shaders/fa5ba6990afd548d.mtek-map.json",
+          "bytes": 37277,
+          "sha256": "e1aac8ee53c5934e153f44431e2199160474495b11fa3aabc4f86a45a1bd7c39"
+        },
+        {
+          "path": "shaders/fa5ba6990afd548d.wgsl",
+          "bytes": 14395,
+          "sha256": "fa5ba6990afd548d2fac065f8580d7cc25ad64a2c7260d1ad361627f4eed7555"
+        }
+      ]
+    },
+    {
+      "name": "pbr_tangent_degenerate",
+      "source": [
+        {
+          "path": "models/model.glb",
+          "bytes": 1852,
+          "sha256": "38f40e423a05b7d1784d8c453f714be2826549efce51636906fa8b06258fd35f"
+        },
+        {
+          "path": "mtek.toml",
+          "bytes": 260,
+          "sha256": "4faebf6547171166fe8ba457fb6a3837c5023ff71ee0a4bf5ead88d36c1b23ae"
+        },
+        {
+          "path": "src/main.mtek",
+          "bytes": 1070,
+          "sha256": "84bb42ce913cc6567ffe4cf4750cbf4ebfe8a699b832251feeba0171ea43185f"
+        }
+      ],
+      "package": [
+        {
+          "path": "app.d.ts",
+          "bytes": 429,
+          "sha256": "fdce1f764ad231289a6685de7adc6fbe08f0836f2eeba3e332e2eec15857ae4d"
+        },
+        {
+          "path": "app.js",
+          "bytes": 9207,
+          "sha256": "d138374d4fc52542d61afa72faeb45894b39a2fa77bf8efd93a529f9ae8fe7c3"
+        },
+        {
+          "path": "app.js.map",
+          "bytes": 546,
+          "sha256": "87915513158d43c43689011b3fd56cccc9c88724d2a89bbcd6051f3fda46d2d5"
+        },
+        {
+          "path": "assets/716a95cf13c7a879.bin",
+          "bytes": 204,
+          "sha256": "29128523b45cb725728c253db69a87785f54e85bbc6d242d718b215663e2ba04"
+        },
+        {
+          "path": "assets/957a75f926487cfc.png",
+          "bytes": 70,
+          "sha256": "54e17ed3a1a6a95b464246c27adc416d891d47349c39af9411448ddd1e379d7e"
+        },
+        {
+          "path": "assets/cbc7f14b79387de5.png",
+          "bytes": 70,
+          "sha256": "18a3d031e513888e09777f55814acadb56830a0f88ae4ebc862a1fb865f9a130"
+        },
+        {
+          "path": "assets/d340457c6b972e4d.png",
+          "bytes": 70,
+          "sha256": "18a3d031e513888e09777f55814acadb56830a0f88ae4ebc862a1fb865f9a130"
+        },
+        {
+          "path": "index.html",
+          "bytes": 359,
+          "sha256": "b2d9af7a2e017f4fb4b7f202da21fa311def577b1cb7558cd8ddf3b7201d9a1e"
+        },
+        {
+          "path": "program.manifest.json",
+          "bytes": 40475,
+          "sha256": "bbc0a82e2afe109707b652f5dca71ffae789133753f9e3b2f942992f35c043e0"
+        },
+        {
+          "path": "runtime.b9e5bf85fb743513.js",
+          "bytes": 1192594,
+          "sha256": "b9e5bf85fb7435136d855fa4d912ebba929c1e5187f0814ffde57515fccc278b"
+        },
+        {
+          "path": "runtime.d.ts",
+          "bytes": 17640,
+          "sha256": "767560890951b19969928c2fe1d68a2142751512c2bc031d360a30e569878c97"
+        },
+        {
+          "path": "shaders/9f3a6cde3d443477.mtek-map.json",
+          "bytes": 42828,
+          "sha256": "09f29f18eea39a585bb1a97f1764f7b76677fcecede221c932e7869ce73a4479"
+        },
+        {
+          "path": "shaders/9f3a6cde3d443477.wgsl",
+          "bytes": 15318,
+          "sha256": "9f3a6cde3d4434779100e5a332b6aa5889e7377598a539def3efd8226fbb2655"
+        }
+      ]
+    },
+    {
+      "name": "pbr_tangent_fallback",
+      "source": [
+        {
+          "path": "models/model.glb",
+          "bytes": 1852,
+          "sha256": "89aa50d9e43a7dfaf53d713361c294c4114f80d48d7c0cf66342d7f608bfa522"
+        },
+        {
+          "path": "mtek.toml",
+          "bytes": 44,
+          "sha256": "79f978e1a7f8e6f867b4f4b020df892917e699fd5bcf9188790d8274fd02b40b"
+        },
+        {
+          "path": "src/main.mtek",
+          "bytes": 821,
+          "sha256": "1ba6a391e4f872a1461599dddc74439fee7aea8424f373eb45491d99819f11b7"
+        }
+      ],
+      "package": [
+        {
+          "path": "app.d.ts",
+          "bytes": 285,
+          "sha256": "72436a45b082d4975bde4c42d22b246f74c8a632495313c29be4473833a51788"
+        },
+        {
+          "path": "app.js",
+          "bytes": 6559,
+          "sha256": "f12f246e4082e1b977ade3fe9d31859b0f878f80d06e20b4744044fd564f1e89"
+        },
+        {
+          "path": "app.js.map",
+          "bytes": 276,
+          "sha256": "cbabc048d09efbe3c9c548f40c5c6faf5a6ce7dca28b4be4caabf9139cc91480"
+        },
+        {
+          "path": "assets/f4a0929f26f2e60f.bin",
+          "bytes": 204,
+          "sha256": "8ee71c97c4df4d88919b07fe7de225166166437ea16ed292edaec9f5e5e7a20b"
+        },
+        {
+          "path": "index.html",
+          "bytes": 359,
+          "sha256": "b2d9af7a2e017f4fb4b7f202da21fa311def577b1cb7558cd8ddf3b7201d9a1e"
+        },
+        {
+          "path": "program.manifest.json",
+          "bytes": 16197,
+          "sha256": "061c1c62b22c0d8b336c04c95ae020bec1d9305537e0984e8095a8c0c9f18e90"
+        },
+        {
+          "path": "runtime.b9e5bf85fb743513.js",
+          "bytes": 1192594,
+          "sha256": "b9e5bf85fb7435136d855fa4d912ebba929c1e5187f0814ffde57515fccc278b"
+        },
+        {
+          "path": "runtime.d.ts",
+          "bytes": 17640,
+          "sha256": "767560890951b19969928c2fe1d68a2142751512c2bc031d360a30e569878c97"
+        },
+        {
+          "path": "shaders/43db10fa7a41a447.mtek-map.json",
+          "bytes": 34520,
+          "sha256": "fc9f619d40ec4c80562821942ce049d87177be9a6a2e67f529e848738c147279"
+        },
+        {
+          "path": "shaders/43db10fa7a41a447.wgsl",
+          "bytes": 14140,
+          "sha256": "43db10fa7a41a447efe8f5616ae163a7f13cfadd19763888a4b560d6973c93ae"
+        }
+      ]
+    },
+    {
+      "name": "pbr_tangent_instanced",
+      "source": [
+        {
+          "path": "models/model.glb",
+          "bytes": 1852,
+          "sha256": "8ea1f7f460e9eeeea8797521dc68450fc37244533efbdbbd4f3bcf9014542e9a"
+        },
+        {
+          "path": "mtek.toml",
+          "bytes": 260,
+          "sha256": "4faebf6547171166fe8ba457fb6a3837c5023ff71ee0a4bf5ead88d36c1b23ae"
+        },
+        {
+          "path": "src/main.mtek",
+          "bytes": 995,
+          "sha256": "234169d32efa36c5e7f24c984c5aa184c470f72377803d24e3c601fb894040a5"
+        }
+      ],
+      "package": [
+        {
+          "path": "app.d.ts",
+          "bytes": 429,
+          "sha256": "fdce1f764ad231289a6685de7adc6fbe08f0836f2eeba3e332e2eec15857ae4d"
+        },
+        {
+          "path": "app.js",
+          "bytes": 9616,
+          "sha256": "3103d0f8741bb0a8c056ef58f6a70c5f4ffcfb4f0cc1d386492363384c6df72c"
+        },
+        {
+          "path": "app.js.map",
+          "bytes": 503,
+          "sha256": "f985ff21c72b1ec5849c609258d4f8b54cd24474afa941cc3c5a620e0141d83e"
+        },
+        {
+          "path": "assets/957a75f926487cfc.png",
+          "bytes": 70,
+          "sha256": "54e17ed3a1a6a95b464246c27adc416d891d47349c39af9411448ddd1e379d7e"
+        },
+        {
+          "path": "assets/cbc7f14b79387de5.png",
+          "bytes": 70,
+          "sha256": "18a3d031e513888e09777f55814acadb56830a0f88ae4ebc862a1fb865f9a130"
+        },
+        {
+          "path": "assets/d340457c6b972e4d.png",
+          "bytes": 70,
+          "sha256": "18a3d031e513888e09777f55814acadb56830a0f88ae4ebc862a1fb865f9a130"
+        },
+        {
+          "path": "assets/d9e2e71811ec4675.bin",
+          "bytes": 204,
+          "sha256": "186bb9d9da5285ff0dfc433e896cb7d9dd67beea6e1b819262236f8aaed42343"
+        },
+        {
+          "path": "index.html",
+          "bytes": 359,
+          "sha256": "b2d9af7a2e017f4fb4b7f202da21fa311def577b1cb7558cd8ddf3b7201d9a1e"
+        },
+        {
+          "path": "program.manifest.json",
+          "bytes": 44044,
+          "sha256": "a0fac780a08a1452807dd8c8a53f2df29387f3e2389995ca4e233a28f535d3ae"
+        },
+        {
+          "path": "runtime.b9e5bf85fb743513.js",
+          "bytes": 1192594,
+          "sha256": "b9e5bf85fb7435136d855fa4d912ebba929c1e5187f0814ffde57515fccc278b"
+        },
+        {
+          "path": "runtime.d.ts",
+          "bytes": 17640,
+          "sha256": "767560890951b19969928c2fe1d68a2142751512c2bc031d360a30e569878c97"
+        },
+        {
+          "path": "shaders/9f3a6cde3d443477.mtek-map.json",
+          "bytes": 42829,
+          "sha256": "4e5885dbfa1177b30ad37db03d9faefd0463f40f27499d2ca190ae1ca94f477b"
+        },
+        {
+          "path": "shaders/9f3a6cde3d443477.wgsl",
+          "bytes": 15318,
+          "sha256": "9f3a6cde3d4434779100e5a332b6aa5889e7377598a539def3efd8226fbb2655"
+        }
+      ]
+    },
+    {
+      "name": "pbr_tangent_mirrored",
+      "source": [
+        {
+          "path": "models/model.glb",
+          "bytes": 1852,
+          "sha256": "1df99dab9aa7d5632b1f2c3da85810600fdb35e0e3f6bbeb94f28ca76fa5e6e2"
+        },
+        {
+          "path": "mtek.toml",
+          "bytes": 260,
+          "sha256": "4faebf6547171166fe8ba457fb6a3837c5023ff71ee0a4bf5ead88d36c1b23ae"
+        },
+        {
+          "path": "src/main.mtek",
+          "bytes": 1070,
+          "sha256": "84bb42ce913cc6567ffe4cf4750cbf4ebfe8a699b832251feeba0171ea43185f"
+        }
+      ],
+      "package": [
+        {
+          "path": "app.d.ts",
+          "bytes": 429,
+          "sha256": "fdce1f764ad231289a6685de7adc6fbe08f0836f2eeba3e332e2eec15857ae4d"
+        },
+        {
+          "path": "app.js",
+          "bytes": 9207,
+          "sha256": "d138374d4fc52542d61afa72faeb45894b39a2fa77bf8efd93a529f9ae8fe7c3"
+        },
+        {
+          "path": "app.js.map",
+          "bytes": 546,
+          "sha256": "87915513158d43c43689011b3fd56cccc9c88724d2a89bbcd6051f3fda46d2d5"
+        },
+        {
+          "path": "assets/43a3522074941a67.bin",
+          "bytes": 204,
+          "sha256": "0dfef1d5bf1ed14c218955fb434ce42c1f435327aa5ce05764f1de03510f50b7"
+        },
+        {
+          "path": "assets/957a75f926487cfc.png",
+          "bytes": 70,
+          "sha256": "54e17ed3a1a6a95b464246c27adc416d891d47349c39af9411448ddd1e379d7e"
+        },
+        {
+          "path": "assets/cbc7f14b79387de5.png",
+          "bytes": 70,
+          "sha256": "18a3d031e513888e09777f55814acadb56830a0f88ae4ebc862a1fb865f9a130"
+        },
+        {
+          "path": "assets/d340457c6b972e4d.png",
+          "bytes": 70,
+          "sha256": "18a3d031e513888e09777f55814acadb56830a0f88ae4ebc862a1fb865f9a130"
+        },
+        {
+          "path": "index.html",
+          "bytes": 359,
+          "sha256": "b2d9af7a2e017f4fb4b7f202da21fa311def577b1cb7558cd8ddf3b7201d9a1e"
+        },
+        {
+          "path": "program.manifest.json",
+          "bytes": 40475,
+          "sha256": "6ba8783ab88c5079191be6d1a6860552593ff7c72dce20d9c1700ad6a1a56cc3"
+        },
+        {
+          "path": "runtime.b9e5bf85fb743513.js",
+          "bytes": 1192594,
+          "sha256": "b9e5bf85fb7435136d855fa4d912ebba929c1e5187f0814ffde57515fccc278b"
+        },
+        {
+          "path": "runtime.d.ts",
+          "bytes": 17640,
+          "sha256": "767560890951b19969928c2fe1d68a2142751512c2bc031d360a30e569878c97"
+        },
+        {
+          "path": "shaders/9f3a6cde3d443477.mtek-map.json",
+          "bytes": 42828,
+          "sha256": "09f29f18eea39a585bb1a97f1764f7b76677fcecede221c932e7869ce73a4479"
+        },
+        {
+          "path": "shaders/9f3a6cde3d443477.wgsl",
+          "bytes": 15318,
+          "sha256": "9f3a6cde3d4434779100e5a332b6aa5889e7377598a539def3efd8226fbb2655"
+        }
+      ]
+    },
+    {
+      "name": "pbr_tangent_regular",
+      "source": [
+        {
+          "path": "models/model.glb",
+          "bytes": 1852,
+          "sha256": "89aa50d9e43a7dfaf53d713361c294c4114f80d48d7c0cf66342d7f608bfa522"
+        },
+        {
+          "path": "mtek.toml",
+          "bytes": 260,
+          "sha256": "4faebf6547171166fe8ba457fb6a3837c5023ff71ee0a4bf5ead88d36c1b23ae"
+        },
+        {
+          "path": "src/main.mtek",
+          "bytes": 1070,
+          "sha256": "84bb42ce913cc6567ffe4cf4750cbf4ebfe8a699b832251feeba0171ea43185f"
+        }
+      ],
+      "package": [
+        {
+          "path": "app.d.ts",
+          "bytes": 429,
+          "sha256": "fdce1f764ad231289a6685de7adc6fbe08f0836f2eeba3e332e2eec15857ae4d"
+        },
+        {
+          "path": "app.js",
+          "bytes": 9207,
+          "sha256": "d138374d4fc52542d61afa72faeb45894b39a2fa77bf8efd93a529f9ae8fe7c3"
+        },
+        {
+          "path": "app.js.map",
+          "bytes": 546,
+          "sha256": "87915513158d43c43689011b3fd56cccc9c88724d2a89bbcd6051f3fda46d2d5"
+        },
+        {
+          "path": "assets/957a75f926487cfc.png",
+          "bytes": 70,
+          "sha256": "54e17ed3a1a6a95b464246c27adc416d891d47349c39af9411448ddd1e379d7e"
+        },
+        {
+          "path": "assets/cbc7f14b79387de5.png",
+          "bytes": 70,
+          "sha256": "18a3d031e513888e09777f55814acadb56830a0f88ae4ebc862a1fb865f9a130"
+        },
+        {
+          "path": "assets/d340457c6b972e4d.png",
+          "bytes": 70,
+          "sha256": "18a3d031e513888e09777f55814acadb56830a0f88ae4ebc862a1fb865f9a130"
+        },
+        {
+          "path": "assets/f4a0929f26f2e60f.bin",
+          "bytes": 204,
+          "sha256": "8ee71c97c4df4d88919b07fe7de225166166437ea16ed292edaec9f5e5e7a20b"
+        },
+        {
+          "path": "index.html",
+          "bytes": 359,
+          "sha256": "b2d9af7a2e017f4fb4b7f202da21fa311def577b1cb7558cd8ddf3b7201d9a1e"
+        },
+        {
+          "path": "program.manifest.json",
+          "bytes": 40475,
+          "sha256": "2d3e91a584f497208a1c956c5345c13dcf0e1c39b6e08e7c391630f20725c98d"
+        },
+        {
+          "path": "runtime.b9e5bf85fb743513.js",
+          "bytes": 1192594,
+          "sha256": "b9e5bf85fb7435136d855fa4d912ebba929c1e5187f0814ffde57515fccc278b"
+        },
+        {
+          "path": "runtime.d.ts",
+          "bytes": 17640,
+          "sha256": "767560890951b19969928c2fe1d68a2142751512c2bc031d360a30e569878c97"
+        },
+        {
+          "path": "shaders/9f3a6cde3d443477.mtek-map.json",
+          "bytes": 42828,
+          "sha256": "09f29f18eea39a585bb1a97f1764f7b76677fcecede221c932e7869ce73a4479"
+        },
+        {
+          "path": "shaders/9f3a6cde3d443477.wgsl",
+          "bytes": 15318,
+          "sha256": "9f3a6cde3d4434779100e5a332b6aa5889e7377598a539def3efd8226fbb2655"
+        }
+      ]
+    },
+    {
+      "name": "pbr_tangent_skin",
+      "source": [
+        {
+          "path": "models/model.glb",
+          "bytes": 2892,
+          "sha256": "c06f299faf7b0083e8f1646ef1420e26c1cafb9ce0313dfdcb003a5ef5e215db"
+        },
+        {
+          "path": "mtek.toml",
+          "bytes": 260,
+          "sha256": "4faebf6547171166fe8ba457fb6a3837c5023ff71ee0a4bf5ead88d36c1b23ae"
+        },
+        {
+          "path": "src/main.mtek",
+          "bytes": 1084,
+          "sha256": "fd928b5151bdb745fcff9eda32a33e9e688acc3bc7524a2002ede00b244d42a8"
+        }
+      ],
+      "package": [
+        {
+          "path": "app.d.ts",
+          "bytes": 429,
+          "sha256": "fdce1f764ad231289a6685de7adc6fbe08f0836f2eeba3e332e2eec15857ae4d"
+        },
+        {
+          "path": "app.js",
+          "bytes": 9207,
+          "sha256": "d138374d4fc52542d61afa72faeb45894b39a2fa77bf8efd93a529f9ae8fe7c3"
+        },
+        {
+          "path": "app.js.map",
+          "bytes": 546,
+          "sha256": "1b36ab558be9eb902cac2f7c8c9f2141c6187777a2982b732672b9356dad020a"
+        },
+        {
+          "path": "assets/957a75f926487cfc.png",
+          "bytes": 70,
+          "sha256": "54e17ed3a1a6a95b464246c27adc416d891d47349c39af9411448ddd1e379d7e"
+        },
+        {
+          "path": "assets/cbc7f14b79387de5.png",
+          "bytes": 70,
+          "sha256": "18a3d031e513888e09777f55814acadb56830a0f88ae4ebc862a1fb865f9a130"
+        },
+        {
+          "path": "assets/d340457c6b972e4d.png",
+          "bytes": 70,
+          "sha256": "18a3d031e513888e09777f55814acadb56830a0f88ae4ebc862a1fb865f9a130"
+        },
+        {
+          "path": "assets/d9e2e71811ec4675.bin",
+          "bytes": 204,
+          "sha256": "186bb9d9da5285ff0dfc433e896cb7d9dd67beea6e1b819262236f8aaed42343"
+        },
+        {
+          "path": "index.html",
+          "bytes": 359,
+          "sha256": "b2d9af7a2e017f4fb4b7f202da21fa311def577b1cb7558cd8ddf3b7201d9a1e"
+        },
+        {
+          "path": "program.manifest.json",
+          "bytes": 43210,
+          "sha256": "0f44f611e23b7d2fb2f05cb79adcade75a28bec2706282b4282007cc94a7440f"
+        },
+        {
+          "path": "runtime.b9e5bf85fb743513.js",
+          "bytes": 1192594,
+          "sha256": "b9e5bf85fb7435136d855fa4d912ebba929c1e5187f0814ffde57515fccc278b"
+        },
+        {
+          "path": "runtime.d.ts",
+          "bytes": 17640,
+          "sha256": "767560890951b19969928c2fe1d68a2142751512c2bc031d360a30e569878c97"
+        },
+        {
+          "path": "shaders/9f3a6cde3d443477.mtek-map.json",
+          "bytes": 42828,
+          "sha256": "09f29f18eea39a585bb1a97f1764f7b76677fcecede221c932e7869ce73a4479"
+        },
+        {
+          "path": "shaders/9f3a6cde3d443477.wgsl",
+          "bytes": 15318,
+          "sha256": "9f3a6cde3d4434779100e5a332b6aa5889e7377598a539def3efd8226fbb2655"
+        }
+      ]
+    },
+    {
+      "name": "pbr_tangent_transform",
+      "source": [
+        {
+          "path": "models/model.glb",
+          "bytes": 1852,
+          "sha256": "8ea1f7f460e9eeeea8797521dc68450fc37244533efbdbbd4f3bcf9014542e9a"
+        },
+        {
+          "path": "mtek.toml",
+          "bytes": 260,
+          "sha256": "4faebf6547171166fe8ba457fb6a3837c5023ff71ee0a4bf5ead88d36c1b23ae"
+        },
+        {
+          "path": "src/main.mtek",
+          "bytes": 1131,
+          "sha256": "5b6eb737efae2d4e07795f0377e316e6d14518e2062e9c9b991abb79b9c88f35"
+        }
+      ],
+      "package": [
+        {
+          "path": "app.d.ts",
+          "bytes": 429,
+          "sha256": "fdce1f764ad231289a6685de7adc6fbe08f0836f2eeba3e332e2eec15857ae4d"
+        },
+        {
+          "path": "app.js",
+          "bytes": 9266,
+          "sha256": "01ad9e6b8857a8b6afc7a606daf3e2d5bb249ef47cc79d2d302e459023f2fe14"
+        },
+        {
+          "path": "app.js.map",
+          "bytes": 548,
+          "sha256": "ca3989699bdec9185fe2bb31b27dfa4546ec8ead5157875d24c193f7b3348755"
+        },
+        {
+          "path": "assets/957a75f926487cfc.png",
+          "bytes": 70,
+          "sha256": "54e17ed3a1a6a95b464246c27adc416d891d47349c39af9411448ddd1e379d7e"
+        },
+        {
+          "path": "assets/cbc7f14b79387de5.png",
+          "bytes": 70,
+          "sha256": "18a3d031e513888e09777f55814acadb56830a0f88ae4ebc862a1fb865f9a130"
+        },
+        {
+          "path": "assets/d340457c6b972e4d.png",
+          "bytes": 70,
+          "sha256": "18a3d031e513888e09777f55814acadb56830a0f88ae4ebc862a1fb865f9a130"
+        },
+        {
+          "path": "assets/d9e2e71811ec4675.bin",
+          "bytes": 204,
+          "sha256": "186bb9d9da5285ff0dfc433e896cb7d9dd67beea6e1b819262236f8aaed42343"
+        },
+        {
+          "path": "index.html",
+          "bytes": 359,
+          "sha256": "b2d9af7a2e017f4fb4b7f202da21fa311def577b1cb7558cd8ddf3b7201d9a1e"
+        },
+        {
+          "path": "program.manifest.json",
+          "bytes": 40476,
+          "sha256": "50b36618a6a62068e1f4839c031677845ccbb420d17915c9f3cb0b10eb4fb1e3"
+        },
+        {
+          "path": "runtime.b9e5bf85fb743513.js",
+          "bytes": 1192594,
+          "sha256": "b9e5bf85fb7435136d855fa4d912ebba929c1e5187f0814ffde57515fccc278b"
+        },
+        {
+          "path": "runtime.d.ts",
+          "bytes": 17640,
+          "sha256": "767560890951b19969928c2fe1d68a2142751512c2bc031d360a30e569878c97"
+        },
+        {
+          "path": "shaders/9f3a6cde3d443477.mtek-map.json",
+          "bytes": 42828,
+          "sha256": "09f29f18eea39a585bb1a97f1764f7b76677fcecede221c932e7869ce73a4479"
+        },
+        {
+          "path": "shaders/9f3a6cde3d443477.wgsl",
+          "bytes": 15318,
+          "sha256": "9f3a6cde3d4434779100e5a332b6aa5889e7377598a539def3efd8226fbb2655"
+        }
+      ]
+    }
+  ]
+}

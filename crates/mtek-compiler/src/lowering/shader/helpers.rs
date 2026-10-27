@@ -624,7 +624,7 @@ impl Builder {
     /// `(1 - VH)^5` is `t2 * t2 * t` for `t = 1 - VH`, like the reference, so `pow` (undefined
     /// for a negative base) is never involved.
     fn lighting_pbr(&self, mapped: bool) -> Vec<Statement> {
-        use Component::{X, Y, Z};
+        use Component::{W, X, Y, Z};
         let frame_global = frame_global(self.span);
         let frame = || Expr::global(&frame_global, self.span);
         let surface = || self.local("surface", ShaderType::named(SURFACE_INPUT_STRUCT));
@@ -945,14 +945,14 @@ impl Builder {
                     self.add(v3("rgb"), indirect_and_emission),
                     frame().field("exposure", ShaderType::F32, self.span),
                 ),
-                self.f(1.0),
+                self.local("base_color", ShaderType::VEC4)
+                    .swizzle(&[W], self.span),
             ])),
         ]
     }
 
-    /// Cotangent frame from screen derivatives: supports mirrored UVs without changing
-    /// the vertex ABI. Degenerate UVs/zero decoded vectors fall back to the geometric normal.
-    /// This is a derivative frame, not a claim of authored MikkTSpace tangent parity.
+    /// Authored tangent frame, with the existing derivative fallback when unavailable.
+    /// Derivatives are evaluated unconditionally to preserve uniformity validation.
     fn mapped_normal(&self) -> Vec<Statement> {
         let v3 = |name: &str| self.local(name, ShaderType::VEC3);
         let v2 = |name: &str| self.local(name, ShaderType::VEC2);
@@ -1051,22 +1051,133 @@ impl Builder {
                 ),
             ),
             self.let_("len2", dot(v3("result"), v3("result"))),
+            self.let_(
+                "derivative_normal",
+                self.call(
+                    Intrinsic::Select,
+                    vec![
+                        v3("n"),
+                        self.mul(
+                            v3("result"),
+                            self.call(
+                                Intrinsic::InverseSqrt,
+                                vec![max(self.scalar("len2"), self.f(1e-20))],
+                                ShaderType::F32,
+                            ),
+                        ),
+                        self.bin(
+                            BinaryOp::LogicalAnd,
+                            self.bin(BinaryOp::Greater, self.scalar("len2"), self.f(1e-16)),
+                            self.bin(BinaryOp::Greater, self.scalar("area2"), self.f(1e-20)),
+                        ),
+                    ],
+                    ShaderType::VEC3,
+                ),
+            ),
+            self.let_(
+                "authored",
+                surface().field("world_tangent", ShaderType::VEC4, self.span),
+            ),
+            self.let_(
+                "authored_orthogonal",
+                self.sub(
+                    self.local("authored", ShaderType::VEC4)
+                        .swizzle(&[Component::X, Component::Y, Component::Z], self.span),
+                    self.mul(
+                        v3("n"),
+                        dot(
+                            v3("n"),
+                            self.local("authored", ShaderType::VEC4)
+                                .swizzle(&[Component::X, Component::Y, Component::Z], self.span),
+                        ),
+                    ),
+                ),
+            ),
+            self.let_(
+                "authored_length2",
+                dot(v3("authored_orthogonal"), v3("authored_orthogonal")),
+            ),
+            self.let_(
+                "authored_t",
+                self.mul(
+                    v3("authored_orthogonal"),
+                    self.call(
+                        Intrinsic::InverseSqrt,
+                        vec![max(self.scalar("authored_length2"), self.f(1e-20))],
+                        ShaderType::F32,
+                    ),
+                ),
+            ),
+            self.let_(
+                "authored_b",
+                self.mul(
+                    cross(v3("n"), v3("authored_t")),
+                    self.call(
+                        Intrinsic::Sign,
+                        vec![channel(
+                            self.local("authored", ShaderType::VEC4),
+                            Component::W,
+                        )],
+                        ShaderType::F32,
+                    ),
+                ),
+            ),
+            self.let_(
+                "authored_result",
+                self.add(
+                    self.mul(
+                        self.add(
+                            self.mul(v3("authored_t"), channel(v3("map"), Component::X)),
+                            self.mul(v3("authored_b"), channel(v3("map"), Component::Y)),
+                        ),
+                        self.scalar("scale"),
+                    ),
+                    self.mul(v3("n"), channel(v3("map"), Component::Z)),
+                ),
+            ),
+            self.let_(
+                "authored_result_length2",
+                dot(v3("authored_result"), v3("authored_result")),
+            ),
             self.ret(self.call(
                 Intrinsic::Select,
                 vec![
-                    v3("n"),
+                    v3("derivative_normal"),
                     self.mul(
-                        v3("result"),
+                        v3("authored_result"),
                         self.call(
                             Intrinsic::InverseSqrt,
-                            vec![max(self.scalar("len2"), self.f(1e-20))],
+                            vec![max(self.scalar("authored_result_length2"), self.f(1e-20))],
                             ShaderType::F32,
                         ),
                     ),
                     self.bin(
                         BinaryOp::LogicalAnd,
-                        self.bin(BinaryOp::Greater, self.scalar("len2"), self.f(1e-16)),
-                        self.bin(BinaryOp::Greater, self.scalar("area2"), self.f(1e-20)),
+                        self.bin(
+                            BinaryOp::Greater,
+                            self.call(
+                                Intrinsic::Abs,
+                                vec![channel(
+                                    self.local("authored", ShaderType::VEC4),
+                                    Component::W,
+                                )],
+                                ShaderType::F32,
+                            ),
+                            self.f(0.5),
+                        ),
+                        self.bin(
+                            BinaryOp::LogicalAnd,
+                            self.bin(
+                                BinaryOp::Greater,
+                                self.scalar("authored_length2"),
+                                self.f(1e-20),
+                            ),
+                            self.bin(
+                                BinaryOp::Greater,
+                                self.scalar("authored_result_length2"),
+                                self.f(1e-16),
+                            ),
+                        ),
                     ),
                 ],
                 ShaderType::VEC3,

@@ -1,0 +1,10 @@
+[project]
+name = "compute-geometry"
+language = "0.1"
+
+[host.inputs]
+caster_x = "Demo.caster_x"
+caster_y = "Demo.caster_y"
+caster_z = "Demo.caster_z"
+caster_visible = "Demo.caster_visible"
+sun_yaw = "Demo.sun_yaw"

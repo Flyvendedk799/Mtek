@@ -1,0 +1,182 @@
+{
+  "format": "mtek-compute-acceptance-package/1",
+  "developmentSourceGateBypass": "none: ordinary public analysis",
+  "sourceSha256": "549f359fb6b46cec01b21b411518f60ae91145f6f8b856b96adf3b21d52a63bc",
+  "projectConfigSha256": null,
+  "runtimeSha256": "362955d81c3e71bd457d456d865e4b26e78065a7b4840d0af9458ddd81c6b4fb",
+  "files": [
+    {
+      "path": "app.d.ts",
+      "sha256": "72436a45b082d4975bde4c42d22b246f74c8a632495313c29be4473833a51788"
+    },
+    {
+      "path": "app.js",
+      "sha256": "5fd37ff232cbdad006a2eca8f982cf059483f6de8ee7e384e54d8048c0c62ff0"
+    },
+    {
+      "path": "app.js.map",
+      "sha256": "287555431b34ecd0300e4a3062e2f7491824f141232068cfb098984df5f0fed2"
+    },
+    {
+      "path": "index.html",
+      "sha256": "5d4c0032c48a5a7a7b57fc46c8b824dd23b1c86f64218cf67b3347a899a24722"
+    },
+    {
+      "path": "program.manifest.json",
+      "sha256": "fd00b3636e236830f90042d64b5e6813d591d5b3670249203ce2aa72f3d4e4c2"
+    },
+    {
+      "path": "runtime.362955d81c3e71bd.js",
+      "sha256": "362955d81c3e71bd457d456d865e4b26e78065a7b4840d0af9458ddd81c6b4fb"
+    },
+    {
+      "path": "runtime.d.ts",
+      "sha256": "767560890951b19969928c2fe1d68a2142751512c2bc031d360a30e569878c97"
+    },
+    {
+      "path": "shaders/0b3085128810cac9.wgsl",
+      "sha256": "0b3085128810cac956b5220e8db9320b3449248d8576affe5712f548505227f7"
+    },
+    {
+      "path": "shaders/357503ee209bd49b.mtek-map.json",
+      "sha256": "357503ee209bd49bb14fa5be9da50158678cbb6639bd65fda0ae6b8f4ffd5bd1"
+    },
+    {
+      "path": "shaders/4cb5089e28a5e471.mtek-map.json",
+      "sha256": "4cb5089e28a5e471f2cc4185419bf1f1500f7dc15e8038cefc26de884530ba91"
+    },
+    {
+      "path": "shaders/6ec0f316a8c9bd00.mtek-map.json",
+      "sha256": "6ec0f316a8c9bd002e5fa189ec25082c8d07353b415de090de59babaa974152c"
+    },
+    {
+      "path": "shaders/7a347620d75c4fcb.mtek-map.json",
+      "sha256": "7a347620d75c4fcb9ade438107d345c962de0f3b9669f208ee50258cbd3d8b2a"
+    },
+    {
+      "path": "shaders/8083d2a6c4354fcd.wgsl",
+      "sha256": "8083d2a6c4354fcd50113d369511dafce750780cca1e6f901898af7a1e0e7304"
+    },
+    {
+      "path": "shaders/85abe07e674f49b1.mtek-map.json",
+      "sha256": "85abe07e674f49b10405322308fced44361a0c6860568dc717abeba8eedb3bb1"
+    },
+    {
+      "path": "shaders/8a6f54e06ee94e33.mtek-map.json",
+      "sha256": "23105188c0043a6e45fd6e29f28e3bf359211739f9eb9f1423a876fd807241c5"
+    },
+    {
+      "path": "shaders/8a6f54e06ee94e33.wgsl",
+      "sha256": "8a6f54e06ee94e3347e5e80e8961f90a3f29b4eeaa6316333aa6923fb77019e9"
+    },
+    {
+      "path": "shaders/8b3015b8cac62c1a.mtek-map.json",
+      "sha256": "8b3015b8cac62c1a1180473bb7c9bfca930a722d1a947a42c5d499f05c369892"
+    },
+    {
+      "path": "shaders/8be158d2289e391b.wgsl",
+      "sha256": "8be158d2289e391bd00aa05c50a65d1874ce8b7a62f743748f73ca107dc165c4"
+    },
+    {
+      "path": "shaders/90ceefd66c94953f.wgsl",
+      "sha256": "90ceefd66c94953f253604ef8d05900cb5ff1efe2fb9e007ebe9e0edf10f1d0e"
+    },
+    {
+      "path": "shaders/90d8881e6ceb3544.wgsl",
+      "sha256": "90d8881e6ceb3544fb27d3b8d804fa1158523a9c4de8d3f45da5b8a5d5f4a5cc"
+    },
+    {
+      "path": "shaders/a203a24cc6f0ccaf.wgsl",
+      "sha256": "a203a24cc6f0ccafcd6f61622acaaf0218567731cc8e53cef06a29dda7c114de"
+    },
+    {
+      "path": "shaders/aebba0b5a4c483b9.mtek-map.json",
+      "sha256": "aebba0b5a4c483b954ce346a3eaee650d999681712b8614dc43bab9bb8d08058"
+    },
+    {
+      "path": "shaders/e49f0a1c71fb8066.wgsl",
+      "sha256": "e49f0a1c71fb8066cc837de1f9db9902fc885a3e194862eccad233991bf0be89"
+    },
+    {
+      "path": "shaders/ee01095dee7c159c.wgsl",
+      "sha256": "ee01095dee7c159cdde17ad42019837c234017d0e1e9bcc23ffd7804294dd767"
+    },
+    {
+      "path": "shaders/eeea09413fc751e0.mtek-map.json",
+      "sha256": "eeea09413fc751e09e2505f3d0281cec1d567120be3dc690095d0c96fa0a76fd"
+    }
+  ],
+  "shadow": {
+    "format": "mtek-compute-acceptance-package/1",
+    "developmentSourceGateBypass": "none: ordinary public analysis",
+    "sourceSha256": "0162b8bcdf3abd17e5516a340cbd4c6ebfaaa473af25b5e4bfd86285b577d1a4",
+    "projectConfigSha256": "3e789b1fcfebed1fbe70e4067d3e8b9a63d7492607666a85db6b307f58de3cf8",
+    "runtimeSha256": "362955d81c3e71bd457d456d865e4b26e78065a7b4840d0af9458ddd81c6b4fb",
+    "files": [
+      {
+        "path": "app.d.ts",
+        "sha256": "c71507ee1dc9d0ccf7276e86a14f01af1dcf6cc1fe6087ee7c9ae09a510f2124"
+      },
+      {
+        "path": "app.js",
+        "sha256": "cf2e1097087acd060050e4b175aec4bb18ce649dc9a731e4312c4c0dc4a67fbb"
+      },
+      {
+        "path": "app.js.map",
+        "sha256": "3b1596c9af749d2358512803817c940e753a4288e16f5e73261297e283e49959"
+      },
+      {
+        "path": "index.html",
+        "sha256": "0f5ae9278b669df20866ab7af6938ba96d18ab1864aeb6d08aeb32adf243bf95"
+      },
+      {
+        "path": "program.manifest.json",
+        "sha256": "bddd2f887a53b4d90ee67d09e44cb9cd0e90199d71dcc4615c56d68f139a2cf0"
+      },
+      {
+        "path": "runtime.362955d81c3e71bd.js",
+        "sha256": "362955d81c3e71bd457d456d865e4b26e78065a7b4840d0af9458ddd81c6b4fb"
+      },
+      {
+        "path": "runtime.d.ts",
+        "sha256": "767560890951b19969928c2fe1d68a2142751512c2bc031d360a30e569878c97"
+      },
+      {
+        "path": "shaders/819eea4642598b4d.mtek-map.json",
+        "sha256": "1458f209d1a1ac2bd227bd1f241d27c8561a547203723c21c6cfce8de6ba4bd8"
+      },
+      {
+        "path": "shaders/819eea4642598b4d.wgsl",
+        "sha256": "819eea4642598b4d5abfbb3f85654841094eeda46025b0541103f850c6c9742d"
+      },
+      {
+        "path": "shaders/f4e837a7c2b0238b.mtek-map.json",
+        "sha256": "f4e837a7c2b0238b37dc36eb3286ff1548715486a0a8e8c0065ff5e47716acca"
+      },
+      {
+        "path": "shaders/fd026fabdad14f5b.wgsl",
+        "sha256": "fd026fabdad14f5b4bd31d37404093802d74efd413f199dd9b7314dcb706e006"
+      }
+    ]
+  },
+  "shadowHarnessSha256": "e86f6e012f7667e3593937fbd7afb2ba96198da1703b5dead0937009750c8679",
+  "references": [
+    {
+      "path": "reference/positions.wgsl",
+      "sha256": "f947940329d612165607088afdd9ff4d77ae6ce36d17a27bf1f08f43fe6172fe"
+    },
+    {
+      "path": "reference/invocation.wgsl",
+      "sha256": "8bd9fe01b09b07005f3f7649fa90545aa36409b5c004fa90e1c136e62f613a94"
+    },
+    {
+      "path": "reference/quad.wgsl",
+      "sha256": "7908d4a54eedc307f911af0773a8a7004da381e1d8915fcbb2874d6f13057902"
+    },
+    {
+      "path": "reference/composite.wgsl",
+      "sha256": "332230e410321460e522f7373f57be1a1a01312ac75c30460bf36404e8f7b562"
+    }
+  ],
+  "harnessSha256": "bd16e67929b26720b59696a0c7ef2bff4a9c3f37584b80f57dae112f3ae210d9"
+}

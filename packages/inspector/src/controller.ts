@@ -1,11 +1,16 @@
 import type {AnimationPlayer, ExtensionContext, MtekExtension, SceneTransform, TransformUpdate} from "@mtek/runtime-web";
-import {INSPECTOR_METRICS_SERVICE, type InspectedAnimation, type InspectorMetrics, type InspectorMetricsSource, type InspectorOptions, type InspectorSnapshot} from "./types.js";
+import {INSPECTOR_METRICS_SERVICE, type InspectedAnimation, type InspectorMetrics, type InspectorMetricsSource, type InspectorOptions, type InspectorSnapshot, type InspectorSpatialSnapshot} from "./types.js";
 
 type Edit = {readonly before: readonly TransformUpdate[]; readonly after: readonly TransformUpdate[]};
 type Command = {kind: "edit"; updates: readonly TransformUpdate[]} | {kind: "undo"} | {kind: "redo"} |
   {kind: "clip"; name: string; seconds: number} | {kind: "seek"; seconds: number} |
   {kind: "pause"} | {kind: "resume"} | {kind: "detach"};
 const empty = (status: InspectorSnapshot["status"]): InspectorSnapshot => Object.freeze({status, entities: Object.freeze([]), selectedId: null, animation: null, metrics: null, pending: 0, canUndo: false, canRedo: false, error: null});
+const emptySpatial = (status: InspectorSpatialSnapshot["status"]): InspectorSpatialSnapshot => Object.freeze({status, selectedId: null, scene: null, animation: null, error: null});
+function frozen<T>(value: T): T {
+  if (value !== null && typeof value === "object") { for (const child of Object.values(value)) frozen(child); Object.freeze(value); }
+  return value;
+}
 function copied(entity: SceneTransform): SceneTransform {
   return Object.freeze({...entity, position: Object.freeze({...entity.position}), rotation: Object.freeze({...entity.rotation}), scale: Object.freeze({...entity.scale}), ...(entity.bounds === undefined ? {} : {bounds: Object.freeze({center: Object.freeze({...entity.bounds.center}), radius: entity.bounds.radius})})});
 }
@@ -43,6 +48,9 @@ export class InspectorController {
   private context: ExtensionContext | undefined;
   private state = empty("detached");
   private readonly listeners = new Set<(snapshot: InspectorSnapshot) => void>();
+  private readonly spatialListeners = new Set<(snapshot: InspectorSpatialSnapshot) => void>();
+  private spatial = emptySpatial("detached");
+  private notifyingSpatial = false;
   private readonly pending: Array<{command: Command; selectedId: string | null}> = [];
   private readonly undoStack: Edit[] = [];
   private readonly redoStack: Edit[] = [];
@@ -64,18 +72,27 @@ export class InspectorController {
         if (context.apiVersion !== 1) throw new RangeError("Inspector requires extension API 1");
         if (this.context !== undefined) throw new Error("Inspector is already mounted; create one per application");
         this.context = context;
-        try {this.capture();} catch (error) {this.context = undefined; throw error;}
-        return () => {if (this.context !== context) return; this.context = undefined; this.clear(); this.publish(empty("detached"));};
+        try {this.capture(); this.captureSpatial();} catch (error) {this.context = undefined; throw error;}
+        return () => {if (this.context !== context) return; this.context = undefined; this.clear(); this.publish(empty("detached")); this.publishSpatial(emptySpatial("detached"));};
       },
       beforeFrame: () => this.flush(),
       afterFrame: (_context, delta) => {
         if (this.context === undefined) return;
+        this.captureSpatial();
         if (Number.isFinite(delta) && delta >= 0) this.elapsed += delta;
         if (this.changed || this.elapsed >= this.interval) {this.elapsed = 0; this.changed = false; this.capture();}
       },
     };
   }
   snapshot(): InspectorSnapshot {return this.state;}
+  spatialSnapshot(): InspectorSpatialSnapshot {return this.spatial;}
+  /** Enables render-aligned sampling only while spatial observers are attached. Panel polling stays throttled. */
+  subscribeSpatial(listener: (snapshot: InspectorSpatialSnapshot) => void): () => void {
+    if (this.state.status === "disposed") throw new Error("Inspector is disposed");
+    this.spatialListeners.add(listener);
+    if (this.context === undefined) this.deliverSpatial(listener); else this.captureSpatial();
+    return () => {this.spatialListeners.delete(listener);};
+  }
   subscribe(listener: (snapshot: InspectorSnapshot) => void): () => void {
     if (this.state.status === "disposed") throw new Error("Inspector is disposed");
     this.listeners.add(listener); this.deliver(listener);
@@ -84,7 +101,7 @@ export class InspectorController {
   select(id: string | null): void {
     this.active();
     if (id !== null && !this.context!.readTransforms().some(entity => entity.id === id)) throw new RangeError(`Unknown or stale entity ID: ${id}`);
-    this.publish({...this.state, selectedId: id}); this.capture();
+    this.publish({...this.state, selectedId: id}); this.capture(); this.captureSpatial();
   }
   edit(updates: readonly TransformUpdate[]): void {this.enqueue({kind: "edit", updates: updatesCopy(updates)});}
   undo(): void {this.enqueue({kind: "undo"});}
@@ -100,8 +117,8 @@ export class InspectorController {
   pauseAnimation(): void {this.enqueue({kind: "pause"});}
   resumeAnimation(): void {this.enqueue({kind: "resume"});}
   detachAnimation(): void {this.enqueue({kind: "detach"});}
-  refresh(): void {this.active(); this.capture();}
-  dispose(): void {if (this.state.status === "disposed") return; this.context = undefined; this.clear(); this.publish(empty("disposed")); this.listeners.clear();}
+  refresh(): void {this.active(); this.capture(); this.captureSpatial();}
+  dispose(): void {if (this.state.status === "disposed") return; this.context = undefined; this.clear(); this.publish(empty("disposed")); this.publishSpatial(emptySpatial("disposed")); this.listeners.clear(); this.spatialListeners.clear();}
   private active(): void {if (this.context === undefined) throw new Error(`Inspector is ${this.state.status}`);}
   private enqueue(command: Command): void {
     this.active(); if (this.pending.length >= 128) throw new RangeError("Inspector command queue is full; advance the scene first");
@@ -110,6 +127,26 @@ export class InspectorController {
   private clear(): void {this.pending.length = this.undoStack.length = this.redoStack.length = 0; this.elapsed = 0; this.changed = false;}
   private report(error: unknown): void {try {this.options.onError?.(error);} catch { /* Host error handlers must not break scene lifetime. */ }}
   private deliver(listener: (snapshot: InspectorSnapshot) => void): void {try {listener(this.state);} catch (error) {this.report(error);}}
+  private deliverSpatial(listener: (snapshot: InspectorSpatialSnapshot) => void): void {try {listener(this.spatial);} catch (error) {this.report(error);}}
+  private publishSpatial(snapshot: InspectorSpatialSnapshot): void {
+    this.spatial = Object.freeze(snapshot); if (this.notifyingSpatial) return;
+    this.notifyingSpatial = true;
+    try {for (const listener of [...this.spatialListeners]) this.deliverSpatial(listener);} finally {this.notifyingSpatial = false;}
+  }
+  private captureSpatial(): void {
+    const context = this.context;
+    if (context === undefined || this.spatialListeners.size === 0) return;
+    try {
+      const scene = context.inspectScene?.();
+      const selectedId = scene?.entities.some(e => e.id === this.state.selectedId) === true ? this.state.selectedId : null;
+      const animation = selectedId === null ? undefined : context.animation(selectedId)?.inspect?.();
+      if (this.context !== context) return;
+      this.publishSpatial(frozen(structuredClone({status: "ready" as const, selectedId, scene: scene ?? null, animation: animation ?? null, error: null})));
+    } catch (error) {
+      if (this.context !== context) return;
+      this.report(error); this.publishSpatial({...emptySpatial("ready"), error: error instanceof Error ? error.message : String(error)});
+    }
+  }
   private publish(state: InspectorSnapshot): void {
     this.state = Object.freeze(state); if (this.notifying) return;
     this.notifying = true; try {for (const listener of [...this.listeners]) this.deliver(listener);} finally {this.notifying = false;}
@@ -156,7 +193,7 @@ export class InspectorController {
   }
   private animation(player: AnimationPlayer): InspectedAnimation {
     const blend = player.locomotion, mode = blend.active ? "locomotion" : "clip";
-    return Object.freeze({mode, clips: Object.freeze(player.skin.clips.map(clip => Object.freeze({name: clip.name, duration: clip.duration}))),
+    return Object.freeze({mode, diagnostics: frozen(structuredClone(player.inspect?.() ?? null)), clips: Object.freeze(player.skin.clips.map(clip => Object.freeze({name: clip.name, duration: clip.duration}))),
       time: blend.active ? blend.phase * blend.duration : player.clock.time(0), duration: blend.active ? blend.duration : player.clock.duration(0), playing: blend.active ? blend.playing : player.clock.playing(0), revision: player.revision, jointCount: player.skin.joints.length,
       joints: Object.freeze(player.skin.joints.slice(0, this.maxJoints).map(index => {
         const node = player.skin.nodes[index]!;

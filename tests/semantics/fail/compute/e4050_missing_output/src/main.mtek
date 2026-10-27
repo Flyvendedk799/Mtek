@@ -2,4 +2,3 @@ compute Broken {
     kernel(input: ComputeInput) -> f32 { return 0.0; }
 }
 scene Demo { camera Main {} }
-// covers: [S: source-compute-build-gate]

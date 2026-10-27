@@ -1,0 +1,21 @@
+{
+  "recordedAt": "2026-10-27T03:02:41.656Z",
+  "status": "passed",
+  "browser": "153.0.8010.12",
+  "gpuDisabled": true,
+  "gpuRequests": 0,
+  "pageErrors": [],
+  "checks": [
+    "queued edit",
+    "undo/redo",
+    "dirty fields survive snapshots",
+    "invalid scale rejected",
+    "filter/selection",
+    "real public animation pause and seek",
+    "joint table",
+    "scene replacement",
+    "disconnect/remount",
+    "untrusted labels stay text",
+    "panel disposal removes listeners"
+  ]
+}

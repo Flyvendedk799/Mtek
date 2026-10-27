@@ -1,4 +1,4 @@
-import type {SceneTransform} from "@mtek/runtime-web";
+import type {SceneTransform, SceneInspection, AnimationInspection} from "@mtek/runtime-web";
 
 export interface InspectorMetrics {
   readonly liveBuffers?: number;
@@ -13,6 +13,7 @@ export interface InspectorMetrics {
 export interface InspectorMetricsSource {read(): InspectorMetrics}
 export const INSPECTOR_METRICS_SERVICE = "mtek.inspector.metrics";
 export interface InspectedAnimation {
+  readonly diagnostics: AnimationInspection | null;
   readonly mode: "clip" | "locomotion";
   readonly clips: readonly {readonly name: string; readonly duration: number}[];
   readonly time: number;
@@ -25,6 +26,13 @@ export interface InspectedAnimation {
     readonly parent: string | null;
     readonly position: {readonly x: number; readonly y: number; readonly z: number};
   }[];
+}
+export interface InspectorSpatialSnapshot {
+  readonly status: "detached" | "ready" | "disposed";
+  readonly selectedId: string | null;
+  readonly scene: SceneInspection | null;
+  readonly animation: AnimationInspection | null;
+  readonly error: string | null;
 }
 export interface InspectorSnapshot {
   readonly status: "detached" | "ready" | "disposed";

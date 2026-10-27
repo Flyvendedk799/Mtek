@@ -12,6 +12,10 @@ of global WebGPU declarations into a host that already provides them.
 The package's types entry names the maintained, self-contained public declaration
 file, so workspace type checking works without `dist/`. Tarballs include that
 declaration and built ESM, while implementation sources stay outside the package.
+The annotated declaration remains the SDK types entry. Compiled applications
+receive the same declarations with comments and redundant whitespace omitted.
+Token-aware compaction verifies identical parsed declarations, preserving literal
+contents and the complete public type surface (decisions 0206 and 0208).
 
 ## API 1 contract
 
@@ -33,8 +37,18 @@ Extensions receive host services only when the application explicitly supplies
 them. They do not gain renderer internals, network capabilities or GPU access.
 
 The optional [`@mtek/inspector`](../inspector/README.md) package demonstrates this
-boundary with entity selection, transform history, animation controls and optional
-host-supplied metrics. Its JavaScript includes no runtime implementation.
+boundary with entity selection, transform history, animation controls, world
+overlays and optional host-supplied metrics. Its JavaScript includes no runtime
+implementation.
+
+Optional `context.inspectScene?.()` and `player.inspect?.()` return fresh copied
+world/camera/physics and animation diagnostics. Read them after frames: inspection
+does not propagate transforms, evaluate poses, step physics or submit GPU work.
+World matrices include parents; nodes remain in mesh-local space before authored
+material deformation. Body poses and collider dimensions come from the physics
+backend contract. Missing/stale bounds and unsupported contacts remain unavailable.
+See the [inspection contract](../../spec/inspection.md) and the public-package
+[inspection studio](../../examples/inspection-studio/README.md).
 
 ## Compatibility and release policy
 
@@ -57,13 +71,14 @@ repository aliases, plus mounted lifecycle tests using a fake GPU. This establis
 the package/API boundary; browser/device rendering support has its separate
 contract and still requires WebGPU and real-device evidence.
 
-## Development compute integration
+## Bounded source compute (API 1)
 
 The current snapshot exposes `app.createCompute(qualifiedId, params?)` and
 `MtekComputeHandle` for packaged compute declarations. Ordinary Mtek source builds
-still reject compute declarations with E4901 while GPU arithmetic and the render
-bridge await acceptance. The compiler/runtime shared fixture exercises this path
-through a development-only compiler test bypass; this is not a stable release.
+now package standalone compute declarations. Numerical, geometry/shadow and
+lifecycle acceptance passes on Radeon and SwiftShader. Compiler tests use ordinary
+analysis without stripping diagnostics. This development snapshot is not a stable
+release; see `spec/compute.md` for the bounded API 1 contract.
 
 Creation applies source defaults and requires every parameter without a default.
 `setParam(name, value)` validates/copies values through generated uniform writers.
@@ -82,3 +97,14 @@ replays the last completed dispatch and preserves subsequent staged edits for th
 next dispatch. Dispose unused handles explicitly. GPU buffers are not public API.
 See [decision 0204](../../spec/decisions/0204-compute-packaging-and-mounted-handles.md)
 for lifecycle, diagnostics and evidence boundaries.
+
+`handle.attachPositions("src/main.mtek::Demo.Shape", { center: [0, 0, 0], radius: 2 })`
+borrows a completed packed scalar f32 xyz output for one declared entity. Its
+capacity must equal three times that mesh's vertex count. Indices, normals and UVs
+are retained; skinned targets and authored vertex-stage composition are currently
+rejected. The explicit final local sphere must cover every position rendered
+while the attachment lives. Dispose the attachment to restore the original mesh.
+The entity is hidden while a subsequent complete-output dispatch is pending, and
+after dispatch failure. Recovery reacquires its recreated output. Scene changes
+dispose attachments while preserving identical program compute handles; program
+replacement disposes both. See [decision 0205](../../spec/decisions/0205-compute-position-attachments.md).

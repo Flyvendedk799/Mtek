@@ -259,6 +259,7 @@ catalogue! {
     E7024 Error "unknown name in asset",
     E7025 Error "accessor out of bounds",
     E7026 Error "asset limit exceeded",
+    E7027 Error "invalid tangent frame",
     E7030 Error "asset fetch or integrity failure",
     E7031 Error "image decode failure",
     E7101 Error "unsupported audio file",

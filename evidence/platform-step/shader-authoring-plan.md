@@ -7,7 +7,7 @@ of the active scorecard. It must not disappear behind a generic future-v0.2 labe
 ## Current boundary
 
 Mtek supports the compatible position-only vertex form and named struct results
-with position, optional normal/UV outputs and typed custom payloads. A matching
+with position, optional normal/UV/tangent outputs and typed custom payloads. A matching
 second fragment parameter receives those payloads. Locations, interpolation modes,
 attribute requirements and the 16-variable limit are checked and inspectable.
 Both ordinary/instanced entries and directional shadows use the authored outputs.
@@ -22,18 +22,39 @@ final local spheres for culling/sorting and copied inspection. A
 [production-character increment](shader-authoring-characters-progress.md) now
 checks combined skin/deformation/bounds/shadows and recovery on the original Fox
 and CesiumMan assets against GPU and CPU-skinned references. It also preserves
-CesiumMan's mixed-filter sampler. World-space overlays, combined authored
-shared-pose instancing, broader animation compositions and wider physical-device
-evidence are still outstanding. **Runnable Mtek-authored compute remains unimplemented (`E4901`).** Internal
-runtime compute and host-authored WGSL do not satisfy it.
+CesiumMan's mixed-filter sampler. A [spatial inspection increment](inspection-2026-10-27/checkpoint.md)
+adds public copied diagnostics and world bounds/skeleton/IK/collider/contact
+overlays. The [authored cohort increment](shader-authoring/cohorts-2026-10-27/checkpoint.md)
+now validates combined authored shared-pose instancing on the original characters,
+including CPU references, bounds/culling, shadows, detach/rejoin and recovery.
+The [production composition workflow](character-composition-2026-10-27/checkpoint.md)
+now adds locomotion/actions, constraints, procedural adaptation, compatible
+different proportions, transitions/root ownership and recovery with authored
+deformation and shadows. Wider physical-device evidence is still outstanding.
+**Bounded standalone Mtek-authored compute is now
+executable through ordinary source builds**; see the current acceptance below.
 
 A [compute-backend increment](shader-authoring-compute-progress.md) now provides
 typed compute entries/builtins, explicit storage access and checked storage-array
 layouts, validated independently with Naga. A subsequent source-checking increment
 implements declarations, resources, signatures and GPU effects under
 [decision 0202](../../spec/decisions/0202-bounded-source-compute-checking.md).
-E4901 explicitly blocks runnable packaging until kernel lowering, manifest/runtime
-resources, dispatch, inspection and end-to-end examples are implemented.
+Kernel lowering, manifest/runtime resources, dispatch and inspection are now
+implemented. A subsequent [position-attachment checkpoint](shader-authoring/compute-render-2026-10-26/checkpoint.md)
+connects completed scalar xyz outputs to declared entity geometry, with finite
+bounds, disposal, scene lifetime and recovery checks using CPU fakes. That
+historical checkpoint retained E4901 pending numerical/render acceptance.
+The [focused acceptance harness](../../tests/browser/COMPUTE-ACCEPTANCE.md) now
+prepares the real compiler package and independent CPU/direct-WGSL references.
+Its CPU preflight is separate from the [passing GPU numerical/geometry runs](shader-authoring/compute-gpu-2026-10-27/checkpoint.md)
+on Radeon and SwiftShader. All eight kernels now execute over 13 numerical cases,
+including composite values. The [public compute acceptance](shader-authoring/compute-release-2026-10-27/checkpoint.md)
+adds independent shadow references and a real [geometry example](../../examples/compute-geometry/README.md).
+Nine tests pass on each backend, including all three shadow qualities, off-camera
+casters, final bounds, pending output, recovery and detach. Ordinary source
+analysis now packages standalone compute without a diagnostic bypass. Context,
+LSP, grammar, coverage and release documentation advertise this bounded API 1
+contract. Material-local compute remains rejected by E4901.
 
 ## Work and acceptance criteria
 
@@ -70,14 +91,19 @@ resources, dispatch, inspection and end-to-end examples are implemented.
 
 ## Scheduling and acceptance
 
-The position-only and structured-output vertex increments have bounded compiler/runtime
-and hardware/software correctness evidence. This does **not** complete criteria
-1, 2, 4 or 5 above: the compute resource contract, bounds overlays, broader composition/instancing/device
-evidence and remaining tooling requirements still apply. Criterion 3 (compute)
-has started with backend/layout infrastructure and source checking; lowering/runtime integration and
-its acceptance evidence remain outstanding.
+The bounded compute implementation and desktop acceptance portions of criteria
+3–5 are delivered: source checking/lowering, packaging, dispatch, inspection,
+resource lifetime, numerical CPU/direct-WGSL comparisons, geometry/shadows and a
+public example. Unsupported operations and device limits are documented in
+[the compute contract](../../spec/compute.md). This does not complete the whole
+shader track: integrated/mobile or other physical-device evidence remains.
+The explicit compatible-rig production composition is now delivered, with its
+operating assumptions and original/generated content documented. SwiftShader on
+the same desktop is a second backend, not a second device.
 
-Animation performance optimization and sustained CPU/GPU benchmarking remain
-retained, deferred work while the user is doing heavy work. The small correctness
-probes for this increment are separate from those measurements. The full active
-goal includes the remaining CPU/GPU validation once it can be run.
+On 2026-10-27 the user explicitly re-enabled animation optimization and CPU/GPU
+testing, including while doing other work. Both are active. The fresh pre-change
+animation baseline and candidate each pass all 210 frozen checks. The
+[measured optimization](animation-optimization-2026-10-27/checkpoint.md) reduces
+GPU pass time and buffer use; whole-frame CPU evidence remains mixed. Host-load
+limits are unchanged, with noisy attempts retained and retried.

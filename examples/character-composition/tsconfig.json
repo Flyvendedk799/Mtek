@@ -1,0 +1,5 @@
+{
+  "extends": "../../packages/runtime-web/tsconfig.json",
+  "compilerOptions": { "noEmit": true },
+  "include": ["controller.ts", "workshop.ts", "main.ts", "reference.ts"]
+}

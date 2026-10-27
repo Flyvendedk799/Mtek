@@ -18,6 +18,7 @@ export interface Area {
 }
 
 export const AREAS: readonly Area[] = [
+  { id: "compute", title: "Bounded source compute", features: ["compute-programs", "compute/*", "type:ComputeInput"], codes: ["E4050", "E4051", "E4052", "E4053", "E4901"] },
   {
     id: "modules",
     title: "Modules: imports and exports",

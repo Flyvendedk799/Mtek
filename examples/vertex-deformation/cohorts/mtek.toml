@@ -1,0 +1,9 @@
+[project]
+name = "authored-character-cohorts"
+language = "0.1"
+
+[host.inputs]
+count = "Demo.count"
+character = "Demo.character"
+reference = "Demo.reference"
+shape = "Demo.shape"

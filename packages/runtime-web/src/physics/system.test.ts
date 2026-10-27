@@ -25,6 +25,8 @@ import {
   type Self,
 } from "../test-support/physics-fixture.js";
 import type { EntityRef } from "../scene/slots.js";
+import type { ExtensionContext } from "../host/extensions.js";
+import type { PhysicsWorld } from "./types.js";
 
 const codes = (m: MountedPhysics): string[] => m.reported.map((d) => d.code);
 
@@ -42,6 +44,22 @@ function position(m: MountedPhysics, name: string): unknown {
 }
 
 describe("mounting", () => {
+  it("inspects actual collider poses and optional contacts through copied opaque IDs", async () => {
+    let context: ExtensionContext | undefined;
+    const m = await mountPhysics({}, {mount:{extensions:[{id:"inspect-physics",apiVersion:1,setup(c){context=c;}}]}});
+    const entities = context!.readTransforms(), ballId = entities.find(e=>e.name==="Ball")!.id, moverId = entities.find(e=>e.name==="Mover")!.id;
+    context!.writeTransforms([{id:ballId,scale:vec(9,9,9)}]); m.debug.step(1,0);
+    expect(context!.inspectScene!()!.bodies.find(b=>b.entityId===ballId)!.contacts).toBeUndefined();
+    const contact = {userId:2,point:vec(1,2,3),normal:vec(0,1,0),distance:-.02};
+    (m.world as PhysicsWorld).contacts = () => [contact];
+    m.world.body(BALL).pose = {position:vec(4,5,6),rotation:IDENTITY};
+    const before = m.debug.counters()["physicsSteps"], info = context!.inspectScene!()!, ball = info.bodies.find(b=>b.entityId===ballId)!;
+    expect(ball.collider.shape).toEqual({kind:"sphere",radius:.5}); expect(ball.position).toEqual(vec(4,5,6));
+    expect(ball.contacts![0]!.otherId).toBe(moverId); expect(m.debug.counters()["physicsSteps"]).toBe(before);
+    Object.assign(ball.position,{x:99}); Object.assign(ball.contacts![0]!.point,{x:99});
+    expect(m.world.body(BALL).pose.position.x).toBe(4); expect(contact.point.x).toBe(1);
+    m.app.dispose(); expect(() => context!.inspectScene!()).toThrow(/disposed/);
+  });
   it("imports the physics module exactly once, from the URL the manifest names", async () => {
     const m = await mountPhysics();
     expect(m.host.imported).toEqual([PHYSICS_URL]);

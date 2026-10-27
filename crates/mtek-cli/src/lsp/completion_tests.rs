@@ -196,6 +196,25 @@ fn fields_already_written_are_not_offered_again() {
 }
 
 #[test]
+fn authored_tangent_fields_are_available_in_both_stage_records() {
+    let fragment = at(
+        "return color.linear(tint.rgb, 1.0);",
+        "return color.linear(input.\u{a7}, 1.0);",
+    );
+    assert_has(&fragment, &["world_normal", "world_tangent", "uv"]);
+    assert_eq!(
+        find(&fragment, "world_tangent").detail.as_deref(),
+        Some("world_tangent: vec4")
+    );
+    let vertex = run("material Frame { vertex(v: VertexInput) -> vec3 { return v.\u{a7}; } fragment(s: SurfaceInput) -> color { return #ffffff; } } scene Demo { camera Main {} }").unwrap();
+    assert_has(&vertex, &["position", "normal", "uv", "tangent"]);
+    assert_eq!(
+        find(&vertex, "tangent").detail.as_deref(),
+        Some("tangent: vec4")
+    );
+}
+
+#[test]
 fn struct_and_prefab_fields_in_a_descriptor() {
     let c = at("speed = -speed;", "let l = Light { \u{a7} };");
     assert_has(&c, &["intensity", "position"]);
@@ -598,4 +617,32 @@ fn authored_bounds_are_offered_on_entity_bodies_and_named_entity_values() {
     assert_has(&fields, &["bounds_center", "bounds_radius"]);
     let values = at("self.rotation", "self.§rotation");
     assert_has(&values, &["bounds_center", "bounds_radius"]);
+}
+
+#[test]
+fn standalone_compute_completes_declarations_and_invocation_fields() {
+    let top = run("§
+scene Demo { camera Main {} }")
+    .unwrap();
+    assert_has(&top, &["compute"]);
+    let body = run("compute Scale { § }
+scene Demo { camera Main {} }")
+    .unwrap();
+    assert_has(
+        &body,
+        &["param", "input", "output", "workgroup_size", "kernel"],
+    );
+    assert_lacks(&body, &["fragment", "vertex", "state"]);
+    let fields = run("compute Scale { output result:array<f32,8>; kernel(i:ComputeInput)->f32 { let x = i.§; return 0.0; } } scene Demo { camera Main {} }").unwrap();
+    assert_has(
+        &fields,
+        &[
+            "index",
+            "global_x",
+            "local_y",
+            "group_z",
+            "group_count_x",
+            "local_index",
+        ],
+    );
 }

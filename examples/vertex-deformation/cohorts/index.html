@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Authored character cohorts · Mtek</title>
+<style>
+  body{max-width:1100px;margin:2rem auto;padding:0 1rem;background:#101b25;color:#edf3f7;font:16px/1.5 system-ui}
+  h1{margin-bottom:.4rem}p{color:#bed0db}.controls{display:flex;flex-wrap:wrap;gap:1rem;padding:1rem;background:#1b2e3d;border-radius:10px}
+  label{display:flex;flex-direction:column;gap:.3rem}select,button{font:inherit;background:#263e50;color:inherit;border:1px solid #536d80;border-radius:5px;padding:.4rem}
+  canvas{display:block;width:100%;aspect-ratio:16/10;margin:1rem 0;background:#101b25;border-radius:10px}output{display:block;font-variant-numeric:tabular-nums}pre{white-space:pre-wrap;color:#ffc1b1}a{color:#95d8ff}
+</style>
+<h1>One pose, many authored characters</h1>
+<p>Share evaluated animation within each group while Mtek vertex stages stretch geometry, remap UVs and cast matching shadows.</p>
+<div class="controls">
+  <label>Character<select id="character"><option value="0">Fox</option><option value="1">CesiumMan</option></select></label>
+  <label>Actors<select id="count"><option>1</option><option selected>10</option><option>50</option></select></label>
+  <label>Pose groups<select id="groups"><option selected>1</option><option>2</option><option>5</option></select></label>
+  <label>Animation data<select id="sharing"><option value="shared">Shared within groups</option><option value="independent">Independent players</option></select></label>
+  <label>Shape<select id="shape"><option value="stretch">Authored stretch</option><option value="identity">Original proportions</option></select></label>
+  <label>Rendering<select id="reference"><option value="authored">Mtek vertex stages</option><option value="reference">Ordinary transform reference</option></select></label>
+  <label>Shadows<select id="shadows"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="off">Off</option></select></label>
+  <button id="pause" type="button">Pause animation</button>
+</div>
+<canvas width="1000" height="625" aria-label="Animated character cohorts and their shadows"></canvas>
+<output id="status" role="status">Preparing…</output><pre id="errors" role="alert"></pre>
+<p>The reference applies equivalent stretch through entity transforms and a fragment-only shader. These live counters are observations, not a performance benchmark. The correctness harness separately compares CPU-skinned references, detach/rejoin and recovery.</p>
+<p>Original assets and attribution: <a href="https://github.com/KhronosGroup/glTF-Sample-Assets">Khronos glTF Sample Assets</a>. See this example’s README and retained upstream licences.</p>
+<script type="module" src="./cohorts.js"></script>
+</html>

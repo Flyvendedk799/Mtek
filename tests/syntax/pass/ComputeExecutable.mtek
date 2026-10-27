@@ -1,0 +1,9 @@
+compute Scale {
+    param gain: f32 = 2.0;
+    input source: array<f32, 16>;
+    output result: array<f32, 16>;
+    kernel(input: ComputeInput) -> f32 {
+        return source[input.index] * gain;
+    }
+}
+scene Demo { camera Main {} }

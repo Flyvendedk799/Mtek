@@ -141,8 +141,8 @@ export interface MtekLayoutRecord {
 
 // ---- shaders, materials ----
 
-export type MtekVertexAttribute = "position" | "normal" | "uv";
-export type MtekSurfaceInput = "local_position" | "world_position" | "world_normal" | "uv";
+export type MtekVertexAttribute = "position" | "normal" | "uv" | "tangent";
+export type MtekSurfaceInput = "local_position" | "world_position" | "world_normal" | "uv" | "world_tangent";
 
 export interface MtekShader {
   /** Optional scene lighting binding group ABI. Absent on older compiled shaders. */
@@ -249,6 +249,7 @@ export interface MtekMeshPrimitive {
     readonly position: number;
     readonly normal?: number;
     readonly uv?: number;
+    readonly tangent?: number;
     readonly indices: number;
   };
   readonly boundingSphere: { readonly center: Vec3; readonly radius: number };

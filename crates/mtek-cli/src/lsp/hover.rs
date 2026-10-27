@@ -247,10 +247,21 @@ pub(super) fn decl_signature(view: &ModuleView<'_>, def: &Def) -> Option<String>
                 DefKind::Prefab => {
                     declaration_text(view, types.prefab(parent.id)?.param(name)?.span)
                 }
+                DefKind::Compute => {
+                    let (_, compute) = types.computes().find(|(id, _)| *id == parent.id)?;
+                    declaration_text(
+                        view,
+                        compute
+                            .params
+                            .iter()
+                            .find(|param| param.name == *name)?
+                            .span,
+                    )
+                }
                 _ => format!("param {name}"),
             }
         }
-        DefKind::Compute => format!("compute {name} (packaging/dispatch unavailable)"),
+        DefKind::Compute => format!("compute {name} (host API 1)"),
         DefKind::InputBuffer | DefKind::OutputBuffer => {
             let word = if def.kind == DefKind::InputBuffer {
                 "input"

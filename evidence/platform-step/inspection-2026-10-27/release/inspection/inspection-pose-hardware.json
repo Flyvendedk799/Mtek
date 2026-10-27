@@ -1,0 +1,28 @@
+{
+  "initial": {
+    "matrixError": 5.0663426232056e-10,
+    "expectedSegments": 22,
+    "matchedSegments": 22,
+    "maxProjectionError": 3.232803447161814e-8,
+    "lines": 24,
+    "diagnostics": []
+  },
+  "moved": {
+    "matrixError": 7.983849397569243e-10,
+    "expectedSegments": 22,
+    "matchedSegments": 22,
+    "maxProjectionError": 2.042811175773096e-8,
+    "lines": 24,
+    "diagnostics": []
+  },
+  "resized": {
+    "matrixError": 7.983849397569243e-10,
+    "expectedSegments": 22,
+    "matchedSegments": 22,
+    "maxProjectionError": 2.042811175773096e-8,
+    "lines": 24,
+    "diagnostics": []
+  },
+  "errors": [],
+  "dpr": 1.5
+}

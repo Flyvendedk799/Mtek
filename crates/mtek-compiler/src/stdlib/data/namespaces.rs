@@ -532,7 +532,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
         namespace(
             "frame",
             Milestone::M1,
-            "Per-frame values, readable in CPU code and in `bind` expressions, not in GPU stage code (route them through material parameters). `update(dt)` gets the frame delta, which varies from frame to frame; `fixed_update(dt)` runs zero or more times per frame and gets the constant fixed step, 1/60 s by default.",
+            "Per-frame CPU/`bind` values; route to GPU stages through material params. `update(dt)` gets variable frame delta; `fixed_update(dt)` runs zero or more times per frame with a constant fixed step (default 1/60 s).",
             vec![
                 value(
                     "time",
@@ -873,6 +873,10 @@ pub(super) fn types() -> Vec<TypeDef> {
                     name: "uv",
                     ty: TypeRef::Vec2,
                 },
+                RecordField {
+                    name: "world_tangent",
+                    ty: TypeRef::Vec4,
+                },
             ],
             ..simple(
                 "SurfaceInput",
@@ -896,6 +900,10 @@ pub(super) fn types() -> Vec<TypeDef> {
                 RecordField {
                     name: "uv",
                     ty: TypeRef::Vec2,
+                },
+                RecordField {
+                    name: "tangent",
+                    ty: TypeRef::Vec4,
                 },
             ],
             ..simple(
@@ -934,7 +942,7 @@ pub(super) fn types() -> Vec<TypeDef> {
                 TypeKind::Record,
                 Milestone::M1,
                 true,
-                "Compute invocation IDs (dispatch unavailable).",
+                "Compute invocation IDs.",
             )
         },
         TypeDef {

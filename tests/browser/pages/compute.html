@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Mtek compute acceptance lab</title>
+<style>body{font:16px system-ui;background:#171923;color:#edf1ff;max-width:900px;margin:40px auto;padding:0 20px}button{font:inherit;padding:10px 16px;margin:8px 8px 8px 0}canvas{width:384px;height:384px;background:#111;display:block}pre{white-space:pre-wrap}</style>
+<h1>Compute acceptance lab</h1>
+<p>Development fixture. Ordinary source builds still report E4901. Each button runs a bounded correctness probe; no probe runs automatically.</p>
+<button id="numbers">Compare numerical output</button><button id="render">Compare geometry and recovery</button>
+<button id="shadows">Compare compute shadows</button>
+<canvas id="mtek" width="128" height="128"></canvas><canvas id="preview" width="128" height="128" aria-label="Captured computed geometry"></canvas><pre id="status">Ready. No GPU requested yet.</pre>
+<script type="module" src="./acceptance.js"></script><script type="module" src="./shadow-acceptance.js"></script></html>

@@ -1,8 +1,25 @@
 # Compute authoring progress
 
-Date: 2026-10-26. Status: **backend, source checking, packaging and mounted API implemented; public source/GPU acceptance incomplete**.
+Updated: 2026-10-27. Status: **bounded standalone source compute accepted on desktop hardware/software backends**.
 Required work in scorecard areas 3 and 10 and the
 [shader-authoring plan](shader-authoring-plan.md).
+
+The [current acceptance](shader-authoring/compute-release-2026-10-27/checkpoint.md)
+supersedes the temporary public E4901 gates recorded below. Ordinary source builds
+now package compute without bypassing diagnostics. Independent CPU/direct-WGSL
+arithmetic, geometry, low/medium/high shadows, final bounds, pending output,
+recovery and resource lifetime pass; all nine tests pass on each backend. The
+[geometry example](../../examples/compute-geometry/README.md), context, LSP,
+coverage and release docs describe the same [bounded API 1](../../spec/compute.md).
+E4901 now rejects only material-local compute. Wider devices and the rest of the
+shader-authoring plan remain open. The sections below preserve earlier boundaries.
+
+A [current-code continuation](shader-authoring/compute-continuation-2026-10-27/checkpoint.md)
+adds dispatch-completion and changed-output shadow references after recovery.
+All 18 hardware/software checks pass, including the twelve shadow cases.
+The context test now ties its advertised compute capability to an ordinary
+successful package and verifies that material-local compute produces E4901 and
+no package. Context/frontend/lowering, LSP and release consistency checks pass.
 
 ## Backend increment
 
@@ -103,15 +120,25 @@ has now been removed: checked development IR packages all compute artifacts.
 
 Manifest packaging, mounted dispatch/inspection and the accepted ownership/recovery
 contract are now connected, including bounded dispatch/device-limit validation,
-upload/readback, ordering, disposal, replacement and device recovery. Run an actual
+upload/readback, ordering, disposal, replacement and device recovery. A subsequent
+[position-attachment checkpoint](shader-authoring/compute-render-2026-10-26/checkpoint.md)
+adds a bounded renderer bridge and corrects scene resets to preserve identical
+program compute handles while retiring scene-local attachments. Its actual
+compiler fixture verifies command/lifetime behavior with CPU callbacks only. Run an actual
 Mtek-authored numerical buffer transform against CPU and direct-WGSL references,
 plus a compute-to-render example. Update editor/coverage/release capabilities only
 as those paths become usable. Naga/backend checks alone cannot close this track.
 
-The complete platform roadmap remains open. The user's overnight goal included
-CPU/GPU testing; carrying the older deferral into that window was an agent
-scheduling mistake. After returning on 2026-10-26 the user explicitly said not to
-run those tests now. Animation optimization and sustained CPU/GPU benchmarking
-are therefore deferred for the current occupied-PC period, and remain required
-for final acceptance. No GPU or sustained performance run was started by either
-compute increment.
+The complete platform roadmap remains open. Earlier compute increments were
+performed during a testing deferral. On 2026-10-27 the user explicitly re-enabled
+CPU/GPU tests and animation optimization, including while doing other work.
+The [new GPU checkpoint](shader-authoring/compute-gpu-2026-10-27/checkpoint.md)
+records passing scalar/invocation and composite arithmetic, rendered geometry,
+recovery and lifetime checks on Radeon and SwiftShader. All eight packaged
+kernels execute over 13 numerical cases. At that historical checkpoint, compute
+geometry shadow references and capability/release alignment were still required
+and E4901 was retained. The public acceptance linked at the top now delivers both
+and removes the standalone gate; material-local compute remains rejected. The
+[animation optimization](animation-optimization-2026-10-27/checkpoint.md) now has
+complete 210-pass before and after measurements, with reduced GPU time/buffers
+and mixed whole-frame CPU evidence. Historical NOT-RUN records remain unchanged.

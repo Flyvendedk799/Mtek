@@ -7,11 +7,12 @@ GPU or physics implementation. Mtek is a peer dependency for the public types.
 The package is private; these are local development tarballs, not a registry release.
 
 ```ts
-import {InspectorController, mountInspectorPanel} from "@mtek/inspector";
+import {InspectorController, mountInspectorPanel, mountInspectorOverlay} from "@mtek/inspector";
 import type {MtekApp} from "@mtek/runtime-web";
 
 const inspector = new InspectorController({onError: console.error});
 const removePanel = mountInspectorPanel(inspector, sidebar);
+const overlay = mountInspectorOverlay(inspector, canvas); // optional Canvas2D layer
 let app: MtekApp | undefined;
 app = await mountMtek(canvas, program, {
   extensions: [inspector.extension],
@@ -26,6 +27,7 @@ app = await mountMtek(canvas, program, {
 
 // Host shutdown:
 app.dispose(); // extension teardown clears queued commands and scene references
+overlay.dispose(); // removes canvas, observers and spatial subscription
 removePanel(); // removes DOM, listeners and subscription
 inspector.dispose();
 ```
@@ -57,9 +59,10 @@ without any DOM panel.
 Bindings/physics can overwrite transform edits after the before-frame hook. The
 panel shows the resulting scene state after the frame; it does not take permanent
 ownership from application logic. Undo covers transform edits only, not animation
-commands or external scene changes. The current public API does not expose the
-active base clip's name; the clip selector is a switch command, not a guessed
-active-clip indicator. Skeleton coordinates are mesh-local, not a world overlay.
+commands or external scene changes. Optional animation diagnostics report the
+actual active clip, transition progress, ordered layers and effective masks,
+root-motion ownership, procedural override state and IK settings/reach errors.
+Older providers without diagnostics show unavailable data.
 
 Snapshots default to four per scene second with no independent render loop/timer.
 An observer failure is isolated and sent to `onError`; command failures remain
@@ -90,11 +93,47 @@ The short DOM-only UI verification launches one headless browser with GPU/WebGPU
 disabled, rejects any GPU-adapter request and checks panel behavior and disposal.
 
 See [runtime compatibility policy](../runtime-web/README.md) and the
-[CPU-only sandbox](../../examples/scene-inspector/README.md). Full rendered scene,
-collision/IK overlays, transition internals, resource provenance and end-to-end
-authoring workflows remain separate roadmap work.
+[CPU-only sandbox](../../examples/scene-inspector/README.md). The lighting-studio
+rendered integration now exercises edit/undo/redo/reset/removal on Radeon and
+SwiftShader. The [inspection studio](../../examples/inspection-studio/README.md)
+also combines an original Fox character, layers, procedural pose/IK controls,
+physics contacts and world overlays through this public package. Resource
+provenance, persistent authored IDs and the broader end-to-end authoring workflow
+corpus remain roadmap work.
 
 When the runtime supplies an authored local bounding sphere, the entity snapshot
 and panel show its center/radius. These values are copied and frozen by the
-controller. They describe the source enclosure, not a world-space wireframe or a
-compiler proof that every deformed vertex lies inside it.
+controller. They describe the source enclosure, not a compiler proof that every
+deformed vertex lies inside it.
+
+## World overlays and spatial diagnosis
+
+`mountInspectorOverlay(controller, renderCanvas, options?)` adds an optional
+transparent, pointer-free Canvas2D layer. Bounds, skeleton, IK targets/reach errors,
+box/sphere colliders and contact normals have independent switches through
+`overlay.setOptions(...)`. Selection is the default scope; `selectedOnly: false`
+shows all entities' bounds/colliders/contacts. Skeleton/IK stays selected.
+When the scene or target has no visible viewport, backing storage is released.
+`dispose()` removes the host, observers, listeners and subscription. It has no
+render loop or GPU resources. Dispose/recreate it to toggle the optional layer.
+
+The controller's `subscribeSpatial` samples after frames only while a spatial
+observer exists. The closed-by-default spatial panel also subscribes only while
+open and updates its text at four Hz. Ordinary snapshots retain their configured
+polling interval. Scene resets discard stale selection and geometry. Direct
+`spatialSnapshot()` reads the latest copied/frozen sample; absent providers report
+unavailable state without disabling the panel.
+
+World matrices include parents, nonuniform scale and node animation. Skeletons
+use node indices, so duplicate names remain distinct. Their mesh-local pose includes
+layers/IK and precedes material-authored vertex deformation. Physics shapes use
+actual backend poses and nominal collider dimensions; entity scale is not applied
+again. Pending compute geometry and stale animated bounds are not fabricated.
+
+Overlay lines clip against all WebGPU planes but do not depth-test against the
+scene. Shadow DOM isolates their transparent canvas from host canvas styling.
+Alignment handles content-box borders/padding, scrolling, resize, DPR and positive
+axis-aligned CSS scale. Rotated/skewed/reflected/perspective CSS ancestors report
+unavailable alignment. Segment count defaults to 4,096 (maximum 16,384); truncation
+is visible. Backing storage caps DPR at 3, dimensions at 8,192 and pixels at
+16,777,216. See the full [inspection contract](../../spec/inspection.md).

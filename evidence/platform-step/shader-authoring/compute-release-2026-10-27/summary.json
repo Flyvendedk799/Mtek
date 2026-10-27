@@ -1,0 +1,1890 @@
+{
+  "format": "mtek-public-compute-shadow-acceptance/1",
+  "runs": {
+    "rejected-harness": {
+      "originalRun": "2026-10-27T00-35-36-126Z",
+      "passed": 2,
+      "failed": 6,
+      "skipped": 0,
+      "analysis": "E4901 only, after proving it is the sole analysis error",
+      "shadowSourceSha256": "dac0446d694245f08cb55aed836c4b56c91e41a4c64502da186520751f1397dc",
+      "reportSha256": "4a8ddd8d3000bed74f3d082b88a71caec4e5c8d4cd3f587cca45b5b200cf3fdc",
+      "cases": [
+        {
+          "record": "compute-shadow-high-final-bounds-hardware.json",
+          "quality": "high",
+          "mode": "final-bounds",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 576,
+          "unculledDifferentPixels": 576,
+          "shadowDifferentPixels": 304,
+          "changedFromOriginal": 576,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 576,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-high-off-camera-hardware.json",
+          "quality": "high",
+          "mode": "off-camera",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 864,
+          "unculledDifferentPixels": 864,
+          "shadowDifferentPixels": 880,
+          "changedFromOriginal": 864,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 576,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-low-final-bounds-hardware.json",
+          "quality": "low",
+          "mode": "final-bounds",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 560,
+          "unculledDifferentPixels": 560,
+          "shadowDifferentPixels": 304,
+          "changedFromOriginal": 560,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 560,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-low-off-camera-hardware.json",
+          "quality": "low",
+          "mode": "off-camera",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 840,
+          "unculledDifferentPixels": 840,
+          "shadowDifferentPixels": 864,
+          "changedFromOriginal": 840,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 560,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-medium-final-bounds-hardware.json",
+          "quality": "medium",
+          "mode": "final-bounds",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 576,
+          "unculledDifferentPixels": 576,
+          "shadowDifferentPixels": 304,
+          "changedFromOriginal": 576,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 576,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-medium-off-camera-hardware.json",
+          "quality": "medium",
+          "mode": "off-camera",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 864,
+          "unculledDifferentPixels": 864,
+          "shadowDifferentPixels": 880,
+          "changedFromOriginal": 864,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 576,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        }
+      ]
+    },
+    "pre-gate-hardware": {
+      "originalRun": "2026-10-27T00-36-42-704Z",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "analysis": "E4901 only, after proving it is the sole analysis error",
+      "shadowSourceSha256": "dac0446d694245f08cb55aed836c4b56c91e41a4c64502da186520751f1397dc",
+      "reportSha256": "3c688109860158b13d62c9136094c61eeb8fdf1fc1404c4d4a5e3c418b5e2329",
+      "cases": [
+        {
+          "record": "compute-shadow-high-final-bounds-hardware.json",
+          "quality": "high",
+          "mode": "final-bounds",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 704,
+          "changedFromOriginal": 656,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-high-off-camera-hardware.json",
+          "quality": "high",
+          "mode": "off-camera",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 880,
+          "changedFromOriginal": 864,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-low-final-bounds-hardware.json",
+          "quality": "low",
+          "mode": "final-bounds",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 688,
+          "changedFromOriginal": 640,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-low-off-camera-hardware.json",
+          "quality": "low",
+          "mode": "off-camera",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 864,
+          "changedFromOriginal": 840,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-medium-final-bounds-hardware.json",
+          "quality": "medium",
+          "mode": "final-bounds",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 704,
+          "changedFromOriginal": 656,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-medium-off-camera-hardware.json",
+          "quality": "medium",
+          "mode": "off-camera",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 880,
+          "changedFromOriginal": 864,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        }
+      ]
+    },
+    "pre-gate-software": {
+      "originalRun": "2026-10-27T00-37-19-908Z",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "analysis": "E4901 only, after proving it is the sole analysis error",
+      "shadowSourceSha256": "dac0446d694245f08cb55aed836c4b56c91e41a4c64502da186520751f1397dc",
+      "reportSha256": "39848f23909f62f87733073a4f967af4ea50422c7ed79c2a4ac83713a5fe1b5b",
+      "cases": [
+        {
+          "record": "compute-shadow-high-final-bounds-software.json",
+          "quality": "high",
+          "mode": "final-bounds",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 704,
+          "changedFromOriginal": 656,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-high-off-camera-software.json",
+          "quality": "high",
+          "mode": "off-camera",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 880,
+          "changedFromOriginal": 864,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-low-final-bounds-software.json",
+          "quality": "low",
+          "mode": "final-bounds",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 688,
+          "changedFromOriginal": 640,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-low-off-camera-software.json",
+          "quality": "low",
+          "mode": "off-camera",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 864,
+          "changedFromOriginal": 840,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-medium-final-bounds-software.json",
+          "quality": "medium",
+          "mode": "final-bounds",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 704,
+          "changedFromOriginal": 656,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-medium-off-camera-software.json",
+          "quality": "medium",
+          "mode": "off-camera",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 880,
+          "changedFromOriginal": 864,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        }
+      ]
+    },
+    "hardware": {
+      "originalRun": "2026-10-27T00-58-43-061Z",
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0,
+      "analysis": "none: ordinary public analysis",
+      "shadowSourceSha256": "0162b8bcdf3abd17e5516a340cbd4c6ebfaaa473af25b5e4bfd86285b577d1a4",
+      "reportSha256": "123f3e9039a7a9690446d04dc8a0572371ecfb7036ce68469dfc4758a6a7788f",
+      "cases": [
+        {
+          "record": "compute-shadow-high-final-bounds-hardware.json",
+          "quality": "high",
+          "mode": "final-bounds",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 704,
+          "changedFromOriginal": 656,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-high-off-camera-hardware.json",
+          "quality": "high",
+          "mode": "off-camera",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 880,
+          "changedFromOriginal": 864,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-low-final-bounds-hardware.json",
+          "quality": "low",
+          "mode": "final-bounds",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 688,
+          "changedFromOriginal": 640,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-low-off-camera-hardware.json",
+          "quality": "low",
+          "mode": "off-camera",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 864,
+          "changedFromOriginal": 840,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-medium-final-bounds-hardware.json",
+          "quality": "medium",
+          "mode": "final-bounds",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 704,
+          "changedFromOriginal": 656,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-medium-off-camera-hardware.json",
+          "quality": "medium",
+          "mode": "off-camera",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 880,
+          "changedFromOriginal": 864,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        }
+      ]
+    },
+    "software": {
+      "originalRun": "2026-10-27T00-58-53-417Z",
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0,
+      "analysis": "none: ordinary public analysis",
+      "shadowSourceSha256": "0162b8bcdf3abd17e5516a340cbd4c6ebfaaa473af25b5e4bfd86285b577d1a4",
+      "reportSha256": "7a35166de09d3b09ded6021257d947e3e85af4db2d649dc1f8147afea5136828",
+      "cases": [
+        {
+          "record": "compute-shadow-high-final-bounds-software.json",
+          "quality": "high",
+          "mode": "final-bounds",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 704,
+          "changedFromOriginal": 656,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-high-off-camera-software.json",
+          "quality": "high",
+          "mode": "off-camera",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 880,
+          "changedFromOriginal": 864,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-low-final-bounds-software.json",
+          "quality": "low",
+          "mode": "final-bounds",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 688,
+          "changedFromOriginal": 640,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-low-off-camera-software.json",
+          "quality": "low",
+          "mode": "off-camera",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 864,
+          "changedFromOriginal": 840,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-medium-final-bounds-software.json",
+          "quality": "medium",
+          "mode": "final-bounds",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 704,
+          "changedFromOriginal": 656,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        },
+        {
+          "record": "compute-shadow-medium-off-camera-software.json",
+          "quality": "medium",
+          "mode": "off-camera",
+          "outputMismatches": 0,
+          "cpuDifferentPixels": 0,
+          "unculledDifferentPixels": 0,
+          "shadowDifferentPixels": 880,
+          "changedFromOriginal": 864,
+          "recoveredDifferentPixels": 0,
+          "pendingDifferentPixels": 0,
+          "detachedDifferentPixels": 0,
+          "dispatchPending": true,
+          "disposedRegistryCounters": [
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            },
+            {
+              "liveBuffers": 0,
+              "liveTextures": 0,
+              "liveSamplers": 0,
+              "liveShaderModules": 0,
+              "livePipelines": 0,
+              "liveBindGroups": 0,
+              "liveListeners": 0
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

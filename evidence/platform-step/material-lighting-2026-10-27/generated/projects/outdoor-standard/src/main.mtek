@@ -1,0 +1,135 @@
+const MODEL = asset.glb("../models/content.glb");
+
+scene Workload {
+    clear_color: #111a26;
+    ambient_intensity: 0.0;
+    camera Main {
+        position: vec3(8.0, 5.0, 10.0);
+        target: vec3(0.0, 1.0, 0.0);
+        projection: Perspective { fov_y: 0.7; near: 0.1; far: 60.0 };
+        exposure: -0.2630344;
+    }
+    entity Sun {
+        rotation: quat.euler(-0.9, 0.6, 0);
+        light: DirectionalLight { color: #fff2dc; intensity: 2.5 };
+    }
+    entity Floor {
+        position: vec3(0.0, -0.15, 0.0);
+        rotation: quat.euler(0.0, 0.0, 0.0);
+        scale: vec3(16.0, 0.3, 14.0);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Ground");
+    }
+    entity Sculpture0_0 {
+        position: vec3(-3.3000000000000003, 0.7, -3.0);
+        rotation: quat.euler(0.0, 0.0, 0.0);
+        scale: vec3(1.2, 1.4, 1.2);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Mapped");
+    }
+    entity Sculpture1_0 {
+        position: vec3(-1.1, 0.7, -3.0);
+        rotation: quat.euler(0.0, 0.23, 0.0);
+        scale: vec3(1.2, 1.4, 1.2);
+        mesh: MODEL.mesh("Sphere_standard");
+        material: MODEL.material("Copper");
+    }
+    entity Sculpture2_0 {
+        position: vec3(1.1, 0.7, -3.0);
+        rotation: quat.euler(0.0, 0.46, 0.0);
+        scale: vec3(1.2, 1.4, 1.2);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Ceramic");
+    }
+    entity Sculpture3_0 {
+        position: vec3(3.3000000000000003, 0.7, -3.0);
+        rotation: quat.euler(0.0, 0.6900000000000001, 0.0);
+        scale: vec3(1.2, 1.4, 1.2);
+        mesh: MODEL.mesh("Sphere_standard");
+        material: MODEL.material("Mapped");
+    }
+    entity Sculpture0_1 {
+        position: vec3(-3.3000000000000003, 0.7, -1.0);
+        rotation: quat.euler(0.0, -0.23, 0.0);
+        scale: vec3(1.2, 1.4, 1.2);
+        mesh: MODEL.mesh("Sphere_standard");
+        material: MODEL.material("Copper");
+    }
+    entity Sculpture1_1 {
+        position: vec3(-1.1, 0.7, -1.0);
+        rotation: quat.euler(0.0, 0.0, 0.0);
+        scale: vec3(1.2, 1.4, 1.2);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Ceramic");
+    }
+    entity Sculpture2_1 {
+        position: vec3(1.1, 0.7, -1.0);
+        rotation: quat.euler(0.0, 0.23, 0.0);
+        scale: vec3(1.2, 1.4, 1.2);
+        mesh: MODEL.mesh("Sphere_standard");
+        material: MODEL.material("Mapped");
+    }
+    entity Sculpture3_1 {
+        position: vec3(3.3000000000000003, 0.7, -1.0);
+        rotation: quat.euler(0.0, 0.46, 0.0);
+        scale: vec3(1.2, 1.4, 1.2);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Copper");
+    }
+    entity Sculpture0_2 {
+        position: vec3(-3.3000000000000003, 0.7, 1.0);
+        rotation: quat.euler(0.0, -0.46, 0.0);
+        scale: vec3(1.2, 1.4, 1.2);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Ceramic");
+    }
+    entity Sculpture1_2 {
+        position: vec3(-1.1, 0.7, 1.0);
+        rotation: quat.euler(0.0, -0.23, 0.0);
+        scale: vec3(1.2, 1.4, 1.2);
+        mesh: MODEL.mesh("Sphere_standard");
+        material: MODEL.material("Mapped");
+    }
+    entity Sculpture2_2 {
+        position: vec3(1.1, 0.7, 1.0);
+        rotation: quat.euler(0.0, 0.0, 0.0);
+        scale: vec3(1.2, 1.4, 1.2);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Copper");
+    }
+    entity Sculpture3_2 {
+        position: vec3(3.3000000000000003, 0.7, 1.0);
+        rotation: quat.euler(0.0, 0.23, 0.0);
+        scale: vec3(1.2, 1.4, 1.2);
+        mesh: MODEL.mesh("Sphere_standard");
+        material: MODEL.material("Ceramic");
+    }
+    entity Sculpture0_3 {
+        position: vec3(-3.3000000000000003, 0.7, 3.0);
+        rotation: quat.euler(0.0, -0.6900000000000001, 0.0);
+        scale: vec3(1.2, 1.4, 1.2);
+        mesh: MODEL.mesh("Sphere_standard");
+        material: MODEL.material("Mapped");
+    }
+    entity Sculpture1_3 {
+        position: vec3(-1.1, 0.7, 3.0);
+        rotation: quat.euler(0.0, -0.46, 0.0);
+        scale: vec3(1.2, 1.4, 1.2);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Copper");
+    }
+    entity Sculpture2_3 {
+        position: vec3(1.1, 0.7, 3.0);
+        rotation: quat.euler(0.0, -0.23, 0.0);
+        scale: vec3(1.2, 1.4, 1.2);
+        mesh: MODEL.mesh("Sphere_standard");
+        material: MODEL.material("Ceramic");
+    }
+    entity Sculpture3_3 {
+        position: vec3(3.3000000000000003, 0.7, 3.0);
+        rotation: quat.euler(0.0, 0.0, 0.0);
+        scale: vec3(1.2, 1.4, 1.2);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Mapped");
+    }
+}

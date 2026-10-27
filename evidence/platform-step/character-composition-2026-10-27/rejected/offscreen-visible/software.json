@@ -1,0 +1,1249 @@
+{
+  "format": "mtek-production-composition-gpu/1",
+  "backend": "software",
+  "launchArgs": [
+    "--enable-unsafe-webgpu",
+    "--use-webgpu-adapter=swiftshader",
+    "--enable-webgpu-developer-features"
+  ],
+  "startedAt": "2026-10-27T04:36:38.577Z",
+  "status": "passed",
+  "cases": [
+    {
+      "name": "locomotion-action-feet-grips",
+      "maximum": 1,
+      "overTolerance": 0,
+      "changed": 2134,
+      "residuals": [
+        {
+          "name": "Original",
+          "targets": [
+            {
+              "name": "leftFoot",
+              "distance": 0.0007972776505518874,
+              "orientationError": 0,
+              "target": {
+                "x": -1.6094257563144623,
+                "y": 0.32162328100299736,
+                "z": -0.16698408400000003
+              },
+              "actual": {
+                "x": -1.6094807292334736,
+                "y": 0.3208317160606384,
+                "z": -0.16706189513206482
+              }
+            },
+            {
+              "name": "rightFoot",
+              "distance": 0.0009126384044624456,
+              "orientationError": 5.960464477539063e-8,
+              "target": {
+                "x": -1.6093376062271971,
+                "y": 0.17162035450327415,
+                "z": 0.14699415979999997
+              },
+              "actual": {
+                "x": -1.609393296316266,
+                "y": 0.17071016132831573,
+                "z": 0.14695733785629272
+              }
+            },
+            {
+              "name": "leftGrip",
+              "distance": 0.0008611548012988602,
+              "orientationError": 0,
+              "target": {
+                "x": -1.0500000238418579,
+                "y": 1.8980015149322478,
+                "z": -0.325
+              },
+              "actual": {
+                "x": -1.0492415511608124,
+                "y": 1.8977569341659546,
+                "z": -0.3253263235092163
+              }
+            },
+            {
+              "name": "rightGrip",
+              "distance": 0.00021422664893870524,
+              "orientationError": 1.1920928955078128e-7,
+              "target": {
+                "x": -1.0500000238418579,
+                "y": 1.8980015149322478,
+                "z": 0.325
+              },
+              "actual": {
+                "x": -1.0498015147447586,
+                "y": 1.8979295492172241,
+                "z": 0.3250361680984497
+              }
+            }
+          ],
+          "pelvis": 0.02
+        },
+        {
+          "name": "Longer",
+          "targets": [
+            {
+              "name": "leftFoot",
+              "distance": 0.0008812454695723358,
+              "orientationError": 0,
+              "target": {
+                "x": 1.578932269929566,
+                "y": 0.3474537064763678,
+                "z": -0.17116518480000004
+              },
+              "actual": {
+                "x": 1.5788727888278664,
+                "y": 0.34657755494117737,
+                "z": -0.1712387651205063
+              }
+            },
+            {
+              "name": "rightFoot",
+              "distance": 0.0009624977824132965,
+              "orientationError": 2.9802322387695312e-8,
+              "target": {
+                "x": 1.5790227469584828,
+                "y": 0.19745041502950886,
+                "z": 0.15117726999999997
+              },
+              "actual": {
+                "x": 1.5789639379270375,
+                "y": 0.19649015367031097,
+                "z": 0.15114825963974
+              }
+            },
+            {
+              "name": "leftGrip",
+              "distance": 0.0004191194273427434,
+              "orientationError": 5.960464477539063e-8,
+              "target": {
+                "x": 2.1500000238418577,
+                "y": 2.114012364927517,
+                "z": -0.325
+              },
+              "actual": {
+                "x": 2.1496356838941573,
+                "y": 2.1141304969787598,
+                "z": -0.3248298168182373
+              }
+            },
+            {
+              "name": "rightGrip",
+              "distance": 0.00035589618040351333,
+              "orientationError": 1.0745380149674385e-7,
+              "target": {
+                "x": 2.1500000238418577,
+                "y": 2.114012364927517,
+                "z": 0.325
+              },
+              "actual": {
+                "x": 2.149670248031616,
+                "y": 2.1141319274902344,
+                "z": 0.32493987679481506
+              }
+            }
+          ],
+          "pelvis": 0.02
+        }
+      ],
+      "counters": {
+        "buffersAllocated": 40,
+        "texturesAllocated": 7,
+        "pipelinesCreated": 8,
+        "shaderModulesCreated": 6,
+        "bindGroupsCreated": 21,
+        "uploads": 166,
+        "uploadBytes": 4830100,
+        "liveBuffers": 38,
+        "liveTextures": 7,
+        "liveSamplers": 3,
+        "liveShaderModules": 6,
+        "livePipelines": 8,
+        "liveBindGroups": 11,
+        "liveListeners": 9,
+        "frameTimeMs": 1.6000000014901161,
+        "cpuUpdateMs": 0.8000000044703484,
+        "renderPrepMs": 0.7999999970197678,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 11,
+        "drawCallsTotal": 690,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 62,
+        "culledObjects": 0,
+        "culledObjectsTotal": 4,
+        "rebatchesTotal": 3,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 63,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "diagnostics": []
+    },
+    {
+      "name": "additive-action",
+      "maximum": 0,
+      "overTolerance": 0,
+      "changed": 2172,
+      "residuals": [
+        {
+          "name": "Original",
+          "targets": [
+            {
+              "name": "leftFoot",
+              "distance": 0.0006855400357019353,
+              "orientationError": 8.429369702178807e-8,
+              "target": {
+                "x": -1.6094257563144623,
+                "y": 0.4411456666519628,
+                "z": -0.16698408400000003
+              },
+              "actual": {
+                "x": -1.6094754091650247,
+                "y": 0.44046708941459656,
+                "z": -0.16706794500350952
+              }
+            },
+            {
+              "name": "rightFoot",
+              "distance": 0.0008332324581866257,
+              "orientationError": 5.16191365590357e-8,
+              "target": {
+                "x": -1.6093376062271971,
+                "y": 0.17162035450327415,
+                "z": 0.14699415979999997
+              },
+              "actual": {
+                "x": -1.60929180637002,
+                "y": 0.17245139181613922,
+                "z": 0.14703360199928284
+              }
+            },
+            {
+              "name": "leftGrip",
+              "distance": 0.0003339910611504582,
+              "orientationError": 0,
+              "target": {
+                "x": -1.0500000238418579,
+                "y": 1.8980015149322478,
+                "z": -0.325
+              },
+              "actual": {
+                "x": -1.0497388327121735,
+                "y": 1.89786958694458,
+                "z": -0.32516101002693176
+              }
+            },
+            {
+              "name": "rightGrip",
+              "distance": 0.0003718992094330514,
+              "orientationError": 9.884312124119402e-8,
+              "target": {
+                "x": -1.0500000238418579,
+                "y": 1.8980015149322478,
+                "z": 0.325
+              },
+              "actual": {
+                "x": -1.0496456384658814,
+                "y": 1.8978986740112305,
+                "z": 0.3250463008880615
+              }
+            }
+          ],
+          "pelvis": 0.04617222575718465
+        },
+        {
+          "name": "Longer",
+          "targets": [
+            {
+              "name": "leftFoot",
+              "distance": 0.0007608216988418894,
+              "orientationError": 0,
+              "target": {
+                "x": 1.578932269929566,
+                "y": 0.46697609212533325,
+                "z": -0.17116518480000004
+              },
+              "actual": {
+                "x": 1.578879776094109,
+                "y": 0.466220885515213,
+                "z": -0.17124105989933014
+              }
+            },
+            {
+              "name": "rightFoot",
+              "distance": 0.0009773046849403202,
+              "orientationError": 2.9802322387695312e-8,
+              "target": {
+                "x": 1.5790227469584828,
+                "y": 0.19745041502950886,
+                "z": 0.15117726999999997
+              },
+              "actual": {
+                "x": 1.5790767701901496,
+                "y": 0.19842560589313507,
+                "z": 0.15121203660964966
+              }
+            },
+            {
+              "name": "leftGrip",
+              "distance": 0.0003566191561564167,
+              "orientationError": 4.2146848510894035e-8,
+              "target": {
+                "x": 2.1500000238418577,
+                "y": 2.114012364927517,
+                "z": -0.325
+              },
+              "actual": {
+                "x": 2.1502722656726836,
+                "y": 2.1138672828674316,
+                "z": -0.32517892122268677
+              }
+            },
+            {
+              "name": "rightGrip",
+              "distance": 0.00018820360216749335,
+              "orientationError": 9.884312124119402e-8,
+              "target": {
+                "x": 2.1500000238418577,
+                "y": 2.114012364927517,
+                "z": 0.325
+              },
+              "actual": {
+                "x": 2.1498225021362307,
+                "y": 2.114070415496826,
+                "z": 0.3249768316745758
+              }
+            }
+          ],
+          "pelvis": 0.038272696923205445
+        }
+      ],
+      "counters": {
+        "buffersAllocated": 42,
+        "texturesAllocated": 7,
+        "pipelinesCreated": 8,
+        "shaderModulesCreated": 6,
+        "bindGroupsCreated": 21,
+        "uploads": 234,
+        "uploadBytes": 4909460,
+        "liveBuffers": 38,
+        "liveTextures": 7,
+        "liveSamplers": 3,
+        "liveShaderModules": 6,
+        "livePipelines": 8,
+        "liveBindGroups": 11,
+        "liveListeners": 9,
+        "frameTimeMs": 1.3999999985098839,
+        "cpuUpdateMs": 0.6999999955296516,
+        "renderPrepMs": 0.7000000029802322,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 11,
+        "drawCallsTotal": 1039,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 93,
+        "culledObjects": 0,
+        "culledObjectsTotal": 8,
+        "rebatchesTotal": 5,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 95,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "diagnostics": []
+    },
+    {
+      "name": "interrupted-transition",
+      "maximum": 1,
+      "overTolerance": 0,
+      "changed": 2135,
+      "residuals": [
+        {
+          "name": "Original",
+          "targets": [
+            {
+              "name": "leftFoot",
+              "distance": 0.0007646080767253124,
+              "orientationError": 0,
+              "target": {
+                "x": -1.6094257563144623,
+                "y": 0.32162328100299736,
+                "z": -0.16698408400000003
+              },
+              "actual": {
+                "x": -1.6094815340545028,
+                "y": 0.3208637833595276,
+                "z": -0.1670524775981903
+              }
+            },
+            {
+              "name": "rightFoot",
+              "distance": 0.0009770053292327407,
+              "orientationError": 2.9802322387695312e-8,
+              "target": {
+                "x": -1.6093376062271971,
+                "y": 0.2195138909661836,
+                "z": 0.14699415979999997
+              },
+              "actual": {
+                "x": -1.6092741559445858,
+                "y": 0.2204882949590683,
+                "z": 0.14702656865119934
+              }
+            },
+            {
+              "name": "leftGrip",
+              "distance": 0.0006387273320510008,
+              "orientationError": 5.960464477539063e-8,
+              "target": {
+                "x": -1.0500000238418579,
+                "y": 1.8980015149322478,
+                "z": -0.325
+              },
+              "actual": {
+                "x": -1.0494304567575454,
+                "y": 1.8978270292282104,
+                "z": -0.3252304792404175
+              }
+            },
+            {
+              "name": "rightGrip",
+              "distance": 0.0003003047035089995,
+              "orientationError": 1.1920928955078128e-7,
+              "target": {
+                "x": -1.0500000238418579,
+                "y": 1.8980015149322478,
+                "z": 0.325
+              },
+              "actual": {
+                "x": -1.0497189414501191,
+                "y": 1.897920846939087,
+                "z": 0.32506832480430603
+              }
+            }
+          ],
+          "pelvis": 0.02
+        },
+        {
+          "name": "Longer",
+          "targets": [
+            {
+              "name": "leftFoot",
+              "distance": 0.000630402770694438,
+              "orientationError": 0,
+              "target": {
+                "x": 1.578932269929566,
+                "y": 0.3474537064763678,
+                "z": -0.17116518480000004
+              },
+              "actual": {
+                "x": 1.5788877072744072,
+                "y": 0.3468267321586609,
+                "z": -0.17121340334415436
+              }
+            },
+            {
+              "name": "rightFoot",
+              "distance": 0.000900105122695992,
+              "orientationError": 4.2146848510894035e-8,
+              "target": {
+                "x": 1.5790227469584828,
+                "y": 0.2453439514924183,
+                "z": 0.15117726999999997
+              },
+              "actual": {
+                "x": 1.5790806475281716,
+                "y": 0.24624194204807281,
+                "z": 0.15119847655296326
+              }
+            },
+            {
+              "name": "leftGrip",
+              "distance": 0.0008242122206417837,
+              "orientationError": 0,
+              "target": {
+                "x": 2.1500000238418577,
+                "y": 2.114012364927517,
+                "z": -0.325
+              },
+              "actual": {
+                "x": 2.1507258969545364,
+                "y": 2.11379075050354,
+                "z": -0.3253214359283447
+              }
+            },
+            {
+              "name": "rightGrip",
+              "distance": 0.000404526340330457,
+              "orientationError": 8.429369702178807e-8,
+              "target": {
+                "x": 2.1500000238418577,
+                "y": 2.114012364927517,
+                "z": 0.325
+              },
+              "actual": {
+                "x": 2.149621440768242,
+                "y": 2.114121198654175,
+                "z": 0.32490795850753784
+              }
+            }
+          ],
+          "pelvis": 0.02
+        }
+      ],
+      "counters": {
+        "buffersAllocated": 44,
+        "texturesAllocated": 7,
+        "pipelinesCreated": 8,
+        "shaderModulesCreated": 6,
+        "bindGroupsCreated": 21,
+        "uploads": 304,
+        "uploadBytes": 4991252,
+        "liveBuffers": 38,
+        "liveTextures": 7,
+        "liveSamplers": 3,
+        "liveShaderModules": 6,
+        "livePipelines": 8,
+        "liveBindGroups": 11,
+        "liveListeners": 9,
+        "frameTimeMs": 0.8999999985098839,
+        "cpuUpdateMs": 0.3999999985098839,
+        "renderPrepMs": 0.5,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 11,
+        "drawCallsTotal": 1399,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 125,
+        "culledObjects": 0,
+        "culledObjectsTotal": 12,
+        "rebatchesTotal": 7,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 2,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 128,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "diagnostics": []
+    },
+    {
+      "name": "root-owned-trajectory",
+      "maximum": 0,
+      "overTolerance": 0,
+      "changed": 2508,
+      "residuals": [
+        {
+          "name": "Original",
+          "targets": [
+            {
+              "name": "leftFoot",
+              "distance": 0.0007883085177295877,
+              "orientationError": 0,
+              "target": {
+                "x": -0.43373484722355565,
+                "y": 0.32162328100299736,
+                "z": -0.16698408400000003
+              },
+              "actual": {
+                "x": -0.43379657210708117,
+                "y": 0.3208412528038025,
+                "z": -0.16706188023090363
+              }
+            },
+            {
+              "name": "rightFoot",
+              "distance": 0.0009055740226492811,
+              "orientationError": 2.9802322387695312e-8,
+              "target": {
+                "x": -0.9251114279322723,
+                "y": 0.21951389096618282,
+                "z": 0.14699415979999997
+              },
+              "actual": {
+                "x": -0.924609825778012,
+                "y": 0.22026735544204712,
+                "z": 0.1470215618610382
+              }
+            },
+            {
+              "name": "leftGrip",
+              "distance": 0.000488626429712309,
+              "orientationError": 8.429369702178807e-8,
+              "target": {
+                "x": 0.1241999761581376,
+                "y": 1.8980015149322478,
+                "z": -0.325
+              },
+              "actual": {
+                "x": 0.12464896781444101,
+                "y": 1.8979371786117554,
+                "z": -0.3251817226409912
+              }
+            },
+            {
+              "name": "rightGrip",
+              "distance": 0.00044170467556920026,
+              "orientationError": 0,
+              "target": {
+                "x": 0.1241999761581376,
+                "y": 1.8980015149322478,
+                "z": 0.325
+              },
+              "actual": {
+                "x": 0.1246260069131806,
+                "y": 1.8979486227035522,
+                "z": 0.3251039385795593
+              }
+            }
+          ],
+          "pelvis": 0.05350792637942952
+        },
+        {
+          "name": "Longer",
+          "targets": [
+            {
+              "name": "leftFoot",
+              "distance": 0.0008267629048362968,
+              "orientationError": 0,
+              "target": {
+                "x": 2.754623179020473,
+                "y": 0.3474537064763678,
+                "z": -0.17116518480000004
+              },
+              "actual": {
+                "x": 2.7545639831021402,
+                "y": 0.3466316759586334,
+                "z": -0.171230748295784
+              }
+            },
+            {
+              "name": "rightFoot",
+              "distance": 0.0009832681101281278,
+              "orientationError": 4.2146848510894035e-8,
+              "target": {
+                "x": 2.2632489252534076,
+                "y": 0.24534395149241753,
+                "z": 0.15117726999999997
+              },
+              "actual": {
+                "x": 2.2637099991559957,
+                "y": 0.2462121546268463,
+                "z": 0.15119849145412445
+              }
+            },
+            {
+              "name": "leftGrip",
+              "distance": 0.000873751605392895,
+              "orientationError": 0,
+              "target": {
+                "x": 3.324200023841855,
+                "y": 2.114012364927517,
+                "z": -0.325
+              },
+              "actual": {
+                "x": 3.3249816416025135,
+                "y": 2.1138317584991455,
+                "z": -0.3253462612628937
+              }
+            },
+            {
+              "name": "rightGrip",
+              "distance": 0.0002810509088653374,
+              "orientationError": 0,
+              "target": {
+                "x": 3.324200023841855,
+                "y": 2.114012364927517,
+                "z": 0.325
+              },
+              "actual": {
+                "x": 3.323932623100278,
+                "y": 2.1140692234039307,
+                "z": 0.32493478059768677
+              }
+            }
+          ],
+          "pelvis": 0.033195336158508885
+        }
+      ],
+      "counters": {
+        "buffersAllocated": 46,
+        "texturesAllocated": 7,
+        "pipelinesCreated": 8,
+        "shaderModulesCreated": 6,
+        "bindGroupsCreated": 21,
+        "uploads": 914,
+        "uploadBytes": 5399924,
+        "liveBuffers": 38,
+        "liveTextures": 7,
+        "liveSamplers": 3,
+        "liveShaderModules": 6,
+        "livePipelines": 8,
+        "liveBindGroups": 11,
+        "liveListeners": 9,
+        "frameTimeMs": 1.3999999985098839,
+        "cpuUpdateMs": 0.5999999940395355,
+        "renderPrepMs": 0.8000000044703484,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 11,
+        "drawCallsTotal": 2749,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 247,
+        "culledObjects": 0,
+        "culledObjectsTotal": 16,
+        "rebatchesTotal": 9,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 2,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 251,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "diagnostics": []
+    },
+    {
+      "name": "recovered-root-composition",
+      "maximum": 0,
+      "overTolerance": 0,
+      "changed": 2508,
+      "residuals": [
+        {
+          "name": "Original",
+          "targets": [
+            {
+              "name": "leftFoot",
+              "distance": 0.0007883085177295877,
+              "orientationError": 0,
+              "target": {
+                "x": -0.43373484722355565,
+                "y": 0.32162328100299736,
+                "z": -0.16698408400000003
+              },
+              "actual": {
+                "x": -0.43379657210708117,
+                "y": 0.3208412528038025,
+                "z": -0.16706188023090363
+              }
+            },
+            {
+              "name": "rightFoot",
+              "distance": 0.0009055740226492811,
+              "orientationError": 2.9802322387695312e-8,
+              "target": {
+                "x": -0.9251114279322723,
+                "y": 0.21951389096618282,
+                "z": 0.14699415979999997
+              },
+              "actual": {
+                "x": -0.924609825778012,
+                "y": 0.22026735544204712,
+                "z": 0.1470215618610382
+              }
+            },
+            {
+              "name": "leftGrip",
+              "distance": 0.000488626429712309,
+              "orientationError": 8.429369702178807e-8,
+              "target": {
+                "x": 0.1241999761581376,
+                "y": 1.8980015149322478,
+                "z": -0.325
+              },
+              "actual": {
+                "x": 0.12464896781444101,
+                "y": 1.8979371786117554,
+                "z": -0.3251817226409912
+              }
+            },
+            {
+              "name": "rightGrip",
+              "distance": 0.00044170467556920026,
+              "orientationError": 0,
+              "target": {
+                "x": 0.1241999761581376,
+                "y": 1.8980015149322478,
+                "z": 0.325
+              },
+              "actual": {
+                "x": 0.1246260069131806,
+                "y": 1.8979486227035522,
+                "z": 0.3251039385795593
+              }
+            }
+          ],
+          "pelvis": 0.05350792637942952
+        },
+        {
+          "name": "Longer",
+          "targets": [
+            {
+              "name": "leftFoot",
+              "distance": 0.0008267629048362968,
+              "orientationError": 0,
+              "target": {
+                "x": 2.754623179020473,
+                "y": 0.3474537064763678,
+                "z": -0.17116518480000004
+              },
+              "actual": {
+                "x": 2.7545639831021402,
+                "y": 0.3466316759586334,
+                "z": -0.171230748295784
+              }
+            },
+            {
+              "name": "rightFoot",
+              "distance": 0.0009832681101281278,
+              "orientationError": 4.2146848510894035e-8,
+              "target": {
+                "x": 2.2632489252534076,
+                "y": 0.24534395149241753,
+                "z": 0.15117726999999997
+              },
+              "actual": {
+                "x": 2.2637099991559957,
+                "y": 0.2462121546268463,
+                "z": 0.15119849145412445
+              }
+            },
+            {
+              "name": "leftGrip",
+              "distance": 0.000873751605392895,
+              "orientationError": 0,
+              "target": {
+                "x": 3.324200023841855,
+                "y": 2.114012364927517,
+                "z": -0.325
+              },
+              "actual": {
+                "x": 3.3249816416025135,
+                "y": 2.1138317584991455,
+                "z": -0.3253462612628937
+              }
+            },
+            {
+              "name": "rightGrip",
+              "distance": 0.0002810509088653374,
+              "orientationError": 0,
+              "target": {
+                "x": 3.324200023841855,
+                "y": 2.114012364927517,
+                "z": 0.325
+              },
+              "actual": {
+                "x": 3.323932623100278,
+                "y": 2.1140692234039307,
+                "z": 0.32493478059768677
+              }
+            }
+          ],
+          "pelvis": 0.033195336158508885
+        }
+      ],
+      "counters": {
+        "buffersAllocated": 88,
+        "texturesAllocated": 14,
+        "pipelinesCreated": 16,
+        "shaderModulesCreated": 12,
+        "bindGroupsCreated": 42,
+        "uploads": 960,
+        "uploadBytes": 10084104,
+        "liveBuffers": 38,
+        "liveTextures": 7,
+        "liveSamplers": 3,
+        "liveShaderModules": 6,
+        "livePipelines": 8,
+        "liveBindGroups": 11,
+        "liveListeners": 9,
+        "frameTimeMs": 1.3999999985098839,
+        "cpuUpdateMs": 0.5999999940395355,
+        "renderPrepMs": 0.8000000044703484,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 11,
+        "drawCallsTotal": 30,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 2,
+        "culledObjects": 0,
+        "culledObjectsTotal": 4,
+        "rebatchesTotal": 3,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 2,
+        "discardedSteps": 2,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 254,
+        "framesSkipped": 0,
+        "deviceLosses": 1,
+        "deviceRecoveries": 1,
+        "recoveryAttempts": 1
+      },
+      "diagnostics": [
+        {
+          "code": "MTEK-W8060",
+          "message": "The GPU device was lost (destroyed): Device was destroyed."
+        },
+        {
+          "code": "MTEK-W8061",
+          "message": "The GPU device was recovered on attempt 1 of 3; every GPU resource was recreated from the manifest and the retained scene state."
+        }
+      ]
+    }
+  ],
+  "derivation": {
+    "format": "mtek-character-composition-assets/1",
+    "original": {
+      "commit": "8f492390ddc7a2ae221a1369ef560589cf8c70fb",
+      "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/8f492390ddc7a2ae221a1369ef560589cf8c70fb/Models/CesiumMan/glTF-Binary/CesiumMan.glb",
+      "sha256": "b7001eaeea8254bd44773bcd247e78696d94169388fbb2a1800fc69434e777d9",
+      "bytes": 438044
+    },
+    "source": {
+      "sha256": "e28acec0d2cba84c8114f43422e834c05c1c1bd4784de69975c9364dad5b4510",
+      "bytes": 529824,
+      "clips": [
+        "Walk",
+        "Idle",
+        "Run",
+        "Travel",
+        "UpperAction",
+        "Nod"
+      ]
+    },
+    "target": {
+      "sha256": "ca93db015cae7ee245c6e99f787bfa483dddf2a2ac5d24d300adaeb259a32d60",
+      "bytes": 889112,
+      "legs": 1.2,
+      "arms": 0.9,
+      "rootLift": 0.108,
+      "maximumBindDisplacement": 0.1357589802712624
+    },
+    "retarget": {
+      "api": 1,
+      "rotationSpace": "world",
+      "bindAxes": "validated unchanged",
+      "mapping": {
+        "Z_UP": "Z_UP",
+        "Armature": "Armature",
+        "Cesium_Man": "Cesium_Man",
+        "Skeleton_torso_joint_1": "Skeleton_torso_joint_1",
+        "leg_joint_R_1": "leg_joint_R_1",
+        "leg_joint_R_2": "leg_joint_R_2",
+        "leg_joint_R_3": "leg_joint_R_3",
+        "leg_joint_R_5": "leg_joint_R_5",
+        "leg_joint_L_1": "leg_joint_L_1",
+        "leg_joint_L_2": "leg_joint_L_2",
+        "leg_joint_L_3": "leg_joint_L_3",
+        "leg_joint_L_5": "leg_joint_L_5",
+        "Skeleton_torso_joint_2": "Skeleton_torso_joint_2",
+        "torso_joint_3": "torso_joint_3",
+        "Skeleton_arm_joint_R": "Skeleton_arm_joint_R",
+        "Skeleton_arm_joint_R__2_": "Skeleton_arm_joint_R__2_",
+        "Skeleton_arm_joint_R__3_": "Skeleton_arm_joint_R__3_",
+        "Skeleton_arm_joint_L__4_": "Skeleton_arm_joint_L__4_",
+        "Skeleton_arm_joint_L__3_": "Skeleton_arm_joint_L__3_",
+        "Skeleton_arm_joint_L__2_": "Skeleton_arm_joint_L__2_",
+        "Skeleton_neck_joint_1": "Skeleton_neck_joint_1",
+        "Skeleton_neck_joint_2": "Skeleton_neck_joint_2",
+        "MotionRoot": "MotionRoot"
+      },
+      "nodeTranslationScales": {
+        "Skeleton_torso_joint_1": 1,
+        "leg_joint_R_2": 1.2,
+        "leg_joint_R_3": 1.2,
+        "leg_joint_R_5": 1.2,
+        "leg_joint_L_2": 1.2,
+        "leg_joint_L_3": 1.2,
+        "leg_joint_L_5": 1.2,
+        "Skeleton_arm_joint_R__2_": 0.9,
+        "Skeleton_arm_joint_R__3_": 0.9,
+        "Skeleton_arm_joint_L__4_": 0.9,
+        "Skeleton_arm_joint_L__3_": 0.9,
+        "Skeleton_arm_joint_L__2_": 0.9
+      },
+      "scaleRoundOff": "Original animated scale keys retained; bounded float32 input guard under decision 0209."
+    },
+    "footProfiles": {
+      "Original": {
+        "left": {
+          "minimum": 0,
+          "vertices": 130
+        },
+        "right": {
+          "minimum": 0,
+          "vertices": 130
+        }
+      },
+      "Longer": {
+        "left": {
+          "minimum": -0.010566016659140587,
+          "vertices": 130
+        },
+        "right": {
+          "minimum": -0.010565769858658314,
+          "vertices": 130
+        }
+      }
+    }
+  },
+  "referenceHarnessSha256": "48cd7388c491d6358555176cef622c314217277ba8a82d8f7d05c24ecb23c9a2",
+  "browser": "153.0.8010.12",
+  "adapter": {
+    "vendor": "google",
+    "architecture": "swiftshader",
+    "device": "0xc0de",
+    "description": "SwiftShader Device (Subzero)",
+    "isFallbackAdapter": true
+  },
+  "interruption": 2.220446049250313e-16,
+  "recovery": {
+    "maximum": 0,
+    "restartedFade": false,
+    "counters": {
+      "buffersAllocated": 86,
+      "texturesAllocated": 14,
+      "pipelinesCreated": 16,
+      "shaderModulesCreated": 12,
+      "bindGroupsCreated": 42,
+      "uploads": 952,
+      "uploadBytes": 10077704,
+      "liveBuffers": 38,
+      "liveTextures": 7,
+      "liveSamplers": 3,
+      "liveShaderModules": 6,
+      "livePipelines": 8,
+      "liveBindGroups": 11,
+      "liveListeners": 9,
+      "frameTimeMs": 1.8999999985098839,
+      "cpuUpdateMs": 1,
+      "renderPrepMs": 0.8999999985098839,
+      "gpuTimeAvailable": 0,
+      "drawCalls": 11,
+      "drawCallsTotal": 11,
+      "failedMaterials": 0,
+      "instancedDraws": 1,
+      "instancedDrawsTotal": 1,
+      "culledObjects": 0,
+      "culledObjectsTotal": 0,
+      "rebatchesTotal": 1,
+      "sharedParamBlocks": 1,
+      "ownedParamBlocks": 2,
+      "discardedSteps": 2,
+      "liveEntities": 8,
+      "pendingSpawns": 0,
+      "pendingRemovals": 0,
+      "entitySlots": 8,
+      "entitiesSpawned": 0,
+      "entitiesDestroyed": 0,
+      "physicsBodies": 0,
+      "physicsColliders": 0,
+      "physicsSteps": 0,
+      "physicsFrozenBodies": 0,
+      "framesRendered": 252,
+      "framesSkipped": 0,
+      "deviceLosses": 1,
+      "deviceRecoveries": 1,
+      "recoveryAttempts": 1
+    }
+  },
+  "disposed": {
+    "buffersAllocated": 88,
+    "texturesAllocated": 14,
+    "pipelinesCreated": 16,
+    "shaderModulesCreated": 12,
+    "bindGroupsCreated": 42,
+    "uploads": 960,
+    "uploadBytes": 10084104,
+    "liveBuffers": 0,
+    "liveTextures": 0,
+    "liveSamplers": 0,
+    "liveShaderModules": 0,
+    "livePipelines": 0,
+    "liveBindGroups": 0,
+    "liveListeners": 0,
+    "frameTimeMs": 1.3999999985098839,
+    "cpuUpdateMs": 0.5999999940395355,
+    "renderPrepMs": 0.8000000044703484,
+    "gpuTimeAvailable": 0,
+    "drawCalls": 11,
+    "drawCallsTotal": 30,
+    "failedMaterials": 0,
+    "instancedDraws": 1,
+    "instancedDrawsTotal": 2,
+    "culledObjects": 0,
+    "culledObjectsTotal": 4,
+    "rebatchesTotal": 3,
+    "sharedParamBlocks": 1,
+    "ownedParamBlocks": 2,
+    "discardedSteps": 2,
+    "liveEntities": 8,
+    "pendingSpawns": 0,
+    "pendingRemovals": 0,
+    "entitySlots": 8,
+    "entitiesSpawned": 0,
+    "entitiesDestroyed": 0,
+    "physicsBodies": 0,
+    "physicsColliders": 0,
+    "physicsSteps": 0,
+    "physicsFrozenBodies": 0,
+    "framesRendered": 254,
+    "framesSkipped": 0,
+    "deviceLosses": 1,
+    "deviceRecoveries": 1,
+    "recoveryAttempts": 1
+  },
+  "referencePrograms": 5,
+  "errors": [],
+  "files": [
+    {
+      "path": "app.d.ts",
+      "sha256": "72436a45b082d4975bde4c42d22b246f74c8a632495313c29be4473833a51788",
+      "bytes": 285
+    },
+    {
+      "path": "app.js",
+      "sha256": "122b3ff3ae95f0bf659fdb90c1a8bb79f0faff2ca2eb518fccba20c83a95fa9b",
+      "bytes": 11851
+    },
+    {
+      "path": "app.js.map",
+      "sha256": "989312f3cfe7cf2588639633f291718b02502427ce34d8fcab2733156b229925",
+      "bytes": 598
+    },
+    {
+      "path": "assets/6235f611c2693ce7.jpg",
+      "sha256": "35d278c7b7b0b9e22881b2c435e41ce8659f230c776ef8780b4a5087abbefaa1",
+      "bytes": 157013
+    },
+    {
+      "path": "assets/79a30b98d2e96bfc.bin",
+      "sha256": "b25aac9e7ba9de811fbce45bbe8e2462952cfdc714d41e7c0b9ad0b37d7d5171",
+      "bytes": 132768
+    },
+    {
+      "path": "assets/fcccef029ea8d7c8.bin",
+      "sha256": "2c4b4a2cafb5f2cd2f234224f441a8c67eff622031d4d991de3cf6dc3e5a0c9e",
+      "bytes": 132768
+    },
+    {
+      "path": "foot-profiles.json",
+      "sha256": "237adafa51baa47d2e8dba2215d18b6877435f9a25f43a96f60a287284dd8320",
+      "bytes": 335
+    },
+    {
+      "path": "index.html",
+      "sha256": "d3b2215bd4259b29cf02a103a477b4d6a360fb3cca23abacc142872e32e0307b",
+      "bytes": 373
+    },
+    {
+      "path": "program.manifest.json",
+      "sha256": "93c20a8b140663fc68ec8edc15b1be6091a71067488b4934ffca229540d05aca",
+      "bytes": 4272085
+    },
+    {
+      "path": "runtime.441e91775bbf690b.js",
+      "sha256": "441e91775bbf690b8c21250c00f795157ae7b8f741ef12c3b876e9f7ae487651",
+      "bytes": 1187035
+    },
+    {
+      "path": "runtime.d.ts",
+      "sha256": "767560890951b19969928c2fe1d68a2142751512c2bc031d360a30e569878c97",
+      "bytes": 17640
+    },
+    {
+      "path": "shaders/8369ca66acc432b3.mtek-map.json",
+      "sha256": "f64707fb7f15b28006d76cdccf52854a26cfbaba327a2b8570a67f9b2d7aee35",
+      "bytes": 33002
+    },
+    {
+      "path": "shaders/8369ca66acc432b3.wgsl",
+      "sha256": "8369ca66acc432b3f1dbbb6a3a8ad6ef1ff30233ccab2f085f370fc1a07d8bcc",
+      "bytes": 12273
+    },
+    {
+      "path": "shaders/cc306e7c4fdef230.mtek-map.json",
+      "sha256": "974663e19a6752fc0cced1d49803683e8a3445d3afa5b89c38729a49ab2c0daa",
+      "bytes": 40594
+    },
+    {
+      "path": "shaders/cc306e7c4fdef230.wgsl",
+      "sha256": "cc306e7c4fdef230097df5347603306d53d7cb9c70ffad1a5af1fe7c60414277",
+      "bytes": 13676
+    },
+    {
+      "path": "shaders/d3969eed1c1680ae.mtek-map.json",
+      "sha256": "0c741a4fc1fb5be0197cc661e9512487c53397ee132faec558f32d94eafdddb2",
+      "bytes": 26243
+    },
+    {
+      "path": "shaders/d3969eed1c1680ae.wgsl",
+      "sha256": "d3969eed1c1680ae699f002c81f052aa0ad4bded101e29a47f11ab8056df6e04",
+      "bytes": 10694
+    }
+  ],
+  "finishedAt": "2026-10-27T04:36:45.494Z"
+}

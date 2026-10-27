@@ -223,7 +223,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e4051"></a>E4051 | invalid compute resource | type, capacity, buffer/uniform byte or expanded-layout budget |
 | <a id="mtek-e4052"></a>E4052 | invalid compute buffer access | whole-buffer values, output reads and buffer writes |
 | <a id="mtek-e4053"></a>E4053 | invalid compute workgroup size | constant u32 triple, positive axes and total limits |
-| <a id="mtek-e4901"></a>E4901 | stage not supported | material compute member, or standalone compute's pending packaging/dispatch gate |
+| <a id="mtek-e4901"></a>E4901 | stage not supported | compute declared as a material member; use a standalone compute program |
 
 ### 5.5 Scenes, schemas, ownership, bindings (`5xxx`)
 | Code | Title | Trigger |
@@ -313,8 +313,8 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e7006"></a>E7006 | unsupported primitive mode | primitive `mode` is not 4 (TRIANGLES) |
 | <a id="mtek-e7007"></a>E7007 | unsupported attribute format | attribute or index accessor is not in the supported format (normalised or non-float attributes) |
 | <a id="mtek-e7008"></a>E7008 | skinning or morph targets | `JOINTS_n`, `WEIGHTS_n`, morph targets or morph weights |
-| <a id="mtek-e7009"></a>E7009 | unsupported vertex attribute | `COLOR_0`, `TANGENT`, `TEXCOORD_1` and up, another unlisted attribute, or a texture reading `texCoord` 1 and up |
-| <a id="mtek-e7010"></a>E7010 | mesh lacks required attribute | material reads `uv`/`world_normal` the mesh lacks; also a primitive without `POSITION` |
+| <a id="mtek-e7009"></a>E7009 | unsupported vertex attribute | `COLOR_0`, `TEXCOORD_1` and up, another unlisted attribute, or a texture reading `texCoord` 1 and up |
+| <a id="mtek-e7010"></a>E7010 | mesh lacks required attribute | material reads `uv`/`world_normal` the mesh lacks; a primitive without `POSITION`; or authored `TANGENT` without `NORMAL` |
 | <a id="mtek-e7011"></a>E7011 | sparse accessor | sparse accessor, or an accessor without a buffer view |
 | <a id="mtek-e7012"></a>E7012 | mesh has several primitives | `.mesh(name)` on a mesh with several primitives; suggests `.primitive` |
 | <a id="mtek-e7013"></a>E7013 | node transform not representable | world transform of a node has shear, a mirror, a zero scale or is not affine |
@@ -331,6 +331,7 @@ Severity letter is part of the code. "Fixture" means at least one negative fixtu
 | <a id="mtek-e7024"></a>E7024 | unknown name in asset | no mesh, material or node of that name, or the name is ambiguous; lists the names; a rename edit when one name is within edit distance 2 and the renamed program checks (§6) |
 | <a id="mtek-e7025"></a>E7025 | accessor out of bounds | buffer view or accessor outside its buffer, bad stride or alignment, non-finite values |
 | <a id="mtek-e7026"></a>E7026 | asset limit exceeded | more vertices than `max_vertices_per_primitive`, or packaged assets over `max_total_bytes` |
+| <a id="mtek-e7027"></a>E7027 | invalid tangent frame | `TANGENT` xyz squared length differs from 1 by more than 0.001, or w is not exactly -1 or +1 |
 | <a id="mtek-e7030"></a>E7030 | asset fetch or integrity failure | runtime: fetch failed, length or SHA-256 mismatch (M4-06, decision 0060) |
 | <a id="mtek-e7031"></a>E7031 | image decode failure | runtime: the browser could not decode the image (M4-06, decision 0060) |
 | <a id="mtek-e7101"></a>E7101 | unsupported audio file | `asset.sound(path)` names a file that is not WAV (PCM or IEEE float), Ogg (Vorbis or Opus) or MP3, by extension or by content (`spec/audio.md` §2, decision 0130) |

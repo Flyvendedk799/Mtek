@@ -1,0 +1,106 @@
+{
+  "records": [
+    {
+      "metal": 0,
+      "rough": 0.5,
+      "pixel": [
+        62,
+        88,
+        122
+      ],
+      "expected": [
+        62,
+        88,
+        122
+      ]
+    },
+    {
+      "metal": 1,
+      "rough": 0.25,
+      "pixel": [
+        59,
+        83,
+        115
+      ],
+      "expected": [
+        58,
+        83,
+        115
+      ]
+    },
+    {
+      "metal": 1,
+      "rough": 0.8,
+      "pixel": [
+        43,
+        62,
+        87
+      ],
+      "expected": [
+        43,
+        62,
+        87
+      ]
+    },
+    {
+      "metal": 0.5,
+      "rough": 0.6,
+      "pixel": [
+        56,
+        80,
+        111
+      ],
+      "expected": [
+        56,
+        80,
+        111
+      ]
+    }
+  ],
+  "counters": {
+    "buffersAllocated": 13,
+    "texturesAllocated": 7,
+    "pipelinesCreated": 3,
+    "shaderModulesCreated": 3,
+    "bindGroupsCreated": 12,
+    "uploads": 14,
+    "uploadBytes": 2832,
+    "liveBuffers": 0,
+    "liveTextures": 0,
+    "liveSamplers": 0,
+    "liveShaderModules": 0,
+    "livePipelines": 0,
+    "liveBindGroups": 0,
+    "liveListeners": 0,
+    "frameTimeMs": 0.20000000298023224,
+    "cpuUpdateMs": 0.10000000149011612,
+    "renderPrepMs": 0.10000000149011612,
+    "gpuTimeAvailable": 0,
+    "drawCalls": 1,
+    "drawCallsTotal": 4,
+    "failedMaterials": 0,
+    "instancedDraws": 0,
+    "instancedDrawsTotal": 0,
+    "culledObjects": 0,
+    "culledObjectsTotal": 0,
+    "rebatchesTotal": 1,
+    "sharedParamBlocks": 0,
+    "ownedParamBlocks": 1,
+    "discardedSteps": 0,
+    "liveEntities": 1,
+    "pendingSpawns": 0,
+    "pendingRemovals": 0,
+    "entitySlots": 1,
+    "entitiesSpawned": 0,
+    "entitiesDestroyed": 0,
+    "physicsBodies": 0,
+    "physicsColliders": 0,
+    "physicsSteps": 0,
+    "physicsFrozenBodies": 0,
+    "framesRendered": 4,
+    "framesSkipped": 0,
+    "deviceLosses": 0,
+    "deviceRecoveries": 0,
+    "recoveryAttempts": 0
+  }
+}

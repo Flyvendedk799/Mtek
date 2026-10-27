@@ -1,0 +1,104 @@
+const MODEL = asset.glb("../models/content.glb");
+
+scene Workload {
+    clear_color: #111a26;
+    ambient_intensity: 0.0;
+    camera Main {
+        position: vec3(8.0, 5.0, 10.0);
+        target: vec3(0.0, 1.0, 0.0);
+        projection: Perspective { fov_y: 0.7; near: 0.1; far: 60.0 };
+        exposure: -0.2630344;
+    }
+    entity Sun {
+        rotation: quat.euler(-0.9, 0.6, 0);
+        light: DirectionalLight { color: #fff2dc; intensity: 0.6 };
+    }
+    entity Fill {
+        position: vec3(1.5, 3.0, 2.0);
+        light: PointLight { color: #b5d6ff; intensity: 50.0; range: 12.0 };
+    }
+    entity Floor {
+        position: vec3(0.0, -0.15, 0.0);
+        rotation: quat.euler(0.0, 0.0, 0.0);
+        scale: vec3(16.0, 0.3, 14.0);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Ground");
+    }
+    entity Plinth0 {
+        position: vec3(-2.6, 0.25, 0.0);
+        rotation: quat.euler(0.0, 0.0, 0.0);
+        scale: vec3(2.0, 0.5, 2.0);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Wall");
+    }
+    entity Product0 {
+        position: vec3(-2.6, 1.45, 0.0);
+        rotation: quat.euler(0.0, 0.25, 0.0);
+        scale: vec3(1.7, 1.7, 1.7);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Mapped");
+    }
+    entity Plinth1 {
+        position: vec3(0.0, 0.25, 0.0);
+        rotation: quat.euler(0.0, 0.0, 0.0);
+        scale: vec3(2.0, 0.5, 2.0);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Wall");
+    }
+    entity Product1 {
+        position: vec3(0.0, 1.45, 0.0);
+        rotation: quat.euler(0.0, 0.5, 0.0);
+        scale: vec3(1.7, 1.7, 1.7);
+        mesh: MODEL.mesh("Sphere_standard");
+        material: MODEL.material("Copper");
+    }
+    entity Plinth2 {
+        position: vec3(2.6, 0.25, 0.0);
+        rotation: quat.euler(0.0, 0.0, 0.0);
+        scale: vec3(2.0, 0.5, 2.0);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Wall");
+    }
+    entity Product2 {
+        position: vec3(2.6, 1.45, 0.0);
+        rotation: quat.euler(0.0, 0.75, 0.0);
+        scale: vec3(1.7, 1.7, 1.7);
+        mesh: MODEL.mesh("Sphere_standard");
+        material: MODEL.material("Ceramic");
+    }
+    entity BackLeft {
+        position: vec3(-3.75, 2.5, -4.0);
+        rotation: quat.euler(0.0, 0.0, 0.0);
+        scale: vec3(2.5, 5.0, 0.2);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Wall");
+    }
+    entity BackRight {
+        position: vec3(3.75, 2.5, -4.0);
+        rotation: quat.euler(0.0, 0.0, 0.0);
+        scale: vec3(2.5, 5.0, 0.2);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Wall");
+    }
+    entity WindowSill {
+        position: vec3(0.0, 0.65, -4.0);
+        rotation: quat.euler(0.0, 0.0, 0.0);
+        scale: vec3(5.0, 1.3, 0.2);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Wall");
+    }
+    entity WindowLintel {
+        position: vec3(0.0, 4.5, -4.0);
+        rotation: quat.euler(0.0, 0.0, 0.0);
+        scale: vec3(5.0, 1.0, 0.2);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Wall");
+    }
+    entity LeftWall {
+        position: vec3(-5.0, 2.5, 0.0);
+        rotation: quat.euler(0.0, 0.0, 0.0);
+        scale: vec3(0.2, 5.0, 8.0);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Wall");
+    }
+}

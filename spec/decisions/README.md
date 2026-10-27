@@ -212,6 +212,17 @@ recorded here before code depends on it (blueprint §15).
 
 | 0201 | [Compute backend and storage-array layout](0201-compute-backend-and-storage-layout.md): typed compute entries/builtins, explicit storage access and packed outer resource arrays; source/runtime integration remains open |
 
-| 0202 | [Bounded source compute checking](0202-bounded-source-compute-checking.md): declarations, buffer/value ownership, kernel typing/effects and bounded workgroups; runnable packaging remains gated |
+| 0202 | [Bounded source compute checking](0202-bounded-source-compute-checking.md): declarations, buffer/value ownership, kernel typing/effects and bounded workgroups; temporary packaging gate superseded by 0207 |
+| 0203 | [Compute artifacts and resource ownership](0203-compute-artifacts-and-internal-resource-ownership.md): validated artifacts, shared layouts and internal resource lifetime |
+| 0204 | [Compute packaging and mounted handles](0204-compute-packaging-and-mounted-handles.md): generated defaults, mounted dispatch, inspection and recovery |
+| 0205 | [Compute position attachments](0205-compute-position-attachments.md): completed xyz output, finite bounds and renderer lifetime |
+| 0206 | [Compact shipped declarations](0206-compact-shipped-runtime-declarations.md): preserve the public type surface within existing package budgets |
+| 0207 | [Executable source compute](0207-source-compute-acceptance-and-capabilities.md): public analysis/build acceptance, independent shadow checks and aligned capabilities; supersedes temporary gates in 0201–0205 |
+| 0208 | [Spatial inspection and diagnostics](0208-spatial-inspection-and-diagnostics.md): copied world/camera/physics and animation diagnostics, optional world overlays and lossless package compaction |
+| 0209 | [Skeletal scale round-off](0209-skeletal-scale-round-off.md): a bounded float32 input band for IK orientation and world retargeting, preserving source scale tracks |
+| 0210 | [PBR colour alpha](0210-pbr-colour-alpha.md): preserve source colour alpha through built-in and authored PBR lighting while retaining opaque texture-import semantics |
+| 0211 | [Tangent-frame deformation](0211-tangent-frame-deformation.md): optional CPU/GPU frame skinning and ownership foundation; import/material integration remains open |
+| 0212 | [Authored tangent integration](0212-authored-tangent-integration.md): original asset streams, source fields, mapped PBR and production-product acceptance; broader validation in progress |
+| 0213 | [Qualified material measurements](0213-qualified-material-measurements.md): separate CPU/GPU/count/native ETW instruments, verified artifacts and resumable qualification; full-run acceptance pending |
 
 Numbers 0157-0169 are unused: the sprites record is 0170 and no record has been written in between. (Earlier versions of this index listed ghost rows 0160-0162 for what are records 0130-0132; they were removed.)

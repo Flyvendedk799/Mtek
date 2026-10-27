@@ -139,7 +139,7 @@ function classifyNotSupported(entry: string): NotSupportedRow["kind"] {
 
 const UNSUPPORTED_CODES: Readonly<Record<string, string>> = {
   "bitwise operators (& | ^ ~ << >>)": "E1901",
-  "compute stages": "E4901",
+  "material-local compute stages": "E4901",
   "remote assets (URLs as asset paths)": "E7901",
   "instancing a whole node hierarchy of a glTF asset": "E7902",
 };

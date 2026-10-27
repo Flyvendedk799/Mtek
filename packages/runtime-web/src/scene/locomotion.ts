@@ -40,6 +40,15 @@ export class LocomotionBlend {
   get parameter(): number { return this.parameterValue; }
   get playing(): boolean { return this.active && this.running; }
   get finished(): boolean { return this.active && this.ended; }
+  inspect(): { phase: number; parameter: number; samples: readonly { clip: string; threshold: number; weight: number }[] } | null {
+    if (!this.active) return null;
+    let right = this.samples.findIndex(sample => sample.threshold >= this.parameterValue);
+    if (right < 0) right = this.samples.length - 1;
+    const left = Math.max(0, right - 1), a = this.samples[left]!, b = this.samples[right]!;
+    const weight = left === right ? 0 : Math.max(0,Math.min(1,(this.parameterValue-a.threshold)/(b.threshold-a.threshold)));
+    return { phase: this.phase, parameter: this.parameter, samples: this.samples.map((sample,index) => ({ clip: sample.clip.name,
+      threshold: sample.threshold, weight: left === right ? Number(index === left) : index === left ? 1 - weight : index === right ? weight : 0 })) };
+  }
   get duration(): number {
     if (!this.active) return 0;
     const [a,b,weight] = this.pair();

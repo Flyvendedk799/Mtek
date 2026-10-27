@@ -66,6 +66,7 @@ const VERTEX_FORMATS: Readonly<Record<MtekVertexAttribute, { readonly location: 
   position: { location: 0, format: "float32x3", stride: 12 },
   normal: { location: 1, format: "float32x3", stride: 12 },
   uv: { location: 2, format: "float32x2", stride: 8 },
+  tangent: { location: 11, format: "float32x4", stride: 16 },
 };
 
 /** The vertex buffer layouts of `spec/materials.md` section 3.3: slot `k` is the `k`-th present attribute. */

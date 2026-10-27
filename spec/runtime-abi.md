@@ -271,8 +271,8 @@ One entry per emitted WGSL statement/expression that originates in Mtek source; 
   "colorSpace": "srgb", "preprocessing": [ "mipmaps generated at runtime" ] }
 ```
 
-- **Mesh data.** A `.bin` holds the referenced primitives of one GLB, in the order of the `primitives` array. Every offset is a **byte offset from the start of the file** and a multiple of 4; numbers are little-endian. A primitive stores, in this order: `position` (`f32 × 3` per vertex), `normal` (`f32 × 3`) if `attributes` has `"normal"`, `uv` (`f32 × 2`) if it has `"uv"`, all tightly packed, then `indexCount` indices of `indexFormat` (`uint16` when `vertexCount` ≤ 65 535, otherwise `uint32`), then zero padding to a multiple of 4. `boundingSphere` is in the mesh's local space (the entity transform applies as for built-in shapes). Triangles are counter-clockwise from the front, uv origin top-left, +Y up (glTF's conventions, which are Mtek's; nothing is converted).
-- **Meshes.** `meshes[]` has entries `{ "id": "mesh:N", "kind": "asset", "asset": <url of a mesh-data entry>, "primitive": <index into that entry's primitives> }`; an entity's `mesh` is the id. The compiler has checked that the mesh has every attribute its material reads (`shaders[].vertexAttributes`, `E7010`).
+- **Mesh data.** A `.bin` holds the referenced primitives of one GLB, in the order of the `primitives` array. Every offset is a **byte offset from the start of the file** and a multiple of 4; numbers are little-endian. A primitive stores, in this order: `position` (`f32 × 3` per vertex), `normal` (`f32 × 3`) if `attributes` has `"normal"`, `uv` (`f32 × 2`) if it has `"uv"`, `tangent` (`f32 × 4`) if it has `"tangent"`, all tightly packed, then `indexCount` indices of `indexFormat` (`uint16` when `vertexCount` ≤ 65 535, otherwise `uint32`), then zero padding to a multiple of 4. `boundingSphere` is in the mesh's local space (the entity transform applies as for built-in shapes). Triangles are counter-clockwise from the front, uv origin top-left, +Y up (glTF's conventions, which are Mtek's; nothing is converted).
+- **Meshes.** `meshes[]` has entries `{ "id": "mesh:N", "kind": "asset", "asset": <url of a mesh-data entry>, "primitive": <index into that entry's primitives> }`; an entity's `mesh` is the id. The compiler has checked that the mesh has every required attribute its material reads (`shaders[].vertexAttributes`, `E7010`). Optional tangents require normals when present; absent frames use a shared zero stream when the shader consumes tangents (decision 0212).
 - **Images.** The file is a PNG or JPEG exactly as the author wrote it; `colorSpace` says how to upload it (`"srgb"`: `rgba8unorm-srgb`, `"linear"`: `rgba8unorm`, `spec/assets.md` §5). An instance's `texture` param is `{ "name": "base_color_texture", "class": "resource", "value": { "kind": "asset", "asset": <url of an image entry> } }`; its `sampler` param is a built-in preset. `preprocessing` lists what the compiler decided instead of the author (`mipmaps generated at runtime`: the file's sampler asked for mip levels, which the runtime generates before drawing).
 - **Audio** (decision 0130). The file is a WAV, Ogg or MP3 exactly as the author wrote it: `{ "url": "assets/<h16>.wav", "sha256": "…", "bytes": 2252, "kind": "audio", "format": "wav", "mime": "audio/wav", "source": "sounds/hit.wav", "span": 3 }`. `format` is `wav`, `ogg` or `mp3`; `source` is the project path, the string by which generated code names the sound (`ctx.audio.play(spanId, "sounds/hit.wav", ..)`).
 - **Loading.** The runtime fetches each `url` from `baseUrl`, verifies `bytes` and `sha256`, decodes images, uploads meshes and textures and keeps the verified bytes for device recovery and hot reload; every state, diagnostic and limit check is decision 0060.
@@ -344,7 +344,7 @@ A startup asset is `ready` only after its length and (with `crypto.subtle`) its 
 
 **Code → kind mapping (normative):** `E8001`, `E8004` → `webgpu-unavailable`; `E8005` → `adapter-unavailable`; `E8002` and a rejected `requestDevice` (browser message as a note) → `device-failed`; `E8003` → `incompatible-program`; `E8006` → `manifest-invalid`; `E8051` → `shader-failed`; `E7030`, `E7031` → `asset-failed`; `E8063` → `allocation-failed`; `E8102` → `physics-failed` (decision 0066); `E8080` → `budget-exceeded` (a loop of `init` ran past the budget of a preview, decision 0075).
 
-`runtime.d.ts` is a **hand-maintained** file in `packages/runtime-web/src/runtime.d.ts` declaring exactly the public types of this section; the runtime build copies it to `packages/runtime-web/dist/runtime.d.ts`, and a test compiles a host snippet against it with `tsc --strict`. The compiler receives it alongside the bundle (`CompileOptions.runtime_declarations`, `spec/compiler-architecture.md` §4.12) and writes it into every `dist/`.
+`runtime.d.ts` is a **hand-maintained** file in `packages/runtime-web/src/runtime.d.ts` declaring exactly the public types of this section. The runtime build prints it without comments to `packages/runtime-web/dist/runtime.d.ts` (decision 0206); tests compare every declaration's syntax and compile the distributed file independently. The annotated source remains the npm SDK types entry. A test also compiles a host snippet with `tsc --strict`. The compiler receives the distributed declaration alongside the bundle (`CompileOptions.runtime_declarations`, `spec/compiler-architecture.md` §4.12) and writes it into every `dist/`.
 
 With `failureDisplay: "overlay"` the runtime also renders a readable error panel (diagnostic code, message, source location) positioned over the canvas, so a failure is never an unexplained blank page (blueprint §7.3, M1 exit gate). Capability detection uses `navigator.gpu`, `requestAdapter()` and the adapter's `features`/`limits`; browser names are never used as capability evidence.
 
@@ -380,16 +380,24 @@ export interface MtekProgram<I = Record<string, unknown>, O = Record<string, unk
 
 `setInput` never throws and never mutates live state immediately: valid values are queued and applied in phase 1 of the next frame (blueprint §5.4).
 
-The development compute contract is defined by
+The executable API 1 compute contract is defined by `spec/compute.md` and
 [decision 0204](decisions/0204-compute-packaging-and-mounted-handles.md).
 `MtekComputeHandle` exposes packed input upload, structured parameter edits,
 asynchronous logical-domain dispatch/readback, copied resource inspection and
 disposal. It is program-owned and survives scene changes/device recovery;
 committed program replacement invalidates old handles. The optional manifest
 `computePrograms` entries carry `api: 1`, compiler layouts/defaults and independently
-hashed shaders/maps. Ordinary source builds still receive E4901 pending GPU and
-compute-to-render acceptance; the mounted development fixture bypasses only that
-gate in compiler tests. The declarations do not establish numerical GPU acceptance.
+hashed shaders/maps. Ordinary source builds package standalone compute programs.
+Numerical, geometry/shadow and lifecycle acceptance is recorded in decision 0207;
+compiler tests no longer remove diagnostics to produce these packages.
+
+`MtekComputeHandle.attachPositions(entitySymbol, bounds)` supplies the bounded
+position render bridge in [decision 0205](decisions/0205-compute-position-attachments.md).
+It borrows completed packed scalar f32 xyz output for a declared entity, retaining
+original topology/non-position attributes and requiring a copied final local
+sphere. Pending/failed output is excluded from draws. Leases dispose on scene
+change and rebind recreated output after device recovery. Skinned and authored
+vertex-stage compositions remain excluded from this initial bridge.
 
 ### 6.3 Host input codecs
 
@@ -641,6 +649,12 @@ Standalone controllers accept distance as the third `update` argument.
 Entity IDs and players remain scene-generation-owned. Recovery-aware extensions
 re-query IDs and reapply sharing and animation settings after reconstruction.
 
+IK orientation and world-frame retargeting require numerically uniform positive
+ancestry scales. [Decision 0209](decisions/0209-skeletal-scale-round-off.md) defines
+the float32 round-off band: both `abs(x/y - 1)` and `abs(x/z - 1)` are at most
+`16 * 2^-23`. Original scale values are preserved. Larger nonuniformity, singular
+and negative scales remain rejected; this is not general nonuniform retargeting.
+
 ## 15. Optional inspection consumer and package boundary
 
 `@mtek/inspector` is an independently packaged extension API 1 consumer. It uses
@@ -656,7 +670,10 @@ version checks, teardown, reconstruction and development-package limitations.
 [Inspector usage](../packages/inspector/README.md) documents transform history,
 animation controls, bounded snapshots, public API limitations and optional host
 metrics. Installed-tarball type/runtime tests and fake-GPU mounted tests cover
-this boundary. Real rendered-scene authoring validation remains separate.
+this boundary. Optional copied spatial and animation diagnostics and the rendered
+overlay contract are specified in [inspection.md](inspection.md), decision 0208.
+The production-character inspection studio exercises this public package boundary
+on the available hardware and software backends.
 
 ## 16. Authored local-position stages (decision 0197)
 
@@ -690,4 +707,5 @@ visibility. World expansion covers inherited shear. Sorting uses the same center
 shadow casters remain independent of camera culling. Recovery retains CPU records;
 replacement initializes the new program's bounds. Optional extension snapshot
 `bounds` values are fresh copies. See decision 0199 for the enclosure promise,
-invalid-write behavior and the absence of a world-space overlay.
+invalid-write behavior. Decision 0208 adds an optional world-space overlay consumer
+without changing the enclosure promise.

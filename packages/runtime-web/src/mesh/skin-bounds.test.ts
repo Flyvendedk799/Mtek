@@ -22,6 +22,30 @@ it("expands authored spheres conservatively under inherited nonuniform scale and
 });
 
 describe("conservative animated bounds", () => {
+  it("matches an independent eight-corner oracle under reflected affine shear", () => {
+    const base = animatedSkin();
+    const positions = new Float32Array([-3, 2, 1, 4, -2, -5, 1, 7, 3]);
+    const skin = { ...base, indices: base.indices.map(() => [0, 0, 0, 0]), weights: base.weights.map(() => [1, 0, 0, 0]) };
+    const bounds = new SkinBounds(skin, positions), center: [number, number, number] = [0, 0, 0];
+    for (let frame = 0; frame < 40; frame++) {
+      const palette = new Float32Array(48), matrix = identity();
+      matrix[0] = -1.3; matrix[1] = Math.sin(frame); matrix[4] = 0.7; matrix[5] = 2.1;
+      matrix[8] = 0.2; matrix[9] = -0.9; matrix[10] = 0.4; matrix[12] = frame * 3;
+      palette.set(matrix);
+      const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
+      for (let corner = 0; corner < 8; corner++) {
+        const point = [corner & 1 ? 4 : -3, corner & 2 ? 7 : -2, corner & 4 ? 3 : -5];
+        for (let row = 0; row < 3; row++) {
+          const value = matrix[row]! * point[0]! + matrix[4+row]! * point[1]! + matrix[8+row]! * point[2]! + matrix[12+row]!;
+          lo[row] = Math.min(lo[row]!, value); hi[row] = Math.max(hi[row]!, value);
+        }
+      }
+      const radius = bounds.sphere(palette, center);
+      for (let axis = 0; axis < 3; axis++) expect(center[axis]).toBeCloseTo((lo[axis]! + hi[axis]!) / 2, 10);
+      const expected = Math.hypot(hi[0]!-lo[0]!,hi[1]!-lo[1]!,hi[2]!-lo[2]!) / 2 + Math.max(1,...lo.map(Math.abs),...hi.map(Math.abs)) * 0.002;
+      expect(radius).toBeCloseTo(expected, 10);
+    }
+  });
   it("encloses deformed vertices under weighted translations, rotations, scale, shear and weight tolerance", () => {
     const base = animatedSkin(),
       skin = {

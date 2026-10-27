@@ -2,7 +2,7 @@
  * `src/runtime.d.ts` is hand-maintained (spec/runtime-abi.md section 6.1). These tests prove that
  *  - a host snippet written against it compiles with `tsc --strict`, and wrong usage does not;
  *  - it agrees with the implementation's own types in both directions, so the two cannot drift;
- *  - `npm run build` copies it to `dist/runtime.d.ts`.
+ *  - `npm run build` ships the same declaration syntax without comments.
  */
 /// <reference types="node" />
 import { execFileSync } from "node:child_process";
@@ -51,6 +51,17 @@ function compile(source: string, options: ts.CompilerOptions = {}): string[] {
 }
 
 describe("runtime.d.ts with tsc --strict", () => {
+  it("matches the copied spatial and animation diagnostic shapes", () => {
+    expect(compile(`
+      import type * as D from "./runtime.js";
+      import type * as S from "./host/inspection.js";
+      import type * as A from "./scene/animation-inspection.js";
+      type Mutual<X,Y>=[X] extends [Y]?([Y] extends [X]?true:false):false;
+      export const scene:Mutual<D.SceneInspection,S.SceneInspection>=true;
+      export const animation:Mutual<D.AnimationInspection,A.AnimationInspection>=true;
+      export const body:Mutual<D.ScenePhysicsBody,S.ScenePhysicsBody>=true;
+    `,{types:["@webgpu/types"],skipLibCheck:true})).toEqual([]);
+  });
   it("accepts the host usage of spec/runtime-abi.md section 6", () => {
     const problems = compile(`
       import { mountMtek, MtekMountError } from "./runtime.js";
@@ -409,11 +420,24 @@ describe("runtime.d.ts agrees with the implementation", () => {
 });
 
 describe("npm run build", () => {
-  it("copies src/runtime.d.ts byte for byte to dist/runtime.d.ts next to the bundle", () => {
+  it("ships every declaration unchanged while omitting comments from compiled app typings", () => {
     execFileSync(process.execPath, ["scripts/build.mjs"], { cwd: PACKAGE_DIR, stdio: "pipe" });
-    const source = readFileSync(path.join(SRC_DIR, "runtime.d.ts"));
-    const copy = readFileSync(path.join(PACKAGE_DIR, "dist", "runtime.d.ts"));
-    expect(copy.equals(source)).toBe(true);
+    const source = readFileSync(path.join(SRC_DIR, "runtime.d.ts"), "utf8");
+    const copy = readFileSync(path.join(PACKAGE_DIR, "dist", "runtime.d.ts"), "utf8");
+    const syntax = (text: string): unknown => {
+      const shape = (node: ts.Node): unknown => {
+        const children: unknown[] = []; ts.forEachChild(node, (child) => { children.push(shape(child)); });
+        const literal = ts.isIdentifier(node) || ts.isLiteralExpression(node) || ts.isTemplateLiteralToken(node) ? node.text : null;
+        return [node.kind, literal, children];
+      };
+      return shape(ts.createSourceFile("runtime.d.ts", text, ts.ScriptTarget.ES2022, true));
+    };
+    expect(syntax(copy)).toEqual(syntax(source));
+    expect(copy.length).toBeLessThan(source.length);
+    expect(copy).not.toContain("/**");
+    const declarationFile = path.join(PACKAGE_DIR, "dist", "runtime.d.ts");
+    const declarationProgram = ts.createProgram([declarationFile], { noEmit: true, strict: true, skipLibCheck: false, types: [], lib: ["lib.es2022.d.ts", "lib.dom.d.ts"] });
+    expect(ts.getPreEmitDiagnostics(declarationProgram).map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"))).toEqual([]);
     const bundle = readFileSync(path.join(PACKAGE_DIR, "dist", "runtime.js"), "utf8");
     expect(bundle).toMatch(/export\s*\{[^}]*\bmountMtek\b/);
   }, 60_000);

@@ -6,6 +6,9 @@ import type { ResourceRegistry } from "../gpu/registry.js";
 import type { ComputeDevice } from "./instance.js";
 import { ComputeStore } from "./store.js";
 import type { ComputeDomain } from "./definition.js";
+import type { Scene } from "../render/startup.js";
+import { checkedPositionBounds, type MtekComputeBounds, type MtekComputePositionAttachment } from "./positions.js";
+export type { MtekComputeBounds, MtekComputePositionAttachment } from "./positions.js";
 
 export type MtekComputeLayout = MtekLayoutNode;
 export interface MtekComputeBufferInfo { readonly name: string; readonly capacity: number; readonly stride: number; readonly bytes: number; readonly layout: MtekComputeLayout }
@@ -24,6 +27,7 @@ export interface MtekComputeHandle {
   setParam(name: string, value: unknown): void;
   dispatch(domain: ComputeDomain): Promise<void>;
   readback(): Promise<ArrayBuffer>;
+  attachPositions(entity: string, bounds: MtekComputeBounds): MtekComputePositionAttachment;
   inspect(): MtekComputeInspection;
   dispose(): void;
 }
@@ -73,6 +77,18 @@ function canonical(value: unknown): string {
   return JSON.stringify(value);
 }
 function layoutKey(layout: MtekLayoutRecord): string { return canonical({ ...layout, root: { ...layout.root, name: undefined } }); }
+function computeKey(manifest: MtekManifest): string {
+  return canonical((manifest.computePrograms ?? []).map((program) => ({ api: program.api, definition: program.definition, hash: program.shader.hash, defaults: program.defaults,
+    params: program.params.map(({ name, type, hasDefault }) => ({ name, type, hasDefault })) })));
+}
+interface PositionAttachment {
+  readonly entity: string;
+  readonly bounds: MtekComputeBounds;
+  readonly vertexCount: number;
+  readonly read: () => GPUBuffer | undefined;
+  release: (() => void) | undefined;
+  readonly dispose: () => void;
+}
 
 export function computeModules(manifest: MtekManifest, modules: ReadonlyMap<string, GPUShaderModule>): ReadonlyMap<string, GPUShaderModule> {
   return new Map((manifest.computePrograms ?? []).map((compute) => {
@@ -87,6 +103,7 @@ export class ComputeHost {
   private programs: ReadonlyMap<string, MtekComputeProgram>;
   private manifest: MtekManifest | undefined;
   private readonly handles = new Set<MtekComputeHandle>();
+  private readonly positions = new Set<PositionAttachment>();
   private disposed = false;
 
   constructor(
@@ -97,6 +114,7 @@ export class ComputeHost {
     modules: ReadonlyMap<string, GPUShaderModule>,
     private assertActive: () => void,
     private report: (id: string, error: unknown) => void,
+    private getScene: () => Scene,
   ) {
     this.manifest = manifest;
     this.programs = new Map((manifest.computePrograms ?? []).map((program) => [program.definition.id, structuredClone(program)]));
@@ -117,24 +135,63 @@ export class ComputeHost {
     for (const [name, value] of Object.entries(params)) bytes = this.packed(program, bytes, name, value);
     const raw = await this.store.create(id, bytes);
     if (this.disposed) { raw.dispose(); throw new Error("compute program was replaced or disposed"); }
+    const attachments = new Set<PositionAttachment>();
     const handle: MtekComputeHandle = Object.freeze({
       get state() { return raw.state; },
       upload: (name: string, data: ArrayBufferView) => { this.ready(); raw.upload(name, data); },
       setParam: (name: string, value: unknown) => { this.ready(); const next = this.packed(program, bytes, name, value); raw.setUniforms(next); bytes = next; },
-      dispatch: async (domain: ComputeDomain) => { this.ready(); try { await raw.dispatch(domain); } catch (error) { if (!this.disposed && raw.state !== "lost" && raw.state !== "disposed") this.report(id, error); throw error; } },
+      dispatch: async (domain: ComputeDomain) => { this.ready();
+        if (attachments.size > 0 && domain.length >= 1 && domain.length <= 3 && domain.reduce<number>((count, axis) => count * (axis ?? 1), 1) !== program.definition.output.layout.length) throw new RangeError("attached positions require a dispatch covering the complete output");
+        try { await raw.dispatch(domain); } catch (error) { if (!this.disposed && raw.state !== "lost" && raw.state !== "disposed") this.report(id, error); throw error; } },
       readback: async () => { this.ready(); try { return await raw.readback(); } catch (error) { if (!this.disposed && raw.state !== "lost" && raw.state !== "disposed") this.report(id, error); throw error; } },
+      attachPositions: (entity: string, bounds: MtekComputeBounds) => {
+        this.ready();
+        const layout = program.definition.output.layout;
+        if (layout.element.kind !== "scalar" || layout.element.scalar !== "f32" || layout.stride !== 4 || layout.length % 3 !== 0) throw new TypeError("compute positions require a packed scalar f32 xyz stream");
+        const snapshot = raw.inspect();
+        if (this.store.renderReadyBuffer(raw) === undefined || snapshot.completedDomain?.reduce((count, axis) => count * axis, 1) !== layout.length) throw new Error("compute positions require a completed full-output dispatch");
+        const sphere = checkedPositionBounds(bounds);
+        const read = () => this.store.renderReadyBuffer(raw);
+        let disposed = false;
+        const attachment: PositionAttachment = {
+          entity, bounds: sphere, vertexCount: layout.length / 3, read,
+          release: this.bindPositions(this.getScene(), entity, layout.length / 3, read, sphere),
+          dispose: () => { if (disposed) return; disposed = true; attachment.release?.(); attachment.release = undefined; attachments.delete(attachment); this.positions.delete(attachment); },
+        };
+        attachments.add(attachment); this.positions.add(attachment);
+        return Object.freeze({ get state() { return disposed ? "disposed" : "attached"; },
+          inspect: () => ({ entity, bounds: checkedPositionBounds(sphere), state: disposed ? "disposed" as const : "attached" as const }), dispose: attachment.dispose });
+      },
       inspect: () => {
         const snapshot = raw.inspect();
         const info = (buffer: typeof snapshot.definition.output): MtekComputeBufferInfo => ({ name: buffer.name, capacity: buffer.layout.length, stride: buffer.layout.stride, bytes: buffer.layout.size, layout: buffer.layout });
         return { id, state: snapshot.state, inputs: snapshot.definition.inputs.map(info), output: info(snapshot.definition.output), pendingReadbacks: snapshot.pendingReadbacks, dispatchPending: snapshot.dispatchPending, ...(snapshot.completedDomain === undefined ? {} : { completedDomain: snapshot.completedDomain }) };
       },
-      dispose: () => { raw.dispose(); bytes = new Uint8Array(0); this.handles.delete(handle); },
+      dispose: () => { for (const attachment of attachments) attachment.dispose(); raw.dispose(); bytes = new Uint8Array(0); this.handles.delete(handle); },
     });
     this.handles.add(handle);
     return handle;
   }
 
-  deviceLost(): void { this.store.deviceLost(); }
+  matchesScene(manifest: MtekManifest): boolean { return this.manifest !== undefined && computeKey(this.manifest) === computeKey(manifest); }
+  sceneChanged(manifest: MtekManifest): void {
+    if (!this.matchesScene(manifest)) throw new Error("scene compute definitions changed");
+    for (const attachment of this.positions) attachment.dispose();
+    this.manifest = manifest;
+  }
+  restorePositions(scene: Scene): void {
+    const created: (() => void)[] = [];
+    try {
+      for (const attachment of this.positions) {
+        const release = this.bindPositions(scene, attachment.entity, attachment.vertexCount, attachment.read, attachment.bounds);
+        attachment.release = release; created.push(release);
+      }
+    } catch (error) { for (const release of created) release(); throw error; }
+  }
+  deviceLost(): void {
+    for (const attachment of this.positions) { attachment.release?.(); attachment.release = undefined; }
+    this.store.deviceLost();
+  }
   async recover(device: ComputeDevice, registry: ResourceRegistry, modules: ReadonlyMap<string, GPUShaderModule>): Promise<void> {
     if (this.disposed || this.manifest === undefined) throw new Error("compute program was disposed");
     await this.store.recover(device, registry, computeModules(this.manifest, modules));
@@ -145,6 +202,14 @@ export class ComputeHost {
     for (const handle of this.handles) handle.dispose();
     this.store.dispose(); this.programs = new Map(); this.writers = new Map(); this.manifest = undefined;
     this.report = () => undefined; this.assertActive = () => { throw new Error("compute program was disposed"); };
+    this.getScene = () => { throw new Error("compute program was disposed"); };
+  }
+
+  private bindPositions(scene: Scene, symbol: string, vertexCount: number, read: () => GPUBuffer | undefined, bounds: MtekComputeBounds): () => void {
+    const entity = scene.world.entities.map((_, slot) => scene.world.resolvedAt(slot)).find((entity) => entity?.symbol === symbol);
+    if (entity?.mesh === null || entity?.mesh === undefined || entity.instance === null) throw new RangeError(`no declared drawable entity '${symbol}'`);
+    if (entity.instance.material.shader.vertexDeformation === 1 || scene.world.skinPlayer(entity.index) !== undefined) throw new Error("compute positions require an unskinned entity without an authored vertex stage");
+    return scene.meshes.attachPositions(entity.index, entity.mesh.id, vertexCount, read, bounds);
   }
 
   private ready(): void { if (this.disposed) throw new Error("compute program was replaced or disposed"); this.assertActive(); }

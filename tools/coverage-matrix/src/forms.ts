@@ -121,6 +121,7 @@ export const FORMS: readonly Form[] = [
   ...forms("bindings", "spec/scenes.md section 8.4 and spec/runtime-abi.md section 5.2", [
     ["binding/target:transform", "binding on `position`, `rotation` or `scale`"],
     ["binding/target:visible", "binding on `visible`"],
+    ["binding/target:bounds", "binding on final local bounds"],
     ["binding/target:param", "binding on a material instance param"],
     ["binding/target:camera", "binding on a camera field"],
     ["binding/target:light", "binding on a light field"],
@@ -149,6 +150,10 @@ export const FORMS: readonly Form[] = [
     ["entity-field/collider", "written `collider`"],
     ["camera/look-at", "camera with a `target`"],
     ["camera/projection-written", "camera with a written `projection`"],
+  ]),
+  ...forms("compute", "spec/compute.md", [
+    ["compute/storage-read", "read a bounded compute input storage buffer"],
+    ["compute/param-read", "read a generated compute uniform parameter"],
   ]),
   ...forms("materials", "spec/materials.md section 4", [
     ["form/builtin-material", "instance of a built-in material (`Unlit`, `Pbr`)"],
@@ -200,6 +205,7 @@ export const IR_VARIANTS: Readonly<Record<string, string>> = {
   "Item.Struct": "structs",
   "Item.Function": "functions",
   "Item.Material": "materials",
+  "Item.Compute": "compute-programs",
   "Item.Prefab": "prefabs",
   "LocalKind.Param": "local/param",
   "LocalKind.Let": "local/let",
@@ -241,6 +247,7 @@ export const IR_VARIANTS: Readonly<Record<string, string>> = {
   "ExprKind.Components": "expr/swizzle",
   "ExprKind.Field": "expr/struct-field",
   "ExprKind.Index": "indexing",
+  "ExprKind.StorageRead": "compute/storage-read",
   "ExprKind.Array": "arrays",
   "ExprKind.Struct": "expr/struct-literal",
   "ExprKind.Descriptor": "descriptors",
@@ -268,6 +275,7 @@ export const IR_VARIANTS: Readonly<Record<string, string>> = {
   "BehaviorKind.Event": "behavior/event",
   "BindingTarget.Transform": "binding/target:transform",
   "BindingTarget.Visible": "binding/target:visible",
+  "BindingTarget.Bounds": "binding/target:bounds",
   "BindingTarget.Param": "binding/target:param",
   "BindingTarget.Camera": "binding/target:camera",
   "BindingTarget.Light": "binding/target:light",

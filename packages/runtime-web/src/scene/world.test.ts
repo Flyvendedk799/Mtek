@@ -9,6 +9,7 @@ import { checkProgram } from "./program.js";
 import { Behaviors } from "./behavior.js";
 import { resolveStructure } from "./structure.js";
 import { chooseItem, CONTEXT_MEMBERS, RuntimeInternalError, shuffled, World, type CameraRecord, type EntityRecord } from "./world.js";
+import { sceneAccess } from "../host/extensions.js";
 
 interface ParamWrite {
   readonly instance: number;
@@ -83,6 +84,23 @@ function makeWorld(manifest: MtekManifest = manifestFrom(minimalManifestJson()))
 }
 
 const IDENTITY = { x: 0, y: 0, z: 0, w: 1 };
+
+it("copies inherited world matrices with opaque parent IDs without consuming render change signals", () => {
+  const initial = makeWorld(nestedManifest()), ctx = initial.ctx;
+  let world = initial.world;
+  ctx.setTransform(world.entities[0],"position",{x:3,y:4,z:5});
+  ctx.setTransform(world.entities[0],"scale",{x:2,y:3,z:4});
+  ctx.setTransform(world.entities[0],"rotation",{x:0,y:0,z:Math.SQRT1_2,w:Math.SQRT1_2});
+  ctx.setTransform(world.entities[1],"position",{x:1,y:2,z:0});
+  world.propagate();
+  const access = sceneAccess(() => world,() => {},() => ({frame:1,renderable:true,viewport:{width:100,height:50},viewProjection:Array.from({length:16},(_,i)=>Number(i%5===0)),bounds:[],bodies:[]}));
+  const first = access.inspectScene!()!, parent = first.entities[0]!, child = first.entities[1]!;
+  expect(child.parentId).toBe(parent.id); expect(child.worldMatrix[12]).toBeCloseTo(-3); expect(child.worldMatrix[13]).toBeCloseTo(6); expect(child.worldMatrix[14]).toBeCloseTo(5);
+  Object.assign(child.worldMatrix,{12:999}); expect(world.worldMatrix(1)[12]).toBeCloseTo(-3);
+  expect(world.takeWorldChanges()).toContain(1);
+  const next = makeWorld(nestedManifest()); world = next.world; world.propagate();
+  expect(access.inspectScene!()!.entities[0]!.id).not.toBe(parent.id);
+});
 
 it("replaces a material value through its parameter writer and validates before changing it", () => {
   const { world, writes } = makeWorld();

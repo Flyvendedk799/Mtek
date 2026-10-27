@@ -1,0 +1,51 @@
+{
+  "name": "mtek",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^22.18.0 || >=23.6.0"
+  },
+  "packageManager": "npm@11.16.0",
+  "workspaces": [
+    "packages/runtime-web",
+    "packages/inspector",
+    "packages/physics-rapier",
+    "packages/editor-vscode",
+    "tests/browser",
+    "tests/codegen",
+    "benchmarks",
+    "benchmarks/baselines/m0-bridge",
+    "benchmarks/runtime",
+    "benchmarks/material-lighting",
+    "tools/ai-eval",
+    "tools/coverage-matrix",
+    "tools/release-docs",
+    "tools/asset-audit"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present && cargo build -p mtek-cli --locked",
+    "check": "cargo fmt --check && cargo clippy --workspace --all-targets --locked -- -D warnings && npm run check:ts && npm run lint && npm run check:naming && npm run check:tasks && npm run check:assets && npm run check:prebuilt",
+    "check:ts": "node scripts/gen-manifest-validator.mjs && tsc -b",
+    "check:naming": "node scripts/check-naming.mjs",
+    "evidence:sanitize": "node tests/browser/support/sanitize-report.ts",
+    "check:tasks": "node benchmarks/tools/validate-tasks.mjs",
+    "check:assets": "node tests/assets/tools/make-glb.mjs --check",
+    "check:prebuilt": "node scripts/prebuilt-runtime.mjs --check",
+    "prebuilt:write": "node scripts/prebuilt-runtime.mjs --write",
+    "check:coverage": "npm run coverage -w @mtek/coverage-matrix",
+    "check:release": "npm run check -w @mtek/release-docs",
+    "lint": "npm run lint --workspaces --if-present",
+    "test:unit": "npm run test:unit --workspaces --if-present",
+    "test:browser": "npm run build && npm run test -w @mtek/browser-tests --",
+    "test:benchmarks": "npm run test:benchmarks -w @mtek/browser-tests --",
+    "test:browser:hardware": "npm run build && npm run test:hardware -w @mtek/browser-tests --",
+    "test": "npm run check && cargo test --workspace --locked && npm run test:unit && npm run check:coverage && npm run check:release && npm run check:baseline && npm run test:browser",
+    "check:baseline": "node scripts/gen-m7-baseline.mjs --check",
+    "check:budgets": "node scripts/game-budgets.mjs size",
+    "audit:assets": "npm run audit -w @mtek/asset-audit --"
+  },
+  "allowScripts": {
+    "esbuild": false,
+    "@vscode/vsce-sign": false
+  }
+}

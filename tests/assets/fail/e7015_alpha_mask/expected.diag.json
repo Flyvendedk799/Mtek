@@ -7,7 +7,7 @@
     "message": "The material 'Plain' (materials[0]) has alphaMode MASK; the profile supports OPAQUE only.",
     "notes": [
       "the problem is in the file 'models/model.glb'",
-      "help: v0.1 has no transparency (`spec/materials.md` section 2)"
+      "help: use a source-authored Pbr colour alpha; this GLB profile imports opaque materials only"
     ]
   }
 ]

@@ -338,6 +338,35 @@ fn f32s(bytes: &[u8], offset: u64, count: usize) -> Vec<f32> {
 }
 
 #[test]
+fn authored_tangents_pack_as_unchanged_vec4_data_and_validate_the_manifest() {
+    let result = build_project("pass", "assets_tangent");
+    assert!(!result.has_errors(), "{:?}", result.report);
+    let manifest = manifest_of(&result);
+    let entry = manifest["assets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|a| a["kind"] == "mesh-data")
+        .unwrap();
+    let primitive = &entry["primitives"][0];
+    assert_eq!(
+        primitive["attributes"],
+        json!(["position", "normal", "uv", "tangent"])
+    );
+    assert_eq!(primitive["offsets"]["tangent"], 96);
+    assert_eq!(primitive["offsets"]["indices"], 144);
+    let bytes = &result.files[entry["url"].as_str().unwrap()];
+    assert_eq!(
+        f32s(bytes, 96, 12),
+        vec![1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0]
+    );
+    let schema: Value =
+        serde_json::from_str(include_str!("../../../spec/manifest.schema.json")).unwrap();
+    let validator = jsonschema::draft202012::new(&schema).unwrap();
+    assert!(validator.is_valid(&manifest));
+}
+
+#[test]
 fn the_supported_project_builds_and_its_manifest_validates() {
     let result = supported();
     let manifest = manifest_of(&result);

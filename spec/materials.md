@@ -21,7 +21,7 @@ material Pulse {
 
 A material is a module item with:
 - zero or more `param` declarations (§2), then
-- exactly one `fragment` stage (§3) and optionally one authored `vertex` stage (§3.5), in either order. A material without `fragment` is `E4020`; duplicate stages are `E2002`. Custom compute stages remain unsupported (`E4901`).
+- exactly one `fragment` stage (§3) and optionally one authored `vertex` stage (§3.5), in either order. A material without `fragment` is `E4020`; duplicate stages are `E2002`. Material-local compute stages are rejected (`E4901`); use bounded standalone programs described in `spec/compute.md`.
 
 Materials are GPU programs plus a typed parameter interface. They have no state, no handlers and no CPU code.
 
@@ -53,8 +53,9 @@ Parameter storage is planned by the resource planner (`spec/gpu-layout.md`): val
 | `world_position` | `vec3` | Interpolated world-space position |
 | `world_normal` | `vec3` | Interpolated world-space normal, **re-normalised** in the fragment wrapper |
 | `uv` | `vec2` | Interpolated `TEXCOORD_0` |
+| `world_tangent` | `vec4` | Interpolated world-space tangent xyz and handedness w; zero means unavailable (decision 0212) |
 
-The compiler records which fields a material reads. The generated vertex stage outputs **only those** varyings; authored vertex reads (§3.5) may require additional mesh attributes (blueprint §7.2). A mesh that lacks an attribute a material reads is rejected: at compile time for built-in and asset meshes whose attributes are known (`E7010`), never by substituting zeros.
+The compiler records which fields a material reads. The generated vertex stage outputs **only those** varyings; authored vertex reads (§3.5) may require additional mesh attributes (blueprint §7.2). Missing required normal/UV data is rejected at compile time for built-in and asset meshes (`E7010`). Tangents are optional: a shared zero frame selects derivative normal mapping when no source frame exists.
 
 ### 3.2 The generated wrapper
 
@@ -71,8 +72,9 @@ Bind groups, struct names and binding numbers are fixed by `spec/gpu-layout.md` 
 | `position` | 0 | `float32x3` | always |
 | `normal` | 1 | `float32x3` | the fragment reads `world_normal` or the vertex stage reads `normal` |
 | `uv` | 2 | `float32x2` | either stage reads `uv` |
+| `tangent` | 11 | `float32x4` | the fragment reads `world_tangent` or the vertex stage reads `tangent`, unless supplied by the authored output |
 
-Each attribute lives in **its own vertex buffer** (non-interleaved, `arrayStride` 12/12/8, `stepMode: "vertex"`). The pipeline's `buffers` array lists only the present attributes, in the order position, normal, uv; vertex-buffer slot `k` is the `k`-th present attribute (so for `Unlit`, slot 0 = position only). The runtime binds the mesh's matching buffers in that order.
+Each attribute lives in **its own vertex buffer** (non-interleaved, `arrayStride` 12/12/8/16, `stepMode: "vertex"`). The pipeline's `buffers` array lists only the present attributes, in the order position, normal, uv, tangent; vertex-buffer slot `k` is the `k`-th present attribute (so for `Unlit`, slot 0 = position only). The runtime binds the mesh's matching buffers in that order. Instance matrices retain locations 3–10.
 
 | Varying (vertex → fragment) | `@location` | Emitted when |
 |---|---|---|
@@ -80,6 +82,7 @@ Each attribute lives in **its own vertex buffer** (non-interleaved, `arrayStride
 | `world_position` | 1 | read by the fragment |
 | `world_normal` | 2 | read by the fragment |
 | `uv` | 3 | read by the fragment |
+| `world_tangent` | 4 | read by the fragment |
 
 Only the varyings the fragment reads are declared; vertex-only attribute reads do not add varyings, and the locations stay fixed so that pipeline layouts and span maps remain stable across edits.
 
@@ -100,13 +103,15 @@ Particles (`particles`, `spec/scenes.md` §4.6) are drawn between the opaque pas
 ### 3.5 Authored vertex stage (decisions 0197–0198)
 
 `vertex(input: VertexInput) -> vec3 { … }` returns a mesh-local position.
-`VertexInput` has `position: vec3`, `normal: vec3`, `uv: vec2`. Alternatively the
+`VertexInput` has `position: vec3`, `normal: vec3`, `uv: vec2`, `tangent: vec4`. Alternatively the
 result may be an ordinary user struct containing `position: vec3`, optional
-`normal: vec3` and `uv: vec2`, plus scalar/vector payload fields. Output geometry
+`normal: vec3`, `uv: vec2` and `tangent: vec4`, plus scalar/vector payload fields. Output geometry
 fields replace mesh values; omitted normal/UV fields retain them. Vertex reads
 add to required mesh attributes independently of fragment varyings. Generated
 normal/UV outputs remove the corresponding fragment-only mesh requirement.
-Passing the whole input record to a helper still requires all three mesh fields.
+Passing the whole input record to a helper requires all fields; tangent data may
+be the unavailable zero frame. An authored vertex result without `tangent`
+invalidates the original tangent frame and selects the derivative fallback.
 Missing required asset data is `E7010`.
 
 A fragment may take a second parameter of exactly the vertex output struct type:
@@ -116,7 +121,7 @@ second parameter exists. Payload fields support f32/i32/u32/bool, float vectors,
 color and quat; matrices, arrays, nested structs and CPU/resource values are
 `E4021`. Float/color fields interpolate in perspective at pixel centers; integer,
 boolean and quaternion fields take the first vertex's value. Surface varyings keep
-locations 0–3; payload fields fill unused locations in declaration order. The
+locations 0–4; payload fields fill unused locations in declaration order. The
 combined limit is 16 variables (`E6003`). Shader inspection lists the mapping.
 
 Both stages are GPU roots with existing purity/capture rules. `sample` reads level
@@ -125,6 +130,10 @@ precedes the authored function; model/instance and camera transforms follow it.
 The result feeds clip position, fragment local/world positions and directional
 shadow passes. Chosen normals pass through the object's inverse-transpose matrix
 and are normalized for SurfaceInput; the custom payload keeps its local values.
+Tangents use the model's linear transform and safe per-vertex normalization
+before interpolation; handedness includes the determinant sign. Mapped PBR
+re-orthogonalizes the interpolated frame against the final normal. A supplied
+tangent must have unit xyz and w ±1, or be the zero unavailable marker.
 
 No authored finite bound is available yet: camera-frustum rejection is skipped for
 these draws, and sorting/inspection centers remain the original mesh centers.
@@ -204,7 +213,7 @@ Notation: `N` = normalised world normal; `V = normalize(camera_position − worl
 4. Fresnel (Schlick): `F0 = mix(vec3(0.04), c, m)`; `F = F0 + (1 − F0) · (1 − VH)⁵`. The dielectric Fresnel is `F_d = 0.04 + 0.96 · (1 − VH)⁵` (a scalar).
 5. Specular `= D · Vis · F`. Diffuse `= (1 − m) · (1 − F_d) · c / π`. (Together this is glTF's `mix(dielectric_brdf, metal_brdf, m)` exactly.)
 6. Radiance of a directional light: `E = light.color.rgb · intensity`. Of a point light at distance `d`: `E = light.color.rgb · intensity / max(d², 1e-4) · w`, with `w = 1` if `range = 0`, else `w = clamp(1 − (d / range)⁴, 0, 1)` (the `KHR_lights_punctual` window, not squared).
-7. Result: `rgb = Σ_lights (Diffuse + Specular) · E · NL + (1 − m) · c · ambient_color.rgb · ambient_intensity`; alpha `= 1`. A metal receives no diffuse ambient.
+7. Result: `rgb = Σ_lights (Diffuse + Specular) · E · NL + (1 − m) · c · ambient_color.rgb · ambient_intensity`; alpha is the supplied base colour's alpha (decision 0210). A metal receives no diffuse ambient. Lighting, occlusion, emission and exposure affect RGB only; alpha is straight, not premultiplied.
 8. No `NaN`: a light's term is exactly `0` when `NL ≤ 0`, and when `L + V = 0` (no half vector, reachable with `NL > 0` only for a back-facing normal). Implementations must test both before forming `H = normalize(L + V)`.
 9. Exposure: the result `rgb` of rule 7 is multiplied by the active camera's exposure scale `1 / (1.2 · 2^EV100)`, where EV100 is `Camera.exposure` (`spec/scenes.md` §3, decision `spec/decisions/0081-camera-exposure.md`). Light intensities stay physical (lux, candela); the default exposure (`-log2(1.2 · π)`, scale `π`) maps a white Lambertian surface under 1 lux to `1.0`.
 
@@ -241,7 +250,7 @@ export material Pbr {
     param emissive: color = #000000;
     fragment(surface: SurfaceInput) -> color {
         let texel = sample_mip(base_color_texture, base_color_sampler, surface.uv);
-        let albedo = color.linear(base_color.rgb * texel.xyz, 1.0);
+        let albedo = color.linear(base_color.rgb * texel.xyz, base_color.a);
         let mr = sample_mip(metallic_roughness_texture, metallic_roughness_sampler, surface.uv);
         let normal = sample_mip(normal_texture, normal_sampler, surface.uv).xyz;
         let ao = sample_mip(occlusion_texture, occlusion_sampler, surface.uv).x;
@@ -258,8 +267,9 @@ The param named `color` in `Unlit` relies on the rule in `spec/language.md` §4.
 blue multiplies metallic, green multiplies roughness, and red supplies occlusion.
 Base and emissive textures are sRGB; the other maps are linear data. Occlusion
 scales ambient light only; emission is added before exposure. Normal mapping
-uses a derivative cotangent frame with geometric-normal fallback for degenerate
-UVs. Authored tangents and full MikkTSpace parity are not supported. Directly
+uses an authored tangent frame when available (decision 0212), otherwise a
+derivative cotangent frame with geometric-normal fallback for degenerate UVs.
+No MikkTSpace tangent generator is provided. Directly
 assigned normal maps need `normal_scale` (default zero); GLB imports use the
 file's scale, default one.
 
@@ -287,7 +297,7 @@ dependencies. They do not prove that a shader respects its enclosure.
 
 ## 10. Not in v0.1
 
-Mtek-authored compute stages; multiply blending and per-triangle sorting of translucent draws; point/cascaded shadows; multiple render targets; material inheritance; texture params written at run time; general derivatives (`dpdx`); language-visible storage buffers, texture arrays and cube maps.
+Material-local compute stages (standalone programs use `spec/compute.md`); multiply blending and per-triangle sorting of translucent draws; point/cascaded shadows; multiple render targets; material inheritance; texture params written at run time; general derivatives (`dpdx`); unrestricted storage buffers, texture arrays and cube maps.
 
 The host runtime provides additive material selection and ordered custom WGSL LDR
 post effects through `MtekMountOptions.rendering` (decision 0193). Image asset textures

@@ -192,13 +192,15 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
     return new ComputeHost(manifest, checked.program.writers, this.deps.device, this.deps.registry, modules,
       () => { if (this.current !== "running" && this.current !== "paused") throw new Error(`application is ${this.current}`); },
       (id, error) => {
-        const compute = manifest.computePrograms?.find((compute) => compute.definition.id === id);
-        this.report(makeRuntimeDiagnostic("E8050", { phase: "runtime:update", message: `Compute '${id}' failed: ${errorText(error)}`, ...(compute === undefined ? {} : { source: resolveSpan(manifest, compute.span) }) }));
-      });
+        const current = this.deps.manifest;
+        const compute = current.computePrograms?.find((compute) => compute.definition.id === id);
+        this.report(makeRuntimeDiagnostic("E8050", { phase: "runtime:update", message: `Compute '${id}' failed: ${errorText(error)}`, ...(compute === undefined ? {} : { source: resolveSpan(current, compute.span) }) }));
+      }, () => this.deps.scene);
   }
   private extensions: ExtensionHost | undefined;
   installExtensions(extensions: readonly MtekExtension[],services:Readonly<Record<string,unknown>>={}):void {
-    const access=sceneAccess(()=>this.deps.scene.world,()=>{if(this.current==="disposed"||this.current==="failed")throw new Error(`The application is ${this.current}`);});
+    const access=sceneAccess(()=>this.deps.scene.world,()=>{if(this.current==="disposed"||this.current==="failed")throw new Error(`The application is ${this.current}`);},
+      () => ({ ...this.deps.scene.renderer.inspect(), bodies: this.deps.physics?.inspect() ?? [] }));
     this.extensions=new ExtensionHost({apiVersion:1,...access,service:<T>(name:string)=>services[name] as T|undefined},(id,error)=>{
       this.report(makeRuntimeDiagnostic("E8050",{phase:"runtime:update",message:`Extension '${id}' failed and was disabled: ${errorText(error)}`}));
     });
@@ -231,7 +233,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         readonly manifest: MtekManifest;
         readonly program: MtekMountProgram<Record<string, unknown>>;
         readonly modules: Map<string, GPUShaderModule>;
-        readonly computes: ComputeHost;
+        readonly computes: ComputeHost | undefined;
         readonly assets: LoadedAssets;
         readonly sceneFunctions: MtekProgramScene;
         readonly restart: StructuralChange | undefined;
@@ -761,9 +763,9 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       // registry already dropped them), so it cannot become the live scene.
       assertActive();
 
-      const computes = this.computeHost(manifest, candidate, shaders.modules);
+      const computes = mode.kind === "fresh" && this.computes.matchesScene(manifest) ? undefined : this.computeHost(manifest, candidate, shaders.modules);
       if (this.pendingSwap !== undefined) {
-        this.pendingSwap.computes.dispose();
+        this.pendingSwap.computes?.dispose();
         this.pendingSwap.scene.materials.dispose();
         this.pendingSwap.scene.meshes.dispose();
         this.pendingSwap.scene.renderer.dispose();
@@ -853,7 +855,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
     if (this.deps.game !== undefined) this.deps.game.target = INERT_GAME;
     this.hostOutputs.dispose();
     if (this.pendingSwap !== undefined) {
-      this.pendingSwap.computes.dispose();
+      this.pendingSwap.computes?.dispose();
       this.pendingSwap.scene.materials.dispose();
       this.pendingSwap.scene.meshes.dispose();
       this.pendingSwap.scene.renderer.dispose();
@@ -1002,7 +1004,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       `Recovery: up to ${String(RECOVERY_ATTEMPTS)} attempts, after ${this.recoveryDelaysMs.map((delay) => `${String(delay)} ms`).join(", ")}; the application is paused until one succeeds.`,
     ];
     if (this.pendingSwap !== undefined) {
-      this.pendingSwap.computes.dispose();
+      this.pendingSwap.computes?.dispose();
       // Its resources belong to the lost device; the next build of the dev server replaces it.
       this.pendingSwap = undefined;
       notes.push("A hot-reload candidate that was waiting for the next frame was discarded.");
@@ -1168,6 +1170,8 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
 
       // Out-of-memory results arrive after a round trip (as at mount), and the new device may have been lost meanwhile.
       await this.computes.recover(device, registry, shaders.modules);
+      if (scene === undefined) throw new Error("internal error: the rebuild produced no scene");
+      this.computes.restorePositions(scene);
       this.ensureRecovering();
       await device.queue.onSubmittedWorkDone();
       this.ensureRecovering();
@@ -1372,7 +1376,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         });
       } catch (error) {
         pending.scene.materials.dispose();
-        pending.computes.dispose();
+        pending.computes?.dispose();
         pending.scene.meshes.dispose();
         pending.scene.renderer.dispose();
         const cause = makeRuntimeDiagnostic("E8102", {
@@ -1432,8 +1436,8 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
     this.deps.physics = physics;
     this.deps.physicsModule = pending.physicsModule;
     this.deps.scene = pending.scene;
-    this.computes.dispose();
-    this.computes = pending.computes;
+    if (pending.computes === undefined) this.computes.sceneChanged(pending.manifest);
+    else { this.computes.dispose(); this.computes = pending.computes; }
     this.deps.manifest = pending.manifest;
     this.deps.program = pending.program;
     this.deps.modules = pending.modules;

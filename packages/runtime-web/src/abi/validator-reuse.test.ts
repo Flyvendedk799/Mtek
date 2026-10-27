@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 import generated from "./generated/validate-manifest.js";
 import { manifestValidationSchema } from "../../../../scripts/manifest-validation-schema.js";
 import { compactStandaloneSchemaData } from "../../../../scripts/standalone-schema-data.js";
+import { poolStandaloneDiagnosticStrings } from "../../../../scripts/standalone-diagnostic-strings.js";
+import type { ManifestValidateFunction } from "./generated/validate-manifest.js";
 
 // Compare with the original inline strategy, including failure order/messages.
 // Ajv remains a development dependency; the shipped validator imports nothing.
@@ -14,6 +16,30 @@ const schema = Object.values(import.meta.glob<string>("../../../../spec/manifest
 const fixtures = import.meta.glob<string>("../../../../tests/abi/manifests/{valid,invalid}/*.json",{query:"?raw",import:"default",eager:true});
 
 describe("shared manifest validators", () => {
+  it("pools diagnostic values without changing exact ordered errors or directive/property syntax", async () => {
+    const ajv = new Ajv({ allErrors:true,strict:true,allowUnionTypes:true,discriminator:true,unicode:false,logger:false,inlineRefs:false });
+    const validationSchema = manifestValidationSchema(JSON.parse(schema) as object) as object;
+    const validator = ajv.compile(validationSchema);
+    const standalone = (require("ajv/dist/standalone") as {default:(ajv:unknown, validate:unknown)=>string}).default;
+    // Standalone requires source generation; use the same pinned constructor with that option enabled.
+    const sourceAjv = new Ajv({ allErrors:true,strict:true,allowUnionTypes:true,discriminator:true,unicode:false,logger:false,inlineRefs:false,code:{source:true,esm:true} });
+    const code = standalone(sourceAjv, sourceAjv.compile(validationSchema));
+    const pooled = poolStandaloneDiagnosticStrings(code);
+    expect(pooled).not.toBe(code);
+    const module = await import(/* @vite-ignore */ `data:text/javascript;base64,${Buffer.from(pooled).toString("base64")}`) as {default:ManifestValidateFunction};
+    for (const [name, text] of Object.entries(fixtures)) {
+      const data: unknown = JSON.parse(text);
+      expect(module.default(data), name).toBe(validator(data));
+      expect(module.default.errors, name).toEqual(validator.errors);
+    }
+    const prefix = '"use strict"; const _mtekDiagnosticString0="unrelated"; export const rows=';
+    const small = prefix + JSON.stringify(Array.from({length:4}, () => ({message:"same diagnostic message",schemaPath:"#/long/schema/path",keyword:"required"}))) + ';';
+    const compact = poolStandaloneDiagnosticStrings(small);
+    expect(compact.startsWith('"use strict";')).toBe(true);
+    expect(compact).toContain('"message":');
+    const result = await import(/* @vite-ignore */ `data:text/javascript;base64,${Buffer.from(compact).toString("base64")}`) as {rows:unknown};
+    expect(result.rows).toEqual(Array.from({length:4}, () => ({message:"same diagnostic message",schemaPath:"#/long/schema/path",keyword:"required"})));
+  });
   it("retains referenced enum data and falls back for unknown schema accesses", () => {
     const compact = compactStandaloneSchemaData('const schema1={"description":"unused","properties":{"kind":{"type":"string","enum":["a","b"]},"unused":{"type":"integer"}}}; export const allowed=schema1.properties.kind.enum;');
     expect(compact).not.toContain('"unused"');

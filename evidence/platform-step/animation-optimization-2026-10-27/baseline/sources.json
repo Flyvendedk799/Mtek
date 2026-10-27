@@ -1,0 +1,10 @@
+{
+  "format": "mtek-animation-source-snapshot/1",
+  "files": {
+    "packages/runtime-web/src/render/gpu-skinning.ts": "2f5179aa4a3362ab8b45696458f7f1b4eb4bb35a49edc61105e8159390e6eca3",
+    "packages/runtime-web/src/render/meshes.ts": "ba6ce49e2233bb593173ca3abd6f3075be7ca1b94912367e107e569da81e0bb4",
+    "packages/runtime-web/src/render/renderer.ts": "946c4333f2ff333763ac8a574395528e41fa2af8b82b24dd28e44d928ea0de83",
+    "packages/runtime-web/src/scene/skeleton.ts": "ffd9e57107a503ae26711af6cbe350a9c0afe994fb8096aa06be755124d1f296",
+    "packages/runtime-web/src/mesh/skin-bounds.ts": "84042c7695b7ebc097e4cd3255a40859a5bcf14f34c9308945f3e1b3cf8a16dc"
+  }
+}

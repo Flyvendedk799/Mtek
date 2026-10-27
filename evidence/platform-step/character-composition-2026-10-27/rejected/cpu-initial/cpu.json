@@ -1,0 +1,1006 @@
+{
+  "format": "mtek-production-composition-cpu/1",
+  "startedAt": "2026-10-27T04:13:23.527Z",
+  "status": "failed",
+  "cases": [
+    {
+      "mesh": "mesh:1",
+      "root": false,
+      "additive": false,
+      "rate": "fps30",
+      "frames": 180,
+      "time": 5.9999999999999885,
+      "maxima": {
+        "leftFoot": 0.000990450962464661,
+        "rightFoot": 0.0009935924045148478,
+        "leftGrip": 0.0010137953463452388,
+        "rightGrip": 0.0009931931911911001
+      },
+      "markers": [
+        3,
+        3
+      ],
+      "origin": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "extracted": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rootPose": [
+        0,
+        0,
+        0
+      ],
+      "hipPose": [
+        2.6369475678621968e-8,
+        -0.02236502191741754,
+        0.5985679592156821
+      ],
+      "layerMasks": [
+        {
+          "id": "upper",
+          "mask": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0
+          ],
+          "additive": false,
+          "weight": 0.7
+        },
+        {
+          "id": "nod",
+          "mask": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0
+          ],
+          "additive": true,
+          "weight": 0.4
+        }
+      ]
+    },
+    {
+      "mesh": "mesh:1",
+      "root": false,
+      "additive": false,
+      "rate": "fps60",
+      "frames": 360,
+      "time": 5.999999999999984,
+      "maxima": {
+        "leftFoot": 0.000990450962464221,
+        "rightFoot": 0.0009989105254395705,
+        "leftGrip": 0.0010137953463452388,
+        "rightGrip": 0.0009931931911911001
+      },
+      "markers": [
+        3,
+        3
+      ],
+      "origin": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "extracted": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rootPose": [
+        0,
+        0,
+        0
+      ],
+      "hipPose": [
+        2.6369475678623562e-8,
+        -0.022365021917417596,
+        0.5985679592156816
+      ],
+      "layerMasks": [
+        {
+          "id": "upper",
+          "mask": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0
+          ],
+          "additive": false,
+          "weight": 0.7
+        },
+        {
+          "id": "nod",
+          "mask": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0
+          ],
+          "additive": true,
+          "weight": 0.4
+        }
+      ]
+    },
+    {
+      "mesh": "mesh:1",
+      "root": false,
+      "additive": false,
+      "rate": "fps144",
+      "frames": 864,
+      "time": 6,
+      "maxima": {
+        "leftFoot": 0.0009987650598451052,
+        "rightFoot": 0.0010000366268234219,
+        "leftGrip": 0.0010204365243181844,
+        "rightGrip": 0.001027131253030788
+      },
+      "markers": [
+        3,
+        3
+      ],
+      "origin": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "extracted": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rootPose": [
+        0,
+        0,
+        0
+      ],
+      "hipPose": [
+        2.636947567855477e-8,
+        -0.02236502191741528,
+        0.5985679592156998
+      ],
+      "layerMasks": [
+        {
+          "id": "upper",
+          "mask": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0
+          ],
+          "additive": false,
+          "weight": 0.7
+        },
+        {
+          "id": "nod",
+          "mask": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0
+          ],
+          "additive": true,
+          "weight": 0.4
+        }
+      ]
+    },
+    {
+      "mesh": "mesh:1",
+      "root": false,
+      "additive": false,
+      "rate": "jitter",
+      "frames": 300,
+      "time": 5.999999999999994,
+      "maxima": {
+        "leftFoot": 0.0009922106150929515,
+        "rightFoot": 0.0009961685991120006,
+        "leftGrip": 0.000993886244852467,
+        "rightGrip": 0.001003986498141517
+      },
+      "markers": [
+        3,
+        3
+      ],
+      "origin": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "extracted": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rootPose": [
+        0,
+        0,
+        0
+      ],
+      "hipPose": [
+        2.636947567862354e-8,
+        -0.022365021917417592,
+        0.5985679592156816
+      ],
+      "layerMasks": [
+        {
+          "id": "upper",
+          "mask": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0
+          ],
+          "additive": false,
+          "weight": 0.7
+        },
+        {
+          "id": "nod",
+          "mask": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0
+          ],
+          "additive": true,
+          "weight": 0.4
+        }
+      ]
+    },
+    {
+      "mesh": "mesh:1",
+      "root": false,
+      "additive": true,
+      "rate": "fps30",
+      "frames": 180,
+      "time": 5.9999999999999885,
+      "maxima": {
+        "leftFoot": 0.000990450962464661,
+        "rightFoot": 0.0009935924045148478,
+        "leftGrip": 0.0010194258910436957,
+        "rightGrip": 0.0010275981037803637
+      },
+      "markers": [
+        3,
+        3
+      ],
+      "origin": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "extracted": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rootPose": [
+        0,
+        0,
+        0
+      ],
+      "hipPose": [
+        2.6369475678621968e-8,
+        -0.02236502191741754,
+        0.5985679592156821
+      ],
+      "layerMasks": [
+        {
+          "id": "upper",
+          "mask": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0
+          ],
+          "additive": true,
+          "weight": 0.7
+        },
+        {
+          "id": "nod",
+          "mask": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0
+          ],
+          "additive": true,
+          "weight": 0.4
+        }
+      ]
+    },
+    {
+      "mesh": "mesh:1",
+      "root": false,
+      "additive": true,
+      "rate": "fps60",
+      "frames": 360,
+      "time": 5.999999999999984,
+      "maxima": {
+        "leftFoot": 0.000990450962464221,
+        "rightFoot": 0.0009989105254395705,
+        "leftGrip": 0.0010231564261152064,
+        "rightGrip": 0.0010275981037803637
+      },
+      "markers": [
+        3,
+        3
+      ],
+      "origin": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "extracted": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rootPose": [
+        0,
+        0,
+        0
+      ],
+      "hipPose": [
+        2.6369475678623562e-8,
+        -0.022365021917417596,
+        0.5985679592156816
+      ],
+      "layerMasks": [
+        {
+          "id": "upper",
+          "mask": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0
+          ],
+          "additive": true,
+          "weight": 0.7
+        },
+        {
+          "id": "nod",
+          "mask": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0
+          ],
+          "additive": true,
+          "weight": 0.4
+        }
+      ]
+    },
+    {
+      "mesh": "mesh:1",
+      "root": false,
+      "additive": true,
+      "rate": "fps144",
+      "frames": 864,
+      "time": 6,
+      "maxima": {
+        "leftFoot": 0.0009987650598451052,
+        "rightFoot": 0.0010000366268234219,
+        "leftGrip": 0.0010231564261152064,
+        "rightGrip": 0.0010282000170409806
+      },
+      "markers": [
+        3,
+        3
+      ],
+      "origin": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "extracted": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rootPose": [
+        0,
+        0,
+        0
+      ],
+      "hipPose": [
+        2.636947567855477e-8,
+        -0.02236502191741528,
+        0.5985679592156998
+      ],
+      "layerMasks": [
+        {
+          "id": "upper",
+          "mask": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0
+          ],
+          "additive": true,
+          "weight": 0.7
+        },
+        {
+          "id": "nod",
+          "mask": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0
+          ],
+          "additive": true,
+          "weight": 0.4
+        }
+      ]
+    },
+    {
+      "mesh": "mesh:1",
+      "root": false,
+      "additive": true,
+      "rate": "jitter",
+      "frames": 300,
+      "time": 5.999999999999994,
+      "maxima": {
+        "leftFoot": 0.0009922106150929515,
+        "rightFoot": 0.0009961685991120006,
+        "leftGrip": 0.0009551447452409236,
+        "rightGrip": 0.0010275887229967552
+      },
+      "markers": [
+        3,
+        3
+      ],
+      "origin": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "extracted": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rootPose": [
+        0,
+        0,
+        0
+      ],
+      "hipPose": [
+        2.636947567862354e-8,
+        -0.022365021917417592,
+        0.5985679592156816
+      ],
+      "layerMasks": [
+        {
+          "id": "upper",
+          "mask": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0
+          ],
+          "additive": true,
+          "weight": 0.7
+        },
+        {
+          "id": "nod",
+          "mask": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0
+          ],
+          "additive": true,
+          "weight": 0.4
+        }
+      ]
+    },
+    {
+      "mesh": "mesh:1",
+      "root": true,
+      "additive": false,
+      "rate": "fps30",
+      "frames": 180,
+      "time": 5.9999999999999885,
+      "maxima": {
+        "leftFoot": 0.0010052588498030476,
+        "rightFoot": 0.030531307306998823,
+        "leftGrip": 0.0009123602955340447,
+        "rightGrip": 0.0010217839742366064
+      },
+      "markers": [
+        3,
+        3
+      ],
+      "origin": {
+        "x": 3.646199999999999,
+        "y": 0,
+        "z": 0
+      },
+      "extracted": {
+        "x": 1.7700000000000027,
+        "y": 0,
+        "z": 0
+      },
+      "rootPose": [
+        0,
+        0,
+        0
+      ],
+      "hipPose": [
+        1.97135e-8,
+        -0.02000011,
+        0.5639971300000001
+      ],
+      "layerMasks": [
+        {
+          "id": "upper",
+          "mask": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0
+          ],
+          "additive": false,
+          "weight": 0.7
+        },
+        {
+          "id": "nod",
+          "mask": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0
+          ],
+          "additive": true,
+          "weight": 0.4
+        }
+      ]
+    }
+  ],
+  "interruptions": [],
+  "derivation": {
+    "format": "mtek-character-composition-assets/1",
+    "original": {
+      "commit": "8f492390ddc7a2ae221a1369ef560589cf8c70fb",
+      "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/8f492390ddc7a2ae221a1369ef560589cf8c70fb/Models/CesiumMan/glTF-Binary/CesiumMan.glb",
+      "sha256": "b7001eaeea8254bd44773bcd247e78696d94169388fbb2a1800fc69434e777d9",
+      "bytes": 438044
+    },
+    "source": {
+      "sha256": "e28acec0d2cba84c8114f43422e834c05c1c1bd4784de69975c9364dad5b4510",
+      "bytes": 529824,
+      "clips": [
+        "Walk",
+        "Idle",
+        "Run",
+        "Travel",
+        "UpperAction",
+        "Nod"
+      ]
+    },
+    "target": {
+      "sha256": "ca93db015cae7ee245c6e99f787bfa483dddf2a2ac5d24d300adaeb259a32d60",
+      "bytes": 889112,
+      "legs": 1.2,
+      "arms": 0.9,
+      "rootLift": 0.108,
+      "maximumBindDisplacement": 0.1357589802712624
+    },
+    "retarget": {
+      "api": 1,
+      "rotationSpace": "world",
+      "bindAxes": "validated unchanged",
+      "mapping": {
+        "Z_UP": "Z_UP",
+        "Armature": "Armature",
+        "Cesium_Man": "Cesium_Man",
+        "Skeleton_torso_joint_1": "Skeleton_torso_joint_1",
+        "leg_joint_R_1": "leg_joint_R_1",
+        "leg_joint_R_2": "leg_joint_R_2",
+        "leg_joint_R_3": "leg_joint_R_3",
+        "leg_joint_R_5": "leg_joint_R_5",
+        "leg_joint_L_1": "leg_joint_L_1",
+        "leg_joint_L_2": "leg_joint_L_2",
+        "leg_joint_L_3": "leg_joint_L_3",
+        "leg_joint_L_5": "leg_joint_L_5",
+        "Skeleton_torso_joint_2": "Skeleton_torso_joint_2",
+        "torso_joint_3": "torso_joint_3",
+        "Skeleton_arm_joint_R": "Skeleton_arm_joint_R",
+        "Skeleton_arm_joint_R__2_": "Skeleton_arm_joint_R__2_",
+        "Skeleton_arm_joint_R__3_": "Skeleton_arm_joint_R__3_",
+        "Skeleton_arm_joint_L__4_": "Skeleton_arm_joint_L__4_",
+        "Skeleton_arm_joint_L__3_": "Skeleton_arm_joint_L__3_",
+        "Skeleton_arm_joint_L__2_": "Skeleton_arm_joint_L__2_",
+        "Skeleton_neck_joint_1": "Skeleton_neck_joint_1",
+        "Skeleton_neck_joint_2": "Skeleton_neck_joint_2",
+        "MotionRoot": "MotionRoot"
+      },
+      "nodeTranslationScales": {
+        "Skeleton_torso_joint_1": 1,
+        "leg_joint_R_2": 1.2,
+        "leg_joint_R_3": 1.2,
+        "leg_joint_R_5": 1.2,
+        "leg_joint_L_2": 1.2,
+        "leg_joint_L_3": 1.2,
+        "leg_joint_L_5": 1.2,
+        "Skeleton_arm_joint_R__2_": 0.9,
+        "Skeleton_arm_joint_R__3_": 0.9,
+        "Skeleton_arm_joint_L__4_": 0.9,
+        "Skeleton_arm_joint_L__3_": 0.9,
+        "Skeleton_arm_joint_L__2_": 0.9
+      },
+      "scaleRoundOff": "Original animated scale keys retained; bounded float32 input guard under decision 0209."
+    }
+  },
+  "failure": "AssertionError [ERR_ASSERTION]: Target residual exceeds 2 mm: {\"mesh\":\"mesh:1\",\"root\":true,\"additive\":false,\"rate\":\"fps30\",\"frames\":180,\"time\":5.9999999999999885,\"maxima\":{\"leftFoot\":0.0010052588498030476,\"rightFoot\":0.030531307306998823,\"leftGrip\":0.0009123602955340447,\"rightGrip\":0.0010217839742366064},\"markers\":[3,3],\"origin\":{\"x\":3.646199999999999,\"y\":0,\"z\":0},\"extracted\":{\"x\":1.7700000000000027,\"y\":0,\"z\":0},\"rootPose\":[0,0,0],\"hipPose\":[1.97135e-8,-0.02000011,0.5639971300000001],\"layerMasks\":[{\"id\":\"upper\",\"mask\":[0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0],\"additive\":false,\"weight\":0.7},{\"id\":\"nod\",\"mask\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0],\"additive\":true,\"weight\":0.4}]}",
+  "sources": [
+    {
+      "path": "examples/character-composition/controller.ts",
+      "sha256": "eebfe9b9fdc9b420e6376242f79ab41633e279b6301524c22eea9713bdda3831"
+    },
+    {
+      "path": "examples/character-composition/glb.mjs",
+      "sha256": "07c76af03ccc68eac183f6e0492dda028ec212ab683d076d5452ae71a1f0e4ef"
+    },
+    {
+      "path": "examples/character-composition/prepare.mjs",
+      "sha256": "a90058961717517a1d806b51e9ffb4c86c24ee2426b084c5aa00cbbedebc85de"
+    },
+    {
+      "path": "examples/character-composition/verify-cpu.mjs",
+      "sha256": "c73730091938c7bf511fd0c4f0606ebc9c5426b97eb76c53c1e8401e2f4ad23a"
+    },
+    {
+      "path": "examples/character-composition/scene/src/main.mtek",
+      "sha256": "5d77feaab15b9d3bf9ebe365e758abae705c227d98229f9d834108add67470f8"
+    }
+  ],
+  "finishedAt": "2026-10-27T04:13:25.316Z"
+}

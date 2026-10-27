@@ -24,7 +24,7 @@ export material Pbr {
     param emissive: color = #000000;
     fragment(surface: SurfaceInput) -> color {
         let texel = sample_mip(base_color_texture, base_color_sampler, surface.uv);
-        let albedo = color.linear(base_color.rgb * texel.xyz, 1.0);
+        let albedo = color.linear(base_color.rgb * texel.xyz, base_color.a);
         let mr = sample_mip(metallic_roughness_texture, metallic_roughness_sampler, surface.uv);
         let normal = sample_mip(normal_texture, normal_sampler, surface.uv).xyz;
         let ao = sample_mip(occlusion_texture, occlusion_sampler, surface.uv).x;

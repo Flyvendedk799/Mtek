@@ -3,6 +3,19 @@ import { animatedSkin } from "../test-support/animated-skin.js";
 import { SkeletonPlayer } from "./skeleton.js";
 
 describe("orientation and hinge-constrained IK", () => {
+  it("retains endpoint and matrix-axis accuracy with float32 exporter scale round-off", () => {
+    const rig = new SkeletonPlayer(animatedSkin());
+    rig.setProceduralOverride(pose => { for (const node of [1,2]) {pose[node*10+7]=1;pose[node*10+8]=Math.fround(1+1.5e-6);pose[node*10+9]=Math.fround(1-1.5e-6);} });
+    rig.ik.set("grip",{chain:["root","elbow","hand"],target:[1,1,0],rotation:[0,0,Math.sin(.3),Math.cos(.3)],iterations:32,tolerance:1e-5});
+    rig.evaluate();
+    const p=rig.jointPosition("hand");expect(Math.hypot(p.x-1,p.y-1,p.z)).toBeLessThan(1e-4);
+    // Identity inverse binds expose the actual composed end matrix, including tiny shear.
+    // Check normalized axes directly against Rz(.6), rather than the quaternion accessor.
+    const matrix=rig.palette.subarray(32,48),expected=[[Math.cos(.6),Math.sin(.6),0],[-Math.sin(.6),Math.cos(.6),0],[0,0,1]];
+    for(let axis=0;axis<3;axis++){const at=axis*4,length=Math.hypot(matrix[at]!,matrix[at+1]!,matrix[at+2]!);for(let component=0;component<3;component++)expect(Math.abs(matrix[at+component]!/length-expected[axis]![component]!)).toBeLessThan(1e-5);}
+    rig.setProceduralOverride(pose=>{pose[18]=1.00001;});
+    expect(()=>rig.evaluate()).toThrow(/uniform/);
+  });
   it("keeps the end effector at its position while aligning its mesh-space orientation", () => {
     const rig = new SkeletonPlayer(animatedSkin());
     rig.ik.set("grip", { chain: ["root", "elbow", "hand"], target: [1, 1, 0], rotation: [0, 0, Math.SQRT1_2, Math.SQRT1_2], iterations: 32 });

@@ -43,7 +43,7 @@ pub struct Capabilities {
 /// (the title without " not supported") is never used in this build.
 const UNSUPPORTED_PHRASES: &[(Code, &str)] = &[
     (Code::E1901, "bitwise operators (& | ^ ~ << >>)"),
-    (Code::E4901, "compute stages"),
+    (Code::E4901, "material-local compute stages"),
     (Code::E7901, "remote assets (URLs as asset paths)"),
     (
         Code::E7902,
@@ -67,6 +67,7 @@ pub const fn feature_name(construct: Construct) -> &'static str {
         Construct::Struct => "structs",
         Construct::Enum => "enums",
         Construct::Material => "materials",
+        Construct::Compute => "compute-programs",
         Construct::Prefab => "prefabs",
         Construct::Scene => "scenes",
         Construct::SceneField => "scene-fields",

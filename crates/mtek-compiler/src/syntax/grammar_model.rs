@@ -875,9 +875,7 @@ pub fn grammar() -> GrammarModel {
                     lit("}"),
                 ]),
             ),
-            &[
-                "                    /* [S: source-compute-build-gate: parsed and checked; packaging/dispatch still E4901] */",
-            ],
+            &[],
         ),
         syntax(
             "ComputeMember",

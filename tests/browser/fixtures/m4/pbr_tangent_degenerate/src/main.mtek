@@ -1,0 +1,24 @@
+const MODEL = asset.glb("../models/model.glb");
+scene Mapped {
+    clear_color: #000000;
+    ambient_color: #ffffff;
+    ambient_intensity: 0.3;
+    state sun: f32 = 3.0;
+    state base_factor: vec3 = vec3(1.0);
+    state normal_scale: f32 = 1.0;
+    state ao_strength: f32 = 0.0;
+    state metal: f32 = 0.0;
+    state rough: f32 = 0.6;
+    state emission: vec3 = vec3(0.0);
+    camera Main { position: vec3(0.0,0.0,2.0); target: vec3(0.0); projection: Orthographic {height:2.0}; exposure: -0.2630344; }
+    entity Sun { rotation: quat.euler(-0.4,-0.6,0.0); light: DirectionalLight { color: #ffffff; intensity: bind(sun) }; }
+    entity Part { mesh: MODEL.mesh("Quad"); material: MODEL.material("Mapped"); }
+    update(dt: f32) {
+        Part.material.base_color = color.linear(base_factor,1.0);
+        Part.material.normal_scale = normal_scale;
+        Part.material.occlusion_strength = ao_strength;
+        Part.material.metallic = metal;
+        Part.material.roughness = rough;
+        Part.material.emissive = color.linear(emission,1.0);
+    }
+}

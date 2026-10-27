@@ -783,12 +783,7 @@ impl<'a> Resolver<'a> {
 
     fn item(&mut self, item: &Item) {
         let construct = match &item.kind {
-            // Source checking remains behind E4901 until packaging/dispatch is
-            // implemented. Do not advertise an implemented construct gate yet.
-            ItemKind::Compute(decl) => {
-                self.compute(decl);
-                return;
-            }
+            ItemKind::Compute(_) => Construct::Compute,
             ItemKind::Import(_) => Construct::Import,
             ItemKind::Const(_) => Construct::ConstItem,
             ItemKind::Fn(decl) if decl.cpu => Construct::CpuFn,
@@ -810,7 +805,8 @@ impl<'a> Resolver<'a> {
         }
         let entered = self.enter(construct, item.span);
         match &item.kind {
-            ItemKind::Import(_) | ItemKind::Compute(_) | ItemKind::Error => {}
+            ItemKind::Import(_) | ItemKind::Error => {}
+            ItemKind::Compute(decl) => self.compute(decl),
             ItemKind::Const(decl) => self.const_body(decl),
             ItemKind::Fn(decl) => self.function(decl),
             ItemKind::Struct(decl) => self.structure(decl),

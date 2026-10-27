@@ -173,6 +173,30 @@ describe("the counting instrument", () => {
     expect(diff.writeBufferBytes).toBe(400 + 360 + 80 + 64 + 8);
   });
 
+  it("counts every RG16Float mip and array layer used by native BRDF lookup textures", () => {
+    const device = new FakeDevice(), before = instrument.snapshotCounters();
+    const texture = device.createTexture({ size: [8, 4, 6], format: "rg16float", mipLevelCount: 4 });
+    // Two 16-bit channels, six fixed array layers, and four 2D mip levels.
+    const expected = (8 * 4 + 4 * 2 + 2 * 1 + 1 * 1) * 4 * 6;
+    const allocated = instrument.diffCounters(instrument.snapshotCounters(), before);
+    expect(allocated.textureBytesCreated).toBe(expected);
+    expect(allocated.liveTextureBytes).toBe(expected);
+    expect(instrument.unknownTextureFormats()).not.toContain("rg16float");
+    texture.destroy();
+    expect(instrument.diffCounters(instrument.snapshotCounters(), before).liveTextureBytes).toBe(0);
+  });
+
+  it("shrinks volume depth across mips and includes multisample storage", () => {
+    const device = new FakeDevice(), before = instrument.snapshotCounters();
+    const volume = device.createTexture({ size: [8, 4, 4], format: "r8unorm", dimension: "3d", mipLevelCount: 4 });
+    const msaa = device.createTexture({ size: [8, 4], format: "rgba8unorm", sampleCount: 4 });
+    expect(instrument.diffCounters(instrument.snapshotCounters(), before).textureBytesCreated)
+      .toBe(8 * 4 * 4 + 4 * 2 * 2 + 2 * 1 * 1 + 1 + 8 * 4 * 4 * 4);
+    volume.destroy();
+    msaa.destroy();
+    expect(instrument.diffCounters(instrument.snapshotCounters(), before).liveTextureBytes).toBe(0);
+  });
+
   it("counts texture uploads and external image copies", () => {
     const queue = new FakeQueue();
     const before = instrument.snapshotCounters();

@@ -1,0 +1,386 @@
+{
+  "job": {
+    "scene": "product",
+    "quality": "low",
+    "pass": "cpu",
+    "implementation": "mtek",
+    "repeat": 0
+  },
+  "attempt": 1,
+  "startedAt": "2026-10-27T10:14:42.897Z",
+  "status": "interference",
+  "pageErrors": [],
+  "setup": {
+    "startupCreationMs": 487.2600000053644,
+    "implementation": "mtek",
+    "scene": "product",
+    "quality": "low",
+    "pass": "cpu",
+    "adapter": {
+      "vendor": "amd",
+      "architecture": "rdna-3",
+      "device": "0x744c",
+      "description": "AMD Radeon RX 7900 XTX",
+      "isFallbackAdapter": false
+    },
+    "deviceFeatures": [
+      "core-features-and-limits"
+    ],
+    "crossOriginIsolated": true,
+    "minimumClockDelta": 0.004999995231628418,
+    "resources": [
+      {
+        "path": "/page.js",
+        "decodedBodySize": 22914
+      },
+      {
+        "path": "/chunks/chunk-2FMLDOAA.js",
+        "decodedBodySize": 11377
+      },
+      {
+        "path": "/favicon.ico",
+        "decodedBodySize": 0
+      },
+      {
+        "path": "/chunks/mtek-YB5FCG7A.js",
+        "decodedBodySize": 1680
+      },
+      {
+        "path": "/programs/product-low/app.js",
+        "decodedBodySize": 12695
+      },
+      {
+        "path": "/programs/product-low/runtime.511aba6ff69265f4.js",
+        "decodedBodySize": 672833
+      },
+      {
+        "path": "/programs/product-low/program.manifest.json",
+        "decodedBodySize": 31939
+      },
+      {
+        "path": "/programs/product-low/shaders/819eea4642598b4d.wgsl",
+        "decodedBodySize": 15638
+      },
+      {
+        "path": "/programs/product-low/assets/65d4707c69942018.bin",
+        "decodedBodySize": 149412
+      },
+      {
+        "path": "/programs/product-low/assets/fa73d0b665fb5153.bin",
+        "decodedBodySize": 7080
+      },
+      {
+        "path": "/programs/product-low/assets/46ff0580472ae247.png",
+        "decodedBodySize": 59102
+      },
+      {
+        "path": "/programs/product-low/assets/52fc5c949f30db77.png",
+        "decodedBodySize": 3012733
+      },
+      {
+        "path": "/programs/product-low/assets/adf3efac61293fc2.png",
+        "decodedBodySize": 3577832
+      },
+      {
+        "path": "/programs/product-low/assets/dbfab38217771e44.png",
+        "decodedBodySize": 2165850
+      },
+      {
+        "path": "/programs/product-low/shaders/819eea4642598b4d.mtek-map.json",
+        "decodedBodySize": 24754
+      }
+    ],
+    "unknownTextureFormats": []
+  },
+  "warmup": {
+    "frames": 30,
+    "info": {
+      "diagnostics": [],
+      "counters": {
+        "buffersAllocated": 21,
+        "texturesAllocated": 11,
+        "pipelinesCreated": 7,
+        "shaderModulesCreated": 5,
+        "bindGroupsCreated": 61,
+        "uploads": 29,
+        "uploadBytes": 67794272,
+        "liveBuffers": 20,
+        "liveTextures": 10,
+        "liveSamplers": 4,
+        "liveShaderModules": 3,
+        "livePipelines": 5,
+        "liveBindGroups": 9,
+        "liveListeners": 9,
+        "frameTimeMs": 0.12000000476837158,
+        "cpuUpdateMs": 0.030000001192092896,
+        "renderPrepMs": 0.09000000357627869,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 12,
+        "drawCallsTotal": 360,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 30,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 1,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 4,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 30,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    "counters": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 0,
+      "renderPassesBegun": 0,
+      "computePassesBegun": 0,
+      "submits": 0,
+      "drawCalls": 0,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 0,
+      "setPipeline": 0,
+      "setBindGroup": 0,
+      "setVertexBuffer": 0,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 0,
+      "writeBufferBytes": 0,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 0
+    },
+    "lastFrameDraws": []
+  },
+  "browserGpu": {
+    "pid": 1464,
+    "processes": [
+      {
+        "type": "browser",
+        "id": 27328,
+        "cpuTime": 0.647947
+      },
+      {
+        "type": "renderer",
+        "id": 34388,
+        "cpuTime": 0.062479
+      },
+      {
+        "type": "renderer",
+        "id": 18680,
+        "cpuTime": 0.37916
+      },
+      {
+        "type": "renderer",
+        "id": 31644,
+        "cpuTime": 0.301896
+      },
+      {
+        "type": "GPU",
+        "id": 1464,
+        "cpuTime": 0.683043
+      },
+      {
+        "type": "network.mojom.NetworkService",
+        "id": 25320,
+        "cpuTime": 0.174538
+      },
+      {
+        "type": "storage.mojom.StorageService",
+        "id": 29356,
+        "cpuTime": 0.032208
+      }
+    ]
+  },
+  "hostLoad": {
+    "quiet": false,
+    "busyBeforePercent": 22.853837891431876,
+    "gpuBeforePercent": 0,
+    "waitedMs": 3021,
+    "observations": [
+      {
+        "cpu": 22.853837891431876,
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 675385053763,
+          "id": 2,
+          "kind": "gpu",
+          "counterRows": 365,
+          "qpcEnd": 675412668878,
+          "nonzero": []
+        }
+      }
+    ]
+  },
+  "error": "Error: CPU/external GPU did not become quiet; pass retained without running known-unqualified work",
+  "disposed": {
+    "result": {
+      "runtime": {
+        "buffersAllocated": 21,
+        "texturesAllocated": 11,
+        "pipelinesCreated": 7,
+        "shaderModulesCreated": 5,
+        "bindGroupsCreated": 61,
+        "uploads": 29,
+        "uploadBytes": 67794272,
+        "liveBuffers": 0,
+        "liveTextures": 0,
+        "liveSamplers": 0,
+        "liveShaderModules": 0,
+        "livePipelines": 0,
+        "liveBindGroups": 0,
+        "liveListeners": 0,
+        "frameTimeMs": 0.12000000476837158,
+        "cpuUpdateMs": 0.030000001192092896,
+        "renderPrepMs": 0.09000000357627869,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 12,
+        "drawCallsTotal": 360,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 30,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 1,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 4,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 30,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "diagnostics": []
+    },
+    "before": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 0,
+      "renderPassesBegun": 0,
+      "computePassesBegun": 0,
+      "submits": 0,
+      "drawCalls": 0,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 0,
+      "setPipeline": 0,
+      "setBindGroup": 0,
+      "setVertexBuffer": 0,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 0,
+      "writeBufferBytes": 0,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 0
+    },
+    "after": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 0,
+      "renderPassesBegun": 0,
+      "computePassesBegun": 0,
+      "submits": 0,
+      "drawCalls": 0,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 0,
+      "setPipeline": 0,
+      "setBindGroup": 0,
+      "setVertexBuffer": 0,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 0,
+      "writeBufferBytes": 0,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 1
+    },
+    "validation": [],
+    "losses": [],
+    "allDevicesDestroyed": true
+  },
+  "finishedAt": "2026-10-27T10:14:46.771Z",
+  "qualification": {
+    "qualified": false,
+    "errors": [
+      "Measurement did not complete",
+      "Missing setup, samples or disposal"
+    ]
+  },
+  "artifacts": []
+}

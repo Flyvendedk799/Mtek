@@ -129,6 +129,9 @@ fn primitive_size(primitive: &GlbPrimitive) -> u64 {
     if primitive.uv.is_some() {
         size += vertices * 8;
     }
+    if primitive.tangent.is_some() {
+        size += vertices * 16;
+    }
     align4(size + u64::from(primitive.index_count) * index_size)
 }
 
@@ -311,6 +314,15 @@ pub fn pack(
                 }
                 None => None,
             };
+            let tangent_offset = match primitive.tangent {
+                Some(tangent) => {
+                    let at = blob.len() as u64;
+                    copy_floats(&file.bin, tangent, vertices, 4, &mut blob)
+                        .ok_or_else(|| defect("a tangent accessor is out of bounds"))?;
+                    Some(at)
+                }
+                None => None,
+            };
             let index_offset = blob.len() as u64;
             if let Some(note) = copy_indices(&file.bin, primitive, &mut blob)
                 .ok_or_else(|| defect("an index accessor is out of bounds"))?
@@ -330,6 +342,9 @@ pub fn pack(
             }
             if uv_offset.is_some() {
                 attributes.push("uv".to_owned());
+            }
+            if tangent_offset.is_some() {
+                attributes.push("tangent".to_owned());
             }
             let center = primitive.bounds_center.map(num);
             let (Some(radius), [Some(x), Some(y), Some(z)]) =
@@ -352,6 +367,7 @@ pub fn pack(
                     position: position_offset,
                     normal: normal_offset,
                     uv: uv_offset,
+                    tangent: tangent_offset,
                     indices: index_offset,
                 },
                 bounding_sphere: BoundingSphere {

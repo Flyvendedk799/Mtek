@@ -1,0 +1,455 @@
+//! Milestone gating: which specified constructs this compiler build
+//! implements (`spec/compiler-architecture.md` section 4.3, decision 0013,
+//! decision 0025).
+//!
+//! Two sources decide, and nothing else:
+//!
+//! * the **construct table** ([`construct_gate`]): one row per syntactic
+//!   construct the resolver meets, with the milestone that implements it;
+//! * the **registry**: every standard-library item carries `since`
+//!   (`spec/stdlib.md` section 1.1), so a prelude type, function, namespace,
+//!   namespace or enum member, schema, schema field, scene-object kind or event
+//!   is implemented exactly when its `since` is reached.
+//!
+//! A construct is implemented when its milestone
+//! [is reached by](Milestone::is_reached_by) [`IMPLEMENTED_MILESTONE`].
+//! Anything else is `E9010` at the construct's span. Later milestones change a
+//! row (or the registry's `since`, or the constant), never the logic.
+
+use crate::stdlib::{CURRENT_MILESTONE, Milestone};
+use crate::syntax::ast::{BinaryOp, UnaryOp};
+
+/// The milestone this compiler build implements. It is the registry's
+/// [`CURRENT_MILESTONE`] (decision 0024), so that the construct table and the
+/// registry can never disagree about the build.
+pub const IMPLEMENTED_MILESTONE: Milestone = CURRENT_MILESTONE;
+
+/// The syntactic constructs the resolver gates. Every construct of the
+/// grammar that has semantics of its own is one of these or is part of one
+/// (statements, parameters and stage functions are part of the function,
+/// handler, lifecycle function or material they appear in).
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub enum Construct {
+    Import,
+    /// The `export` keyword in front of an item.
+    Export,
+    /// A module-level `const` item.
+    ConstItem,
+    /// `const` in a scene, entity or prefab body.
+    BodyConst,
+    Fn,
+    CpuFn,
+    Struct,
+    /// `enum Name { … }` (decision 0129).
+    Enum,
+    Material,
+    Compute,
+    Prefab,
+    Scene,
+    /// `name: value;` in a scene (fields of the schema `Scene`); each field
+    /// also has its own registry `since`.
+    SceneField,
+    State,
+    /// `camera Main { … }`; the kind has its own registry `since`.
+    SceneObject,
+    Entity,
+    /// `name: value;` in an entity (fields of the schema `Entity`).
+    EntityField,
+    /// `entity Name: Prefab { … }`.
+    PrefabInstance,
+    /// `update(dt: f32) { … }`, `fixed_update(…)` (and any other
+    /// `name(…) { … }` member, which is `E5052` once implemented).
+    LifecycleFn,
+    /// `on event(…) { … }`; the event has its own registry `since`.
+    Handler,
+    Bind,
+    SelfValue,
+    /// `Name { … }`; a registry schema has its own `since`.
+    Descriptor,
+    StringLiteral,
+    ArrayLiteral,
+    Index,
+    /// Unary `-` (operators: decision 0026).
+    Negation,
+    /// Binary `+`, `-`, `*`, `/`.
+    Arithmetic,
+    /// Binary `%`.
+    Remainder,
+    /// `<`, `<=`, `>`, `>=`.
+    Comparison,
+    /// `==`, `!=`.
+    Equality,
+    /// `!`, `&&`, `||`.
+    Logical,
+    /// `match` statements and expressions (decision 0129).
+    Match,
+}
+
+impl Construct {
+    /// Every construct, in declaration order.
+    pub const ALL: [Construct; 33] = [
+        Construct::Import,
+        Construct::Export,
+        Construct::ConstItem,
+        Construct::BodyConst,
+        Construct::Fn,
+        Construct::CpuFn,
+        Construct::Struct,
+        Construct::Enum,
+        Construct::Material,
+        Construct::Compute,
+        Construct::Prefab,
+        Construct::Scene,
+        Construct::SceneField,
+        Construct::State,
+        Construct::SceneObject,
+        Construct::Entity,
+        Construct::EntityField,
+        Construct::PrefabInstance,
+        Construct::LifecycleFn,
+        Construct::Handler,
+        Construct::Bind,
+        Construct::SelfValue,
+        Construct::Descriptor,
+        Construct::StringLiteral,
+        Construct::ArrayLiteral,
+        Construct::Index,
+        Construct::Negation,
+        Construct::Arithmetic,
+        Construct::Remainder,
+        Construct::Comparison,
+        Construct::Equality,
+        Construct::Logical,
+        Construct::Match,
+    ];
+}
+
+/// One row of the construct table.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct ConstructGate {
+    /// How diagnostics name the construct, at the start of a sentence.
+    pub subject: &'static str,
+    /// Whether `subject` is plural ("`fn` declarations are …").
+    pub plural: bool,
+    /// The milestone that implements the construct.
+    pub since: Milestone,
+}
+
+const fn row(subject: &'static str, plural: bool, since: Milestone) -> ConstructGate {
+    ConstructGate {
+        subject,
+        plural,
+        since,
+    }
+}
+
+/// The construct table. M1 implements scenes with scene fields, `camera`
+/// objects, entities (nested), descriptor literals of M1 registry schemas and
+/// constants (task M1-09), and unary minus and the arithmetic operators (task
+/// M1-10); the milestones of the rest follow the work plan (decisions 0025 and
+/// 0026).
+#[must_use]
+pub const fn construct_gate(construct: Construct) -> ConstructGate {
+    use Milestone::M1;
+    match construct {
+        // Modules (task M2-03, decision 0036) are implemented ahead of the M2
+        // gate; this build still reports milestone M1, so the rows say M1.
+        Construct::Import => row("Imports", true, M1),
+        Construct::Export => row("`export`", false, M1),
+        Construct::ConstItem => row("`const` items", true, M1),
+        Construct::BodyConst => row("`const` declarations in bodies", true, M1),
+        // Planned for M2; implemented by task M2-02 before the M2 gate (decision 0038).
+        Construct::Fn => row("`fn` declarations", true, M1),
+        Construct::CpuFn => row("`cpu fn` declarations", true, M1),
+        // Planned for M2; implemented by task M2-01 before the M2 gate (decision 0035).
+        Construct::Struct => row("`struct` declarations", true, M1),
+        // Small-game support, stage 1 (decision 0129): implemented by this build.
+        Construct::Enum => row("`enum` declarations", true, M1),
+        // Planned for M2; implemented by task M2-04 before the M2 gate (decision 0039).
+        Construct::Material => row("`material` declarations", true, M1),
+        Construct::Compute => row("`compute` declarations", true, M1),
+        // Planned for M5; implemented by task M5-01 before the M5 gate (decision 0062).
+        Construct::Prefab => row("`prefab` declarations", true, M1),
+        Construct::Scene => row("Scenes", true, M1),
+        Construct::SceneField => row("Scene fields", true, M1),
+        // Planned for M3; implemented by task M3-01 before the M3 gate (decision 0049).
+        Construct::State => row("`state` declarations", true, M1),
+        Construct::SceneObject => row("Scene objects", true, M1),
+        Construct::Entity => row("Entities", true, M1),
+        Construct::EntityField => row("Entity fields", true, M1),
+        Construct::PrefabInstance => row("Prefab instances (`entity Name: Prefab`)", true, M1),
+        // Planned for M3; implemented by tasks M3-01 and M3-02 before the M3 gate (decision 0049).
+        Construct::LifecycleFn => row("Lifecycle functions", true, M1),
+        Construct::Handler => row("Event handlers", true, M1),
+        // Planned for M3; implemented by task M3-05 before the M3 gate (decision 0051).
+        Construct::Bind => row("`bind`", false, M1),
+        Construct::SelfValue => row("`self`", false, M1),
+        Construct::Descriptor => row("Descriptor literals", true, M1),
+        // Planned for M2 with the registry types `string` and `array`; implemented by
+        // task M2-01 before the M2 gate (decision 0035).
+        Construct::StringLiteral => row("String literals", true, M1),
+        Construct::ArrayLiteral => row("Array literals", true, M1),
+        Construct::Index => row("Indexing (`a[i]`)", false, M1),
+        // Operators (decision 0026): M1 types and folds unary minus and the
+        // four arithmetic operators. The others are M2 work (M2-01) that
+        // landed before the M2 gate: `M1` marks them implemented by this
+        // build (decision 0035).
+        Construct::Negation => row("Unary minus", false, M1),
+        Construct::Arithmetic => row("Arithmetic operators", true, M1),
+        Construct::Remainder => row("The remainder operator `%`", false, M1),
+        Construct::Comparison => row("Comparison operators (`<`, `<=`, `>`, `>=`)", true, M1),
+        Construct::Equality => row("Equality operators (`==`, `!=`)", true, M1),
+        Construct::Logical => row("Logical operators (`!`, `&&`, `||`)", true, M1),
+        Construct::Match => row("`match`", false, M1),
+    }
+}
+
+/// The construct a unary operator belongs to.
+#[must_use]
+pub const fn unary_construct(op: UnaryOp) -> Construct {
+    match op {
+        UnaryOp::Neg => Construct::Negation,
+        UnaryOp::Not => Construct::Logical,
+    }
+}
+
+/// The construct a binary operator belongs to.
+#[must_use]
+pub const fn binary_construct(op: BinaryOp) -> Construct {
+    match op {
+        BinaryOp::Add | BinaryOp::Sub | BinaryOp::Mul | BinaryOp::Div => Construct::Arithmetic,
+        BinaryOp::Rem => Construct::Remainder,
+        BinaryOp::Lt | BinaryOp::Le | BinaryOp::Gt | BinaryOp::Ge => Construct::Comparison,
+        BinaryOp::Eq | BinaryOp::Ne => Construct::Equality,
+        BinaryOp::And | BinaryOp::Or => Construct::Logical,
+    }
+}
+
+/// Whether this build implements `construct`. The type checker asks the
+/// same table, so it never types what the resolver reported as `E9010`.
+#[must_use]
+pub const fn construct_implemented(construct: Construct) -> bool {
+    is_implemented(construct_gate(construct).since)
+}
+
+/// Whether something added in `since` is implemented by this build.
+#[must_use]
+pub const fn is_implemented(since: Milestone) -> bool {
+    since.is_reached_by(IMPLEMENTED_MILESTONE)
+}
+
+/// A construct the build rejects with `E9010` from a check of its own, whatever
+/// [`IMPLEMENTED_MILESTONE`] says: it is not a row of the construct table and not a registry
+/// item, so nothing above would lift it. The checker takes its wording from here and the context
+/// export (`spec/decisions/0072-context-export.md`) lists every one under `notSupported`, so the
+/// export and the build cannot disagree about it.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct HardGate {
+    /// The name the context export gives the construct.
+    pub feature: &'static str,
+    /// How diagnostics name the construct, at the start of a sentence.
+    pub subject: &'static str,
+    /// Whether `subject` is plural.
+    pub plural: bool,
+    /// The milestone that is planned to implement the construct; `None` when no milestone is planned
+    /// for it (a planned milestone that has passed without it would be a false promise).
+    pub since: Option<Milestone>,
+}
+
+/// A state initialiser, constant or field initialiser that is not a constant expression and is
+/// not allowed to be (decision 0039): the value would have to be computed during initialisation.
+pub const NON_CONSTANT_INITIAL_VALUES: HardGate = HardGate {
+    feature: "non-constant-initial-values",
+    subject: "Initial values that are not constant expressions",
+    plural: true,
+    since: None,
+};
+
+/// Every [`HardGate`] of the build.
+pub const HARD_GATES: [HardGate; 1] = [NON_CONSTANT_INITIAL_VALUES];
+
+/// The `E9010` message for `subject` (`plural` selects "are" over "is"),
+/// planned for `since`.
+#[must_use]
+pub fn gate_message(subject: &str, plural: bool, since: Milestone) -> String {
+    let verb = if plural { "are" } else { "is" };
+    format!(
+        "{subject} {verb} specified for v0.1 but not implemented by this compiler build yet (planned for {}).",
+        since.as_str()
+    )
+}
+
+/// The `E9010` message of a [`HardGate`]: with the milestone planned for it, if there is one.
+#[must_use]
+pub fn hard_gate_message(gate: &HardGate) -> String {
+    match gate.since {
+        Some(since) => gate_message(gate.subject, gate.plural, since),
+        None => {
+            let verb = if gate.plural { "are" } else { "is" };
+            format!(
+                "{} {verb} specified for v0.1 but not implemented by this compiler build yet.",
+                gate.subject
+            )
+        }
+    }
+}
+
+/// The note every `E9010` of the resolver carries: where to see what the build supports (the
+/// registry's milestone tags are not a version of the build, decision 0024).
+#[must_use]
+pub fn gate_note() -> String {
+    "`mtek context` lists what this build supports and what it does not".to_owned()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::stdlib::registry;
+
+    #[test]
+    fn the_list_of_constructs_is_complete_and_unique() {
+        let mut seen = Vec::new();
+        for construct in Construct::ALL {
+            assert!(!seen.contains(&construct), "{construct:?} twice");
+            seen.push(construct);
+        }
+        // `construct_gate` is an exhaustive match, so a new variant cannot be
+        // forgotten there; `ALL` is checked against the variant count by the
+        // array length.
+        assert_eq!(seen.len(), Construct::ALL.len());
+    }
+
+    #[test]
+    fn this_build_implements_scenes_entities_descriptors_constants_and_operators() {
+        for construct in [
+            Construct::ConstItem,
+            Construct::BodyConst,
+            Construct::Scene,
+            Construct::SceneField,
+            Construct::SceneObject,
+            Construct::Entity,
+            Construct::EntityField,
+            Construct::Descriptor,
+            Construct::Negation,
+            Construct::Arithmetic,
+            Construct::Import,
+            Construct::Export,
+            Construct::Remainder,
+            Construct::Comparison,
+            Construct::Equality,
+            Construct::Logical,
+            Construct::StringLiteral,
+            Construct::ArrayLiteral,
+            Construct::Index,
+            Construct::Struct,
+            Construct::Fn,
+            Construct::CpuFn,
+            Construct::Material,
+        ] {
+            assert!(
+                is_implemented(construct_gate(construct).since),
+                "{construct:?}"
+            );
+        }
+        for construct in [
+            Construct::State,
+            Construct::LifecycleFn,
+            Construct::Handler,
+            Construct::SelfValue,
+            Construct::Bind,
+        ] {
+            assert!(
+                is_implemented(construct_gate(construct).since),
+                "{construct:?}"
+            );
+        }
+        // Prefabs (task M5-01, decision 0062) land ahead of the M5 gate; the M1 rows mark them
+        // implemented, as decision 0035 prescribes.
+        for construct in [Construct::Prefab, Construct::PrefabInstance] {
+            assert!(
+                is_implemented(construct_gate(construct).since),
+                "{construct:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn literal_rows_agree_with_the_registry_types() {
+        // String and array literals produce values of the registry types
+        // `string` and `array`, so they land with them.
+        let registry = registry();
+        let since = |name: &str| registry.type_def(name).map(|t| t.since);
+        assert_eq!(
+            Some(construct_gate(Construct::StringLiteral).since),
+            since("string")
+        );
+        assert_eq!(
+            Some(construct_gate(Construct::ArrayLiteral).since),
+            since("array")
+        );
+        assert_eq!(Some(construct_gate(Construct::Index).since), since("array"));
+    }
+
+    #[test]
+    fn rows_agree_with_the_registry_where_it_has_the_same_item() {
+        let registry = registry();
+        let schema = |name: &str| registry.schema(name).map(|s| s.since);
+        assert_eq!(
+            Some(construct_gate(Construct::Scene).since),
+            schema("Scene")
+        );
+        assert_eq!(
+            Some(construct_gate(Construct::Entity).since),
+            schema("Entity")
+        );
+        let camera = registry.scene_object("camera").map(|k| k.since);
+        assert_eq!(Some(construct_gate(Construct::SceneObject).since), camera);
+    }
+
+    #[test]
+    fn every_operator_belongs_to_one_construct() {
+        use BinaryOp::*;
+        for op in [Add, Sub, Mul, Div] {
+            assert_eq!(binary_construct(op), Construct::Arithmetic);
+        }
+        assert_eq!(binary_construct(Rem), Construct::Remainder);
+        for op in [Lt, Le, Gt, Ge] {
+            assert_eq!(binary_construct(op), Construct::Comparison);
+        }
+        for op in [Eq, Ne] {
+            assert_eq!(binary_construct(op), Construct::Equality);
+        }
+        for op in [And, Or] {
+            assert_eq!(binary_construct(op), Construct::Logical);
+        }
+        assert_eq!(unary_construct(UnaryOp::Neg), Construct::Negation);
+        assert_eq!(unary_construct(UnaryOp::Not), Construct::Logical);
+        assert!(construct_implemented(Construct::Arithmetic));
+        assert!(construct_implemented(Construct::Logical));
+        assert!(construct_implemented(Construct::Fn));
+        assert!(construct_implemented(Construct::Material));
+    }
+
+    #[test]
+    fn messages_follow_the_specified_wording() {
+        let gate = construct_gate(Construct::Prefab);
+        assert_eq!(
+            gate_message(gate.subject, gate.plural, Milestone::M5),
+            "`prefab` declarations are specified for v0.1 but not implemented by this compiler build yet (planned for M5)."
+        );
+        let gate = construct_gate(Construct::PrefabInstance);
+        assert_eq!(
+            gate_message(gate.subject, gate.plural, Milestone::M5),
+            "Prefab instances (`entity Name: Prefab`) are specified for v0.1 but not implemented by this compiler build yet (planned for M5)."
+        );
+        assert_eq!(
+            gate_note(),
+            "`mtek context` lists what this build supports and what it does not"
+        );
+        // A hard gate with no planned milestone promises none.
+        assert_eq!(
+            hard_gate_message(&NON_CONSTANT_INITIAL_VALUES),
+            "Initial values that are not constant expressions are specified for v0.1 but not implemented by this compiler build yet."
+        );
+    }
+}

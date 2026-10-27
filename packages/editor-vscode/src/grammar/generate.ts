@@ -266,8 +266,8 @@ export function generateGrammar(source: GrammarSource, builtins: Builtins): TmGr
   });
 
   // --- keywords and the names they declare ------------------------------------------------------
-  // Source compute declarations are parsed/checked, while executable packaging
-  // remains E4901. The word remains illegal when used as an ordinary name.
+  // Standalone compute declarations are executable. The contextual word remains
+  // illegal when used as an ordinary name or as a material stage.
   add("checked-compute-declaration", {
     match: `(?:^|(?<=[{};]))\\s*(?:(export)\\s+)?(compute)\\s+(?!${words(source.reserved)}${END})(${IDENT})${END}(?!\\s*\\()`,
     captures: {

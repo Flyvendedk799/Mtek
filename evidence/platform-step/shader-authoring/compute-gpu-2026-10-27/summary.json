@@ -1,0 +1,358 @@
+{
+  "format": "mtek-compute-gpu-checkpoint/1",
+  "date": "2026-10-27",
+  "runs": {
+    "hardware": {
+      "source": "2026-10-26T23-38-43-545Z",
+      "status": "passed",
+      "cpuDifferentPixels": 0,
+      "directDifferentPixels": 0,
+      "recoveredDifferentPixels": 0,
+      "outputMismatches": 0,
+      "registryCounters": {
+        "liveBuffers": 0,
+        "liveTextures": 0,
+        "liveSamplers": 0,
+        "liveShaderModules": 0,
+        "livePipelines": 0,
+        "liveBindGroups": 0,
+        "liveListeners": 0
+      },
+      "reportSha256": "6676374488ae93f25cd48e5df9494a81b21f2c5582152c0831e6507c851b2d6d"
+    },
+    "software": {
+      "source": "2026-10-26T23-38-48-205Z",
+      "status": "passed",
+      "cpuDifferentPixels": 0,
+      "directDifferentPixels": 0,
+      "recoveredDifferentPixels": 0,
+      "outputMismatches": 0,
+      "registryCounters": {
+        "liveBuffers": 0,
+        "liveTextures": 0,
+        "liveSamplers": 0,
+        "liveShaderModules": 0,
+        "livePipelines": 0,
+        "liveBindGroups": 0,
+        "liveListeners": 0
+      },
+      "reportSha256": "fa2d0ad89660b26c8c47e4275bb7ccc24ef275ff6b034d286995260bba51e549"
+    },
+    "rejected-initial": {
+      "source": "2026-10-26T23-38-10-754Z",
+      "status": "failed harness counter assertion",
+      "cpuDifferentPixels": 0,
+      "directDifferentPixels": 0,
+      "recoveredDifferentPixels": 0,
+      "outputMismatches": 0,
+      "registryCounters": {
+        "liveBuffers": 0,
+        "liveTextures": 0,
+        "liveSamplers": 0,
+        "liveShaderModules": 0,
+        "livePipelines": 0,
+        "liveBindGroups": 0,
+        "liveListeners": 0
+      },
+      "reportSha256": "9b3ecc3ce8aa94c79817339a960cf3331bb39497f115d9f785ad5d59baed2b2c"
+    },
+    "composite-hardware": {
+      "source": "2026-10-27T00-20-26-515Z",
+      "status": "passed",
+      "numericalCases": [
+        {
+          "name": "positions",
+          "domain": [
+            1,
+            1,
+            1
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "positions",
+          "domain": [
+            71,
+            1,
+            1
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "positions",
+          "domain": [
+            72,
+            1,
+            1
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "positions",
+          "domain": [
+            3,
+            4,
+            6
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "all-14-invocation-fields",
+          "domain": [
+            5,
+            3,
+            3
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "ScalarCopy",
+          "domain": [
+            17,
+            1,
+            1
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "VectorCopy",
+          "domain": [
+            17,
+            1,
+            1
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "MatrixCopy",
+          "domain": [
+            17,
+            1,
+            1
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "ArrayCopy",
+          "domain": [
+            17,
+            1,
+            1
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "Transform",
+          "domain": [
+            17,
+            1,
+            1
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "Transform",
+          "domain": [
+            2,
+            2,
+            4
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "Transform",
+          "domain": [
+            3,
+            2,
+            2
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "Required",
+          "domain": [
+            17,
+            1,
+            1
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        }
+      ],
+      "cpuDifferentPixels": 0,
+      "directDifferentPixels": 0,
+      "recoveredDifferentPixels": 0,
+      "registryCounters": {
+        "liveBuffers": 0,
+        "liveTextures": 0,
+        "liveSamplers": 0,
+        "liveShaderModules": 0,
+        "livePipelines": 0,
+        "liveBindGroups": 0,
+        "liveListeners": 0
+      },
+      "reportSha256": "fc76d48de7795ed826b1dd3c1d02d8a9b84535c4f3fc1982a4e4d798215c9368"
+    },
+    "composite-software": {
+      "source": "2026-10-27T00-20-30-430Z",
+      "status": "passed",
+      "numericalCases": [
+        {
+          "name": "positions",
+          "domain": [
+            1,
+            1,
+            1
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "positions",
+          "domain": [
+            71,
+            1,
+            1
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "positions",
+          "domain": [
+            72,
+            1,
+            1
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "positions",
+          "domain": [
+            3,
+            4,
+            6
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "all-14-invocation-fields",
+          "domain": [
+            5,
+            3,
+            3
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "ScalarCopy",
+          "domain": [
+            17,
+            1,
+            1
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "VectorCopy",
+          "domain": [
+            17,
+            1,
+            1
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "MatrixCopy",
+          "domain": [
+            17,
+            1,
+            1
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "ArrayCopy",
+          "domain": [
+            17,
+            1,
+            1
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "Transform",
+          "domain": [
+            17,
+            1,
+            1
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "Transform",
+          "domain": [
+            2,
+            2,
+            4
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "Transform",
+          "domain": [
+            3,
+            2,
+            2
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        },
+        {
+          "name": "Required",
+          "domain": [
+            17,
+            1,
+            1
+          ],
+          "cpuMismatches": 0,
+          "directMismatches": 0
+        }
+      ],
+      "cpuDifferentPixels": 0,
+      "directDifferentPixels": 0,
+      "recoveredDifferentPixels": 0,
+      "registryCounters": {
+        "liveBuffers": 0,
+        "liveTextures": 0,
+        "liveSamplers": 0,
+        "liveShaderModules": 0,
+        "livePipelines": 0,
+        "liveBindGroups": 0,
+        "liveListeners": 0
+      },
+      "reportSha256": "b4849c62f95b5901bd04b59c90cc9cc431831eac05fe567c4736112261e6d97d"
+    }
+  }
+}

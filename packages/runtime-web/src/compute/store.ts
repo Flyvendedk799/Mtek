@@ -1,5 +1,5 @@
-/** Internal mounted-lifetime owner. It is intentionally not yet exported from
- * runtime-web: source packaging, host API and real GPU acceptance remain open. */
+/** Internal mounted-lifetime owner behind the public host handles. Ordinary
+ * source builds remain gated pending real GPU acceptance. */
 import type { ResourceRegistry } from "../gpu/registry.js";
 import { checkedDefinition, type ComputeDefinition, type ComputeDomain } from "./definition.js";
 import { ComputeInstance, type ComputeDevice } from "./instance.js";
@@ -78,6 +78,12 @@ export class ComputeStore {
     const instance = this.handles.get(handle);
     if (instance === undefined || !this.instances.has(instance)) throw new Error("compute: handle does not belong to the current program");
     return instance.renderBuffer();
+  }
+
+  renderReadyBuffer(handle: ComputeHandle): GPUBuffer | undefined {
+    const instance = this.handles.get(handle);
+    if (instance === undefined || !this.instances.has(instance)) return undefined;
+    return this.current === "ready" ? instance.renderReadyBuffer() : undefined;
   }
 
   inspect(): { state: State; instances: readonly ReturnType<ComputeInstance["inspect"]>[] } {

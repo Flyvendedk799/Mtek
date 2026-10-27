@@ -1,0 +1,958 @@
+{
+  "job": {
+    "scene": "product",
+    "quality": "low",
+    "pass": "presented",
+    "implementation": "three",
+    "repeat": 0
+  },
+  "attempt": 1,
+  "startedAt": "2026-10-27T10:33:42.717Z",
+  "status": "completed",
+  "pageErrors": [],
+  "setup": {
+    "startupCreationMs": 738.7600000053644,
+    "implementation": "three",
+    "scene": "product",
+    "quality": "low",
+    "pass": "presented",
+    "adapter": {
+      "vendor": "amd",
+      "architecture": "rdna-3",
+      "device": "0x744c",
+      "description": "AMD Radeon RX 7900 XTX",
+      "isFallbackAdapter": false
+    },
+    "deviceFeatures": [
+      "bgra8unorm-storage",
+      "clip-distances",
+      "core-features-and-limits",
+      "depth-clip-control",
+      "depth32float-stencil8",
+      "dual-source-blending",
+      "float32-blendable",
+      "float32-filterable",
+      "indirect-first-instance",
+      "rg11b10ufloat-renderable",
+      "shader-f16",
+      "subgroups",
+      "texture-compression-bc",
+      "texture-compression-bc-sliced-3d",
+      "texture-formats-tier1",
+      "texture-formats-tier2",
+      "timestamp-query"
+    ],
+    "crossOriginIsolated": true,
+    "minimumClockDelta": 0.004999995231628418,
+    "resources": [
+      {
+        "path": "/page.js",
+        "decodedBodySize": 23196
+      },
+      {
+        "path": "/chunks/chunk-2FMLDOAA.js",
+        "decodedBodySize": 11377
+      },
+      {
+        "path": "/favicon.ico",
+        "decodedBodySize": 0
+      },
+      {
+        "path": "/chunks/three-LSOSNDET.js",
+        "decodedBodySize": 2762536
+      },
+      {
+        "path": "/content.glb",
+        "decodedBodySize": 65480
+      },
+      {
+        "path": "/WaterBottle.glb",
+        "decodedBodySize": 8966700
+      }
+    ],
+    "unknownTextureFormats": []
+  },
+  "warmup": {
+    "frames": 30,
+    "info": {
+      "frames": 30,
+      "particles": 0,
+      "render": {
+        "calls": 107,
+        "frameCalls": 3,
+        "drawCalls": 11,
+        "triangles": 10013,
+        "points": 0,
+        "lines": 0,
+        "timestamp": 0
+      },
+      "memory": {
+        "attributes": 27,
+        "attributesSize": 134412,
+        "geometries": 13,
+        "indexAttributes": 3,
+        "indexAttributesSize": 56952,
+        "indirectStorageAttributes": 0,
+        "indirectStorageAttributesSize": 0,
+        "programs": 20,
+        "programsSize": 146459,
+        "readbackBuffers": 0,
+        "readbackBuffersSize": 0,
+        "renderTargets": 4,
+        "storageAttributes": 0,
+        "storageAttributesSize": 0,
+        "textures": 12,
+        "texturesSize": 95035892,
+        "uniformBuffers": 35,
+        "uniformBuffersSize": 4704,
+        "total": 95378419
+      },
+      "opaqueBatches": 5,
+      "productIdentity": {
+        "sourceSha256": "b337e526fd6a162013c2984aeec163f5fbb4f717252724dfc3f3458bd51df94b",
+        "mesh": "WaterBottle",
+        "material": "BottleMat",
+        "vertices": 2549,
+        "indices": 13530,
+        "tangentComponents": 4,
+        "nodeRotation": [
+          0,
+          1,
+          0,
+          0
+        ],
+        "normalMap": {
+          "width": 2048,
+          "height": 2048,
+          "type": 1009,
+          "format": 1023,
+          "colorSpace": "",
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "scale": [
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "counters": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 0,
+      "renderPassesBegun": 0,
+      "computePassesBegun": 0,
+      "submits": 0,
+      "drawCalls": 0,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 0,
+      "setPipeline": 0,
+      "setBindGroup": 0,
+      "setVertexBuffer": 0,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 0,
+      "writeBufferBytes": 0,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 0
+    },
+    "lastFrameDraws": []
+  },
+  "browserGpu": {
+    "pid": 10460,
+    "processes": [
+      {
+        "type": "browser",
+        "id": 7068,
+        "cpuTime": 0.583992
+      },
+      {
+        "type": "renderer",
+        "id": 2328,
+        "cpuTime": 0.057414
+      },
+      {
+        "type": "renderer",
+        "id": 16264,
+        "cpuTime": 0.539776
+      },
+      {
+        "type": "renderer",
+        "id": 23612,
+        "cpuTime": 0.270206
+      },
+      {
+        "type": "GPU",
+        "id": 10460,
+        "cpuTime": 0.855478
+      },
+      {
+        "type": "network.mojom.NetworkService",
+        "id": 10136,
+        "cpuTime": 0.148654
+      },
+      {
+        "type": "storage.mojom.StorageService",
+        "id": 27120,
+        "cpuTime": 0.027872
+      }
+    ]
+  },
+  "clocks": {
+    "qpc": {
+      "offsetMs": -0.0010000020265579224,
+      "uncertaintyMs": 0.10220000147819519,
+      "attempts": [
+        {
+          "before": 68679204.0559,
+          "after": 68679204.7412,
+          "remote": 68679204.45279999,
+          "roundTripMs": 0.6853000074625015,
+          "offsetMs": 0.05424998700618744
+        },
+        {
+          "before": 68679204.7605,
+          "after": 68679205.2367,
+          "remote": 68679204.91319999,
+          "roundTripMs": 0.47619999945163727,
+          "offsetMs": -0.08540001511573792
+        },
+        {
+          "before": 68679205.2434,
+          "after": 68679205.5965,
+          "remote": 68679205.4093,
+          "roundTripMs": 0.3531000018119812,
+          "offsetMs": -0.010649994015693665
+        },
+        {
+          "before": 68679205.6026,
+          "after": 68679205.8923,
+          "remote": 68679205.7542,
+          "roundTripMs": 0.2897000014781952,
+          "offsetMs": 0.006750002503395081
+        },
+        {
+          "before": 68679205.8963,
+          "after": 68679206.1395,
+          "remote": 68679206.01969999,
+          "roundTripMs": 0.24320000410079956,
+          "offsetMs": 0.0017999857664108276
+        },
+        {
+          "before": 68679206.1489,
+          "after": 68679206.3666,
+          "remote": 68679206.2582,
+          "roundTripMs": 0.21770000457763672,
+          "offsetMs": 0.00045000016689300537
+        },
+        {
+          "before": 68679206.3695,
+          "after": 68679206.5739,
+          "remote": 68679206.4707,
+          "roundTripMs": 0.20440000295639038,
+          "offsetMs": -0.0010000020265579224
+        },
+        {
+          "before": 68679206.5766,
+          "after": 68679206.8215,
+          "remote": 68679206.6754,
+          "roundTripMs": 0.24490000307559967,
+          "offsetMs": -0.02365000545978546
+        },
+        {
+          "before": 68679206.8282,
+          "after": 68679207.1337,
+          "remote": 68679206.9703,
+          "roundTripMs": 0.30550000071525574,
+          "offsetMs": -0.010649994015693665
+        },
+        {
+          "before": 68679207.1395,
+          "after": 68679207.4201,
+          "remote": 68679207.2686,
+          "roundTripMs": 0.28059999644756317,
+          "offsetMs": -0.011199995875358582
+        },
+        {
+          "before": 68679207.4264,
+          "after": 68679207.7232,
+          "remote": 68679207.56539999,
+          "roundTripMs": 0.29679998755455017,
+          "offsetMs": -0.009400010108947754
+        },
+        {
+          "before": 68679207.7294,
+          "after": 68679208.0012,
+          "remote": 68679207.8665,
+          "roundTripMs": 0.2718000113964081,
+          "offsetMs": 0.0012000054121017456
+        }
+      ]
+    },
+    "browser": {
+      "offsetMs": -68677609.13419999,
+      "uncertaintyMs": 0.1972000002861023,
+      "attempts": [
+        {
+          "before": 68679208.042,
+          "after": 68679208.8285,
+          "remote": 1599.4200000017881,
+          "roundTripMs": 0.7865000069141388,
+          "offsetMs": -68677609.01525
+        },
+        {
+          "before": 68679208.8347,
+          "after": 68679209.3189,
+          "remote": 1599.9500000029802,
+          "roundTripMs": 0.48420000076293945,
+          "offsetMs": -68677609.1268
+        },
+        {
+          "before": 68679209.3252,
+          "after": 68679209.7643,
+          "remote": 1600.4149999916553,
+          "roundTripMs": 0.4390999972820282,
+          "offsetMs": -68677609.12975001
+        },
+        {
+          "before": 68679209.7725,
+          "after": 68679210.2305,
+          "remote": 1600.8799999952316,
+          "roundTripMs": 0.4580000042915344,
+          "offsetMs": -68677609.1215
+        },
+        {
+          "before": 68679210.24,
+          "after": 68679210.6621,
+          "remote": 1601.3199999928474,
+          "roundTripMs": 0.4221000075340271,
+          "offsetMs": -68677609.13105
+        },
+        {
+          "before": 68679210.6671,
+          "after": 68679211.1046,
+          "remote": 1601.7450000047684,
+          "roundTripMs": 0.4375,
+          "offsetMs": -68677609.14085
+        },
+        {
+          "before": 68679211.107,
+          "after": 68679211.5014,
+          "remote": 1602.1700000017881,
+          "roundTripMs": 0.3944000005722046,
+          "offsetMs": -68677609.13419999
+        },
+        {
+          "before": 68679211.5035,
+          "after": 68679211.9543,
+          "remote": 1602.6350000053644,
+          "roundTripMs": 0.45080000162124634,
+          "offsetMs": -68677609.0939
+        },
+        {
+          "before": 68679211.9564,
+          "after": 68679212.3546,
+          "remote": 1603.0049999952316,
+          "roundTripMs": 0.39819999039173126,
+          "offsetMs": -68677609.1505
+        },
+        {
+          "before": 68679212.357,
+          "after": 68679212.7713,
+          "remote": 1603.4299999922514,
+          "roundTripMs": 0.41430000960826874,
+          "offsetMs": -68677609.13415001
+        },
+        {
+          "before": 68679212.7735,
+          "after": 68679213.1781,
+          "remote": 1603.844999998808,
+          "roundTripMs": 0.40460000932216644,
+          "offsetMs": -68677609.13080001
+        },
+        {
+          "before": 68679213.1802,
+          "after": 68679213.5979,
+          "remote": 1604.265000000596,
+          "roundTripMs": 0.41770000755786896,
+          "offsetMs": -68677609.12405
+        }
+      ]
+    },
+    "after": {
+      "offsetMs": -68677609.1306,
+      "uncertaintyMs": 0.1827000007033348,
+      "attempts": [
+        {
+          "before": 68680931.1385,
+          "after": 68680932.085,
+          "remote": 3322.594999998808,
+          "roundTripMs": 0.9464999884366989,
+          "offsetMs": -68677609.01675001
+        },
+        {
+          "before": 68680932.0931,
+          "after": 68680932.6385,
+          "remote": 3323.265000000596,
+          "roundTripMs": 0.545400008559227,
+          "offsetMs": -68677609.1008
+        },
+        {
+          "before": 68680932.6401,
+          "after": 68680933.0504,
+          "remote": 3323.734999999404,
+          "roundTripMs": 0.41030000150203705,
+          "offsetMs": -68677609.11025001
+        },
+        {
+          "before": 68680933.0518,
+          "after": 68680933.4461,
+          "remote": 3324.109999999404,
+          "roundTripMs": 0.3942999988794327,
+          "offsetMs": -68677609.13895
+        },
+        {
+          "before": 68680933.4476,
+          "after": 68680933.8697,
+          "remote": 3324.5349999964237,
+          "roundTripMs": 0.4220999926328659,
+          "offsetMs": -68677609.12365001
+        },
+        {
+          "before": 68680933.8711,
+          "after": 68680934.2565,
+          "remote": 3324.9449999928474,
+          "roundTripMs": 0.3854000121355057,
+          "offsetMs": -68677609.11880001
+        },
+        {
+          "before": 68680934.2579,
+          "after": 68680934.6233,
+          "remote": 3325.310000002384,
+          "roundTripMs": 0.3654000014066696,
+          "offsetMs": -68677609.1306
+        },
+        {
+          "before": 68680934.6246,
+          "after": 68680935.0981,
+          "remote": 3325.704999998212,
+          "roundTripMs": 0.47350001335144043,
+          "offsetMs": -68677609.15635
+        },
+        {
+          "before": 68680935.0996,
+          "after": 68680935.5181,
+          "remote": 3326.1749999970198,
+          "roundTripMs": 0.41849999129772186,
+          "offsetMs": -68677609.13385
+        },
+        {
+          "before": 68680935.5197,
+          "after": 68680935.9174,
+          "remote": 3326.594999998808,
+          "roundTripMs": 0.3976999968290329,
+          "offsetMs": -68677609.12355
+        },
+        {
+          "before": 68680935.9188,
+          "after": 68680936.3212,
+          "remote": 3326.9749999940395,
+          "roundTripMs": 0.4024000018835068,
+          "offsetMs": -68677609.14500001
+        },
+        {
+          "before": 68680936.3227,
+          "after": 68680936.7244,
+          "remote": 3327.390000000596,
+          "roundTripMs": 0.4017000049352646,
+          "offsetMs": -68677609.13355
+        }
+      ]
+    }
+  },
+  "nativeWindow": {
+    "bounds": {
+      "left": 10,
+      "top": 10,
+      "width": 656,
+      "height": 448,
+      "windowState": "normal"
+    }
+  },
+  "sample": {
+    "frames": 46,
+    "mode": "presented",
+    "renderedFrames": 16,
+    "milliseconds": null,
+    "gpu": null,
+    "counters": null,
+    "presentation": {
+      "captureWindow": {
+        "start": 2830.1949999928474,
+        "end": 2899.2549999952316
+      },
+      "rafTimestamps": [
+        2832.47,
+        2835.82,
+        2839.195,
+        2842.58,
+        2845.86,
+        2849.195,
+        2852.56,
+        2855.88,
+        2859.205,
+        2862.545,
+        2865.865,
+        2869.2,
+        2872.545,
+        2875.875,
+        2879.23,
+        2882.585
+      ],
+      "submissions": [
+        [
+          2832.594999998808,
+          2833.155000001192
+        ],
+        [
+          2835.935000002384,
+          2836.439999997616
+        ],
+        [
+          2839.3349999934435,
+          2839.859999999404
+        ],
+        [
+          2842.719999998808,
+          2843.185000002384
+        ],
+        [
+          2845.9599999934435,
+          2846.435000002384
+        ],
+        [
+          2849.3349999934435,
+          2849.939999997616
+        ],
+        [
+          2852.689999997616,
+          2853.234999999404
+        ],
+        [
+          2856.0849999934435,
+          2856.564999997616
+        ],
+        [
+          2859.390000000596,
+          2860.045000001788
+        ],
+        [
+          2862.685000002384,
+          2863.2150000035763
+        ],
+        [
+          2866.0100000053644,
+          2866.4800000041723
+        ],
+        [
+          2869.3400000035763,
+          2869.814999997616
+        ],
+        [
+          2872.719999998808,
+          2873.4449999928474
+        ],
+        [
+          2875.9950000047684,
+          2876.4149999916553
+        ],
+        [
+          2879.4099999964237,
+          2879.920000001788
+        ],
+        [
+          2882.7549999952316,
+          2883.2399999946356
+        ]
+      ],
+      "visibilityFailures": [],
+      "visibility": "visible",
+      "focused": true,
+      "canvas": {
+        "x": 0,
+        "y": 0,
+        "width": 640,
+        "height": 360,
+        "top": 0,
+        "right": 640,
+        "bottom": 360,
+        "left": 0
+      },
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "devicePixelRatio": 1
+    },
+    "info": {
+      "frames": 46,
+      "particles": 0,
+      "render": {
+        "calls": 155,
+        "frameCalls": 3,
+        "drawCalls": 11,
+        "triangles": 10013,
+        "points": 0,
+        "lines": 0,
+        "timestamp": 0
+      },
+      "memory": {
+        "attributes": 27,
+        "attributesSize": 134412,
+        "geometries": 13,
+        "indexAttributes": 3,
+        "indexAttributesSize": 56952,
+        "indirectStorageAttributes": 0,
+        "indirectStorageAttributesSize": 0,
+        "programs": 20,
+        "programsSize": 146459,
+        "readbackBuffers": 0,
+        "readbackBuffersSize": 0,
+        "renderTargets": 4,
+        "storageAttributes": 0,
+        "storageAttributesSize": 0,
+        "textures": 12,
+        "texturesSize": 95035892,
+        "uniformBuffers": 35,
+        "uniformBuffersSize": 4704,
+        "total": 95378419
+      },
+      "opaqueBatches": 5,
+      "productIdentity": {
+        "sourceSha256": "b337e526fd6a162013c2984aeec163f5fbb4f717252724dfc3f3458bd51df94b",
+        "mesh": "WaterBottle",
+        "material": "BottleMat",
+        "vertices": 2549,
+        "indices": 13530,
+        "tangentComponents": 4,
+        "nodeRotation": [
+          0,
+          1,
+          0,
+          0
+        ],
+        "normalMap": {
+          "width": 2048,
+          "height": 2048,
+          "type": 1009,
+          "format": 1023,
+          "colorSpace": "",
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "scale": [
+            1,
+            1
+          ]
+        }
+      }
+    }
+  },
+  "hostLoad": {
+    "quiet": true,
+    "busyBeforePercent": 9.292307692307693,
+    "gpuBeforePercent": 0,
+    "waitedMs": 563,
+    "observations": [
+      {
+        "cpu": 9.292307692307693,
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 686786224869,
+          "id": 17,
+          "kind": "gpu",
+          "counterRows": 381,
+          "qpcEnd": 686789281106,
+          "nonzero": []
+        }
+      }
+    ],
+    "valid": true,
+    "busyDuringPercent": 13.15287838353031,
+    "externalGpuPeakPercent": 1,
+    "logicalCpus": 20,
+    "cpuBefore": {
+      "idle": 1099420305,
+      "total": 1379558853
+    },
+    "cpuAfter": {
+      "idle": 1099422583,
+      "total": 1379561476
+    },
+    "gpuSamples": [
+      {
+        "raw": {
+          "qpc": 686804386818,
+          "id": 30,
+          "kind": "gpu",
+          "counterRows": 381,
+          "qpcEnd": 686807607549,
+          "nonzero": [
+            {
+              "name": "pid_4_luid_0x00000000_0x00013585_phys_0_eng_3_engtype_Copy",
+              "percent": 1
+            }
+          ]
+        },
+        "allEnginePeakPercent": 1,
+        "externalEnginePeakPercent": 1
+      }
+    ]
+  },
+  "etw": {
+    "args": [
+      "--process_id",
+      "10460",
+      "--session_name",
+      "MtekMaterials-29152-0c611d86",
+      "--output_file",
+      ".out/material-measurement-preflight-v2/passes/product-low-presented-three-r0/attempt-1/presentmon.csv",
+      "--v2_metrics",
+      "--qpc_time",
+      "--write_display_time",
+      "--write_frame_id",
+      "--write_display_metadata",
+      "--track_etw_status",
+      "--no_track_gpu",
+      "--no_track_input",
+      "--no_console_stats",
+      "--timed",
+      "120",
+      "--terminate_after_timed"
+    ],
+    "pid": 10460,
+    "sessionName": "MtekMaterials-29152-0c611d86",
+    "readiness": {
+      "code": 0,
+      "stdout": "\r\nName:                 MtekMaterials-29152-0c611d86\r\nStatus:               Running\r\nRoot Path:            %systemdrive%\\PerfLogs\r\nSegment:              Off\r\nSchedules:            On\r\n\r\nName:                 MtekMaterials-29152-0c611d86\\MtekMaterials-29152-0c611d86\r\nType:                 Trace\r\nAppend:               Off\r\nCircular:             Off\r\nOverwrite:            Off\r\nBuffer Size:          64\r\nBuffers Lost:         0\r\nBuffers Written:      0\r\nBuffer Flush Timer:   1\r\nClock Type:           Performance\r\nFile Mode:            Real-time\r\n\r\nProvider:\r\nName:                 Microsoft-Windows-D3D9\r\nProvider Guid:        {783ACA0A-790E-4D7F-8451-AA850511C6B9}\r\nLevel:                255\r\nKeywordsAll:          0x8000000000000002 (Events,Microsoft-Windows-Direct3D9/Analytic)\r\nKeywordsAny:          0x8000000000000002 (Events,Microsoft-Windows-Direct3D9/Analytic)\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 Microsoft-Windows-DxgKrnl\r\nProvider Guid:        {802EC45A-1E99-4B83-9920-87C98277BA9D}\r\nLevel:                4 (win:Informational)\r\nKeywordsAll:          0x1 (Base)\r\nKeywordsAny:          0x8000001 (Base,Present)\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 Microsoft-Windows-Dwm-Core\r\nProvider Guid:        {9E9BBA3C-2E38-40CB-99F4-9E8281425164}\r\nLevel:                5 (win:Verbose)\r\nKeywordsAll:          0x0\r\nKeywordsAny:          0x8000000000000081 (Composition,Scheduling,Microsoft-Windows-Dwm-Core/Diagnostic)\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 {8C9DD1AD-E6E5-4B07-B455-684A9D879900}\r\nProvider Guid:        {8C9DD1AD-E6E5-4B07-B455-684A9D879900}\r\nLevel:                5\r\nKeywordsAll:          0x0\r\nKeywordsAny:          0xffffffffffffffff\r\nProperties:           64\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 {AE4F8626-8265-40D1-A70B-11B64240E8E9}\r\nProvider Guid:        {AE4F8626-8265-40D1-A70B-11B64240E8E9}\r\nLevel:                4\r\nKeywordsAll:          0x1000000000000000\r\nKeywordsAny:          0x1000000000000000\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 {65CD4C8A-0848-4583-92A0-31C0FBAF00C0}\r\nProvider Guid:        {65CD4C8A-0848-4583-92A0-31C0FBAF00C0}\r\nLevel:                4\r\nKeywordsAll:          0x0\r\nKeywordsAny:          0x0\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 Microsoft-Windows-DXGI\r\nProvider Guid:        {CA11C036-0102-4A2D-A6AD-F03CFED5D3C9}\r\nLevel:                255\r\nKeywordsAll:          0x8000000000000002 (Events,Microsoft-Windows-DXGI/Analytic)\r\nKeywordsAny:          0x8000000000000002 (Events,Microsoft-Windows-DXGI/Analytic)\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 Microsoft-Windows-Win32k\r\nProvider Guid:        {8C416C79-D49B-4F01-A467-E56D3AA8234C}\r\nLevel:                4 (win:Informational)\r\nKeywordsAll:          0x8000000000001000 (Updates,Microsoft-Windows-Win32k/Tracing)\r\nKeywordsAny:          0x8000000400001000 (Updates,Visualization,Microsoft-Windows-Win32k/Tracing)\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nThe command completed successfully.\r\n",
+      "stderr": ""
+    },
+    "code": 0,
+    "stdout": "Started recording.\r\n[ETW Status] BufferFillPct=3.1% BuffersInUse=8 TotalBuffers=256 EventsLost=0 BuffersLost=0, OverflowedPresents=0\r\n",
+    "stderr": "warning: PresentMon requires elevated privilege in order to query processes that are\r\n         short-running or started on another account.  Without it, those processes will\r\n         be listed as '<unknown>' and they can't be targeted by --process_name nor trigger\r\n         --terminate_on_proc_exit.\r\n",
+    "stop": {
+      "code": 0,
+      "stdout": "",
+      "stderr": "warning: --terminate_existing_session exits without capturing anything; ignoring all other options.\r\nwarning: --no_console_stats added because stdout does not support statistics reporting.\r\n"
+    }
+  },
+  "presentation": {
+    "source": "PresentMon 2.6.0 ETW",
+    "windowQpc": {
+      "start": 686804393281.9999,
+      "end": 686805083881.9999
+    },
+    "processId": 10460,
+    "swapchain": "0x164DDF0CE90",
+    "rawRows": 14,
+    "displayedRows": 14,
+    "uniqueDisplayTimes": 14,
+    "notDisplayedOsRows": 0,
+    "cohorts": [
+      {
+        "address": "0x164DDF0CE90",
+        "rows": 14
+      }
+    ],
+    "timestampsMs": [
+      1191.7867,
+      1198.428,
+      1201.789,
+      1205.1106,
+      1208.4403,
+      1211.7777,
+      1215.0961,
+      1218.4345,
+      1221.779,
+      1225.0819,
+      1228.4616,
+      1231.7944,
+      1235.091,
+      1238.4145
+    ],
+    "intervalsMs": [
+      6.641300000000001,
+      3.3609999999998763,
+      3.3215999999999894,
+      3.3297000000000025,
+      3.337400000000116,
+      3.318399999999883,
+      3.3384000000000924,
+      3.3444999999999254,
+      3.3028999999999087,
+      3.3797000000001844,
+      3.3327999999999065,
+      3.2965999999998985,
+      3.3235000000001946
+    ],
+    "cadence": {
+      "count": 13,
+      "min": 3.2965999999998985,
+      "max": 6.641300000000001,
+      "mean": 3.5867538461538446,
+      "p50": 3.3327999999999065,
+      "p95": 6.641300000000001,
+      "p99": 6.641300000000001
+    },
+    "framesPerSecond": 278.80363216793427,
+    "modes": [
+      "Composed: Flip"
+    ],
+    "boundaries": "OS display events of the isolated browser; no per-JavaScript-frame latency or physical pixel scanout measurement is inferred"
+  },
+  "nativeConsistency": {
+    "path": "native.png",
+    "sha256": "4005bae67afc8c4539e64c1611cf455716b296e6bff1269c5cd45161ccdd5fcf",
+    "reference": {
+      "path": "offscreen.png",
+      "sha256": "9505a57e30e57ceea10726bb0e98f0491be22e75ce1cd6321f627d9eaf13e5bb"
+    },
+    "meanAbsoluteRgb8": 1.1103660300925926,
+    "p95MaximumChannelError8": 4,
+    "fractionOver3": 0.4420529513888889,
+    "passed": false
+  },
+  "disposed": {
+    "result": {
+      "frames": 46,
+      "particles": 0
+    },
+    "before": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 0,
+      "renderPassesBegun": 0,
+      "computePassesBegun": 0,
+      "submits": 0,
+      "drawCalls": 0,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 0,
+      "setPipeline": 0,
+      "setBindGroup": 0,
+      "setVertexBuffer": 0,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 0,
+      "writeBufferBytes": 0,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 0
+    },
+    "after": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 0,
+      "renderPassesBegun": 0,
+      "computePassesBegun": 0,
+      "submits": 0,
+      "drawCalls": 0,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 0,
+      "setPipeline": 0,
+      "setBindGroup": 0,
+      "setVertexBuffer": 0,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 0,
+      "writeBufferBytes": 0,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 1
+    },
+    "validation": [],
+    "losses": [],
+    "allDevicesDestroyed": true
+  },
+  "finishedAt": "2026-10-27T10:33:47.161Z",
+  "qualification": {
+    "qualified": false,
+    "errors": [
+      "Native canvas differs from offscreen reference"
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "native.png",
+      "bytes": 24507,
+      "sha256": "4005bae67afc8c4539e64c1611cf455716b296e6bff1269c5cd45161ccdd5fcf"
+    },
+    {
+      "path": "offscreen.png",
+      "bytes": 32572,
+      "sha256": "9505a57e30e57ceea10726bb0e98f0491be22e75ce1cd6321f627d9eaf13e5bb"
+    },
+    {
+      "path": "presentmon-process.json",
+      "bytes": 4840,
+      "sha256": "54a23e308d83d80dab4f8d239b20d7cc7ff0ab30ff48f0e365164577e67d27d3"
+    },
+    {
+      "path": "presentmon.csv",
+      "bytes": 2336,
+      "sha256": "51d3094ae5ce9bdc5cc3360aed1d6704a290e7cbe400aed8ac4078d7410cd632"
+    }
+  ]
+}

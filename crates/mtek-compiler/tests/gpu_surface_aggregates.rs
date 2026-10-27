@@ -43,7 +43,7 @@ fn compile(declarations: &str, body: &str) -> naga::Module {
     let TypeInner::Struct { members, span } = &surface[0].1.inner else {
         panic!("SurfaceInput must be a struct");
     };
-    assert_eq!(*span, 64);
+    assert_eq!(*span, 80);
     assert_eq!(
         members
             .iter()
@@ -53,7 +53,8 @@ fn compile(declarations: &str, body: &str) -> naga::Module {
             ("local_position", 0),
             ("world_position", 16),
             ("world_normal", 32),
-            ("uv", 48)
+            ("uv", 48),
+            ("world_tangent", 64)
         ]
     );
     module
@@ -65,7 +66,7 @@ fn stage_inputs_in_arrays_support_constant_and_clamped_indices() {
         "",
         "let values = [input, input]; return color.linear(values[index].world_normal + values[0].world_position, 1.0);",
     );
-    assert!(module.types.iter().any(|(_, ty)| matches!(ty.inner, TypeInner::Array { base, stride: 64, .. } if module.types[base].name.as_deref() == Some("MtekSurfaceInput"))));
+    assert!(module.types.iter().any(|(_, ty)| matches!(ty.inner, TypeInner::Array { base, stride: 80, .. } if module.types[base].name.as_deref() == Some("MtekSurfaceInput"))));
 }
 
 #[test]

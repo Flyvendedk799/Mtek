@@ -7,7 +7,7 @@
 //
 // Exit codes: 0 every assertion holds and the document is current; 1 an assertion fails or the document
 // is stale; 3 the compiler or its helper cannot be found.
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { audit, committed, DOCUMENT } from "./audit.ts";
@@ -56,7 +56,11 @@ export async function runCli(
   }
   if (flags.has("--write")) {
     mkdirSync(dirname(join(root, DOCUMENT)), { recursive: true });
-    writeFileSync(join(root, DOCUMENT), text, "utf8");
+    // Replace the file: desktop editors can keep the existing document mapped
+    // on Windows, which prevents opening it for truncation.
+    const destination = join(root, DOCUMENT), temporary = `${destination}.${String(process.pid)}.tmp`;
+    writeFileSync(temporary, text, "utf8");
+    renameSync(temporary, destination);
     io.out(`wrote ${DOCUMENT}\n`);
   }
   const problems = [...matrix.problems];

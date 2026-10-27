@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E7010",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The mesh 'Tri' (meshes[0]), primitive 0 has TANGENT but no NORMAL; this profile requires normals for authored tangent frames.",
+    "notes": [
+      "the problem is in the file 'models/model.glb'"
+    ]
+  }
+]

@@ -49,12 +49,14 @@ import { batchDraws, instancingCandidates, type Batch } from "./instancing.js";
 import type { MaterialStore } from "./materials.js";
 import { vertexBufferOf, type GpuMesh, type MeshStore } from "./meshes.js";
 import {skinWorldScale} from "../mesh/skin-bounds.js";
+import type { RenderInspection, SceneRenderBounds } from "../host/inspection.js";
 import { INSTANCE_FLOATS, INSTANCE_STRIDE, type BindingPlan, alwaysBlends } from "./pipelines.js";
 import type { ParticleDraw } from "../scene/particles.js";
 import type { SceneLighting } from "./scene-lighting.js";
 
 /** What the renderer needs of the drawing surface (`host/surface.ts`). */
 export interface RenderSurface {
+  readonly framesRendered?: number;
   readonly renderable: boolean;
   readonly size: { readonly width: number; readonly height: number };
   render(clearColor: readonly [number, number, number, number], encode?: (pass: GPURenderPassEncoder) => void,
@@ -244,6 +246,8 @@ export class Renderer {
   private viewKeyValid = false;
   private draws: readonly DrawItem[] = [];
   private drawsVersion = -1;
+  private drawsPositionVersion = -1;
+  private positionBoundsDirty = false;
   private drawsBlockVersion = -1;
   private drawsPopulation = -1;
   /** The blended pipelines made so far, by material id, and the requests in flight (decision 0138). */
@@ -530,6 +534,28 @@ export class Renderer {
     this.cullingEnabled = enabled;
   }
 
+  /** Passive diagnostics: no pose evaluation, GPU work or consumption of world change flags. */
+  inspect(): RenderInspection {
+    const world = this.options.world, planes = extractFrustumPlanes(this.lastViewProj);
+    return { frame: this.options.surface.framesRendered ?? null, renderable: this.viewKeyValid && this.options.surface.renderable,
+      viewport: this.options.surface.size, viewProjection: [...this.lastViewProj],
+      bounds: this.draws.flatMap(draw => {
+        const record = world.recordAt(draw.entity), skin = world.skinPlayer(draw.entity);
+        if (record === undefined || !this.options.meshes.positionsAvailable(draw.entity)) return [];
+        const computed = draw.gpuMesh.computedPositions === true, authored = record.bounds_radius > 0 && !computed;
+        const source: SceneRenderBounds["source"] = authored ? "authored" : computed ? "compute" : draw.vertexDeformation === 1 ? "unbounded" : skin === undefined ? "mesh" : "animated";
+        const unavailable = source === "unbounded" || (!authored && skin !== undefined && !this.options.meshes.skinBoundsCurrent(draw.entity, skin));
+        const sphere: WorldSphere = { x: 0, y: 0, z: 0, radius: 0 }, model = world.worldMatrix(draw.entity);
+        const center: readonly [number, number, number] = authored ? [record.bounds_center.x, record.bounds_center.y, record.bounds_center.z] : draw.gpuMesh.boundingCenter;
+        worldBoundingSphere(model, authored ? record.bounds_radius : draw.gpuMesh.boundingRadius, sphere, center);
+        if (authored || computed || skin !== undefined) sphere.radius = (authored ? record.bounds_radius : draw.gpuMesh.boundingRadius) * skinWorldScale(model);
+        const finite = !unavailable && [sphere.x, sphere.y, sphere.z, sphere.radius].every(Number.isFinite);
+        return [{ slot: draw.entity, value: { source, sphere: finite ? { center: { x: sphere.x, y: sphere.y, z: sphere.z }, radius: sphere.radius } : null,
+          culled: this.cullingEnabled && finite && !sphereIntersectsFrustum(planes, sphere.x, sphere.y, sphere.z, sphere.radius) } }];
+      }),
+    };
+  }
+
   /** Number of materials taken out of the draw list by `failMaterial`. */
   get failedMaterialCount(): number {
     return this.failedMaterials.size;
@@ -576,10 +602,13 @@ export class Renderer {
   /** The current draw list (rebuilt when visibility or the set of failed materials changed). */
   drawList(): readonly DrawItem[] {
     const { world, structure, pipelines, meshes, materials } = this.options;
+    meshes.refreshPositions();
+    if (this.drawsPositionVersion !== meshes.positionVersion) { this.positionBoundsDirty = true; this.cullDirty = true; }
     if (
       this.drawsVersion === world.visibilityVersion &&
       this.drawsBlockVersion === materials.blockVersion &&
       this.drawsPopulation === world.dynamic.version &&
+      this.drawsPositionVersion === meshes.positionVersion &&
       this.drawsBlendedVersion === this.blendedVersion
     ) {
       return this.draws;
@@ -592,7 +621,8 @@ export class Renderer {
       const pipeline = pipelines.get(entity.instance.material.id);
       if (pipeline === undefined) throw new Error(`internal error: no pipeline for material '${entity.instance.material.id}'`);
       const skin = world.skinPlayer(entity.index);
-      const gpuMesh = meshes.forEntity(entity.mesh.id, entity.index, skin);
+      if (!meshes.positionsAvailable(entity.index)) return;
+      const gpuMesh = meshes.forEntity(entity.mesh.id, entity.index, skin, entity.instance.material.shader.vertexAttributes.includes("normal"), entity.instance.material.shader.vertexAttributes.includes("tangent"));
       const translucent = materials.isTranslucent(entity.instance.index) || alwaysBlends(entity.instance.material) || this.options.additiveMaterials?.has(entity.instance.material.id)===true;
       const blended = translucent ? this.blendedPipeline(entity.instance.material) : undefined;
       items.push({
@@ -616,6 +646,7 @@ export class Renderer {
     for (const spawned of world.dynamic.live) list(spawned.resolved, spawned.record.visible, structure.entities.length + spawned.order);
     this.draws = items.sort(compareDraws);
     this.drawsVersion = world.visibilityVersion;
+    this.drawsPositionVersion = meshes.positionVersion;
     this.drawsBlockVersion = materials.blockVersion;
     this.drawsPopulation = world.dynamic.version;
     this.drawsBlendedVersion = this.blendedVersion;
@@ -641,12 +672,16 @@ export class Renderer {
     materials.flush(device.queue);
 
     const listed = this.drawList();
-    const boundsDirty = this.boundsVersion !== this.options.world.boundsVersion;
+    const boundsDirty = this.boundsVersion !== this.options.world.boundsVersion || this.positionBoundsDirty;
+    this.positionBoundsDirty = false;
     if (boundsDirty) { this.cullDirty = true; this.boundsVersion = this.options.world.boundsVersion; }
     for(const draw of listed) {
+      // Opaque unculled draws need neither animated bounds nor sorting centres.
+      // Shadow passes consume all visible casters directly, without these spheres.
+      if (!this.cullingEnabled && draw.translucent !== true) continue;
       const record = this.options.world.recordAt(draw.entity);
       const skin=this.options.world.skinPlayer(draw.entity);
-      if (record !== undefined && record.bounds_radius > 0) {
+      if (record !== undefined && record.bounds_radius > 0 && draw.gpuMesh.computedPositions !== true) {
         const center = record.bounds_center;
         this.boundsCenter[0] = center.x; this.boundsCenter[1] = center.y; this.boundsCenter[2] = center.z;
         const model = this.options.world.worldMatrix(draw.entity);
@@ -662,12 +697,13 @@ export class Renderer {
         this.sphereCentres[draw.entity*3+1] = this.sphere.y;
         this.sphereCentres[draw.entity*3+2] = this.sphere.z;
         this.sphereScales[draw.entity]=skinWorldScale(this.options.world.worldMatrix(draw.entity));
-      } else if (boundsDirty) {
-        worldBoundingSphere(this.options.world.worldMatrix(draw.entity), 1, this.sphere, draw.gpuMesh.boundingCenter);
+      } else if (boundsDirty || draw.gpuMesh.computedPositions === true) {
+        const model = this.options.world.worldMatrix(draw.entity);
+        worldBoundingSphere(model, 1, this.sphere, draw.gpuMesh.boundingCenter);
         this.sphereCentres[draw.entity*3] = this.sphere.x;
         this.sphereCentres[draw.entity*3+1] = this.sphere.y;
         this.sphereCentres[draw.entity*3+2] = this.sphere.z;
-        this.sphereScales[draw.entity] = this.sphere.radius;
+        this.sphereScales[draw.entity] = draw.gpuMesh.computedPositions === true ? skinWorldScale(model) : this.sphere.radius;
       }
     }
     const culled = this.cull(listed, viewProj);
@@ -729,7 +765,7 @@ export class Renderer {
     for (let i = 0; i < draws.length; i++) {
       const draw = draws[i] as DrawItem;
       const e = draw.entity;
-      const authoredRadius = this.options.world.recordAt(e)?.bounds_radius ?? 0;
+      const authoredRadius = draw.gpuMesh.computedPositions === true ? 0 : this.options.world.recordAt(e)?.bounds_radius ?? 0;
       const radius = (authoredRadius > 0 ? authoredRadius : draw.gpuMesh.boundingRadius) * (sphereScales[e] ?? 0);
       if ((draw.vertexDeformation === 1 && authoredRadius === 0) || sphereIntersectsFrustum(planes, sphereCentres[e * 3] ?? 0, sphereCentres[e * 3 + 1] ?? 0, sphereCentres[e * 3 + 2] ?? 0, radius)) {
         if (drawn[count] !== draw) {

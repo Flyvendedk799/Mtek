@@ -4,6 +4,21 @@ import { retargetSkin } from "./retarget.js";
 import { SkeletonPlayer } from "./skeleton.js";
 
 describe("explicit world-frame retargeting", () => {
+  it("preserves imported scale keys inside the float32 round-off band and rejects larger anisotropy", () => {
+    const base=animatedSkin(),values=[1,Math.fround(1+1.5e-6),Math.fround(1-1.5e-6)];
+    const scale={node:1,path:"scale" as const,interpolation:"linear" as const,times:[0,1],values:[...values,...values]};
+    const source={...base,clips:[{...base.clips[1]!,channels:[...base.clips[1]!.channels,scale]}]};
+    const mapping={root:"root",elbow:"elbow",hand:"hand"};
+    const transferred=retargetSkin(source,source,mapping,{rotationSpace:"world"});
+    expect(transferred.clips[0]!.channels[1]!.values).toEqual(scale.values);
+    const rig=new SkeletonPlayer(transferred,"action");rig.advance(.5);
+    const matrix=rig.palette.subarray(16,32),axis=[matrix[0]!,matrix[1]!,matrix[2]!],length=Math.hypot(...axis);
+    expect(Math.abs(axis[0]!/length)).toBeLessThan(1e-5);expect(axis[1]!/length).toBeCloseTo(1,5);
+    const invalid={...source,clips:[{...source.clips[0]!,channels:[{...scale,values:[1,1.00001,1,1,1.00001,1]}]}]};
+    expect(()=>retargetSkin(invalid,source,mapping,{rotationSpace:"world"})).toThrow(/uniform animated/);
+    const nodes=source.nodes.map(n=>({...n}));nodes[1]={...nodes[1]!,scale:[1,1.00001,1]};
+    expect(()=>retargetSkin(source,{...source,nodes},mapping,{rotationSpace:"world"})).toThrow(/uniform bind/);
+  });
   it("accepts node names that coincide with Object prototype properties", () => {
     const original=animatedSkin(),nodes=original.nodes.map(node=>({...node}));
     nodes[1]={...nodes[1]!,name:"constructor"};

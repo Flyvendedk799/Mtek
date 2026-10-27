@@ -1,6 +1,7 @@
 import type { Vec3, Quat } from "../math/types.js";
 import type { SkeletonPlayer } from "../scene/skeleton.js";
 import type { World, EntityRecord } from "../scene/world.js";
+import type { SceneInspection, BodyInspection, RenderInspection } from "./inspection.js";
 
 export const EXTENSION_API_VERSION = 1;
 export interface SceneTransform {
@@ -24,6 +25,8 @@ export interface ExtensionContext {
   readonly apiVersion: 1;
   /** Fresh copies; no mutable world records cross the boundary. */
   readTransforms(): readonly SceneTransform[];
+  /** Optional additive API 1 capability. Passive copies; use afterFrame for render-aligned data. */
+  inspectScene?(): SceneInspection | undefined;
   /** Validates the complete batch before applying any write. Local transforms, before bindings. */
   writeTransforms(updates: readonly TransformUpdate[]): void;
   animation(id: string): SkeletonPlayer | undefined;
@@ -64,7 +67,8 @@ export function validateExtensions(extensions: readonly MtekExtension[]): void {
 export function sceneAccess(
   getWorld: () => World,
   active: () => void,
-): Pick<ExtensionContext, "readTransforms" | "writeTransforms" | "animation" | "shareAnimation" | "detachAnimation"> {
+  inspect?: () => RenderInspection & { readonly bodies: readonly BodyInspection[] },
+): Pick<ExtensionContext, "readTransforms" | "inspectScene" | "writeTransforms" | "animation" | "shareAnimation" | "detachAnimation"> {
   const epochs = new WeakMap<World, number>();
   let nextEpoch = 0;
   const records = (): Map<string, EntityRecord> => {
@@ -87,6 +91,30 @@ export function sceneAccess(
     return entries;
   };
   return {
+    inspectScene: () => {
+      active();
+      if (inspect === undefined) return undefined;
+      const world = getWorld(), entries = records(), raw = inspect();
+      const ids = new Map([...entries].map(([id, r]) => [r.ref.slot, id]));
+      const bounds = new Map(raw.bounds.map(row => [row.slot, row.value]));
+      return {
+        frame: raw.frame, renderable: raw.renderable, viewport: { ...raw.viewport }, viewProjection: [...raw.viewProjection],
+        entities: [...entries].map(([id, r]) => {
+          const parent = world.resolvedAt(r.ref.slot)?.parent;
+          const bound = bounds.get(r.ref.slot);
+          return { id, parentId: parent === null || parent === undefined ? null : ids.get(parent) ?? null,
+            worldMatrix: [...world.worldMatrix(r.ref.slot)], ...(bound === undefined ? {} : { bounds: structuredClone(bound) }) };
+        }),
+        bodies: raw.bodies.flatMap(body => {
+          const entityId = ids.get(body.slot), record = world.recordAt(body.slot);
+          if (entityId === undefined || record?.ref.gen !== body.generation) return [];
+          return [{ entityId, kind: body.kind, active: body.active, collider: structuredClone(body.collider),
+            position: { ...body.position }, rotation: { ...body.rotation }, ...(body.contacts === undefined ? {} : {
+              contacts: body.contacts.map(c => ({ otherId: ids.get(c.userId) ?? null, point: { ...c.point }, normal: { ...c.normal }, distance: c.distance })),
+            }) }];
+        }),
+      };
+    },
     readTransforms: () => {
       active();
       const world = getWorld();

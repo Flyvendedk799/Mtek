@@ -1,0 +1,7 @@
+[project]
+name = "fixture"
+language = "0.1"
+
+[host.inputs]
+caster_x = "Demo.caster_x"
+caster_visible = "Demo.caster_visible"

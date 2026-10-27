@@ -1,0 +1,567 @@
+{
+  "config": {
+    "argv": [
+      "<external>",
+      "node_modules/@playwright/test/cli.js",
+      "test",
+      "--config=compute.config.ts",
+      "--project=hardware"
+    ],
+    "configFile": "tests/browser/compute.config.ts",
+    "rootDir": "tests/browser/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "tests/browser/support/compute-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "hardware",
+        "name": "hardware",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "compute/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "software",
+        "name": "software",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "compute/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<results>/test-results.json"
+        }
+      ],
+      [
+        "tests/browser/support/not-run-reporter.ts",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "compute\\acceptance.spec.ts",
+      "file": "compute/acceptance.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "source compute matches CPU and independent WGSL, including tails and all invocation fields",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 564,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:35:37.507Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6b84eede0fe390243265-137a5cfe49a2c1a61f3b",
+          "file": "compute/acceptance.spec.ts",
+          "line": 10,
+          "column": 1
+        },
+        {
+          "title": "computed geometry matches CPU/direct-WGSL pixels through recovery, detach and reset",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 441,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:35:38.873Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6b84eede0fe390243265-0f71ae959f7e2e2e59cd",
+          "file": "compute/acceptance.spec.ts",
+          "line": 21,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "compute\\shadows.spec.ts",
+      "file": "compute/shadows.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "compute shadows match CPU geometry: low, off-camera, pending and recovery",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 619,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m4\u001b[39m\nReceived:    \u001b[31m840\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m4\u001b[39m\nReceived:    \u001b[31m840\u001b[39m\n    at tests/browser/specs/compute/shadows.spec.ts:12:80",
+                    "location": {
+                      "file": "tests/browser/specs/compute/shadows.spec.ts",
+                      "column": 80,
+                      "line": 12
+                    },
+                    "snippet": "  10 |     const report = await page.evaluate(async ({ quality, mode }) => (window as unknown as { __computeShadows: ShadowApi }).__computeShadows.run(quality, mode), { quality, mode });\n  11 |     writeRecord(`compute-shadow-${quality}-${mode}-${test.info().project.name}.json`, report);\n> 12 |     expect(report.outputMismatches).toBe(0); expect(report.cpuDifferentPixels).toBeLessThanOrEqual(4); expect(report.unculledDifferentPixels).toBeLessThanOrEqual(4);\n     |                                                                                ^\n  13 |     expect(report.shadowDifferentPixels).toBeGreaterThan(40); expect(report.changedFromOriginal).toBeGreaterThan(40);\n  14 |     expect(report.dispatchPending).toBe(true); expect(report.pendingDifferentPixels).toBe(0);\n  15 |     expect(report.recoveredDifferentPixels).toBe(0); expect(report.detachedDifferentPixels).toBe(0);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "tests/browser/specs/compute/shadows.spec.ts",
+                        "column": 80,
+                        "line": 12
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m4\u001b[39m\nReceived:    \u001b[31m840\u001b[39m\n\n  10 |     const report = await page.evaluate(async ({ quality, mode }) => (window as unknown as { __computeShadows: ShadowApi }).__computeShadows.run(quality, mode), { quality, mode });\n  11 |     writeRecord(`compute-shadow-${quality}-${mode}-${test.info().project.name}.json`, report);\n> 12 |     expect(report.outputMismatches).toBe(0); expect(report.cpuDifferentPixels).toBeLessThanOrEqual(4); expect(report.unculledDifferentPixels).toBeLessThanOrEqual(4);\n     |                                                                                ^\n  13 |     expect(report.shadowDifferentPixels).toBeGreaterThan(40); expect(report.changedFromOriginal).toBeGreaterThan(40);\n  14 |     expect(report.dispatchPending).toBe(true); expect(report.pendingDifferentPixels).toBe(0);\n  15 |     expect(report.recoveredDifferentPixels).toBe(0); expect(report.detachedDifferentPixels).toBe(0);\n    at tests/browser/specs/compute/shadows.spec.ts:12:80"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:35:39.342Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/compute-shadows-compute-sh-33dc7-camera-pending-and-recovery-hardware/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "tests/browser/specs/compute/shadows.spec.ts",
+                    "column": 80,
+                    "line": 12
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "e41d980e58f80d4e86fe-90ed69bbacdc63e22f0a",
+          "file": "compute/shadows.spec.ts",
+          "line": 6,
+          "column": 3
+        },
+        {
+          "title": "compute shadows match CPU geometry: low, final-bounds, pending and recovery",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 564,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m4\u001b[39m\nReceived:    \u001b[31m560\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m4\u001b[39m\nReceived:    \u001b[31m560\u001b[39m\n    at tests/browser/specs/compute/shadows.spec.ts:12:80",
+                    "location": {
+                      "file": "tests/browser/specs/compute/shadows.spec.ts",
+                      "column": 80,
+                      "line": 12
+                    },
+                    "snippet": "  10 |     const report = await page.evaluate(async ({ quality, mode }) => (window as unknown as { __computeShadows: ShadowApi }).__computeShadows.run(quality, mode), { quality, mode });\n  11 |     writeRecord(`compute-shadow-${quality}-${mode}-${test.info().project.name}.json`, report);\n> 12 |     expect(report.outputMismatches).toBe(0); expect(report.cpuDifferentPixels).toBeLessThanOrEqual(4); expect(report.unculledDifferentPixels).toBeLessThanOrEqual(4);\n     |                                                                                ^\n  13 |     expect(report.shadowDifferentPixels).toBeGreaterThan(40); expect(report.changedFromOriginal).toBeGreaterThan(40);\n  14 |     expect(report.dispatchPending).toBe(true); expect(report.pendingDifferentPixels).toBe(0);\n  15 |     expect(report.recoveredDifferentPixels).toBe(0); expect(report.detachedDifferentPixels).toBe(0);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "tests/browser/specs/compute/shadows.spec.ts",
+                        "column": 80,
+                        "line": 12
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m4\u001b[39m\nReceived:    \u001b[31m560\u001b[39m\n\n  10 |     const report = await page.evaluate(async ({ quality, mode }) => (window as unknown as { __computeShadows: ShadowApi }).__computeShadows.run(quality, mode), { quality, mode });\n  11 |     writeRecord(`compute-shadow-${quality}-${mode}-${test.info().project.name}.json`, report);\n> 12 |     expect(report.outputMismatches).toBe(0); expect(report.cpuDifferentPixels).toBeLessThanOrEqual(4); expect(report.unculledDifferentPixels).toBeLessThanOrEqual(4);\n     |                                                                                ^\n  13 |     expect(report.shadowDifferentPixels).toBeGreaterThan(40); expect(report.changedFromOriginal).toBeGreaterThan(40);\n  14 |     expect(report.dispatchPending).toBe(true); expect(report.pendingDifferentPixels).toBe(0);\n  15 |     expect(report.recoveredDifferentPixels).toBe(0); expect(report.detachedDifferentPixels).toBe(0);\n    at tests/browser/specs/compute/shadows.spec.ts:12:80"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:35:40.491Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/compute-shadows-compute-sh-226a3-bounds-pending-and-recovery-hardware/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "tests/browser/specs/compute/shadows.spec.ts",
+                    "column": 80,
+                    "line": 12
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "e41d980e58f80d4e86fe-23d499ab8516b2258140",
+          "file": "compute/shadows.spec.ts",
+          "line": 6,
+          "column": 3
+        },
+        {
+          "title": "compute shadows match CPU geometry: medium, off-camera, pending and recovery",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 558,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m4\u001b[39m\nReceived:    \u001b[31m864\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m4\u001b[39m\nReceived:    \u001b[31m864\u001b[39m\n    at tests/browser/specs/compute/shadows.spec.ts:12:80",
+                    "location": {
+                      "file": "tests/browser/specs/compute/shadows.spec.ts",
+                      "column": 80,
+                      "line": 12
+                    },
+                    "snippet": "  10 |     const report = await page.evaluate(async ({ quality, mode }) => (window as unknown as { __computeShadows: ShadowApi }).__computeShadows.run(quality, mode), { quality, mode });\n  11 |     writeRecord(`compute-shadow-${quality}-${mode}-${test.info().project.name}.json`, report);\n> 12 |     expect(report.outputMismatches).toBe(0); expect(report.cpuDifferentPixels).toBeLessThanOrEqual(4); expect(report.unculledDifferentPixels).toBeLessThanOrEqual(4);\n     |                                                                                ^\n  13 |     expect(report.shadowDifferentPixels).toBeGreaterThan(40); expect(report.changedFromOriginal).toBeGreaterThan(40);\n  14 |     expect(report.dispatchPending).toBe(true); expect(report.pendingDifferentPixels).toBe(0);\n  15 |     expect(report.recoveredDifferentPixels).toBe(0); expect(report.detachedDifferentPixels).toBe(0);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "tests/browser/specs/compute/shadows.spec.ts",
+                        "column": 80,
+                        "line": 12
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m4\u001b[39m\nReceived:    \u001b[31m864\u001b[39m\n\n  10 |     const report = await page.evaluate(async ({ quality, mode }) => (window as unknown as { __computeShadows: ShadowApi }).__computeShadows.run(quality, mode), { quality, mode });\n  11 |     writeRecord(`compute-shadow-${quality}-${mode}-${test.info().project.name}.json`, report);\n> 12 |     expect(report.outputMismatches).toBe(0); expect(report.cpuDifferentPixels).toBeLessThanOrEqual(4); expect(report.unculledDifferentPixels).toBeLessThanOrEqual(4);\n     |                                                                                ^\n  13 |     expect(report.shadowDifferentPixels).toBeGreaterThan(40); expect(report.changedFromOriginal).toBeGreaterThan(40);\n  14 |     expect(report.dispatchPending).toBe(true); expect(report.pendingDifferentPixels).toBe(0);\n  15 |     expect(report.recoveredDifferentPixels).toBe(0); expect(report.detachedDifferentPixels).toBe(0);\n    at tests/browser/specs/compute/shadows.spec.ts:12:80"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:35:42.267Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/compute-shadows-compute-sh-c08ef-camera-pending-and-recovery-hardware/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "tests/browser/specs/compute/shadows.spec.ts",
+                    "column": 80,
+                    "line": 12
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "e41d980e58f80d4e86fe-2847a51eb4e6f22533eb",
+          "file": "compute/shadows.spec.ts",
+          "line": 6,
+          "column": 3
+        },
+        {
+          "title": "compute shadows match CPU geometry: medium, final-bounds, pending and recovery",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 636,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m4\u001b[39m\nReceived:    \u001b[31m576\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m4\u001b[39m\nReceived:    \u001b[31m576\u001b[39m\n    at tests/browser/specs/compute/shadows.spec.ts:12:80",
+                    "location": {
+                      "file": "tests/browser/specs/compute/shadows.spec.ts",
+                      "column": 80,
+                      "line": 12
+                    },
+                    "snippet": "  10 |     const report = await page.evaluate(async ({ quality, mode }) => (window as unknown as { __computeShadows: ShadowApi }).__computeShadows.run(quality, mode), { quality, mode });\n  11 |     writeRecord(`compute-shadow-${quality}-${mode}-${test.info().project.name}.json`, report);\n> 12 |     expect(report.outputMismatches).toBe(0); expect(report.cpuDifferentPixels).toBeLessThanOrEqual(4); expect(report.unculledDifferentPixels).toBeLessThanOrEqual(4);\n     |                                                                                ^\n  13 |     expect(report.shadowDifferentPixels).toBeGreaterThan(40); expect(report.changedFromOriginal).toBeGreaterThan(40);\n  14 |     expect(report.dispatchPending).toBe(true); expect(report.pendingDifferentPixels).toBe(0);\n  15 |     expect(report.recoveredDifferentPixels).toBe(0); expect(report.detachedDifferentPixels).toBe(0);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "tests/browser/specs/compute/shadows.spec.ts",
+                        "column": 80,
+                        "line": 12
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m4\u001b[39m\nReceived:    \u001b[31m576\u001b[39m\n\n  10 |     const report = await page.evaluate(async ({ quality, mode }) => (window as unknown as { __computeShadows: ShadowApi }).__computeShadows.run(quality, mode), { quality, mode });\n  11 |     writeRecord(`compute-shadow-${quality}-${mode}-${test.info().project.name}.json`, report);\n> 12 |     expect(report.outputMismatches).toBe(0); expect(report.cpuDifferentPixels).toBeLessThanOrEqual(4); expect(report.unculledDifferentPixels).toBeLessThanOrEqual(4);\n     |                                                                                ^\n  13 |     expect(report.shadowDifferentPixels).toBeGreaterThan(40); expect(report.changedFromOriginal).toBeGreaterThan(40);\n  14 |     expect(report.dispatchPending).toBe(true); expect(report.pendingDifferentPixels).toBe(0);\n  15 |     expect(report.recoveredDifferentPixels).toBe(0); expect(report.detachedDifferentPixels).toBe(0);\n    at tests/browser/specs/compute/shadows.spec.ts:12:80"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:35:44.084Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/compute-shadows-compute-sh-e8a57-bounds-pending-and-recovery-hardware/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "tests/browser/specs/compute/shadows.spec.ts",
+                    "column": 80,
+                    "line": 12
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "e41d980e58f80d4e86fe-665e52e26c7faf7e717a",
+          "file": "compute/shadows.spec.ts",
+          "line": 6,
+          "column": 3
+        },
+        {
+          "title": "compute shadows match CPU geometry: high, off-camera, pending and recovery",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 634,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m4\u001b[39m\nReceived:    \u001b[31m864\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m4\u001b[39m\nReceived:    \u001b[31m864\u001b[39m\n    at tests/browser/specs/compute/shadows.spec.ts:12:80",
+                    "location": {
+                      "file": "tests/browser/specs/compute/shadows.spec.ts",
+                      "column": 80,
+                      "line": 12
+                    },
+                    "snippet": "  10 |     const report = await page.evaluate(async ({ quality, mode }) => (window as unknown as { __computeShadows: ShadowApi }).__computeShadows.run(quality, mode), { quality, mode });\n  11 |     writeRecord(`compute-shadow-${quality}-${mode}-${test.info().project.name}.json`, report);\n> 12 |     expect(report.outputMismatches).toBe(0); expect(report.cpuDifferentPixels).toBeLessThanOrEqual(4); expect(report.unculledDifferentPixels).toBeLessThanOrEqual(4);\n     |                                                                                ^\n  13 |     expect(report.shadowDifferentPixels).toBeGreaterThan(40); expect(report.changedFromOriginal).toBeGreaterThan(40);\n  14 |     expect(report.dispatchPending).toBe(true); expect(report.pendingDifferentPixels).toBe(0);\n  15 |     expect(report.recoveredDifferentPixels).toBe(0); expect(report.detachedDifferentPixels).toBe(0);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "tests/browser/specs/compute/shadows.spec.ts",
+                        "column": 80,
+                        "line": 12
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m4\u001b[39m\nReceived:    \u001b[31m864\u001b[39m\n\n  10 |     const report = await page.evaluate(async ({ quality, mode }) => (window as unknown as { __computeShadows: ShadowApi }).__computeShadows.run(quality, mode), { quality, mode });\n  11 |     writeRecord(`compute-shadow-${quality}-${mode}-${test.info().project.name}.json`, report);\n> 12 |     expect(report.outputMismatches).toBe(0); expect(report.cpuDifferentPixels).toBeLessThanOrEqual(4); expect(report.unculledDifferentPixels).toBeLessThanOrEqual(4);\n     |                                                                                ^\n  13 |     expect(report.shadowDifferentPixels).toBeGreaterThan(40); expect(report.changedFromOriginal).toBeGreaterThan(40);\n  14 |     expect(report.dispatchPending).toBe(true); expect(report.pendingDifferentPixels).toBe(0);\n  15 |     expect(report.recoveredDifferentPixels).toBe(0); expect(report.detachedDifferentPixels).toBe(0);\n    at tests/browser/specs/compute/shadows.spec.ts:12:80"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:35:46.029Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/compute-shadows-compute-sh-978ac-camera-pending-and-recovery-hardware/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "tests/browser/specs/compute/shadows.spec.ts",
+                    "column": 80,
+                    "line": 12
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "e41d980e58f80d4e86fe-b965d1a1503e9a8ec3a0",
+          "file": "compute/shadows.spec.ts",
+          "line": 6,
+          "column": 3
+        },
+        {
+          "title": "compute shadows match CPU geometry: high, final-bounds, pending and recovery",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 615,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m4\u001b[39m\nReceived:    \u001b[31m576\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m4\u001b[39m\nReceived:    \u001b[31m576\u001b[39m\n    at tests/browser/specs/compute/shadows.spec.ts:12:80",
+                    "location": {
+                      "file": "tests/browser/specs/compute/shadows.spec.ts",
+                      "column": 80,
+                      "line": 12
+                    },
+                    "snippet": "  10 |     const report = await page.evaluate(async ({ quality, mode }) => (window as unknown as { __computeShadows: ShadowApi }).__computeShadows.run(quality, mode), { quality, mode });\n  11 |     writeRecord(`compute-shadow-${quality}-${mode}-${test.info().project.name}.json`, report);\n> 12 |     expect(report.outputMismatches).toBe(0); expect(report.cpuDifferentPixels).toBeLessThanOrEqual(4); expect(report.unculledDifferentPixels).toBeLessThanOrEqual(4);\n     |                                                                                ^\n  13 |     expect(report.shadowDifferentPixels).toBeGreaterThan(40); expect(report.changedFromOriginal).toBeGreaterThan(40);\n  14 |     expect(report.dispatchPending).toBe(true); expect(report.pendingDifferentPixels).toBe(0);\n  15 |     expect(report.recoveredDifferentPixels).toBe(0); expect(report.detachedDifferentPixels).toBe(0);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "tests/browser/specs/compute/shadows.spec.ts",
+                        "column": 80,
+                        "line": 12
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m4\u001b[39m\nReceived:    \u001b[31m576\u001b[39m\n\n  10 |     const report = await page.evaluate(async ({ quality, mode }) => (window as unknown as { __computeShadows: ShadowApi }).__computeShadows.run(quality, mode), { quality, mode });\n  11 |     writeRecord(`compute-shadow-${quality}-${mode}-${test.info().project.name}.json`, report);\n> 12 |     expect(report.outputMismatches).toBe(0); expect(report.cpuDifferentPixels).toBeLessThanOrEqual(4); expect(report.unculledDifferentPixels).toBeLessThanOrEqual(4);\n     |                                                                                ^\n  13 |     expect(report.shadowDifferentPixels).toBeGreaterThan(40); expect(report.changedFromOriginal).toBeGreaterThan(40);\n  14 |     expect(report.dispatchPending).toBe(true); expect(report.pendingDifferentPixels).toBe(0);\n  15 |     expect(report.recoveredDifferentPixels).toBe(0); expect(report.detachedDifferentPixels).toBe(0);\n    at tests/browser/specs/compute/shadows.spec.ts:12:80"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:35:48.006Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/compute-shadows-compute-sh-3edab-bounds-pending-and-recovery-hardware/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "tests/browser/specs/compute/shadows.spec.ts",
+                    "column": 80,
+                    "line": 12
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "e41d980e58f80d4e86fe-7930bacc4c342145dde8",
+          "file": "compute/shadows.spec.ts",
+          "line": 6,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-27T00:35:36.213Z",
+    "duration": 13315.054,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 6,
+    "flaky": 0
+  }
+}

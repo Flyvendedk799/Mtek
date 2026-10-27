@@ -1,0 +1,63 @@
+// The built-in materials (spec/materials.md section 9). Ordinary Mtek source, compiled by the
+// same pipeline as user materials (decision 0044). A compiler build compiles the materials
+// whose milestone it has reached; all of them since M4-03.
+
+export material Unlit {
+    param color: color = #ffffff;
+    fragment(surface: SurfaceInput) -> color { return color; }
+}
+
+export material Pbr {
+    param base_color: color = #ffffff;
+    param metallic: f32 = 0.0;
+    param roughness: f32 = 0.5;
+    param base_color_texture: texture = texture.white();
+    param base_color_sampler: sampler = sampler.linear_repeat();
+    param metallic_roughness_texture: texture = texture.white();
+    param metallic_roughness_sampler: sampler = sampler.linear_repeat();
+    param normal_texture: texture = texture.white();
+    param normal_sampler: sampler = sampler.linear_repeat();
+    param occlusion_texture: texture = texture.white();
+    param occlusion_sampler: sampler = sampler.linear_repeat();
+    param emissive_texture: texture = texture.white();
+    param emissive_sampler: sampler = sampler.linear_repeat();
+    // Zero disables normal mapping for the neutral white fallback. GLB imports set
+    // this to the file's normalTexture.scale (default 1) when a normal map exists.
+    param normal_scale: f32 = 0.0;
+    param occlusion_strength: f32 = 1.0;
+    param emissive: color = #000000;
+    fragment(surface: SurfaceInput) -> color {
+        let texel = sample_mip(base_color_texture, base_color_sampler, surface.uv);
+        let albedo = color.linear(base_color.rgb * texel.xyz, base_color.a);
+        let mr = sample_mip(metallic_roughness_texture, metallic_roughness_sampler, surface.uv);
+        let normal = sample_mip(normal_texture, normal_sampler, surface.uv).xyz;
+        let ao = sample_mip(occlusion_texture, occlusion_sampler, surface.uv).x;
+        let emissive_texel = sample_mip(emissive_texture, emissive_sampler, surface.uv).xyz;
+        let emission = emissive.rgb * emissive_texel;
+        return lighting.pbr_mapped(surface, albedo, metallic * mr.z, roughness * mr.y, normal, normal_scale, 1.0 + clamp(occlusion_strength, 0.0, 1.0) * (ao - 1.0), emission);
+    }
+}
+
+// Sprites (decision 0170, spec/materials.md section 9.1): one cell of a sprite sheet of
+// `columns` x `rows` equal cells, numbered left to right and top to bottom from 0, tinted.
+// Its draws are always translucent, so transparent texels show what is behind them.
+export material Sprite {
+    param sheet: texture = texture.white();
+    param sheet_sampler: sampler = sampler.nearest_clamp();
+    param tint: color = #ffffff;
+    param cell: f32 = 0.0;
+    param columns: f32 = 1.0;
+    param rows: f32 = 1.0;
+    fragment(surface: SurfaceInput) -> color {
+        // The sheet layout is floored and held to 1..64, so a run-time value never divides by zero (decision 0170).
+        let cols = clamp(floor(columns), 1.0, 64.0);
+        let rws = clamp(floor(rows), 1.0, 64.0);
+        let count = cols * rws;
+        let index = clamp(floor(cell - count * floor(cell / count)), 0.0, count - 1.0);
+        let row = floor(index / cols);
+        let column = index - row * cols;
+        let uv = (surface.uv + vec2(column, row)) / vec2(cols, rws);
+        let texel = sample(sheet, sheet_sampler, uv);
+        return color.linear(tint.rgb * texel.xyz, tint.a * texel.w);
+    }
+}

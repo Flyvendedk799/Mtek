@@ -37,6 +37,14 @@ export class SkinBounds {
         }
       }
     }
+    for (let joint = 0; joint < skin.joints.length; joint++) {
+      if (!Number.isFinite(this.boxes[joint * 6])) continue;
+      for (let axis = 0; axis < 3; axis++) {
+        const lo = this.boxes[joint * 6 + axis]!, hi = this.boxes[joint * 6 + axis + 3]!;
+        this.boxes[joint * 6 + axis] = (lo + hi) / 2;
+        this.boxes[joint * 6 + axis + 3] = (hi - lo) / 2;
+      }
+    }
   }
 
   /**
@@ -55,32 +63,18 @@ export class SkinBounds {
       const at = j * 6;
       if (!Number.isFinite(this.boxes[at])) continue;
       const m = j * 16;
-      for (let corner = 0; corner < 8; corner++) {
-        const x = this.boxes[at + (corner & 1 ? 3 : 0)]!;
-        const y = this.boxes[at + (corner & 2 ? 4 : 1)]!;
-        const z = this.boxes[at + (corner & 4 ? 5 : 2)]!;
-        const px =
-          palette[m]! * x +
-          palette[m + 4]! * y +
-          palette[m + 8]! * z +
-          palette[m + 12]!;
-        const py =
-          palette[m + 1]! * x +
-          palette[m + 5]! * y +
-          palette[m + 9]! * z +
-          palette[m + 13]!;
-        const pz =
-          palette[m + 2]! * x +
-          palette[m + 6]! * y +
-          palette[m + 10]! * z +
-          palette[m + 14]!;
-        lx = Math.min(lx, px);
-        ly = Math.min(ly, py);
-        lz = Math.min(lz, pz);
-        hx = Math.max(hx, px);
-        hy = Math.max(hy, py);
-        hz = Math.max(hz, pz);
-      }
+      const x = this.boxes[at]!, y = this.boxes[at+1]!, z = this.boxes[at+2]!;
+      const ex = this.boxes[at+3]!, ey = this.boxes[at+4]!, ez = this.boxes[at+5]!;
+      // An affine box has center M*c+t and exact AABB half extents |M|*e.
+      // This encloses all eight corners, including reflections and shear.
+      const px = palette[m]!*x + palette[m+4]!*y + palette[m+8]!*z + palette[m+12]!;
+      const py = palette[m+1]!*x + palette[m+5]!*y + palette[m+9]!*z + palette[m+13]!;
+      const pz = palette[m+2]!*x + palette[m+6]!*y + palette[m+10]!*z + palette[m+14]!;
+      const dx = Math.abs(palette[m]!)*ex + Math.abs(palette[m+4]!)*ey + Math.abs(palette[m+8]!)*ez;
+      const dy = Math.abs(palette[m+1]!)*ex + Math.abs(palette[m+5]!)*ey + Math.abs(palette[m+9]!)*ez;
+      const dz = Math.abs(palette[m+2]!)*ex + Math.abs(palette[m+6]!)*ey + Math.abs(palette[m+10]!)*ez;
+      lx = Math.min(lx, px-dx); ly = Math.min(ly, py-dy); lz = Math.min(lz, pz-dz);
+      hx = Math.max(hx, px+dx); hy = Math.max(hy, py+dy); hz = Math.max(hz, pz+dz);
     }
     if (!Number.isFinite(lx)) {
       center.fill(0);

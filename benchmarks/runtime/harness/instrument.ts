@@ -109,6 +109,7 @@ const TEXEL_BYTES: Readonly<Record<string, number>> = {
   "rgba8unorm-srgb": 4,
   bgra8unorm: 4,
   "bgra8unorm-srgb": 4,
+  rg16float: 4,
   rgba16float: 8,
   rgba32float: 16,
   depth16unorm: 2,
@@ -254,8 +255,13 @@ function textureBytes(descriptor: GPUTextureDescriptor): number {
   const per = TEXEL_BYTES[descriptor.format];
   if (per === undefined) hooks.unknownTextureFormats.add(descriptor.format);
   const samples = descriptor.sampleCount ?? 1;
-  // Mip levels beyond the first add a third at most; the benchmarks create single-level textures (Mtek v0.1 has no mips).
-  return width * height * layers * (per ?? 4) * samples;
+  let texels = 0;
+  for (let mip = 0; mip < (descriptor.mipLevelCount ?? 1); mip += 1) {
+    texels += Math.max(1, Math.floor(width / 2 ** mip))
+      * Math.max(1, Math.floor(height / 2 ** mip))
+      * (descriptor.dimension === "3d" ? Math.max(1, Math.floor(layers / 2 ** mip)) : layers);
+  }
+  return texels * (per ?? 4) * samples;
 }
 
 export function installCounters(): void {

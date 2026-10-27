@@ -1,0 +1,429 @@
+{
+  "format": "mtek-native-product-mips/1",
+  "backend": "hardware",
+  "performanceEligible": false,
+  "instrumentation": "COPY_SRC added to native 2048-square rgba8unorm allocations; Three 0.186.1 product normal map at material binding 10",
+  "setup": {
+    "startupCreationMs": 1312.9099999964237,
+    "implementation": "three",
+    "scene": "product",
+    "quality": "standard",
+    "adapter": {
+      "vendor": "amd",
+      "architecture": "rdna-3",
+      "device": "0x744c",
+      "description": "AMD Radeon RX 7900 XTX",
+      "isFallbackAdapter": false
+    },
+    "deviceFeatures": [
+      "bgra8unorm-storage",
+      "clip-distances",
+      "core-features-and-limits",
+      "depth-clip-control",
+      "depth32float-stencil8",
+      "dual-source-blending",
+      "float32-blendable",
+      "float32-filterable",
+      "indirect-first-instance",
+      "rg11b10ufloat-renderable",
+      "shader-f16",
+      "subgroups",
+      "texture-compression-bc",
+      "texture-compression-bc-sliced-3d",
+      "texture-formats-tier1",
+      "texture-formats-tier2",
+      "timestamp-query"
+    ],
+    "crossOriginIsolated": true,
+    "minimumClockDelta": 0.004999995231628418,
+    "resources": [
+      {
+        "path": "/page.js",
+        "decodedBodySize": 20225
+      },
+      {
+        "path": "/chunks/chunk-VUBMIYCG.js",
+        "decodedBodySize": 8790
+      },
+      {
+        "path": "/favicon.ico",
+        "decodedBodySize": 0
+      },
+      {
+        "path": "/chunks/three-7EFL7GG5.js",
+        "decodedBodySize": 2762536
+      },
+      {
+        "path": "/content.glb",
+        "decodedBodySize": 65480
+      },
+      {
+        "path": "/WaterBottle.glb",
+        "decodedBodySize": 8966700
+      }
+    ]
+  },
+  "data": [
+    {
+      "mip": 0,
+      "size": 2048,
+      "sha256": "33f41aa145a44b5652b1c844039b89005f511d74138b1a0d67481c21c28c5d72",
+      "min": [
+        37,
+        38,
+        213,
+        255
+      ],
+      "max": [
+        205,
+        214,
+        255,
+        255
+      ],
+      "mean": [
+        125.52358269691467,
+        126.03061699867249,
+        254.881573677063,
+        255
+      ]
+    },
+    {
+      "mip": 1,
+      "size": 1024,
+      "sha256": "b325ea25c8fc5fb65fcb2a9d5b58883e54124d6d34301cb9f76d22fd1692c679",
+      "min": [
+        46,
+        49,
+        223,
+        255
+      ],
+      "max": [
+        202,
+        198,
+        255,
+        255
+      ],
+      "mean": [
+        125.4234037399292,
+        125.94986057281494,
+        254.85518741607666,
+        255
+      ]
+    },
+    {
+      "mip": 2,
+      "size": 512,
+      "sha256": "44554d5f7a430fcf058832c7a2d28df5cf73bbe08f60ca137ab0faffe5ba2d57",
+      "min": [
+        68,
+        69,
+        235,
+        255
+      ],
+      "max": [
+        172,
+        176,
+        255,
+        255
+      ],
+      "mean": [
+        125.3247299194336,
+        125.8792610168457,
+        254.82412719726562,
+        255
+      ]
+    },
+    {
+      "mip": 3,
+      "size": 256,
+      "sha256": "dc1a4807840c631b0572861cd2d54dcf5269b2ee3fdf5c5afa97edaf5a158f7c",
+      "min": [
+        92,
+        95,
+        243,
+        255
+      ],
+      "max": [
+        148,
+        150,
+        255,
+        255
+      ],
+      "mean": [
+        125.23103332519531,
+        125.81069946289062,
+        254.80453491210938,
+        255
+      ]
+    },
+    {
+      "mip": 4,
+      "size": 128,
+      "sha256": "315775f326dce9c23bf732f3270a19e19a089dfb20ae6d5172dc8385a30b5eec",
+      "min": [
+        107,
+        108,
+        247,
+        255
+      ],
+      "max": [
+        136,
+        136,
+        255,
+        255
+      ],
+      "mean": [
+        125.174072265625,
+        125.744873046875,
+        254.79412841796875,
+        255
+      ]
+    },
+    {
+      "mip": 5,
+      "size": 64,
+      "sha256": "f77e268a256b9507a7b3b3fc37327a2e76f29c321e4d0f4f97a40c739dcd02e6",
+      "min": [
+        115,
+        115,
+        248,
+        255
+      ],
+      "max": [
+        131,
+        133,
+        255,
+        255
+      ],
+      "mean": [
+        125.123291015625,
+        125.6708984375,
+        254.781494140625,
+        255
+      ]
+    },
+    {
+      "mip": 6,
+      "size": 32,
+      "sha256": "f32eb568a304a62fcaa50a7759c2bd178c174000df2162c722b50b375011d1c9",
+      "min": [
+        118,
+        120,
+        251,
+        255
+      ],
+      "max": [
+        128,
+        131,
+        255,
+        255
+      ],
+      "mean": [
+        125.0712890625,
+        125.595703125,
+        254.7666015625,
+        255
+      ]
+    },
+    {
+      "mip": 7,
+      "size": 16,
+      "sha256": "483e4b0e0206271cec81d5d854670734b494542bda995a8c451f696a3289986d",
+      "min": [
+        119,
+        121,
+        252,
+        255
+      ],
+      "max": [
+        128,
+        129,
+        255,
+        255
+      ],
+      "mean": [
+        124.9921875,
+        125.48828125,
+        254.7265625,
+        255
+      ]
+    },
+    {
+      "mip": 8,
+      "size": 8,
+      "sha256": "64552271bedd5ce9d86c8121236643c3b8137b1e441cbd370d633368ae3eb061",
+      "min": [
+        119,
+        122,
+        253,
+        255
+      ],
+      "max": [
+        128,
+        128,
+        255,
+        255
+      ],
+      "mean": [
+        124.890625,
+        125.453125,
+        254.671875,
+        255
+      ]
+    },
+    {
+      "mip": 9,
+      "size": 4,
+      "sha256": "d32b8a7b69de45a99d24b1153f397679a9f34d7d8fe11ad83a17e7e585e41ca6",
+      "min": [
+        121,
+        122,
+        254,
+        255
+      ],
+      "max": [
+        128,
+        128,
+        255,
+        255
+      ],
+      "mean": [
+        124.875,
+        125.4375,
+        254.6875,
+        255
+      ]
+    },
+    {
+      "mip": 10,
+      "size": 2,
+      "sha256": "36afea1e6f5ced937ff03ad33ef07454563b5c7b64267d12d8079ccc68bb187a",
+      "min": [
+        124,
+        124,
+        254,
+        255
+      ],
+      "max": [
+        126,
+        126,
+        255,
+        255
+      ],
+      "mean": [
+        124.75,
+        125,
+        254.5,
+        255
+      ]
+    },
+    {
+      "mip": 11,
+      "size": 1,
+      "sha256": "1c23dbe818ab00a891e3205b361d1903d49d640a03174acafcbd4248793cf3da",
+      "min": [
+        125,
+        125,
+        254,
+        255
+      ],
+      "max": [
+        125,
+        125,
+        254,
+        255
+      ],
+      "mean": [
+        125,
+        125,
+        254,
+        255
+      ]
+    }
+  ],
+  "disposed": {
+    "result": {
+      "frames": 1,
+      "particles": 0
+    },
+    "before": {
+      "buffersCreated": 80,
+      "bufferBytesCreated": 22626680,
+      "texturesCreated": 16,
+      "textureBytesCreated": 99681280,
+      "samplersCreated": 5,
+      "shaderModulesCreated": 19,
+      "bindGroupsCreated": 109,
+      "bindGroupLayoutsCreated": 7,
+      "pipelineLayoutsCreated": 13,
+      "renderPipelinesCreated": 16,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 38,
+      "renderPassesBegun": 67,
+      "computePassesBegun": 0,
+      "submits": 38,
+      "drawCalls": 31,
+      "instancedDrawCalls": 2,
+      "instancesDrawn": 35,
+      "setPipeline": 31,
+      "setBindGroup": 52,
+      "setVertexBuffer": 56,
+      "setIndexBuffer": 8,
+      "writeBufferCalls": 85,
+      "writeBufferBytes": 4472,
+      "writeTextureCalls": 2,
+      "writeTextureBytes": 1049600,
+      "externalImageCopies": 4,
+      "externalImageBytes": 67108864,
+      "mappedAtCreationBytes": 241728,
+      "buffersDestroyed": 12,
+      "texturesDestroyed": 2,
+      "liveBufferBytes": 246392,
+      "liveTextureBytes": 94438400,
+      "devicesRequested": 1,
+      "devicesDestroyed": 0
+    },
+    "after": {
+      "buffersCreated": 80,
+      "bufferBytesCreated": 22626680,
+      "texturesCreated": 16,
+      "textureBytesCreated": 99681280,
+      "samplersCreated": 5,
+      "shaderModulesCreated": 19,
+      "bindGroupsCreated": 109,
+      "bindGroupLayoutsCreated": 7,
+      "pipelineLayoutsCreated": 13,
+      "renderPipelinesCreated": 16,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 38,
+      "renderPassesBegun": 67,
+      "computePassesBegun": 0,
+      "submits": 38,
+      "drawCalls": 31,
+      "instancedDrawCalls": 2,
+      "instancesDrawn": 35,
+      "setPipeline": 31,
+      "setBindGroup": 52,
+      "setVertexBuffer": 56,
+      "setIndexBuffer": 8,
+      "writeBufferCalls": 85,
+      "writeBufferBytes": 4472,
+      "writeTextureCalls": 2,
+      "writeTextureBytes": 1049600,
+      "externalImageCopies": 4,
+      "externalImageBytes": 67108864,
+      "mappedAtCreationBytes": 241728,
+      "buffersDestroyed": 78,
+      "texturesDestroyed": 11,
+      "liveBufferBytes": 8,
+      "liveTextureBytes": 15762432,
+      "devicesRequested": 1,
+      "devicesDestroyed": 1
+    },
+    "validation": [],
+    "losses": [],
+    "allDevicesDestroyed": true
+  }
+}

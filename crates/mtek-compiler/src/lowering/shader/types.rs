@@ -279,6 +279,7 @@ impl<'p> TypeMapper<'p> {
                     ("position".to_owned(), LayoutType::Vec3),
                     ("normal".to_owned(), LayoutType::Vec3),
                     ("uv".to_owned(), LayoutType::Vec2),
+                    ("tangent".to_owned(), LayoutType::Vec4),
                 ],
             ),
         })

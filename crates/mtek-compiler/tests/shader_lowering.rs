@@ -242,7 +242,11 @@ fn lighting_pbr_is_a_helper_over_the_frame_block_that_reads_two_surface_fields()
     assert_eq!(checker.0, ["position", "normal", "uv"]);
     assert_eq!(checker.1, ["world_position", "world_normal", "uv"]);
     let pbr = names(&lit["materials.Pbr"]);
-    assert_eq!(pbr, checker);
+    assert_eq!(pbr.0, ["position", "normal", "uv", "tangent"]);
+    assert_eq!(
+        pbr.1,
+        ["world_position", "world_normal", "uv", "world_tangent"]
+    );
 
     for (key, artifact) in &lit {
         if key == "materials.Unlit" || key == "materials.Sprite" {

@@ -1,5 +1,7 @@
 import { copyFileSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { join } from "node:path";
+import { buildSync } from "esbuild";
 import { BROWSER_ROOT, REPO_ROOT } from "./environment.ts";
 import { runCli } from "./m1-fixtures.ts";
 
@@ -14,4 +16,10 @@ export function buildLightingStudio(cli: string): void {
   const runtime = readdirSync(out).find(file => /^runtime\.[a-f0-9]{16}\.js$/.test(file));
   if (runtime === undefined) throw new Error("Lighting studio has no embedded runtime");
   writeFileSync(join(out, "lighting-api.js"), `export {decodeRadiance} from "./${runtime}";\n`);
+  // studio.js imports the optional SDK even when its panel starts disabled.
+  // Match dev.mjs: serve the built, independently packaged inspector entry.
+  const inspector = join(REPO_ROOT, "packages/inspector");
+  execFileSync(process.execPath, ["scripts/build.mjs"], { cwd: inspector, stdio: "inherit", windowsHide: true });
+  buildSync({ entryPoints: [join(inspector, "dist/index.js")], outfile: join(out, "inspector.js"), bundle: true,
+    format: "esm", platform: "browser", target: "es2022", logLevel: "warning" });
 }

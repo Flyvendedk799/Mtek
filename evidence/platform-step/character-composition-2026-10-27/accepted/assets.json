@@ -1,0 +1,213 @@
+{
+  "format": "mtek-character-composition-derivation-check/1",
+  "startedAt": "2026-10-27T04:48:17.252Z",
+  "status": "passed",
+  "original": {
+    "sha256": "b7001eaeea8254bd44773bcd247e78696d94169388fbb2a1800fc69434e777d9",
+    "bytes": 438044,
+    "walkChannels": 57,
+    "binaryPrefixUnchanged": true,
+    "textureBytesUnchanged": true
+  },
+  "proportions": [
+    {
+      "name": "leg_joint_R_2",
+      "ratio": 1.1999999999999997,
+      "expected": 1.2
+    },
+    {
+      "name": "leg_joint_R_3",
+      "ratio": 1.2,
+      "expected": 1.2
+    },
+    {
+      "name": "leg_joint_R_5",
+      "ratio": 1.1999999999999997,
+      "expected": 1.2
+    },
+    {
+      "name": "leg_joint_L_2",
+      "ratio": 1.2000000000000002,
+      "expected": 1.2
+    },
+    {
+      "name": "leg_joint_L_3",
+      "ratio": 1.2,
+      "expected": 1.2
+    },
+    {
+      "name": "leg_joint_L_5",
+      "ratio": 1.2000000000000002,
+      "expected": 1.2
+    },
+    {
+      "name": "Skeleton_arm_joint_R__2_",
+      "ratio": 0.8999999999999999,
+      "expected": 0.9
+    },
+    {
+      "name": "Skeleton_arm_joint_R__3_",
+      "ratio": 0.9,
+      "expected": 0.9
+    },
+    {
+      "name": "Skeleton_arm_joint_L__4_",
+      "ratio": 0.8999999999999999,
+      "expected": 0.9
+    },
+    {
+      "name": "Skeleton_arm_joint_L__3_",
+      "ratio": 0.9,
+      "expected": 0.9
+    },
+    {
+      "name": "Skeleton_arm_joint_L__2_",
+      "ratio": 0.9,
+      "expected": 0.9
+    }
+  ],
+  "mappedClips": [
+    {
+      "name": "Walk",
+      "channels": 57,
+      "timesAndScaleKeysPreserved": true
+    },
+    {
+      "name": "Idle",
+      "channels": 57,
+      "timesAndScaleKeysPreserved": true
+    },
+    {
+      "name": "Run",
+      "channels": 57,
+      "timesAndScaleKeysPreserved": true
+    },
+    {
+      "name": "Travel",
+      "channels": 58,
+      "timesAndScaleKeysPreserved": true
+    },
+    {
+      "name": "UpperAction",
+      "channels": 2,
+      "timesAndScaleKeysPreserved": true
+    },
+    {
+      "name": "Nod",
+      "channels": 1,
+      "timesAndScaleKeysPreserved": true
+    }
+  ],
+  "derivation": {
+    "format": "mtek-character-composition-assets/1",
+    "original": {
+      "commit": "8f492390ddc7a2ae221a1369ef560589cf8c70fb",
+      "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/8f492390ddc7a2ae221a1369ef560589cf8c70fb/Models/CesiumMan/glTF-Binary/CesiumMan.glb",
+      "sha256": "b7001eaeea8254bd44773bcd247e78696d94169388fbb2a1800fc69434e777d9",
+      "bytes": 438044
+    },
+    "source": {
+      "sha256": "e28acec0d2cba84c8114f43422e834c05c1c1bd4784de69975c9364dad5b4510",
+      "bytes": 529824,
+      "clips": [
+        "Walk",
+        "Idle",
+        "Run",
+        "Travel",
+        "UpperAction",
+        "Nod"
+      ]
+    },
+    "target": {
+      "sha256": "ca93db015cae7ee245c6e99f787bfa483dddf2a2ac5d24d300adaeb259a32d60",
+      "bytes": 889112,
+      "legs": 1.2,
+      "arms": 0.9,
+      "rootLift": 0.108,
+      "maximumBindDisplacement": 0.1357589802712624
+    },
+    "retarget": {
+      "api": 1,
+      "rotationSpace": "world",
+      "bindAxes": "validated unchanged",
+      "mapping": {
+        "Z_UP": "Z_UP",
+        "Armature": "Armature",
+        "Cesium_Man": "Cesium_Man",
+        "Skeleton_torso_joint_1": "Skeleton_torso_joint_1",
+        "leg_joint_R_1": "leg_joint_R_1",
+        "leg_joint_R_2": "leg_joint_R_2",
+        "leg_joint_R_3": "leg_joint_R_3",
+        "leg_joint_R_5": "leg_joint_R_5",
+        "leg_joint_L_1": "leg_joint_L_1",
+        "leg_joint_L_2": "leg_joint_L_2",
+        "leg_joint_L_3": "leg_joint_L_3",
+        "leg_joint_L_5": "leg_joint_L_5",
+        "Skeleton_torso_joint_2": "Skeleton_torso_joint_2",
+        "torso_joint_3": "torso_joint_3",
+        "Skeleton_arm_joint_R": "Skeleton_arm_joint_R",
+        "Skeleton_arm_joint_R__2_": "Skeleton_arm_joint_R__2_",
+        "Skeleton_arm_joint_R__3_": "Skeleton_arm_joint_R__3_",
+        "Skeleton_arm_joint_L__4_": "Skeleton_arm_joint_L__4_",
+        "Skeleton_arm_joint_L__3_": "Skeleton_arm_joint_L__3_",
+        "Skeleton_arm_joint_L__2_": "Skeleton_arm_joint_L__2_",
+        "Skeleton_neck_joint_1": "Skeleton_neck_joint_1",
+        "Skeleton_neck_joint_2": "Skeleton_neck_joint_2",
+        "MotionRoot": "MotionRoot"
+      },
+      "nodeTranslationScales": {
+        "Skeleton_torso_joint_1": 1,
+        "leg_joint_R_2": 1.2,
+        "leg_joint_R_3": 1.2,
+        "leg_joint_R_5": 1.2,
+        "leg_joint_L_2": 1.2,
+        "leg_joint_L_3": 1.2,
+        "leg_joint_L_5": 1.2,
+        "Skeleton_arm_joint_R__2_": 0.9,
+        "Skeleton_arm_joint_R__3_": 0.9,
+        "Skeleton_arm_joint_L__4_": 0.9,
+        "Skeleton_arm_joint_L__3_": 0.9,
+        "Skeleton_arm_joint_L__2_": 0.9
+      },
+      "scaleRoundOff": "Original animated scale keys retained; bounded float32 input guard under decision 0209."
+    },
+    "footProfiles": {
+      "Original": {
+        "left": {
+          "minimum": 0,
+          "vertices": 130
+        },
+        "right": {
+          "minimum": 0,
+          "vertices": 130
+        }
+      },
+      "Longer": {
+        "left": {
+          "minimum": -0.010566016659140587,
+          "vertices": 130
+        },
+        "right": {
+          "minimum": -0.010565769858658314,
+          "vertices": 130
+        }
+      }
+    }
+  },
+  "repeatedDerivationIdentical": true,
+  "sources": [
+    {
+      "path": "examples/character-composition/verify-assets.mjs",
+      "sha256": "c01860b81b209e26b7a0f34e9e85b50b2ba11bfedaaee8e25508015e9bd9a6d9"
+    },
+    {
+      "path": "examples/character-composition/glb.mjs",
+      "sha256": "4bc3e7715e1e2ed6811e3d42ddcc4d7a83a5f0ff9afcf0f8c7584b6ca29b342a"
+    },
+    {
+      "path": "examples/character-composition/prepare.mjs",
+      "sha256": "070d14dc57c5bb4f99e0fb814c3fcffda05736080cbe46a81f06d6a71c5ea706"
+    }
+  ],
+  "finishedAt": "2026-10-27T04:48:20.856Z"
+}

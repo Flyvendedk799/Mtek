@@ -728,12 +728,14 @@
       "vertexAttributes": [
         "position",
         "normal",
-        "uv"
+        "uv",
+        "tangent"
       ],
       "surfaceInputs": [
         "world_position",
         "world_normal",
-        "uv"
+        "uv",
+        "world_tangent"
       ]
     },
     {
@@ -1259,7 +1261,7 @@
     {
       "url": "assets/b7f9a53a15a88547.bin",
       "sha256": "b7f9a53a15a88547fd0e55a920c2ee23c17e029db786da9a3cb3d1a39621f46a",
-      "bytes": 1296,
+      "bytes": 1680,
       "kind": "mesh-data",
       "primitives": [
         {
@@ -1274,13 +1276,15 @@
           "attributes": [
             "position",
             "normal",
-            "uv"
+            "uv",
+            "tangent"
           ],
           "offsets": {
             "position": 0,
             "normal": 288,
             "uv": 576,
-            "indices": 768
+            "tangent": 768,
+            "indices": 1152
           },
           "boundingSphere": {
             "center": [

@@ -1,0 +1,278 @@
+{
+  "pose": {
+    "layers": [
+      {
+        "id": "upper-body",
+        "weight": 0.6,
+        "mask": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "ik": [
+      {
+        "id": "right-hand",
+        "chain": [
+          9,
+          10,
+          11
+        ],
+        "target": {
+          "x": -7,
+          "y": 9,
+          "z": 1
+        },
+        "weight": 0.8,
+        "iterations": 12,
+        "tolerance": 0.001,
+        "rotationWeight": 1,
+        "limits": []
+      }
+    ],
+    "procedural": true,
+    "ikLines": 6
+  },
+  "physics": {
+    "body": {
+      "entityId": "scene:1:src/main.mtek::Studio.Crate",
+      "kind": "dynamic",
+      "active": true,
+      "collider": {
+        "shape": {
+          "kind": "box",
+          "size": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.7
+          }
+        },
+        "sensor": false,
+        "friction": 0.6,
+        "restitution": 0
+      },
+      "position": {
+        "x": 1.4011532068252563,
+        "y": 0.34993070363998413,
+        "z": 0.5005362629890442
+      },
+      "rotation": {
+        "x": -9.340047881778446e-7,
+        "y": -0.000001477166165386734,
+        "z": 3.3954458444895863e-7,
+        "w": 1
+      },
+      "contacts": [
+        {
+          "otherId": "scene:1:src/main.mtek::Studio.Floor",
+          "point": {
+            "x": 1.0505762100219727,
+            "y": -0.000034433091059327126,
+            "z": 0.8502679467201233
+          },
+          "normal": {
+            "x": 0,
+            "y": -1,
+            "z": 0
+          },
+          "distance": -0.005739934276789427
+        },
+        {
+          "otherId": "scene:1:src/main.mtek::Studio.Floor",
+          "point": {
+            "x": 1.050577163696289,
+            "y": -0.00003508874215185642,
+            "z": 0.15026794373989105
+          },
+          "normal": {
+            "x": 0,
+            "y": -1,
+            "z": 0
+          },
+          "distance": -0.005739934276789427
+        },
+        {
+          "otherId": "scene:1:src/main.mtek::Studio.Floor",
+          "point": {
+            "x": 1.7505762577056885,
+            "y": -0.00003419467248022556,
+            "z": 0.8502690196037292
+          },
+          "normal": {
+            "x": 0,
+            "y": -1,
+            "z": 0
+          },
+          "distance": -0.005739934276789427
+        },
+        {
+          "otherId": "scene:1:src/main.mtek::Studio.Floor",
+          "point": {
+            "x": 1.7505772113800049,
+            "y": -0.00003485032357275486,
+            "z": 0.15026898682117462
+          },
+          "normal": {
+            "x": 0,
+            "y": -1,
+            "z": 0
+          },
+          "distance": -0.005739934276789427
+        }
+      ]
+    },
+    "before": 64,
+    "after": 64,
+    "kinds": [
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "bounds",
+      "collider",
+      "collider",
+      "collider",
+      "collider",
+      "collider",
+      "collider",
+      "collider",
+      "collider",
+      "collider",
+      "collider",
+      "collider",
+      "collider",
+      "contact",
+      "contact",
+      "contact",
+      "contact",
+      "contact",
+      "contact",
+      "contact",
+      "contact",
+      "contact",
+      "contact",
+      "contact",
+      "contact",
+      "contact",
+      "contact",
+      "contact",
+      "contact"
+    ],
+    "diagnostics": []
+  }
+}

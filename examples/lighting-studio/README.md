@@ -34,7 +34,14 @@ Enable **Scene inspector** under View & materials to select entities, edit local
 transforms, undo/redo and inspect optional host counters. Toggling it rebuilds the
 mount. Edits wait for the next frame; resume the application if it is paused.
 Bindings can overwrite edits. The panel/controller clean up when the scene rebuilds
-or the page closes. The initial inspector increment has mounted fake-GPU and
-GPU-disabled DOM evidence; its real lighting-studio rendering check is deferred
-while the workstation is doing CPU/GPU-heavy work. See the
+or the page closes. The rendered studio check now passes on Radeon and SwiftShader:
+it applies a transform, exercises undo/redo, resets the mount and removes the
+panel without browser errors. The browser setup serves the separately built
+inspector package, matching the standalone dev server. See the
 [inspector documentation](../../packages/inspector/README.md).
+
+With the inspector enabled, **World overlays** draws the selected entity's current
+world bounds and any available skeleton/IK/collider/contact diagnostics. It uses
+the separate public inspector package and disposes its canvas/subscription when
+disabled or rebuilt. The dedicated [inspection studio](../inspection-studio/README.md)
+adds an original animated character and physics/IK controls.

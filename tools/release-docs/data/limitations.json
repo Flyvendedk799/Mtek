@@ -9,10 +9,10 @@
       }
     },
     "E4901": {
-      "reason": "Runnable compute remains unsupported. Standalone declarations now parse and type-check (decision 0202), but receive E4901 until lowering, packaging and runtime dispatch are integrated. A material requires one fragment stage and may declare one authored vertex stage.",
+      "reason": "Compute is not a material member. Standalone bounded compute programs compile to WGSL and execute through app.createCompute (API 1), with upload/dispatch/readback, recovery and bounded position attachments; see spec/compute.md.",
       "source": {
         "file": "spec/materials.md",
-        "quote": "Custom compute stages remain unsupported"
+        "quote": "Material-local compute stages are rejected"
       }
     },
     "E5901": {
@@ -242,7 +242,7 @@
     {
       "id": "lang-unsupported-list-wording",
       "area": "Language",
-      "restriction": "Most items of spec/language.md section 11 have no unsupported-feature code of their own. Only the reserved words (E0013), the bitwise operators (E1901) and compute stages (E4901) do; the others are rejected by the general rules named in the entries above.",
+      "restriction": "Most items of spec/language.md section 11 have no unsupported-feature code of their own. Only the reserved words (E0013), the bitwise operators (E1901) and material-local compute stages (E4901) do; the others are rejected by the general rules named in the entries above.",
       "reason": "Section 11 used to be headed as if every item had \"a dedicated unsupported diagnostic\", which the compiler does not meet. Decision 0102 corrected the heading instead of hiding the difference. Every item is still rejected with a diagnostic.",
       "codes": [
         "E0013",
@@ -260,15 +260,17 @@
     {
       "id": "materials-scope",
       "area": "Materials and rendering",
-      "restriction": "No runnable Mtek-authored compute, multiply blending, point/cascaded shadows, multiple render targets, material inheritance, general derivative intrinsics or usable source storage buffers/texture arrays/cube maps. Standalone compute/resources now parse and type-check but remain blocked by E4901 at the build boundary. Host options provide additive materials, LDR post effects, one directional shadow map and HDR panorama IBL. HDR display/post targets and tone mapping remain unsupported.",
-      "reason": "Vertex position/normal/UV outputs, typed varying payloads and authored finite spheres are implemented by decisions 0197–0199. Sampled original-character skin/deformation/shadow/recovery cases match CPU references; decision 0200 preserves mixed glTF sampler filters. Authors must enclose final geometry. Combined shared-pose instancing, broader animation compositions, overlays, wider physical devices and compute resources/dispatch remain required work. Decisions 0193 to 0195 add host rendering facilities and core material channels.",
+      "restriction": "No material-local compute, multiply blending, point/cascaded shadows, multiple render targets, material inheritance, general derivative intrinsics, workgroup memory/barriers/atomics or compute textures. Standalone fixed-capacity compute buffers are supported through host API 1. Host options provide additive materials, LDR post effects, one directional shadow map and HDR panorama IBL; HDR display/post targets and tone mapping remain unsupported.",
+      "reason": "Vertex position/normal/UV outputs, typed varyings and authored finite bounds are implemented. Standalone compute has numerical, geometry/shadow, recovery and disposal evidence on Radeon and SwiftShader. Optional copied scene/animation diagnostics and world overlays are implemented. Original-character authored shared-pose cohorts match independent draws and CPU references through bounds/culling, shadows, detach/rejoin and recovery. Broader animation compositions and wider physical-device evidence remain separate roadmap work.",
       "codes": [
         "E4901"
       ],
       "decisions": [
         "0193",
         "0194",
-        "0195"
+        "0195",
+        "0207",
+        "0208"
       ],
       "source": {
         "file": "spec/materials.md",
@@ -544,25 +546,28 @@
     {
       "id": "gltf-attributes",
       "area": "Assets",
-      "restriction": "Only positions, normals and the first UV set (triangles only); no vertex colours, tangents or second UV set.",
-      "reason": "Decision 0015.",
+      "restriction": "Triangles with positions, normals, first UV set and optional FLOAT/VEC4 authored tangents. No vertex colours or additional UV sets. Tangents require normals, normalized xyz and handedness ±1.",
+      "reason": "Decision 0212 extends the strict attribute profile without generating missing tangent frames.",
       "codes": [
         "E7006",
         "E7007",
-        "E7009"
+        "E7009",
+        "E7010",
+        "E7027"
       ],
       "decisions": [
-        "0015"
+        "0015",
+        "0212"
       ],
       "source": {
-        "file": "spec/decisions/0015-asset-strictness.md",
-        "quote": "vertex colours, tangents, second UV sets"
+        "file": "spec/decisions/0212-authored-tangent-integration.md",
+        "quote": "no MikkTSpace tangent generator is added."
       }
     },
     {
       "id": "gltf-materials",
       "area": "Assets",
-      "restriction": "Opaque, single-sided core metallic-roughness materials, including base-colour, normal, MR, occlusion and emissive maps on UV0. Other alpha modes, double-sided materials, authored tangents and additional UV sets remain unsupported. Normal maps use a derivative frame rather than authored MikkTSpace tangents.",
+      "restriction": "Opaque, single-sided core metallic-roughness materials, including base-colour, normal, MR, occlusion and emissive maps on UV0. Other alpha modes, double-sided materials and additional UV sets remain unsupported. Normal maps use authored tangents when available, with a derivative fallback; no MikkTSpace tangent generation.",
       "reason": "Decision 0194 extends the strict material profile while retaining explicit boundaries.",
       "codes": [
         "E7015",
@@ -570,7 +575,8 @@
       ],
       "decisions": [
         "0015",
-        "0194"
+        "0194",
+        "0212"
       ],
       "source": {
         "file": "spec/decisions/0194-gltf-material-channels.md",

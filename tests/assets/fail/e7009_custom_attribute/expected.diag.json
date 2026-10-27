@@ -4,10 +4,10 @@
     "file": "src/main.mtek",
     "startByte": 24,
     "endByte": 45,
-    "message": "The mesh 'Tri' (meshes[0]), primitive 0 has the attribute _BATCHID; the profile supports POSITION, NORMAL and TEXCOORD_0.",
+    "message": "The mesh 'Tri' (meshes[0]), primitive 0 has the attribute _BATCHID; the profile supports POSITION, NORMAL, TEXCOORD_0 and TANGENT.",
     "notes": [
       "the problem is in the file 'models/model.glb'",
-      "help: remove vertex colours, tangents and further UV sets when exporting"
+      "help: remove vertex colours and further UV sets when exporting"
     ]
   }
 ]

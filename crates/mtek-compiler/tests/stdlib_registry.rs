@@ -715,7 +715,8 @@ fn types_cover_section_2() {
             ("local_position", "vec3"),
             ("world_position", "vec3"),
             ("world_normal", "vec3"),
-            ("uv", "vec2")
+            ("uv", "vec2"),
+            ("world_tangent", "vec4")
         ]
     );
     let pointer = registry.type_def("PointerEvent").unwrap();

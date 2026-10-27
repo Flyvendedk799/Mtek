@@ -5,6 +5,7 @@ import { PoseLayers } from "./pose-layers.js";
 import { PoseIK } from "./ik.js";
 import { LocomotionBlend } from "./locomotion.js";
 import { PoseSchedule, type AnimationUpdateBand } from "./pose-schedule.js";
+import type { AnimationInspection } from "./animation-inspection.js";
 
 /** Shared file data, independently evaluated by every entity instance. */
 export function skinProblem(skin: MtekSkin, vertices: number): string | undefined {
@@ -98,6 +99,7 @@ export class SkeletonPlayer {
   private readonly locals: Float32Array[];
   private readonly globals: Float32Array[];
   private readonly inverseBind: Float32Array[];
+  private readonly paletteEntries: Float32Array[];
   private readonly order: number[] = [];
   private readonly scratch = identity();
   private readonly inverseMesh = identity();
@@ -111,6 +113,19 @@ export class SkeletonPlayer {
   private evaluatedBlend = NaN;
   private evaluatedWeight = NaN;
   get revision(): number { return this.revisionValue; }
+  /** Copies current evaluated diagnostics. Never advances clocks, consumes root motion or evaluates a pose. */
+  inspect(): AnimationInspection {
+    const progress = this.blendDuration === 0 ? 1 : Math.min(1, this.blendTime / this.blendDuration);
+    return { mode: this.held ? "held" : this.locomotion.active ? "locomotion" : this.name === "" ? "bind" : "clip", clip: this.name || null,
+      transition: { elapsed: this.blendTime, duration: this.blendDuration, progress, outgoingClip: this.outgoing?.name ?? null, fromSnapshot: progress < 1 && this.outgoing === undefined },
+      rootMotionNode: this.rootNode < 0 ? null : this.rootNode, proceduralOverride: this.override !== undefined,
+      nodes: this.skin.nodes.map((node, index) => {
+        multiplyInto(this.product, this.inverseMesh, this.globals[index]!);
+        return { index, name: node.name, parent: node.parent, joint: this.skin.joints.includes(index),
+          position: { x: Math.fround(this.product[12]!), y: Math.fround(this.product[13]!), z: Math.fround(this.product[14]!) } };
+      }), layers: this.layers.inspect(), ik: this.ik.inspect(), locomotion: this.locomotion.inspect(),
+    };
+  }
   jointPosition(name: string): { x: number; y: number; z: number } {
     const i=this.skin.nodes.findIndex(n=>n.name===name);
     if(i<0) return {x:0,y:0,z:0};
@@ -150,6 +165,7 @@ export class SkeletonPlayer {
     this.locals = skin.nodes.map(()=>identity()); this.globals = skin.nodes.map(()=>identity());
     this.inverseBind = skin.inverseBind.map(m=>new Float32Array(m));
     this.palette = new Float32Array(skin.joints.length*16);
+    this.paletteEntries = skin.joints.map((_, joint) => this.palette.subarray(joint*16,joint*16+16));
     const visited = new Set<number>();
     const visit = (i: number): void => { if (visited.has(i)) return; const parent=skin.nodes[i]!.parent; if(parent>=0) visit(parent); visited.add(i); this.order.push(i); };
     skin.nodes.forEach((_,i)=>visit(i));
@@ -295,7 +311,7 @@ export class SkeletonPlayer {
       if (!Number.isFinite(this.pose[i]) || (i%10>=7 && this.pose[i]!<=0)) throw new RangeError("Procedural pose contains an invalid transform");
     }
     for (let at=3;at<this.pose.length;at+=10) {
-      const length=Math.hypot(...this.pose.subarray(at,at+4));
+      const length=Math.hypot(this.pose[at]!,this.pose[at+1]!,this.pose[at+2]!,this.pose[at+3]!);
       if(length<1e-8) throw new RangeError("Procedural pose contains a zero quaternion");
       for(let c=0;c<4;c++) this.pose[at+c]=this.pose[at+c]!/length;
     }
@@ -312,12 +328,13 @@ export class SkeletonPlayer {
     // Inverse affine mesh-node transform: transpose its normal matrix, then inverse translation.
     const mesh=this.globals[this.skin.meshNode]!;
     normalMatrixInto(this.scratch,0,mesh);
-    this.inverseMesh.set(identity());
+    // The affine last row stays at its constructor identity values; every other
+    // element is overwritten below, without allocating an identity each pose.
     for(let r=0;r<3;r++) for(let c=0;c<3;c++) this.inverseMesh[c*4+r]=this.scratch[r*4+c]!;
     for(let r=0;r<3;r++) this.inverseMesh[12+r]=-(this.inverseMesh[r]!*mesh[12]!+this.inverseMesh[4+r]!*mesh[13]!+this.inverseMesh[8+r]!*mesh[14]!);
     for(let j=0;j<this.skin.joints.length;j++) {
       multiplyInto(this.product,this.globals[this.skin.joints[j]!]!,this.inverseBind[j]!);
-      multiplyInto(this.palette.subarray(j*16,j*16+16),this.inverseMesh,this.product);
+      multiplyInto(this.paletteEntries[j]!,this.inverseMesh,this.product);
     }
     this.revisionValue++;
   }

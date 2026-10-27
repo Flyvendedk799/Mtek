@@ -85,8 +85,7 @@ impl ComputeArtifact {
     }
 }
 
-/// Lower, print and validate a checked compute declaration. This internal artifact
-/// path is not an alternative to the E4901 gate on public source builds.
+/// Lower, print and validate a checked standalone compute declaration.
 ///
 /// # Errors
 /// E9999 for invalid typed IR/layouts; E6100 for a WGSL validation failure.

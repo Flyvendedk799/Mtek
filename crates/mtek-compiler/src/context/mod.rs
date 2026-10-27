@@ -61,7 +61,7 @@ pub const DEFAULT_MAX_BYTES: usize = 30_000;
 
 /// The `diagnosticsGuide` text. A test checks that every field it names exists in
 /// `spec/diagnostic.schema.json`.
-pub const DIAGNOSTICS_GUIDE: &str = "`mtek check --format json`: one report. Diagnostics: code, severity, title, message, source (file, startByte, endByte, startLine, startColumn, endLine, endColumn), expected/actual where relevant, related, notes, suggestedEdits, phase. Fix errors in report order; apply only supplied validated edits; never delete the requested feature.";
+pub const DIAGNOSTICS_GUIDE: &str = "`mtek check --format json`: code, severity, title, message, source(file,startByte,endByte,startLine,startColumn,endLine,endColumn), expected/actual, related, notes, suggestedEdits, phase. Fix errors in order; use only supplied validated edits; preserve requested features.";
 
 /// What to export.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -357,7 +357,14 @@ pub fn used_features(root: &ProjectRoot, fs: &dyn Fs) -> Result<BTreeSet<String>
 fn seeds(program: &Program<'_>, symbols: &[String]) -> Result<Vec<usize>, ContextError> {
     if symbols.is_empty() {
         return Ok(match program.entry_scene() {
-            Some(scene) => vec![scene],
+            Some(scene) => std::iter::once(scene)
+                .chain(
+                    program
+                        .roots()
+                        .into_iter()
+                        .filter(|index| program.decls[*index].kind == "compute"),
+                )
+                .collect(),
             None => program
                 .roots()
                 .into_iter()

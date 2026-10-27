@@ -1,0 +1,81 @@
+const MODEL = asset.glb("../models/content.glb");
+
+scene Workload {
+    clear_color: #111a26;
+    ambient_intensity: 0.0;
+    camera Main {
+        position: vec3(8.0, 5.0, 10.0);
+        target: vec3(0.0, 1.0, 0.0);
+        projection: Perspective { fov_y: 0.7; near: 0.1; far: 60.0 };
+        exposure: -0.2630344;
+    }
+    entity Sun {
+        rotation: quat.euler(-0.9, 0.6, 0);
+        light: DirectionalLight { color: #fff2dc; intensity: 2.5 };
+    }
+    entity Floor {
+        position: vec3(0.0, -0.15, 0.0);
+        rotation: quat.euler(0.0, 0.0, 0.0);
+        scale: vec3(16.0, 0.3, 14.0);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Ground");
+    }
+    entity BehindGlass {
+        position: vec3(0.0, 1.4, -1.0);
+        rotation: quat.euler(0.0, 0.3, 0.0);
+        scale: vec3(2.2, 2.2, 2.2);
+        mesh: MODEL.mesh("Sphere_standard");
+        material: MODEL.material("Mapped");
+    }
+    entity Pane0 {
+        position: vec3(-1.125, 1.5, 1.5);
+        rotation: quat.euler(0.0, -0.18, 0.0);
+        scale: vec3(2.0, 2.6, 0.06);
+        mesh: MODEL.mesh("Box");
+        material: Pbr {
+            base_color: color.linear(vec3(0.08, 0.38, 0.6), 0.35);
+            metallic: 0.0;
+            roughness: 0.35;
+        };
+    }
+    entity Pane1 {
+        position: vec3(-0.375, 1.5, 1.05);
+        rotation: quat.euler(0.0, -0.06, 0.0);
+        scale: vec3(2.0, 2.6, 0.06);
+        mesh: MODEL.mesh("Box");
+        material: Pbr {
+            base_color: color.linear(vec3(0.08, 0.38, 0.6), 0.35);
+            metallic: 0.0;
+            roughness: 0.35;
+        };
+    }
+    entity Pane2 {
+        position: vec3(0.375, 1.5, 0.6);
+        rotation: quat.euler(0.0, 0.06, 0.0);
+        scale: vec3(2.0, 2.6, 0.06);
+        mesh: MODEL.mesh("Box");
+        material: Pbr {
+            base_color: color.linear(vec3(0.08, 0.38, 0.6), 0.35);
+            metallic: 0.0;
+            roughness: 0.35;
+        };
+    }
+    entity Pane3 {
+        position: vec3(1.125, 1.5, 0.1499999999999999);
+        rotation: quat.euler(0.0, 0.18, 0.0);
+        scale: vec3(2.0, 2.6, 0.06);
+        mesh: MODEL.mesh("Box");
+        material: Pbr {
+            base_color: color.linear(vec3(0.08, 0.38, 0.6), 0.35);
+            metallic: 0.0;
+            roughness: 0.35;
+        };
+    }
+    entity SideCopper {
+        position: vec3(-3.0, 1.0, 0.0);
+        rotation: quat.euler(0.0, 0.0, 0.0);
+        scale: vec3(1.6, 1.6, 1.6);
+        mesh: MODEL.mesh("Sphere_standard");
+        material: MODEL.material("Copper");
+    }
+}

@@ -1,5 +1,6 @@
 import type { MtekSkin } from "../abi/manifest-types.js";
 import { ClipPlayers, sampleChannelInto } from "./clips.js";
+import type { AnimationLayerInspection } from "./animation-inspection.js";
 
 export interface AnimationLayer {
   readonly clip: string;
@@ -67,6 +68,11 @@ export class PoseLayers {
   private readonly inverse = new Float64Array(4);
   revision = 0;
   constructor(private readonly skin: MtekSkin) {}
+
+  inspect(): readonly AnimationLayerInspection[] {
+    return [...this.layers].map(([id, { options, mask, clock }]) => ({ id, clip: options.clip, weight: options.weight,
+      additive: options.additive ?? false, time: clock.time(0), duration: clock.duration(0), playing: clock.playing(0), mask: [...mask] }));
+  }
 
   set(id: string, options: AnimationLayer): void {
     const clip = this.skin.clips.find((c) => c.name === options.clip);

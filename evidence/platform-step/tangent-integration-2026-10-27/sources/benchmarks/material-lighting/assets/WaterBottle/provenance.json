@@ -1,0 +1,24 @@
+{
+  "format": "mtek-original-product-asset/1",
+  "repository": "KhronosGroup/glTF-Sample-Assets",
+  "commit": "8f492390ddc7a2ae221a1369ef560589cf8c70fb",
+  "upstreamPath": "Models/WaterBottle/glTF-Binary/WaterBottle.glb",
+  "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/8f492390ddc7a2ae221a1369ef560589cf8c70fb/Models/WaterBottle/glTF-Binary/WaterBottle.glb",
+  "sha256": "b337e526fd6a162013c2984aeec163f5fbb4f717252724dfc3f3458bd51df94b",
+  "gitBlob": "27894ec0ce010ba689e04e4801520ebb5ccc849f",
+  "bytes": 8966700,
+  "license": "CC0-1.0",
+  "artist": "Microsoft",
+  "year": 2017,
+  "modifications": "none: original GLB, all original geometry, tangent and texture data",
+  "mesh": "WaterBottle",
+  "material": "BottleMat",
+  "node": "WaterBottle",
+  "nodeRotation": [0, 1, 0, 0],
+  "vertices": 2549,
+  "indices": 13530,
+  "bounds": {
+    "min": [-0.05445001, -0.130220339, -0.0544500239],
+    "max": [0.05445001, 0.130220339, 0.0544500239]
+  }
+}

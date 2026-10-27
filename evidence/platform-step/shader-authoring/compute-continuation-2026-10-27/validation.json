@@ -1,0 +1,502 @@
+{
+  "format": "mtek-compute-continuation-validation/1",
+  "recordedAt": "2026-10-27T06:52:33.923Z",
+  "gitBase": "986040bd9c9e284a06231121eb64f5262b81b620",
+  "scope": "Current-code compute shadow lifecycle and capability alignment; no performance or additional physical-device claim",
+  "commands": [
+    {
+      "command": "cargo test -p mtek-compiler --locked -j 2 --test context --test compute_frontend --test compute_lowering -- --test-threads=2",
+      "exitCode": 0,
+      "log": "logs/compiler.log"
+    },
+    {
+      "command": "MTEK_RESULTS_DIR=<results>/hardware npm run test -w @mtek/browser-tests -- --config=compute.config.ts --project=hardware",
+      "exitCode": 0,
+      "log": "logs/hardware.log"
+    },
+    {
+      "command": "MTEK_RESULTS_DIR=<results>/software npm run test -w @mtek/browser-tests -- --config=compute.config.ts --project=software",
+      "exitCode": 0,
+      "log": "logs/software.log"
+    },
+    {
+      "command": "cargo test -p mtek-cli --bin mtek --locked -j 2 lsp:: -- --test-threads=2",
+      "exitCode": 0,
+      "log": "logs/lsp.log"
+    },
+    {
+      "command": "MTEK_BIN=.out/material-tools/mtek.exe npm run check -w @mtek/release-docs",
+      "exitCode": 0,
+      "log": "logs/release.log"
+    },
+    {
+      "command": "MTEK_BIN=.out/material-tools/mtek.exe npm run test:unit -w @mtek/release-docs -- --maxWorkers=1",
+      "exitCode": 0,
+      "log": "logs/release-unit.log"
+    },
+    {
+      "command": "npm run check:ts",
+      "exitCode": 0,
+      "log": "logs/ts.log"
+    },
+    {
+      "command": "npm exec --workspace @mtek/browser-tests -- eslint pages/compute-shadow.ts specs/compute/shadows.spec.ts",
+      "exitCode": 0,
+      "log": "logs/lint.log"
+    },
+    {
+      "command": "cargo clippy -p mtek-compiler --test context --locked -j 2 -- -D warnings",
+      "exitCode": 0,
+      "log": "logs/clippy.log"
+    },
+    {
+      "command": "cargo fmt --all --check",
+      "exitCode": 0,
+      "log": "logs/format.log"
+    }
+  ],
+  "sources": [
+    {
+      "path": "tests/browser/pages/compute-shadow.ts",
+      "bytes": 8119,
+      "sha256": "5f90e146c315b1ce372eaa27e2736343d77184620561dbbbf78bb03c8c33795d"
+    },
+    {
+      "path": "tests/browser/specs/compute/shadows.spec.ts",
+      "bytes": 2270,
+      "sha256": "5dc404dc44b72352bb750920206976dffc7a0456c56a283725e6fbf5696da692"
+    },
+    {
+      "path": "tests/browser/support/compute-fixtures.ts",
+      "bytes": 4992,
+      "sha256": "e90d830727ed7e44e7e50dd3ea750ee30727c944e3a82093d7f12e2dee5debdf"
+    },
+    {
+      "path": "tests/browser/support/compute-reference.ts",
+      "bytes": 4797,
+      "sha256": "f20ea2f88b06397011ca0a20383df21e052bd06510c47c9475f506dfe894283c"
+    },
+    {
+      "path": "tests/browser/support/compute-composite-reference.ts",
+      "bytes": 5181,
+      "sha256": "a3cc6dae02aa8cccf283b5dbf675ed0a3302fc3082f58abbc234081fe4318ab5"
+    },
+    {
+      "path": "tests/browser/COMPUTE-ACCEPTANCE.md",
+      "bytes": 6426,
+      "sha256": "886e5af414f1848d246660dc2ad9e0bceb1e19074c444ca97bddc9173874f7fc"
+    },
+    {
+      "path": "crates/mtek-compiler/tests/context.rs",
+      "bytes": 58699,
+      "sha256": "c8f60df537a3ec092cd19beab5e7d4b6b9934520cd931baaa0a31dd22c922768"
+    },
+    {
+      "path": "crates/mtek-compiler/src/context/capabilities.rs",
+      "bytes": 12600,
+      "sha256": "a0f89f939da325bc175684c3c2c6ab0f583b127c4b9df4c7b15f8faefbfde7a9"
+    },
+    {
+      "path": "crates/mtek-compiler/src/resolve/gate.rs",
+      "bytes": 18207,
+      "sha256": "3989a6c1923ea5f9bfe1daaf4c7b0e362ea902440d7bdd30f3ba9aae46cb6734"
+    },
+    {
+      "path": "crates/mtek-compiler/tests/compute_lowering.rs",
+      "bytes": 24205,
+      "sha256": "8f0931e6cd9d5928b866ec4273a71e311ebd917716d9f2dcfabfff80ecd10986"
+    },
+    {
+      "path": "crates/mtek-compiler/tests/compute_frontend.rs",
+      "bytes": 13660,
+      "sha256": "8b8946ae4cbb00010190fccf97039db1fd73d220f1649a252b9de5a53d8de54a"
+    },
+    {
+      "path": "crates/mtek-cli/src/lsp/feature_tests.rs",
+      "bytes": 19489,
+      "sha256": "ef1dc03bb5366160e5a0ec3bf95ffc1b7fd98273e0487240bf3e3cfab319c5e7"
+    },
+    {
+      "path": "crates/mtek-cli/src/lsp/completion_tests.rs",
+      "bytes": 19467,
+      "sha256": "c4df9a03fb36dbb2165bed631b84b0a6e5abf0bffe8fa27a20330fd1a45afebd"
+    },
+    {
+      "path": "spec/compute.md",
+      "bytes": 4705,
+      "sha256": "420212d41155550d93e9af47562150bf38a826d0d4b26ef5a45fb08d25f646b6"
+    },
+    {
+      "path": "examples/compute-geometry/scene/src/main.mtek",
+      "bytes": 1545,
+      "sha256": "0162b8bcdf3abd17e5516a340cbd4c6ebfaaa473af25b5e4bfd86285b577d1a4"
+    },
+    {
+      "path": "examples/compute-geometry/scene/mtek.toml",
+      "bytes": 213,
+      "sha256": "3e789b1fcfebed1fbe70e4067d3e8b9a63d7492607666a85db6b307f58de3cf8"
+    },
+    {
+      "path": "examples/compute-geometry/geometry.js",
+      "bytes": 529,
+      "sha256": "2a1a71579dd489002ec2d2d19268e67f36d02d8514c8b6ff7d773790f81bb3d8"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "checkpoint.md",
+      "bytes": 2481,
+      "sha256": "79b7810f57a585d5e1b5d9771b4f2e5fc93cc9b8e86a2c5cbd1bfda6e7abe132"
+    },
+    {
+      "path": "hardware/artifacts/.last-run.json",
+      "bytes": 46,
+      "sha256": "fff6299efb51ba9ef550e500ecc967e972c83e86be387042c360caea7fdbae29"
+    },
+    {
+      "path": "hardware/artifacts/compute-acceptance-compute-4a417-h-recovery-detach-and-reset-hardware/computed-geometry.png",
+      "bytes": 1416,
+      "sha256": "16ce795fce5357405c291dc3812af5c38614586d1cea88c5b0d10c2f196208f1"
+    },
+    {
+      "path": "hardware/artifacts/compute-example-the-public-6242d-etry-without-browser-errors-hardware/compute-example.png",
+      "bytes": 41566,
+      "sha256": "8c81138a6f48a00e5f6ae1bba4a368ef1b51f1f20c300cb1d24d5c80a7eea622"
+    },
+    {
+      "path": "hardware/artifacts/compute-shadows-compute-sh-226a3-bounds-pending-and-recovery-hardware/compute-shadow.png",
+      "bytes": 2190,
+      "sha256": "71d6d85c446b9e7cf69ba52c180e0d2155641590af82a6d504d5b4d9d214bd8e"
+    },
+    {
+      "path": "hardware/artifacts/compute-shadows-compute-sh-33dc7-camera-pending-and-recovery-hardware/compute-shadow.png",
+      "bytes": 2063,
+      "sha256": "523d9ede1aaa45449cc85df51711b1b6a70c32c66961e6dedb08e0489a348658"
+    },
+    {
+      "path": "hardware/artifacts/compute-shadows-compute-sh-3edab-bounds-pending-and-recovery-hardware/compute-shadow.png",
+      "bytes": 2240,
+      "sha256": "e85abe5d68dced7a21459f2900978c36b1ac89be56a30f3f186f4ef65369b26f"
+    },
+    {
+      "path": "hardware/artifacts/compute-shadows-compute-sh-978ac-camera-pending-and-recovery-hardware/compute-shadow.png",
+      "bytes": 2201,
+      "sha256": "58d810d45ce7693fcc269edd6e34b349417337ac03a435346d64ecd2d50bdb2c"
+    },
+    {
+      "path": "hardware/artifacts/compute-shadows-compute-sh-c08ef-camera-pending-and-recovery-hardware/compute-shadow.png",
+      "bytes": 2156,
+      "sha256": "ceb0ed15553a0a32f8ecddb68c97e9a165618c655f6dfee52f523f9da5499692"
+    },
+    {
+      "path": "hardware/artifacts/compute-shadows-compute-sh-e8a57-bounds-pending-and-recovery-hardware/compute-shadow.png",
+      "bytes": 2220,
+      "sha256": "4e97ced720e6ca378c817a18d877626353e08a843d817ddfa631d3242daa6f2d"
+    },
+    {
+      "path": "hardware/compute-example-hardware.json",
+      "bytes": 79,
+      "sha256": "4b91b7759d38752263e643a93e890d85762e3ee7bf7b8b95ea870fbfde38a56d"
+    },
+    {
+      "path": "hardware/compute-numerical-hardware.json",
+      "bytes": 96460,
+      "sha256": "de1b55c0bed9e098da5ce572e0b74e0d6ee145f4dba6adb55ed95cf40b93ff54"
+    },
+    {
+      "path": "hardware/compute-package.json",
+      "bytes": 6638,
+      "sha256": "67bebd1aebd7bb622ff7e123f0565a8c0918301b13653363e2a78307548ad226"
+    },
+    {
+      "path": "hardware/compute-render-hardware.json",
+      "bytes": 351497,
+      "sha256": "d0034e201f378961cf4d39cd214945c0f6e6c069f62b6b32d3ee731aa1d6ae48"
+    },
+    {
+      "path": "hardware/compute-shadow-high-final-bounds-hardware.json",
+      "bytes": 1147054,
+      "sha256": "7e39a262bae4a4b2ad83db2e7698bdc8bb9ac68c672d269aef63adc64f53cd24"
+    },
+    {
+      "path": "hardware/compute-shadow-high-off-camera-hardware.json",
+      "bytes": 1147038,
+      "sha256": "704c57606e8e5e3162af5de267725d65e33d92189f9b3b992844210634b0065a"
+    },
+    {
+      "path": "hardware/compute-shadow-low-final-bounds-hardware.json",
+      "bytes": 1147025,
+      "sha256": "31b28fb955b9d6bfee716c8a1cfc36fb020a0332c4117f4729758f55116614c8"
+    },
+    {
+      "path": "hardware/compute-shadow-low-off-camera-hardware.json",
+      "bytes": 1147021,
+      "sha256": "14682688afc6ff57af71f0c9f24961a2ba321fd5a4edeabc73b3d3020087761a"
+    },
+    {
+      "path": "hardware/compute-shadow-medium-final-bounds-hardware.json",
+      "bytes": 1147060,
+      "sha256": "a28004165541f5b3bff0cc49ec75f4be85ef214f0d97ed1b1fd07df4841d0448"
+    },
+    {
+      "path": "hardware/compute-shadow-medium-off-camera-hardware.json",
+      "bytes": 1147055,
+      "sha256": "7150e3f60a666daea2fcfc0519432226f0036ad4c554ee502c6a303fb1a93e63"
+    },
+    {
+      "path": "hardware/environment-hardware.json",
+      "bytes": 3481,
+      "sha256": "2f1f964b063fb9428c99885f875c1de7196e59a32f73b908b6c6005e5ae1d5be"
+    },
+    {
+      "path": "hardware/test-results.json",
+      "bytes": 12386,
+      "sha256": "1d44f16d8c7c7bc56c63f4763ab9c2c7ea30acf8f4190c56019ecdbef777b04c"
+    },
+    {
+      "path": "logs/clippy.log",
+      "bytes": 135,
+      "sha256": "c6e5cbbbbf55818134916bb1ac92a019c8aeb2ce676b0f169427f336cc2db210"
+    },
+    {
+      "path": "logs/compiler.log",
+      "bytes": 5115,
+      "sha256": "967b8a414c8d7d487f0c8bbfb1f0cd8968d780e8495d7edcc7ee4f343d3d80e5"
+    },
+    {
+      "path": "logs/format.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/hardware.log",
+      "bytes": 1834,
+      "sha256": "11f39116b469edbcb1ee370c1232add8445a6ad0f38708b3da553b1187e35ed1"
+    },
+    {
+      "path": "logs/lint.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/lsp.log",
+      "bytes": 10980,
+      "sha256": "f86d04c4035b46ac0b4362c197e373199e54d087a5f87ae4cac170e2a2d09aa1"
+    },
+    {
+      "path": "logs/release-unit.log",
+      "bytes": 255,
+      "sha256": "2f74d85cfdb83b9b9c12c035a4a51f087dc4fd325fe31eca34fbcff2bcc22fa5"
+    },
+    {
+      "path": "logs/release.log",
+      "bytes": 170,
+      "sha256": "abf9123bb39249c6ea320cffe1b7075f9b74a5fdaf2cf797d0357346801fdae1"
+    },
+    {
+      "path": "logs/software.log",
+      "bytes": 1839,
+      "sha256": "a5b9a23b78e58739d279e75e8c189efb418f90c1760f03a202d232fb77c5da55"
+    },
+    {
+      "path": "logs/ts.log",
+      "bytes": 69,
+      "sha256": "f69b529a81c6522a394d778b79e8ae92367c8d99be0a286dc03f645a434833fc"
+    },
+    {
+      "path": "software/artifacts/.last-run.json",
+      "bytes": 46,
+      "sha256": "fff6299efb51ba9ef550e500ecc967e972c83e86be387042c360caea7fdbae29"
+    },
+    {
+      "path": "software/artifacts/compute-acceptance-compute-4a417-h-recovery-detach-and-reset-software/computed-geometry.png",
+      "bytes": 1416,
+      "sha256": "16ce795fce5357405c291dc3812af5c38614586d1cea88c5b0d10c2f196208f1"
+    },
+    {
+      "path": "software/artifacts/compute-example-the-public-6242d-etry-without-browser-errors-software/compute-example.png",
+      "bytes": 41432,
+      "sha256": "8534ad9caef5df56de6dc9fd86ef9de6ea492f22788720b90c7b98699bb56fab"
+    },
+    {
+      "path": "software/artifacts/compute-shadows-compute-sh-226a3-bounds-pending-and-recovery-software/compute-shadow.png",
+      "bytes": 2135,
+      "sha256": "f954942e8bf2c488d1a4084a7fe0498a57a173d20ef0e624c5621eab00bec34b"
+    },
+    {
+      "path": "software/artifacts/compute-shadows-compute-sh-33dc7-camera-pending-and-recovery-software/compute-shadow.png",
+      "bytes": 2004,
+      "sha256": "513ed22d29bc0b7b3aa1c3c5942481278d4e870b7fbd17fefc2eba37daf00fd9"
+    },
+    {
+      "path": "software/artifacts/compute-shadows-compute-sh-3edab-bounds-pending-and-recovery-software/compute-shadow.png",
+      "bytes": 2182,
+      "sha256": "4cf95564c129e0aa84c4049fbe0b446eebbc9b18dcf62ffecef7f6e358b79861"
+    },
+    {
+      "path": "software/artifacts/compute-shadows-compute-sh-978ac-camera-pending-and-recovery-software/compute-shadow.png",
+      "bytes": 2133,
+      "sha256": "d813055f5cb613a7d082955af0fa86f869ff0257df846794aa57be6abd9451c8"
+    },
+    {
+      "path": "software/artifacts/compute-shadows-compute-sh-c08ef-camera-pending-and-recovery-software/compute-shadow.png",
+      "bytes": 2108,
+      "sha256": "00a676688adce3f30764b48239b5888c3fb49871178678d3851554950d6f6751"
+    },
+    {
+      "path": "software/artifacts/compute-shadows-compute-sh-e8a57-bounds-pending-and-recovery-software/compute-shadow.png",
+      "bytes": 2163,
+      "sha256": "7e8ecbadde2a009802a6670217afb5bb3ac48586606ab55dc3ddd11260abaaec"
+    },
+    {
+      "path": "software/compute-example-software.json",
+      "bytes": 79,
+      "sha256": "4b91b7759d38752263e643a93e890d85762e3ee7bf7b8b95ea870fbfde38a56d"
+    },
+    {
+      "path": "software/compute-numerical-software.json",
+      "bytes": 96460,
+      "sha256": "de1b55c0bed9e098da5ce572e0b74e0d6ee145f4dba6adb55ed95cf40b93ff54"
+    },
+    {
+      "path": "software/compute-package.json",
+      "bytes": 6638,
+      "sha256": "67bebd1aebd7bb622ff7e123f0565a8c0918301b13653363e2a78307548ad226"
+    },
+    {
+      "path": "software/compute-render-software.json",
+      "bytes": 351479,
+      "sha256": "3d392463539fbf5ac0d3233384ea669860c24bfa91c5a0731a58eba52e85336f"
+    },
+    {
+      "path": "software/compute-shadow-high-final-bounds-software.json",
+      "bytes": 1147008,
+      "sha256": "1ff7bdea38fcb0af6620d2bb41c4d7d7898dca800021d9df7453c6a83e8fa808"
+    },
+    {
+      "path": "software/compute-shadow-high-off-camera-software.json",
+      "bytes": 1147036,
+      "sha256": "ea8b5bdff6353660d48449ee6360aacb6141c7f6ab9536109f14def842b75c0b"
+    },
+    {
+      "path": "software/compute-shadow-low-final-bounds-software.json",
+      "bytes": 1147056,
+      "sha256": "697cb9a6e027a05bec9402be08852cb597ff4ad2b8a6bcf3acbeaa11682503c3"
+    },
+    {
+      "path": "software/compute-shadow-low-off-camera-software.json",
+      "bytes": 1146992,
+      "sha256": "1130bd81c480de46975e3dc6f43de6aace51cea328517692dde515d793e5b40c"
+    },
+    {
+      "path": "software/compute-shadow-medium-final-bounds-software.json",
+      "bytes": 1147055,
+      "sha256": "cdd4268a7a7d968b28ee0107a1d110bf9e7daadfb5924adb8ff99bfa7fab307a"
+    },
+    {
+      "path": "software/compute-shadow-medium-off-camera-software.json",
+      "bytes": 1147025,
+      "sha256": "cb20d6dbaaf591c4447db37043f84cf8c7c383c9a3587bf1c60e808a9d8571bd"
+    },
+    {
+      "path": "software/environment-software.json",
+      "bytes": 3418,
+      "sha256": "6baf7cf782a102cba56950d6f12f6e91f7e518efd525c327658e4e28912389c4"
+    },
+    {
+      "path": "software/test-results.json",
+      "bytes": 12394,
+      "sha256": "21f22783c8bc33cba1c7d7a4d251e83866482dd69844edcd180f2a407f5d1319"
+    },
+    {
+      "path": "sources/crates/mtek-cli/src/lsp/completion_tests.rs",
+      "bytes": 19467,
+      "sha256": "c4df9a03fb36dbb2165bed631b84b0a6e5abf0bffe8fa27a20330fd1a45afebd"
+    },
+    {
+      "path": "sources/crates/mtek-cli/src/lsp/feature_tests.rs",
+      "bytes": 19489,
+      "sha256": "ef1dc03bb5366160e5a0ec3bf95ffc1b7fd98273e0487240bf3e3cfab319c5e7"
+    },
+    {
+      "path": "sources/crates/mtek-compiler/src/context/capabilities.rs",
+      "bytes": 12600,
+      "sha256": "a0f89f939da325bc175684c3c2c6ab0f583b127c4b9df4c7b15f8faefbfde7a9"
+    },
+    {
+      "path": "sources/crates/mtek-compiler/src/resolve/gate.rs",
+      "bytes": 18207,
+      "sha256": "3989a6c1923ea5f9bfe1daaf4c7b0e362ea902440d7bdd30f3ba9aae46cb6734"
+    },
+    {
+      "path": "sources/crates/mtek-compiler/tests/compute_frontend.rs",
+      "bytes": 13660,
+      "sha256": "8b8946ae4cbb00010190fccf97039db1fd73d220f1649a252b9de5a53d8de54a"
+    },
+    {
+      "path": "sources/crates/mtek-compiler/tests/compute_lowering.rs",
+      "bytes": 24205,
+      "sha256": "8f0931e6cd9d5928b866ec4273a71e311ebd917716d9f2dcfabfff80ecd10986"
+    },
+    {
+      "path": "sources/crates/mtek-compiler/tests/context.rs",
+      "bytes": 58699,
+      "sha256": "c8f60df537a3ec092cd19beab5e7d4b6b9934520cd931baaa0a31dd22c922768"
+    },
+    {
+      "path": "sources/examples/compute-geometry/geometry.js",
+      "bytes": 529,
+      "sha256": "2a1a71579dd489002ec2d2d19268e67f36d02d8514c8b6ff7d773790f81bb3d8"
+    },
+    {
+      "path": "sources/examples/compute-geometry/scene/mtek.toml",
+      "bytes": 213,
+      "sha256": "3e789b1fcfebed1fbe70e4067d3e8b9a63d7492607666a85db6b307f58de3cf8"
+    },
+    {
+      "path": "sources/examples/compute-geometry/scene/src/main.mtek",
+      "bytes": 1545,
+      "sha256": "0162b8bcdf3abd17e5516a340cbd4c6ebfaaa473af25b5e4bfd86285b577d1a4"
+    },
+    {
+      "path": "sources/spec/compute.md",
+      "bytes": 4705,
+      "sha256": "420212d41155550d93e9af47562150bf38a826d0d4b26ef5a45fb08d25f646b6"
+    },
+    {
+      "path": "sources/tests/browser/COMPUTE-ACCEPTANCE.md",
+      "bytes": 6426,
+      "sha256": "886e5af414f1848d246660dc2ad9e0bceb1e19074c444ca97bddc9173874f7fc"
+    },
+    {
+      "path": "sources/tests/browser/pages/compute-shadow.ts",
+      "bytes": 8119,
+      "sha256": "5f90e146c315b1ce372eaa27e2736343d77184620561dbbbf78bb03c8c33795d"
+    },
+    {
+      "path": "sources/tests/browser/specs/compute/shadows.spec.ts",
+      "bytes": 2270,
+      "sha256": "5dc404dc44b72352bb750920206976dffc7a0456c56a283725e6fbf5696da692"
+    },
+    {
+      "path": "sources/tests/browser/support/compute-composite-reference.ts",
+      "bytes": 5181,
+      "sha256": "a3cc6dae02aa8cccf283b5dbf675ed0a3302fc3082f58abbc234081fe4318ab5"
+    },
+    {
+      "path": "sources/tests/browser/support/compute-fixtures.ts",
+      "bytes": 4992,
+      "sha256": "e90d830727ed7e44e7e50dd3ea750ee30727c944e3a82093d7f12e2dee5debdf"
+    },
+    {
+      "path": "sources/tests/browser/support/compute-reference.ts",
+      "bytes": 4797,
+      "sha256": "f20ea2f88b06397011ca0a20383df21e052bd06510c47c9475f506dfe894283c"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 167131,
+      "sha256": "12c42a14c715225c46d918b2aa594c96c60e0037e37bde39a51cc2e221af2adf"
+    }
+  ]
+}

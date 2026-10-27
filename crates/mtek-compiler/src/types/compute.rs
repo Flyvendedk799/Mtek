@@ -1,5 +1,4 @@
-//! Bounded source compute checking. Builds checked resource/kernel metadata;
-//! an explicit E4901 build gate remains until packaging/runtime dispatch exists.
+//! Bounded source compute checking, shared by packaging and mounted dispatch.
 
 use std::collections::BTreeSet;
 
@@ -281,8 +280,6 @@ impl<'a> Checker<'a> {
             );
         }
         self.out.computes.insert(def, info);
-        self.report(Diagnostic::new(Code::E4901, "Source compute checking is implemented, but compute packaging and runtime dispatch are not yet available.")
-            .at(decl.name.span).note("the required compute-authoring workstream remains in progress; this declaration cannot produce a runnable package yet"));
     }
 
     fn compute_buffer(&mut self, buffer: &StorageDecl) -> Option<ComputeBuffer> {

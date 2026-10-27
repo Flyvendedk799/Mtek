@@ -1,0 +1,7 @@
+[project]
+name = "inspection-studio"
+language = "0.1"
+
+[host.inputs]
+camera_yaw = "Studio.camera_yaw"
+parent_yaw = "Studio.parent_yaw"

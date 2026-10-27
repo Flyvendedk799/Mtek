@@ -368,13 +368,13 @@
         "vertexAttributes": {
           "type": "array",
           "description": "Present vertex attributes in vertex-buffer slot order (spec/materials.md section 3.3).",
-          "items": { "type": "string", "enum": ["position", "normal", "uv"] },
+          "items": { "type": "string", "enum": ["position", "normal", "uv", "tangent"] },
           "uniqueItems": true
         },
         "surfaceInputs": {
           "type": "array",
           "description": "SurfaceInput fields the fragment stage reads.",
-          "items": { "type": "string", "enum": ["local_position", "world_position", "world_normal", "uv"] },
+          "items": { "type": "string", "enum": ["local_position", "world_position", "world_normal", "uv", "world_tangent"] },
           "uniqueItems": true
         }
       }
@@ -567,7 +567,7 @@
         "indexFormat": { "type": "string", "enum": ["uint16", "uint32"] },
         "attributes": {
           "type": "array",
-          "items": { "type": "string", "enum": ["position", "normal", "uv"] },
+          "items": { "type": "string", "enum": ["position", "normal", "uv", "tangent"] },
           "uniqueItems": true
         },
         "offsets": {
@@ -578,6 +578,7 @@
             "position": { "$ref": "#/$defs/index" },
             "normal": { "$ref": "#/$defs/index" },
             "uv": { "$ref": "#/$defs/index" },
+            "tangent": { "$ref": "#/$defs/index" },
             "indices": { "$ref": "#/$defs/index" }
           }
         },

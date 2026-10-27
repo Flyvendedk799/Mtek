@@ -68,6 +68,16 @@ describe("MeshStore", () => {
     expect(contents.every((byte, i) => byte === expected[i])).toBe(true);
   });
 
+  it("allocates a shared zero-frame stream only when a material needs the tangent fallback", () => {
+    const device = new FakeDevice(), registry = new ResourceRegistry(asGpu<GPUDevice>(device));
+    const store = new MeshStore(registry, asGpu<GPUQueue>(device.queue), undefined, Infinity, undefined, true);
+    store.upload([box, { ...box, id: "same" }]);
+    const a = store.get(box.id), b = store.get("same"), tangent = fake(vertexBufferOf(a, "tangent"));
+    expect(a).toBe(b); expect(tangent.size).toBe(a.vertexCount * 16); expect(tangent.contents.every(v => v === 0)).toBe(true);
+    expect(registry.snapshot()).toMatchObject({ buffersAllocated: 5, uploads: 4 });
+    store.dispose(); expect(tangent.destroyed).toBe(true); expect(registry.snapshot().liveBuffers).toBe(0);
+  });
+
   it("pads data whose byte length is not a multiple of 4 (writeBuffer needs multiples of 4)", () => {
     const { registry, device } = setup();
     const odd = new Uint16Array([1, 2, 3]);
@@ -246,8 +256,17 @@ describe("MeshStore: meshes from asset files (decision 0060)", () => {
     expect(registry.snapshot().uploads).toBe(before);
     const aBytes = fake(a.vertexBuffers.position!).contents.slice();
     expect(aBytes).not.toEqual(fake(b.vertexBuffers.position!).contents);
+    const lean = store.forEntity("mesh:0", 3, first, false);
+    expect(lean).not.toBe(a); expect(lean.vertexBuffers.normal).toBeUndefined();
+    store.updateSkin(3, first);
+    expect(fake(lean.vertexBuffers.position!).contents).toEqual(aBytes);
+    const leanShared = store.forEntity("mesh:0", 4, first, false);
+    expect(leanShared).toBe(lean);
     store.releaseSkin(0); expect(fake(a.vertexBuffers.position!).destroyed).toBe(false);
     store.releaseSkin(2); expect(fake(a.vertexBuffers.position!).destroyed).toBe(true);
+    expect(fake(lean.vertexBuffers.position!).destroyed).toBe(false);
+    store.releaseSkin(3); expect(fake(lean.vertexBuffers.position!).destroyed).toBe(false);
+    store.releaseSkin(4); expect(fake(lean.vertexBuffers.position!).destroyed).toBe(true);
     const reused = store.forEntity("mesh:0", 0, second);
     expect(reused).toBe(b);
     store.updateSkin(0, second);
@@ -258,5 +277,38 @@ describe("MeshStore: meshes from asset files (decision 0060)", () => {
     const rebuilt = recovered.store.forEntity("mesh:0", 0, first);
     recovered.store.updateSkin(0, first);
     expect(fake(rebuilt.vertexBuffers.position!).contents).toEqual(aBytes);
+  });
+
+  it("skins imported tangent frames on the CPU fallback, isolates cohorts and restores from retained bytes", () => {
+    const bytes = new Uint8Array(204);
+    bytes.set(new Uint8Array(new Float32Array([-1, -1, 0, 1, -1, 0, -1, 1, 0, 1, 1, 0]).buffer));
+    bytes.set(new Uint8Array(new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1]).buffer), 48);
+    const original = new Float32Array([1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1]);
+    bytes.set(new Uint8Array(original.buffer), 128);
+    bytes.set(new Uint8Array(new Uint16Array([0, 1, 2, 2, 1, 3]).buffer), 192);
+    const layout = { ...layout0, attributes: ["position", "normal", "uv", "tangent"] as const, offsets: { position: 0, normal: 48, uv: 96, tangent: 128, indices: 192 } };
+    const asset = { url: "assets/t.bin", sha256: "0".repeat(64), bytes: 204, kind: "mesh-data" as const, primitives: [layout], preprocessing: [], span: 0 };
+    const files = new LoadedAssets(new Map([[asset.url, { asset, bytes }]]));
+    const skin: MtekSkin = { meshNode: 0, nodes: [
+      { name: "mesh", parent: -1, translation: [0, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] },
+      { name: "joint", parent: -1, translation: [0, 0, 0], rotation: [0, 0, 0, 1], scale: [2, 1, 0.5] },
+    ], joints: [1], inverseBind: [[-1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]],
+    indices: Array.from({ length: 4 }, () => [0, 0, 0, 0]), weights: Array.from({ length: 4 }, () => [1, 0, 0, 0]), clips: [] };
+    const source: ResolvedMesh = { id: "tangent", descriptor: { kind: "asset", asset: asset.url, primitive: 0, layout, skin } };
+    const { store, registry } = setup(); store.upload([source], files);
+    const player = new SkeletonPlayer(skin), a = store.forEntity(source.id, 0, player, true, true);
+    expect(store.forEntity(source.id, 1, player, true, true)).toBe(a);
+    const lean = store.forEntity(source.id, 2, player, true, false); expect(lean.vertexBuffers.tangent).toBeUndefined();
+    store.updateSkin(0, player); const deformed = fake(a.vertexBuffers.tangent!);
+    expect(Array.from(new Float32Array(deformed.contents.buffer))).toEqual(Array.from(original, (v, k) => k % 4 === 0 || k % 4 === 3 ? -v : v));
+    expect(new Float32Array(fake(store.get(source.id).vertexBuffers.tangent!).contents.buffer)).toEqual(original);
+    const before = registry.snapshot().uploads; store.updateSkin(1, player); expect(registry.snapshot().uploads).toBe(before);
+    const snapshot = deformed.contents.slice(); store.releaseSkin(0); expect(deformed.destroyed).toBe(false);
+    store.releaseSkin(1); expect(deformed.destroyed).toBe(true);
+    store.dispose(); expect(registry.snapshot().liveBuffers).toBe(0);
+    const recovered = setup(); recovered.store.upload([source], files);
+    const restored = recovered.store.forEntity(source.id, 0, player, true, true); recovered.store.updateSkin(0, player);
+    expect(fake(restored.vertexBuffers.tangent!).contents).toEqual(snapshot);
+    recovered.store.dispose(); expect(recovered.registry.snapshot().liveBuffers).toBe(0);
   });
 });

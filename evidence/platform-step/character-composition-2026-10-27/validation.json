@@ -1,0 +1,1366 @@
+{
+  "format": "mtek-character-composition-validation/1",
+  "recordedAt": "2026-10-27T04:56:49.288Z",
+  "status": "passed",
+  "cpu": {
+    "cases": 32,
+    "interruptions": 2,
+    "restorations": 4,
+    "maximumPositionError": 0.0010259718610108868,
+    "maximumOrientationError": 3.2373608622551644e-7,
+    "soleRange": [
+      -0.0019049861267422807,
+      0.0009975817471940818
+    ]
+  },
+  "gpu": [
+    {
+      "backend": "hardware",
+      "cases": [
+        {
+          "name": "locomotion-action-feet-grips",
+          "maximum": 0,
+          "overTolerance": 0,
+          "changed": 2131
+        },
+        {
+          "name": "additive-action",
+          "maximum": 0,
+          "overTolerance": 0,
+          "changed": 2171
+        },
+        {
+          "name": "interrupted-transition",
+          "maximum": 1,
+          "overTolerance": 0,
+          "changed": 2134
+        },
+        {
+          "name": "root-owned-trajectory",
+          "maximum": 0,
+          "overTolerance": 0,
+          "changed": 2508
+        },
+        {
+          "name": "recovered-root-composition",
+          "maximum": 0,
+          "overTolerance": 0,
+          "changed": 2508
+        }
+      ],
+      "steadyRecovery": 0,
+      "unfinishedFadeRecovery": 0,
+      "resets": 3,
+      "visibleCanvas": {
+        "colours": 9434,
+        "painted": 463063,
+        "width": 1062,
+        "height": 798
+      }
+    },
+    {
+      "backend": "software",
+      "cases": [
+        {
+          "name": "locomotion-action-feet-grips",
+          "maximum": 1,
+          "overTolerance": 0,
+          "changed": 2134
+        },
+        {
+          "name": "additive-action",
+          "maximum": 0,
+          "overTolerance": 0,
+          "changed": 2172
+        },
+        {
+          "name": "interrupted-transition",
+          "maximum": 1,
+          "overTolerance": 0,
+          "changed": 2135
+        },
+        {
+          "name": "root-owned-trajectory",
+          "maximum": 0,
+          "overTolerance": 0,
+          "changed": 2508
+        },
+        {
+          "name": "recovered-root-composition",
+          "maximum": 0,
+          "overTolerance": 0,
+          "changed": 2508
+        }
+      ],
+      "steadyRecovery": 0,
+      "unfinishedFadeRecovery": 0,
+      "resets": 3,
+      "visibleCanvas": {
+        "colours": 9439,
+        "painted": 463067,
+        "width": 1062,
+        "height": 798
+      }
+    }
+  ],
+  "runtimeUnit": {
+    "passed": 1661,
+    "failed": 0
+  },
+  "browser": [
+    {
+      "path": "compute/hardware",
+      "stats": {
+        "startTime": "2026-10-27T04:43:08.006Z",
+        "duration": 7681.579,
+        "expected": 9,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      }
+    },
+    {
+      "path": "compute/software",
+      "stats": {
+        "startTime": "2026-10-27T04:43:23.080Z",
+        "duration": 14179.432999999999,
+        "expected": 9,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      }
+    },
+    {
+      "path": "regression/inspection",
+      "stats": {
+        "startTime": "2026-10-27T04:49:46.864Z",
+        "duration": 22094.865999999998,
+        "expected": 8,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      }
+    },
+    {
+      "path": "regression/rendering",
+      "stats": {
+        "startTime": "2026-10-27T04:50:09.906Z",
+        "duration": 52635.01,
+        "expected": 78,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      }
+    }
+  ],
+  "capabilities": {
+    "contextRegression": "passed",
+    "releaseDocs": "every comparison holds",
+    "coverage": {
+      "features": 409,
+      "positiveFixturePrograms": 220,
+      "diagnosticCodes": 251,
+      "missingNegativeTests": 0
+    }
+  },
+  "priorRustWorkspace": "../inspection-2026-10-27/validation.json; no Rust implementation changes in this increment",
+  "frozenTrees": "No tracked changes or nonignored untracked files in benchmarks/runtime/animation or benchmarks/results/ai",
+  "commandsPassed": [
+    "npm run test:unit -w @mtek/runtime-web -- --maxWorkers=1",
+    "npm run lint -w @mtek/runtime-web",
+    "npx tsc -b",
+    "npx tsc --noEmit -p examples/character-composition/tsconfig.json",
+    "npx eslint --config packages/runtime-web/eslint.config.js examples/character-composition/{controller,workshop,main,reference}.ts",
+    "mtek fmt --check examples/character-composition/{scene,seed}",
+    "pinned GBNF validator for both new Mtek sources",
+    "mtek build --release --out .out/composition-release-package examples/character-composition/scene",
+    "npm run generate -w @mtek/coverage-matrix",
+    "npm run check:release",
+    "node scripts/game-budgets.mjs size --json .out/composition-budgets.json",
+    "node scripts/prebuilt-runtime.mjs --check --against-dist"
+  ],
+  "artifacts": {
+    "packages/runtime-web/dist/runtime.js": {
+      "bytes": 1174852,
+      "sha256": "3a0a8a07f260f604dc2d827acfb69898abc9fabca425480dc08e85e1a592afd8"
+    },
+    "packages/runtime-web/dist/runtime.dev.js": {
+      "bytes": 1187035,
+      "sha256": "441e91775bbf690b8c21250c00f795157ae7b8f741ef12c3b876e9f7ae487651"
+    },
+    "packages/runtime-web/dist/runtime.min.js": {
+      "bytes": 668929,
+      "sha256": "b68d72530fd1042b40add47226f9800886afc7bcc41fae40ccb3d5c05e1ce167"
+    },
+    "packages/runtime-web/dist/runtime.d.ts": {
+      "bytes": 17640,
+      "sha256": "767560890951b19969928c2fe1d68a2142751512c2bc031d360a30e569878c97"
+    },
+    "crates/mtek-cli/prebuilt/PROVENANCE.json": {
+      "bytes": 1472,
+      "sha256": "751e9dbcb8386d76be61022f5709500aa66aa72a850764b1e6ab99b4851288ac"
+    }
+  },
+  "sources": {
+    "examples/character-composition/.gitignore": {
+      "bytes": 52,
+      "sha256": "ebe33ed99dd524c2b7ba0ab84eebde9459e7d0ad278e2bbd11cefb2bf64bc082"
+    },
+    "examples/character-composition/README.md": {
+      "bytes": 7127,
+      "sha256": "75a56a5575086fbe0d1ce00d17f0582f05d8ece36a65a663ae79e37eba1a0181"
+    },
+    "examples/character-composition/controller.ts": {
+      "bytes": 13797,
+      "sha256": "db23c68ae74eba2279272d52179a2b42bb1159b610ce5745d6a9ba72ff885907"
+    },
+    "examples/character-composition/glb.mjs": {
+      "bytes": 10024,
+      "sha256": "4bc3e7715e1e2ed6811e3d42ddcc4d7a83a5f0ff9afcf0f8c7584b6ca29b342a"
+    },
+    "examples/character-composition/index.html": {
+      "bytes": 3177,
+      "sha256": "04470af7fc557c5a026c5ae9cf73a42caa1575ea92194e8bdd5cef8ce48fe84a"
+    },
+    "examples/character-composition/main.ts": {
+      "bytes": 3254,
+      "sha256": "ff49a92492cdec4f96bd0003b3b783cfcba281206e138718ee565b14ca0fec2d"
+    },
+    "examples/character-composition/prepare.mjs": {
+      "bytes": 4430,
+      "sha256": "070d14dc57c5bb4f99e0fb814c3fcffda05736080cbe46a81f06d6a71c5ea706"
+    },
+    "examples/character-composition/reference.ts": {
+      "bytes": 4488,
+      "sha256": "0c3badc920c503722605a723a485615fc1049a4a5b7948e4f1c2f821ee5a3d34"
+    },
+    "examples/character-composition/scene/mtek.toml": {
+      "bytes": 58,
+      "sha256": "74f1e9952a1422c5a9497f671e4c4c9c39437aafa060f487fd63d7633adb5563"
+    },
+    "examples/character-composition/scene/src/main.mtek": {
+      "bytes": 3356,
+      "sha256": "356e164ea78446692f5662125fb080cfe0eb3ad79e9475cf643faeb955b4f709"
+    },
+    "examples/character-composition/seed/mtek.toml": {
+      "bytes": 62,
+      "sha256": "65fc073055c32c8c331133cb24992eccb415a1b34cb1d75510e0da3ebe5b044a"
+    },
+    "examples/character-composition/seed/src/main.mtek": {
+      "bytes": 362,
+      "sha256": "8f6a769ccb779a2cd1d1b4cc0f678b5dda1ba63398bb2d84ea669a5aaaf30ed3"
+    },
+    "examples/character-composition/serve.mjs": {
+      "bytes": 1024,
+      "sha256": "4844dacc6745194e9cbbeb6e4cfb78bfbe4397263c93e3b9af7175fc8b49748d"
+    },
+    "examples/character-composition/tsconfig.json": {
+      "bytes": 175,
+      "sha256": "55d0948dd4a8c69eb631b98bef5d7c8ae5827eec9deb21351e4e528c47db139e"
+    },
+    "examples/character-composition/verify-assets.mjs": {
+      "bytes": 4542,
+      "sha256": "c01860b81b209e26b7a0f34e9e85b50b2ba11bfedaaee8e25508015e9bd9a6d9"
+    },
+    "examples/character-composition/verify-cpu.mjs": {
+      "bytes": 8417,
+      "sha256": "e8f090293849686339e52a14dfe5ce2b58aaab76d9bfbebddfab32ef2c4b5331"
+    },
+    "examples/character-composition/verify-gpu.mjs": {
+      "bytes": 15202,
+      "sha256": "fb77794200aba9f558109afe267aa8201d0598d7615d8b5c46aa69e967f74788"
+    },
+    "examples/character-composition/workshop.ts": {
+      "bytes": 4813,
+      "sha256": "f3da1dabc1d9efe074f8c98a61cdc8547ed2df7b98d0db1fbb97007527175963"
+    },
+    "packages/runtime-web/src/scene/uniform-scale.ts": {
+      "bytes": 507,
+      "sha256": "c44124e3a9417b0c3582adf606b44affd5724d0860ce395e6db6f0e9dca19f42"
+    },
+    "spec/decisions/0209-skeletal-scale-round-off.md": {
+      "bytes": 1694,
+      "sha256": "f73a187e51deb5f5532ad602992d77a6caaad82a904e73c94aaa9a8594d4e338"
+    },
+    "docs/platform-runtime.md": {
+      "bytes": 7792,
+      "sha256": "8efc56c77df92b71b23508cc61a6957e3a415e969d82baf00289439463bc724c"
+    },
+    "packages/runtime-web/src/scene/ik-orientation.test.ts": {
+      "bytes": 4618,
+      "sha256": "10f4fdc750225190dbcb7dab31611dd980dbee830952fc67a6a1a8d020d9f3a0"
+    },
+    "packages/runtime-web/src/scene/ik.ts": {
+      "bytes": 12613,
+      "sha256": "8ff3d1f1cebd6c453f90a199f5972302b3b16c144be690b063be7b77f8c3be85"
+    },
+    "packages/runtime-web/src/scene/retarget-frames.test.ts": {
+      "bytes": 4800,
+      "sha256": "3aa14a19870cfd4171df7b20a710c1abb0afe6c59727ab38b8b601d47d181434"
+    },
+    "packages/runtime-web/src/scene/retarget.ts": {
+      "bytes": 7823,
+      "sha256": "1c16a48da0205a0690189076761fca21f7b77e77d247333c1b48be6cf9bdfe46"
+    },
+    "spec/runtime-abi.md": {
+      "bytes": 80424,
+      "sha256": "c0b50d1f900fd65f0f334db32db48a0ac0760e5809e3338124d127a260b94742"
+    },
+    "tools/coverage-matrix/src/projects.ts": {
+      "bytes": 6323,
+      "sha256": "2da2fbff8a1193bb278b412cc4893af85926a81896e37476cdc70256725a8501"
+    }
+  },
+  "archiveFiles": [
+    {
+      "path": "accepted/cpu.json",
+      "bytes": 74574,
+      "sha256": "d24f9adf2bd20e0d7f0215d093ae8aeb6e45e0972e7301639da5b4cf5442fb8a",
+      "source": ".out/composition-final-cpu/cpu.json"
+    },
+    {
+      "path": "accepted/assets.json",
+      "bytes": 5857,
+      "sha256": "21f9989a00bf03ef5bc6db0bed16d7575f01f4b3b356d95cf1b7633e2a0bb692",
+      "source": ".out/composition-final-assets-2/assets.json"
+    },
+    {
+      "path": "accepted/hardware.json",
+      "bytes": 3196370,
+      "sha256": "4f62561b21b5bbded8741753ed928b6b72e4db29ec7e92db2f3ae17e20e80886",
+      "source": ".out/composition-accepted-hardware/hardware.json"
+    },
+    {
+      "path": "accepted/software.json",
+      "bytes": 3196392,
+      "sha256": "3a6e236c8faea46c03f9840b5f5c0951eb1911d3ce55ed9dc02f5651d49b4f74",
+      "source": ".out/composition-accepted-software/software.json"
+    },
+    {
+      "path": "accepted/hardware-canvas.png",
+      "bytes": 74691,
+      "sha256": "063171d679355143ece108f6a64a3591fcf94a2ce34b0f724337993db9dff7df",
+      "source": ".out/composition-accepted-hardware/hardware-canvas.png"
+    },
+    {
+      "path": "accepted/hardware-workshop.png",
+      "bytes": 169123,
+      "sha256": "5f98e97a9e2887e00c565998cae205c6792421e329e7df7b9a9772c21bfa5548",
+      "source": ".out/composition-accepted-hardware/hardware-workshop.png"
+    },
+    {
+      "path": "accepted/software-canvas.png",
+      "bytes": 74972,
+      "sha256": "e6f1101f683c029366d69a3f929c680450adabd8cbe1dac691a7f7a45214ddec",
+      "source": ".out/composition-accepted-software/software-canvas.png"
+    },
+    {
+      "path": "accepted/software-workshop.png",
+      "bytes": 169319,
+      "sha256": "53eb18e5889e908bcb92d7b6502321c3638b2de0f218f25c23113bb8f1a64709",
+      "source": ".out/composition-accepted-software/software-workshop.png"
+    },
+    {
+      "path": "rejected/cpu-initial/cpu.json",
+      "bytes": 19972,
+      "sha256": "fff190fce978f6dfbf96d7b6cebfd85e112c490b5768711586294e31a4a090cb",
+      "source": ".out/composition-cpu-initial/cpu.json"
+    },
+    {
+      "path": "rejected/cpu-restore/cpu.json",
+      "bytes": 74387,
+      "sha256": "cdf005a716b7f9281890bdd158e34a6f1dd1915448c48eb58bf649de909e5eb6",
+      "source": ".out/composition-cpu-restore/cpu.json"
+    },
+    {
+      "path": "rejected/range-value/hardware.json",
+      "bytes": 12779,
+      "sha256": "389477d0cf08b11b8346703fbce71e9bd9a2485567625b04b922e492e95a95a2",
+      "source": ".out/composition-gpu-initial/hardware.json"
+    },
+    {
+      "path": "rejected/offscreen-visible/hardware-workshop.png",
+      "bytes": 106868,
+      "sha256": "1a6eaad40ee0514cbcb0486cc5d073f8bd3206e142f20012de3e5836b2a58389",
+      "source": ".out/composition-gpu-second/hardware-workshop.png"
+    },
+    {
+      "path": "rejected/offscreen-visible/hardware.json",
+      "bytes": 37699,
+      "sha256": "a109d53887859cf05790675a52ad1b09dde49cabc9a72402fea1d4dc36259c4e",
+      "source": ".out/composition-gpu-second/hardware.json"
+    },
+    {
+      "path": "rejected/offscreen-visible/software-workshop.png",
+      "bytes": 106868,
+      "sha256": "1a6eaad40ee0514cbcb0486cc5d073f8bd3206e142f20012de3e5836b2a58389",
+      "source": ".out/composition-gpu-second/software-workshop.png"
+    },
+    {
+      "path": "rejected/offscreen-visible/software.json",
+      "bytes": 37910,
+      "sha256": "9419bfeb081286dbccc602af2239464a3cefbed310977994b0d0207967e3c572",
+      "source": ".out/composition-gpu-second/software.json"
+    },
+    {
+      "path": "rejected/canvas-draw-image/hardware.json",
+      "bytes": 38024,
+      "sha256": "df259a58eef1df4d8c8ba2a198f1dfd8304aaf16d7cb0ae2449db395a3096b21",
+      "source": ".out/composition-gpu-visible/hardware.json"
+    },
+    {
+      "path": "rejected/recovery-assumption/hardware.json",
+      "bytes": 39629,
+      "sha256": "edc7a21232c6bbbe3711fca29fa226472d1375857a0e0f583e63270570301ef9",
+      "source": ".out/composition-final-hardware/hardware.json"
+    },
+    {
+      "path": "rejected/large-array-spread/hardware.json",
+      "bytes": 39531,
+      "sha256": "274e49f963b714ca25ef672365a55acd9de36857a0300d92f734821ce4ab119b",
+      "source": ".out/composition-final-hardware-2/hardware.json"
+    },
+    {
+      "path": "rejected/absent-name-metadata/assets.json",
+      "bytes": 1001,
+      "sha256": "ca334bab3a29ce716941d797c88f322fe9a797f4cdb9eec223992a4520d35901",
+      "source": ".out/composition-final-assets/assets.json"
+    },
+    {
+      "path": "intermediate/composition-cpu-pelvis/cpu.json",
+      "bytes": 58978,
+      "sha256": "28f43578cfee6836b14996689d8b001dbba48ca04dae175814fb2479df6d104e",
+      "source": ".out/composition-cpu-pelvis/cpu.json"
+    },
+    {
+      "path": "intermediate/composition-cpu-orientation/cpu.json",
+      "bytes": 65636,
+      "sha256": "c49d38147ca1f4035f01eddc34255f33b737524663035b281773abbea499430f",
+      "source": ".out/composition-cpu-orientation/cpu.json"
+    },
+    {
+      "path": "intermediate/composition-cpu-toes/cpu.json",
+      "bytes": 66078,
+      "sha256": "0a5090d48a8fee74e9c0b2846946375822e067bca5ef8e1285a71fc9823953ba",
+      "source": ".out/composition-cpu-toes/cpu.json"
+    },
+    {
+      "path": "intermediate/composition-cpu-soles/cpu.json",
+      "bytes": 74148,
+      "sha256": "bf825a661015875e2df0019d92c1194bd68c03e4b20aa6f1174aed290e2eabc9",
+      "source": ".out/composition-cpu-soles/cpu.json"
+    },
+    {
+      "path": "intermediate/composition-cpu-restored/cpu.json",
+      "bytes": 74574,
+      "sha256": "8327ec4870a5fc6f1b45e13969af2d03477a0f3784dab86d6e602819b49685b1",
+      "source": ".out/composition-cpu-restored/cpu.json"
+    },
+    {
+      "path": "intermediate/composition-gpu-native/hardware-canvas.png",
+      "bytes": 74691,
+      "sha256": "063171d679355143ece108f6a64a3591fcf94a2ce34b0f724337993db9dff7df",
+      "source": ".out/composition-gpu-native/hardware-canvas.png"
+    },
+    {
+      "path": "intermediate/composition-gpu-native/hardware-workshop.png",
+      "bytes": 169123,
+      "sha256": "5f98e97a9e2887e00c565998cae205c6792421e329e7df7b9a9772c21bfa5548",
+      "source": ".out/composition-gpu-native/hardware-workshop.png"
+    },
+    {
+      "path": "intermediate/composition-gpu-native/hardware.json",
+      "bytes": 37921,
+      "sha256": "f99db673cb448e74e964c7706731e31134bc1ebaef5c9ee74fdab55012f55592",
+      "source": ".out/composition-gpu-native/hardware.json"
+    },
+    {
+      "path": "intermediate/composition-gpu-native/software-canvas.png",
+      "bytes": 74972,
+      "sha256": "e6f1101f683c029366d69a3f929c680450adabd8cbe1dac691a7f7a45214ddec",
+      "source": ".out/composition-gpu-native/software-canvas.png"
+    },
+    {
+      "path": "intermediate/composition-gpu-native/software-workshop.png",
+      "bytes": 169319,
+      "sha256": "53eb18e5889e908bcb92d7b6502321c3638b2de0f218f25c23113bb8f1a64709",
+      "source": ".out/composition-gpu-native/software-workshop.png"
+    },
+    {
+      "path": "intermediate/composition-gpu-native/software.json",
+      "bytes": 37972,
+      "sha256": "51e7cc51e379423c37469cc735fe4095e18eb1630a186cf44f7fddffd728a74f",
+      "source": ".out/composition-gpu-native/software.json"
+    },
+    {
+      "path": "intermediate/composition-final-hardware-3/hardware-canvas.png",
+      "bytes": 74691,
+      "sha256": "063171d679355143ece108f6a64a3591fcf94a2ce34b0f724337993db9dff7df",
+      "source": ".out/composition-final-hardware-3/hardware-canvas.png"
+    },
+    {
+      "path": "intermediate/composition-final-hardware-3/hardware-workshop.png",
+      "bytes": 169123,
+      "sha256": "5f98e97a9e2887e00c565998cae205c6792421e329e7df7b9a9772c21bfa5548",
+      "source": ".out/composition-final-hardware-3/hardware-workshop.png"
+    },
+    {
+      "path": "intermediate/composition-final-hardware-3/hardware.json",
+      "bytes": 45887,
+      "sha256": "5abdc83423df3795bba557754e7463ec64b554f2b4af7f4fabbcb7aa52cf2f45",
+      "source": ".out/composition-final-hardware-3/hardware.json"
+    },
+    {
+      "path": "intermediate/composition-final-software/software-canvas.png",
+      "bytes": 74972,
+      "sha256": "e6f1101f683c029366d69a3f929c680450adabd8cbe1dac691a7f7a45214ddec",
+      "source": ".out/composition-final-software/software-canvas.png"
+    },
+    {
+      "path": "intermediate/composition-final-software/software-workshop.png",
+      "bytes": 169319,
+      "sha256": "53eb18e5889e908bcb92d7b6502321c3638b2de0f218f25c23113bb8f1a64709",
+      "source": ".out/composition-final-software/software-workshop.png"
+    },
+    {
+      "path": "intermediate/composition-final-software/software.json",
+      "bytes": 45965,
+      "sha256": "6c53ae9229223d7e39b6b7156ed9af100e8d161ea1ccd68d162ba9ce2ba642af",
+      "source": ".out/composition-final-software/software.json"
+    },
+    {
+      "path": "intermediate/composition-release-hardware/hardware-canvas.png",
+      "bytes": 74691,
+      "sha256": "063171d679355143ece108f6a64a3591fcf94a2ce34b0f724337993db9dff7df",
+      "source": ".out/composition-release-hardware/hardware-canvas.png"
+    },
+    {
+      "path": "intermediate/composition-release-hardware/hardware-workshop.png",
+      "bytes": 169123,
+      "sha256": "5f98e97a9e2887e00c565998cae205c6792421e329e7df7b9a9772c21bfa5548",
+      "source": ".out/composition-release-hardware/hardware-workshop.png"
+    },
+    {
+      "path": "intermediate/composition-release-hardware/hardware.json",
+      "bytes": 45937,
+      "sha256": "a62f1e9edf02df0be08b9a6aac38cec331a95bb9ca76564cf562e5b67e2c573a",
+      "source": ".out/composition-release-hardware/hardware.json"
+    },
+    {
+      "path": "intermediate/composition-release-software/software-canvas.png",
+      "bytes": 74972,
+      "sha256": "e6f1101f683c029366d69a3f929c680450adabd8cbe1dac691a7f7a45214ddec",
+      "source": ".out/composition-release-software/software-canvas.png"
+    },
+    {
+      "path": "intermediate/composition-release-software/software-workshop.png",
+      "bytes": 169319,
+      "sha256": "53eb18e5889e908bcb92d7b6502321c3638b2de0f218f25c23113bb8f1a64709",
+      "source": ".out/composition-release-software/software-workshop.png"
+    },
+    {
+      "path": "intermediate/composition-release-software/software.json",
+      "bytes": 46003,
+      "sha256": "bb28eb51687df8363d051c96510082ad8789740f4bef1fc92f607c1285b46c54",
+      "source": ".out/composition-release-software/software.json"
+    },
+    {
+      "path": "intermediate/initial-local-derivation.json",
+      "bytes": 2582,
+      "sha256": "fccdd23b4d83d41f630b0644177908ab45cb29b59bdccc64fdcf6d8f7548344a",
+      "source": ".out/composition-initial-local-derivation.json"
+    },
+    {
+      "path": "compute/hardware/artifacts/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+      "source": ".out/compute-alignment-2026-10-27/hardware/artifacts/.last-run.json"
+    },
+    {
+      "path": "compute/hardware/artifacts/compute-acceptance-compute-4a417-h-recovery-detach-and-reset-hardware/computed-geometry.png",
+      "bytes": 1416,
+      "sha256": "16ce795fce5357405c291dc3812af5c38614586d1cea88c5b0d10c2f196208f1",
+      "source": ".out/compute-alignment-2026-10-27/hardware/artifacts/compute-acceptance-compute-4a417-h-recovery-detach-and-reset-hardware/computed-geometry.png"
+    },
+    {
+      "path": "compute/hardware/artifacts/compute-example-the-public-6242d-etry-without-browser-errors-hardware/compute-example.png",
+      "bytes": 41566,
+      "sha256": "8c81138a6f48a00e5f6ae1bba4a368ef1b51f1f20c300cb1d24d5c80a7eea622",
+      "source": ".out/compute-alignment-2026-10-27/hardware/artifacts/compute-example-the-public-6242d-etry-without-browser-errors-hardware/compute-example.png"
+    },
+    {
+      "path": "compute/hardware/artifacts/compute-shadows-compute-sh-226a3-bounds-pending-and-recovery-hardware/compute-shadow.png",
+      "bytes": 2190,
+      "sha256": "71d6d85c446b9e7cf69ba52c180e0d2155641590af82a6d504d5b4d9d214bd8e",
+      "source": ".out/compute-alignment-2026-10-27/hardware/artifacts/compute-shadows-compute-sh-226a3-bounds-pending-and-recovery-hardware/compute-shadow.png"
+    },
+    {
+      "path": "compute/hardware/artifacts/compute-shadows-compute-sh-33dc7-camera-pending-and-recovery-hardware/compute-shadow.png",
+      "bytes": 2063,
+      "sha256": "523d9ede1aaa45449cc85df51711b1b6a70c32c66961e6dedb08e0489a348658",
+      "source": ".out/compute-alignment-2026-10-27/hardware/artifacts/compute-shadows-compute-sh-33dc7-camera-pending-and-recovery-hardware/compute-shadow.png"
+    },
+    {
+      "path": "compute/hardware/artifacts/compute-shadows-compute-sh-3edab-bounds-pending-and-recovery-hardware/compute-shadow.png",
+      "bytes": 2240,
+      "sha256": "e85abe5d68dced7a21459f2900978c36b1ac89be56a30f3f186f4ef65369b26f",
+      "source": ".out/compute-alignment-2026-10-27/hardware/artifacts/compute-shadows-compute-sh-3edab-bounds-pending-and-recovery-hardware/compute-shadow.png"
+    },
+    {
+      "path": "compute/hardware/artifacts/compute-shadows-compute-sh-978ac-camera-pending-and-recovery-hardware/compute-shadow.png",
+      "bytes": 2201,
+      "sha256": "58d810d45ce7693fcc269edd6e34b349417337ac03a435346d64ecd2d50bdb2c",
+      "source": ".out/compute-alignment-2026-10-27/hardware/artifacts/compute-shadows-compute-sh-978ac-camera-pending-and-recovery-hardware/compute-shadow.png"
+    },
+    {
+      "path": "compute/hardware/artifacts/compute-shadows-compute-sh-c08ef-camera-pending-and-recovery-hardware/compute-shadow.png",
+      "bytes": 2156,
+      "sha256": "ceb0ed15553a0a32f8ecddb68c97e9a165618c655f6dfee52f523f9da5499692",
+      "source": ".out/compute-alignment-2026-10-27/hardware/artifacts/compute-shadows-compute-sh-c08ef-camera-pending-and-recovery-hardware/compute-shadow.png"
+    },
+    {
+      "path": "compute/hardware/artifacts/compute-shadows-compute-sh-e8a57-bounds-pending-and-recovery-hardware/compute-shadow.png",
+      "bytes": 2220,
+      "sha256": "4e97ced720e6ca378c817a18d877626353e08a843d817ddfa631d3242daa6f2d",
+      "source": ".out/compute-alignment-2026-10-27/hardware/artifacts/compute-shadows-compute-sh-e8a57-bounds-pending-and-recovery-hardware/compute-shadow.png"
+    },
+    {
+      "path": "compute/hardware/compute-example-hardware.json",
+      "bytes": 79,
+      "sha256": "4b91b7759d38752263e643a93e890d85762e3ee7bf7b8b95ea870fbfde38a56d",
+      "source": ".out/compute-alignment-2026-10-27/hardware/compute-example-hardware.json"
+    },
+    {
+      "path": "compute/hardware/compute-numerical-hardware.json",
+      "bytes": 96460,
+      "sha256": "de1b55c0bed9e098da5ce572e0b74e0d6ee145f4dba6adb55ed95cf40b93ff54",
+      "source": ".out/compute-alignment-2026-10-27/hardware/compute-numerical-hardware.json"
+    },
+    {
+      "path": "compute/hardware/compute-package.json",
+      "bytes": 6638,
+      "sha256": "74cc3e0c0bac3558fa24be9dad94ba10c5275304f9747e738a3b30ecfbe1f050",
+      "source": ".out/compute-alignment-2026-10-27/hardware/compute-package.json"
+    },
+    {
+      "path": "compute/hardware/compute-render-hardware.json",
+      "bytes": 351497,
+      "sha256": "0308572c84836a4aa15ee2124c9e9430d598c2f212d7364a1a99fc1260f2511f",
+      "source": ".out/compute-alignment-2026-10-27/hardware/compute-render-hardware.json"
+    },
+    {
+      "path": "compute/hardware/compute-shadow-high-final-bounds-hardware.json",
+      "bytes": 794723,
+      "sha256": "b05c13b8ae6e0a817b3f42c00394eb553f0cab5f240df59be8427be4e6847c49",
+      "source": ".out/compute-alignment-2026-10-27/hardware/compute-shadow-high-final-bounds-hardware.json"
+    },
+    {
+      "path": "compute/hardware/compute-shadow-high-off-camera-hardware.json",
+      "bytes": 794720,
+      "sha256": "9ac4e846516285d7cdb75904056706c6f58052c736fbc34b2bd8eca224ddc7bd",
+      "source": ".out/compute-alignment-2026-10-27/hardware/compute-shadow-high-off-camera-hardware.json"
+    },
+    {
+      "path": "compute/hardware/compute-shadow-low-final-bounds-hardware.json",
+      "bytes": 794719,
+      "sha256": "c859ae78548a046440d7a14d23785b6206b4ab1d0328023aebd685b0c3cae726",
+      "source": ".out/compute-alignment-2026-10-27/hardware/compute-shadow-low-final-bounds-hardware.json"
+    },
+    {
+      "path": "compute/hardware/compute-shadow-low-off-camera-hardware.json",
+      "bytes": 794685,
+      "sha256": "06288d2344d0c9880145e328f43dfec1b298bf40a66b9561c884357b3398434d",
+      "source": ".out/compute-alignment-2026-10-27/hardware/compute-shadow-low-off-camera-hardware.json"
+    },
+    {
+      "path": "compute/hardware/compute-shadow-medium-final-bounds-hardware.json",
+      "bytes": 794742,
+      "sha256": "cc86acee228ab7fd26dcd890d84ed2d5debb601930a5fe8c3ec361eea9a2803f",
+      "source": ".out/compute-alignment-2026-10-27/hardware/compute-shadow-medium-final-bounds-hardware.json"
+    },
+    {
+      "path": "compute/hardware/compute-shadow-medium-off-camera-hardware.json",
+      "bytes": 794702,
+      "sha256": "2eaf3a922a176f5cbe178e424d90aaf56a4b82957b27018189f09b48122fd944",
+      "source": ".out/compute-alignment-2026-10-27/hardware/compute-shadow-medium-off-camera-hardware.json"
+    },
+    {
+      "path": "compute/hardware/environment-hardware.json",
+      "bytes": 3481,
+      "sha256": "fc36494bd8b3b8a96dd92e0336f4fc5ac97dd46f87f80595a3a5db7038c3b5c8",
+      "source": ".out/compute-alignment-2026-10-27/hardware/environment-hardware.json"
+    },
+    {
+      "path": "compute/hardware/test-results.json",
+      "bytes": 12376,
+      "sha256": "14e3bf82ed514fbbef9b5373678d102235413f1f0ec695ba3790cf43e0f74e83",
+      "source": ".out/compute-alignment-2026-10-27/hardware/test-results.json"
+    },
+    {
+      "path": "compute/software/artifacts/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+      "source": ".out/compute-alignment-2026-10-27/software/artifacts/.last-run.json"
+    },
+    {
+      "path": "compute/software/artifacts/compute-acceptance-compute-4a417-h-recovery-detach-and-reset-software/computed-geometry.png",
+      "bytes": 1416,
+      "sha256": "16ce795fce5357405c291dc3812af5c38614586d1cea88c5b0d10c2f196208f1",
+      "source": ".out/compute-alignment-2026-10-27/software/artifacts/compute-acceptance-compute-4a417-h-recovery-detach-and-reset-software/computed-geometry.png"
+    },
+    {
+      "path": "compute/software/artifacts/compute-example-the-public-6242d-etry-without-browser-errors-software/compute-example.png",
+      "bytes": 41432,
+      "sha256": "8534ad9caef5df56de6dc9fd86ef9de6ea492f22788720b90c7b98699bb56fab",
+      "source": ".out/compute-alignment-2026-10-27/software/artifacts/compute-example-the-public-6242d-etry-without-browser-errors-software/compute-example.png"
+    },
+    {
+      "path": "compute/software/artifacts/compute-shadows-compute-sh-226a3-bounds-pending-and-recovery-software/compute-shadow.png",
+      "bytes": 2135,
+      "sha256": "f954942e8bf2c488d1a4084a7fe0498a57a173d20ef0e624c5621eab00bec34b",
+      "source": ".out/compute-alignment-2026-10-27/software/artifacts/compute-shadows-compute-sh-226a3-bounds-pending-and-recovery-software/compute-shadow.png"
+    },
+    {
+      "path": "compute/software/artifacts/compute-shadows-compute-sh-33dc7-camera-pending-and-recovery-software/compute-shadow.png",
+      "bytes": 2004,
+      "sha256": "513ed22d29bc0b7b3aa1c3c5942481278d4e870b7fbd17fefc2eba37daf00fd9",
+      "source": ".out/compute-alignment-2026-10-27/software/artifacts/compute-shadows-compute-sh-33dc7-camera-pending-and-recovery-software/compute-shadow.png"
+    },
+    {
+      "path": "compute/software/artifacts/compute-shadows-compute-sh-3edab-bounds-pending-and-recovery-software/compute-shadow.png",
+      "bytes": 2182,
+      "sha256": "4cf95564c129e0aa84c4049fbe0b446eebbc9b18dcf62ffecef7f6e358b79861",
+      "source": ".out/compute-alignment-2026-10-27/software/artifacts/compute-shadows-compute-sh-3edab-bounds-pending-and-recovery-software/compute-shadow.png"
+    },
+    {
+      "path": "compute/software/artifacts/compute-shadows-compute-sh-978ac-camera-pending-and-recovery-software/compute-shadow.png",
+      "bytes": 2133,
+      "sha256": "d813055f5cb613a7d082955af0fa86f869ff0257df846794aa57be6abd9451c8",
+      "source": ".out/compute-alignment-2026-10-27/software/artifacts/compute-shadows-compute-sh-978ac-camera-pending-and-recovery-software/compute-shadow.png"
+    },
+    {
+      "path": "compute/software/artifacts/compute-shadows-compute-sh-c08ef-camera-pending-and-recovery-software/compute-shadow.png",
+      "bytes": 2108,
+      "sha256": "00a676688adce3f30764b48239b5888c3fb49871178678d3851554950d6f6751",
+      "source": ".out/compute-alignment-2026-10-27/software/artifacts/compute-shadows-compute-sh-c08ef-camera-pending-and-recovery-software/compute-shadow.png"
+    },
+    {
+      "path": "compute/software/artifacts/compute-shadows-compute-sh-e8a57-bounds-pending-and-recovery-software/compute-shadow.png",
+      "bytes": 2163,
+      "sha256": "7e8ecbadde2a009802a6670217afb5bb3ac48586606ab55dc3ddd11260abaaec",
+      "source": ".out/compute-alignment-2026-10-27/software/artifacts/compute-shadows-compute-sh-e8a57-bounds-pending-and-recovery-software/compute-shadow.png"
+    },
+    {
+      "path": "compute/software/compute-example-software.json",
+      "bytes": 79,
+      "sha256": "4b91b7759d38752263e643a93e890d85762e3ee7bf7b8b95ea870fbfde38a56d",
+      "source": ".out/compute-alignment-2026-10-27/software/compute-example-software.json"
+    },
+    {
+      "path": "compute/software/compute-numerical-software.json",
+      "bytes": 96460,
+      "sha256": "de1b55c0bed9e098da5ce572e0b74e0d6ee145f4dba6adb55ed95cf40b93ff54",
+      "source": ".out/compute-alignment-2026-10-27/software/compute-numerical-software.json"
+    },
+    {
+      "path": "compute/software/compute-package.json",
+      "bytes": 6638,
+      "sha256": "74cc3e0c0bac3558fa24be9dad94ba10c5275304f9747e738a3b30ecfbe1f050",
+      "source": ".out/compute-alignment-2026-10-27/software/compute-package.json"
+    },
+    {
+      "path": "compute/software/compute-render-software.json",
+      "bytes": 351479,
+      "sha256": "53e57011209bbf8e6f92e32bde7bc8f3bbf3b386c89092f9b5c060c642780b61",
+      "source": ".out/compute-alignment-2026-10-27/software/compute-render-software.json"
+    },
+    {
+      "path": "compute/software/compute-shadow-high-final-bounds-software.json",
+      "bytes": 794705,
+      "sha256": "41e50d10b71423a875c86cabfbafdfcb0cf8769d1f2e4844d1b73ccbfac0456e",
+      "source": ".out/compute-alignment-2026-10-27/software/compute-shadow-high-final-bounds-software.json"
+    },
+    {
+      "path": "compute/software/compute-shadow-high-off-camera-software.json",
+      "bytes": 794719,
+      "sha256": "6524800b9caa9882ee425798d366f12859a4413d456aedd9e1f8a135786ebe2c",
+      "source": ".out/compute-alignment-2026-10-27/software/compute-shadow-high-off-camera-software.json"
+    },
+    {
+      "path": "compute/software/compute-shadow-low-final-bounds-software.json",
+      "bytes": 794733,
+      "sha256": "734508c51016bd51a43624ebd92e7867d1f1caaeb463a2e0a5c0a2b34130d95c",
+      "source": ".out/compute-alignment-2026-10-27/software/compute-shadow-low-final-bounds-software.json"
+    },
+    {
+      "path": "compute/software/compute-shadow-low-off-camera-software.json",
+      "bytes": 794719,
+      "sha256": "05984f456d9c5da2f0b055b5ffe46cc84be70e9ff8ee463a131a82273d3e1f49",
+      "source": ".out/compute-alignment-2026-10-27/software/compute-shadow-low-off-camera-software.json"
+    },
+    {
+      "path": "compute/software/compute-shadow-medium-final-bounds-software.json",
+      "bytes": 794710,
+      "sha256": "96a1d9f0009dcef6b5279f62e8bd073404882ba2cedfc8f2de85d679e8025ecd",
+      "source": ".out/compute-alignment-2026-10-27/software/compute-shadow-medium-final-bounds-software.json"
+    },
+    {
+      "path": "compute/software/compute-shadow-medium-off-camera-software.json",
+      "bytes": 794721,
+      "sha256": "1c4f8436d9d21d0ffbb2f1f779cdf4b36c5f83336a5ed049f828e68a09b43237",
+      "source": ".out/compute-alignment-2026-10-27/software/compute-shadow-medium-off-camera-software.json"
+    },
+    {
+      "path": "compute/software/environment-software.json",
+      "bytes": 3418,
+      "sha256": "f8b83df8b85f956c048de1a66f2757c176d897af9aa47dd121727c789b06768b",
+      "source": ".out/compute-alignment-2026-10-27/software/environment-software.json"
+    },
+    {
+      "path": "compute/software/test-results.json",
+      "bytes": 12390,
+      "sha256": "7cf1f46df8b6c25812f847cb12965e0e8a16c338ba615004a940a2560304d9c6",
+      "source": ".out/compute-alignment-2026-10-27/software/test-results.json"
+    },
+    {
+      "path": "regression/inspection/artifacts/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+      "source": ".out/composition-regression-inspection/artifacts/.last-run.json"
+    },
+    {
+      "path": "regression/inspection/artifacts/inspection-overlays-layer--a2043--explain-the-composed-scene-hardware/inspection-contacts.png",
+      "bytes": 172977,
+      "sha256": "00fac6240fea4928b8a51233cc44d9ba418e20c5d80336828a30123aa4d76e66",
+      "source": ".out/composition-regression-inspection/artifacts/inspection-overlays-layer--a2043--explain-the-composed-scene-hardware/inspection-contacts.png"
+    },
+    {
+      "path": "regression/inspection/artifacts/inspection-overlays-layer--a2043--explain-the-composed-scene-software/inspection-contacts.png",
+      "bytes": 173511,
+      "sha256": "9fcdc213711adfdbbb0546cb981edbabd9ad3dcb6b13e806ca7d21a1a0050091",
+      "source": ".out/composition-regression-inspection/artifacts/inspection-overlays-layer--a2043--explain-the-composed-scene-software/inspection-contacts.png"
+    },
+    {
+      "path": "regression/inspection/artifacts/inspection-overlays-lighti-3ae4f-onal-public-package-overlay-hardware/lighting-world-bounds.png",
+      "bytes": 275720,
+      "sha256": "674478a6a74ebc928f0a73f6e69f8ebfdc5faa4551bbeac2bd04b580aee2719d",
+      "source": ".out/composition-regression-inspection/artifacts/inspection-overlays-lighti-3ae4f-onal-public-package-overlay-hardware/lighting-world-bounds.png"
+    },
+    {
+      "path": "regression/inspection/artifacts/inspection-overlays-lighti-3ae4f-onal-public-package-overlay-software/lighting-world-bounds.png",
+      "bytes": 263055,
+      "sha256": "e5ef0264c06cd130a1a080a374cc3ca890272a48ec4a0e94b11d9e3699a634a2",
+      "source": ".out/composition-regression-inspection/artifacts/inspection-overlays-lighti-3ae4f-onal-public-package-overlay-software/lighting-world-bounds.png"
+    },
+    {
+      "path": "regression/inspection/artifacts/inspection-overlays-produc-5a5e6-s-and-resized-content-boxes-hardware/inspection-pose-overlay.png",
+      "bytes": 155354,
+      "sha256": "c42bf2d5afdb487e21b4113d3510b65ef39f6c5f1601380a6963f818eb7fa130",
+      "source": ".out/composition-regression-inspection/artifacts/inspection-overlays-produc-5a5e6-s-and-resized-content-boxes-hardware/inspection-pose-overlay.png"
+    },
+    {
+      "path": "regression/inspection/artifacts/inspection-overlays-produc-5a5e6-s-and-resized-content-boxes-software/inspection-pose-overlay.png",
+      "bytes": 155606,
+      "sha256": "2b5f730acd4fff694441b1d365d0e49c1783cc457082a84670858a0c2698f0e6",
+      "source": ".out/composition-regression-inspection/artifacts/inspection-overlays-produc-5a5e6-s-and-resized-content-boxes-software/inspection-pose-overlay.png"
+    },
+    {
+      "path": "regression/inspection/environment-hardware.json",
+      "bytes": 3483,
+      "sha256": "be21a0a164791b4998d813aafc9280036a2085fbf6d8da76b72784d4dd4d568f",
+      "source": ".out/composition-regression-inspection/environment-hardware.json"
+    },
+    {
+      "path": "regression/inspection/environment-software.json",
+      "bytes": 3420,
+      "sha256": "39125a538466722565b8d7f8c79ea62c31c4aa03735c2b49bdf43da8e80e8df4",
+      "source": ".out/composition-regression-inspection/environment-software.json"
+    },
+    {
+      "path": "regression/inspection/inspection-build.json",
+      "bytes": 2209,
+      "sha256": "5b5ea7bdaf447ce59f59f94c8abc0fc71858bf62cc37a96404d40187fe5bd545",
+      "source": ".out/composition-regression-inspection/inspection-build.json"
+    },
+    {
+      "path": "regression/inspection/inspection-composition-hardware.json",
+      "bytes": 5152,
+      "sha256": "3ec34f87b80cc3795092364b8c695ef5e5b5ea1d22e5e0380ee014fca06b5e47",
+      "source": ".out/composition-regression-inspection/inspection-composition-hardware.json"
+    },
+    {
+      "path": "regression/inspection/inspection-composition-software.json",
+      "bytes": 5152,
+      "sha256": "3ec34f87b80cc3795092364b8c695ef5e5b5ea1d22e5e0380ee014fca06b5e47",
+      "source": ".out/composition-regression-inspection/inspection-composition-software.json"
+    },
+    {
+      "path": "regression/inspection/inspection-lifetime-hardware.json",
+      "bytes": 1285,
+      "sha256": "6345da814b58eb794cc9e1f272b338c6abfc0b707355a55e920bdcf8c9fe3a86",
+      "source": ".out/composition-regression-inspection/inspection-lifetime-hardware.json"
+    },
+    {
+      "path": "regression/inspection/inspection-lifetime-software.json",
+      "bytes": 1271,
+      "sha256": "27960efa7ec8fc10bd51f6b8644dc29aa38b3c4446182f97908d34f21796955f",
+      "source": ".out/composition-regression-inspection/inspection-lifetime-software.json"
+    },
+    {
+      "path": "regression/inspection/inspection-pose-hardware.json",
+      "bytes": 641,
+      "sha256": "8eed5e2f472c53b2dd020a2ef79c40fa03ea51819fae16a768acfa495a07bbb1",
+      "source": ".out/composition-regression-inspection/inspection-pose-hardware.json"
+    },
+    {
+      "path": "regression/inspection/inspection-pose-software.json",
+      "bytes": 641,
+      "sha256": "8eed5e2f472c53b2dd020a2ef79c40fa03ea51819fae16a768acfa495a07bbb1",
+      "source": ".out/composition-regression-inspection/inspection-pose-software.json"
+    },
+    {
+      "path": "regression/inspection/test-results.json",
+      "bytes": 11106,
+      "sha256": "e6e00aff89928c2fbfbb32bf0ada3061f1e57018df8c2acbad044506b1443645",
+      "source": ".out/composition-regression-inspection/test-results.json"
+    },
+    {
+      "path": "regression/rendering/animation-distance-hardware.json",
+      "bytes": 1335,
+      "sha256": "c548950688ca5f828b4fe7f5725996dbd7fb2a26349bb33ad2072a138636baf9",
+      "source": ".out/composition-regression-rendering/animation-distance-hardware.json"
+    },
+    {
+      "path": "regression/rendering/animation-distance-software.json",
+      "bytes": 1335,
+      "sha256": "c548950688ca5f828b4fe7f5725996dbd7fb2a26349bb33ad2072a138636baf9",
+      "source": ".out/composition-regression-rendering/animation-distance-software.json"
+    },
+    {
+      "path": "regression/rendering/artifacts/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+      "source": ".out/composition-regression-rendering/artifacts/.last-run.json"
+    },
+    {
+      "path": "regression/rendering/artifacts/animation-locomotion-demo--e83f4-oriented-grips-on-both-rigs-hardware/locomotion-demo.png",
+      "bytes": 50405,
+      "sha256": "bec1335645b153c94880441ac904be8727c5d722782dbae7a702287c18712ec8",
+      "source": ".out/composition-regression-rendering/artifacts/animation-locomotion-demo--e83f4-oriented-grips-on-both-rigs-hardware/locomotion-demo.png"
+    },
+    {
+      "path": "regression/rendering/artifacts/animation-locomotion-demo--e83f4-oriented-grips-on-both-rigs-software/locomotion-demo.png",
+      "bytes": 50453,
+      "sha256": "61a3242d6f9aa680679bbdb5d21030ef3fe9e6b789525c1edd7c5db428312b56",
+      "source": ".out/composition-regression-rendering/artifacts/animation-locomotion-demo--e83f4-oriented-grips-on-both-rigs-software/locomotion-demo.png"
+    },
+    {
+      "path": "regression/rendering/artifacts/m4-scene-lighting-lighting-83be2-s-through-the-rendered-host-hardware/lighting-studio-inspector.png",
+      "bytes": 101201,
+      "sha256": "e9a229c3b6f1f239f3648a5239ee70e933be8ec22c98d833f0abd18716ce8eb6",
+      "source": ".out/composition-regression-rendering/artifacts/m4-scene-lighting-lighting-83be2-s-through-the-rendered-host-hardware/lighting-studio-inspector.png"
+    },
+    {
+      "path": "regression/rendering/artifacts/m4-scene-lighting-lighting-83be2-s-through-the-rendered-host-software/lighting-studio-inspector.png",
+      "bytes": 97767,
+      "sha256": "e608df6e8159c2d445c6af4cc3ac25f3e5824e96937ae5199f807e589d6d5c9f",
+      "source": ".out/composition-regression-rendering/artifacts/m4-scene-lighting-lighting-83be2-s-through-the-rendered-host-software/lighting-studio-inspector.png"
+    },
+    {
+      "path": "regression/rendering/artifacts/m4-scene-lighting-lighting-965fc-work-without-browser-errors-hardware/lighting-studio.png",
+      "bytes": 93926,
+      "sha256": "732163077d1d40cbe8094b1dab976063cdd7f1c259f3c3e399316328ad6cb5f9",
+      "source": ".out/composition-regression-rendering/artifacts/m4-scene-lighting-lighting-965fc-work-without-browser-errors-hardware/lighting-studio.png"
+    },
+    {
+      "path": "regression/rendering/artifacts/m4-scene-lighting-lighting-965fc-work-without-browser-errors-software/lighting-studio.png",
+      "bytes": 90189,
+      "sha256": "bba162c536ae7770e2073777e4319ed436ecff982fb2592eeadf6b5adc76fbf6",
+      "source": ".out/composition-regression-rendering/artifacts/m4-scene-lighting-lighting-965fc-work-without-browser-errors-software/lighting-studio.png"
+    },
+    {
+      "path": "regression/rendering/crowd-1-1-hardware.json",
+      "bytes": 5321,
+      "sha256": "b0ffdad638917ee388de9e76a8d0b7f49c17c2ffa14ea3e05ba85a09ce6adbfb",
+      "source": ".out/composition-regression-rendering/crowd-1-1-hardware.json"
+    },
+    {
+      "path": "regression/rendering/crowd-1-1-software.json",
+      "bytes": 5270,
+      "sha256": "504b8850a4a38fa2ee7f6e0ca592fecb6dfbc8207bb61d0c6b9ea75d26b4901b",
+      "source": ".out/composition-regression-rendering/crowd-1-1-software.json"
+    },
+    {
+      "path": "regression/rendering/crowd-10-1-hardware.json",
+      "bytes": 5279,
+      "sha256": "9d9736cb7ab1c2f01cdb52af7f21571676ffd5fdabc97e7f6a1e297f0874ef24",
+      "source": ".out/composition-regression-rendering/crowd-10-1-hardware.json"
+    },
+    {
+      "path": "regression/rendering/crowd-10-1-software.json",
+      "bytes": 5297,
+      "sha256": "54d0feab54c44df9573a9705882f9a1c4c84681843d7ad18d43df9ee4ae6893e",
+      "source": ".out/composition-regression-rendering/crowd-10-1-software.json"
+    },
+    {
+      "path": "regression/rendering/crowd-50-5-hardware.json",
+      "bytes": 5323,
+      "sha256": "c9d7f5e4e45dcf1f8667cb96d0c3220d98c6062e3900341d6f84a624912a9ca2",
+      "source": ".out/composition-regression-rendering/crowd-50-5-hardware.json"
+    },
+    {
+      "path": "regression/rendering/crowd-50-5-software.json",
+      "bytes": 5359,
+      "sha256": "fe51b64abf03fc130e0f99480db2e9bef2e0397a2601fdc0a12ed6eb78e8f558",
+      "source": ".out/composition-regression-rendering/crowd-50-5-software.json"
+    },
+    {
+      "path": "regression/rendering/crowd-recovery-hardware.json",
+      "bytes": 2683,
+      "sha256": "f6621ba214c39425bde231808e033e428a4a6c9168bb387491ec3028a055c302",
+      "source": ".out/composition-regression-rendering/crowd-recovery-hardware.json"
+    },
+    {
+      "path": "regression/rendering/crowd-recovery-software.json",
+      "bytes": 2717,
+      "sha256": "f519c8466b7af2b4b37761596c10e686c012faff9eedfa2994e483aa0f34b344",
+      "source": ".out/composition-regression-rendering/crowd-recovery-software.json"
+    },
+    {
+      "path": "regression/rendering/environment-constant-hardware.json",
+      "bytes": 1900,
+      "sha256": "0fadfb1ce26c3b3bdfe26dd6b2dfc04443ec8eb800fd1907f761aa70622ccdf0",
+      "source": ".out/composition-regression-rendering/environment-constant-hardware.json"
+    },
+    {
+      "path": "regression/rendering/environment-constant-software.json",
+      "bytes": 1900,
+      "sha256": "c06d879bf0cd83a45645b354719c45eb917a8d045f1541e3aa4d651b334bcd4d",
+      "source": ".out/composition-regression-rendering/environment-constant-software.json"
+    },
+    {
+      "path": "regression/rendering/environment-directions-hardware.json",
+      "bytes": 167,
+      "sha256": "1ed9043f33573380dfee53bef11567c955bd413b01a151992c175f041b87206f",
+      "source": ".out/composition-regression-rendering/environment-directions-hardware.json"
+    },
+    {
+      "path": "regression/rendering/environment-directions-software.json",
+      "bytes": 167,
+      "sha256": "1ed9043f33573380dfee53bef11567c955bd413b01a151992c175f041b87206f",
+      "source": ".out/composition-regression-rendering/environment-directions-software.json"
+    },
+    {
+      "path": "regression/rendering/environment-hardware.json",
+      "bytes": 3481,
+      "sha256": "c1ddc18d2b37ce49a578799162beb0ddd3a6fcdba2def7d36f11045906d7e845",
+      "source": ".out/composition-regression-rendering/environment-hardware.json"
+    },
+    {
+      "path": "regression/rendering/environment-software.json",
+      "bytes": 3418,
+      "sha256": "5c91cafc60eeb1be12e3c80b6f8aa6f8003873e870450644c6c6a2e6fadbc7e3",
+      "source": ".out/composition-regression-rendering/environment-software.json"
+    },
+    {
+      "path": "regression/rendering/inspection-build.json",
+      "bytes": 2209,
+      "sha256": "5b5ea7bdaf447ce59f59f94c8abc0fc71858bf62cc37a96404d40187fe5bd545",
+      "source": ".out/composition-regression-rendering/inspection-build.json"
+    },
+    {
+      "path": "regression/rendering/lighting-input-errors-hardware.json",
+      "bytes": 260,
+      "sha256": "28d1c8b25831181532998a3c4867e51386a6d08a8ad3d642f5b394a0b4f82317",
+      "source": ".out/composition-regression-rendering/lighting-input-errors-hardware.json"
+    },
+    {
+      "path": "regression/rendering/lighting-input-errors-software.json",
+      "bytes": 260,
+      "sha256": "28d1c8b25831181532998a3c4867e51386a6d08a8ad3d642f5b394a0b4f82317",
+      "source": ".out/composition-regression-rendering/lighting-input-errors-software.json"
+    },
+    {
+      "path": "regression/rendering/lighting-recovery-hardware.json",
+      "bytes": 1217,
+      "sha256": "8636670df9d685b186ca9d04788f2e8e5e39319654618163c2f07df69f5c5c1d",
+      "source": ".out/composition-regression-rendering/lighting-recovery-hardware.json"
+    },
+    {
+      "path": "regression/rendering/lighting-recovery-software.json",
+      "bytes": 1217,
+      "sha256": "bb4212982efe5c511bcad8fb73212bcfa5665615c93d191497f5b476e276f5da",
+      "source": ".out/composition-regression-rendering/lighting-recovery-software.json"
+    },
+    {
+      "path": "regression/rendering/lighting-studio-hardware.json",
+      "bytes": 88,
+      "sha256": "85e0b0b70df2886c5905860fad7b75d2606371275b1ecb1eace1e737eccc6cef",
+      "source": ".out/composition-regression-rendering/lighting-studio-hardware.json"
+    },
+    {
+      "path": "regression/rendering/lighting-studio-inspector-hardware.json",
+      "bytes": 105,
+      "sha256": "760716d986e3b5fd05cd1c07d006d2d4aa1874ab077656a6a1641b08131f5cb2",
+      "source": ".out/composition-regression-rendering/lighting-studio-inspector-hardware.json"
+    },
+    {
+      "path": "regression/rendering/lighting-studio-inspector-software.json",
+      "bytes": 105,
+      "sha256": "760716d986e3b5fd05cd1c07d006d2d4aa1874ab077656a6a1641b08131f5cb2",
+      "source": ".out/composition-regression-rendering/lighting-studio-inspector-software.json"
+    },
+    {
+      "path": "regression/rendering/lighting-studio-software.json",
+      "bytes": 88,
+      "sha256": "85e0b0b70df2886c5905860fad7b75d2606371275b1ecb1eace1e737eccc6cef",
+      "source": ".out/composition-regression-rendering/lighting-studio-software.json"
+    },
+    {
+      "path": "regression/rendering/lit_sampler_boundary-hardware.json",
+      "bytes": 1191,
+      "sha256": "f1b40a72081b8c4c7c8ee22724d1853daad5ac161ca7d3c9ea934dd0acbae62f",
+      "source": ".out/composition-regression-rendering/lit_sampler_boundary-hardware.json"
+    },
+    {
+      "path": "regression/rendering/lit_sampler_boundary-software.json",
+      "bytes": 1205,
+      "sha256": "8447cede0ba2f2be3a52d7c66457b25a98ddd78ce674155d12e9e54fac6a4d89",
+      "source": ".out/composition-regression-rendering/lit_sampler_boundary-software.json"
+    },
+    {
+      "path": "regression/rendering/lit_texture_boundary-hardware.json",
+      "bytes": 1191,
+      "sha256": "f1b40a72081b8c4c7c8ee22724d1853daad5ac161ca7d3c9ea934dd0acbae62f",
+      "source": ".out/composition-regression-rendering/lit_texture_boundary-hardware.json"
+    },
+    {
+      "path": "regression/rendering/lit_texture_boundary-software.json",
+      "bytes": 1205,
+      "sha256": "99b37f05ef7a8f35b7ac3e19da869272faa7b757b24953a4546d299f1da120cd",
+      "source": ".out/composition-regression-rendering/lit_texture_boundary-software.json"
+    },
+    {
+      "path": "regression/rendering/locomotion-demo-hardware.json",
+      "bytes": 1463,
+      "sha256": "7be1509a5d6b6ed069dc9bed86bf16c39f6855cc27043cee7996231c7c988cce",
+      "source": ".out/composition-regression-rendering/locomotion-demo-hardware.json"
+    },
+    {
+      "path": "regression/rendering/locomotion-demo-software.json",
+      "bytes": 1460,
+      "sha256": "4a6c7d38cce0de1089cd424f60e424c8e01239535e9a62e75b695aa41050d1f9",
+      "source": ".out/composition-regression-rendering/locomotion-demo-software.json"
+    },
+    {
+      "path": "regression/rendering/pbr-maps-degenerate-hardware.json",
+      "bytes": 2955,
+      "sha256": "d11c0da281add1ca141848d4a703d5a4b669edb0d729d093508433b4a420cd04",
+      "source": ".out/composition-regression-rendering/pbr-maps-degenerate-hardware.json"
+    },
+    {
+      "path": "regression/rendering/pbr-maps-degenerate-software.json",
+      "bytes": 2955,
+      "sha256": "d1903e71ff0c129be3d79f377945cc386bb1f62880b7fd8153d69e8b5109a48e",
+      "source": ".out/composition-regression-rendering/pbr-maps-degenerate-software.json"
+    },
+    {
+      "path": "regression/rendering/pbr-maps-mirrored-hardware.json",
+      "bytes": 2967,
+      "sha256": "f6bddcb9ed925397eb7a18435f7d652b322596fa46d49592090eb4938917fbdf",
+      "source": ".out/composition-regression-rendering/pbr-maps-mirrored-hardware.json"
+    },
+    {
+      "path": "regression/rendering/pbr-maps-mirrored-software.json",
+      "bytes": 2967,
+      "sha256": "734f931bc0ac0286fad861154f853eb785280766d9073dde785490fd268e21b7",
+      "source": ".out/composition-regression-rendering/pbr-maps-mirrored-software.json"
+    },
+    {
+      "path": "regression/rendering/pbr-maps-recovery-hardware.json",
+      "bytes": 1249,
+      "sha256": "9b17f8b2b0b7a3a9cf3fc2fd2eef132877477f88e60d68569fbbc9f5faec9d50",
+      "source": ".out/composition-regression-rendering/pbr-maps-recovery-hardware.json"
+    },
+    {
+      "path": "regression/rendering/pbr-maps-recovery-software.json",
+      "bytes": 1231,
+      "sha256": "73c7efb8edfdc54f1ee5ca1a1d746a124e2f2335ea7946b4fdfb339fa6dbb53b",
+      "source": ".out/composition-regression-rendering/pbr-maps-recovery-software.json"
+    },
+    {
+      "path": "regression/rendering/pbr-maps-regular-hardware.json",
+      "bytes": 2967,
+      "sha256": "f95cfb8d5b1d3e97baabbafba4876512b0f8e01b900931e5b049914235c02e83",
+      "source": ".out/composition-regression-rendering/pbr-maps-regular-hardware.json"
+    },
+    {
+      "path": "regression/rendering/pbr-maps-regular-software.json",
+      "bytes": 2952,
+      "sha256": "2a18680f2952073bd1a5fb2c7db82b472028053f8ad68675cb38c30d483a1ed0",
+      "source": ".out/composition-regression-rendering/pbr-maps-regular-software.json"
+    },
+    {
+      "path": "regression/rendering/shadow-skin-hardware.json",
+      "bytes": 2366,
+      "sha256": "2830149102734f739e8b8c25c902a532461eecad1ea878fb2c42b0a6ceed66c7",
+      "source": ".out/composition-regression-rendering/shadow-skin-hardware.json"
+    },
+    {
+      "path": "regression/rendering/shadow-skin-software.json",
+      "bytes": 2366,
+      "sha256": "864a67c831f22f7a4ea2c9de48173e3b5e043fea088b0526e598c268b4618aec",
+      "source": ".out/composition-regression-rendering/shadow-skin-software.json"
+    },
+    {
+      "path": "regression/rendering/shadows-high-hardware.json",
+      "bytes": 2505,
+      "sha256": "7fafb596ab0a8bafe5358a9ca03ff813af8f284f108f14e29089cf22fcdc9a20",
+      "source": ".out/composition-regression-rendering/shadows-high-hardware.json"
+    },
+    {
+      "path": "regression/rendering/shadows-high-software.json",
+      "bytes": 2518,
+      "sha256": "9e20dc0791d8bdb874b280296dee65d7891254c1ae90c7e8729ac58e764bb704",
+      "source": ".out/composition-regression-rendering/shadows-high-software.json"
+    },
+    {
+      "path": "regression/rendering/shadows-low-hardware.json",
+      "bytes": 2504,
+      "sha256": "8f113e59d4128db22b892678d7c39384e45b3a0af6fcbcd68a39c62af4da0a58",
+      "source": ".out/composition-regression-rendering/shadows-low-hardware.json"
+    },
+    {
+      "path": "regression/rendering/shadows-low-software.json",
+      "bytes": 2504,
+      "sha256": "e2431701390a0c28c301888c663588c27ab058e8f26ae3006762698df72b873e",
+      "source": ".out/composition-regression-rendering/shadows-low-software.json"
+    },
+    {
+      "path": "regression/rendering/shadows-medium-hardware.json",
+      "bytes": 2505,
+      "sha256": "c41ef23c5d9d9b0e54e421271b3d3661f4780029243c364038805af47af44254",
+      "source": ".out/composition-regression-rendering/shadows-medium-hardware.json"
+    },
+    {
+      "path": "regression/rendering/shadows-medium-software.json",
+      "bytes": 2519,
+      "sha256": "c3629f28384ce5b3cc62a790a40997d3a524c3acd3cc8bd988f45dae096d7b22",
+      "source": ".out/composition-regression-rendering/shadows-medium-software.json"
+    },
+    {
+      "path": "regression/rendering/test-results.json",
+      "bytes": 88168,
+      "sha256": "56cfe704825f96ad844977468809fd2c762f09840771abb7cf781a35552e74ce",
+      "source": ".out/composition-regression-rendering/test-results.json"
+    },
+    {
+      "path": "package-budgets.json",
+      "bytes": 984,
+      "sha256": "6c1ec4e6691deae90e5f8ae5489426d971d9d2781de4b3c8d2e46fccd8e4cb1f",
+      "source": ".out/composition-budgets.json"
+    },
+    {
+      "path": "logs/composition-runtime-tests.log",
+      "bytes": 677,
+      "sha256": "aa58f1868d73baa5b895f31e6419fbff3f9b3d8353f43b72ce19f872f475d04f",
+      "source": ".out/composition-runtime-tests.log"
+    },
+    {
+      "path": "logs/composition-runtime-lint.log",
+      "bytes": 157,
+      "sha256": "81b7d3f88f4df88b3aea9b539b9aa8c8adcd860bab55b261357f23ce7d416977",
+      "source": ".out/composition-runtime-lint.log"
+    },
+    {
+      "path": "logs/composition-typescript.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": ".out/composition-typescript.log"
+    },
+    {
+      "path": "logs/composition-final-cpu.log",
+      "bytes": 346,
+      "sha256": "4d716ed78f4df3d7e67cfb5ce6d65fd8e072e7dadacc074b783da53c57a5545b",
+      "source": ".out/composition-final-cpu.log"
+    },
+    {
+      "path": "logs/composition-final-assets.log",
+      "bytes": 829,
+      "sha256": "2f7affb20b384c75978575e28a68a718fc4766775c43abe05c865e61e6f32529",
+      "source": ".out/composition-final-assets.log"
+    },
+    {
+      "path": "logs/composition-final-assets-2.log",
+      "bytes": 671,
+      "sha256": "becc9f1f658f5c967ab44ce06607e28f5602b20e0a331bc1429ba5ebb3c75b7d",
+      "source": ".out/composition-final-assets-2.log"
+    },
+    {
+      "path": "logs/composition-accepted-hardware.log",
+      "bytes": 409,
+      "sha256": "6178c0d0d306a0cc46a2a40ec4176523b6165683109989396975ba1eb9ceb25d",
+      "source": ".out/composition-accepted-hardware.log"
+    },
+    {
+      "path": "logs/composition-accepted-software.log",
+      "bytes": 409,
+      "sha256": "a6e9487785f9b334a4f7a24bc04f848344a17396ce7e2c1af4c56c741800e303",
+      "source": ".out/composition-accepted-software.log"
+    },
+    {
+      "path": "logs/composition-regression-inspection.log",
+      "bytes": 2296,
+      "sha256": "210da074b1b5c02444d851e3a17930e6be87419bee51d476243a73131b284952",
+      "source": ".out/composition-regression-inspection.log"
+    },
+    {
+      "path": "logs/composition-regression-rendering.log",
+      "bytes": 12661,
+      "sha256": "c5cced1ff8b0754b25bdb98c5b9b9afa897af77a506bcd45e0f324cfe3675239",
+      "source": ".out/composition-regression-rendering.log"
+    },
+    {
+      "path": "logs/composition-coverage.log",
+      "bytes": 258,
+      "sha256": "47589abb47b4d7995a00fa74f8621a2299de2d78aafdb1d779ab4389e2cb5ba2",
+      "source": ".out/composition-coverage.log"
+    },
+    {
+      "path": "logs/composition-budgets.log",
+      "bytes": 933,
+      "sha256": "2935c6985c6bbf2eb5db07cb172f879123b1302d233acdf50548590f9a2319fe",
+      "source": ".out/composition-budgets.log"
+    },
+    {
+      "path": "logs/compute-alignment-hardware.log",
+      "bytes": 1858,
+      "sha256": "641d68a7dde62d683cb66d957302b5c2f73bf08bd4edb36800e0730865e17198",
+      "source": ".out/compute-alignment-hardware.log"
+    },
+    {
+      "path": "logs/compute-alignment-software.log",
+      "bytes": 1866,
+      "sha256": "2a56d386f84f8bd08a3b5ed3172c175205a564f68dba3798cf18be229ad22615",
+      "source": ".out/compute-alignment-software.log"
+    },
+    {
+      "path": "logs/compute-alignment-release.log",
+      "bytes": 230,
+      "sha256": "69d3b101af9bedebec84742cebd0905508ff36f95815ae9209dd73c5c93b6598",
+      "source": ".out/compute-alignment-release.log"
+    },
+    {
+      "path": "logs/compute-alignment-context.log",
+      "bytes": 413,
+      "sha256": "de537ae651253fd30a3fc6e6ba1c209647191ac4976d8740d4484e9dcd7ec02f",
+      "source": ".out/compute-alignment-context.log"
+    },
+    {
+      "path": "logs/composition-final-checks.log",
+      "bytes": 727,
+      "sha256": "2b28f596c8dc7232b43a6bdbed60bc7388477ed03febf741a976a3f7cce01a95",
+      "source": ".out/composition-final-checks.log"
+    }
+  ]
+}

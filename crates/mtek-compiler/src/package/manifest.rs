@@ -589,6 +589,8 @@ pub struct PrimitiveOffsets {
     pub normal: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub uv: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tangent: Option<u64>,
     pub indices: u64,
 }
 

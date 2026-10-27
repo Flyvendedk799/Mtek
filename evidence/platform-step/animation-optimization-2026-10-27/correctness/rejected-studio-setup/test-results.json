@@ -1,0 +1,1343 @@
+{
+  "config": {
+    "argv": [
+      "<external>",
+      "node_modules/@playwright/test/cli.js",
+      "test",
+      "specs/animation",
+      "specs/m4/scene-lighting.spec.ts",
+      "--project=hardware"
+    ],
+    "configFile": "tests/browser/playwright.config.ts",
+    "rootDir": "tests/browser/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "tests/browser/support/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "hardware",
+        "name": "hardware",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "software",
+        "name": "software",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "benchmarks",
+        "name": "benchmarks",
+        "testDir": "benchmarks",
+        "testIgnore": [],
+        "testMatch": [
+          "tasks/*/baseline-tests/*.spec.ts",
+          "holdout/*/baseline-tests/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<results>/test-results.json"
+        }
+      ],
+      [
+        "tests/browser/support/not-run-reporter.ts",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "animation\\crowds.spec.ts",
+      "file": "animation/crowds.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "mounted distance policies refresh poses when an actor approaches the active camera",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 332,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:01:51.633Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8c448b4a080eecbf44f9-d95ccefb22d3618ddba5",
+          "file": "animation/crowds.spec.ts",
+          "line": 8,
+          "column": 1
+        },
+        {
+          "title": "cohorts detach and rejoin without resource growth and rebuild after device loss",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 401,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:01:52.759Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8c448b4a080eecbf44f9-2faebd7e93efcc169a4c",
+          "file": "animation/crowds.spec.ts",
+          "line": 32,
+          "column": 1
+        },
+        {
+          "title": "1 actors in 1 pose cohorts match independent rendering and release shared resources",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1138,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:01:53.167Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8c448b4a080eecbf44f9-6b28894315674bbcc92d",
+          "file": "animation/crowds.spec.ts",
+          "line": 69,
+          "column": 3
+        },
+        {
+          "title": "10 actors in 1 pose cohorts match independent rendering and release shared resources",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1120,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:01:54.315Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8c448b4a080eecbf44f9-508851c069243e46a280",
+          "file": "animation/crowds.spec.ts",
+          "line": 69,
+          "column": 3
+        },
+        {
+          "title": "50 actors in 5 pose cohorts match independent rendering and release shared resources",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1121,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:01:55.444Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8c448b4a080eecbf44f9-9abbd69e768456f9ffd3",
+          "file": "animation/crowds.spec.ts",
+          "line": 69,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "animation\\gpu-skinning.spec.ts",
+      "file": "animation/gpu-skinning.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "GPU skinning agrees with CPU: 1 actors, 63 vertices, with normals",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 222,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:01:56.594Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5626aaf5681f7021ff40-b37474f2846b0fbebddb",
+          "file": "animation/gpu-skinning.spec.ts",
+          "line": 8,
+          "column": 5
+        },
+        {
+          "title": "GPU skinning agrees with CPU: 1 actors, 1025 vertices, with normals",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 212,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:01:56.824Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5626aaf5681f7021ff40-bce576c0572ecd2a403a",
+          "file": "animation/gpu-skinning.spec.ts",
+          "line": 8,
+          "column": 5
+        },
+        {
+          "title": "GPU skinning agrees with CPU: 1 actors, 63 vertices, positions only",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 250,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:01:57.044Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5626aaf5681f7021ff40-376a543625c8a607c534",
+          "file": "animation/gpu-skinning.spec.ts",
+          "line": 8,
+          "column": 5
+        },
+        {
+          "title": "GPU skinning agrees with CPU: 1 actors, 1025 vertices, positions only",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 224,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:01:57.302Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5626aaf5681f7021ff40-830cd8e855b7a01a3d9b",
+          "file": "animation/gpu-skinning.spec.ts",
+          "line": 8,
+          "column": 5
+        },
+        {
+          "title": "GPU skinning agrees with CPU: 10 actors, 63 vertices, with normals",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 219,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:01:57.536Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5626aaf5681f7021ff40-312a15b10524926a1ae0",
+          "file": "animation/gpu-skinning.spec.ts",
+          "line": 8,
+          "column": 5
+        },
+        {
+          "title": "GPU skinning agrees with CPU: 10 actors, 1025 vertices, with normals",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 220,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:01:57.761Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5626aaf5681f7021ff40-1f632593c4d782e16842",
+          "file": "animation/gpu-skinning.spec.ts",
+          "line": 8,
+          "column": 5
+        },
+        {
+          "title": "GPU skinning agrees with CPU: 10 actors, 63 vertices, positions only",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 206,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:01:57.989Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5626aaf5681f7021ff40-e28598f620e390c26f6e",
+          "file": "animation/gpu-skinning.spec.ts",
+          "line": 8,
+          "column": 5
+        },
+        {
+          "title": "GPU skinning agrees with CPU: 10 actors, 1025 vertices, positions only",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 213,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:01:58.202Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5626aaf5681f7021ff40-da1af8434e1fe18ef701",
+          "file": "animation/gpu-skinning.spec.ts",
+          "line": 8,
+          "column": 5
+        },
+        {
+          "title": "GPU skinning agrees with CPU: 50 actors, 63 vertices, with normals",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 218,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:01:58.422Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5626aaf5681f7021ff40-c045a0fb4a35d80225bc",
+          "file": "animation/gpu-skinning.spec.ts",
+          "line": 8,
+          "column": 5
+        },
+        {
+          "title": "GPU skinning agrees with CPU: 50 actors, 1025 vertices, with normals",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 226,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:01:58.647Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5626aaf5681f7021ff40-29d686c5b210e7d906cf",
+          "file": "animation/gpu-skinning.spec.ts",
+          "line": 8,
+          "column": 5
+        },
+        {
+          "title": "GPU skinning agrees with CPU: 50 actors, 63 vertices, positions only",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 210,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:01:58.880Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5626aaf5681f7021ff40-9ed02715827d18c54b1b",
+          "file": "animation/gpu-skinning.spec.ts",
+          "line": 8,
+          "column": 5
+        },
+        {
+          "title": "GPU skinning agrees with CPU: 50 actors, 1025 vertices, positions only",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 216,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:01:59.097Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5626aaf5681f7021ff40-a53848f469a2353b83f5",
+          "file": "animation/gpu-skinning.spec.ts",
+          "line": 8,
+          "column": 5
+        },
+        {
+          "title": "GPU skinning agrees with CPU: 4 actors, 63 vertices, mixed pipelines",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 216,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:01:59.320Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5626aaf5681f7021ff40-ed8df2c2d9e335f2767f",
+          "file": "animation/gpu-skinning.spec.ts",
+          "line": 8,
+          "column": 5
+        },
+        {
+          "title": "GPU skinning agrees with CPU: 4 actors, 1025 vertices, mixed pipelines",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 235,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:01:59.543Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5626aaf5681f7021ff40-bdf263a5867565f5e38a",
+          "file": "animation/gpu-skinning.spec.ts",
+          "line": 8,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "animation\\locomotion-demo.spec.ts",
+      "file": "animation/locomotion-demo.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "the Three.js integration blends locomotion and maintains oriented grips on both rigs",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 353,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:01:59.802Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5bd699b3bee10c71c208-1b0585b1e8ba5ef81fe4",
+          "file": "animation/locomotion-demo.spec.ts",
+          "line": 6,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "animation\\rendering.spec.ts",
+      "file": "animation/rendering.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "minified sampling selects mip levels while base-only glTF samplers retain level zero",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 220,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:02:00.177Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "234191fcaf5c0610dcb9-62db090c7e1076866858",
+          "file": "animation/rendering.spec.ts",
+          "line": 11,
+          "column": 1
+        },
+        {
+          "title": "mounted post effects survive device recovery and reject invalid WGSL",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 468,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:02:00.404Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "234191fcaf5c0610dcb9-2be81da53e0e43c83094",
+          "file": "animation/rendering.spec.ts",
+          "line": 26,
+          "column": 1
+        },
+        {
+          "title": "linear-light NPOT mipmaps and ordered post effects run without leaked resources",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 229,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:02:00.878Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "234191fcaf5c0610dcb9-6c3a9bbce9521f20d5a5",
+          "file": "animation/rendering.spec.ts",
+          "line": 118,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "m4\\scene-lighting.spec.ts",
+      "file": "m4/scene-lighting.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "scene lighting fits default resource limits at lit_texture_boundary",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 252,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:02:01.124Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ec311872965cd6b9104d-b3b980774f95e9178969",
+          "file": "m4/scene-lighting.spec.ts",
+          "line": 11,
+          "column": 3
+        },
+        {
+          "title": "scene lighting fits default resource limits at lit_sampler_boundary",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 261,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:02:01.384Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ec311872965cd6b9104d-13c6b09c6cec2e9e7d22",
+          "file": "m4/scene-lighting.spec.ts",
+          "line": 11,
+          "column": 3
+        },
+        {
+          "title": "unsupported shadow lights and malformed environments fail with actionable errors",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 213,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:02:01.652Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ec311872965cd6b9104d-6028d38e409e37dca02d",
+          "file": "m4/scene-lighting.spec.ts",
+          "line": 22,
+          "column": 1
+        },
+        {
+          "title": "lighting studio controls, local HDR loading and reset work without browser errors",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 5156,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('#status')\nExpected: \u001b[32m\"Live · directional shadows + HDR IBL\"\u001b[39m\nReceived: \u001b[31m\"Preparing lighting…\"\u001b[39m\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" locator('#status') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('#status')\u001b[22m\n\u001b[2m    14 × locator resolved to <span id=\"status\" role=\"status\">Preparing lighting…</span>\u001b[22m\n\u001b[2m       - unexpected value \"Preparing lighting…\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('#status')\nExpected: \u001b[32m\"Live · directional shadows + HDR IBL\"\u001b[39m\nReceived: \u001b[31m\"Preparing lighting…\"\u001b[39m\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" locator('#status') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('#status')\u001b[22m\n\u001b[2m    14 × locator resolved to <span id=\"status\" role=\"status\">Preparing lighting…</span>\u001b[22m\n\u001b[2m       - unexpected value \"Preparing lighting…\"\u001b[22m\n\n    at tests/browser/specs/m4/scene-lighting.spec.ts:42:24",
+                    "location": {
+                      "file": "tests/browser/specs/m4/scene-lighting.spec.ts",
+                      "column": 24,
+                      "line": 42
+                    },
+                    "snippet": "  40 |   await page.goto(\"/lighting-studio/index.html\");\n  41 |   const status = page.locator(\"#status\");\n> 42 |   await expect(status).toHaveText(\"Live · directional shadows + HDR IBL\");\n     |                        ^\n  43 |   await page.locator(\"#pause\").click(); await expect(page.locator(\"#pause\")).toHaveText(\"Resume motion\");\n  44 |   await page.screenshot({ path: test.info().outputPath(\"lighting-studio.png\") });\n  45 |   let revision = await status.getAttribute(\"data-revision\");"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "tests/browser/specs/m4/scene-lighting.spec.ts",
+                        "column": 24,
+                        "line": 42
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('#status')\nExpected: \u001b[32m\"Live · directional shadows + HDR IBL\"\u001b[39m\nReceived: \u001b[31m\"Preparing lighting…\"\u001b[39m\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" locator('#status') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('#status')\u001b[22m\n\u001b[2m    14 × locator resolved to <span id=\"status\" role=\"status\">Preparing lighting…</span>\u001b[22m\n\u001b[2m       - unexpected value \"Preparing lighting…\"\u001b[22m\n\n\n  40 |   await page.goto(\"/lighting-studio/index.html\");\n  41 |   const status = page.locator(\"#status\");\n> 42 |   await expect(status).toHaveText(\"Live · directional shadows + HDR IBL\");\n     |                        ^\n  43 |   await page.locator(\"#pause\").click(); await expect(page.locator(\"#pause\")).toHaveText(\"Resume motion\");\n  44 |   await page.screenshot({ path: test.info().outputPath(\"lighting-studio.png\") });\n  45 |   let revision = await status.getAttribute(\"data-revision\");\n    at tests/browser/specs/m4/scene-lighting.spec.ts:42:24"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:02:01.871Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/m4-scene-lighting-lighting-965fc-work-without-browser-errors-hardware/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "tests/browser/specs/m4/scene-lighting.spec.ts",
+                    "column": 24,
+                    "line": 42
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "ec311872965cd6b9104d-36907f374958fa5aaa46",
+          "file": "m4/scene-lighting.spec.ts",
+          "line": 37,
+          "column": 1
+        },
+        {
+          "title": "an off-camera GPU skin animates its visible shadow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 346,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:02:07.602Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ec311872965cd6b9104d-be23a4b927e849eba41e",
+          "file": "m4/scene-lighting.spec.ts",
+          "line": 69,
+          "column": 1
+        },
+        {
+          "title": "directional shadows: low, animated light, off-camera caster and disposal",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 317,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:02:08.720Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ec311872965cd6b9104d-5a942b1c4a54a845f1fa",
+          "file": "m4/scene-lighting.spec.ts",
+          "line": 87,
+          "column": 3
+        },
+        {
+          "title": "directional shadows: medium, animated light, off-camera caster and disposal",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 309,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:02:09.047Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ec311872965cd6b9104d-e91d6194fef5cc250135",
+          "file": "m4/scene-lighting.spec.ts",
+          "line": 87,
+          "column": 3
+        },
+        {
+          "title": "directional shadows: high, animated light, off-camera caster and disposal",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 303,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:02:09.364Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ec311872965cd6b9104d-3255ce0915ad4e0f23c1",
+          "file": "m4/scene-lighting.spec.ts",
+          "line": 87,
+          "column": 3
+        },
+        {
+          "title": "constant HDR environment matches integrated diffuse/specular, metal and roughness factors",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 308,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:02:09.676Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ec311872965cd6b9104d-e8256ea6604eeb665814",
+          "file": "m4/scene-lighting.spec.ts",
+          "line": 136,
+          "column": 1
+        },
+        {
+          "title": "environment yaw rotates reflections and roughness filters a bright lobe",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 363,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:02:09.992Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ec311872965cd6b9104d-8aa9865317bbf63e45fa",
+          "file": "m4/scene-lighting.spec.ts",
+          "line": 161,
+          "column": 1
+        },
+        {
+          "title": "shadow and HDR environment resources recover with identical pixels and dispose",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 479,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T00:02:10.361Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ec311872965cd6b9104d-8ee71e729dbc64a065bc",
+          "file": "m4/scene-lighting.spec.ts",
+          "line": 191,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-27T00:01:34.937Z",
+    "duration": 36044.049,
+    "expected": 33,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

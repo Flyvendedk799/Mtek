@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "tool": "mtek",
+  "compilerVersion": "0.1.0-dev",
+  "languageVersion": "0.1",
+  "project": "waterbottle-preflight",
+  "diagnostics": [
+    {
+      "schemaVersion": 1,
+      "code": "MTEK-E7009",
+      "severity": "error",
+      "title": "unsupported vertex attribute",
+      "message": "The mesh 'WaterBottle' (meshes[0]), primitive 0 has the attribute TANGENT; the profile supports POSITION, NORMAL and TEXCOORD_0.",
+      "source": {
+        "file": "src/main.mtek",
+        "startByte": 24,
+        "endByte": 44,
+        "startLine": 1,
+        "startColumn": 25,
+        "endLine": 1,
+        "endColumn": 45
+      },
+      "related": [],
+      "notes": [
+        "the problem is in the file 'WaterBottle.glb'",
+        "help: remove vertex colours, tangents and further UV sets when exporting"
+      ],
+      "suggestedEdits": [],
+      "phase": "check",
+      "docs": "spec/diagnostics.md#mtek-e7009"
+    }
+  ],
+  "summary": {
+    "errors": 1,
+    "warnings": 0,
+    "notes": 0,
+    "suppressed": 0
+  }
+}

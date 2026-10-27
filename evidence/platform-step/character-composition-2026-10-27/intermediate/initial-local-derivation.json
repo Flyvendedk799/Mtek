@@ -1,0 +1,73 @@
+{
+  "format": "mtek-character-composition-assets/1",
+  "original": {
+    "commit": "8f492390ddc7a2ae221a1369ef560589cf8c70fb",
+    "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/8f492390ddc7a2ae221a1369ef560589cf8c70fb/Models/CesiumMan/glTF-Binary/CesiumMan.glb",
+    "sha256": "b7001eaeea8254bd44773bcd247e78696d94169388fbb2a1800fc69434e777d9",
+    "bytes": 438044
+  },
+  "source": {
+    "sha256": "97b84749e240f95b92e828100677ae866d01f126bdfde73d6c48382a9b8955e1",
+    "bytes": 530140,
+    "clips": [
+      "Walk",
+      "Idle",
+      "Run",
+      "Travel",
+      "UpperAction",
+      "Nod"
+    ]
+  },
+  "target": {
+    "sha256": "024184363b0934ad931e4bef2f9767c10b07b9d1d681f6a82bd518c5c4937506",
+    "bytes": 889124,
+    "legs": 1.2,
+    "arms": 0.9,
+    "rootLift": 0.108,
+    "maximumBindDisplacement": 0.1357589802712624
+  },
+  "retarget": {
+    "api": 1,
+    "rotationSpace": "local",
+    "bindAxes": "validated unchanged",
+    "mapping": {
+      "Z_UP": "Z_UP",
+      "Armature": "Armature",
+      "Cesium_Man": "Cesium_Man",
+      "Skeleton_torso_joint_1": "Skeleton_torso_joint_1",
+      "leg_joint_R_1": "leg_joint_R_1",
+      "leg_joint_R_2": "leg_joint_R_2",
+      "leg_joint_R_3": "leg_joint_R_3",
+      "leg_joint_R_5": "leg_joint_R_5",
+      "leg_joint_L_1": "leg_joint_L_1",
+      "leg_joint_L_2": "leg_joint_L_2",
+      "leg_joint_L_3": "leg_joint_L_3",
+      "leg_joint_L_5": "leg_joint_L_5",
+      "Skeleton_torso_joint_2": "Skeleton_torso_joint_2",
+      "torso_joint_3": "torso_joint_3",
+      "Skeleton_arm_joint_R": "Skeleton_arm_joint_R",
+      "Skeleton_arm_joint_R__2_": "Skeleton_arm_joint_R__2_",
+      "Skeleton_arm_joint_R__3_": "Skeleton_arm_joint_R__3_",
+      "Skeleton_arm_joint_L__4_": "Skeleton_arm_joint_L__4_",
+      "Skeleton_arm_joint_L__3_": "Skeleton_arm_joint_L__3_",
+      "Skeleton_arm_joint_L__2_": "Skeleton_arm_joint_L__2_",
+      "Skeleton_neck_joint_1": "Skeleton_neck_joint_1",
+      "Skeleton_neck_joint_2": "Skeleton_neck_joint_2"
+    },
+    "nodeTranslationScales": {
+      "Skeleton_torso_joint_1": 1,
+      "leg_joint_R_2": 1.2,
+      "leg_joint_R_3": 1.2,
+      "leg_joint_R_5": 1.2,
+      "leg_joint_L_2": 1.2,
+      "leg_joint_L_3": 1.2,
+      "leg_joint_L_5": 1.2,
+      "Skeleton_arm_joint_R__2_": 0.9,
+      "Skeleton_arm_joint_R__3_": 0.9,
+      "Skeleton_arm_joint_L__4_": 0.9,
+      "Skeleton_arm_joint_L__3_": 0.9,
+      "Skeleton_arm_joint_L__2_": 0.9
+    },
+    "worldMode": "Original animated scale anisotropy reaches 1.5e-6; world mode rejects it at its unchanged 1e-6 limit."
+  }
+}

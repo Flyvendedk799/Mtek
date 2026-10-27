@@ -220,5 +220,18 @@
       "type:i32",
       "type:vec3"
     ]
+  },
+  {
+    "title": "A bounded compute buffer transform (dispatch from the host API)",
+    "features": [
+      "compute-programs",
+      "indexing",
+      "scene-object:camera",
+      "scene-objects",
+      "scenes",
+      "type:ComputeInput",
+      "type:array",
+      "type:f32"
+    ]
   }
 ]

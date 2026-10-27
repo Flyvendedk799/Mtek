@@ -4,9 +4,9 @@
     "file": "e4901_compute_stage.mtek",
     "startByte": 25,
     "endByte": 32,
-    "message": "Custom `compute` stages are not supported in v0.1; they are planned for v0.2.",
+    "message": "`compute` is not a material stage in v0.1; declare a standalone `compute Name { ... }` program.",
     "notes": [
-      "help: a material requires `fragment(input: SurfaceInput) -> color` and may declare `vertex(input: VertexInput) -> vec3`"
+      "help: use `kernel(input: ComputeInput) -> T` inside the standalone compute declaration; materials use fragment and optional vertex stages"
     ]
   }
 ]

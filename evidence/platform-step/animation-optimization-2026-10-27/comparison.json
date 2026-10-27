@@ -1,0 +1,430 @@
+{
+  "format": "mtek-animation-before-after/1",
+  "definitions": "0897d7e5d5e7aa19ccf6cd49faf640e4001762b10faa9baa24e2db23590d0c6a",
+  "runs": [
+    "baseline/run-01",
+    "optimized/run-01"
+  ],
+  "rows": [
+    {
+      "model": "Fox",
+      "actors": 1,
+      "engine": "mtek",
+      "cpuP95Ms": {
+        "before": 0.23499999940395355,
+        "after": 0.21000000089406967,
+        "changePercent": -10.6382972652311
+      },
+      "gpuPassSumP95Ms": {
+        "before": 0.00604,
+        "after": 0.00576,
+        "changePercent": -4.635761589403975
+      },
+      "liveGpuBufferBytes": {
+        "before": 158080,
+        "after": 116608,
+        "changePercent": -26.234817813765186
+      },
+      "liveJsHeapUsedBytes": {
+        "before": 3477960,
+        "after": 3454928,
+        "changePercent": -0.6622272826599551
+      },
+      "writeBufferBytesPerFrame": {
+        "before": 1536,
+        "after": 1536,
+        "changePercent": 0
+      },
+      "drawCallsPerFrame": {
+        "before": 1,
+        "after": 1,
+        "changePercent": 0
+      }
+    },
+    {
+      "model": "Fox",
+      "actors": 1,
+      "engine": "three",
+      "cpuP95Ms": {
+        "before": 0.19500000029802322,
+        "after": 0.19999999925494194,
+        "changePercent": 2.5641020252703095
+      },
+      "gpuPassSumP95Ms": {
+        "before": 0.00488,
+        "after": 0.00492,
+        "changePercent": 0.819672131147553
+      },
+      "liveGpuBufferBytes": {
+        "before": 77904,
+        "after": 77904,
+        "changePercent": 0
+      },
+      "liveJsHeapUsedBytes": {
+        "before": 5140680,
+        "after": 5138528,
+        "changePercent": -0.041862166094752684
+      },
+      "writeBufferBytesPerFrame": {
+        "before": 1536,
+        "after": 1536,
+        "changePercent": 0
+      },
+      "drawCallsPerFrame": {
+        "before": 1,
+        "after": 1,
+        "changePercent": 0
+      }
+    },
+    {
+      "model": "Fox",
+      "actors": 10,
+      "engine": "mtek",
+      "cpuP95Ms": {
+        "before": 0.42500000074505806,
+        "after": 0.42499999701976776,
+        "changePercent": -8.765388970211063e-7
+      },
+      "gpuPassSumP95Ms": {
+        "before": 0.02268,
+        "after": 0.02084,
+        "changePercent": -8.112874779541436
+      },
+      "liveGpuBufferBytes": {
+        "before": 551040,
+        "after": 322944,
+        "changePercent": -41.393728222996515
+      },
+      "liveJsHeapUsedBytes": {
+        "before": 4054612,
+        "after": 4040280,
+        "changePercent": -0.35347401921564936
+      },
+      "writeBufferBytesPerFrame": {
+        "before": 15360,
+        "after": 15360,
+        "changePercent": 0
+      },
+      "drawCallsPerFrame": {
+        "before": 10,
+        "after": 10,
+        "changePercent": 0
+      }
+    },
+    {
+      "model": "Fox",
+      "actors": 10,
+      "engine": "three",
+      "cpuP95Ms": {
+        "before": 0.30000000074505806,
+        "after": 0.375,
+        "changePercent": 24.99999968955915
+      },
+      "gpuPassSumP95Ms": {
+        "before": 0.0056,
+        "after": 0.00604,
+        "changePercent": 7.857142857142851
+      },
+      "liveGpuBufferBytes": {
+        "before": 93600,
+        "after": 93600,
+        "changePercent": 0
+      },
+      "liveJsHeapUsedBytes": {
+        "before": 5886352,
+        "after": 5884244,
+        "changePercent": -0.03581165380527329
+      },
+      "writeBufferBytesPerFrame": {
+        "before": 15360,
+        "after": 15360,
+        "changePercent": 0
+      },
+      "drawCallsPerFrame": {
+        "before": 10,
+        "after": 10,
+        "changePercent": 0
+      }
+    },
+    {
+      "model": "Fox",
+      "actors": 50,
+      "engine": "mtek",
+      "cpuP95Ms": {
+        "before": 1.3649999983608723,
+        "after": 1.8500000014901161,
+        "changePercent": 35.53113580305087
+      },
+      "gpuPassSumP95Ms": {
+        "before": 0.09728,
+        "after": 0.08844,
+        "changePercent": -9.087171052631582
+      },
+      "liveGpuBufferBytes": {
+        "before": 2296960,
+        "after": 1239424,
+        "changePercent": -46.04067985511284
+      },
+      "liveJsHeapUsedBytes": {
+        "before": 5164920,
+        "after": 5208512,
+        "changePercent": 0.8440014559760955
+      },
+      "writeBufferBytesPerFrame": {
+        "before": 76800,
+        "after": 76800,
+        "changePercent": 0
+      },
+      "drawCallsPerFrame": {
+        "before": 50,
+        "after": 50,
+        "changePercent": 0
+      }
+    },
+    {
+      "model": "Fox",
+      "actors": 50,
+      "engine": "three",
+      "cpuP95Ms": {
+        "before": 0.9100000001490116,
+        "after": 1.7599999979138374,
+        "changePercent": 93.40659314567463
+      },
+      "gpuPassSumP95Ms": {
+        "before": 0.00864,
+        "after": 0.00856,
+        "changePercent": -0.92592592592593
+      },
+      "liveGpuBufferBytes": {
+        "before": 163360,
+        "after": 163360,
+        "changePercent": 0
+      },
+      "liveJsHeapUsedBytes": {
+        "before": 8057360,
+        "after": 8054496,
+        "changePercent": -0.03554514133661257
+      },
+      "writeBufferBytesPerFrame": {
+        "before": 76800,
+        "after": 76800,
+        "changePercent": 0
+      },
+      "drawCallsPerFrame": {
+        "before": 50,
+        "after": 50,
+        "changePercent": 0
+      }
+    },
+    {
+      "model": "CesiumMan",
+      "actors": 1,
+      "engine": "mtek",
+      "cpuP95Ms": {
+        "before": 0.19499999657273293,
+        "after": 0.21000000089406967,
+        "changePercent": 7.6923100435757785
+      },
+      "gpuPassSumP95Ms": {
+        "before": 0.00676,
+        "after": 0.00668,
+        "changePercent": -1.183431952662728
+      },
+      "liveGpuBufferBytes": {
+        "before": 318296,
+        "after": 279020,
+        "changePercent": -12.339457611782745
+      },
+      "liveJsHeapUsedBytes": {
+        "before": 3617016,
+        "after": 3594044,
+        "changePercent": -0.6351091618063021
+      },
+      "writeBufferBytesPerFrame": {
+        "before": 1216,
+        "after": 1216,
+        "changePercent": 0
+      },
+      "drawCallsPerFrame": {
+        "before": 1,
+        "after": 1,
+        "changePercent": 0
+      }
+    },
+    {
+      "model": "CesiumMan",
+      "actors": 1,
+      "engine": "three",
+      "cpuP95Ms": {
+        "before": 0.14000000059604645,
+        "after": 0.19500000029802322,
+        "changePercent": 39.28571390558262
+      },
+      "gpuPassSumP95Ms": {
+        "before": 0.00576,
+        "after": 0.00576,
+        "changePercent": 0
+      },
+      "liveGpuBufferBytes": {
+        "before": 240904,
+        "after": 240904,
+        "changePercent": 0
+      },
+      "liveJsHeapUsedBytes": {
+        "before": 5177640,
+        "after": 5177704,
+        "changePercent": 0.0012360843936631838
+      },
+      "writeBufferBytesPerFrame": {
+        "before": 1216,
+        "after": 1216,
+        "changePercent": 0
+      },
+      "drawCallsPerFrame": {
+        "before": 1,
+        "after": 1,
+        "changePercent": 0
+      }
+    },
+    {
+      "model": "CesiumMan",
+      "actors": 10,
+      "engine": "mtek",
+      "cpuP95Ms": {
+        "before": 0.38500000163912773,
+        "after": 0.42500000074505806,
+        "changePercent": 10.389610113151004
+      },
+      "gpuPassSumP95Ms": {
+        "before": 0.02532,
+        "after": 0.0232,
+        "changePercent": -8.37282780410743
+      },
+      "liveGpuBufferBytes": {
+        "before": 1042096,
+        "after": 649336,
+        "changePercent": -37.68942592621025
+      },
+      "liveJsHeapUsedBytes": {
+        "before": 4163660,
+        "after": 4148660,
+        "changePercent": -0.36025996358972634
+      },
+      "writeBufferBytesPerFrame": {
+        "before": 12160,
+        "after": 12160,
+        "changePercent": 0
+      },
+      "drawCallsPerFrame": {
+        "before": 10,
+        "after": 10,
+        "changePercent": 0
+      }
+    },
+    {
+      "model": "CesiumMan",
+      "actors": 10,
+      "engine": "three",
+      "cpuP95Ms": {
+        "before": 0.2549999989569187,
+        "after": 0.32499999925494194,
+        "changePercent": 27.450980621317367
+      },
+      "gpuPassSumP95Ms": {
+        "before": 0.00884,
+        "after": 0.00896,
+        "changePercent": 1.3574660633483893
+      },
+      "liveGpuBufferBytes": {
+        "before": 253720,
+        "after": 253720,
+        "changePercent": 0
+      },
+      "liveJsHeapUsedBytes": {
+        "before": 6020232,
+        "after": 6020288,
+        "changePercent": 0.0009301967100361352
+      },
+      "writeBufferBytesPerFrame": {
+        "before": 12160,
+        "after": 12160,
+        "changePercent": 0
+      },
+      "drawCallsPerFrame": {
+        "before": 10,
+        "after": 10,
+        "changePercent": 0
+      }
+    },
+    {
+      "model": "CesiumMan",
+      "actors": 50,
+      "engine": "mtek",
+      "cpuP95Ms": {
+        "before": 1.1799999997019768,
+        "after": 1.1500000022351742,
+        "changePercent": -2.5423726673202918
+      },
+      "gpuPassSumP95Ms": {
+        "before": 0.11016,
+        "after": 0.10136,
+        "changePercent": -7.988380537400131
+      },
+      "liveGpuBufferBytes": {
+        "before": 4258416,
+        "after": 2294616,
+        "changePercent": -46.11573880992369
+      },
+      "liveJsHeapUsedBytes": {
+        "before": 5148080,
+        "after": 5181228,
+        "changePercent": 0.6438905378315818
+      },
+      "writeBufferBytesPerFrame": {
+        "before": 60800,
+        "after": 60800,
+        "changePercent": 0
+      },
+      "drawCallsPerFrame": {
+        "before": 50,
+        "after": 50,
+        "changePercent": 0
+      }
+    },
+    {
+      "model": "CesiumMan",
+      "actors": 50,
+      "engine": "three",
+      "cpuP95Ms": {
+        "before": 0.8049999997019768,
+        "after": 1.1650000028312206,
+        "changePercent": 44.7204972996921
+      },
+      "gpuPassSumP95Ms": {
+        "before": 0.02248,
+        "after": 0.02264,
+        "changePercent": 0.7117437722419906
+      },
+      "liveGpuBufferBytes": {
+        "before": 310680,
+        "after": 310680,
+        "changePercent": 0
+      },
+      "liveJsHeapUsedBytes": {
+        "before": 8552852,
+        "after": 8553840,
+        "changePercent": 0.011551702285972354
+      },
+      "writeBufferBytesPerFrame": {
+        "before": 60800,
+        "after": 60800,
+        "changePercent": 0
+      },
+      "drawCallsPerFrame": {
+        "before": 50,
+        "after": 50,
+        "changePercent": 0
+      }
+    }
+  ]
+}

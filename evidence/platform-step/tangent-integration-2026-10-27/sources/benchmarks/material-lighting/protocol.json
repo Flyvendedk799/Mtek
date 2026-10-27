@@ -1,0 +1,19 @@
+{
+  "format": "mtek-material-lighting-protocol/2",
+  "product": { "asset": "WaterBottle", "sha256": "b337e526fd6a162013c2984aeec163f5fbb4f717252724dfc3f3458bd51df94b", "unchanged": true, "sameGeometryAtBothQualities": true, "sourceBounds": true, "preserveNodeRotation": true, "camera": { "position": [6, 3, 7], "target": [0, 1, 0] }, "normalMapControl": { "changedChannelError": 8, "minimumChangedPixels": { "low": 20, "standard": 80 }, "scope": "projected source bounds of Product0" } },
+  "reference": { "package": "three", "version": "0.186.1", "backend": "WebGPU", "opaqueBatching": "public InstancedMesh groups for repeated geometry/material pairs" },
+  "scenes": ["product", "indoor", "outdoor", "transparency", "particles"],
+  "profiles": {
+    "low": { "width": 640, "height": 360, "sphereSegments": 16, "sphereRings": 8, "shadowResolution": 512, "shadowRadius": 0, "environmentWidth": 256, "environmentHeight": 128, "environmentQuality": "low", "emitters": 2, "particleRate": 24 },
+    "standard": { "width": 1280, "height": 720, "sphereSegments": 48, "sphereRings": 24, "shadowResolution": 1024, "shadowRadius": 1, "environmentWidth": 512, "environmentHeight": 256, "environmentQuality": "medium", "emitters": 4, "particleRate": 40 }
+  },
+  "camera": { "position": [8, 5, 10], "target": [0, 1, 0], "fovY": 0.7, "near": 0.1, "far": 60 },
+  "clearColorSrgb": "#111a26",
+  "exposureScale": 1,
+  "toneMapping": "none; linear light encoded once into LDR sRGB",
+  "shadow": { "center": [0, 1, 0], "size": 16, "distance": 20, "near": 0.1, "far": 40, "depthBias": 0.001, "normalBias": 0, "frontFaces": "CCW", "filter": "nearest comparison, square uniform PCF; one or nine taps", "refresh": "regenerated each submitted frame; frames are paced through RAF outside CPU timing" },
+  "environment": { "intensity": 0.45, "rotation": 0, "layout": "linear RGBA float32; top row +Y; longitude atan2(z,x)/(2*pi)+0.5", "nativePrefilters": true },
+  "particles": { "seed": 1889696798, "capacityPerEmitter": 64, "lifetime": 1.5, "speed": 2, "size": 0.18, "gravity": 2, "dt": 0.016666666666666666, "captureFrames": [60, 90, 120], "geometry": "unit mesh-local XZ quad with +Y normal; billboard basis right/toward-camera/minus-up", "sorting": "within each emitter by descending view depth; emitters by mean view depth; before translucent entities" },
+  "visualGate": { "meanAbsoluteRgb8": 8, "p95MaximumChannelError8": 24, "fractionOver24": 0.05, "minimumForegroundPixels": 1000, "silhouetteIoU": 0.97, "scope": "whole foreground, declared object rectangles and independently projected particle pixels; no image alignment or fitted colour transform", "particleChangedPixelsMin": {"low":40,"standard":160}, "particleStructure": "indexed quad instance totals must equal independently simulated particles plus emitter markers" },
+  "measurement": { "warmupFrames": 120, "samples": 600, "repeats": 3, "deltaSeconds": 0.016666666666666666, "passes": ["cpu", "gpu", "counts", "presented"], "gpu": "sum of every render and compute pass across all frame encoders; missing timestamps invalidate this metric", "cpu": "synchronous frame preparation/submission, with completion awaited outside interval", "presented": "native visible canvas under requestAnimationFrame; RAF intervals reported separately from CPU/GPU durations", "hostBusyLimitPercent": 10, "retryNoisyPasses": true, "performanceEligibility": "all visual/structural/lifetime gates passed; hardware adapter required; native preprocessing differences disclosed" }
+}

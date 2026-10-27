@@ -146,6 +146,9 @@ function exprFact(ctx: Context, node: JsonObject): void {
     case "index":
       add(ctx, "indexing", "expr/index");
       break;
+    case "storageRead":
+      add(ctx, "compute/storage-read");
+      break;
     case "array":
       add(ctx, "arrays", "expr/array-literal");
       break;
@@ -211,7 +214,7 @@ function exprFact(ctx: Context, node: JsonObject): void {
       break;
     }
     case "param":
-      add(ctx, ctx.item === "prefab" ? "expr/prefab-param-read" : "expr/material-param-read");
+      add(ctx, ctx.item === "compute" ? "compute/param-read" : ctx.item === "prefab" ? "expr/prefab-param-read" : "expr/material-param-read");
       break;
     case "material": {
       add(ctx, "expr/material-literal");
@@ -415,6 +418,9 @@ function visit(ctx: Context, node: Json, slot: string): void {
         case "material":
           add(ctx, "materials");
           break;
+        case "compute":
+          add(ctx, "compute-programs");
+          break;
         case "prefab":
           add(ctx, "prefabs");
           if (arr(node, "params").length > 0) add(ctx, "prefab/params");
@@ -510,6 +516,7 @@ const EXPR_KINDS = new Set([
   "components",
   "field",
   "index",
+  "storageRead",
   "array",
   "struct",
   "descriptor",

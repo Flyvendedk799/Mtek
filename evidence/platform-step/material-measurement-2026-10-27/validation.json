@@ -1,0 +1,1440 @@
+{
+  "format": "mtek-material-measurement-checkpoint/1",
+  "date": "2026-10-27",
+  "performanceEligible": false,
+  "roadmapComplete": false,
+  "userRequestedPause": true,
+  "checks": {
+    "materialUnits": 17,
+    "counterUnits": 11,
+    "nativeReadbackExactMatches": 2,
+    "rafOnlyNegativeControl": "passed",
+    "materialLint": "passed",
+    "runtimeBenchmarkTypes": "passed",
+    "fullProtocol3VisualMatrix": "not run",
+    "full240PassPerformanceRun": "not run",
+    "latestPreflight": {
+      "accepted": 0,
+      "total": 8,
+      "status": "interference"
+    }
+  },
+  "files": [
+    {
+      "path": "preflights/v1/attempts.jsonl",
+      "bytes": 2473,
+      "sha256": "320b5fc55a1de2d9af5e885f2d6ad58950155ca87566da8319b02a459e963ab5",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v1\\attempts.jsonl",
+        "bytes": 2473,
+        "sha256": "320b5fc55a1de2d9af5e885f2d6ad58950155ca87566da8319b02a459e963ab5"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v1/passes/product-low-counts-mtek-r0/attempt-1/record.json",
+      "bytes": 11730,
+      "sha256": "5b449e7fe34d6b8171c0f427cb03f44b9fb60f21e53d40fe78d27e9eb6f5e0e9",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v1\\passes\\product-low-counts-mtek-r0\\attempt-1\\record.json",
+        "bytes": 11730,
+        "sha256": "5b449e7fe34d6b8171c0f427cb03f44b9fb60f21e53d40fe78d27e9eb6f5e0e9"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v1/passes/product-low-counts-three-r0/attempt-1/record.json",
+      "bytes": 39031,
+      "sha256": "79cc183ba6d840752feaf6903af08311ef52d743f7538a48116e072a98d117f7",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v1\\passes\\product-low-counts-three-r0\\attempt-1\\record.json",
+        "bytes": 39031,
+        "sha256": "79cc183ba6d840752feaf6903af08311ef52d743f7538a48116e072a98d117f7"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v1/passes/product-low-cpu-mtek-r0/attempt-1/record.json",
+      "bytes": 10220,
+      "sha256": "be089d476aa1506d7c13bece1e6df90afa06374848d49842615e8a41b6dc9c20",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v1\\passes\\product-low-cpu-mtek-r0\\attempt-1\\record.json",
+        "bytes": 10220,
+        "sha256": "be089d476aa1506d7c13bece1e6df90afa06374848d49842615e8a41b6dc9c20"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v1/passes/product-low-cpu-three-r0/attempt-1/record.json",
+      "bytes": 8538,
+      "sha256": "ad69f5d52113d2e85cdbb0bd4cc7606073f83a5ffdc212a9e163e5d763bbc2f0",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v1\\passes\\product-low-cpu-three-r0\\attempt-1\\record.json",
+        "bytes": 8538,
+        "sha256": "ad69f5d52113d2e85cdbb0bd4cc7606073f83a5ffdc212a9e163e5d763bbc2f0"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v1/passes/product-low-gpu-mtek-r0/attempt-1/record.json",
+      "bytes": 10582,
+      "sha256": "92225b3a81cdc394afa6c4ad2d05b8c731c139c175c949785e124ee73bf7b552",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v1\\passes\\product-low-gpu-mtek-r0\\attempt-1\\record.json",
+        "bytes": 10582,
+        "sha256": "92225b3a81cdc394afa6c4ad2d05b8c731c139c175c949785e124ee73bf7b552"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v1/passes/product-low-gpu-three-r0/attempt-1/record.json",
+      "bytes": 8527,
+      "sha256": "5626005992bd6ee993f19a79b5323a316f274a5ed92d6a75502c6402e8c2012d",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v1\\passes\\product-low-gpu-three-r0\\attempt-1\\record.json",
+        "bytes": 8527,
+        "sha256": "5626005992bd6ee993f19a79b5323a316f274a5ed92d6a75502c6402e8c2012d"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v1/passes/product-low-presented-mtek-r0/attempt-1/record.json",
+      "bytes": 10568,
+      "sha256": "34044cf69836ad1fae4f6de9a5b760044c6599fd26c6c11fb53aa88e9a37d6d7",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v1\\passes\\product-low-presented-mtek-r0\\attempt-1\\record.json",
+        "bytes": 10568,
+        "sha256": "34044cf69836ad1fae4f6de9a5b760044c6599fd26c6c11fb53aa88e9a37d6d7"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v1/passes/product-low-presented-three-r0/attempt-1/record.json",
+      "bytes": 8634,
+      "sha256": "447306cefb4411fc5b2339d4f3d951a69e1bad15b08f379d657ffbef9993c2ea",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v1\\passes\\product-low-presented-three-r0\\attempt-1\\record.json",
+        "bytes": 8634,
+        "sha256": "447306cefb4411fc5b2339d4f3d951a69e1bad15b08f379d657ffbef9993c2ea"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v1/run.json.gz",
+      "bytes": 15279,
+      "sha256": "a8520fe32db7b2d96ec0dd8fe6bbb109c47443d45543b22418c0f1aad7237a2b",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v1\\run.json",
+        "bytes": 79427,
+        "sha256": "950800a7e7091b8e7165c1eaadcf3ad24a4956584f811475d244ed23f6bcb90a"
+      },
+      "sanitized": true,
+      "compressed": true
+    },
+    {
+      "path": "logs/material-measurement-preflight-v1.log",
+      "bytes": 1986,
+      "sha256": "1cdd2bbc85c0f5abeb61c0761596eed763a90553ea272a4d53abc60e71594590",
+      "original": {
+        "path": ".out/material-measurement-preflight-v1.log",
+        "bytes": 1986,
+        "sha256": "1cdd2bbc85c0f5abeb61c0761596eed763a90553ea272a4d53abc60e71594590"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v2/attempts.jsonl",
+      "bytes": 2079,
+      "sha256": "458de3f4ee08cf4ee21c48bc7deb0fffc6da14aeff3f743440358f742f9ad361",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v2\\attempts.jsonl",
+        "bytes": 2079,
+        "sha256": "458de3f4ee08cf4ee21c48bc7deb0fffc6da14aeff3f743440358f742f9ad361"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v2/passes/product-low-counts-mtek-r0/attempt-1/record.json",
+      "bytes": 40316,
+      "sha256": "098852b284a6b28946f9b75388ae677b9a11f2fb8b71248c184d98f3ddc5e7e0",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v2\\passes\\product-low-counts-mtek-r0\\attempt-1\\record.json",
+        "bytes": 40316,
+        "sha256": "098852b284a6b28946f9b75388ae677b9a11f2fb8b71248c184d98f3ddc5e7e0"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v2/passes/product-low-counts-three-r0/attempt-1/record.json",
+      "bytes": 38665,
+      "sha256": "27e6cf7e1f62770ff51d3afb6c4adc0286489d7b12c5d21d11c7adb0bff2f669",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v2\\passes\\product-low-counts-three-r0\\attempt-1\\record.json",
+        "bytes": 38665,
+        "sha256": "27e6cf7e1f62770ff51d3afb6c4adc0286489d7b12c5d21d11c7adb0bff2f669"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v2/passes/product-low-cpu-mtek-r0/attempt-1/record.json",
+      "bytes": 12894,
+      "sha256": "9173ba184f255e7ba8babe68f84728fa382ee1206a1eb8c6d5490808148a7f66",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v2\\passes\\product-low-cpu-mtek-r0\\attempt-1\\record.json",
+        "bytes": 12894,
+        "sha256": "9173ba184f255e7ba8babe68f84728fa382ee1206a1eb8c6d5490808148a7f66"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v2/passes/product-low-cpu-three-r0/attempt-1/record.json",
+      "bytes": 10841,
+      "sha256": "57e2e52ecac9d67228b0da2e456e97d391b07bdf3e08e47ea0fa8089b07b0b89",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v2\\passes\\product-low-cpu-three-r0\\attempt-1\\record.json",
+        "bytes": 10841,
+        "sha256": "57e2e52ecac9d67228b0da2e456e97d391b07bdf3e08e47ea0fa8089b07b0b89"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v2/passes/product-low-gpu-mtek-r0/attempt-1/record.json",
+      "bytes": 22370,
+      "sha256": "591ee11636186f92dd561b96244d2c317d7e09153b5313ea8f0f05032ad41edb",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v2\\passes\\product-low-gpu-mtek-r0\\attempt-1\\record.json",
+        "bytes": 22370,
+        "sha256": "591ee11636186f92dd561b96244d2c317d7e09153b5313ea8f0f05032ad41edb"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v2/passes/product-low-gpu-three-r0/attempt-1/record.json",
+      "bytes": 20574,
+      "sha256": "a01881d0e8e9c35ee2e35d965bc94a6901bfdb3a8b23190ae98c3c44e47851da",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v2\\passes\\product-low-gpu-three-r0\\attempt-1\\record.json",
+        "bytes": 20574,
+        "sha256": "a01881d0e8e9c35ee2e35d965bc94a6901bfdb3a8b23190ae98c3c44e47851da"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v2/passes/product-low-presented-mtek-r0/attempt-1/presentmon-process.json",
+      "bytes": 4694,
+      "sha256": "056dcaf79dd50e7e9581465bef3e488dfa0655cd4f2d5b1b822750779ad6b9e9",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v2\\passes\\product-low-presented-mtek-r0\\attempt-1\\presentmon-process.json",
+        "bytes": 4723,
+        "sha256": "2bbd67fee9a26240f1ebd86a71fa36367c6355e97efb3d74a358c0cbee5a4167"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v2/passes/product-low-presented-mtek-r0/attempt-1/presentmon.csv",
+      "bytes": 2293,
+      "sha256": "568e099e429373a596d107771ae337f3af4d16721dee7536d67f98c886f3e63c",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v2\\passes\\product-low-presented-mtek-r0\\attempt-1\\presentmon.csv",
+        "bytes": 2293,
+        "sha256": "568e099e429373a596d107771ae337f3af4d16721dee7536d67f98c886f3e63c"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v2/passes/product-low-presented-mtek-r0/attempt-1/record.json",
+      "bytes": 25244,
+      "sha256": "784ab937a04c513abbe9798ff63f18e623370b54dc0ae2963996b82de4bb07dc",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v2\\passes\\product-low-presented-mtek-r0\\attempt-1\\record.json",
+        "bytes": 25273,
+        "sha256": "3519ce735d85f3135e2ec43dca01df7058c081b4121dddbf1fbf903b5756cf68"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v2/passes/product-low-presented-three-r0/attempt-1/native.png",
+      "bytes": 24507,
+      "sha256": "4005bae67afc8c4539e64c1611cf455716b296e6bff1269c5cd45161ccdd5fcf",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v2\\passes\\product-low-presented-three-r0\\attempt-1\\native.png",
+        "bytes": 24507,
+        "sha256": "4005bae67afc8c4539e64c1611cf455716b296e6bff1269c5cd45161ccdd5fcf"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v2/passes/product-low-presented-three-r0/attempt-1/offscreen.png",
+      "bytes": 32572,
+      "sha256": "9505a57e30e57ceea10726bb0e98f0491be22e75ce1cd6321f627d9eaf13e5bb",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v2\\passes\\product-low-presented-three-r0\\attempt-1\\offscreen.png",
+        "bytes": 32572,
+        "sha256": "9505a57e30e57ceea10726bb0e98f0491be22e75ce1cd6321f627d9eaf13e5bb"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v2/passes/product-low-presented-three-r0/attempt-1/presentmon-process.json",
+      "bytes": 4811,
+      "sha256": "c52b1f988f964a088413b903e96e67c64da4207076ea78a0b62f9ab311366d45",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v2\\passes\\product-low-presented-three-r0\\attempt-1\\presentmon-process.json",
+        "bytes": 4840,
+        "sha256": "54a23e308d83d80dab4f8d239b20d7cc7ff0ab30ff48f0e365164577e67d27d3"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v2/passes/product-low-presented-three-r0/attempt-1/presentmon.csv",
+      "bytes": 2336,
+      "sha256": "51d3094ae5ce9bdc5cc3360aed1d6704a290e7cbe400aed8ac4078d7410cd632",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v2\\passes\\product-low-presented-three-r0\\attempt-1\\presentmon.csv",
+        "bytes": 2336,
+        "sha256": "51d3094ae5ce9bdc5cc3360aed1d6704a290e7cbe400aed8ac4078d7410cd632"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v2/passes/product-low-presented-three-r0/attempt-1/record.json",
+      "bytes": 28493,
+      "sha256": "c2de711b1587c91a586537115b68fe8dba9cb3623c63fde0f65f1fee3e774ce1",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v2\\passes\\product-low-presented-three-r0\\attempt-1\\record.json",
+        "bytes": 28522,
+        "sha256": "f856a7416bdbe6b698ab05be7bff5c959920fd3c81b0a4fd32dc16dc973cc043"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v2/report.json",
+      "bytes": 17747,
+      "sha256": "9e68c2256f39618492438fac63e5f177083df0908ea372a77c8004b8ef36311f",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v2\\report.json",
+        "bytes": 17892,
+        "sha256": "4e0b83c45e6fdb0e835f8a8d0d28e4327322b2c71ec744b872d6581ea11d4420"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v2/run.json.gz",
+      "bytes": 16185,
+      "sha256": "79e9889c8edf77671f08846911f2f13dda5f75b6d0b78a6b73ce9832e7e643ec",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v2\\run.json",
+        "bytes": 83743,
+        "sha256": "ef25f316f1a890acd3001909d78ec966104c0ff58c7531bdd973542bf5689f7d"
+      },
+      "sanitized": true,
+      "compressed": true
+    },
+    {
+      "path": "logs/material-measurement-preflight-v2.log",
+      "bytes": 833,
+      "sha256": "52ef6e3c73ffc9d93b629d8a578da46e008e8dfaeec2003177ffc6325367ea1b",
+      "original": {
+        "path": ".out/material-measurement-preflight-v2.log",
+        "bytes": 833,
+        "sha256": "52ef6e3c73ffc9d93b629d8a578da46e008e8dfaeec2003177ffc6325367ea1b"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v3/attempts.jsonl",
+      "bytes": 1965,
+      "sha256": "5c7685f8e6b0cf158eb3ae539bf3dc15f7d29ab25a7011751b9dcfe46fadf475",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v3\\attempts.jsonl",
+        "bytes": 1965,
+        "sha256": "5c7685f8e6b0cf158eb3ae539bf3dc15f7d29ab25a7011751b9dcfe46fadf475"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v3/passes/product-low-counts-mtek-r0/attempt-1/record.json",
+      "bytes": 40501,
+      "sha256": "abac6b8c774df0afa37b862532f0fa66d86de1657a3fc7a7c25e2622c91f5e8d",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v3\\passes\\product-low-counts-mtek-r0\\attempt-1\\record.json",
+        "bytes": 40501,
+        "sha256": "abac6b8c774df0afa37b862532f0fa66d86de1657a3fc7a7c25e2622c91f5e8d"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v3/passes/product-low-counts-three-r0/attempt-1/record.json",
+      "bytes": 38701,
+      "sha256": "c22dd0d597863e9716b6666b326c6a397f1bdc7c9f5a60447d9ff5f5c96bd1b0",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v3\\passes\\product-low-counts-three-r0\\attempt-1\\record.json",
+        "bytes": 38701,
+        "sha256": "c22dd0d597863e9716b6666b326c6a397f1bdc7c9f5a60447d9ff5f5c96bd1b0"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v3/passes/product-low-cpu-mtek-r0/attempt-1/record.json",
+      "bytes": 13254,
+      "sha256": "fa6158546030b80f4b5ebfc9bced3363c20391b88f7449adcd571a75fbad2c5c",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v3\\passes\\product-low-cpu-mtek-r0\\attempt-1\\record.json",
+        "bytes": 13254,
+        "sha256": "fa6158546030b80f4b5ebfc9bced3363c20391b88f7449adcd571a75fbad2c5c"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v3/passes/product-low-cpu-three-r0/attempt-1/record.json",
+      "bytes": 11470,
+      "sha256": "6ec4f80f92cbc9ffbb3132b7540532d5715b5ab7a618e5970ed1eb165b15ff02",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v3\\passes\\product-low-cpu-three-r0\\attempt-1\\record.json",
+        "bytes": 11470,
+        "sha256": "6ec4f80f92cbc9ffbb3132b7540532d5715b5ab7a618e5970ed1eb165b15ff02"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v3/passes/product-low-gpu-mtek-r0/attempt-1/record.json",
+      "bytes": 22290,
+      "sha256": "e66742a68a147c99f4e5532b94437680ac834dd767219d2bc953486b3d4b1964",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v3\\passes\\product-low-gpu-mtek-r0\\attempt-1\\record.json",
+        "bytes": 22290,
+        "sha256": "e66742a68a147c99f4e5532b94437680ac834dd767219d2bc953486b3d4b1964"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v3/passes/product-low-gpu-three-r0/attempt-1/record.json",
+      "bytes": 20644,
+      "sha256": "38305a54f80c92dbb2e587c83ee1959ed38e3c081072eef36b85ff1e34d16796",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v3\\passes\\product-low-gpu-three-r0\\attempt-1\\record.json",
+        "bytes": 20644,
+        "sha256": "38305a54f80c92dbb2e587c83ee1959ed38e3c081072eef36b85ff1e34d16796"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v3/passes/product-low-presented-mtek-r0/attempt-1/native.png",
+      "bytes": 25671,
+      "sha256": "28a7936d6dc0d8ed99e88074aa88a719ae3d809c56b8876b9eaa340e4aa00ef1",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v3\\passes\\product-low-presented-mtek-r0\\attempt-1\\native.png",
+        "bytes": 25671,
+        "sha256": "28a7936d6dc0d8ed99e88074aa88a719ae3d809c56b8876b9eaa340e4aa00ef1"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v3/passes/product-low-presented-mtek-r0/attempt-1/offscreen.png",
+      "bytes": 32949,
+      "sha256": "a4fffb17a7f394747fa617b7334dfa2ce7269fdfb594f1ee864256559a76bd1c",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v3\\passes\\product-low-presented-mtek-r0\\attempt-1\\offscreen.png",
+        "bytes": 32949,
+        "sha256": "a4fffb17a7f394747fa617b7334dfa2ce7269fdfb594f1ee864256559a76bd1c"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v3/passes/product-low-presented-mtek-r0/attempt-1/presentmon-process.json",
+      "bytes": 4926,
+      "sha256": "c4757fd6a4b2013375c0868211290a0d9c2bff750092fe544017c4097c5489fc",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v3\\passes\\product-low-presented-mtek-r0\\attempt-1\\presentmon-process.json",
+        "bytes": 4955,
+        "sha256": "b791e2ea7c52d8e5bd92c8ed4a84412e94e6f6782bae92980c86a91341dbfa66"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v3/passes/product-low-presented-mtek-r0/attempt-1/presentmon.csv",
+      "bytes": 2332,
+      "sha256": "598cef124acaa513819f5d4f0f3edf49b2aca10427911d70895ca47a03d7bde4",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v3\\passes\\product-low-presented-mtek-r0\\attempt-1\\presentmon.csv",
+        "bytes": 2332,
+        "sha256": "598cef124acaa513819f5d4f0f3edf49b2aca10427911d70895ca47a03d7bde4"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v3/passes/product-low-presented-mtek-r0/attempt-1/record.json",
+      "bytes": 30136,
+      "sha256": "7493dafa1a8d598e0d32b527e68896cd8ae8fe171eb2f7b424f0ccb72e1fc36f",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v3\\passes\\product-low-presented-mtek-r0\\attempt-1\\record.json",
+        "bytes": 30165,
+        "sha256": "50b2bcd92947b0a7cca7acfc4f929723001bcd272030ca875f3d46a9c4f6ccf1"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v3/passes/product-low-presented-three-r0/attempt-1/native.png",
+      "bytes": 24507,
+      "sha256": "4005bae67afc8c4539e64c1611cf455716b296e6bff1269c5cd45161ccdd5fcf",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v3\\passes\\product-low-presented-three-r0\\attempt-1\\native.png",
+        "bytes": 24507,
+        "sha256": "4005bae67afc8c4539e64c1611cf455716b296e6bff1269c5cd45161ccdd5fcf"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v3/passes/product-low-presented-three-r0/attempt-1/offscreen.png",
+      "bytes": 32572,
+      "sha256": "9505a57e30e57ceea10726bb0e98f0491be22e75ce1cd6321f627d9eaf13e5bb",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v3\\passes\\product-low-presented-three-r0\\attempt-1\\offscreen.png",
+        "bytes": 32572,
+        "sha256": "9505a57e30e57ceea10726bb0e98f0491be22e75ce1cd6321f627d9eaf13e5bb"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v3/passes/product-low-presented-three-r0/attempt-1/presentmon-process.json",
+      "bytes": 4927,
+      "sha256": "b23f7505ac20c18408c2b4c6f91bb4a3832818c4750003e5f458ed382e7d5e88",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v3\\passes\\product-low-presented-three-r0\\attempt-1\\presentmon-process.json",
+        "bytes": 4956,
+        "sha256": "bb9715e8edaf78fbcdbff7363ff393c815ea256b7459e875b1946443a3f749f9"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v3/passes/product-low-presented-three-r0/attempt-1/presentmon.csv",
+      "bytes": 2307,
+      "sha256": "ab6fed75917d3ccac35e3ce1a79b8999aee6e2da3a4c30c9a68976ed75ecd433",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v3\\passes\\product-low-presented-three-r0\\attempt-1\\presentmon.csv",
+        "bytes": 2307,
+        "sha256": "ab6fed75917d3ccac35e3ce1a79b8999aee6e2da3a4c30c9a68976ed75ecd433"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v3/passes/product-low-presented-three-r0/attempt-1/record.json",
+      "bytes": 28619,
+      "sha256": "4532904df3eebe2b23c5a209f7c68e9bf771eaea4ef858841eed27afc135af3b",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v3\\passes\\product-low-presented-three-r0\\attempt-1\\record.json",
+        "bytes": 28648,
+        "sha256": "84d64a73977cda86631707a18e9fccfca25c62f3820cee6f28b4450f8d54b91e"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v3/report.json",
+      "bytes": 18076,
+      "sha256": "ee4c090dd8a708b200b9706959a25b27561ff72c9b9e220b925b266adf7c1cd5",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v3\\report.json",
+        "bytes": 18221,
+        "sha256": "770b82e25b1b13f2681e0999a8083c4da44ca8042821c38277939771e8c1f529"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v3/run.json.gz",
+      "bytes": 16381,
+      "sha256": "78c210b9b18cb321d0a2e84632c1fddb7fb1ba75ee9c1a49c5a64c96f05900af",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v3\\run.json",
+        "bytes": 84410,
+        "sha256": "27b608cdbb6d4d9760cfa5905268ea332c9c798117d2fe948892e284cc3a88b2"
+      },
+      "sanitized": true,
+      "compressed": true
+    },
+    {
+      "path": "logs/material-measurement-preflight-v3.log",
+      "bytes": 624,
+      "sha256": "2ae3987935c57f84d749be74e8992bbba171d51be1b5ff86c83ccd1d8994562d",
+      "original": {
+        "path": ".out/material-measurement-preflight-v3.log",
+        "bytes": 624,
+        "sha256": "2ae3987935c57f84d749be74e8992bbba171d51be1b5ff86c83ccd1d8994562d"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v4/attempts.jsonl",
+      "bytes": 2484,
+      "sha256": "1a0b255d7d3365afb139c7059d2e99c078db427dc4396848fa353471e97eb1bf",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v4\\attempts.jsonl",
+        "bytes": 2484,
+        "sha256": "1a0b255d7d3365afb139c7059d2e99c078db427dc4396848fa353471e97eb1bf"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v4/passes/product-low-counts-mtek-r0/attempt-1/record.json",
+      "bytes": 33418,
+      "sha256": "c531f79c2106bb4f606b601baf070a467b265f81d7231b21df2d2495ec3d9686",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v4\\passes\\product-low-counts-mtek-r0\\attempt-1\\record.json",
+        "bytes": 33418,
+        "sha256": "c531f79c2106bb4f606b601baf070a467b265f81d7231b21df2d2495ec3d9686"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v4/passes/product-low-counts-three-r0/attempt-1/record.json",
+      "bytes": 35136,
+      "sha256": "c25149d566447c8c96a6b7eafc2b5fe7b8a22cf58addb77e07135a982e4792e0",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v4\\passes\\product-low-counts-three-r0\\attempt-1\\record.json",
+        "bytes": 35136,
+        "sha256": "c25149d566447c8c96a6b7eafc2b5fe7b8a22cf58addb77e07135a982e4792e0"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v4/passes/product-low-cpu-mtek-r0/attempt-1/record.json",
+      "bytes": 27524,
+      "sha256": "de5e248bcaa80c77df7e292fa5ce03b1dc873b539df09a6faa2e053ea8885d49",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v4\\passes\\product-low-cpu-mtek-r0\\attempt-1\\record.json",
+        "bytes": 27524,
+        "sha256": "de5e248bcaa80c77df7e292fa5ce03b1dc873b539df09a6faa2e053ea8885d49"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v4/passes/product-low-cpu-three-r0/attempt-1/record.json",
+      "bytes": 26332,
+      "sha256": "2c83b1b7c2124de42ca21d8e8dadfe5857826f33252072f5d79a2ca4a4822bda",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v4\\passes\\product-low-cpu-three-r0\\attempt-1\\record.json",
+        "bytes": 26332,
+        "sha256": "2c83b1b7c2124de42ca21d8e8dadfe5857826f33252072f5d79a2ca4a4822bda"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v4/passes/product-low-gpu-mtek-r0/attempt-1/record.json",
+      "bytes": 29911,
+      "sha256": "8a3dfbaff3a2d8e4b9970de1f80e3e5094fc7a4094cd804ebbfddcb14f9c784d",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v4\\passes\\product-low-gpu-mtek-r0\\attempt-1\\record.json",
+        "bytes": 29911,
+        "sha256": "8a3dfbaff3a2d8e4b9970de1f80e3e5094fc7a4094cd804ebbfddcb14f9c784d"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v4/passes/product-low-gpu-three-r0/attempt-1/record.json",
+      "bytes": 26647,
+      "sha256": "be54ac3c5f22eaa7d00a43dc2e365a2158ab063fdc7ad7d53d7d13ac6bc6c101",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v4\\passes\\product-low-gpu-three-r0\\attempt-1\\record.json",
+        "bytes": 26647,
+        "sha256": "be54ac3c5f22eaa7d00a43dc2e365a2158ab063fdc7ad7d53d7d13ac6bc6c101"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v4/passes/product-low-presented-mtek-r0/attempt-1/record.json",
+      "bytes": 38232,
+      "sha256": "cbae4527f89d5c0d3cbda90d6bb077884d6e9f9d6b4d879a503e62215851b914",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v4\\passes\\product-low-presented-mtek-r0\\attempt-1\\record.json",
+        "bytes": 38232,
+        "sha256": "cbae4527f89d5c0d3cbda90d6bb077884d6e9f9d6b4d879a503e62215851b914"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v4/passes/product-low-presented-three-r0/attempt-1/record.json",
+      "bytes": 32419,
+      "sha256": "9e31d2c4e679c53f7a068a6e6295cf5d54e5c5fabfc90dba7ced5862452cfe14",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v4\\passes\\product-low-presented-three-r0\\attempt-1\\record.json",
+        "bytes": 32419,
+        "sha256": "9e31d2c4e679c53f7a068a6e6295cf5d54e5c5fabfc90dba7ced5862452cfe14"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v4/report.json",
+      "bytes": 14674,
+      "sha256": "bed03e3b3dec7b3190d28b2d588f469b5fffc2a80b981edc08a3bdf31a5ba2fd",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v4\\report.json",
+        "bytes": 14819,
+        "sha256": "4f340aea658de3d802d02d28350f88430cce321f3f2fe43897322786db22b9e5"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "preflights/v4/run.json.gz",
+      "bytes": 15908,
+      "sha256": "b50a2143c93b77cadd544cb440caaaebc203681c2015255da63b9e99f6e3f4cf",
+      "original": {
+        "path": ".out\\material-measurement-preflight-v4\\run.json",
+        "bytes": 81376,
+        "sha256": "caf3f218aea6069ed8f415aea8150756284d0e4fe9ce8c8b13c2cd0b02839962"
+      },
+      "sanitized": true,
+      "compressed": true
+    },
+    {
+      "path": "logs/material-measurement-preflight-v4.log",
+      "bytes": 2095,
+      "sha256": "a089832bef2cac75c2aac08765adeeb91c5b46752384a1eb1edf6e480452d499",
+      "original": {
+        "path": ".out/material-measurement-preflight-v4.log",
+        "bytes": 2095,
+        "sha256": "a089832bef2cac75c2aac08765adeeb91c5b46752384a1eb1edf6e480452d499"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "correctness/presentmon-material-probe-v2/canvas.png",
+      "bytes": 26543,
+      "sha256": "bd4eb207473f7085b3f2556228eea8965f3dcbdccf89cfea851c720f14c4e944",
+      "original": {
+        "path": ".out\\presentmon-material-probe-v2\\canvas.png",
+        "bytes": 26543,
+        "sha256": "bd4eb207473f7085b3f2556228eea8965f3dcbdccf89cfea851c720f14c4e944"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "correctness/presentmon-material-probe-v2/raf-only/presentmon-process.json",
+      "bytes": 4750,
+      "sha256": "c37977013bee87ce63dd8fc4d3ffbff82b9090dce89e5b5e55ae18ffa4de177f",
+      "original": {
+        "path": ".out\\presentmon-material-probe-v2\\raf-only\\presentmon-process.json",
+        "bytes": 4777,
+        "sha256": "c82a1a6345f30df105ac2378cfd5c8042cc49e06a1f0d108561094db19612db8"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "correctness/presentmon-material-probe-v2/render/presentmon-process.json",
+      "bytes": 4749,
+      "sha256": "ab36ee9d3d3fcf32789f0d3dc61b640ec0b340230ac9b19f9a1649c1d702461d",
+      "original": {
+        "path": ".out\\presentmon-material-probe-v2\\render\\presentmon-process.json",
+        "bytes": 4776,
+        "sha256": "bc47f9c1430a5e03e54b273002cf1b972d1e4e6dd9b8b26a93652a33d07883be"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "correctness/presentmon-material-probe-v2/render/presentmon.csv",
+      "bytes": 17556,
+      "sha256": "3789aedefba71fc9662de5da8fb05f7e7b171188556a466917a94471b22fc511",
+      "original": {
+        "path": ".out\\presentmon-material-probe-v2\\render\\presentmon.csv",
+        "bytes": 17556,
+        "sha256": "3789aedefba71fc9662de5da8fb05f7e7b171188556a466917a94471b22fc511"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "correctness/presentmon-material-probe-v2/result.json.gz",
+      "bytes": 8344,
+      "sha256": "5acf188a8eac5b6ad76d7c2e27749dcb2b1203eceaf2f8b7457848164892c018",
+      "original": {
+        "path": ".out\\presentmon-material-probe-v2\\result.json",
+        "bytes": 54879,
+        "sha256": "f9c41df01704a077f29af650bddf7d59908cbb72cfe61e96345a89bad4424a59"
+      },
+      "sanitized": true,
+      "compressed": true
+    },
+    {
+      "path": "correctness/material-native-checkpoint-proof/result.json",
+      "bytes": 4061,
+      "sha256": "c41c467fdc41bd4f6858e674f550cd5fc40e0548b9af5d00b511374820d16bd7",
+      "original": {
+        "path": ".out\\material-native-checkpoint-proof\\result.json",
+        "bytes": 4061,
+        "sha256": "c41c467fdc41bd4f6858e674f550cd5fc40e0548b9af5d00b511374820d16bd7"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "correctness/material-native-checkpoint-proof/three-native.png",
+      "bytes": 24507,
+      "sha256": "4005bae67afc8c4539e64c1611cf455716b296e6bff1269c5cd45161ccdd5fcf",
+      "original": {
+        "path": ".out\\material-native-checkpoint-proof\\three-native.png",
+        "bytes": 24507,
+        "sha256": "4005bae67afc8c4539e64c1611cf455716b296e6bff1269c5cd45161ccdd5fcf"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "correctness/material-native-checkpoint-proof/three-offscreen.png",
+      "bytes": 28698,
+      "sha256": "4996a7ffea0d4ecb807ded7e57e8650ca252e5c6bdb827f168cad7baff25ecba",
+      "original": {
+        "path": ".out\\material-native-checkpoint-proof\\three-offscreen.png",
+        "bytes": 28698,
+        "sha256": "4996a7ffea0d4ecb807ded7e57e8650ca252e5c6bdb827f168cad7baff25ecba"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "correctness/material-native-checkpoint-proof-v2/mtek-native.png",
+      "bytes": 25671,
+      "sha256": "28a7936d6dc0d8ed99e88074aa88a719ae3d809c56b8876b9eaa340e4aa00ef1",
+      "original": {
+        "path": ".out\\material-native-checkpoint-proof-v2\\mtek-native.png",
+        "bytes": 25671,
+        "sha256": "28a7936d6dc0d8ed99e88074aa88a719ae3d809c56b8876b9eaa340e4aa00ef1"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "correctness/material-native-checkpoint-proof-v2/mtek-offscreen.png",
+      "bytes": 32949,
+      "sha256": "a4fffb17a7f394747fa617b7334dfa2ce7269fdfb594f1ee864256559a76bd1c",
+      "original": {
+        "path": ".out\\material-native-checkpoint-proof-v2\\mtek-offscreen.png",
+        "bytes": 32949,
+        "sha256": "a4fffb17a7f394747fa617b7334dfa2ce7269fdfb594f1ee864256559a76bd1c"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "correctness/material-native-checkpoint-proof-v2/raf-only/presentmon-process.json",
+      "bytes": 4887,
+      "sha256": "16958c5359c04acebffdf012c2d2d32348c79259dd1f908a2f090e490c408f94",
+      "original": {
+        "path": ".out\\material-native-checkpoint-proof-v2\\raf-only\\presentmon-process.json",
+        "bytes": 4914,
+        "sha256": "8e61c029fc70e8041d716f169b045743a1910f0e63e1d8f5572cefacc0717bae"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "correctness/material-native-checkpoint-proof-v2/result.json.gz",
+      "bytes": 14589,
+      "sha256": "4b3eccb646ebd078a5f4d00a2850f945dcedec2049923fb15a0463a2880dd371",
+      "original": {
+        "path": ".out\\material-native-checkpoint-proof-v2\\result.json",
+        "bytes": 107615,
+        "sha256": "f574617756898d24f2a557814abdef3dd0328081c7545bd5c9df6bb54e945eec"
+      },
+      "sanitized": true,
+      "compressed": true
+    },
+    {
+      "path": "correctness/material-native-checkpoint-proof-v2/three-native.png",
+      "bytes": 24507,
+      "sha256": "4005bae67afc8c4539e64c1611cf455716b296e6bff1269c5cd45161ccdd5fcf",
+      "original": {
+        "path": ".out\\material-native-checkpoint-proof-v2\\three-native.png",
+        "bytes": 24507,
+        "sha256": "4005bae67afc8c4539e64c1611cf455716b296e6bff1269c5cd45161ccdd5fcf"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "correctness/material-native-checkpoint-proof-v2/three-offscreen.png",
+      "bytes": 30613,
+      "sha256": "68ae7dc1d50024cd2e45d778a9db5ba062b14d60fcb491fabc211acc1ab0c2c5",
+      "original": {
+        "path": ".out\\material-native-checkpoint-proof-v2\\three-offscreen.png",
+        "bytes": 30613,
+        "sha256": "68ae7dc1d50024cd2e45d778a9db5ba062b14d60fcb491fabc211acc1ab0c2c5"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "logs/material-measurement-unit-final.log",
+      "bytes": 3881,
+      "sha256": "74cde7eee9a6537046b3550f26d7dbb07f9c7572ac6228963d20f69862645aee",
+      "original": {
+        "path": ".out/material-measurement-unit-final.log",
+        "bytes": 3881,
+        "sha256": "74cde7eee9a6537046b3550f26d7dbb07f9c7572ac6228963d20f69862645aee"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "logs/material-measurement-lint-final.log",
+      "bytes": 69,
+      "sha256": "527206ec1da9394d690e22123ba1bcc881c7133e7e4c25bd3be9d39484123c8b",
+      "original": {
+        "path": ".out/material-measurement-lint-final.log",
+        "bytes": 69,
+        "sha256": "527206ec1da9394d690e22123ba1bcc881c7133e7e4c25bd3be9d39484123c8b"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "logs/material-measurement-counter-final.log",
+      "bytes": 298,
+      "sha256": "d6d61e6a2c54dc8046992363d0984947a00dc8da7728861b17c32ff7a0eee019",
+      "original": {
+        "path": ".out/material-measurement-counter-final.log",
+        "bytes": 318,
+        "sha256": "7d9d68c03b4aebe9b04446ff76b6a0d24e271aee0f7d182f36c7756a7b200776"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "logs/material-measurement-types-final.log",
+      "bytes": 87,
+      "sha256": "d50217b3f4c35a392ece95be0f53b2d2706e16a9e444d6fea9e5c3b5c1083afd",
+      "original": {
+        "path": ".out/material-measurement-types-final.log",
+        "bytes": 87,
+        "sha256": "d50217b3f4c35a392ece95be0f53b2d2706e16a9e444d6fea9e5c3b5c1083afd"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "logs/checkpoint-native-proof.log",
+      "bytes": 264,
+      "sha256": "f48238c86da2206d7365fa49fd82f7e113750c9c805fae0df249f97e6c38f7d8",
+      "original": {
+        "path": ".out/checkpoint-native-proof.log",
+        "bytes": 264,
+        "sha256": "f48238c86da2206d7365fa49fd82f7e113750c9c805fae0df249f97e6c38f7d8"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "logs/checkpoint-native-proof-v2.log",
+      "bytes": 303,
+      "sha256": "d8bbdc95151419dc5b0d5d151520da16404c6c5f1fdf1219ed73c3acb96aab8e",
+      "original": {
+        "path": ".out/checkpoint-native-proof-v2.log",
+        "bytes": 303,
+        "sha256": "d8bbdc95151419dc5b0d5d151520da16404c6c5f1fdf1219ed73c3acb96aab8e"
+      },
+      "sanitized": true,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/adapters.mjs",
+      "bytes": 275,
+      "sha256": "72a92386c07b8c7518aa091bfba2b03c0a75d718038b55957e33ef475c3de285",
+      "original": {
+        "path": "benchmarks/material-lighting/adapters.mjs",
+        "bytes": 275,
+        "sha256": "72a92386c07b8c7518aa091bfba2b03c0a75d718038b55957e33ef475c3de285"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/assets.mjs",
+      "bytes": 4165,
+      "sha256": "6e4d433ccb6e02df56b35aa6ba11a3c107094f9d275743061f5160d55a4ed110",
+      "original": {
+        "path": "benchmarks/material-lighting/assets.mjs",
+        "bytes": 4165,
+        "sha256": "6e4d433ccb6e02df56b35aa6ba11a3c107094f9d275743061f5160d55a4ed110"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/diagnose-product-mips.mjs",
+      "bytes": 4135,
+      "sha256": "b8a9dae160b7a5e9c829919ff62e871697b9892ddcdf1fdf836d145877614b90",
+      "original": {
+        "path": "benchmarks/material-lighting/diagnose-product-mips.mjs",
+        "bytes": 4135,
+        "sha256": "b8a9dae160b7a5e9c829919ff62e871697b9892ddcdf1fdf836d145877614b90"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/eslint.config.mjs",
+      "bytes": 649,
+      "sha256": "ca1f303f89e8b5743eed5e024ac753a7e78d258db102f4a549768bc3bde94632",
+      "original": {
+        "path": "benchmarks/material-lighting/eslint.config.mjs",
+        "bytes": 649,
+        "sha256": "ca1f303f89e8b5743eed5e024ac753a7e78d258db102f4a549768bc3bde94632"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/gpu-timer.mjs",
+      "bytes": 4006,
+      "sha256": "333984bf4f8f8908d68f550de73bbfda14fbe6ebd06cec9c3af5097ed86f94a8",
+      "original": {
+        "path": "benchmarks/material-lighting/gpu-timer.mjs",
+        "bytes": 4006,
+        "sha256": "333984bf4f8f8908d68f550de73bbfda14fbe6ebd06cec9c3af5097ed86f94a8"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/host-observation.mjs",
+      "bytes": 2001,
+      "sha256": "b530fdd4a2bf9db65f7f07f20a84c7a2464e38fc9c0eb9f5e3a6126636010fb1",
+      "original": {
+        "path": "benchmarks/material-lighting/host-observation.mjs",
+        "bytes": 2001,
+        "sha256": "b530fdd4a2bf9db65f7f07f20a84c7a2464e38fc9c0eb9f5e3a6126636010fb1"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/launch.mjs",
+      "bytes": 401,
+      "sha256": "e51027c58286ee1f42d997f4ff03c6881b5ed748c6a3091fd6b6d424f2cdef89",
+      "original": {
+        "path": "benchmarks/material-lighting/launch.mjs",
+        "bytes": 401,
+        "sha256": "e51027c58286ee1f42d997f4ff03c6881b5ed748c6a3091fd6b6d424f2cdef89"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/measure.mjs",
+      "bytes": 16123,
+      "sha256": "c52bafd542b106c6a48935791cf0ee5eff215a944521da5d8aa7f371f98e742d",
+      "original": {
+        "path": "benchmarks/material-lighting/measure.mjs",
+        "bytes": 16123,
+        "sha256": "c52bafd542b106c6a48935791cf0ee5eff215a944521da5d8aa7f371f98e742d"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/measurement-data.mjs",
+      "bytes": 13438,
+      "sha256": "56743c5c867f0cf899c68f4a661748d4150179d2cd81bf60eb4abbe42dc1f53f",
+      "original": {
+        "path": "benchmarks/material-lighting/measurement-data.mjs",
+        "bytes": 13438,
+        "sha256": "56743c5c867f0cf899c68f4a661748d4150179d2cd81bf60eb4abbe42dc1f53f"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/measurement.test.mjs",
+      "bytes": 6771,
+      "sha256": "3e7ae0d1aed4a0adcd34c837b7b0c617d525274fc81cef97122ef8c7504af76a",
+      "original": {
+        "path": "benchmarks/material-lighting/measurement.test.mjs",
+        "bytes": 6771,
+        "sha256": "3e7ae0d1aed4a0adcd34c837b7b0c617d525274fc81cef97122ef8c7504af76a"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/metrics.mjs",
+      "bytes": 4604,
+      "sha256": "5eb278917e58084aa78235c06e5bdcb492e954ca8c192835f23deb622ab4321a",
+      "original": {
+        "path": "benchmarks/material-lighting/metrics.mjs",
+        "bytes": 4604,
+        "sha256": "5eb278917e58084aa78235c06e5bdcb492e954ca8c192835f23deb622ab4321a"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/mtek.mjs",
+      "bytes": 1388,
+      "sha256": "91514245669c8a60dbe98d89fa6b20554b289eec6a3b015721ee308a2cf158f6",
+      "original": {
+        "path": "benchmarks/material-lighting/mtek.mjs",
+        "bytes": 1388,
+        "sha256": "91514245669c8a60dbe98d89fa6b20554b289eec6a3b015721ee308a2cf158f6"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/package.json",
+      "bytes": 629,
+      "sha256": "a10491206e6fb3287004576991f7739bfc306a032c04102aff1ee6489c9f1908",
+      "original": {
+        "path": "benchmarks/material-lighting/package.json",
+        "bytes": 629,
+        "sha256": "a10491206e6fb3287004576991f7739bfc306a032c04102aff1ee6489c9f1908"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/page.mjs",
+      "bytes": 6835,
+      "sha256": "2da70a12d185407bf2c290e4a011bb98d899f1a39272decfb9322a7e010a4f09",
+      "original": {
+        "path": "benchmarks/material-lighting/page.mjs",
+        "bytes": 6835,
+        "sha256": "2da70a12d185407bf2c290e4a011bb98d899f1a39272decfb9322a7e010a4f09"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/particles.mjs",
+      "bytes": 1323,
+      "sha256": "b7003c8cb326c1b07aca2d0d974ef56ea71033159acbe3f9c3ef8a2c6edb9c3e",
+      "original": {
+        "path": "benchmarks/material-lighting/particles.mjs",
+        "bytes": 1323,
+        "sha256": "b7003c8cb326c1b07aca2d0d974ef56ea71033159acbe3f9c3ef8a2c6edb9c3e"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/prepare.mjs",
+      "bytes": 4864,
+      "sha256": "139c9fe45c627bd8d0dddfcef9332cf4f957ae7755c8c5235c1ee36f24c49a3d",
+      "original": {
+        "path": "benchmarks/material-lighting/prepare.mjs",
+        "bytes": 4864,
+        "sha256": "139c9fe45c627bd8d0dddfcef9332cf4f957ae7755c8c5235c1ee36f24c49a3d"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/presentmon.json",
+      "bytes": 624,
+      "sha256": "96fbf4721f4159f14fd007a0b704fa0b12a6a3b87fbce372bcd0c6845d92f68a",
+      "original": {
+        "path": "benchmarks/material-lighting/presentmon.json",
+        "bytes": 624,
+        "sha256": "96fbf4721f4159f14fd007a0b704fa0b12a6a3b87fbce372bcd0c6845d92f68a"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/presentmon.mjs",
+      "bytes": 4163,
+      "sha256": "61819267d5d36a39463bb9317396297147be397fe2b97dc6fe9ae0b9d28230d0",
+      "original": {
+        "path": "benchmarks/material-lighting/presentmon.mjs",
+        "bytes": 4163,
+        "sha256": "61819267d5d36a39463bb9317396297147be397fe2b97dc6fe9ae0b9d28230d0"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/probe-gpu.mjs",
+      "bytes": 2916,
+      "sha256": "02db986e73c7ce0af1e801ea743ae3ffb00c05640310aec9fb146ea04a7fabf2",
+      "original": {
+        "path": "benchmarks/material-lighting/probe-gpu.mjs",
+        "bytes": 2916,
+        "sha256": "02db986e73c7ce0af1e801ea743ae3ffb00c05640310aec9fb146ea04a7fabf2"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/product-asset.mjs",
+      "bytes": 4084,
+      "sha256": "630660567f2472a43ffee3100400c0a0ea78eebe398e21b8d70cddf42c03fed2",
+      "original": {
+        "path": "benchmarks/material-lighting/product-asset.mjs",
+        "bytes": 4084,
+        "sha256": "630660567f2472a43ffee3100400c0a0ea78eebe398e21b8d70cddf42c03fed2"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/protocol.json",
+      "bytes": 6548,
+      "sha256": "72ba079e8ebe2b5234d40d2e1392e3f45f53133ad2f45609576f365fe04fa8bc",
+      "original": {
+        "path": "benchmarks/material-lighting/protocol.json",
+        "bytes": 6548,
+        "sha256": "72ba079e8ebe2b5234d40d2e1392e3f45f53133ad2f45609576f365fe04fa8bc"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/README.md",
+      "bytes": 11665,
+      "sha256": "8e118d64c4c2ced48b4fbcb72613868baf0c64ce767ddc53dbd3e3ba1fb5e3de",
+      "original": {
+        "path": "benchmarks/material-lighting/README.md",
+        "bytes": 11665,
+        "sha256": "8e118d64c4c2ced48b4fbcb72613868baf0c64ce767ddc53dbd3e3ba1fb5e3de"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/report.mjs",
+      "bytes": 10327,
+      "sha256": "b27d49f0fca5731a8927dad7c7545a35c18402102a4feda104b5320c6734454c",
+      "original": {
+        "path": "benchmarks/material-lighting/report.mjs",
+        "bytes": 10327,
+        "sha256": "b27d49f0fca5731a8927dad7c7545a35c18402102a4feda104b5320c6734454c"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/report.test.mjs",
+      "bytes": 2628,
+      "sha256": "47380ae3a4d79546912a3a1b643de5370666d603534201057bf76b23db206ee0",
+      "original": {
+        "path": "benchmarks/material-lighting/report.test.mjs",
+        "bytes": 2628,
+        "sha256": "47380ae3a4d79546912a3a1b643de5370666d603534201057bf76b23db206ee0"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/run-files.mjs",
+      "bytes": 4547,
+      "sha256": "285fb5671185237b89629a1167838483c7ece2ad758b93abc74e0126f0ae1b36",
+      "original": {
+        "path": "benchmarks/material-lighting/run-files.mjs",
+        "bytes": 4547,
+        "sha256": "285fb5671185237b89629a1167838483c7ece2ad758b93abc74e0126f0ae1b36"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/scenes.mjs",
+      "bytes": 5862,
+      "sha256": "8bfb3cae905e8c40ebfda24967f1efe9cd9ab1a508b64e81a4481d213d3eef3d",
+      "original": {
+        "path": "benchmarks/material-lighting/scenes.mjs",
+        "bytes": 5862,
+        "sha256": "8bfb3cae905e8c40ebfda24967f1efe9cd9ab1a508b64e81a4481d213d3eef3d"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/server.mjs",
+      "bytes": 1085,
+      "sha256": "3cde02daa35005d36ba160e12a7ec22deaa6bb4ef64f2d8f1edd0eed5eb980b4",
+      "original": {
+        "path": "benchmarks/material-lighting/server.mjs",
+        "bytes": 1085,
+        "sha256": "3cde02daa35005d36ba160e12a7ec22deaa6bb4ef64f2d8f1edd0eed5eb980b4"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/test.mjs",
+      "bytes": 3445,
+      "sha256": "9e14b25b6605ef6198a1c7b54a2a260e727f349f8420a6aa664c127b9efaffc8",
+      "original": {
+        "path": "benchmarks/material-lighting/test.mjs",
+        "bytes": 3445,
+        "sha256": "9e14b25b6605ef6198a1c7b54a2a260e727f349f8420a6aa664c127b9efaffc8"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/three.mjs",
+      "bytes": 10454,
+      "sha256": "941bc1b8200b74c2b16f9953590f95d26aec7671a6e83c4d82c8af24f1ce88a1",
+      "original": {
+        "path": "benchmarks/material-lighting/three.mjs",
+        "bytes": 10454,
+        "sha256": "941bc1b8200b74c2b16f9953590f95d26aec7671a6e83c4d82c8af24f1ce88a1"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/verify.mjs",
+      "bytes": 9201,
+      "sha256": "4484f29c5e5d5f7b8ad9de8c18de181131920b0040262a9ac7a13da979c32706",
+      "original": {
+        "path": "benchmarks/material-lighting/verify.mjs",
+        "bytes": 9201,
+        "sha256": "4484f29c5e5d5f7b8ad9de8c18de181131920b0040262a9ac7a13da979c32706"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/windows-monitor.mjs",
+      "bytes": 4049,
+      "sha256": "7a9e26b7fa85dd0a277a31bacc704214ae82f2859ea1774bfa7491483e73d3a9",
+      "original": {
+        "path": "benchmarks/material-lighting/windows-monitor.mjs",
+        "bytes": 4049,
+        "sha256": "7a9e26b7fa85dd0a277a31bacc704214ae82f2859ea1774bfa7491483e73d3a9"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/windows-monitor.ps1",
+      "bytes": 2046,
+      "sha256": "ff263a6502727509ab2a1b67be0908e5db8afb0644c2cb10e3b5b9a4c227c685",
+      "original": {
+        "path": "benchmarks/material-lighting/windows-monitor.ps1",
+        "bytes": 2046,
+        "sha256": "ff263a6502727509ab2a1b67be0908e5db8afb0644c2cb10e3b5b9a4c227c685"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/runtime/harness/instrument.ts",
+      "bytes": 19824,
+      "sha256": "645271d4ae99014d299d7a8ad51c7a7f260b1a02c2f1626982a3483140ecbe7e",
+      "original": {
+        "path": "benchmarks/runtime/harness/instrument.ts",
+        "bytes": 19824,
+        "sha256": "645271d4ae99014d299d7a8ad51c7a7f260b1a02c2f1626982a3483140ecbe7e"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/benchmarks/runtime/harness/instrument.test.ts",
+      "bytes": 11299,
+      "sha256": "503c2fc11af083d372bde28c06cc110dedfe2d8fd216e1d5cb2266d0c282f31c",
+      "original": {
+        "path": "benchmarks/runtime/harness/instrument.test.ts",
+        "bytes": 11299,
+        "sha256": "503c2fc11af083d372bde28c06cc110dedfe2d8fd216e1d5cb2266d0c282f31c"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/spec/decisions/0213-qualified-material-measurements.md",
+      "bytes": 3435,
+      "sha256": "2165786ecfa063cf3f7b738c884f56a938bc73a808094af9c73bb405907ade83",
+      "original": {
+        "path": "spec/decisions/0213-qualified-material-measurements.md",
+        "bytes": 3435,
+        "sha256": "2165786ecfa063cf3f7b738c884f56a938bc73a808094af9c73bb405907ade83"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/.out/checkpoint-native-proof.mjs",
+      "bytes": 5229,
+      "sha256": "653125f5f678291b2c8e94c2ab97db3ff73927da3ec5b97c12aeba51aaeeba0d",
+      "original": {
+        "path": ".out/checkpoint-native-proof.mjs",
+        "bytes": 5229,
+        "sha256": "653125f5f678291b2c8e94c2ab97db3ff73927da3ec5b97c12aeba51aaeeba0d"
+      },
+      "sanitized": false,
+      "compressed": false
+    },
+    {
+      "path": "sources/.out/archive-material-measurement-checkpoint.mjs",
+      "bytes": 4657,
+      "sha256": "f839b450ce22129365f6cb7ca817699a75c43821b300413b824004a583d41719",
+      "original": {
+        "path": ".out/archive-material-measurement-checkpoint.mjs",
+        "bytes": 4657,
+        "sha256": "f839b450ce22129365f6cb7ca817699a75c43821b300413b824004a583d41719"
+      },
+      "sanitized": false,
+      "compressed": false
+    }
+  ]
+}

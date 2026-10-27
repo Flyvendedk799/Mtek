@@ -1,0 +1,6 @@
+{
+  "failures": [
+    "MTEK-E8051: Shadow light 'Floor' must uniquely name a directional-light entity in the scene; use its full symbol when names are repeated.",
+    "Environment components must be finite, nonnegative and at most 65504 (RGBA16F range)"
+  ]
+}

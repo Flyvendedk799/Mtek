@@ -1,0 +1,126 @@
+{
+  "format": "mtek-animation-optimization-validation/1",
+  "recordedAt": "2026-10-27T00:26:26.239Z",
+  "baseCommit": "986040bd9c9e284a06231121eb64f5262b81b620",
+  "scope": "Local measured animation optimization, rendered inspector integration and compute composite GPU acceptance; full roadmap remains open",
+  "authorization": "User re-enabled CPU/GPU tests and animation optimization including during other work",
+  "checks": [
+    {
+      "command": "npm run test:unit -w @mtek/runtime-web -- --maxWorkers=1",
+      "status": "passed",
+      "tests": 1652,
+      "files": 107
+    },
+    {
+      "command": "npm run test:unit -w @mtek/browser-tests -- --maxWorkers=1",
+      "status": "passed",
+      "tests": 314,
+      "files": 29
+    },
+    {
+      "command": "npx tsc -p packages/runtime-web/tsconfig.json --noEmit; npx tsc -p tests/browser/tsconfig.json --noEmit",
+      "status": "passed"
+    },
+    {
+      "command": "npm run lint -w @mtek/runtime-web; npm run lint -w @mtek/browser-tests",
+      "status": "passed"
+    },
+    {
+      "command": "cargo fmt --check; cargo test -p mtek-compiler --locked -j 2 --test compute_lowering -- --test-threads=2",
+      "status": "passed",
+      "tests": 11,
+      "referenceShaders": 4
+    },
+    {
+      "command": "cargo clippy -p mtek-compiler --test compute_lowering --locked -j 2 -- -D warnings",
+      "status": "passed"
+    },
+    {
+      "command": "npm run test -w @mtek/browser-tests -- specs/animation specs/m4/scene-lighting.spec.ts --project=<hardware|software>",
+      "status": "passed",
+      "hardware": 35,
+      "software": 35,
+      "notRun": 0,
+      "initialFailure": "Retained missing inspector module in browser fixture; corrected to match dev.mjs"
+    },
+    {
+      "command": "npm run test -w @mtek/browser-tests -- --config=compute.config.ts --project=<hardware|software>",
+      "status": "passed",
+      "hardware": 2,
+      "software": 2,
+      "numericalCasesPerBackend": 13,
+      "kernelsPerBackend": 8,
+      "record": "../shader-authoring/compute-gpu-2026-10-27/summary.json"
+    },
+    {
+      "command": "node benchmarks/runtime/animation/run.ts --out=<baseline/run-01|optimized/run-01>",
+      "status": "passed",
+      "acceptedPassesPerRun": 210,
+      "reportsRegenerate": true,
+      "definitionHash": "0897d7e5d5e7aa19ccf6cd49faf640e4001762b10faa9baa24e2db23590d0c6a",
+      "noisyAttempts": "preserved and retried"
+    },
+    {
+      "command": "node evidence/platform-step/animation-optimization-2026-10-27/profile-pose.mjs",
+      "status": "passed",
+      "framesPerModel": 1800,
+      "actors": 50,
+      "exactPosePaletteChecks": true,
+      "scope": "supplemental Node pose-only diagnostic"
+    },
+    {
+      "command": "node scripts/game-budgets.mjs size --mtek target/debug/mtek.exe --json <package-budgets.json>",
+      "status": "passed",
+      "budgets": 11,
+      "tightestZipHeadroomBytes": 90
+    },
+    {
+      "command": "node scripts/prebuilt-runtime.mjs --check --against-dist; node benchmarks/runtime/animation/freeze.ts; node evidence/platform-step/animation-optimization-2026-10-27/compare.mjs --check; git diff --check",
+      "status": "passed"
+    }
+  ],
+  "limitations": [
+    "Whole-frame CPU changes are mixed; Fox 50-actor p95 regresses while unchanged Three.js controls also slow; no browser whole-frame CPU reduction is established",
+    "Logical GPU buffer bytes are not physical VRAM; GPU pass sums exclude transfers/queue gaps/presentation",
+    "One physical Radeon desktop plus same-host SwiftShader; wider hardware and complete roadmap remain open",
+    "Public source compute still emits E4901 pending shadow references and capability/release alignment"
+  ],
+  "files": {
+    "baseline/run-01/run.json": "7097c97e1b7a5da4939a5e15a81298d95e395263d921b2808c9f8bcc0ecfe141",
+    "baseline/run-01/report.md": "0192e57254e28570532f65f3264b61e1abf5b903fcf49be5855663030133c144",
+    "baseline/run-01/summary.json": "bc8418bb9f5540b160ebfb2d420fdaa5948ff7c343560ee187d3652fff1dd44b",
+    "optimized/run-01/run.json": "f2aacd68330f6ca65d3b10ca79ccafde02bc60236463adaaa7785a0d76d89ba1",
+    "optimized/run-01/report.md": "8910c82841561b5d67ffb3ddbd29bb901694038fd52e6b2714726b54ea18d0b1",
+    "optimized/run-01/summary.json": "174aa37b338ea19892046a2de106fc67e6a9bb921e79cc98c450ad74e0d3eeee",
+    "baseline/sources.json": "97bcdfecf229a7ad7890f58ca568ffd964dbdc81dc2a2d20e9ac4e741e1ea4a4",
+    "optimized/sources.json": "ce1ef2a3769059ac1ea772fd301e1056219c338dbfc439c1992666a09c5255cf",
+    "baseline/PROVENANCE.json": "b3327fd108ed2ea44b421f06727f838ab6655f0d1269d0fd9dafd7f202e16a1a",
+    "optimized/PROVENANCE.json": "e0d3b36947960d25f8cab6ca1766484631e38fe831f27f9b4021d5cebf606b49",
+    "comparison.json": "54cdae5a5f7b54712a691df68c073014b5ac16379fa7adece582028bceadbb5d",
+    "comparison.md": "fdcd7c8c040ea78180a24f8b8f5caa284aaca852897636de6851598720d06096",
+    "pose-only.json": "7037da295266483bfdd37f8072cb4ee90207c23cc8937d6d9c5a2b6c9fed270e",
+    "compare.mjs": "3cdf1021ec548dbc725745ad18bb344dedfca97d0e05da8b9d89e8aae92a1db1",
+    "profile-pose.mjs": "c40961136d533ab51d529c4ce6e74251548de4307f7b214f6500cddd6d0e3f6c",
+    "package-budgets.json": "bf595248368c08eebf04e3ee1062634c440978847635e3f5f7e910079be0651d",
+    "correctness/hardware/test-results.json": "7b104a7f25a798b06623d68aebd8cdf277e5a87a2f75d619642e825980960710",
+    "correctness/software/test-results.json": "5aaac24f049cc15823e3ac7249db991629d1c4f0be28a7a07f6329d0ee2ffce1",
+    "correctness/rejected-studio-setup/test-results.json": "179087765375ffa6673510e42f3193fac4517c2411a82419405f760e055f4ea1"
+  },
+  "sources": {
+    "packages/runtime-web/src/render/gpu-skinning.ts": "2bc343a10b0483dc7540c96fbef4f087f9c18030569966e3ff8db9cd5bc4c909",
+    "packages/runtime-web/src/render/meshes.ts": "c0aa567618455a4d08f08696949e852f61d490dbfbb6a762a73bceca7de40ef8",
+    "packages/runtime-web/src/render/renderer.ts": "041ebcfe381071dace3a3d94b7b179109b5b226b2f9e0608068080a36a74a294",
+    "packages/runtime-web/src/scene/skeleton.ts": "64845bce52d0730a424b8ae22b912cbda9383ef6c7a2a431640fbd282926fff8",
+    "packages/runtime-web/src/mesh/skin-bounds.ts": "df8c819094d30150fb1544721a933048c66e209c12fee75dd2e621807c64b267",
+    "tests/browser/support/skinning-probe.ts": "5f636b6eb6ec47ae64c1ef2e25cdd5b637e14181e74d3bdfda67a608267fd8c5",
+    "tests/browser/specs/animation/gpu-skinning.spec.ts": "de06a0bc7d275d47c589afebc10983ad98d757a60aeebc0601edf53839996c39",
+    "tests/browser/support/lighting-studio.ts": "26c238bd396d488e1f27e673d7b3c60555e5fdca0ccddbd5a4546a3e53748bf0",
+    "tests/browser/specs/m4/scene-lighting.spec.ts": "6c9a02387e7b7cfd76388321cfeee4b02a1f1aa45076af0c5b46d192cc40a17e",
+    "tests/browser/support/compute-composite-reference.ts": "a3cc6dae02aa8cccf283b5dbf675ed0a3302fc3082f58abbc234081fe4318ab5",
+    "tests/browser/support/compute-composite-reference.test.ts": "18b553f6031c491c8f3686af6e6c4c8dd110a64f2d1a7f9bf7732b039b978e3e",
+    "tests/browser/pages/compute.ts": "346775f8281d3c2fcc24d972065557cc077f49e2e9bb4b8cf7dc3d349823562d",
+    "tests/browser/support/compute-fixtures.ts": "be5797674302bd0ab7150df783c84cf631eb637e8071a98f24590fe5941d6bbd",
+    "tests/browser/specs/compute/acceptance.spec.ts": "26899d276efd56db0c1b5e7baa261bb845b2fda2b6216ed168bb413f77e7736b",
+    "crates/mtek-compiler/tests/compute_lowering.rs": "7e6aa33f5e7bc61fac9f7c589958fa5a6648f39ce1e01fe4de3dc87e52153fc2"
+  }
+}

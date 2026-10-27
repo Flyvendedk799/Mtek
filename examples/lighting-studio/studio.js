@@ -1,13 +1,14 @@
 import program, { mountMtek } from "./.out/app.js";
 import { decodeRadiance } from "./.out/lighting-api.js";
-import { InspectorController, mountInspectorPanel } from "./.out/inspector.js";
+import { InspectorController, mountInspectorPanel, mountInspectorOverlay } from "./.out/inspector.js";
 
 const canvas = document.querySelector("#canvas"), status = document.querySelector("#status"), diagnostics = document.querySelector("#diagnostics");
 const control = id => document.getElementById(id);
 const value = id => Number(control(id).value);
 let app, paused = false, revision = 0, queue = Promise.resolve(), source;
-let inspector, removeInspectorPanel;
+let inspector, removeInspectorPanel, inspectorOverlay;
 function disposeInspector() {
+  inspectorOverlay?.dispose(); inspectorOverlay = undefined;
   removeInspectorPanel?.(); removeInspectorPanel = undefined;
   inspector?.dispose(); inspector = undefined; control("scene-inspector").hidden = true;
 }
@@ -35,6 +36,7 @@ function rebuild() {
         inspector = new InspectorController({onError: error => {if(current !== revision)return;diagnostics.hidden=false;diagnostics.textContent += `${String(error)}\n`;}});
         control("scene-inspector").hidden = false;
         removeInspectorPanel = mountInspectorPanel(inspector, control("scene-inspector"));
+        if (control("overlays").checked) inspectorOverlay = mountInspectorOverlay(inspector, canvas);
       }
       const next = await mountMtek(canvas, program, {
         extensions: inspector === undefined ? [] : [inspector.extension],
@@ -77,6 +79,10 @@ control("pause").addEventListener("click", () => {
   paused = !paused; if (paused) app?.pause(); else app?.resume(); control("pause").textContent = paused ? "Resume motion" : "Pause motion";
 });
 control("inspector").addEventListener("change", rebuild);
+control("overlays").addEventListener("change", () => {
+  inspectorOverlay?.dispose(); inspectorOverlay = undefined;
+  if (inspector !== undefined && control("overlays").checked) inspectorOverlay = mountInspectorOverlay(inspector, canvas);
+});
 let fileRevision = 0;
 control("hdr").addEventListener("change", async event => {
   const file = event.target.files[0], current = ++fileRevision; if (file === undefined) return;

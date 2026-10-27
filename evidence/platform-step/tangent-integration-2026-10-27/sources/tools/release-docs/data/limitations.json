@@ -1,0 +1,666 @@
+{
+  "description": "The hand-written part of docs/limitations.md (decision 0103): the reason of every unsupported-feature code, the hard gates, and the documented restrictions of v0.1 beyond the x9xx codes. Everything else on that page is derived (the x9xx codes from the diagnostics catalogue, the gates and reserved words from `mtek context`, the reserved codes from tests/semantics/code-coverage-exceptions.json). Each entry is anchored: `source.quote` must occur verbatim in `source.file`, every code must be in the catalogue and every decision must exist, so a statement that the specification no longer makes fails tools/release-docs.",
+  "unsupportedCodes": {
+    "E1901": {
+      "reason": "Bitwise operators are not part of the v0.1 language. They are lexed only so that they are rejected with this code instead of a confusing parse error.",
+      "source": {
+        "file": "spec/language.md",
+        "quote": "Bitwise operators (`& | ^ ~ << >>`) are not part of v0.1"
+      }
+    },
+    "E4901": {
+      "reason": "Compute is not a material member. Standalone bounded compute programs compile to WGSL and execute through app.createCompute (API 1), with upload/dispatch/readback, recovery and bounded position attachments; see spec/compute.md.",
+      "source": {
+        "file": "spec/materials.md",
+        "quote": "Material-local compute stages are rejected"
+      }
+    },
+    "E5901": {
+      "reason": "Retired: `go_to(Scene)` switches the active scene (decision 0141), so no program produces this code. It stays in the catalogue so that the number is not reused.",
+      "source": {
+        "file": "spec/diagnostics.md",
+        "quote": "retired by decision 0141"
+      }
+    },
+    "E5902": {
+      "reason": "Retired: a material colour param with an alpha below 1 makes the draw translucent (decision 0138), so no program produces this code. It stays in the catalogue so that the number is not reused. A transparent glTF material is still rejected with E7015.",
+      "source": {
+        "file": "spec/diagnostics.md",
+        "quote": "retired by decision 0138"
+      }
+    },
+    "E7901": {
+      "reason": "Assets are compile-time dependencies that the compiler opens and validates while it checks the program (decision 0015); v0.1 offers no option to load remote assets.",
+      "source": {
+        "file": "spec/assets.md",
+        "quote": "Remote URLs are not supported in v0.1"
+      }
+    },
+    "E7902": {
+      "reason": "Entities reference the meshes of a glTF asset individually, which keeps every drawn object a named, inspectable entity; instancing a whole node hierarchy is not provided.",
+      "source": {
+        "file": "spec/assets.md",
+        "quote": "Instantiating a whole node hierarchy (`model: CHAIR`) is not in v0.1"
+      }
+    }
+  },
+  "internalErrorCodes": {
+    "E9999": "It is the internal compiler error (a converted panic), the one exception that spec/diagnostics.md section 3 names."
+  },
+  "hardGates": {
+    "non-constant-initial-values": {
+      "code": "E9010",
+      "restriction": "The initial value of an entity or camera field, of a material instance parameter or of a projection field that is not a constant expression is rejected (for example `position: vec3(half(1.0), 0.0, 0.0)`, which calls a user function). A scene `state` initialiser is not affected by this gate (a `state` initialised by a pure user function checks and builds).",
+      "reason": "Specified for v0.1 but not implemented: spec/scenes.md section 11 evaluates such values once at construction, but this build folds every initial value at compile time, so it stops at the first value it cannot fold instead of approximating it. No milestone is planned for it (decision 0086 item 2).",
+      "decisions": [
+        "0039",
+        "0086",
+        "0094"
+      ],
+      "source": {
+        "file": "spec/decisions/0086-diagnostic-wording-and-baseline-frame-order.md",
+        "quote": "the build still folds every initial value"
+      }
+    }
+  },
+  "reservedWords": {
+    "code": "E0013",
+    "reason": "The words are reserved for future use (spec/language.md 2.3); using one as a name is E0013 (\"`while` is reserved for a future version\"). The specification gives no further rationale.",
+    "source": {
+      "file": "spec/language.md",
+      "quote": "Using these as identifiers is error `E0013`"
+    }
+  },
+  "restrictions": [
+    {
+      "id": "lang-loops",
+      "area": "Language",
+      "restriction": "No `loop`. Write `while true { … }` and leave it with `break`. `while` runs at most 1 000 000 iterations.",
+      "reason": "`loop` stays reserved (decision 0144). A `while` that runs past the cap fails the frame with E8080.",
+      "codes": [
+        "E0013",
+        "E8080"
+      ],
+      "decisions": [
+        "0144"
+      ],
+      "source": {
+        "file": "spec/language.md",
+        "quote": "There is no `loop`"
+      }
+    },
+    {
+      "id": "lang-numeric-types",
+      "area": "Language",
+      "restriction": "No integer or boolean vectors, no `mat2` or `mat3` (only `mat4`), no `f16` or `f64`. The names are not defined, so a use is an unknown type.",
+      "reason": "Listed as not in v0.1; the specification records no rationale beyond scope. The diagnostic is the general unknown-type error, not a dedicated unsupported-feature code.",
+      "codes": [
+        "E3003"
+      ],
+      "decisions": [],
+      "source": {
+        "file": "spec/language.md",
+        "quote": "Integer and boolean vectors are not in v0.1"
+      }
+    },
+    {
+      "id": "lang-literal-forms",
+      "area": "Language",
+      "restriction": "No numeric suffixes (`1u`), no hexadecimal, binary or octal literals, no digit separators.",
+      "reason": "The spelling of a literal decides its type and the lexical rules keep it canonical; the other forms are not in v0.1.",
+      "codes": [
+        "E0021"
+      ],
+      "decisions": [],
+      "source": {
+        "file": "spec/language.md",
+        "quote": "no hexadecimal in v0.1"
+      }
+    },
+    {
+      "id": "lang-unicode-identifiers",
+      "area": "Language",
+      "restriction": "Identifiers are ASCII only.",
+      "reason": "Not in v0.1; the diagnostic says so (\"Unicode identifiers are not supported in v0.1\").",
+      "codes": [
+        "E0010"
+      ],
+      "decisions": [],
+      "source": {
+        "file": "spec/language.md",
+        "quote": "ASCII only in v0.1"
+      }
+    },
+    {
+      "id": "lang-closures",
+      "area": "Language",
+      "restriction": "No closures or function values; functions are module items only.",
+      "reason": "Not in v0.1. There is no dedicated diagnostic: the `|` that would start a closure is read as the (unsupported) bitwise operator, E1901, and its parameter is an unknown name, E2003.",
+      "codes": [
+        "E1901",
+        "E2003"
+      ],
+      "decisions": [],
+      "source": {
+        "file": "spec/language.md",
+        "quote": "closures and function values"
+      }
+    },
+    {
+      "id": "lang-generics",
+      "area": "Language",
+      "restriction": "No generics: a function cannot take type parameters (`fn f<T>(x: T)`).",
+      "reason": "Not in v0.1. There is no dedicated diagnostic: the `<` after the name is a syntax error, E1001.",
+      "codes": [
+        "E1001"
+      ],
+      "decisions": [],
+      "source": {
+        "file": "spec/language.md",
+        "quote": "generics"
+      }
+    },
+    {
+      "id": "lang-future-constructs",
+      "area": "Language",
+      "restriction": "No methods or `impl`, no `use`, `mod`, `trait`, `type`, `async` or any other word of the reserved list.",
+      "reason": "Reserved for future versions (E0013).",
+      "codes": [
+        "E0013"
+      ],
+      "decisions": [],
+      "source": {
+        "file": "spec/language.md",
+        "quote": "methods and `impl`;"
+      }
+    },
+    {
+      "id": "lang-enum-limits",
+      "area": "Language",
+      "restriction": "Enum variants carry no data and have no explicit discriminants; an enum does not convert to or from a number, has no ordering, and is CPU-only. A `match` pattern is an enum variant or `_`: no literal, binding, range or guard patterns and no destructuring.",
+      "reason": "Decision 0129 adds the closed, data-free enum and the exhaustive `match` that a game-state machine needs and leaves the rest for a later version; an enum is erased to its variant index, which the language does not expose.",
+      "codes": [
+        "E3001",
+        "E3014",
+        "E3204",
+        "E4011"
+      ],
+      "decisions": [
+        "0129"
+      ],
+      "source": {
+        "file": "spec/language.md",
+        "quote": "enum variants that carry data, explicit enum discriminants"
+      }
+    },
+    {
+      "id": "lang-optional-result",
+      "area": "Language",
+      "restriction": "No optional or result types and no null.",
+      "reason": "Fallibility exists only at host boundaries (spec/runtime-abi.md section 6) and in a few built-in operations that return a `bool` plus a documented default, such as `alive(r)`.",
+      "codes": [],
+      "decisions": [],
+      "source": {
+        "file": "spec/language.md",
+        "quote": "There is no implicit `null`, no `any`, no implicit optional."
+      }
+    },
+    {
+      "id": "lang-string-operations",
+      "area": "Language",
+      "restriction": "Strings are immutable, CPU-only values with no concatenation; `+` on strings is an error. Strings are built by interpolation (`\"Score: ${points}\"`, format spec `.N` only), which is formatted at run time and is not a constant expression.",
+      "reason": "Strings have no GPU representation. Interpolation covers HUD text (decision 0133); other format specs (width, padding, hexadecimal) are not specified yet.",
+      "codes": [
+        "E3014",
+        "E3501",
+        "E3502"
+      ],
+      "decisions": [
+        "0133"
+      ],
+      "source": {
+        "file": "spec/language.md",
+        "quote": "string concatenation (`+` on `string` is `E3014`"
+      }
+    },
+    {
+      "id": "lang-recursion",
+      "area": "Language",
+      "restriction": "No recursion, direct or mutual, in either execution domain.",
+      "reason": "Decision 0016 item 3: GPU code cannot recurse, and v0.1 forbids it on the CPU too, which keeps effect analysis simple and the rules identical for code that may run in either domain. To be revisited with evidence of need.",
+      "codes": [
+        "E4001"
+      ],
+      "decisions": [
+        "0016"
+      ],
+      "source": {
+        "file": "spec/language.md",
+        "quote": "Recursion, direct or mutual, is error `E4001`"
+      }
+    },
+    {
+      "id": "lang-unsupported-list-wording",
+      "area": "Language",
+      "restriction": "Most items of spec/language.md section 11 have no unsupported-feature code of their own. Only the reserved words (E0013), the bitwise operators (E1901) and material-local compute stages (E4901) do; the others are rejected by the general rules named in the entries above.",
+      "reason": "Section 11 used to be headed as if every item had \"a dedicated unsupported diagnostic\", which the compiler does not meet. Decision 0102 corrected the heading instead of hiding the difference. Every item is still rejected with a diagnostic.",
+      "codes": [
+        "E0013",
+        "E1901",
+        "E4901"
+      ],
+      "decisions": [
+        "0102"
+      ],
+      "source": {
+        "file": "spec/language.md",
+        "quote": "## 11. What is not in v0.1"
+      }
+    },
+    {
+      "id": "materials-scope",
+      "area": "Materials and rendering",
+      "restriction": "No material-local compute, multiply blending, point/cascaded shadows, multiple render targets, material inheritance, general derivative intrinsics, workgroup memory/barriers/atomics or compute textures. Standalone fixed-capacity compute buffers are supported through host API 1. Host options provide additive materials, LDR post effects, one directional shadow map and HDR panorama IBL; HDR display/post targets and tone mapping remain unsupported.",
+      "reason": "Vertex position/normal/UV outputs, typed varyings and authored finite bounds are implemented. Standalone compute has numerical, geometry/shadow, recovery and disposal evidence on Radeon and SwiftShader. Optional copied scene/animation diagnostics and world overlays are implemented. Original-character authored shared-pose cohorts match independent draws and CPU references through bounds/culling, shadows, detach/rejoin and recovery. Broader animation compositions and wider physical-device evidence remain separate roadmap work.",
+      "codes": [
+        "E4901"
+      ],
+      "decisions": [
+        "0193",
+        "0194",
+        "0195",
+        "0207",
+        "0208"
+      ],
+      "source": {
+        "file": "spec/materials.md",
+        "quote": "## 10. Not in v0.1"
+      }
+    },
+    {
+      "id": "materials-translucency",
+      "area": "Materials and rendering",
+      "restriction": "Translucency is per object: translucent draws are sorted back to front by their centre, blend alpha \"over\" only, write no depth and are never instanced.",
+      "reason": "Decision 0138 keeps the small-game transparency to one blend mode, with no order-independent transparency. Intersecting translucent objects can show order artefacts. A host input with the `color-hex-opaque` codec still rejects alpha (E8100).",
+      "codes": [
+        "E8100"
+      ],
+      "decisions": [
+        "0138"
+      ],
+      "source": {
+        "file": "spec/materials.md",
+        "quote": "Order is per object, not per triangle"
+      }
+    },
+    {
+      "id": "materials-texture-params",
+      "area": "Materials and rendering",
+      "restriction": "`texture` and `sampler` parameters are fixed when the instance is constructed; a texture cannot be replaced at run time.",
+      "reason": "Decision 0016 item 2: texture and sampler parameters are construction-only, so resource identity never changes while the program runs; replacing a texture is v0.2.",
+      "codes": [
+        "E5073"
+      ],
+      "decisions": [
+        "0016"
+      ],
+      "source": {
+        "file": "spec/decisions/0016-v0.1-restrictions.md",
+        "quote": "Texture identity fixed per instance."
+      }
+    },
+    {
+      "id": "scenes-scope",
+      "area": "Scenes and entities",
+      "restriction": "One scene runs at a time (`go_to(Scene)` switches between the scenes of a program, and `set_camera(Name)` switches which of that scene's cameras draws); no run-time re-parenting, no spawned prefabs with children or nested prefab instances inside prefabs, no user-defined components, queries or systems, no render interpolation, no text in the 3D world, no UI layout or text input (screen-space text and buttons are the HUD, spec/hud.md).",
+      "reason": "Not in v0.1 (spec/scenes.md section 14). Scene switching landed with decision 0141; `component`, `query` and `system` are reserved words (E0013).",
+      "codes": [
+        "E0013"
+      ],
+      "decisions": [
+        "0141"
+      ],
+      "source": {
+        "file": "spec/scenes.md",
+        "quote": "## 14. Not in v0.1"
+      }
+    },
+    {
+      "id": "hud-scope",
+      "area": "Scenes and entities",
+      "restriction": "The HUD is immediate mode and screen-space only: `hud.text`, `hud.rect` and `hud.button` drawn again every frame from lifecycle functions and handlers (not from functions), in the system UI font, an `asset.font(..)` file or the built-in ASCII pixel font, with horizontal alignment as the only layout. No text in the 3D world, no images, no text input, no keyboard or gamepad navigation, and `mtek test` fixtures cannot see or click it.",
+      "reason": "Spec/hud.md section 7 (decisions 0134, 0139): the smallest UI that covers scores, timers, bars and buttons, drawn as a DOM layer over the canvas.",
+      "codes": [
+        "E5601",
+        "W8203",
+        "E5080"
+      ],
+      "decisions": [
+        "0134"
+      ],
+      "source": {
+        "file": "spec/hud.md",
+        "quote": "## 7. Not in this extension"
+      }
+    },
+    {
+      "id": "tween-scope",
+      "area": "Scenes and entities",
+      "restriction": "Tweens are progress state plus ten CPU easing curves (`easing.in_quad` .. `easing.out_bounce`) used in bindings, lifecycle functions, handlers and `cpu fn`s: no tween objects, timelines, delays, callbacks or user curves in `bind`, no easing in a plain `fn` or on the GPU (`smoothstep` only), and no curve in a `const`.",
+      "reason": "Spec/tweens.md (decision 0135): curves are the smallest addition that makes bindings animate; tween bookkeeping is ordinary state logic that fixtures can observe.",
+      "codes": [
+        "E4002",
+        "E3090"
+      ],
+      "decisions": [
+        "0135"
+      ],
+      "source": {
+        "file": "spec/tweens.md",
+        "quote": "## 4. Limits"
+      }
+    },
+    {
+      "id": "game-package-scope",
+      "area": "Tooling",
+      "restriction": "`mtek build --release` packages one self-contained folder (minified runtime, loading screen, favicon, title) and, with `--itch`, an uncompressed zip for itch.io: `app.js` is not minified, the zip is stored rather than deflated, the favicon is found only at `assets/favicon.svg|png|ico`, and there is no upload, no other store format and no PWA manifest.",
+      "reason": "Spec/tooling.md section 2.1 (decision 0136): the smallest packaging that turns a release build into an uploadable HTML5 game without new dependencies.",
+      "codes": [
+        "E7103",
+        "E7104"
+      ],
+      "decisions": [
+        "0136"
+      ],
+      "source": {
+        "file": "spec/tooling.md",
+        "quote": "### 2.1 Game packages"
+      }
+    },
+    {
+      "id": "audio-scope",
+      "area": "Scenes and entities",
+      "restriction": "Audio plays whole decoded WAV, Ogg or MP3 files: no streaming, no effects or buses beyond the master volume, no handle to stop a playing one-shot, one music track at a time, and nothing plays before the first user gesture (browser autoplay policy).",
+      "reason": "Spec/audio.md section 8 (decision 0130): the smallest audio model that covers hit, score and music sounds.",
+      "codes": [
+        "E7101",
+        "E7102",
+        "E5501"
+      ],
+      "decisions": [
+        "0130"
+      ],
+      "source": {
+        "file": "spec/audio.md",
+        "quote": "## 8. Not in this extension"
+      }
+    },
+    {
+      "id": "scenes-entity-ref-fields",
+      "area": "Scenes and entities",
+      "restriction": "An `entity_ref` can be compared, passed to `destroy` and `alive`, given body commands, and read for `position`, `rotation`, `scale` and `visible`. Writing a field, or reading any other field or state, is rejected, and a `bind` cannot read a field through a reference.",
+      "reason": "Decision 0151 allows the four transform reads. Writes stay rejected because the single-writer rules need the entity's declaration (decision 0064).",
+      "codes": [
+        "E5074",
+        "E5005"
+      ],
+      "decisions": [
+        "0064",
+        "0151"
+      ],
+      "source": {
+        "file": "spec/diagnostics.md",
+        "quote": "field access through entity_ref"
+      }
+    },
+    {
+      "id": "physics-collider-fields",
+      "area": "Physics",
+      "restriction": "Collider dimensions are fixed at construction; changing them means spawning a new entity.",
+      "reason": "Decision 0016 item 1: because collider fields are construction-only, no rebuild path exists to define; it is specified when collider fields become writable (v0.2).",
+      "codes": [
+        "E5073"
+      ],
+      "decisions": [
+        "0016"
+      ],
+      "source": {
+        "file": "spec/decisions/0016-v0.1-restrictions.md",
+        "quote": "Collider rebuild deferred."
+      }
+    },
+    {
+      "id": "physics-no-ccd",
+      "area": "Physics",
+      "restriction": "Default discrete physics can miss thin moving obstacles: the recorded radius-0.05 m ball and 0.1 m moving plate can tunnel above 7.2 m/s at 60 Hz, depending on phase. Host physics options can enable CCD. A regression covers 240 m/s against that plate; this does not establish a universal CCD guarantee (decision 0193).",
+      "reason": "The default retains the recorded discrete-physics contract. CCD is explicit and adds solver work. Swept spatial queries and character movement are optional adapter capabilities, without new Mtek language intrinsics.",
+      "codes": [],
+      "decisions": [
+        "0068",
+        "0193"
+      ],
+      "source": {
+        "file": "spec/physics.md",
+        "quote": "### 7.1 Known limitation: high-speed bodies (measured)"
+      }
+    },
+    {
+      "id": "input-auto-repeat",
+      "area": "Input",
+      "restriction": "`key_down` fires once per physical press; auto-repeat is ignored and there is no way to ask for it.",
+      "reason": "Decision 0016 item 4: an opt-in is added when a use case appears.",
+      "codes": [],
+      "decisions": [
+        "0016"
+      ],
+      "source": {
+        "file": "spec/decisions/0016-v0.1-restrictions.md",
+        "quote": "No opt-in to keyboard auto-repeat."
+      }
+    },
+    {
+      "id": "input-keys",
+      "area": "Input",
+      "restriction": "Only the physical keys of the `Key` enum (letters, digits, Space, Enter, Escape, Tab, Backspace, shift, control and alt on both sides, and the arrow keys) reach a program; events with any other `KeyboardEvent.code` are ignored.",
+      "reason": "The `Key` enum is the registry's list of mapped codes (spec/stdlib.md section 5.2); the consistency check compares it with the runtime's list.",
+      "codes": [],
+      "decisions": [],
+      "source": {
+        "file": "spec/stdlib.md",
+        "quote": "Events with a `code` outside this table are ignored by the runtime."
+      }
+    },
+    {
+      "id": "host-inputs",
+      "area": "Host page",
+      "restriction": "Only scene `state` of the types with a codec (`f32`, `i32`, `u32`, `bool`, `vec2`, `vec3`, `vec4`, `color`, `string`) can be exposed as a host input; a string is at most 64 KiB.",
+      "reason": "The host input table of spec/runtime-abi.md section 6.3; anything else is E9020.",
+      "codes": [
+        "E9020"
+      ],
+      "decisions": [],
+      "source": {
+        "file": "spec/runtime-abi.md",
+        "quote": "only **scene state** of these types can be exposed (`E9020` otherwise)"
+      }
+    },
+    {
+      "id": "gltf-container",
+      "area": "Assets",
+      "restriction": "Only binary glTF 2.0 (`.glb`) with embedded buffers and images: no `.gltf`, no external or `data:` URIs; PNG and JPEG images only (a JPEG with an EXIF orientation other than 1 is rejected).",
+      "reason": "Decision 0015: assets are compile-time dependencies validated by the compiler, and the v0.1 profile is strict so that every deviation is an error naming the feature.",
+      "codes": [
+        "E7001",
+        "E7003",
+        "E7017"
+      ],
+      "decisions": [
+        "0015",
+        "0082"
+      ],
+      "source": {
+        "file": "spec/decisions/0015-asset-strictness.md",
+        "quote": "Assets are compile-time dependencies validated by the compiler."
+      }
+    },
+    {
+      "id": "gltf-extensions",
+      "area": "Assets",
+      "restriction": "No glTF extension, required or used.",
+      "reason": "Decision 0015. Consequence recorded there: many exported files need a re-export without extensions; the limitation is documented rather than hidden.",
+      "codes": [
+        "E7004",
+        "E7005"
+      ],
+      "decisions": [
+        "0015"
+      ],
+      "source": {
+        "file": "spec/decisions/0015-asset-strictness.md",
+        "quote": "glTF extensions (required or used)"
+      }
+    },
+    {
+      "id": "gltf-animation",
+      "area": "Assets",
+      "restriction": "No morph targets, cubic-spline interpolation or sparse accessors. Skeletal meshes retain four influences, up to 128 joints and 256 nodes. WebGPU deforms visible actors with conservative animated bounds; CPU deformation remains available for inspection. Explicit shared-pose cohorts can instance compatible opaque draws; independent poses retain separate palettes/outputs. Host APIs add layers, synchronized 1D locomotion, distance policies, positional/orientation IK with hinge limits and explicit bind-frame retargeting (decision 0196). These have no new Mtek language intrinsics; automatic humanoid mapping and arbitrary independent-pose crowd instancing are unsupported.",
+      "reason": "Decision 0015 rejected every animation. Decision 0156 plays TRS clips and keeps the rest of that rejection; decision 0174 composes clips with the entity and narrows the error to the use.",
+      "codes": [
+        "E7008",
+        "E7019",
+        "E7011"
+      ],
+      "decisions": [
+        "0015",
+        "0156",
+        "0174",
+        "0191",
+        "0193",
+        "0196"
+      ],
+      "source": {
+        "file": "spec/decisions/0191-skeletal-animation.md",
+        "quote": "A skinned GLB mesh retains its hierarchy"
+      }
+    },
+    {
+      "id": "gltf-attributes",
+      "area": "Assets",
+      "restriction": "Triangles with positions, normals, first UV set and optional FLOAT/VEC4 authored tangents. No vertex colours or additional UV sets. Tangents require normals, normalized xyz and handedness ±1.",
+      "reason": "Decision 0212 extends the strict attribute profile without generating missing tangent frames.",
+      "codes": [
+        "E7006",
+        "E7007",
+        "E7009",
+        "E7010",
+        "E7027"
+      ],
+      "decisions": [
+        "0015",
+        "0212"
+      ],
+      "source": {
+        "file": "spec/decisions/0212-authored-tangent-integration.md",
+        "quote": "no MikkTSpace tangent generator is added."
+      }
+    },
+    {
+      "id": "gltf-materials",
+      "area": "Assets",
+      "restriction": "Opaque, single-sided core metallic-roughness materials, including base-colour, normal, MR, occlusion and emissive maps on UV0. Other alpha modes, double-sided materials and additional UV sets remain unsupported. Normal maps use authored tangents when available, with a derivative fallback; no MikkTSpace tangent generation.",
+      "reason": "Decision 0194 extends the strict material profile while retaining explicit boundaries.",
+      "codes": [
+        "E7015",
+        "E7016"
+      ],
+      "decisions": [
+        "0015",
+        "0194",
+        "0212"
+      ],
+      "source": {
+        "file": "spec/decisions/0194-gltf-material-channels.md",
+        "quote": "OPAQUE, single-sided"
+      }
+    },
+    {
+      "id": "assets-limits",
+      "area": "Assets",
+      "restriction": "Asset files, textures and vertex counts are limited by the `[assets]` table of `mtek.toml`.",
+      "reason": "Compile-time limits checked before the data is used (spec/assets.md section 6).",
+      "codes": [
+        "E7002",
+        "E7026"
+      ],
+      "decisions": [],
+      "source": {
+        "file": "spec/assets.md",
+        "quote": "## 6. Limits (`mtek.toml [assets]`)"
+      }
+    },
+    {
+      "id": "compiler-limits",
+      "area": "Compiler",
+      "restriction": "Source files over 4 MiB, more than 1 024 modules, nesting deeper than 256, arrays over 65 536 elements, more than 16 384 static entities in a scene, more than 64 parameters in a material.",
+      "reason": "Compiler constants, all diagnosed and never a panic (spec/compiler-architecture.md section 9).",
+      "codes": [
+        "E0004",
+        "E9002",
+        "E1050",
+        "E3031",
+        "E5092",
+        "E4032"
+      ],
+      "decisions": [],
+      "source": {
+        "file": "spec/compiler-architecture.md",
+        "quote": "## 9. Limits (compiler constants, all diagnosed, never panics)"
+      }
+    },
+    {
+      "id": "target-profile",
+      "area": "Runtime",
+      "restriction": "The target profile `webgpu-core-2026` is exactly the WebGPU default limits and requires no optional feature; a device below it cannot run a program.",
+      "reason": "Keeps the required capabilities of every v0.1 program empty (`features: []`, `limits: {}`); the consistency check compares this with the manifest the compiler writes.",
+      "codes": [
+        "E8002"
+      ],
+      "decisions": [],
+      "source": {
+        "file": "spec/runtime-abi.md",
+        "quote": "the v0.1 profile `webgpu-core-2026` is exactly the default limits"
+      }
+    },
+    {
+      "id": "webgpu-only",
+      "area": "Runtime",
+      "restriction": "WebGPU is the only renderer: there is no WebGL2 fallback, and a browser without WebGPU (or without an adapter) shows the unsupported-browser screen instead of the game. Only Chromium has a full automated run; Firefox has one Windows run and Safari none.",
+      "reason": "Decision 0132: a second backend would need a second shader language and layout for every feature; spec/browser-support.md section 2 marks which browsers are expectations.",
+      "codes": [
+        "E8004",
+        "E8005"
+      ],
+      "decisions": [
+        "0132"
+      ],
+      "source": {
+        "file": "spec/browser-support.md",
+        "quote": "## 1. The stance: WebGPU only, no WebGL2"
+      }
+    },
+    {
+      "id": "formatter-scope",
+      "area": "Tooling",
+      "restriction": "`mtek fmt` has no range formatting, no standard-input mode and no configuration, and comments inside a multi-line block comment are not re-indented.",
+      "reason": "Decision 0070 item 11: \"no options\" is the design; the layout is one canonical form.",
+      "codes": [],
+      "decisions": [
+        "0070"
+      ],
+      "source": {
+        "file": "spec/decisions/0070-canonical-formatter.md",
+        "quote": "Range formatting, a stdin mode and configuration are not provided"
+      }
+    }
+  ]
+}

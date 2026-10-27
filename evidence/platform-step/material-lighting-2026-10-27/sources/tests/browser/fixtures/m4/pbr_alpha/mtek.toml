@@ -1,0 +1,6 @@
+[project]
+name = "pbr-alpha"
+language = "0.1"
+
+[host.inputs]
+opacity = "Alpha.opacity"

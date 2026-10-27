@@ -1,0 +1,900 @@
+{
+  "manifestSchema": 1,
+  "runtimeAbi": 1,
+  "languageVersion": "0.1",
+  "compilerVersion": "0.1.0-dev",
+  "buildId": "9d6eba0dd826aa3968d12b96431cdc37ae742de5bb53a14e8ccab08bc7b70d1a",
+  "targetProfile": "webgpu-core-2026",
+  "requiredCapabilities": {
+    "features": [],
+    "limits": {},
+    "wgslLanguageFeatures": []
+  },
+  "subsystems": {
+    "physics": false
+  },
+  "runtimeConfig": {
+    "fixedStep": 0.016666668,
+    "maxCatchUpSteps": 4,
+    "maxFrameDelta": 0.1,
+    "maxEntities": 16384,
+    "pauseWhenHidden": true
+  },
+  "entryScene": "AuthoredFrame",
+  "sources": [
+    {
+      "id": 0,
+      "path": "src/main.mtek",
+      "sha256": "643700b6a5fa87733058964864fbbe9b7e469fb3b0e64ee36aac6d81b3a6f905"
+    }
+  ],
+  "spans": [
+    {
+      "file": 0,
+      "start": 554,
+      "end": 900,
+      "startLine": 11,
+      "startColumn": 1,
+      "endLine": 16,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 608,
+      "end": 732,
+      "startLine": 13,
+      "startColumn": 5,
+      "endLine": 13,
+      "endColumn": 129
+    },
+    {
+      "file": 0,
+      "start": 737,
+      "end": 829,
+      "startLine": 14,
+      "startColumn": 5,
+      "endLine": 14,
+      "endColumn": 97
+    },
+    {
+      "file": 0,
+      "start": 834,
+      "end": 898,
+      "startLine": 15,
+      "startColumn": 5,
+      "endLine": 15,
+      "endColumn": 69
+    },
+    {
+      "file": 0,
+      "start": 120,
+      "end": 553,
+      "startLine": 3,
+      "startColumn": 1,
+      "endLine": 10,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 144,
+      "end": 361,
+      "startLine": 4,
+      "startColumn": 5,
+      "endLine": 6,
+      "endColumn": 6
+    },
+    {
+      "file": 0,
+      "start": 186,
+      "end": 355,
+      "startLine": 5,
+      "startColumn": 9,
+      "endLine": 5,
+      "endColumn": 178
+    },
+    {
+      "file": 0,
+      "start": 193,
+      "end": 354,
+      "startLine": 5,
+      "startColumn": 16,
+      "endLine": 5,
+      "endColumn": 177
+    },
+    {
+      "file": 0,
+      "start": 211,
+      "end": 257,
+      "startLine": 5,
+      "startColumn": 34,
+      "endLine": 5,
+      "endColumn": 80
+    },
+    {
+      "file": 0,
+      "start": 216,
+      "end": 229,
+      "startLine": 5,
+      "startColumn": 39,
+      "endLine": 5,
+      "endColumn": 52
+    },
+    {
+      "file": 0,
+      "start": 217,
+      "end": 229,
+      "startLine": 5,
+      "startColumn": 40,
+      "endLine": 5,
+      "endColumn": 52
+    },
+    {
+      "file": 0,
+      "start": 217,
+      "end": 227,
+      "startLine": 5,
+      "startColumn": 40,
+      "endLine": 5,
+      "endColumn": 50
+    },
+    {
+      "file": 0,
+      "start": 217,
+      "end": 218,
+      "startLine": 5,
+      "startColumn": 40,
+      "endLine": 5,
+      "endColumn": 41
+    },
+    {
+      "file": 0,
+      "start": 230,
+      "end": 243,
+      "startLine": 5,
+      "startColumn": 53,
+      "endLine": 5,
+      "endColumn": 66
+    },
+    {
+      "file": 0,
+      "start": 231,
+      "end": 243,
+      "startLine": 5,
+      "startColumn": 54,
+      "endLine": 5,
+      "endColumn": 66
+    },
+    {
+      "file": 0,
+      "start": 231,
+      "end": 241,
+      "startLine": 5,
+      "startColumn": 54,
+      "endLine": 5,
+      "endColumn": 64
+    },
+    {
+      "file": 0,
+      "start": 231,
+      "end": 232,
+      "startLine": 5,
+      "startColumn": 54,
+      "endLine": 5,
+      "endColumn": 55
+    },
+    {
+      "file": 0,
+      "start": 244,
+      "end": 256,
+      "startLine": 5,
+      "startColumn": 67,
+      "endLine": 5,
+      "endColumn": 79
+    },
+    {
+      "file": 0,
+      "start": 244,
+      "end": 254,
+      "startLine": 5,
+      "startColumn": 67,
+      "endLine": 5,
+      "endColumn": 77
+    },
+    {
+      "file": 0,
+      "start": 244,
+      "end": 245,
+      "startLine": 5,
+      "startColumn": 67,
+      "endLine": 5,
+      "endColumn": 68
+    },
+    {
+      "file": 0,
+      "start": 267,
+      "end": 275,
+      "startLine": 5,
+      "startColumn": 90,
+      "endLine": 5,
+      "endColumn": 98
+    },
+    {
+      "file": 0,
+      "start": 267,
+      "end": 268,
+      "startLine": 5,
+      "startColumn": 90,
+      "endLine": 5,
+      "endColumn": 91
+    },
+    {
+      "file": 0,
+      "start": 281,
+      "end": 285,
+      "startLine": 5,
+      "startColumn": 104,
+      "endLine": 5,
+      "endColumn": 108
+    },
+    {
+      "file": 0,
+      "start": 281,
+      "end": 282,
+      "startLine": 5,
+      "startColumn": 104,
+      "endLine": 5,
+      "endColumn": 105
+    },
+    {
+      "file": 0,
+      "start": 296,
+      "end": 351,
+      "startLine": 5,
+      "startColumn": 119,
+      "endLine": 5,
+      "endColumn": 174
+    },
+    {
+      "file": 0,
+      "start": 301,
+      "end": 313,
+      "startLine": 5,
+      "startColumn": 124,
+      "endLine": 5,
+      "endColumn": 136
+    },
+    {
+      "file": 0,
+      "start": 302,
+      "end": 313,
+      "startLine": 5,
+      "startColumn": 125,
+      "endLine": 5,
+      "endColumn": 136
+    },
+    {
+      "file": 0,
+      "start": 302,
+      "end": 311,
+      "startLine": 5,
+      "startColumn": 125,
+      "endLine": 5,
+      "endColumn": 134
+    },
+    {
+      "file": 0,
+      "start": 302,
+      "end": 303,
+      "startLine": 5,
+      "startColumn": 125,
+      "endLine": 5,
+      "endColumn": 126
+    },
+    {
+      "file": 0,
+      "start": 314,
+      "end": 326,
+      "startLine": 5,
+      "startColumn": 137,
+      "endLine": 5,
+      "endColumn": 149
+    },
+    {
+      "file": 0,
+      "start": 315,
+      "end": 326,
+      "startLine": 5,
+      "startColumn": 138,
+      "endLine": 5,
+      "endColumn": 149
+    },
+    {
+      "file": 0,
+      "start": 315,
+      "end": 324,
+      "startLine": 5,
+      "startColumn": 138,
+      "endLine": 5,
+      "endColumn": 147
+    },
+    {
+      "file": 0,
+      "start": 315,
+      "end": 316,
+      "startLine": 5,
+      "startColumn": 138,
+      "endLine": 5,
+      "endColumn": 139
+    },
+    {
+      "file": 0,
+      "start": 327,
+      "end": 338,
+      "startLine": 5,
+      "startColumn": 150,
+      "endLine": 5,
+      "endColumn": 161
+    },
+    {
+      "file": 0,
+      "start": 327,
+      "end": 336,
+      "startLine": 5,
+      "startColumn": 150,
+      "endLine": 5,
+      "endColumn": 159
+    },
+    {
+      "file": 0,
+      "start": 327,
+      "end": 328,
+      "startLine": 5,
+      "startColumn": 150,
+      "endLine": 5,
+      "endColumn": 151
+    },
+    {
+      "file": 0,
+      "start": 339,
+      "end": 350,
+      "startLine": 5,
+      "startColumn": 162,
+      "endLine": 5,
+      "endColumn": 173
+    },
+    {
+      "file": 0,
+      "start": 339,
+      "end": 348,
+      "startLine": 5,
+      "startColumn": 162,
+      "endLine": 5,
+      "endColumn": 171
+    },
+    {
+      "file": 0,
+      "start": 339,
+      "end": 340,
+      "startLine": 5,
+      "startColumn": 162,
+      "endLine": 5,
+      "endColumn": 163
+    },
+    {
+      "file": 0,
+      "start": 366,
+      "end": 551,
+      "startLine": 7,
+      "startColumn": 5,
+      "endLine": 9,
+      "endColumn": 6
+    },
+    {
+      "file": 0,
+      "start": 411,
+      "end": 545,
+      "startLine": 8,
+      "startColumn": 9,
+      "endLine": 8,
+      "endColumn": 143
+    },
+    {
+      "file": 0,
+      "start": 418,
+      "end": 544,
+      "startLine": 8,
+      "startColumn": 16,
+      "endLine": 8,
+      "endColumn": 142
+    },
+    {
+      "file": 0,
+      "start": 438,
+      "end": 439,
+      "startLine": 8,
+      "startColumn": 36,
+      "endLine": 8,
+      "endColumn": 37
+    },
+    {
+      "file": 0,
+      "start": 440,
+      "end": 475,
+      "startLine": 8,
+      "startColumn": 38,
+      "endLine": 8,
+      "endColumn": 73
+    },
+    {
+      "file": 0,
+      "start": 476,
+      "end": 479,
+      "startLine": 8,
+      "startColumn": 74,
+      "endLine": 8,
+      "endColumn": 77
+    },
+    {
+      "file": 0,
+      "start": 480,
+      "end": 483,
+      "startLine": 8,
+      "startColumn": 78,
+      "endLine": 8,
+      "endColumn": 81
+    },
+    {
+      "file": 0,
+      "start": 484,
+      "end": 525,
+      "startLine": 8,
+      "startColumn": 82,
+      "endLine": 8,
+      "endColumn": 123
+    },
+    {
+      "file": 0,
+      "start": 526,
+      "end": 529,
+      "startLine": 8,
+      "startColumn": 124,
+      "endLine": 8,
+      "endColumn": 127
+    },
+    {
+      "file": 0,
+      "start": 530,
+      "end": 533,
+      "startLine": 8,
+      "startColumn": 128,
+      "endLine": 8,
+      "endColumn": 131
+    },
+    {
+      "file": 0,
+      "start": 534,
+      "end": 543,
+      "startLine": 8,
+      "startColumn": 132,
+      "endLine": 8,
+      "endColumn": 141
+    },
+    {
+      "file": 0,
+      "start": 24,
+      "end": 45,
+      "startLine": 1,
+      "startColumn": 25,
+      "endLine": 1,
+      "endColumn": 46
+    }
+  ],
+  "symbols": [
+    {
+      "id": "src/main.mtek::AuthoredFrame",
+      "kind": "scene",
+      "span": 0
+    },
+    {
+      "id": "src/main.mtek::AuthoredFrame.Main",
+      "kind": "camera",
+      "span": 1
+    },
+    {
+      "id": "src/main.mtek::AuthoredFrame.Sun",
+      "kind": "entity",
+      "span": 2
+    },
+    {
+      "id": "src/main.mtek::AuthoredFrame.Part",
+      "kind": "entity",
+      "span": 3
+    },
+    {
+      "id": "src/main.mtek::Authored",
+      "kind": "material",
+      "span": 4
+    }
+  ],
+  "layouts": [
+    {
+      "id": "builtin:frame",
+      "wgslStruct": "MtekFrame",
+      "size": 288,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 288,
+        "align": 16,
+        "members": [
+          {
+            "name": "view_proj",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 0,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          },
+          {
+            "name": "camera_position",
+            "mtekType": "vec3",
+            "node": {
+              "kind": "vector",
+              "offset": 64,
+              "size": 12,
+              "align": 16,
+              "scalar": "f32",
+              "components": 3
+            }
+          },
+          {
+            "name": "light_count",
+            "mtekType": "u32",
+            "node": {
+              "kind": "scalar",
+              "offset": 76,
+              "size": 4,
+              "align": 4,
+              "scalar": "u32"
+            }
+          },
+          {
+            "name": "ambient",
+            "mtekType": "vec3",
+            "node": {
+              "kind": "vector",
+              "offset": 80,
+              "size": 12,
+              "align": 16,
+              "scalar": "f32",
+              "components": 3
+            }
+          },
+          {
+            "name": "exposure",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 92,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          },
+          {
+            "name": "lights",
+            "mtekType": "array<MtekLight, 4>",
+            "node": {
+              "kind": "array",
+              "offset": 96,
+              "size": 192,
+              "align": 16,
+              "length": 4,
+              "stride": 48,
+              "padded": false,
+              "element": {
+                "kind": "struct",
+                "name": "MtekLight",
+                "offset": 0,
+                "size": 48,
+                "align": 16,
+                "members": [
+                  {
+                    "name": "color",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 0,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "kind",
+                    "mtekType": "u32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 12,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "u32"
+                    }
+                  },
+                  {
+                    "name": "position",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 16,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "range",
+                    "mtekType": "f32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 28,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  },
+                  {
+                    "name": "direction",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 32,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "reserved",
+                    "mtekType": "f32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 44,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "builtin:object",
+      "wgslStruct": "MtekObject",
+      "size": 128,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 128,
+        "align": 16,
+        "members": [
+          {
+            "name": "model",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 0,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          },
+          {
+            "name": "normal_matrix",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 64,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "shaders": [
+    {
+      "lighting": 1,
+      "vertexDeformation": 1,
+      "hash": "2c31539fd2193c39d23cc91a33ce5f49bee94da9e4f2714c2c8e21b27089a496",
+      "url": "shaders/2c31539fd2193c39.wgsl",
+      "map": "shaders/2c31539fd2193c39.mtek-map.json",
+      "material": "src/main.mtek::Authored",
+      "vertexEntry": "mtek_vs",
+      "instancedVertexEntry": "mtek_vs_instanced",
+      "fragmentEntry": "mtek_fs",
+      "vertexAttributes": [
+        "position",
+        "normal",
+        "uv",
+        "tangent"
+      ],
+      "surfaceInputs": [
+        "world_position",
+        "world_normal",
+        "uv",
+        "world_tangent"
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "id": "src/main.mtek::Authored",
+      "layout": null,
+      "shader": "2c31539fd2193c39d23cc91a33ce5f49bee94da9e4f2714c2c8e21b27089a496",
+      "resources": [],
+      "params": []
+    }
+  ],
+  "meshes": [
+    {
+      "id": "mesh:0",
+      "kind": "asset",
+      "asset": "assets/f4a0929f26f2e60f.bin",
+      "primitive": 0
+    }
+  ],
+  "assets": [
+    {
+      "url": "assets/f4a0929f26f2e60f.bin",
+      "sha256": "8ee71c97c4df4d88919b07fe7de225166166437ea16ed292edaec9f5e5e7a20b",
+      "bytes": 204,
+      "kind": "mesh-data",
+      "primitives": [
+        {
+          "source": {
+            "file": "models/model.glb",
+            "mesh": "Quad",
+            "primitive": 0
+          },
+          "vertexCount": 4,
+          "indexCount": 6,
+          "indexFormat": "uint16",
+          "attributes": [
+            "position",
+            "normal",
+            "uv",
+            "tangent"
+          ],
+          "offsets": {
+            "position": 0,
+            "normal": 48,
+            "uv": 96,
+            "tangent": 128,
+            "indices": 192
+          },
+          "boundingSphere": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "radius": 1.4142137
+          }
+        }
+      ],
+      "preprocessing": [],
+      "span": 50
+    }
+  ],
+  "scene": {
+    "name": "AuthoredFrame",
+    "symbol": "src/main.mtek::AuthoredFrame",
+    "fields": {
+      "clearColor": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "ambientColor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "ambientIntensity": 0.3,
+      "gravity": [
+        0,
+        -9.81,
+        0
+      ]
+    },
+    "state": [],
+    "cameras": [
+      {
+        "name": "Main",
+        "symbol": "src/main.mtek::AuthoredFrame.Main",
+        "projection": "orthographic",
+        "hasTarget": true,
+        "active": true,
+        "exposure": -0.2630344
+      }
+    ],
+    "entities": [
+      {
+        "index": 0,
+        "name": "Sun",
+        "symbol": "src/main.mtek::AuthoredFrame.Sun",
+        "parent": null,
+        "mesh": null,
+        "material": null,
+        "light": 0,
+        "body": null,
+        "collider": null,
+        "state": [],
+        "update": false,
+        "fixedUpdate": false
+      },
+      {
+        "index": 1,
+        "name": "Part",
+        "symbol": "src/main.mtek::AuthoredFrame.Part",
+        "parent": null,
+        "mesh": "mesh:0",
+        "material": {
+          "id": "src/main.mtek::Authored",
+          "instance": 0
+        },
+        "light": null,
+        "body": null,
+        "collider": null,
+        "state": [],
+        "update": false,
+        "fixedUpdate": false
+      }
+    ],
+    "materialInstances": [
+      {
+        "index": 0,
+        "material": "src/main.mtek::Authored",
+        "entity": 1,
+        "params": [],
+        "shareable": true
+      }
+    ],
+    "bindings": [],
+    "hostInputs": [],
+    "lights": [
+      {
+        "index": 0,
+        "entity": 0,
+        "kind": "directional",
+        "classes": {
+          "color": "initial",
+          "intensity": "initial"
+        }
+      }
+    ]
+  }
+}

@@ -5,15 +5,5 @@
     "startByte": 8,
     "endByte": 14,
     "message": "A compute program requires one `output name: array<T, N>;` declaration."
-  },
-  {
-    "code": "MTEK-E4901",
-    "file": "src/main.mtek",
-    "startByte": 8,
-    "endByte": 14,
-    "message": "Source compute checking is implemented, but compute packaging and runtime dispatch are not yet available.",
-    "notes": [
-      "the required compute-authoring workstream remains in progress; this declaration cannot produce a runnable package yet"
-    ]
   }
 ]

@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Mtek · Compute geometry</title>
+<style>body{margin:0;background:#101820;color:#e3edf1;font:15px/1.5 system-ui}main{max-width:1150px;margin:30px auto;padding:0 24px}header{display:flex;justify-content:space-between;align-items:center;gap:24px}h1{margin:0;font-size:27px}p{color:#b7cbd2}.layout{display:grid;grid-template-columns:280px 1fr;gap:24px}aside{background:#192b34;padding:22px;border-radius:12px}label{display:block;margin-bottom:20px}input[type=range],select{width:100%}button,select{font:inherit;background:#27434f;border:1px solid #557280;border-radius:6px;color:inherit;padding:9px}canvas{display:block;width:100%;aspect-ratio:1;min-width:0;border-radius:12px}pre{white-space:pre-wrap;overflow-wrap:anywhere}#status{color:#93dfbb}@media(max-width:750px){.layout{grid-template-columns:1fr}header{display:block}}</style>
+<main><header><div><h1>Compute geometry & shadows</h1><p>A source-authored kernel moves a box's vertices. Its shadow follows; the shared twin stays in place.</p></div><span id="status" role="status">Preparing…</span></header>
+<div class="layout"><aside>
+<label>View<select id="mode"><option value="off-camera">Off-camera caster, visible shadow</option><option value="visible">Box and shadow in view</option></select></label>
+<label>Geometry offset Z <output id="offset-value">0.75</output><input id="offset" type="range" min="-2" max="2" step="0.25" value="0.75"></label>
+<label><input id="enabled" type="checkbox" checked> Use compute geometry</label>
+<button id="release">Release compute resources</button>
+<p>The source entity stays fixed. The host dispatches a bounded packed XYZ stream and attaches it to the declared mesh.</p>
+<p>The original normals and UVs stay valid under translation. A conservative local sphere encloses the entire slider range.</p>
+<pre id="diagnostics" hidden></pre></aside>
+<canvas id="canvas" aria-label="Compute-translated box, unchanged twin and directional shadows"></canvas></div></main>
+<script type="module" src="./main.js"></script></html>

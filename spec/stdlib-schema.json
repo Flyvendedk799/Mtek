@@ -2912,7 +2912,7 @@
     {
       "name": "frame",
       "since": "M1",
-      "doc": "Per-frame values, readable in CPU code and in `bind` expressions, not in GPU stage code (route them through material parameters). `update(dt)` gets the frame delta, which varies from frame to frame; `fixed_update(dt)` runs zero or more times per frame and gets the constant fixed step, 1/60 s by default.",
+      "doc": "Per-frame CPU/`bind` values; route to GPU stages through material params. `update(dt)` gets variable frame delta; `fixed_update(dt)` runs zero or more times per frame with a constant fixed step (default 1/60 s).",
       "members": [
         {
           "name": "delta",
@@ -3405,7 +3405,7 @@
       "kind": "record",
       "gpu": true,
       "since": "M1",
-      "doc": "Compute invocation IDs (dispatch unavailable).",
+      "doc": "Compute invocation IDs.",
       "fields": [
         {
           "name": "index",
@@ -3506,6 +3506,10 @@
         {
           "name": "uv",
           "type": "vec2"
+        },
+        {
+          "name": "world_tangent",
+          "type": "vec4"
         }
       ],
       "methods": []
@@ -3528,6 +3532,10 @@
         {
           "name": "uv",
           "type": "vec2"
+        },
+        {
+          "name": "tangent",
+          "type": "vec4"
         }
       ],
       "methods": []

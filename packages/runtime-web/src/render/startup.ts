@@ -150,7 +150,7 @@ export async function startScene(options: SceneStartupOptions): Promise<SceneSta
     // Every instance holds its initial values: identical immutable ones now share a parameter block.
     materials.shareIdentical();
 
-    meshes = new MeshStore(registry, device.queue, undefined, device.limits.maxBufferSize, structure.meshes.some(m => m.descriptor.kind === "asset" && m.descriptor.skin !== undefined) ? device : undefined);
+    meshes = new MeshStore(registry, device.queue, undefined, device.limits.maxBufferSize, structure.meshes.some(m => m.descriptor.kind === "asset" && m.descriptor.skin !== undefined) ? device : undefined, structure.materials.some(m => m.shader.vertexAttributes.includes("tangent")));
     meshes.upload(structure.meshes, options.assets?.files);
 
     if (structure.materials.some(material => material.shader.lighting === 1)) {

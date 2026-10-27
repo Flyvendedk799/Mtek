@@ -1,0 +1,56 @@
+// Original pinned Khronos Fox, with attribution/provenance in the example README.
+const FOX = asset.glb("../models/Fox.glb");
+
+material Fur {
+    param image: texture;
+    param filter: sampler = sampler.linear_repeat();
+    fragment(surface: SurfaceInput) -> color {
+        return color.linear(sample(image, filter, surface.uv).xyz, 1.0);
+    }
+}
+
+scene Studio {
+    clear_color: #17252f;
+    ambient_intensity: 0.15;
+    state camera_yaw: f32 = 0.8;
+    state parent_yaw: f32 = 0.15;
+    camera Main {
+        position: bind(vec3(cos(camera_yaw) * 7.0, 3.8, sin(camera_yaw) * 7.0));
+        target: vec3(0.0, 0.9, 0.0);
+        projection: Perspective { fov_y: 0.85; near: 0.1; far: 50.0 };
+        exposure: -0.2630344;
+    }
+    entity Sun {
+        rotation: quat.euler(-0.9, 0.4, 0.0);
+        light: DirectionalLight { intensity: 3.0 };
+    }
+    entity Floor {
+        position: vec3(0.0, -0.1, 0.0);
+        mesh: Box { size: vec3(10.0, 0.2, 10.0) };
+        material: Pbr { base_color: #566975; roughness: 0.85 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(10.0, 0.2, 10.0); friction: 0.8 };
+    }
+    entity RigParent {
+        position: vec3(-1.0, 0.0, 0.0);
+        rotation: bind(quat.euler(0.0, parent_yaw, 0.0));
+        scale: vec3(1.1, 0.9, 1.3);
+        entity Fox {
+            scale: vec3(0.015625);
+            mesh: FOX.mesh("fox1");
+            material: Fur { image: FOX.material_texture("fox_material") };
+            bounds_center: vec3(0.0, 30.0, 0.0);
+            bounds_radius: 200.0;
+        }
+    }
+    entity Crate {
+        position: vec3(1.4, 1.5, 0.5);
+        mesh: Box { size: vec3(0.7) };
+        material: Pbr { base_color: #dd9567; roughness: 0.6 };
+        body: Dynamic { mass: 1.0 };
+        collider: BoxCollider { size: vec3(0.7); friction: 0.6 };
+    }
+    on key_down(Key.R) {
+        reset();
+    }
+}

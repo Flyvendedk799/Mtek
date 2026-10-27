@@ -12,6 +12,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { manifestValidationSchema } from "./manifest-validation-schema.ts";
 import { compactStandaloneSchemaData } from "./standalone-schema-data.ts";
+import { poolStandaloneDiagnosticStrings } from "./standalone-diagnostic-strings.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -50,7 +51,7 @@ const ajv = new Ajv2020({
   code: { source: true, esm: true },
 });
 const validate = ajv.compile(manifestValidationSchema(schema));
-const generated = compactStandaloneSchemaData(standaloneCode(ajv, validate));
+const generated = poolStandaloneDiagnosticStrings(compactStandaloneSchemaData(standaloneCode(ajv, validate)));
 
 // The bundled runtime must not need Ajv at run time: fail the build if the generated code imports anything.
 const importLike = /\b(?:import\s*[\w{*"']|import\s*\(|require\s*\()/;

@@ -1,5 +1,5 @@
 // Mtek runtime host API (ABI 1). Hand-maintained: the public types of spec/runtime-abi.md section 6,
-// nothing else. `npm run build` copies this file to dist/runtime.d.ts; the compiler writes it into every
+// nothing else. `npm run build` prints this file without comments to dist/runtime.d.ts; the compiler writes it into every
 // program's dist/ next to app.d.ts, which imports from it. Keep it self-contained (no imports) so it
 // compiles in a host project with only the DOM library.
 
@@ -200,8 +200,16 @@ export interface MtekComputeInspection {
   readonly dispatchPending: boolean;
   readonly completedDomain?: readonly [number, number, number];
 }
+export interface MtekComputeBounds { readonly center: readonly [number, number, number]; readonly radius: number }
+export interface MtekComputePositionAttachment {
+  readonly state: "attached" | "disposed";
+  inspect(): { readonly entity: string; readonly bounds: MtekComputeBounds; readonly state: "attached" | "disposed" };
+  dispose(): void;
+}
 export interface MtekComputeHandle {
   readonly state: MtekComputeInspection["state"];
+  /** Borrow a completed packed f32 xyz output for one declared entity in the current scene. */
+  attachPositions(entity: string, bounds: MtekComputeBounds): MtekComputePositionAttachment;
   /** Upload an exact-size packed resource; bytes are copied. Layout is available through inspect(). */
   upload(name: string, data: ArrayBufferView): void;
   /** Supply a scalar, vector tuple/object, column-major matrix, array or struct value. */
@@ -285,6 +293,25 @@ export interface MtekRenderingOptions {readonly additiveMaterials?:readonly stri
 export declare function decodeRadiance(bytes:Uint8Array):LinearEnvironment;
 export interface AnimationVector { readonly x:number;readonly y:number;readonly z:number }
 export interface AnimationQuaternion extends AnimationVector { readonly w:number }
+export interface SceneRenderBounds {
+  readonly source:"authored"|"compute"|"animated"|"mesh"|"unbounded";
+  readonly sphere:{readonly center:AnimationVector;readonly radius:number}|null;
+  readonly culled:boolean;
+}
+export interface SceneSpatialEntity {
+  readonly id:string;readonly parentId:string|null;readonly worldMatrix:readonly number[];readonly bounds?:SceneRenderBounds;
+}
+export interface ScenePhysicsBody {
+  readonly entityId:string;readonly kind:"static"|"kinematic"|"dynamic";readonly active:boolean;
+  readonly collider:{readonly shape:{readonly kind:"box";readonly size:AnimationVector}|{readonly kind:"sphere";readonly radius:number};readonly sensor:boolean;readonly friction:number;readonly restitution:number};
+  readonly position:AnimationVector;readonly rotation:AnimationQuaternion;
+  readonly contacts?:readonly {readonly otherId:string|null;readonly point:AnimationVector;readonly normal:AnimationVector;readonly distance:number}[];
+}
+export interface SceneInspection {
+  readonly frame:number|null;readonly renderable:boolean;
+  readonly viewport:{readonly width:number;readonly height:number};readonly viewProjection:readonly number[];
+  readonly entities:readonly SceneSpatialEntity[];readonly bodies:readonly ScenePhysicsBody[];
+}
 export interface SceneTransform {
   /** Explicit final mesh-local sphere, when supplied by source. */
   readonly bounds?: { readonly center: AnimationVector; readonly radius: number };
@@ -295,6 +322,8 @@ export interface TransformUpdate {readonly id:string;readonly position?:Animatio
 export interface ExtensionContext {
   readonly apiVersion:1;
   readTransforms():readonly SceneTransform[];
+  /** Optional API 1 capability; passive copies from the last propagated/rendered frame. */
+  inspectScene?():SceneInspection|undefined;
   writeTransforms(updates:readonly TransformUpdate[]):void;
   animation(id:string):AnimationPlayer|undefined;
   shareAnimation(source:string,targets:readonly string[]):void;detachAnimation(id:string):AnimationPlayer;
@@ -340,6 +369,8 @@ export interface AnimationClock {
   time(slot:number):number;duration(slot:number):number;weight(slot:number):number;playing(slot:number):boolean;finished(slot:number):boolean;crossed(slot:number,marker:number):boolean;
 }
 export interface AnimationPlayer {
+  /** Optional diagnostic capability. Does not advance/evaluate or consume root motion/markers. */
+  inspect?():AnimationInspection;
   readonly skin:MtekSkin;readonly palette:Float32Array;readonly pose:Float64Array;readonly revision:number;
   readonly clock:AnimationClock;
   readonly locomotion:LocomotionPlayer;
@@ -351,6 +382,23 @@ export interface AnimationPlayer {
   jointPosition(name:string):AnimationVector;jointRotation(name:string):AnimationQuaternion;
   setProceduralOverride(override:((pose:Float64Array)=>void)|undefined):void;
   setRootMotion(node:string|undefined):void;consumeRootMotion():AnimationVector;
+}
+export interface AnimationLayerInspection {
+  readonly id:string;readonly clip:string;readonly weight:number;readonly additive:boolean;readonly time:number;
+  readonly duration:number;readonly playing:boolean;readonly mask:readonly number[];
+}
+export interface IKInspection {
+  readonly id:string;readonly chain:readonly number[];readonly target:AnimationVector;readonly weight:number;
+  readonly iterations:number;readonly tolerance:number;readonly rotation?:AnimationQuaternion;readonly rotationWeight:number;
+  readonly limits:readonly {readonly node:number;readonly limit:IKHingeLimit}[];
+}
+export interface AnimationInspection {
+  readonly mode:"bind"|"held"|"clip"|"locomotion";readonly clip:string|null;
+  readonly transition:{readonly elapsed:number;readonly duration:number;readonly progress:number;readonly outgoingClip:string|null;readonly fromSnapshot:boolean};
+  readonly rootMotionNode:number|null;readonly proceduralOverride:boolean;
+  readonly nodes:readonly {readonly index:number;readonly name:string;readonly parent:number;readonly joint:boolean;readonly position:AnimationVector}[];
+  readonly layers:readonly AnimationLayerInspection[];readonly ik:readonly IKInspection[];
+  readonly locomotion:{readonly phase:number;readonly parameter:number;readonly samples:readonly {readonly clip:string;readonly threshold:number;readonly weight:number}[]}|null;
 }
 export declare class AnimationController {
   readonly apiVersion=1;readonly player:AnimationPlayer;

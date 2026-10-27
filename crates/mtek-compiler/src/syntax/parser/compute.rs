@@ -35,7 +35,7 @@ impl Parser<'_> {
             let member_start = self.span().start;
             let member = match self.kind() {
                 TokenKind::KwParam => self.param_decl().map(ComputeMember::Param),
-                TokenKind::Ident => match self.text_of(self.span()) {
+                TokenKind::Ident | TokenKind::Underscore => match self.text_of(self.span()) {
                     "input" => self.storage_decl().map(ComputeMember::Input),
                     "output" => self.storage_decl().map(ComputeMember::Output),
                     "workgroup_size" if self.kind_at(1) != TokenKind::LParen => {

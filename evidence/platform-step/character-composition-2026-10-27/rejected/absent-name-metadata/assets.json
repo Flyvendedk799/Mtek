@@ -1,0 +1,21 @@
+{
+  "format": "mtek-character-composition-derivation-check/1",
+  "startedAt": "2026-10-27T04:48:06.206Z",
+  "status": "failed",
+  "failure": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  {\n    channels: [\n      {\n        sampler: 0,\n        target: {\n...\n    ],\n+   name: undefined,\n    samplers: [\n      {\n        input: 6,\n        interpolation: 'LINEAR',\n        output: 7\n",
+  "sources": [
+    {
+      "path": "examples/character-composition/verify-assets.mjs",
+      "sha256": "e29803e4386ceca5ac1543404d5ebc0320770ec9c30c43bd4c943e89022f0391"
+    },
+    {
+      "path": "examples/character-composition/glb.mjs",
+      "sha256": "4bc3e7715e1e2ed6811e3d42ddcc4d7a83a5f0ff9afcf0f8c7584b6ca29b342a"
+    },
+    {
+      "path": "examples/character-composition/prepare.mjs",
+      "sha256": "070d14dc57c5bb4f99e0fb814c3fcffda05736080cbe46a81f06d6a71c5ea706"
+    }
+  ],
+  "finishedAt": "2026-10-27T04:48:08.042Z"
+}

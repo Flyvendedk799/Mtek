@@ -2,8 +2,32 @@ import {createAnimationController, type ExtensionContext} from "@mtek/runtime-we
 import {describe, expect, it, vi} from "vitest";
 import {INSPECTOR_METRICS_SERVICE, InspectorController} from "../src/index.js";
 import {entity, fixture, skin} from "./fixture.js";
+import type {SceneInspection} from "@mtek/runtime-web";
 
 describe("public inspector extension", () => {
+  it("samples spatial data only for observers and keeps panel polling independent", () => {
+    const f = fixture({interval:10}), matrix = [1,0,0,0,0,1,0,0,0,0,1,0,1,2,3,1];
+    let spatial: SceneInspection = {frame:1,renderable:true,viewport:{width:100,height:100},viewProjection:matrix,entities:[{id:entity().id,parentId:null,worldMatrix:matrix}],bodies:[]};
+    const inspect = vi.fn(() => spatial); f.context.inspectScene = inspect;
+    const detach = f.mount(); f.inspector.select(entity().id); expect(inspect).not.toHaveBeenCalled();
+    const observer = vi.fn(), remove = f.inspector.subscribeSpatial(observer), reads = f.read.mock.calls.length;
+    expect(inspect).toHaveBeenCalledTimes(1); matrix[12] = 99;
+    expect(f.inspector.spatialSnapshot().scene!.entities[0]!.worldMatrix[12]).toBe(1);
+    expect(() => Object.assign(f.inspector.spatialSnapshot().scene!.entities[0]!.worldMatrix,{12:8})).toThrow();
+    f.step(.1); expect(inspect).toHaveBeenCalledTimes(2); expect(f.read).toHaveBeenCalledTimes(reads);
+    spatial = {...spatial,entities:[{id:"scene:2:Actor",parentId:null,worldMatrix:matrix}]}; f.setEntities([entity("scene:2:Actor")]);
+    f.step(.1); expect(f.inspector.spatialSnapshot().selectedId).toBeNull();
+    remove(); f.step(.1); expect(inspect).toHaveBeenCalledTimes(3);
+    detach?.(); expect(f.inspector.spatialSnapshot().status).toBe("detached");
+  });
+  it("isolates unavailable/failing spatial providers and cannot resurrect a disposed controller", () => {
+    const onError = vi.fn(), f = fixture({onError}); f.mount();
+    const remove = f.inspector.subscribeSpatial(() => {}); expect(f.inspector.spatialSnapshot().scene).toBeNull();
+    f.context.inspectScene = () => {throw new Error("adapter contact read failed");};
+    f.step(); expect(f.inspector.spatialSnapshot().error).toMatch(/contact read/); expect(f.inspector.snapshot().status).toBe("ready"); expect(onError).toHaveBeenCalled();
+    f.context.inspectScene = () => {f.inspector.dispose(); return undefined;};
+    f.step(); expect(f.inspector.spatialSnapshot().status).toBe("disposed"); remove();
+  });
   it("isolates snapshots and applies copied batches only before the next frame", () => {
     const f = fixture(); f.mount(); f.setEntities([entity(),entity("scene:1:Other")]); f.inspector.refresh();
     const updates = [{id:entity().id, position:{x:3,y:2,z:1}},{id:"scene:1:Other", scale:{x:2,y:2,z:2}}];

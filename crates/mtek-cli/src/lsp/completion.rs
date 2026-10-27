@@ -322,8 +322,16 @@ fn context(nodes: &Nodes, anchor: u32) -> Context {
         .filter(|info| {
             matches!(
                 info.kind,
-                "desc" | "entity" | "prefab" | "scene" | "object" | "material" | "block" | "module"
-            ) && info.span.start < anchor
+                "desc"
+                    | "entity"
+                    | "prefab"
+                    | "scene"
+                    | "object"
+                    | "material"
+                    | "compute"
+                    | "block"
+                    | "module"
+            ) && (info.span.start < anchor || (info.kind == "module" && info.span.start == anchor))
                 && anchor <= info.span.end
         })
         .min_by_key(|info| info.span.len());
@@ -775,7 +783,7 @@ fn member_start_candidates(
     match owner.kind {
         "module" => keywords(&[
             "import", "export", "const", "fn", "cpu", "struct", "enum", "material", "prefab",
-            "scene",
+            "scene", "compute",
         ]),
         "scene" => {
             let mut out = schema_fields(registry.declaration_schemas.scene, &written, 0);
@@ -811,6 +819,7 @@ fn member_start_candidates(
             out
         }
         "material" => keywords(&["param", "fragment", "vertex"]),
+        "compute" => keywords(&["param", "input", "output", "workgroup_size", "kernel"]),
         _ => Vec::new(),
     }
 }

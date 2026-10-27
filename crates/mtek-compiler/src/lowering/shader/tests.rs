@@ -59,14 +59,14 @@ material Deformed {{
     let shader = lower_material(&program, material).expect("lowered");
     let artifact = emit_shader(&shader).expect("Naga validates authored entry points");
     assert!(artifact.vertex_deformation);
-    // Passing the whole input to a helper retains all three attributes.
+    // Passing the whole input to a helper retains all four attributes.
     assert_eq!(
         artifact
             .vertex_attributes
             .iter()
             .map(|a| a.name())
             .collect::<Vec<_>>(),
-        vec!["position", "normal", "uv"]
+        vec!["position", "normal", "uv", "tangent"]
     );
     assert!(artifact.surface_inputs.is_empty());
     assert!(artifact.wgsl.contains("fn mtek_vertex("));
@@ -510,6 +510,48 @@ material M {{
         vec!["position"]
     );
     emit_shader(&shader).expect("normal and UV are supplied by the authored result");
+}
+
+#[test]
+fn authored_tangent_outputs_replace_the_source_frame_and_other_deformations_use_the_sentinel() {
+    for explicit in [false, true] {
+        let fields = if explicit { "tangent: vec4;" } else { "" };
+        let value = if explicit {
+            "tangent: vec4(0.0, 1.0, 0.0, -1.0);"
+        } else {
+            ""
+        };
+        let text = format!(
+            r#"
+struct Shape {{ position: vec3; {fields} }}
+material M {{
+    vertex(v: VertexInput) -> Shape {{ return Shape {{ position: v.position; {value} }}; }}
+    fragment(s: SurfaceInput) -> color {{ return lighting.pbr_mapped(s, #ffffff, 0.0, 0.5, vec3(0.5, 0.75, 1.0), 1.0, 1.0, vec3(0.0)); }}
+}}
+{SCENE}
+"#
+        );
+        let (program, _) = program(&[("src/main.mtek", &text)]);
+        let material = program.materials().next().unwrap();
+        let shader = lower_material(&program, material).unwrap();
+        assert!(shader.surface_inputs.contains(&SurfaceField::WorldTangent));
+        assert!(
+            !shader
+                .vertex_attributes
+                .iter()
+                .any(|a| a.name() == "tangent")
+        );
+        let artifact =
+            emit_shader(&shader).expect("authored and fallback mapped PBR validate in Naga");
+        assert!(artifact.wgsl.contains("mtek_in.world_tangent"));
+        assert_eq!(
+            artifact.wgsl.contains("mtek_deformed_vertex.u_tangent"),
+            explicit
+        );
+        assert!(artifact.wgsl.contains("mtek_authored_result"));
+        assert!(artifact.wgsl.contains("mtek_derivative_normal"));
+    }
+    assert!(stage_errors("struct Shape { position: vec3; tangent: vec3; }", "vertex(v: VertexInput) -> Shape { return Shape { position: v.position; tangent: vec3(1.0) }; } fragment(s: SurfaceInput) -> color { return #ffffff; }").contains(&Code::E4021));
 }
 
 fn stage_errors(types: &str, stages: &str) -> Vec<Code> {

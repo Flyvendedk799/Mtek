@@ -1,0 +1,940 @@
+{
+  "format": "mtek-authored-cohort-evidence/1",
+  "recordedAt": "2026-10-27T03:48:11.986Z",
+  "final": {
+    "hardware": {
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-3",
+        "device": "0x744c",
+        "description": "AMD Radeon RX 7900 XTX",
+        "isFallbackAdapter": false
+      },
+      "cases": 12,
+      "lifetime": 4,
+      "maximumIndependentError": 0,
+      "maximumCpuError": 0,
+      "maximumCullingError": 0,
+      "sharedDemo": {
+        "actors": 50,
+        "players": 5
+      },
+      "independentDemo": {
+        "actors": 50,
+        "players": 50
+      }
+    },
+    "software": {
+      "adapter": {
+        "vendor": "google",
+        "architecture": "swiftshader",
+        "device": "0xc0de",
+        "description": "SwiftShader Device (Subzero)",
+        "isFallbackAdapter": true
+      },
+      "cases": 12,
+      "lifetime": 4,
+      "maximumIndependentError": 0,
+      "maximumCpuError": 1,
+      "maximumCullingError": 0,
+      "sharedDemo": {
+        "actors": 50,
+        "players": 5
+      },
+      "independentDemo": {
+        "actors": 50,
+        "players": 50
+      }
+    }
+  },
+  "checksPassed": [
+    "Ordinary CLI check/format/test build and release build",
+    "TypeScript and type-aware ESLint for the new TS sources",
+    "Pinned GBNF validator accepts the actual source",
+    "Coverage and release-document generation audits",
+    "Five prebuilt artifacts and provenance unchanged since inspection checkpoint",
+    "Runtime/prebuilt against-dist provenance check",
+    "Frozen definition hash and no changed AI archive files"
+  ],
+  "unchangedRuntime": {
+    "crates/mtek-cli/prebuilt/physics.js": "5bf6a0597ba2872d5394eb96421e526cf6bf76ab55a27c5fe226bc74be4d7526",
+    "crates/mtek-cli/prebuilt/PROVENANCE.json": "2c3d54da5efbef77b9e4125bffa187a8dd15eb8235d4ab361eeeab34c2faebb0",
+    "crates/mtek-cli/prebuilt/runtime.d.ts": "767560890951b19969928c2fe1d68a2142751512c2bc031d360a30e569878c97",
+    "crates/mtek-cli/prebuilt/runtime.dev.js": "261be44f22fd2d2258004991326640136e3bc596c28246b0785d68fa272b72a0",
+    "crates/mtek-cli/prebuilt/runtime.js": "c86d6e586f81a0639eb027ae52a170557b8c826041e3570f8320b962ad7cdc00",
+    "crates/mtek-cli/prebuilt/runtime.min.js": "dcf9429370485b7eaf4fd47590a2c44a075edf442625345d2ff10e075ba39dc0"
+  },
+  "frozenAnimationDefinitions": "0897d7e5d5e7aa19ccf6cd49faf640e4001762b10faa9baa24e2db23590d0c6a",
+  "records": [
+    {
+      "run": "rejected/manifest-id",
+      "files": [
+        {
+          "file": "hardware.json",
+          "originalSha256": "ee96e7d734604a136285b63366f16b5f06224c726767625d8bc7545744c51761",
+          "retainedSha256": "ee96e7d734604a136285b63366f16b5f06224c726767625d8bc7545744c51761"
+        }
+      ]
+    },
+    {
+      "run": "intermediate/gpu-first",
+      "files": [
+        {
+          "file": "hardware-CesiumMan-1-1-colour.png",
+          "originalSha256": "21f588fbc51c1dccf11b0e746013376156e83b709a90adb70fd00dd582dc7be7",
+          "retainedSha256": "21f588fbc51c1dccf11b0e746013376156e83b709a90adb70fd00dd582dc7be7"
+        },
+        {
+          "file": "hardware-CesiumMan-1-1-shadow.png",
+          "originalSha256": "67ec9768abeddc0dbf3de53edbdf75895a41f096aee91a90aa387b04c5f69447",
+          "retainedSha256": "67ec9768abeddc0dbf3de53edbdf75895a41f096aee91a90aa387b04c5f69447"
+        },
+        {
+          "file": "hardware-CesiumMan-10-1-colour.png",
+          "originalSha256": "67449d7a22e63f95ad4cf3d8fbf5c1c4f1e73742f4803b62bf17fb22b075214f",
+          "retainedSha256": "67449d7a22e63f95ad4cf3d8fbf5c1c4f1e73742f4803b62bf17fb22b075214f"
+        },
+        {
+          "file": "hardware-CesiumMan-10-1-shadow.png",
+          "originalSha256": "eccefdc2d8a96e2531653fe6661ba8c33e0b9e64e47a8f30c67d3d449f6ae23a",
+          "retainedSha256": "eccefdc2d8a96e2531653fe6661ba8c33e0b9e64e47a8f30c67d3d449f6ae23a"
+        },
+        {
+          "file": "hardware-CesiumMan-50-5-colour.png",
+          "originalSha256": "a2e5462dd02a69dac187e4843bb98518233f13b2ac2b898c3051e15aee3c7285",
+          "retainedSha256": "a2e5462dd02a69dac187e4843bb98518233f13b2ac2b898c3051e15aee3c7285"
+        },
+        {
+          "file": "hardware-CesiumMan-50-5-shadow.png",
+          "originalSha256": "b70b28542e90a11cb6a3a5e499431abc1336c6d195b62e09ba650274d7eddcaa",
+          "retainedSha256": "b70b28542e90a11cb6a3a5e499431abc1336c6d195b62e09ba650274d7eddcaa"
+        },
+        {
+          "file": "hardware-Fox-1-1-colour.png",
+          "originalSha256": "1067d684985c31a1662845bc8df5df7221b31951ea7b544e7e5aa87eba908983",
+          "retainedSha256": "1067d684985c31a1662845bc8df5df7221b31951ea7b544e7e5aa87eba908983"
+        },
+        {
+          "file": "hardware-Fox-1-1-shadow.png",
+          "originalSha256": "7436a83f20df718be8d57357e8b6ef484894cd63cd027929e469a3e9904468b9",
+          "retainedSha256": "7436a83f20df718be8d57357e8b6ef484894cd63cd027929e469a3e9904468b9"
+        },
+        {
+          "file": "hardware-Fox-10-1-colour.png",
+          "originalSha256": "c91265a34b34ee53ee3ae819a16ffc3a369d768d09e241384d22d6e68b852711",
+          "retainedSha256": "c91265a34b34ee53ee3ae819a16ffc3a369d768d09e241384d22d6e68b852711"
+        },
+        {
+          "file": "hardware-Fox-10-1-shadow.png",
+          "originalSha256": "93628cfdbc264e08f35d3387fff41e86462b19efc771e211de18bf61e5f7d7fb",
+          "retainedSha256": "93628cfdbc264e08f35d3387fff41e86462b19efc771e211de18bf61e5f7d7fb"
+        },
+        {
+          "file": "hardware-Fox-50-5-colour.png",
+          "originalSha256": "c6c755204651fcc16ee1f5cb97182eb0b09bda4fe8a450f27e4ca587dd3ce83b",
+          "retainedSha256": "c6c755204651fcc16ee1f5cb97182eb0b09bda4fe8a450f27e4ca587dd3ce83b"
+        },
+        {
+          "file": "hardware-Fox-50-5-shadow.png",
+          "originalSha256": "8f490e9b6fd1ab122035f4ea87603ee78466c42a6d20530ab0f177a281a7d5b5",
+          "retainedSha256": "8f490e9b6fd1ab122035f4ea87603ee78466c42a6d20530ab0f177a281a7d5b5"
+        },
+        {
+          "file": "hardware.json",
+          "originalSha256": "1ecf600bcd8a0d337e56ec544a5905be1a5b778cd8ff0a807fac74ae1c5e0a7a",
+          "retainedSha256": "1ecf600bcd8a0d337e56ec544a5905be1a5b778cd8ff0a807fac74ae1c5e0a7a"
+        },
+        {
+          "file": "software-CesiumMan-1-1-colour.png",
+          "originalSha256": "2ea86062003b0e8ba269537ec30120ff826459d53f38ca4f595eead778db56c5",
+          "retainedSha256": "2ea86062003b0e8ba269537ec30120ff826459d53f38ca4f595eead778db56c5"
+        },
+        {
+          "file": "software-CesiumMan-1-1-shadow.png",
+          "originalSha256": "5df6a0c5091e125633fe76c063b5ee99a97840fdc9f2412fa4d7d0fce65c5e3b",
+          "retainedSha256": "5df6a0c5091e125633fe76c063b5ee99a97840fdc9f2412fa4d7d0fce65c5e3b"
+        },
+        {
+          "file": "software-CesiumMan-10-1-colour.png",
+          "originalSha256": "9c2767fc1c0d59311cc67ee55c3b360da9ea01b6c0512b58accc45649b04f40a",
+          "retainedSha256": "9c2767fc1c0d59311cc67ee55c3b360da9ea01b6c0512b58accc45649b04f40a"
+        },
+        {
+          "file": "software-CesiumMan-10-1-shadow.png",
+          "originalSha256": "94d58109ee8e88f2f627a521f8f0af15c58ab7ba562d2186ee4700aa948fce39",
+          "retainedSha256": "94d58109ee8e88f2f627a521f8f0af15c58ab7ba562d2186ee4700aa948fce39"
+        },
+        {
+          "file": "software-CesiumMan-50-5-colour.png",
+          "originalSha256": "b9f66a8242820e590205ade0f0064f9d8d4564b783ce54922770f588874acb0e",
+          "retainedSha256": "b9f66a8242820e590205ade0f0064f9d8d4564b783ce54922770f588874acb0e"
+        },
+        {
+          "file": "software-CesiumMan-50-5-shadow.png",
+          "originalSha256": "e3a8d252eb0ac97ce7b9bdaac53a37ffc8c1228f509b0a25d91beff8e4fb2599",
+          "retainedSha256": "e3a8d252eb0ac97ce7b9bdaac53a37ffc8c1228f509b0a25d91beff8e4fb2599"
+        },
+        {
+          "file": "software-Fox-1-1-colour.png",
+          "originalSha256": "bc35055aa66e97156bc72c4ce8364f6e53d5a31b516fae8cdfa69d17e6704313",
+          "retainedSha256": "bc35055aa66e97156bc72c4ce8364f6e53d5a31b516fae8cdfa69d17e6704313"
+        },
+        {
+          "file": "software-Fox-1-1-shadow.png",
+          "originalSha256": "40ce6fb8905b30b73ea2430fb044f152e1c13f7b057de516b622f9615a6f094d",
+          "retainedSha256": "40ce6fb8905b30b73ea2430fb044f152e1c13f7b057de516b622f9615a6f094d"
+        },
+        {
+          "file": "software-Fox-10-1-colour.png",
+          "originalSha256": "c99312b1e4e9c46512ca87e5d9344b8dcbcee8f875dafc9a0ca5b25f09e7688d",
+          "retainedSha256": "c99312b1e4e9c46512ca87e5d9344b8dcbcee8f875dafc9a0ca5b25f09e7688d"
+        },
+        {
+          "file": "software-Fox-10-1-shadow.png",
+          "originalSha256": "aa59de69531b2df932f7541ebe916fef7acb159a1dfc4419a8ea9752f1760fed",
+          "retainedSha256": "aa59de69531b2df932f7541ebe916fef7acb159a1dfc4419a8ea9752f1760fed"
+        },
+        {
+          "file": "software-Fox-50-5-colour.png",
+          "originalSha256": "0b8070e6cd9511c6685659ea72aa6e23c03167a8bccfefbda27e1065fc1a4643",
+          "retainedSha256": "0b8070e6cd9511c6685659ea72aa6e23c03167a8bccfefbda27e1065fc1a4643"
+        },
+        {
+          "file": "software-Fox-50-5-shadow.png",
+          "originalSha256": "4daddabd2854cc4ff60ea8879ce787be867bc457bed73bd91beb15dd1a887d0d",
+          "retainedSha256": "4daddabd2854cc4ff60ea8879ce787be867bc457bed73bd91beb15dd1a887d0d"
+        },
+        {
+          "file": "software.json",
+          "originalSha256": "6e49835128dc3ba0dea1437104d7ca6f5a11d89c19b7f71ced409c6e9d3e058f",
+          "retainedSha256": "6e49835128dc3ba0dea1437104d7ca6f5a11d89c19b7f71ced409c6e9d3e058f"
+        }
+      ]
+    },
+    {
+      "run": "rejected/demo-step",
+      "files": [
+        {
+          "file": "hardware-CesiumMan-1-1-colour.png",
+          "originalSha256": "21f588fbc51c1dccf11b0e746013376156e83b709a90adb70fd00dd582dc7be7",
+          "retainedSha256": "21f588fbc51c1dccf11b0e746013376156e83b709a90adb70fd00dd582dc7be7"
+        },
+        {
+          "file": "hardware-CesiumMan-1-1-shadow.png",
+          "originalSha256": "67ec9768abeddc0dbf3de53edbdf75895a41f096aee91a90aa387b04c5f69447",
+          "retainedSha256": "67ec9768abeddc0dbf3de53edbdf75895a41f096aee91a90aa387b04c5f69447"
+        },
+        {
+          "file": "hardware-CesiumMan-10-1-colour.png",
+          "originalSha256": "67449d7a22e63f95ad4cf3d8fbf5c1c4f1e73742f4803b62bf17fb22b075214f",
+          "retainedSha256": "67449d7a22e63f95ad4cf3d8fbf5c1c4f1e73742f4803b62bf17fb22b075214f"
+        },
+        {
+          "file": "hardware-CesiumMan-10-1-shadow.png",
+          "originalSha256": "eccefdc2d8a96e2531653fe6661ba8c33e0b9e64e47a8f30c67d3d449f6ae23a",
+          "retainedSha256": "eccefdc2d8a96e2531653fe6661ba8c33e0b9e64e47a8f30c67d3d449f6ae23a"
+        },
+        {
+          "file": "hardware-CesiumMan-50-5-colour.png",
+          "originalSha256": "a2e5462dd02a69dac187e4843bb98518233f13b2ac2b898c3051e15aee3c7285",
+          "retainedSha256": "a2e5462dd02a69dac187e4843bb98518233f13b2ac2b898c3051e15aee3c7285"
+        },
+        {
+          "file": "hardware-CesiumMan-50-5-shadow.png",
+          "originalSha256": "b70b28542e90a11cb6a3a5e499431abc1336c6d195b62e09ba650274d7eddcaa",
+          "retainedSha256": "b70b28542e90a11cb6a3a5e499431abc1336c6d195b62e09ba650274d7eddcaa"
+        },
+        {
+          "file": "hardware-Fox-1-1-colour.png",
+          "originalSha256": "1067d684985c31a1662845bc8df5df7221b31951ea7b544e7e5aa87eba908983",
+          "retainedSha256": "1067d684985c31a1662845bc8df5df7221b31951ea7b544e7e5aa87eba908983"
+        },
+        {
+          "file": "hardware-Fox-1-1-shadow.png",
+          "originalSha256": "7436a83f20df718be8d57357e8b6ef484894cd63cd027929e469a3e9904468b9",
+          "retainedSha256": "7436a83f20df718be8d57357e8b6ef484894cd63cd027929e469a3e9904468b9"
+        },
+        {
+          "file": "hardware-Fox-10-1-colour.png",
+          "originalSha256": "c91265a34b34ee53ee3ae819a16ffc3a369d768d09e241384d22d6e68b852711",
+          "retainedSha256": "c91265a34b34ee53ee3ae819a16ffc3a369d768d09e241384d22d6e68b852711"
+        },
+        {
+          "file": "hardware-Fox-10-1-shadow.png",
+          "originalSha256": "93628cfdbc264e08f35d3387fff41e86462b19efc771e211de18bf61e5f7d7fb",
+          "retainedSha256": "93628cfdbc264e08f35d3387fff41e86462b19efc771e211de18bf61e5f7d7fb"
+        },
+        {
+          "file": "hardware-Fox-50-5-colour.png",
+          "originalSha256": "c6c755204651fcc16ee1f5cb97182eb0b09bda4fe8a450f27e4ca587dd3ce83b",
+          "retainedSha256": "c6c755204651fcc16ee1f5cb97182eb0b09bda4fe8a450f27e4ca587dd3ce83b"
+        },
+        {
+          "file": "hardware-Fox-50-5-shadow.png",
+          "originalSha256": "8f490e9b6fd1ab122035f4ea87603ee78466c42a6d20530ab0f177a281a7d5b5",
+          "retainedSha256": "8f490e9b6fd1ab122035f4ea87603ee78466c42a6d20530ab0f177a281a7d5b5"
+        },
+        {
+          "file": "hardware.json",
+          "originalSha256": "0ae961ea3da31525ba17645831706f34dfc95e76a9a4f981bed197f16f71e02d",
+          "retainedSha256": "0ae961ea3da31525ba17645831706f34dfc95e76a9a4f981bed197f16f71e02d"
+        }
+      ]
+    },
+    {
+      "run": "rejected/demo-diagnostic",
+      "files": [
+        {
+          "file": "hardware-CesiumMan-1-1-colour.png",
+          "originalSha256": "21f588fbc51c1dccf11b0e746013376156e83b709a90adb70fd00dd582dc7be7",
+          "retainedSha256": "21f588fbc51c1dccf11b0e746013376156e83b709a90adb70fd00dd582dc7be7"
+        },
+        {
+          "file": "hardware-CesiumMan-1-1-shadow.png",
+          "originalSha256": "67ec9768abeddc0dbf3de53edbdf75895a41f096aee91a90aa387b04c5f69447",
+          "retainedSha256": "67ec9768abeddc0dbf3de53edbdf75895a41f096aee91a90aa387b04c5f69447"
+        },
+        {
+          "file": "hardware-CesiumMan-10-1-colour.png",
+          "originalSha256": "67449d7a22e63f95ad4cf3d8fbf5c1c4f1e73742f4803b62bf17fb22b075214f",
+          "retainedSha256": "67449d7a22e63f95ad4cf3d8fbf5c1c4f1e73742f4803b62bf17fb22b075214f"
+        },
+        {
+          "file": "hardware-CesiumMan-10-1-shadow.png",
+          "originalSha256": "eccefdc2d8a96e2531653fe6661ba8c33e0b9e64e47a8f30c67d3d449f6ae23a",
+          "retainedSha256": "eccefdc2d8a96e2531653fe6661ba8c33e0b9e64e47a8f30c67d3d449f6ae23a"
+        },
+        {
+          "file": "hardware-CesiumMan-50-5-colour.png",
+          "originalSha256": "a2e5462dd02a69dac187e4843bb98518233f13b2ac2b898c3051e15aee3c7285",
+          "retainedSha256": "a2e5462dd02a69dac187e4843bb98518233f13b2ac2b898c3051e15aee3c7285"
+        },
+        {
+          "file": "hardware-CesiumMan-50-5-shadow.png",
+          "originalSha256": "b70b28542e90a11cb6a3a5e499431abc1336c6d195b62e09ba650274d7eddcaa",
+          "retainedSha256": "b70b28542e90a11cb6a3a5e499431abc1336c6d195b62e09ba650274d7eddcaa"
+        },
+        {
+          "file": "hardware-Fox-1-1-colour.png",
+          "originalSha256": "1067d684985c31a1662845bc8df5df7221b31951ea7b544e7e5aa87eba908983",
+          "retainedSha256": "1067d684985c31a1662845bc8df5df7221b31951ea7b544e7e5aa87eba908983"
+        },
+        {
+          "file": "hardware-Fox-1-1-shadow.png",
+          "originalSha256": "7436a83f20df718be8d57357e8b6ef484894cd63cd027929e469a3e9904468b9",
+          "retainedSha256": "7436a83f20df718be8d57357e8b6ef484894cd63cd027929e469a3e9904468b9"
+        },
+        {
+          "file": "hardware-Fox-10-1-colour.png",
+          "originalSha256": "c91265a34b34ee53ee3ae819a16ffc3a369d768d09e241384d22d6e68b852711",
+          "retainedSha256": "c91265a34b34ee53ee3ae819a16ffc3a369d768d09e241384d22d6e68b852711"
+        },
+        {
+          "file": "hardware-Fox-10-1-shadow.png",
+          "originalSha256": "93628cfdbc264e08f35d3387fff41e86462b19efc771e211de18bf61e5f7d7fb",
+          "retainedSha256": "93628cfdbc264e08f35d3387fff41e86462b19efc771e211de18bf61e5f7d7fb"
+        },
+        {
+          "file": "hardware-Fox-50-5-colour.png",
+          "originalSha256": "c6c755204651fcc16ee1f5cb97182eb0b09bda4fe8a450f27e4ca587dd3ce83b",
+          "retainedSha256": "c6c755204651fcc16ee1f5cb97182eb0b09bda4fe8a450f27e4ca587dd3ce83b"
+        },
+        {
+          "file": "hardware-Fox-50-5-shadow.png",
+          "originalSha256": "8f490e9b6fd1ab122035f4ea87603ee78466c42a6d20530ab0f177a281a7d5b5",
+          "retainedSha256": "8f490e9b6fd1ab122035f4ea87603ee78466c42a6d20530ab0f177a281a7d5b5"
+        },
+        {
+          "file": "hardware.json",
+          "originalSha256": "99b68c0d97c5c144cef8b22daabe36e17f61aeec684f06d6cddad881a2341fd0",
+          "retainedSha256": "99b68c0d97c5c144cef8b22daabe36e17f61aeec684f06d6cddad881a2341fd0"
+        }
+      ]
+    },
+    {
+      "run": "intermediate/demo-fixed",
+      "files": [
+        {
+          "file": "hardware-CesiumMan-1-1-colour.png",
+          "originalSha256": "21f588fbc51c1dccf11b0e746013376156e83b709a90adb70fd00dd582dc7be7",
+          "retainedSha256": "21f588fbc51c1dccf11b0e746013376156e83b709a90adb70fd00dd582dc7be7"
+        },
+        {
+          "file": "hardware-CesiumMan-1-1-shadow.png",
+          "originalSha256": "67ec9768abeddc0dbf3de53edbdf75895a41f096aee91a90aa387b04c5f69447",
+          "retainedSha256": "67ec9768abeddc0dbf3de53edbdf75895a41f096aee91a90aa387b04c5f69447"
+        },
+        {
+          "file": "hardware-CesiumMan-10-1-colour.png",
+          "originalSha256": "67449d7a22e63f95ad4cf3d8fbf5c1c4f1e73742f4803b62bf17fb22b075214f",
+          "retainedSha256": "67449d7a22e63f95ad4cf3d8fbf5c1c4f1e73742f4803b62bf17fb22b075214f"
+        },
+        {
+          "file": "hardware-CesiumMan-10-1-shadow.png",
+          "originalSha256": "eccefdc2d8a96e2531653fe6661ba8c33e0b9e64e47a8f30c67d3d449f6ae23a",
+          "retainedSha256": "eccefdc2d8a96e2531653fe6661ba8c33e0b9e64e47a8f30c67d3d449f6ae23a"
+        },
+        {
+          "file": "hardware-CesiumMan-50-5-colour.png",
+          "originalSha256": "a2e5462dd02a69dac187e4843bb98518233f13b2ac2b898c3051e15aee3c7285",
+          "retainedSha256": "a2e5462dd02a69dac187e4843bb98518233f13b2ac2b898c3051e15aee3c7285"
+        },
+        {
+          "file": "hardware-CesiumMan-50-5-shadow.png",
+          "originalSha256": "b70b28542e90a11cb6a3a5e499431abc1336c6d195b62e09ba650274d7eddcaa",
+          "retainedSha256": "b70b28542e90a11cb6a3a5e499431abc1336c6d195b62e09ba650274d7eddcaa"
+        },
+        {
+          "file": "hardware-demo.png",
+          "originalSha256": "b23f10acbd8f0c6733cf7815c00161cbe5fe9a0a2985c0f720fdedcd342ae6d9",
+          "retainedSha256": "b23f10acbd8f0c6733cf7815c00161cbe5fe9a0a2985c0f720fdedcd342ae6d9"
+        },
+        {
+          "file": "hardware-Fox-1-1-colour.png",
+          "originalSha256": "1067d684985c31a1662845bc8df5df7221b31951ea7b544e7e5aa87eba908983",
+          "retainedSha256": "1067d684985c31a1662845bc8df5df7221b31951ea7b544e7e5aa87eba908983"
+        },
+        {
+          "file": "hardware-Fox-1-1-shadow.png",
+          "originalSha256": "7436a83f20df718be8d57357e8b6ef484894cd63cd027929e469a3e9904468b9",
+          "retainedSha256": "7436a83f20df718be8d57357e8b6ef484894cd63cd027929e469a3e9904468b9"
+        },
+        {
+          "file": "hardware-Fox-10-1-colour.png",
+          "originalSha256": "c91265a34b34ee53ee3ae819a16ffc3a369d768d09e241384d22d6e68b852711",
+          "retainedSha256": "c91265a34b34ee53ee3ae819a16ffc3a369d768d09e241384d22d6e68b852711"
+        },
+        {
+          "file": "hardware-Fox-10-1-shadow.png",
+          "originalSha256": "93628cfdbc264e08f35d3387fff41e86462b19efc771e211de18bf61e5f7d7fb",
+          "retainedSha256": "93628cfdbc264e08f35d3387fff41e86462b19efc771e211de18bf61e5f7d7fb"
+        },
+        {
+          "file": "hardware-Fox-50-5-colour.png",
+          "originalSha256": "c6c755204651fcc16ee1f5cb97182eb0b09bda4fe8a450f27e4ca587dd3ce83b",
+          "retainedSha256": "c6c755204651fcc16ee1f5cb97182eb0b09bda4fe8a450f27e4ca587dd3ce83b"
+        },
+        {
+          "file": "hardware-Fox-50-5-shadow.png",
+          "originalSha256": "8f490e9b6fd1ab122035f4ea87603ee78466c42a6d20530ab0f177a281a7d5b5",
+          "retainedSha256": "8f490e9b6fd1ab122035f4ea87603ee78466c42a6d20530ab0f177a281a7d5b5"
+        },
+        {
+          "file": "hardware.json",
+          "originalSha256": "1b007c416e92edb3aeefc97b14184426fb49832cb8a3712c82d819ae9ba4ce65",
+          "retainedSha256": "1b007c416e92edb3aeefc97b14184426fb49832cb8a3712c82d819ae9ba4ce65"
+        },
+        {
+          "file": "software-CesiumMan-1-1-colour.png",
+          "originalSha256": "2ea86062003b0e8ba269537ec30120ff826459d53f38ca4f595eead778db56c5",
+          "retainedSha256": "2ea86062003b0e8ba269537ec30120ff826459d53f38ca4f595eead778db56c5"
+        },
+        {
+          "file": "software-CesiumMan-1-1-shadow.png",
+          "originalSha256": "5df6a0c5091e125633fe76c063b5ee99a97840fdc9f2412fa4d7d0fce65c5e3b",
+          "retainedSha256": "5df6a0c5091e125633fe76c063b5ee99a97840fdc9f2412fa4d7d0fce65c5e3b"
+        },
+        {
+          "file": "software-CesiumMan-10-1-colour.png",
+          "originalSha256": "9c2767fc1c0d59311cc67ee55c3b360da9ea01b6c0512b58accc45649b04f40a",
+          "retainedSha256": "9c2767fc1c0d59311cc67ee55c3b360da9ea01b6c0512b58accc45649b04f40a"
+        },
+        {
+          "file": "software-CesiumMan-10-1-shadow.png",
+          "originalSha256": "94d58109ee8e88f2f627a521f8f0af15c58ab7ba562d2186ee4700aa948fce39",
+          "retainedSha256": "94d58109ee8e88f2f627a521f8f0af15c58ab7ba562d2186ee4700aa948fce39"
+        },
+        {
+          "file": "software-CesiumMan-50-5-colour.png",
+          "originalSha256": "b9f66a8242820e590205ade0f0064f9d8d4564b783ce54922770f588874acb0e",
+          "retainedSha256": "b9f66a8242820e590205ade0f0064f9d8d4564b783ce54922770f588874acb0e"
+        },
+        {
+          "file": "software-CesiumMan-50-5-shadow.png",
+          "originalSha256": "e3a8d252eb0ac97ce7b9bdaac53a37ffc8c1228f509b0a25d91beff8e4fb2599",
+          "retainedSha256": "e3a8d252eb0ac97ce7b9bdaac53a37ffc8c1228f509b0a25d91beff8e4fb2599"
+        },
+        {
+          "file": "software-demo.png",
+          "originalSha256": "20288d01ba91036d59b483f1c6a562f0b9ab3842c94703ec145bae0cbb1455c4",
+          "retainedSha256": "20288d01ba91036d59b483f1c6a562f0b9ab3842c94703ec145bae0cbb1455c4"
+        },
+        {
+          "file": "software-Fox-1-1-colour.png",
+          "originalSha256": "bc35055aa66e97156bc72c4ce8364f6e53d5a31b516fae8cdfa69d17e6704313",
+          "retainedSha256": "bc35055aa66e97156bc72c4ce8364f6e53d5a31b516fae8cdfa69d17e6704313"
+        },
+        {
+          "file": "software-Fox-1-1-shadow.png",
+          "originalSha256": "40ce6fb8905b30b73ea2430fb044f152e1c13f7b057de516b622f9615a6f094d",
+          "retainedSha256": "40ce6fb8905b30b73ea2430fb044f152e1c13f7b057de516b622f9615a6f094d"
+        },
+        {
+          "file": "software-Fox-10-1-colour.png",
+          "originalSha256": "c99312b1e4e9c46512ca87e5d9344b8dcbcee8f875dafc9a0ca5b25f09e7688d",
+          "retainedSha256": "c99312b1e4e9c46512ca87e5d9344b8dcbcee8f875dafc9a0ca5b25f09e7688d"
+        },
+        {
+          "file": "software-Fox-10-1-shadow.png",
+          "originalSha256": "aa59de69531b2df932f7541ebe916fef7acb159a1dfc4419a8ea9752f1760fed",
+          "retainedSha256": "aa59de69531b2df932f7541ebe916fef7acb159a1dfc4419a8ea9752f1760fed"
+        },
+        {
+          "file": "software-Fox-50-5-colour.png",
+          "originalSha256": "0b8070e6cd9511c6685659ea72aa6e23c03167a8bccfefbda27e1065fc1a4643",
+          "retainedSha256": "0b8070e6cd9511c6685659ea72aa6e23c03167a8bccfefbda27e1065fc1a4643"
+        },
+        {
+          "file": "software-Fox-50-5-shadow.png",
+          "originalSha256": "4daddabd2854cc4ff60ea8879ce787be867bc457bed73bd91beb15dd1a887d0d",
+          "retainedSha256": "4daddabd2854cc4ff60ea8879ce787be867bc457bed73bd91beb15dd1a887d0d"
+        },
+        {
+          "file": "software.json",
+          "originalSha256": "83f6b02d0bcba63ca5cf2490e68f47ad27d0a0a360342c2d1af00d45c7de1d72",
+          "retainedSha256": "83f6b02d0bcba63ca5cf2490e68f47ad27d0a0a360342c2d1af00d45c7de1d72"
+        }
+      ]
+    },
+    {
+      "run": "intermediate/bounds",
+      "files": [
+        {
+          "file": "hardware-CesiumMan-1-1-colour.png",
+          "originalSha256": "21f588fbc51c1dccf11b0e746013376156e83b709a90adb70fd00dd582dc7be7",
+          "retainedSha256": "21f588fbc51c1dccf11b0e746013376156e83b709a90adb70fd00dd582dc7be7"
+        },
+        {
+          "file": "hardware-CesiumMan-1-1-shadow.png",
+          "originalSha256": "67ec9768abeddc0dbf3de53edbdf75895a41f096aee91a90aa387b04c5f69447",
+          "retainedSha256": "67ec9768abeddc0dbf3de53edbdf75895a41f096aee91a90aa387b04c5f69447"
+        },
+        {
+          "file": "hardware-CesiumMan-10-1-colour.png",
+          "originalSha256": "67449d7a22e63f95ad4cf3d8fbf5c1c4f1e73742f4803b62bf17fb22b075214f",
+          "retainedSha256": "67449d7a22e63f95ad4cf3d8fbf5c1c4f1e73742f4803b62bf17fb22b075214f"
+        },
+        {
+          "file": "hardware-CesiumMan-10-1-shadow.png",
+          "originalSha256": "eccefdc2d8a96e2531653fe6661ba8c33e0b9e64e47a8f30c67d3d449f6ae23a",
+          "retainedSha256": "eccefdc2d8a96e2531653fe6661ba8c33e0b9e64e47a8f30c67d3d449f6ae23a"
+        },
+        {
+          "file": "hardware-CesiumMan-50-5-colour.png",
+          "originalSha256": "a2e5462dd02a69dac187e4843bb98518233f13b2ac2b898c3051e15aee3c7285",
+          "retainedSha256": "a2e5462dd02a69dac187e4843bb98518233f13b2ac2b898c3051e15aee3c7285"
+        },
+        {
+          "file": "hardware-CesiumMan-50-5-shadow.png",
+          "originalSha256": "b70b28542e90a11cb6a3a5e499431abc1336c6d195b62e09ba650274d7eddcaa",
+          "retainedSha256": "b70b28542e90a11cb6a3a5e499431abc1336c6d195b62e09ba650274d7eddcaa"
+        },
+        {
+          "file": "hardware-demo.png",
+          "originalSha256": "132c3e8b50fa423e436a07fc1745ce8b79f26c561177fa2873173f1b23702881",
+          "retainedSha256": "132c3e8b50fa423e436a07fc1745ce8b79f26c561177fa2873173f1b23702881"
+        },
+        {
+          "file": "hardware-Fox-1-1-colour.png",
+          "originalSha256": "1067d684985c31a1662845bc8df5df7221b31951ea7b544e7e5aa87eba908983",
+          "retainedSha256": "1067d684985c31a1662845bc8df5df7221b31951ea7b544e7e5aa87eba908983"
+        },
+        {
+          "file": "hardware-Fox-1-1-shadow.png",
+          "originalSha256": "7436a83f20df718be8d57357e8b6ef484894cd63cd027929e469a3e9904468b9",
+          "retainedSha256": "7436a83f20df718be8d57357e8b6ef484894cd63cd027929e469a3e9904468b9"
+        },
+        {
+          "file": "hardware-Fox-10-1-colour.png",
+          "originalSha256": "c91265a34b34ee53ee3ae819a16ffc3a369d768d09e241384d22d6e68b852711",
+          "retainedSha256": "c91265a34b34ee53ee3ae819a16ffc3a369d768d09e241384d22d6e68b852711"
+        },
+        {
+          "file": "hardware-Fox-10-1-shadow.png",
+          "originalSha256": "93628cfdbc264e08f35d3387fff41e86462b19efc771e211de18bf61e5f7d7fb",
+          "retainedSha256": "93628cfdbc264e08f35d3387fff41e86462b19efc771e211de18bf61e5f7d7fb"
+        },
+        {
+          "file": "hardware-Fox-50-5-colour.png",
+          "originalSha256": "c6c755204651fcc16ee1f5cb97182eb0b09bda4fe8a450f27e4ca587dd3ce83b",
+          "retainedSha256": "c6c755204651fcc16ee1f5cb97182eb0b09bda4fe8a450f27e4ca587dd3ce83b"
+        },
+        {
+          "file": "hardware-Fox-50-5-shadow.png",
+          "originalSha256": "8f490e9b6fd1ab122035f4ea87603ee78466c42a6d20530ab0f177a281a7d5b5",
+          "retainedSha256": "8f490e9b6fd1ab122035f4ea87603ee78466c42a6d20530ab0f177a281a7d5b5"
+        },
+        {
+          "file": "hardware.json",
+          "originalSha256": "e11ba024dfeed2fdbae6e51a074f7c9bffbc707af7ec3943ac4f146f80bdda1f",
+          "retainedSha256": "e11ba024dfeed2fdbae6e51a074f7c9bffbc707af7ec3943ac4f146f80bdda1f"
+        },
+        {
+          "file": "software-CesiumMan-1-1-colour.png",
+          "originalSha256": "2ea86062003b0e8ba269537ec30120ff826459d53f38ca4f595eead778db56c5",
+          "retainedSha256": "2ea86062003b0e8ba269537ec30120ff826459d53f38ca4f595eead778db56c5"
+        },
+        {
+          "file": "software-CesiumMan-1-1-shadow.png",
+          "originalSha256": "5df6a0c5091e125633fe76c063b5ee99a97840fdc9f2412fa4d7d0fce65c5e3b",
+          "retainedSha256": "5df6a0c5091e125633fe76c063b5ee99a97840fdc9f2412fa4d7d0fce65c5e3b"
+        },
+        {
+          "file": "software-CesiumMan-10-1-colour.png",
+          "originalSha256": "9c2767fc1c0d59311cc67ee55c3b360da9ea01b6c0512b58accc45649b04f40a",
+          "retainedSha256": "9c2767fc1c0d59311cc67ee55c3b360da9ea01b6c0512b58accc45649b04f40a"
+        },
+        {
+          "file": "software-CesiumMan-10-1-shadow.png",
+          "originalSha256": "94d58109ee8e88f2f627a521f8f0af15c58ab7ba562d2186ee4700aa948fce39",
+          "retainedSha256": "94d58109ee8e88f2f627a521f8f0af15c58ab7ba562d2186ee4700aa948fce39"
+        },
+        {
+          "file": "software-CesiumMan-50-5-colour.png",
+          "originalSha256": "b9f66a8242820e590205ade0f0064f9d8d4564b783ce54922770f588874acb0e",
+          "retainedSha256": "b9f66a8242820e590205ade0f0064f9d8d4564b783ce54922770f588874acb0e"
+        },
+        {
+          "file": "software-CesiumMan-50-5-shadow.png",
+          "originalSha256": "e3a8d252eb0ac97ce7b9bdaac53a37ffc8c1228f509b0a25d91beff8e4fb2599",
+          "retainedSha256": "e3a8d252eb0ac97ce7b9bdaac53a37ffc8c1228f509b0a25d91beff8e4fb2599"
+        },
+        {
+          "file": "software-demo.png",
+          "originalSha256": "937d3d49ebf75038ecf5e7d987ec9d204f1e746ce0b76f60a128cf893817922f",
+          "retainedSha256": "937d3d49ebf75038ecf5e7d987ec9d204f1e746ce0b76f60a128cf893817922f"
+        },
+        {
+          "file": "software-Fox-1-1-colour.png",
+          "originalSha256": "bc35055aa66e97156bc72c4ce8364f6e53d5a31b516fae8cdfa69d17e6704313",
+          "retainedSha256": "bc35055aa66e97156bc72c4ce8364f6e53d5a31b516fae8cdfa69d17e6704313"
+        },
+        {
+          "file": "software-Fox-1-1-shadow.png",
+          "originalSha256": "40ce6fb8905b30b73ea2430fb044f152e1c13f7b057de516b622f9615a6f094d",
+          "retainedSha256": "40ce6fb8905b30b73ea2430fb044f152e1c13f7b057de516b622f9615a6f094d"
+        },
+        {
+          "file": "software-Fox-10-1-colour.png",
+          "originalSha256": "c99312b1e4e9c46512ca87e5d9344b8dcbcee8f875dafc9a0ca5b25f09e7688d",
+          "retainedSha256": "c99312b1e4e9c46512ca87e5d9344b8dcbcee8f875dafc9a0ca5b25f09e7688d"
+        },
+        {
+          "file": "software-Fox-10-1-shadow.png",
+          "originalSha256": "aa59de69531b2df932f7541ebe916fef7acb159a1dfc4419a8ea9752f1760fed",
+          "retainedSha256": "aa59de69531b2df932f7541ebe916fef7acb159a1dfc4419a8ea9752f1760fed"
+        },
+        {
+          "file": "software-Fox-50-5-colour.png",
+          "originalSha256": "0b8070e6cd9511c6685659ea72aa6e23c03167a8bccfefbda27e1065fc1a4643",
+          "retainedSha256": "0b8070e6cd9511c6685659ea72aa6e23c03167a8bccfefbda27e1065fc1a4643"
+        },
+        {
+          "file": "software-Fox-50-5-shadow.png",
+          "originalSha256": "4daddabd2854cc4ff60ea8879ce787be867bc457bed73bd91beb15dd1a887d0d",
+          "retainedSha256": "4daddabd2854cc4ff60ea8879ce787be867bc457bed73bd91beb15dd1a887d0d"
+        },
+        {
+          "file": "software.json",
+          "originalSha256": "1065b3b407a54f4a0e9fd7be13df1d720afeb4f7e5b2bb1d8db8a943673fc964",
+          "retainedSha256": "1065b3b407a54f4a0e9fd7be13df1d720afeb4f7e5b2bb1d8db8a943673fc964"
+        }
+      ]
+    },
+    {
+      "run": "intermediate/provenance",
+      "files": [
+        {
+          "file": "hardware-CesiumMan-1-1-colour.png",
+          "originalSha256": "21f588fbc51c1dccf11b0e746013376156e83b709a90adb70fd00dd582dc7be7",
+          "retainedSha256": "21f588fbc51c1dccf11b0e746013376156e83b709a90adb70fd00dd582dc7be7"
+        },
+        {
+          "file": "hardware-CesiumMan-1-1-shadow.png",
+          "originalSha256": "67ec9768abeddc0dbf3de53edbdf75895a41f096aee91a90aa387b04c5f69447",
+          "retainedSha256": "67ec9768abeddc0dbf3de53edbdf75895a41f096aee91a90aa387b04c5f69447"
+        },
+        {
+          "file": "hardware-CesiumMan-10-1-colour.png",
+          "originalSha256": "67449d7a22e63f95ad4cf3d8fbf5c1c4f1e73742f4803b62bf17fb22b075214f",
+          "retainedSha256": "67449d7a22e63f95ad4cf3d8fbf5c1c4f1e73742f4803b62bf17fb22b075214f"
+        },
+        {
+          "file": "hardware-CesiumMan-10-1-shadow.png",
+          "originalSha256": "eccefdc2d8a96e2531653fe6661ba8c33e0b9e64e47a8f30c67d3d449f6ae23a",
+          "retainedSha256": "eccefdc2d8a96e2531653fe6661ba8c33e0b9e64e47a8f30c67d3d449f6ae23a"
+        },
+        {
+          "file": "hardware-CesiumMan-50-5-colour.png",
+          "originalSha256": "a2e5462dd02a69dac187e4843bb98518233f13b2ac2b898c3051e15aee3c7285",
+          "retainedSha256": "a2e5462dd02a69dac187e4843bb98518233f13b2ac2b898c3051e15aee3c7285"
+        },
+        {
+          "file": "hardware-CesiumMan-50-5-shadow.png",
+          "originalSha256": "b70b28542e90a11cb6a3a5e499431abc1336c6d195b62e09ba650274d7eddcaa",
+          "retainedSha256": "b70b28542e90a11cb6a3a5e499431abc1336c6d195b62e09ba650274d7eddcaa"
+        },
+        {
+          "file": "hardware-demo.png",
+          "originalSha256": "29a97ebda82c94cf3a680e84eaacb57ef859d333d74d9081ca5349f44ffdc484",
+          "retainedSha256": "29a97ebda82c94cf3a680e84eaacb57ef859d333d74d9081ca5349f44ffdc484"
+        },
+        {
+          "file": "hardware-Fox-1-1-colour.png",
+          "originalSha256": "1067d684985c31a1662845bc8df5df7221b31951ea7b544e7e5aa87eba908983",
+          "retainedSha256": "1067d684985c31a1662845bc8df5df7221b31951ea7b544e7e5aa87eba908983"
+        },
+        {
+          "file": "hardware-Fox-1-1-shadow.png",
+          "originalSha256": "7436a83f20df718be8d57357e8b6ef484894cd63cd027929e469a3e9904468b9",
+          "retainedSha256": "7436a83f20df718be8d57357e8b6ef484894cd63cd027929e469a3e9904468b9"
+        },
+        {
+          "file": "hardware-Fox-10-1-colour.png",
+          "originalSha256": "c91265a34b34ee53ee3ae819a16ffc3a369d768d09e241384d22d6e68b852711",
+          "retainedSha256": "c91265a34b34ee53ee3ae819a16ffc3a369d768d09e241384d22d6e68b852711"
+        },
+        {
+          "file": "hardware-Fox-10-1-shadow.png",
+          "originalSha256": "93628cfdbc264e08f35d3387fff41e86462b19efc771e211de18bf61e5f7d7fb",
+          "retainedSha256": "93628cfdbc264e08f35d3387fff41e86462b19efc771e211de18bf61e5f7d7fb"
+        },
+        {
+          "file": "hardware-Fox-50-5-colour.png",
+          "originalSha256": "c6c755204651fcc16ee1f5cb97182eb0b09bda4fe8a450f27e4ca587dd3ce83b",
+          "retainedSha256": "c6c755204651fcc16ee1f5cb97182eb0b09bda4fe8a450f27e4ca587dd3ce83b"
+        },
+        {
+          "file": "hardware-Fox-50-5-shadow.png",
+          "originalSha256": "8f490e9b6fd1ab122035f4ea87603ee78466c42a6d20530ab0f177a281a7d5b5",
+          "retainedSha256": "8f490e9b6fd1ab122035f4ea87603ee78466c42a6d20530ab0f177a281a7d5b5"
+        },
+        {
+          "file": "hardware.json",
+          "originalSha256": "a6bebc8b9400d1d64fd7daeb983a6b666cc1740d2fa86b531fafa4e207ef2b94",
+          "retainedSha256": "a6bebc8b9400d1d64fd7daeb983a6b666cc1740d2fa86b531fafa4e207ef2b94"
+        },
+        {
+          "file": "software-CesiumMan-1-1-colour.png",
+          "originalSha256": "2ea86062003b0e8ba269537ec30120ff826459d53f38ca4f595eead778db56c5",
+          "retainedSha256": "2ea86062003b0e8ba269537ec30120ff826459d53f38ca4f595eead778db56c5"
+        },
+        {
+          "file": "software-CesiumMan-1-1-shadow.png",
+          "originalSha256": "5df6a0c5091e125633fe76c063b5ee99a97840fdc9f2412fa4d7d0fce65c5e3b",
+          "retainedSha256": "5df6a0c5091e125633fe76c063b5ee99a97840fdc9f2412fa4d7d0fce65c5e3b"
+        },
+        {
+          "file": "software-CesiumMan-10-1-colour.png",
+          "originalSha256": "9c2767fc1c0d59311cc67ee55c3b360da9ea01b6c0512b58accc45649b04f40a",
+          "retainedSha256": "9c2767fc1c0d59311cc67ee55c3b360da9ea01b6c0512b58accc45649b04f40a"
+        },
+        {
+          "file": "software-CesiumMan-10-1-shadow.png",
+          "originalSha256": "94d58109ee8e88f2f627a521f8f0af15c58ab7ba562d2186ee4700aa948fce39",
+          "retainedSha256": "94d58109ee8e88f2f627a521f8f0af15c58ab7ba562d2186ee4700aa948fce39"
+        },
+        {
+          "file": "software-CesiumMan-50-5-colour.png",
+          "originalSha256": "b9f66a8242820e590205ade0f0064f9d8d4564b783ce54922770f588874acb0e",
+          "retainedSha256": "b9f66a8242820e590205ade0f0064f9d8d4564b783ce54922770f588874acb0e"
+        },
+        {
+          "file": "software-CesiumMan-50-5-shadow.png",
+          "originalSha256": "e3a8d252eb0ac97ce7b9bdaac53a37ffc8c1228f509b0a25d91beff8e4fb2599",
+          "retainedSha256": "e3a8d252eb0ac97ce7b9bdaac53a37ffc8c1228f509b0a25d91beff8e4fb2599"
+        },
+        {
+          "file": "software-demo.png",
+          "originalSha256": "f721cc381c394eb54ae5e1804d02a3b4d4c13f72795860d876d95df7f8b1614b",
+          "retainedSha256": "f721cc381c394eb54ae5e1804d02a3b4d4c13f72795860d876d95df7f8b1614b"
+        },
+        {
+          "file": "software-Fox-1-1-colour.png",
+          "originalSha256": "bc35055aa66e97156bc72c4ce8364f6e53d5a31b516fae8cdfa69d17e6704313",
+          "retainedSha256": "bc35055aa66e97156bc72c4ce8364f6e53d5a31b516fae8cdfa69d17e6704313"
+        },
+        {
+          "file": "software-Fox-1-1-shadow.png",
+          "originalSha256": "40ce6fb8905b30b73ea2430fb044f152e1c13f7b057de516b622f9615a6f094d",
+          "retainedSha256": "40ce6fb8905b30b73ea2430fb044f152e1c13f7b057de516b622f9615a6f094d"
+        },
+        {
+          "file": "software-Fox-10-1-colour.png",
+          "originalSha256": "c99312b1e4e9c46512ca87e5d9344b8dcbcee8f875dafc9a0ca5b25f09e7688d",
+          "retainedSha256": "c99312b1e4e9c46512ca87e5d9344b8dcbcee8f875dafc9a0ca5b25f09e7688d"
+        },
+        {
+          "file": "software-Fox-10-1-shadow.png",
+          "originalSha256": "aa59de69531b2df932f7541ebe916fef7acb159a1dfc4419a8ea9752f1760fed",
+          "retainedSha256": "aa59de69531b2df932f7541ebe916fef7acb159a1dfc4419a8ea9752f1760fed"
+        },
+        {
+          "file": "software-Fox-50-5-colour.png",
+          "originalSha256": "0b8070e6cd9511c6685659ea72aa6e23c03167a8bccfefbda27e1065fc1a4643",
+          "retainedSha256": "0b8070e6cd9511c6685659ea72aa6e23c03167a8bccfefbda27e1065fc1a4643"
+        },
+        {
+          "file": "software-Fox-50-5-shadow.png",
+          "originalSha256": "4daddabd2854cc4ff60ea8879ce787be867bc457bed73bd91beb15dd1a887d0d",
+          "retainedSha256": "4daddabd2854cc4ff60ea8879ce787be867bc457bed73bd91beb15dd1a887d0d"
+        },
+        {
+          "file": "software.json",
+          "originalSha256": "0dbb6df1bb7063dcc7100909fbaaf432c5212f8576f787322dece266dc456978",
+          "retainedSha256": "0dbb6df1bb7063dcc7100909fbaaf432c5212f8576f787322dece266dc456978"
+        }
+      ]
+    },
+    {
+      "run": "accepted",
+      "files": [
+        {
+          "file": "hardware-CesiumMan-1-1-colour.png",
+          "originalSha256": "21f588fbc51c1dccf11b0e746013376156e83b709a90adb70fd00dd582dc7be7",
+          "retainedSha256": "21f588fbc51c1dccf11b0e746013376156e83b709a90adb70fd00dd582dc7be7"
+        },
+        {
+          "file": "hardware-CesiumMan-1-1-shadow.png",
+          "originalSha256": "67ec9768abeddc0dbf3de53edbdf75895a41f096aee91a90aa387b04c5f69447",
+          "retainedSha256": "67ec9768abeddc0dbf3de53edbdf75895a41f096aee91a90aa387b04c5f69447"
+        },
+        {
+          "file": "hardware-CesiumMan-10-1-colour.png",
+          "originalSha256": "67449d7a22e63f95ad4cf3d8fbf5c1c4f1e73742f4803b62bf17fb22b075214f",
+          "retainedSha256": "67449d7a22e63f95ad4cf3d8fbf5c1c4f1e73742f4803b62bf17fb22b075214f"
+        },
+        {
+          "file": "hardware-CesiumMan-10-1-shadow.png",
+          "originalSha256": "eccefdc2d8a96e2531653fe6661ba8c33e0b9e64e47a8f30c67d3d449f6ae23a",
+          "retainedSha256": "eccefdc2d8a96e2531653fe6661ba8c33e0b9e64e47a8f30c67d3d449f6ae23a"
+        },
+        {
+          "file": "hardware-CesiumMan-50-5-colour.png",
+          "originalSha256": "a2e5462dd02a69dac187e4843bb98518233f13b2ac2b898c3051e15aee3c7285",
+          "retainedSha256": "a2e5462dd02a69dac187e4843bb98518233f13b2ac2b898c3051e15aee3c7285"
+        },
+        {
+          "file": "hardware-CesiumMan-50-5-shadow.png",
+          "originalSha256": "b70b28542e90a11cb6a3a5e499431abc1336c6d195b62e09ba650274d7eddcaa",
+          "retainedSha256": "b70b28542e90a11cb6a3a5e499431abc1336c6d195b62e09ba650274d7eddcaa"
+        },
+        {
+          "file": "hardware-demo.png",
+          "originalSha256": "2b15b9235bc7538470d49b7e5a52fb526823c45afe040930efd4b6752f1898e8",
+          "retainedSha256": "2b15b9235bc7538470d49b7e5a52fb526823c45afe040930efd4b6752f1898e8"
+        },
+        {
+          "file": "hardware-Fox-1-1-colour.png",
+          "originalSha256": "1067d684985c31a1662845bc8df5df7221b31951ea7b544e7e5aa87eba908983",
+          "retainedSha256": "1067d684985c31a1662845bc8df5df7221b31951ea7b544e7e5aa87eba908983"
+        },
+        {
+          "file": "hardware-Fox-1-1-shadow.png",
+          "originalSha256": "7436a83f20df718be8d57357e8b6ef484894cd63cd027929e469a3e9904468b9",
+          "retainedSha256": "7436a83f20df718be8d57357e8b6ef484894cd63cd027929e469a3e9904468b9"
+        },
+        {
+          "file": "hardware-Fox-10-1-colour.png",
+          "originalSha256": "c91265a34b34ee53ee3ae819a16ffc3a369d768d09e241384d22d6e68b852711",
+          "retainedSha256": "c91265a34b34ee53ee3ae819a16ffc3a369d768d09e241384d22d6e68b852711"
+        },
+        {
+          "file": "hardware-Fox-10-1-shadow.png",
+          "originalSha256": "93628cfdbc264e08f35d3387fff41e86462b19efc771e211de18bf61e5f7d7fb",
+          "retainedSha256": "93628cfdbc264e08f35d3387fff41e86462b19efc771e211de18bf61e5f7d7fb"
+        },
+        {
+          "file": "hardware-Fox-50-5-colour.png",
+          "originalSha256": "c6c755204651fcc16ee1f5cb97182eb0b09bda4fe8a450f27e4ca587dd3ce83b",
+          "retainedSha256": "c6c755204651fcc16ee1f5cb97182eb0b09bda4fe8a450f27e4ca587dd3ce83b"
+        },
+        {
+          "file": "hardware-Fox-50-5-shadow.png",
+          "originalSha256": "8f490e9b6fd1ab122035f4ea87603ee78466c42a6d20530ab0f177a281a7d5b5",
+          "retainedSha256": "8f490e9b6fd1ab122035f4ea87603ee78466c42a6d20530ab0f177a281a7d5b5"
+        },
+        {
+          "file": "hardware.json",
+          "originalSha256": "5a88461e2de7747ed3e44e5951140877c287ee4b199526dcf13122516e434e11",
+          "retainedSha256": "5a88461e2de7747ed3e44e5951140877c287ee4b199526dcf13122516e434e11"
+        },
+        {
+          "file": "software-CesiumMan-1-1-colour.png",
+          "originalSha256": "2ea86062003b0e8ba269537ec30120ff826459d53f38ca4f595eead778db56c5",
+          "retainedSha256": "2ea86062003b0e8ba269537ec30120ff826459d53f38ca4f595eead778db56c5"
+        },
+        {
+          "file": "software-CesiumMan-1-1-shadow.png",
+          "originalSha256": "5df6a0c5091e125633fe76c063b5ee99a97840fdc9f2412fa4d7d0fce65c5e3b",
+          "retainedSha256": "5df6a0c5091e125633fe76c063b5ee99a97840fdc9f2412fa4d7d0fce65c5e3b"
+        },
+        {
+          "file": "software-CesiumMan-10-1-colour.png",
+          "originalSha256": "9c2767fc1c0d59311cc67ee55c3b360da9ea01b6c0512b58accc45649b04f40a",
+          "retainedSha256": "9c2767fc1c0d59311cc67ee55c3b360da9ea01b6c0512b58accc45649b04f40a"
+        },
+        {
+          "file": "software-CesiumMan-10-1-shadow.png",
+          "originalSha256": "94d58109ee8e88f2f627a521f8f0af15c58ab7ba562d2186ee4700aa948fce39",
+          "retainedSha256": "94d58109ee8e88f2f627a521f8f0af15c58ab7ba562d2186ee4700aa948fce39"
+        },
+        {
+          "file": "software-CesiumMan-50-5-colour.png",
+          "originalSha256": "b9f66a8242820e590205ade0f0064f9d8d4564b783ce54922770f588874acb0e",
+          "retainedSha256": "b9f66a8242820e590205ade0f0064f9d8d4564b783ce54922770f588874acb0e"
+        },
+        {
+          "file": "software-CesiumMan-50-5-shadow.png",
+          "originalSha256": "e3a8d252eb0ac97ce7b9bdaac53a37ffc8c1228f509b0a25d91beff8e4fb2599",
+          "retainedSha256": "e3a8d252eb0ac97ce7b9bdaac53a37ffc8c1228f509b0a25d91beff8e4fb2599"
+        },
+        {
+          "file": "software-demo.png",
+          "originalSha256": "207f9ea721d74ce4159e4b7e0ebe1975938233246f5216fb75e8c32a30370b21",
+          "retainedSha256": "207f9ea721d74ce4159e4b7e0ebe1975938233246f5216fb75e8c32a30370b21"
+        },
+        {
+          "file": "software-Fox-1-1-colour.png",
+          "originalSha256": "bc35055aa66e97156bc72c4ce8364f6e53d5a31b516fae8cdfa69d17e6704313",
+          "retainedSha256": "bc35055aa66e97156bc72c4ce8364f6e53d5a31b516fae8cdfa69d17e6704313"
+        },
+        {
+          "file": "software-Fox-1-1-shadow.png",
+          "originalSha256": "40ce6fb8905b30b73ea2430fb044f152e1c13f7b057de516b622f9615a6f094d",
+          "retainedSha256": "40ce6fb8905b30b73ea2430fb044f152e1c13f7b057de516b622f9615a6f094d"
+        },
+        {
+          "file": "software-Fox-10-1-colour.png",
+          "originalSha256": "c99312b1e4e9c46512ca87e5d9344b8dcbcee8f875dafc9a0ca5b25f09e7688d",
+          "retainedSha256": "c99312b1e4e9c46512ca87e5d9344b8dcbcee8f875dafc9a0ca5b25f09e7688d"
+        },
+        {
+          "file": "software-Fox-10-1-shadow.png",
+          "originalSha256": "aa59de69531b2df932f7541ebe916fef7acb159a1dfc4419a8ea9752f1760fed",
+          "retainedSha256": "aa59de69531b2df932f7541ebe916fef7acb159a1dfc4419a8ea9752f1760fed"
+        },
+        {
+          "file": "software-Fox-50-5-colour.png",
+          "originalSha256": "0b8070e6cd9511c6685659ea72aa6e23c03167a8bccfefbda27e1065fc1a4643",
+          "retainedSha256": "0b8070e6cd9511c6685659ea72aa6e23c03167a8bccfefbda27e1065fc1a4643"
+        },
+        {
+          "file": "software-Fox-50-5-shadow.png",
+          "originalSha256": "4daddabd2854cc4ff60ea8879ce787be867bc457bed73bd91beb15dd1a887d0d",
+          "retainedSha256": "4daddabd2854cc4ff60ea8879ce787be867bc457bed73bd91beb15dd1a887d0d"
+        },
+        {
+          "file": "software.json",
+          "originalSha256": "0419d7acc59fe30f408532ab97e7eac5bb0b637cd21abcce6024cceffb0eea6c",
+          "retainedSha256": "0419d7acc59fe30f408532ab97e7eac5bb0b637cd21abcce6024cceffb0eea6c"
+        }
+      ]
+    }
+  ],
+  "remaining": [
+    "Broader production-rig animation compositions",
+    "Wider physical-device tiers",
+    "Other platform roadmap acceptance criteria"
+  ]
+}

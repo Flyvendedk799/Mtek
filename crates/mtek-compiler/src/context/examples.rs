@@ -29,7 +29,7 @@ pub struct Example {
 }
 
 /// The example library, in the order of its files.
-pub const LIBRARY: [Example; 11] = [
+pub const LIBRARY: [Example; 12] = [
     Example {
         title: "A scene with a camera and a cube",
         source: include_str!("examples/01-scene-camera-cube.mtek"),
@@ -73,6 +73,10 @@ pub const LIBRARY: [Example; 11] = [
     Example {
         title: "Pointer events and arrays",
         source: include_str!("examples/11-pointer-arrays.mtek"),
+    },
+    Example {
+        title: "A bounded compute buffer transform (dispatch from the host API)",
+        source: include_str!("examples/12-compute-buffer.mtek"),
     },
 ];
 

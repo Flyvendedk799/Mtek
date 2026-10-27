@@ -66,6 +66,37 @@ test("lighting studio controls, local HDR loading and reset work without browser
   writeRecord(`lighting-studio-${test.info().project.name}.json`, { errors, localHdrLoaded: true, qualityChanged: true, reset: true });
 });
 
+test("lighting studio inspector applies and reverses edits through the rendered host", async ({ page, gpu }) => {
+  expect(gpu.available).toBe(true);
+  const errors: string[] = []; page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/lighting-studio/index.html");
+  await expect(page.locator("#status")).toHaveText("Live · directional shadows + HDR IBL");
+  await page.locator("#inspector").check();
+  const panel = page.locator("[data-mtek-inspector]");
+  await expect(panel.getByText("Connected", { exact: true })).toBeVisible();
+  const entities = panel.getByRole("listbox", { name: "Scene entities" });
+  await entities.selectOption({ label: "Ceramic" });
+  const position = panel.getByRole("spinbutton", { name: "position y", exact: true });
+  await expect(position).toHaveValue("1");
+  await position.fill("3"); await panel.getByRole("button", { name: "Apply edits", exact: true }).click();
+  const undo = panel.getByRole("button", { name: "Undo", exact: true });
+  await expect(undo).toBeEnabled();
+  await page.locator("#pause").click();
+  await page.screenshot({ path: test.info().outputPath("lighting-studio-inspector.png"), fullPage: true });
+  await page.locator("#pause").click();
+  await undo.click(); await expect(position).toHaveValue("1");
+  await panel.getByRole("button", { name: "Redo", exact: true }).click(); await expect(position).toHaveValue("3");
+  let revision = await page.locator("#status").getAttribute("data-revision");
+  await page.locator("#reset").click(); await expect(page.locator("#status")).not.toHaveAttribute("data-revision", revision!);
+  await expect(entities).toHaveValue(""); await entities.selectOption({ label: "Ceramic" });
+  await expect(position).toHaveValue("1"); await expect(undo).toBeDisabled();
+  revision = await page.locator("#status").getAttribute("data-revision");
+  await page.locator("#inspector").uncheck(); await expect(page.locator("#status")).not.toHaveAttribute("data-revision", revision!);
+  await expect(panel).toHaveCount(0); await expect(page.locator("#diagnostics")).toBeHidden();
+  expect(errors).toEqual([]);
+  writeRecord(`lighting-studio-inspector-${test.info().project.name}.json`, { errors, edited: true, undo: true, redo: true, reset: true, removed: true });
+});
+
 test("an off-camera GPU skin animates its visible shadow", async ({ page, gpu }) => {
   expect(gpu.available).toBe(true); await page.goto("/m4/shadow_skin/index.html");
   const result = await page.evaluate(async () => {

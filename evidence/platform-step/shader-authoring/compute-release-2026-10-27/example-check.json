@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "tool": "mtek",
+  "compilerVersion": "0.1.0-dev",
+  "languageVersion": "0.1",
+  "project": "compute-geometry",
+  "diagnostics": [],
+  "summary": {
+    "errors": 0,
+    "warnings": 0,
+    "notes": 0,
+    "suppressed": 0
+  }
+}

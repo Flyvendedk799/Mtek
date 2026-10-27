@@ -1,0 +1,16 @@
+const MODEL = asset.glb("../models/model.glb");
+struct Shape { position: vec3; normal: vec3; uv: vec2; tangent: vec4; }
+material Authored {
+    vertex(v: VertexInput) -> Shape {
+        return Shape { position: vec3(-v.position.x,-v.position.y,v.position.z); normal: v.normal; uv: v.uv; tangent: vec4(-v.tangent.x,-v.tangent.y,v.tangent.z,v.tangent.w); };
+    }
+    fragment(s: SurfaceInput) -> color {
+        return lighting.pbr_mapped(s,color.linear(vec3(0.3,0.4,0.5),1.0),0.0,0.6,vec3(200.0/255.0,180.0/255.0,230.0/255.0),1.0,1.0,vec3(0.0));
+    }
+}
+scene AuthoredFrame {
+    ambient_intensity: 0.3;
+    camera Main { position: vec3(0.0,0.0,2.0); target: vec3(0.0); projection: Orthographic {height:2.0}; exposure: -0.2630344; }
+    entity Sun { rotation: quat.euler(-0.4,-0.6,0.0); light: DirectionalLight {intensity:3.0}; }
+    entity Part { mesh: MODEL.mesh("Quad"); material: Authored {}; }
+}

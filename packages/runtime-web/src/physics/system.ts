@@ -29,6 +29,7 @@ import type { BodyService, EntityRecord, World } from "../scene/world.js";
 import { CommandQueue, type QueuedCommand } from "./commands.js";
 import { collisionPair, sortCollisions, type CollisionPair } from "./events.js";
 import type { BodyDesc, BodyHandle, ColliderDesc, PhysicsBackend, PhysicsWorld, Pose, Quat, Vec3 } from "./types.js";
+import type { BodyInspection } from "../host/inspection.js";
 
 export type BodyKind = "static" | "kinematic" | "dynamic";
 
@@ -52,6 +53,7 @@ export interface PhysicsOptions {
 
 /** What the system knows about one entity that has a body. */
 interface BodyEntry {
+  readonly collider: ColliderDesc;
   readonly ref: EntityRef;
   readonly kind: BodyKind;
   /** For messages: the entity's name (a prefab's name for spawned entities). */
@@ -166,7 +168,7 @@ export class PhysicsSystem implements BodyService {
   }
 
   private addBody(ref: EntityRef, record: EntityRecord, body: MtekBody, collider: MtekCollider, name: string): void {
-    const entry: BodyEntry = { ref, kind: body.kind, name, handle: undefined, linear: ZERO, angular: ZERO };
+    const entry: BodyEntry = { ref, kind: body.kind, name, collider: colliderDesc(collider), handle: undefined, linear: ZERO, angular: ZERO };
     this.bodies[ref.slot] = entry;
     const pose: Pose = { position: record.position, rotation: record.rotation };
     if (!isFiniteVec3(pose.position) || !finiteRotation(pose.rotation)) {
@@ -174,7 +176,7 @@ export class PhysicsSystem implements BodyService {
       return;
     }
     const description=bodyDesc(body);
-    entry.handle = this.physics.addBody(description.kind==="dynamic"&&this.options.continuousCollision===true?{...description,continuousCollision:true}:description, colliderDesc(collider), pose, ref.slot);
+    entry.handle = this.physics.addBody(description.kind==="dynamic"&&this.options.continuousCollision===true?{...description,continuousCollision:true}:description, entry.collider, pose, ref.slot);
   }
 
   // ---- ctx.body ----
@@ -363,6 +365,20 @@ export class PhysicsSystem implements BodyService {
   }
 
   // ---- introspection and lifetime ----
+
+  inspect(): readonly BodyInspection[] {
+    if (this.disposed) return [];
+    return this.bodies.flatMap(entry => {
+      if (entry === undefined) return [];
+      const record = this.options.world.recordAt(entry.ref.slot);
+      if (record === undefined || record.ref.gen !== entry.ref.gen || this.options.world.dynamic.status(entry.ref) === "pending-removal") return [];
+      const pose = entry.handle === undefined ? record : this.physics.readPose(entry.handle);
+      const contacts = entry.handle === undefined ? undefined : this.physics.contacts?.(entry.handle);
+      return [{ slot: entry.ref.slot, generation: entry.ref.gen, kind: entry.kind, active: entry.handle !== undefined,
+        collider: structuredClone(entry.collider), position: { ...pose.position }, rotation: { ...pose.rotation },
+        ...(contacts === undefined ? {} : { contacts: structuredClone(contacts) }) }];
+    });
+  }
 
   /** Bodies and colliders in the backend's world (both 0 after {@link dispose}). */
   counts(): { readonly bodies: number; readonly colliders: number } {

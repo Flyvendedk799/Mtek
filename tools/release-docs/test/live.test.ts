@@ -188,13 +188,13 @@ live("the generated documents against the compiler (docs/*, limitations/*)", () 
   });
 
   it("a reserved code missing from section 5 fails limitations/specified-not-produced", () => {
-    const limitations = replaceOnce(base.docs.limitations ?? "", /^\| `E6003` \|.*\n/m, "");
+    const limitations = replaceOnce(base.docs.limitations ?? "", /^\| `E5100` \|.*\n/m, "");
     const found = checkInputs({ ...base, docs: { ...base.docs, limitations } });
     expectNamesBoth(found, "limitations/specified-not-produced", "code-coverage-exceptions.json", "docs/limitations.md section 5");
   });
 
   it("a catalogue mark with no entry in the exceptions fails limitations/catalogue-marks", () => {
-    const exceptions = { ...base.docs.exceptions, reserved: base.docs.exceptions.reserved.filter((e) => e.code !== "E6003") };
+    const exceptions = { ...base.docs.exceptions, reserved: base.docs.exceptions.reserved.filter((e) => e.code !== "E5100") };
     const found = checkInputs({ ...base, docs: { ...base.docs, exceptions } });
     expectNamesBoth(found, "limitations/catalogue-marks", "spec/diagnostics.md catalogue", "code-coverage-exceptions.json");
   });

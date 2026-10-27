@@ -17,14 +17,16 @@ for(const name of ["runtime-web","inspector"]){
 }
 writeFileSync(join(scratch,"package.json"),JSON.stringify({name:"independent-inspector-consumer",private:true,type:"module"}));
 npm(scratch,["install","--offline","--ignore-scripts","--no-audit","--no-fund","--workspaces=false",...packs.map(pack=>join(scratch,pack.filename))]);
-writeFileSync(join(scratch,"consumer.ts"),`import {InspectorController,mountInspectorPanel,type InspectorSnapshot} from "@mtek/inspector";
+writeFileSync(join(scratch,"consumer.ts"),`import {InspectorController,mountInspectorPanel,mountInspectorOverlay,buildInspectorOverlay,type InspectorSnapshot,type InspectorOverlay} from "@mtek/inspector";
 import type {MtekExtension,ExtensionContext} from "@mtek/runtime-web";
 const controller=new InspectorController();
 const extension:MtekExtension=controller.extension;
 const attach:(parent:HTMLElement)=>()=>void=parent=>mountInspectorPanel(controller,parent);
 const snapshot:InspectorSnapshot=controller.snapshot();
 const context:ExtensionContext|null=null;
-void [extension,attach,snapshot,context];
+const overlay:(canvas:HTMLCanvasElement)=>InspectorOverlay=canvas=>mountInspectorOverlay(controller,canvas,{bounds:true,skeleton:true,ik:true,colliders:true,contacts:true});
+const geometry=buildInspectorOverlay(controller.spatialSnapshot());
+void [extension,attach,snapshot,context,overlay,geometry];
 `);
 writeFileSync(join(scratch,"tsconfig.json"),JSON.stringify({compilerOptions:{module:"NodeNext",moduleResolution:"NodeNext",target:"ES2022",lib:["ES2022","DOM","DOM.Iterable"],types:[],strict:true,noEmit:true,skipLibCheck:false},files:["consumer.ts"]}));
 try{execFileSync(process.execPath,[require.resolve("typescript/lib/tsc.js"),"-p",join(scratch,"tsconfig.json")],{cwd:scratch,encoding:"utf8",stdio:"pipe",windowsHide:true});}
@@ -46,7 +48,7 @@ await assert.rejects(()=>import("@mtek/inspector/src/controller.js"),{code:"ERR_
 execFileSync(process.execPath,[join(scratch,"consumer.mjs")],{cwd:scratch,stdio:"pipe",windowsHide:true});
 const meta=JSON.parse(readFileSync(join(root,"packages/inspector/dist/metafile.json"),"utf8"));
 if(Object.keys(meta.inputs).some(path=>!path.startsWith("src/")))throw new Error("Inspector bundled a runtime implementation dependency");
-const out=join(root,"evidence/platform-step/inspector");mkdirSync(out,{recursive:true});
+const out=resolve(process.env.MTEK_INSPECTOR_EVIDENCE_DIR??join(root,".out/inspector-package"));mkdirSync(out,{recursive:true});
 const report={recordedAt:new Date().toISOString(),status:"passed",network:"offline installation of local tarballs",typecheck:"strict NodeNext, skipLibCheck=false, no source aliases",runtimeConsumer:"passed without DOM/GPU; frame-queued edit, undo, cleanup, root API and export boundary",inspectorRuntimeDependencies:Object.keys(meta.inputs),packages:packs.map(pack=>({name:pack.name,version:pack.version,files:pack.files.map(file=>file.path),integrity:pack.integrity,sha256:createHash("sha256").update(readFileSync(join(scratch,pack.filename))).digest("hex")}))};
 writeFileSync(join(out,"package-consumer.json"),JSON.stringify(report,null,2)+"\n");
 console.log("Independent offline tarball consumer: strict public declarations, runtime operations and package boundaries passed.");

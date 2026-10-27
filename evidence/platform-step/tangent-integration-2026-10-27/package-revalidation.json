@@ -1,0 +1,20 @@
+{
+  "format": "mtek-tangent-package-revalidation/1",
+  "reason": "Equivalent Clippy iterator rewrite in GLB validation after GPU captures; final source emits byte-identical complete packages",
+  "previousCliSha256": "389ae2f0cff07351d57966020c0669e335e94b5f0f3ae875ecb128bc10a598c1",
+  "currentCliSha256": "464ad8666f77ff7e476a1763d65cbc3ba39bcf8ec9b05220863099a0429449da",
+  "packages": [
+    "pbr_tangent_authored",
+    "pbr_tangent_degenerate",
+    "pbr_tangent_fallback",
+    "pbr_tangent_instanced",
+    "pbr_tangent_mirrored",
+    "pbr_tangent_regular",
+    "pbr_tangent_shadow_reference",
+    "pbr_tangent_shadow_skin",
+    "pbr_tangent_skin",
+    "pbr_tangent_transform",
+    "pbr_tangent_varying"
+  ],
+  "allFilesIdentical": true
+}

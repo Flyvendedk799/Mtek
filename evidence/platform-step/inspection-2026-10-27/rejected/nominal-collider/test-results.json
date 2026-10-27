@@ -1,0 +1,273 @@
+{
+  "config": {
+    "argv": [
+      "<external>",
+      "node_modules/@playwright/test/cli.js",
+      "test",
+      "--config=inspection.config.ts",
+      "--project=hardware"
+    ],
+    "configFile": "tests/browser/inspection.config.ts",
+    "rootDir": "tests/browser/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "tests/browser/support/inspection-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "hardware",
+        "name": "hardware",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "inspection/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "software",
+        "name": "software",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "inspection/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<results>/test-results.json"
+        }
+      ],
+      [
+        "tests/browser/support/not-run-reporter.ts",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "inspection\\overlays.spec.ts",
+      "file": "inspection/overlays.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "production pose overlays match independent parent/camera transforms and resized content boxes",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 759,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T02:42:47.715Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "77c10f53cda748e35524-fdeaff10cf3b34d3eaf2",
+          "file": "inspection/overlays.spec.ts",
+          "line": 48,
+          "column": 1
+        },
+        {
+          "title": "layer/IK diagnostics and real physics contact overlays explain the composed scene",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 572,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 3\u001b[39m\n\u001b[31m+ Received  + 3\u001b[39m\n\n\u001b[2m  Object {\u001b[22m\n\u001b[2m    \"kind\": \"box\",\u001b[22m\n\u001b[2m    \"size\": Object {\u001b[22m\n\u001b[32m-     \"x\": 0.699999988079071,\u001b[39m\n\u001b[32m-     \"y\": 0.699999988079071,\u001b[39m\n\u001b[32m-     \"z\": 0.699999988079071,\u001b[39m\n\u001b[31m+     \"x\": 0.7,\u001b[39m\n\u001b[31m+     \"y\": 0.7,\u001b[39m\n\u001b[31m+     \"z\": 0.7,\u001b[39m\n\u001b[2m    },\u001b[22m\n\u001b[2m  }\u001b[22m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 3\u001b[39m\n\u001b[31m+ Received  + 3\u001b[39m\n\n\u001b[2m  Object {\u001b[22m\n\u001b[2m    \"kind\": \"box\",\u001b[22m\n\u001b[2m    \"size\": Object {\u001b[22m\n\u001b[32m-     \"x\": 0.699999988079071,\u001b[39m\n\u001b[32m-     \"y\": 0.699999988079071,\u001b[39m\n\u001b[32m-     \"z\": 0.699999988079071,\u001b[39m\n\u001b[31m+     \"x\": 0.7,\u001b[39m\n\u001b[31m+     \"y\": 0.7,\u001b[39m\n\u001b[31m+     \"z\": 0.7,\u001b[39m\n\u001b[2m    },\u001b[22m\n\u001b[2m  }\u001b[22m\n    at tests/browser/specs/inspection/overlays.spec.ts:86:79",
+                    "location": {
+                      "file": "tests/browser/specs/inspection/overlays.spec.ts",
+                      "column": 79,
+                      "line": 86
+                    },
+                    "snippet": "  84 |     return {body,before,after,kinds:s.overlay!.geometry().lines.map(l=>l.kind),diagnostics:s.diagnostics};\n  85 |   });\n> 86 |   expect(physics.body.active).toBe(true); expect(physics.body.collider.shape).toEqual({kind:\"box\",size:{x:Math.fround(.7),y:Math.fround(.7),z:Math.fround(.7)}});\n     |                                                                               ^\n  87 |   expect(physics.body.contacts!.length).toBeGreaterThan(0); expect(physics.before).toBe(physics.after);\n  88 |   expect(physics.kinds).toContain(\"collider\"); expect(physics.kinds).toContain(\"contact\"); expect(physics.diagnostics).toEqual([]);\n  89 |   await expect(panel.getByText(/observed contacts/)).toBeVisible(); await page.screenshot({path:test.info().outputPath(\"inspection-contacts.png\"),fullPage:true});"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "tests/browser/specs/inspection/overlays.spec.ts",
+                        "column": 79,
+                        "line": 86
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 3\u001b[39m\n\u001b[31m+ Received  + 3\u001b[39m\n\n\u001b[2m  Object {\u001b[22m\n\u001b[2m    \"kind\": \"box\",\u001b[22m\n\u001b[2m    \"size\": Object {\u001b[22m\n\u001b[32m-     \"x\": 0.699999988079071,\u001b[39m\n\u001b[32m-     \"y\": 0.699999988079071,\u001b[39m\n\u001b[32m-     \"z\": 0.699999988079071,\u001b[39m\n\u001b[31m+     \"x\": 0.7,\u001b[39m\n\u001b[31m+     \"y\": 0.7,\u001b[39m\n\u001b[31m+     \"z\": 0.7,\u001b[39m\n\u001b[2m    },\u001b[22m\n\u001b[2m  }\u001b[22m\n\n  84 |     return {body,before,after,kinds:s.overlay!.geometry().lines.map(l=>l.kind),diagnostics:s.diagnostics};\n  85 |   });\n> 86 |   expect(physics.body.active).toBe(true); expect(physics.body.collider.shape).toEqual({kind:\"box\",size:{x:Math.fround(.7),y:Math.fround(.7),z:Math.fround(.7)}});\n     |                                                                               ^\n  87 |   expect(physics.body.contacts!.length).toBeGreaterThan(0); expect(physics.before).toBe(physics.after);\n  88 |   expect(physics.kinds).toContain(\"collider\"); expect(physics.kinds).toContain(\"contact\"); expect(physics.diagnostics).toEqual([]);\n  89 |   await expect(panel.getByText(/observed contacts/)).toBeVisible(); await page.screenshot({path:test.info().outputPath(\"inspection-contacts.png\"),fullPage:true});\n    at tests/browser/specs/inspection/overlays.spec.ts:86:79"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T02:42:49.546Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "<results>/artifacts/inspection-overlays-layer--a2043--explain-the-composed-scene-hardware/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "tests/browser/specs/inspection/overlays.spec.ts",
+                    "column": 79,
+                    "line": 86
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "77c10f53cda748e35524-8b11b6a9689891df10ab",
+          "file": "inspection/overlays.spec.ts",
+          "line": 66,
+          "column": 1
+        },
+        {
+          "title": "overlay disposal, source reset and device recovery preserve resource/lifetime boundaries",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 851,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T02:42:50.691Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "77c10f53cda748e35524-543230ba6cf80e4617dd",
+          "file": "inspection/overlays.spec.ts",
+          "line": 93,
+          "column": 1
+        },
+        {
+          "title": "lighting studio exposes world bounds as an optional public-package overlay",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 630,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T02:42:52.234Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "77c10f53cda748e35524-448d764d1128d18af570",
+          "file": "inspection/overlays.spec.ts",
+          "line": 118,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-27T02:42:39.509Z",
+    "duration": 13503.53,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

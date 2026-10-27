@@ -307,6 +307,89 @@
         ]
       },
       "probes": []
+    },
+    {
+      "id": "water-bottle-original",
+      "file": "../../benchmarks/material-lighting/assets/WaterBottle/WaterBottle.glb",
+      "provenance": "KhronosGroup/glTF-Sample-Assets @ 8f492390ddc7a2ae221a1369ef560589cf8c70fb; original Microsoft CC0-1.0 metadata retained beside the unchanged GLB",
+      "expectedImport": {
+        "status": "passed"
+      },
+      "probes": [
+        {
+          "id": "mesh",
+          "mesh": "WaterBottle",
+          "expected": {
+            "status": "passed"
+          }
+        },
+        {
+          "id": "material",
+          "mesh": "WaterBottle",
+          "material": "BottleMat",
+          "expected": {
+            "status": "passed"
+          }
+        }
+      ],
+      "sha256": "b337e526fd6a162013c2984aeec163f5fbb4f717252724dfc3f3458bd51df94b"
+    },
+    {
+      "id": "authored-tangents",
+      "file": "../../tests/assets/pass/assets_tangent/models/model.glb",
+      "expectedImport": {
+        "status": "passed"
+      },
+      "probes": [
+        {
+          "id": "mesh",
+          "mesh": "Tri",
+          "expected": {
+            "status": "passed"
+          }
+        }
+      ],
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs",
+      "sha256": "5fbf73cb30bfb71c97ef62b9c143be9e046637f92da6f0ed751a232c1ef5cd61"
+    },
+    {
+      "id": "tangent-direction",
+      "file": "../../tests/assets/fail/e7027_tangent_direction/models/model.glb",
+      "expectedImport": {
+        "status": "rejected",
+        "codes": [
+          "MTEK-E7027"
+        ]
+      },
+      "probes": [],
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs",
+      "sha256": "0c4557ddd5e2a72fbaca398be70e9c069cdc9d767ca81ad44208c9f1b3215cc5"
+    },
+    {
+      "id": "tangent-handedness",
+      "file": "../../tests/assets/fail/e7027_tangent_handedness/models/model.glb",
+      "expectedImport": {
+        "status": "rejected",
+        "codes": [
+          "MTEK-E7027"
+        ]
+      },
+      "probes": [],
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs",
+      "sha256": "c400408035eb73c223d96f1133666c69a15e9f5308b05c9b35e32ca82c258956"
+    },
+    {
+      "id": "tangent-without-normal",
+      "file": "../../tests/assets/fail/e7010_tangent_without_normal/models/model.glb",
+      "expectedImport": {
+        "status": "rejected",
+        "codes": [
+          "MTEK-E7010"
+        ]
+      },
+      "probes": [],
+      "provenance": "Repository-generated fixture; tests/assets/tools/make-glb.mjs",
+      "sha256": "e6f76d5ca43f52707a8e42f37a5fa876fcda545ec45cd063b709ae61e136cf70"
     }
   ]
 }

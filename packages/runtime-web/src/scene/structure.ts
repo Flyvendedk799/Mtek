@@ -179,7 +179,7 @@ export const FRAME_MEMBERS = ["view_proj", "camera_position", "light_count", "am
 export const OBJECT_MEMBERS = ["model", "normal_matrix"] as const;
 
 /** The vertex attributes of `spec/materials.md` section 3.3, in vertex-buffer slot order. */
-export const VERTEX_ATTRIBUTE_ORDER: readonly MtekVertexAttribute[] = ["position", "normal", "uv"];
+export const VERTEX_ATTRIBUTE_ORDER: readonly MtekVertexAttribute[] = ["position", "normal", "uv", "tangent"];
 
 function broken(field: string, message: string): MtekDiagnostic {
   return makeRuntimeDiagnostic("E8006", { phase: "runtime:mount", message: `Invalid manifest: ${message}`, notes: [`field: ${field}`] });
@@ -420,7 +420,7 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
     // The compiler proved that an asset mesh has every attribute its material reads (E7010); the runtime does not trust that blindly.
     const source = mesh?.descriptor;
     if (source?.kind === "asset" && instance !== null) {
-      const missing = instance.material.shader.vertexAttributes.find((attribute) => !source.layout.attributes.includes(attribute));
+      const missing = instance.material.shader.vertexAttributes.find((attribute) => attribute !== "tangent" && !source.layout.attributes.includes(attribute));
       if (missing !== undefined) {
         diagnostics.push(
           broken(
@@ -523,7 +523,7 @@ export function resolveStructure(manifest: MtekManifest): StructureResult {
     }
     const source = mesh?.descriptor;
     if (source?.kind === "asset" && material !== null) {
-      const missing = material.material.shader.vertexAttributes.find((attribute) => !source.layout.attributes.includes(attribute));
+      const missing = material.material.shader.vertexAttributes.find((attribute) => attribute !== "tangent" && !source.layout.attributes.includes(attribute));
       if (missing !== undefined) {
         diagnostics.push(
           broken(field, `prefab '${prefab.name}' draws the mesh '${mesh?.id ?? ""}' with material '${material.material.id}', which reads '${missing}'; primitive ${String(source.primitive)} of '${source.asset}' has [${source.layout.attributes.join(", ")}].`),

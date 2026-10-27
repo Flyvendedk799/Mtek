@@ -1,4 +1,4 @@
-// Internal compiler/runtime contract fixture. Public builds still report E4901.
+// Shared compiler/runtime contract fixture. Executable source compute API 1.
 struct Small { value: f32; }
 struct Record {
     position: vec3;
@@ -53,4 +53,46 @@ compute Required {
     output result: array<f32, 17>;
     kernel(input: ComputeInput) -> f32 { return bias + f32(input.index); }
 }
-scene Demo { camera Main {} }
+compute Positions {
+    param shift: f32 = 0.0;
+    input source: array<f32, 72>;
+    output result: array<f32, 72>;
+    kernel(input: ComputeInput) -> f32 { return source[input.index] + shift; }
+}
+material Flat {
+    fragment(input: SurfaceInput) -> color { return #6b5cff; }
+}
+struct Invocation {
+    index: u32;
+    global_x: u32; global_y: u32; global_z: u32;
+    local_x: u32; local_y: u32; local_z: u32;
+    group_x: u32; group_y: u32; group_z: u32;
+    group_count_x: u32; group_count_y: u32; group_count_z: u32;
+    local_index: u32;
+}
+compute InvocationProbe {
+    output result: array<Invocation, 257>;
+    workgroup_size: [4, 2, 2];
+    kernel(input: ComputeInput) -> Invocation {
+        return Invocation {
+            index: input.index;
+            global_x: input.global_x; global_y: input.global_y; global_z: input.global_z;
+            local_x: input.local_x; local_y: input.local_y; local_z: input.local_z;
+            group_x: input.group_x; group_y: input.group_y; group_z: input.group_z;
+            group_count_x: input.group_count_x; group_count_y: input.group_count_y; group_count_z: input.group_count_z;
+            local_index: input.local_index;
+        };
+    }
+}
+scene Demo {
+    camera Main {}
+    entity Shape {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Flat {};
+    }
+    entity Twin {
+        mesh: Box { size: vec3(1.0, 1.0, 1.0) };
+        material: Flat {};
+    }
+    on key_down(Key.R) { reset(); }
+}

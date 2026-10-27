@@ -1,6 +1,6 @@
 import type {SceneTransform} from "@mtek/runtime-web";
 import {InspectorController} from "./controller.js";
-import type {InspectorSnapshot} from "./types.js";
+import type {InspectorSnapshot, InspectorSpatialSnapshot} from "./types.js";
 
 const css = `
 :host{display:block;color-scheme:dark;color:#dce8ed;font:13px/1.5 system-ui,sans-serif;min-width:280px}*{box-sizing:border-box}[hidden]{display:none!important}
@@ -40,9 +40,42 @@ export function mountInspectorPanel(controller: InspectorController, container: 
   animationSection.append(animationStatus, clip, timeLabel, animationButtons, make("small", "Shared-pose controls can affect other actors. Make the pose independent first to edit only this actor."));
   const skeleton = make("details", undefined, "detail"), skeletonSummary = make("summary", "Skeleton"), table = make("table"), tableBody = make("tbody");
   table.append(make("caption", "Mesh-local joint positions")); const tableHead = make("thead"), headRow = make("tr"); for (const name of ["Joint", "X", "Y", "Z"]) headRow.append(make("th", name)); tableHead.append(headRow); table.append(tableHead, tableBody); skeleton.append(skeletonSummary, table); animationSection.append(skeleton);
+  const diagnosis = make("details", undefined, "detail"), diagnosisSummary = make("summary", "Transitions, layers and IK"), transition = make("p"), ownership = make("p"), composition = make("div");
+  diagnosis.append(diagnosisSummary, transition, ownership, composition, make("small", "Pose order: base/blend → layers → procedural override → root extraction → IK. IK distances use mesh-local units.")); animationSection.append(diagnosis);
+  const spatialSection = section("World and collisions"), spatial = make("details"), spatialSummary = make("summary", "World transforms, draw bounds and contacts"), spatialBody = make("div");
+  spatial.append(spatialSummary,spatialBody); spatialSection.append(spatial);
   const metricsSection = section("Host metrics"), metrics = make("dl", undefined, "metrics"), metricEmpty = make("small", "Metrics unavailable"), footer = make("footer"), pending = make("p"), error = make("p", undefined, "error");
   metricsSection.append(metrics, metricEmpty, make("small", "Live observations, not benchmark measurements.")); error.setAttribute("role", "alert"); footer.append(pending, error); panel.append(footer); shadow.append(style, panel); container.append(host);
   let disposed = false, dirty = false, selected: string | null = null, entityKey = "", clipKey = "", jointRevision = -1, localError = "";
+  let removeSpatial: (() => void) | undefined, spatialTime = -Infinity, spatialSelected: string | null = null;
+  const renderSpatial = (snapshot: InspectorSpatialSnapshot): void => {
+    spatialSelected = snapshot.selectedId;
+    if (snapshot.scene === null) {spatialBody.replaceChildren(make("small",snapshot.error ?? "Spatial data unavailable from this runtime/provider.")); return;}
+    const scene = snapshot.scene, entity = scene.entities.find(e => e.id === snapshot.selectedId), body = scene.bodies.find(b => b.entityId === snapshot.selectedId);
+    const rows: HTMLElement[] = [make("small",`Rendered frame: ${scene.frame ?? "unavailable"} · viewport ${scene.viewport.width} × ${scene.viewport.height}`)];
+    const vector = (p: {readonly x:number;readonly y:number;readonly z:number}): string => `(${p.x.toFixed(3)}, ${p.y.toFixed(3)}, ${p.z.toFixed(3)})`;
+    if (entity === undefined) rows.push(make("p","Select an entity for world and collision data."));
+    else {
+      const m = entity.worldMatrix; rows.push(make("p",`World origin: ${vector({x:m[12]!,y:m[13]!,z:m[14]!})}`));
+      const bounds = entity.bounds;
+      rows.push(make("p",bounds === undefined ? "Draw bounds unavailable: the entity has no current drawable geometry." : bounds.sphere === null ? `${bounds.source} bounds: no current finite enclosure.` : `${bounds.source} bounds: center ${vector(bounds.sphere.center)}, radius ${bounds.sphere.radius.toFixed(3)} · ${bounds.culled ? "camera-culled" : "retained by camera culling"}`));
+    }
+    if (body === undefined) rows.push(make("p","No physics body in this snapshot."));
+    else {
+      const shape = body.collider.shape;
+      rows.push(make("p",`${body.kind} · ${body.active ? "active" : "inactive (frozen or unavailable)"} · ${shape.kind === "box" ? `box full extents ${vector(shape.size)}` : `sphere radius ${shape.radius}`} · ${body.collider.sensor ? "sensor" : "solid"}`));
+      rows.push(make("p",`Physics position: ${vector(body.position)} · friction ${body.collider.friction} · restitution ${body.collider.restitution}`));
+      if (body.contacts === undefined) rows.push(make("small","Contact inspection unavailable from this adapter/body."));
+      else {
+        rows.push(make("small",`${body.contacts.length} observed contacts${body.contacts.length > 128 ? " · showing first 128" : ""}`));
+        for (const contact of body.contacts.slice(0,128)) {
+          const other = controller.snapshot().entities.find(e => e.id === contact.otherId);
+          rows.push(make("p",`${other === undefined ? contact.otherId ?? "Unknown other body" : `${other.name} · ${other.id}`} · point ${vector(contact.point)} · normal ${vector(contact.normal)} · separation ${contact.distance.toFixed(5)}`));
+        }
+      }
+    }
+    spatialBody.replaceChildren(...rows);
+  };
   const showError = (): void => {error.textContent = localError || controller.snapshot().error || "";};
   const run = (action: () => void): void => {localError = ""; try {action();} catch (caught) {localError = caught instanceof Error ? caught.message : String(caught);} showError();};
   const selectedEntity = (snapshot: InspectorSnapshot): SceneTransform | undefined => snapshot.entities.find(entity => entity.id === snapshot.selectedId);
@@ -71,6 +104,21 @@ export function mountInspectorPanel(controller: InspectorController, container: 
     undo.disabled = !ready || !snapshot.canUndo || snapshot.pending > 0; redo.disabled = !ready || !snapshot.canRedo || snapshot.pending > 0;
     const animation = snapshot.animation; animationSection.hidden = animation === null;
     if (animation !== null) {
+      const data = animation.diagnostics;
+      diagnosisSummary.textContent = data === null ? "Animation diagnostics unavailable" : `Transitions, layers (${data.layers.length}) and IK (${data.ik.length})`;
+      diagnosis.hidden = false;
+      transition.textContent = data === null ? "This animation provider does not expose diagnostic snapshots." : data.transition.progress < 1
+        ? `${data.transition.outgoingClip ?? (data.transition.fromSnapshot ? "Pose snapshot" : "Bind pose")} → ${data.clip ?? data.mode} · ${(data.transition.progress * 100).toFixed(1)}% · ${data.transition.elapsed.toFixed(3)} / ${data.transition.duration.toFixed(3)} s`
+        : `${data.mode}${data.clip === null ? "" : ` · ${data.clip}`} · no active transition`;
+      ownership.textContent = data === null ? "" : `Root motion: ${data.rootMotionNode === null ? "pose-owned" : `host-owned · ${data.nodes.find(n => n.index === data.rootMotionNode)?.name ?? data.rootMotionNode}`} · procedural override: ${data.proceduralOverride ? "active" : "none"}`;
+      if (diagnosis.open) composition.replaceChildren(...(data === null ? [] : [
+        ...data.layers.map((layer, index) => make("p", `${index + 1}. ${layer.id} · ${layer.clip} · ${layer.additive ? "additive" : "override"} · weight ${layer.weight.toFixed(3)} · mask ${layer.mask.filter(w => w > 0).length}/${layer.mask.length} nodes · ${layer.time.toFixed(3)}/${layer.duration.toFixed(3)} s · ${layer.playing ? "playing" : "paused"}`)),
+        ...data.ik.map(ik => {
+          const node = data.nodes.find(n => n.index === ik.chain.at(-1)), target = ik.target;
+          const error = node === undefined ? null : Math.hypot(node.position.x - target.x, node.position.y - target.y, node.position.z - target.z);
+          return make("p", `${ik.id} · ${ik.chain.map(i => data.nodes.find(n => n.index === i)?.name ?? i).join(" → ")} · position error ${error === null ? "unavailable" : error.toFixed(4)} · tolerance ${ik.tolerance} · weight ${ik.weight} · ${ik.limits.length} hinge limit(s)${ik.rotation === undefined ? "" : " · orientation target"}`);
+        }),
+      ]));
       animationStatus.textContent = `${animation.mode} · ${animation.playing ? "playing" : "paused"} · ${animation.time.toFixed(3)} / ${animation.duration.toFixed(3)} s`;
       const nextClips = JSON.stringify(animation.clips);
       if (nextClips !== clipKey) {clipKey = nextClips; const placeholder = make("option", "Switch clip…"); placeholder.value = ""; clip.replaceChildren(placeholder, ...animation.clips.map(item => {const option = make("option", item.name); option.value = item.name; return option;}));}
@@ -112,6 +160,17 @@ export function mountInspectorPanel(controller: InspectorController, container: 
   listen(play, "click", () => run(() => {if (controller.snapshot().animation?.playing) controller.pauseAnimation(); else controller.resumeAnimation();}));
   listen(detach, "click", () => run(() => controller.detachAnimation())); listen(time, "change", () => run(() => controller.seek(time.valueAsNumber)));
   listen(skeleton, "toggle", () => {jointRevision = -1; render(controller.snapshot());});
+  listen(diagnosis, "toggle", () => render(controller.snapshot()));
+  listen(spatial,"toggle",() => {
+    removeSpatial?.(); removeSpatial = undefined;
+    if (spatial.open) {
+      spatialTime = -Infinity;
+      removeSpatial = controller.subscribeSpatial(snapshot => {
+        const now = performance.now();
+        if (now - spatialTime >= 250 || snapshot.status !== "ready" || snapshot.selectedId !== spatialSelected) {spatialTime = now; renderSpatial(snapshot);}
+      });
+    }
+  });
   const unsubscribe = controller.subscribe(render);
-  return () => {if (disposed) return; disposed = true; unsubscribe(); events.abort(); host.remove();};
+  return () => {if (disposed) return; disposed = true; unsubscribe(); removeSpatial?.(); events.abort(); host.remove();};
 }

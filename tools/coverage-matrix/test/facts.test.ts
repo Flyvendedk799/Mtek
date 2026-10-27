@@ -233,3 +233,14 @@ describe("host output manifest facts", () => {
     expect(manifestFacts({ scene: { hostOutputs: [{ name: "total", source: { kind: "state", name: "total" }, type: "f32" }] } }).has("project/host-outputs")).toBe(true);
   });
 });
+
+describe("compute facts", () => {
+  it("distinguishes compute storage/uniform reads from material parameters", () => {
+    const ir = program([{path:"src/main.mtek",items:[{kind:"compute",params:[],kernel:{body:{stmts:[{kind:"return",value:{kind:"storageRead",type:"f32",input:0,index:f32(0)}},{kind:"return",value:{kind:"param",type:"f32",name:"gain"}}]}}}]}]);
+    const facts = irFacts(ir);
+    expect(facts.has("compute-programs")).toBe(true);
+    expect(facts.has("compute/storage-read")).toBe(true);
+    expect(facts.has("compute/param-read")).toBe(true);
+    expect(facts.has("expr/material-param-read")).toBe(false);
+  });
+});

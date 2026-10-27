@@ -1,0 +1,11 @@
+{
+  "version": "2.6.0",
+  "url": "https://github.com/GameTechDev/PresentMon/releases/download/v2.6.0/PresentMon-2.6.0-x64.exe",
+  "sha256": "b2a706bc6ad475749e3b7e3409263aa1e6906d45bdcf993f6dbc0f660188f1af",
+  "bytes": 980320,
+  "license": "MIT",
+  "source": "https://github.com/GameTechDev/PresentMon/tree/v2.6.0",
+  "documentation": "https://github.com/GameTechDev/PresentMon/blob/v2.6.0/README-ConsoleApplication.md",
+  "columnsSource": "https://github.com/GameTechDev/PresentMon/blob/v2.6.0/PresentMon/CsvOutput.cpp",
+  "installation": "Portable console executable only; no service, driver or machine setting changes"
+}

@@ -1,6 +1,7 @@
 import type { MtekSkin } from "../abi/manifest-types.js";
 import { multiplyQuat } from "./pose-layers.js";
 import { skinProblem } from "./skeleton.js";
+import { numericallyUniformScale } from "./uniform-scale.js";
 
 export interface RetargetOptions {
   readonly translationScale?: number;
@@ -85,10 +86,10 @@ export function retargetSkin(
   }
   if (worldSpace) {
     for (const skin of [source,target])
-      if (skin.nodes.some(node => Math.abs(node.scale[0]! / node.scale[1]! - 1) > 1e-6 || Math.abs(node.scale[0]! / node.scale[2]! - 1) > 1e-6))
+      if (skin.nodes.some(node => !numericallyUniformScale(node.scale[0]!, node.scale[1]!, node.scale[2]!)))
         throw new RangeError("World-space retargeting requires uniform bind scales");
     for (const clip of source.clips) for (const channel of clip.channels)
-      if (channel.path === "scale" && channel.values.some((value,i,values) => Math.abs(value / values[Math.floor(i/3)*3]! - 1) > 1e-6))
+      if (channel.path === "scale" && channel.values.some((_,i,values) => i % 3 === 0 && !numericallyUniformScale(values[i]!, values[i+1]!, values[i+2]!)))
         throw new RangeError("World-space retargeting requires uniform animated scales");
   }
   const sourceRotations = worldSpace ? bindRotations(source) : [], targetRotations = worldSpace ? bindRotations(target) : [];

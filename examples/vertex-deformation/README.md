@@ -79,3 +79,9 @@ node examples/vertex-deformation/verify-characters.mjs hardware target/character
 node examples/vertex-deformation/verify-characters.mjs software target/character-check
 npx tsc -p examples/vertex-deformation/tsconfig.json
 ```
+
+The [authored cohort example](cohorts/README.md) extends this to 1/10/50 original
+characters, explicit pose groups, ordinary/instanced draws and matching shadows.
+It includes a live demo and separate per-group CPU-skinned references, sampled
+bounds/culling, detach/rejoin and recovery checks. It does not change the frozen
+animation performance workloads.

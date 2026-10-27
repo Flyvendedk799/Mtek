@@ -1,0 +1,54 @@
+compute Translate {
+    param offset: vec3 = vec3(0.0);
+    input source: array<f32, 72>;
+    output positions: array<f32, 72>;
+    kernel(input: ComputeInput) -> f32 {
+        let axis = input.index % 3;
+        var shift = offset.z;
+        if axis == 0 {
+            shift = offset.x;
+        } else if axis == 1 {
+            shift = offset.y;
+        }
+        return source[input.index] + shift;
+    }
+}
+
+scene Demo {
+    clear_color: #101820;
+    ambient_intensity: 0.02;
+    state caster_x: f32 = 5.0;
+    state caster_y: f32 = 3.0;
+    state caster_z: f32 = 0.0;
+    state caster_visible: bool = true;
+    state sun_yaw: f32 = 1.5707963;
+
+    camera Main {
+        position: vec3(0.0, 8.0, 0.0);
+        target: vec3(0.0);
+        projection: Orthographic { height: 8.0; near: 0.1; far: 30.0 };
+        exposure: -0.2630344;
+    }
+    entity Sun {
+        rotation: bind(quat.euler(-0.7, sun_yaw, 0.0));
+        light: DirectionalLight { intensity: 3.0 };
+    }
+    entity Floor {
+        mesh: Plane { size: vec2(20.0) };
+        material: Pbr { base_color: #b0b0b0; roughness: 0.8 };
+    }
+    entity Caster {
+        position: bind(vec3(caster_x, caster_y, caster_z));
+        visible: bind(caster_visible);
+        mesh: Box { size: vec3(1.0) };
+        material: Pbr { base_color: #6b5cff; roughness: 0.8 };
+    }
+    entity Twin {
+        position: vec3(-2.0, 0.5, -2.0);
+        mesh: Box { size: vec3(1.0) };
+        material: Pbr { base_color: #6b5cff; roughness: 0.8 };
+    }
+    on key_down(Key.R) {
+        reset();
+    }
+}

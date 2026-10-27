@@ -1,0 +1,31 @@
+{
+  "format": "mtek-compute-artifact-integrity/1",
+  "checked": {
+    "hardware": {
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0,
+      "shadowCases": 6,
+      "publicAnalysis": true,
+      "packageHashesVerified": true,
+      "runtimeSha256": "994855cc61f21aee714ffde10305f4d75b549effb294d40e5839b9e8158218c8"
+    },
+    "software": {
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0,
+      "shadowCases": 6,
+      "publicAnalysis": true,
+      "packageHashesVerified": true,
+      "runtimeSha256": "994855cc61f21aee714ffde10305f4d75b549effb294d40e5839b9e8158218c8"
+    }
+  },
+  "exampleHostHashes": {
+    "examples/compute-geometry/index.html": "87d514688a3f44240d2f3cca4d3e837b7383631b4821221eb9d96297752366f5",
+    "examples/compute-geometry/main.js": "e9853bb4e9bbe22a98b9c68d31410a6f3a4349641d50a3db2ad5e18c4f5035fb",
+    "examples/compute-geometry/geometry.js": "2a1a71579dd489002ec2d2d19268e67f36d02d8514c8b6ff7d773790f81bb3d8"
+  },
+  "frozenAnimationDefinition": "0897d7e5d5e7aa19ccf6cd49faf640e4001762b10faa9baa24e2db23590d0c6a",
+  "runtimeMinBytes": 694425,
+  "packagesIdenticalAfterParserConformanceFix": true
+}

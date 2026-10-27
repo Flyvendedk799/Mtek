@@ -1,5 +1,5 @@
 //! Compute kernels share the material expression/statement lowering and helper graph.
-//! This produces typed shader IR only; public packaging is still blocked by E4901.
+//! Public packaging validates this typed shader IR through Naga.
 
 use super::*;
 use crate::ir::{ComputeBufferItem, ComputeItem};

@@ -1,0 +1,2105 @@
+{
+  "manifestSchema": 1,
+  "runtimeAbi": 1,
+  "languageVersion": "0.1",
+  "compilerVersion": "0.1.0-dev",
+  "buildId": "da92719e715ef200a5fbb531d67b39ac04bcbb62285d4e7b0922a77550553e52",
+  "targetProfile": "webgpu-core-2026",
+  "requiredCapabilities": {
+    "features": [],
+    "limits": {},
+    "wgslLanguageFeatures": []
+  },
+  "subsystems": {
+    "physics": false
+  },
+  "runtimeConfig": {
+    "fixedStep": 0.016666668,
+    "maxCatchUpSteps": 4,
+    "maxFrameDelta": 0.1,
+    "maxEntities": 16384,
+    "pauseWhenHidden": true
+  },
+  "entryScene": "Mapped",
+  "sources": [
+    {
+      "id": 0,
+      "path": "src/main.mtek",
+      "sha256": "235ab6d08534817a9f7b1ed9c4fea9562c5118c9cb4ceea1cc9494a7aeec12c3"
+    },
+    {
+      "id": 1,
+      "path": "std/materials.mtek",
+      "sha256": "99fc9afba2aa73629a64caf69c42b38f864f471c48e5ec5b731b94ba02990214"
+    }
+  ],
+  "spans": [
+    {
+      "file": 0,
+      "start": 48,
+      "end": 1066,
+      "startLine": 2,
+      "startColumn": 1,
+      "endLine": 24,
+      "endColumn": 2
+    },
+    {
+      "file": 0,
+      "start": 149,
+      "end": 170,
+      "startLine": 6,
+      "startColumn": 5,
+      "endLine": 6,
+      "endColumn": 26
+    },
+    {
+      "file": 0,
+      "start": 175,
+      "end": 211,
+      "startLine": 7,
+      "startColumn": 5,
+      "endLine": 7,
+      "endColumn": 41
+    },
+    {
+      "file": 0,
+      "start": 216,
+      "end": 246,
+      "startLine": 8,
+      "startColumn": 5,
+      "endLine": 8,
+      "endColumn": 35
+    },
+    {
+      "file": 0,
+      "start": 251,
+      "end": 280,
+      "startLine": 9,
+      "startColumn": 5,
+      "endLine": 9,
+      "endColumn": 34
+    },
+    {
+      "file": 0,
+      "start": 285,
+      "end": 308,
+      "startLine": 10,
+      "startColumn": 5,
+      "endLine": 10,
+      "endColumn": 28
+    },
+    {
+      "file": 0,
+      "start": 313,
+      "end": 336,
+      "startLine": 11,
+      "startColumn": 5,
+      "endLine": 11,
+      "endColumn": 28
+    },
+    {
+      "file": 0,
+      "start": 341,
+      "end": 374,
+      "startLine": 12,
+      "startColumn": 5,
+      "endLine": 12,
+      "endColumn": 38
+    },
+    {
+      "file": 0,
+      "start": 379,
+      "end": 503,
+      "startLine": 13,
+      "startColumn": 5,
+      "endLine": 13,
+      "endColumn": 129
+    },
+    {
+      "file": 0,
+      "start": 508,
+      "end": 625,
+      "startLine": 14,
+      "startColumn": 5,
+      "endLine": 14,
+      "endColumn": 122
+    },
+    {
+      "file": 0,
+      "start": 630,
+      "end": 721,
+      "startLine": 15,
+      "startColumn": 5,
+      "endLine": 15,
+      "endColumn": 96
+    },
+    {
+      "file": 1,
+      "start": 379,
+      "end": 2186,
+      "startLine": 10,
+      "startColumn": 8,
+      "endLine": 39,
+      "endColumn": 2
+    },
+    {
+      "file": 1,
+      "start": 398,
+      "end": 432,
+      "startLine": 11,
+      "startColumn": 5,
+      "endLine": 11,
+      "endColumn": 39
+    },
+    {
+      "file": 1,
+      "start": 437,
+      "end": 463,
+      "startLine": 12,
+      "startColumn": 5,
+      "endLine": 12,
+      "endColumn": 31
+    },
+    {
+      "file": 1,
+      "start": 468,
+      "end": 495,
+      "startLine": 13,
+      "startColumn": 5,
+      "endLine": 13,
+      "endColumn": 32
+    },
+    {
+      "file": 1,
+      "start": 500,
+      "end": 552,
+      "startLine": 14,
+      "startColumn": 5,
+      "endLine": 14,
+      "endColumn": 57
+    },
+    {
+      "file": 1,
+      "start": 557,
+      "end": 617,
+      "startLine": 15,
+      "startColumn": 5,
+      "endLine": 15,
+      "endColumn": 65
+    },
+    {
+      "file": 1,
+      "start": 622,
+      "end": 682,
+      "startLine": 16,
+      "startColumn": 5,
+      "endLine": 16,
+      "endColumn": 65
+    },
+    {
+      "file": 1,
+      "start": 687,
+      "end": 755,
+      "startLine": 17,
+      "startColumn": 5,
+      "endLine": 17,
+      "endColumn": 73
+    },
+    {
+      "file": 1,
+      "start": 760,
+      "end": 808,
+      "startLine": 18,
+      "startColumn": 5,
+      "endLine": 18,
+      "endColumn": 53
+    },
+    {
+      "file": 1,
+      "start": 813,
+      "end": 869,
+      "startLine": 19,
+      "startColumn": 5,
+      "endLine": 19,
+      "endColumn": 61
+    },
+    {
+      "file": 1,
+      "start": 874,
+      "end": 925,
+      "startLine": 20,
+      "startColumn": 5,
+      "endLine": 20,
+      "endColumn": 56
+    },
+    {
+      "file": 1,
+      "start": 930,
+      "end": 989,
+      "startLine": 21,
+      "startColumn": 5,
+      "endLine": 21,
+      "endColumn": 64
+    },
+    {
+      "file": 1,
+      "start": 994,
+      "end": 1044,
+      "startLine": 22,
+      "startColumn": 5,
+      "endLine": 22,
+      "endColumn": 55
+    },
+    {
+      "file": 1,
+      "start": 1049,
+      "end": 1107,
+      "startLine": 23,
+      "startColumn": 5,
+      "endLine": 23,
+      "endColumn": 63
+    },
+    {
+      "file": 1,
+      "start": 1280,
+      "end": 1310,
+      "startLine": 26,
+      "startColumn": 5,
+      "endLine": 26,
+      "endColumn": 35
+    },
+    {
+      "file": 1,
+      "start": 1315,
+      "end": 1351,
+      "startLine": 27,
+      "startColumn": 5,
+      "endLine": 27,
+      "endColumn": 41
+    },
+    {
+      "file": 1,
+      "start": 1356,
+      "end": 1388,
+      "startLine": 28,
+      "startColumn": 5,
+      "endLine": 28,
+      "endColumn": 37
+    },
+    {
+      "file": 1,
+      "start": 1393,
+      "end": 2184,
+      "startLine": 29,
+      "startColumn": 5,
+      "endLine": 38,
+      "endColumn": 6
+    },
+    {
+      "file": 1,
+      "start": 1444,
+      "end": 1519,
+      "startLine": 30,
+      "startColumn": 9,
+      "endLine": 30,
+      "endColumn": 84
+    },
+    {
+      "file": 1,
+      "start": 1456,
+      "end": 1518,
+      "startLine": 30,
+      "startColumn": 21,
+      "endLine": 30,
+      "endColumn": 83
+    },
+    {
+      "file": 1,
+      "start": 1467,
+      "end": 1485,
+      "startLine": 30,
+      "startColumn": 32,
+      "endLine": 30,
+      "endColumn": 50
+    },
+    {
+      "file": 1,
+      "start": 1487,
+      "end": 1505,
+      "startLine": 30,
+      "startColumn": 52,
+      "endLine": 30,
+      "endColumn": 70
+    },
+    {
+      "file": 1,
+      "start": 1507,
+      "end": 1517,
+      "startLine": 30,
+      "startColumn": 72,
+      "endLine": 30,
+      "endColumn": 82
+    },
+    {
+      "file": 1,
+      "start": 1507,
+      "end": 1514,
+      "startLine": 30,
+      "startColumn": 72,
+      "endLine": 30,
+      "endColumn": 79
+    },
+    {
+      "file": 1,
+      "start": 1528,
+      "end": 1596,
+      "startLine": 31,
+      "startColumn": 9,
+      "endLine": 31,
+      "endColumn": 77
+    },
+    {
+      "file": 1,
+      "start": 1541,
+      "end": 1595,
+      "startLine": 31,
+      "startColumn": 22,
+      "endLine": 31,
+      "endColumn": 76
+    },
+    {
+      "file": 1,
+      "start": 1554,
+      "end": 1580,
+      "startLine": 31,
+      "startColumn": 35,
+      "endLine": 31,
+      "endColumn": 61
+    },
+    {
+      "file": 1,
+      "start": 1554,
+      "end": 1568,
+      "startLine": 31,
+      "startColumn": 35,
+      "endLine": 31,
+      "endColumn": 49
+    },
+    {
+      "file": 1,
+      "start": 1554,
+      "end": 1564,
+      "startLine": 31,
+      "startColumn": 35,
+      "endLine": 31,
+      "endColumn": 45
+    },
+    {
+      "file": 1,
+      "start": 1571,
+      "end": 1580,
+      "startLine": 31,
+      "startColumn": 52,
+      "endLine": 31,
+      "endColumn": 61
+    },
+    {
+      "file": 1,
+      "start": 1571,
+      "end": 1576,
+      "startLine": 31,
+      "startColumn": 52,
+      "endLine": 31,
+      "endColumn": 57
+    },
+    {
+      "file": 1,
+      "start": 1582,
+      "end": 1594,
+      "startLine": 31,
+      "startColumn": 63,
+      "endLine": 31,
+      "endColumn": 75
+    },
+    {
+      "file": 1,
+      "start": 1582,
+      "end": 1592,
+      "startLine": 31,
+      "startColumn": 63,
+      "endLine": 31,
+      "endColumn": 73
+    },
+    {
+      "file": 1,
+      "start": 1605,
+      "end": 1693,
+      "startLine": 32,
+      "startColumn": 9,
+      "endLine": 32,
+      "endColumn": 97
+    },
+    {
+      "file": 1,
+      "start": 1614,
+      "end": 1692,
+      "startLine": 32,
+      "startColumn": 18,
+      "endLine": 32,
+      "endColumn": 96
+    },
+    {
+      "file": 1,
+      "start": 1625,
+      "end": 1651,
+      "startLine": 32,
+      "startColumn": 29,
+      "endLine": 32,
+      "endColumn": 55
+    },
+    {
+      "file": 1,
+      "start": 1653,
+      "end": 1679,
+      "startLine": 32,
+      "startColumn": 57,
+      "endLine": 32,
+      "endColumn": 83
+    },
+    {
+      "file": 1,
+      "start": 1681,
+      "end": 1691,
+      "startLine": 32,
+      "startColumn": 85,
+      "endLine": 32,
+      "endColumn": 95
+    },
+    {
+      "file": 1,
+      "start": 1681,
+      "end": 1688,
+      "startLine": 32,
+      "startColumn": 85,
+      "endLine": 32,
+      "endColumn": 92
+    },
+    {
+      "file": 1,
+      "start": 1702,
+      "end": 1774,
+      "startLine": 33,
+      "startColumn": 9,
+      "endLine": 33,
+      "endColumn": 81
+    },
+    {
+      "file": 1,
+      "start": 1715,
+      "end": 1773,
+      "startLine": 33,
+      "startColumn": 22,
+      "endLine": 33,
+      "endColumn": 80
+    },
+    {
+      "file": 1,
+      "start": 1715,
+      "end": 1769,
+      "startLine": 33,
+      "startColumn": 22,
+      "endLine": 33,
+      "endColumn": 76
+    },
+    {
+      "file": 1,
+      "start": 1726,
+      "end": 1740,
+      "startLine": 33,
+      "startColumn": 33,
+      "endLine": 33,
+      "endColumn": 47
+    },
+    {
+      "file": 1,
+      "start": 1742,
+      "end": 1756,
+      "startLine": 33,
+      "startColumn": 49,
+      "endLine": 33,
+      "endColumn": 63
+    },
+    {
+      "file": 1,
+      "start": 1758,
+      "end": 1768,
+      "startLine": 33,
+      "startColumn": 65,
+      "endLine": 33,
+      "endColumn": 75
+    },
+    {
+      "file": 1,
+      "start": 1758,
+      "end": 1765,
+      "startLine": 33,
+      "startColumn": 65,
+      "endLine": 33,
+      "endColumn": 72
+    },
+    {
+      "file": 1,
+      "start": 1783,
+      "end": 1855,
+      "startLine": 34,
+      "startColumn": 9,
+      "endLine": 34,
+      "endColumn": 81
+    },
+    {
+      "file": 1,
+      "start": 1792,
+      "end": 1854,
+      "startLine": 34,
+      "startColumn": 18,
+      "endLine": 34,
+      "endColumn": 80
+    },
+    {
+      "file": 1,
+      "start": 1792,
+      "end": 1852,
+      "startLine": 34,
+      "startColumn": 18,
+      "endLine": 34,
+      "endColumn": 78
+    },
+    {
+      "file": 1,
+      "start": 1803,
+      "end": 1820,
+      "startLine": 34,
+      "startColumn": 29,
+      "endLine": 34,
+      "endColumn": 46
+    },
+    {
+      "file": 1,
+      "start": 1822,
+      "end": 1839,
+      "startLine": 34,
+      "startColumn": 48,
+      "endLine": 34,
+      "endColumn": 65
+    },
+    {
+      "file": 1,
+      "start": 1841,
+      "end": 1851,
+      "startLine": 34,
+      "startColumn": 67,
+      "endLine": 34,
+      "endColumn": 77
+    },
+    {
+      "file": 1,
+      "start": 1841,
+      "end": 1848,
+      "startLine": 34,
+      "startColumn": 67,
+      "endLine": 34,
+      "endColumn": 74
+    },
+    {
+      "file": 1,
+      "start": 1864,
+      "end": 1948,
+      "startLine": 35,
+      "startColumn": 9,
+      "endLine": 35,
+      "endColumn": 93
+    },
+    {
+      "file": 1,
+      "start": 1885,
+      "end": 1947,
+      "startLine": 35,
+      "startColumn": 30,
+      "endLine": 35,
+      "endColumn": 92
+    },
+    {
+      "file": 1,
+      "start": 1885,
+      "end": 1943,
+      "startLine": 35,
+      "startColumn": 30,
+      "endLine": 35,
+      "endColumn": 88
+    },
+    {
+      "file": 1,
+      "start": 1896,
+      "end": 1912,
+      "startLine": 35,
+      "startColumn": 41,
+      "endLine": 35,
+      "endColumn": 57
+    },
+    {
+      "file": 1,
+      "start": 1914,
+      "end": 1930,
+      "startLine": 35,
+      "startColumn": 59,
+      "endLine": 35,
+      "endColumn": 75
+    },
+    {
+      "file": 1,
+      "start": 1932,
+      "end": 1942,
+      "startLine": 35,
+      "startColumn": 77,
+      "endLine": 35,
+      "endColumn": 87
+    },
+    {
+      "file": 1,
+      "start": 1932,
+      "end": 1939,
+      "startLine": 35,
+      "startColumn": 77,
+      "endLine": 35,
+      "endColumn": 84
+    },
+    {
+      "file": 1,
+      "start": 1957,
+      "end": 2002,
+      "startLine": 36,
+      "startColumn": 9,
+      "endLine": 36,
+      "endColumn": 54
+    },
+    {
+      "file": 1,
+      "start": 1972,
+      "end": 2001,
+      "startLine": 36,
+      "startColumn": 24,
+      "endLine": 36,
+      "endColumn": 53
+    },
+    {
+      "file": 1,
+      "start": 1972,
+      "end": 1984,
+      "startLine": 36,
+      "startColumn": 24,
+      "endLine": 36,
+      "endColumn": 36
+    },
+    {
+      "file": 1,
+      "start": 1972,
+      "end": 1980,
+      "startLine": 36,
+      "startColumn": 24,
+      "endLine": 36,
+      "endColumn": 32
+    },
+    {
+      "file": 1,
+      "start": 1987,
+      "end": 2001,
+      "startLine": 36,
+      "startColumn": 39,
+      "endLine": 36,
+      "endColumn": 53
+    },
+    {
+      "file": 1,
+      "start": 2011,
+      "end": 2178,
+      "startLine": 37,
+      "startColumn": 9,
+      "endLine": 37,
+      "endColumn": 176
+    },
+    {
+      "file": 1,
+      "start": 2018,
+      "end": 2177,
+      "startLine": 37,
+      "startColumn": 16,
+      "endLine": 37,
+      "endColumn": 175
+    },
+    {
+      "file": 1,
+      "start": 2038,
+      "end": 2045,
+      "startLine": 37,
+      "startColumn": 36,
+      "endLine": 37,
+      "endColumn": 43
+    },
+    {
+      "file": 1,
+      "start": 2047,
+      "end": 2053,
+      "startLine": 37,
+      "startColumn": 45,
+      "endLine": 37,
+      "endColumn": 51
+    },
+    {
+      "file": 1,
+      "start": 2055,
+      "end": 2070,
+      "startLine": 37,
+      "startColumn": 53,
+      "endLine": 37,
+      "endColumn": 68
+    },
+    {
+      "file": 1,
+      "start": 2055,
+      "end": 2063,
+      "startLine": 37,
+      "startColumn": 53,
+      "endLine": 37,
+      "endColumn": 61
+    },
+    {
+      "file": 1,
+      "start": 2066,
+      "end": 2070,
+      "startLine": 37,
+      "startColumn": 64,
+      "endLine": 37,
+      "endColumn": 68
+    },
+    {
+      "file": 1,
+      "start": 2066,
+      "end": 2068,
+      "startLine": 37,
+      "startColumn": 64,
+      "endLine": 37,
+      "endColumn": 66
+    },
+    {
+      "file": 1,
+      "start": 2072,
+      "end": 2088,
+      "startLine": 37,
+      "startColumn": 70,
+      "endLine": 37,
+      "endColumn": 86
+    },
+    {
+      "file": 1,
+      "start": 2072,
+      "end": 2081,
+      "startLine": 37,
+      "startColumn": 70,
+      "endLine": 37,
+      "endColumn": 79
+    },
+    {
+      "file": 1,
+      "start": 2084,
+      "end": 2088,
+      "startLine": 37,
+      "startColumn": 82,
+      "endLine": 37,
+      "endColumn": 86
+    },
+    {
+      "file": 1,
+      "start": 2084,
+      "end": 2086,
+      "startLine": 37,
+      "startColumn": 82,
+      "endLine": 37,
+      "endColumn": 84
+    },
+    {
+      "file": 1,
+      "start": 2090,
+      "end": 2096,
+      "startLine": 37,
+      "startColumn": 88,
+      "endLine": 37,
+      "endColumn": 94
+    },
+    {
+      "file": 1,
+      "start": 2098,
+      "end": 2110,
+      "startLine": 37,
+      "startColumn": 96,
+      "endLine": 37,
+      "endColumn": 108
+    },
+    {
+      "file": 1,
+      "start": 2112,
+      "end": 2166,
+      "startLine": 37,
+      "startColumn": 110,
+      "endLine": 37,
+      "endColumn": 164
+    },
+    {
+      "file": 1,
+      "start": 2112,
+      "end": 2115,
+      "startLine": 37,
+      "startColumn": 110,
+      "endLine": 37,
+      "endColumn": 113
+    },
+    {
+      "file": 1,
+      "start": 2118,
+      "end": 2166,
+      "startLine": 37,
+      "startColumn": 116,
+      "endLine": 37,
+      "endColumn": 164
+    },
+    {
+      "file": 1,
+      "start": 2118,
+      "end": 2153,
+      "startLine": 37,
+      "startColumn": 116,
+      "endLine": 37,
+      "endColumn": 151
+    },
+    {
+      "file": 1,
+      "start": 2124,
+      "end": 2142,
+      "startLine": 37,
+      "startColumn": 122,
+      "endLine": 37,
+      "endColumn": 140
+    },
+    {
+      "file": 1,
+      "start": 2144,
+      "end": 2147,
+      "startLine": 37,
+      "startColumn": 142,
+      "endLine": 37,
+      "endColumn": 145
+    },
+    {
+      "file": 1,
+      "start": 2149,
+      "end": 2152,
+      "startLine": 37,
+      "startColumn": 147,
+      "endLine": 37,
+      "endColumn": 150
+    },
+    {
+      "file": 1,
+      "start": 2157,
+      "end": 2165,
+      "startLine": 37,
+      "startColumn": 155,
+      "endLine": 37,
+      "endColumn": 163
+    },
+    {
+      "file": 1,
+      "start": 2157,
+      "end": 2159,
+      "startLine": 37,
+      "startColumn": 155,
+      "endLine": 37,
+      "endColumn": 157
+    },
+    {
+      "file": 1,
+      "start": 2162,
+      "end": 2165,
+      "startLine": 37,
+      "startColumn": 160,
+      "endLine": 37,
+      "endColumn": 163
+    },
+    {
+      "file": 1,
+      "start": 2168,
+      "end": 2176,
+      "startLine": 37,
+      "startColumn": 166,
+      "endLine": 37,
+      "endColumn": 174
+    },
+    {
+      "file": 0,
+      "start": 24,
+      "end": 45,
+      "startLine": 1,
+      "startColumn": 25,
+      "endLine": 1,
+      "endColumn": 46
+    },
+    {
+      "file": 0,
+      "start": 611,
+      "end": 620,
+      "startLine": 14,
+      "startColumn": 108,
+      "endLine": 14,
+      "endColumn": 117
+    }
+  ],
+  "symbols": [
+    {
+      "id": "src/main.mtek::Mapped",
+      "kind": "scene",
+      "span": 0
+    },
+    {
+      "id": "src/main.mtek::Mapped.sun",
+      "kind": "state",
+      "span": 1
+    },
+    {
+      "id": "src/main.mtek::Mapped.base_factor",
+      "kind": "state",
+      "span": 2
+    },
+    {
+      "id": "src/main.mtek::Mapped.normal_scale",
+      "kind": "state",
+      "span": 3
+    },
+    {
+      "id": "src/main.mtek::Mapped.ao_strength",
+      "kind": "state",
+      "span": 4
+    },
+    {
+      "id": "src/main.mtek::Mapped.metal",
+      "kind": "state",
+      "span": 5
+    },
+    {
+      "id": "src/main.mtek::Mapped.rough",
+      "kind": "state",
+      "span": 6
+    },
+    {
+      "id": "src/main.mtek::Mapped.emission",
+      "kind": "state",
+      "span": 7
+    },
+    {
+      "id": "src/main.mtek::Mapped.Main",
+      "kind": "camera",
+      "span": 8
+    },
+    {
+      "id": "src/main.mtek::Mapped.Sun",
+      "kind": "entity",
+      "span": 9
+    },
+    {
+      "id": "src/main.mtek::Mapped.Part",
+      "kind": "entity",
+      "span": 10
+    },
+    {
+      "id": "std/materials.mtek::Pbr",
+      "kind": "material",
+      "span": 11
+    },
+    {
+      "id": "std/materials.mtek::Pbr.base_color",
+      "kind": "param",
+      "span": 12
+    },
+    {
+      "id": "std/materials.mtek::Pbr.metallic",
+      "kind": "param",
+      "span": 13
+    },
+    {
+      "id": "std/materials.mtek::Pbr.roughness",
+      "kind": "param",
+      "span": 14
+    },
+    {
+      "id": "std/materials.mtek::Pbr.base_color_texture",
+      "kind": "param",
+      "span": 15
+    },
+    {
+      "id": "std/materials.mtek::Pbr.base_color_sampler",
+      "kind": "param",
+      "span": 16
+    },
+    {
+      "id": "std/materials.mtek::Pbr.metallic_roughness_texture",
+      "kind": "param",
+      "span": 17
+    },
+    {
+      "id": "std/materials.mtek::Pbr.metallic_roughness_sampler",
+      "kind": "param",
+      "span": 18
+    },
+    {
+      "id": "std/materials.mtek::Pbr.normal_texture",
+      "kind": "param",
+      "span": 19
+    },
+    {
+      "id": "std/materials.mtek::Pbr.normal_sampler",
+      "kind": "param",
+      "span": 20
+    },
+    {
+      "id": "std/materials.mtek::Pbr.occlusion_texture",
+      "kind": "param",
+      "span": 21
+    },
+    {
+      "id": "std/materials.mtek::Pbr.occlusion_sampler",
+      "kind": "param",
+      "span": 22
+    },
+    {
+      "id": "std/materials.mtek::Pbr.emissive_texture",
+      "kind": "param",
+      "span": 23
+    },
+    {
+      "id": "std/materials.mtek::Pbr.emissive_sampler",
+      "kind": "param",
+      "span": 24
+    },
+    {
+      "id": "std/materials.mtek::Pbr.normal_scale",
+      "kind": "param",
+      "span": 25
+    },
+    {
+      "id": "std/materials.mtek::Pbr.occlusion_strength",
+      "kind": "param",
+      "span": 26
+    },
+    {
+      "id": "std/materials.mtek::Pbr.emissive",
+      "kind": "param",
+      "span": 27
+    }
+  ],
+  "layouts": [
+    {
+      "id": "builtin:frame",
+      "wgslStruct": "MtekFrame",
+      "size": 288,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 288,
+        "align": 16,
+        "members": [
+          {
+            "name": "view_proj",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 0,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          },
+          {
+            "name": "camera_position",
+            "mtekType": "vec3",
+            "node": {
+              "kind": "vector",
+              "offset": 64,
+              "size": 12,
+              "align": 16,
+              "scalar": "f32",
+              "components": 3
+            }
+          },
+          {
+            "name": "light_count",
+            "mtekType": "u32",
+            "node": {
+              "kind": "scalar",
+              "offset": 76,
+              "size": 4,
+              "align": 4,
+              "scalar": "u32"
+            }
+          },
+          {
+            "name": "ambient",
+            "mtekType": "vec3",
+            "node": {
+              "kind": "vector",
+              "offset": 80,
+              "size": 12,
+              "align": 16,
+              "scalar": "f32",
+              "components": 3
+            }
+          },
+          {
+            "name": "exposure",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 92,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          },
+          {
+            "name": "lights",
+            "mtekType": "array<MtekLight, 4>",
+            "node": {
+              "kind": "array",
+              "offset": 96,
+              "size": 192,
+              "align": 16,
+              "length": 4,
+              "stride": 48,
+              "padded": false,
+              "element": {
+                "kind": "struct",
+                "name": "MtekLight",
+                "offset": 0,
+                "size": 48,
+                "align": 16,
+                "members": [
+                  {
+                    "name": "color",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 0,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "kind",
+                    "mtekType": "u32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 12,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "u32"
+                    }
+                  },
+                  {
+                    "name": "position",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 16,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "range",
+                    "mtekType": "f32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 28,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  },
+                  {
+                    "name": "direction",
+                    "mtekType": "vec3",
+                    "node": {
+                      "kind": "vector",
+                      "offset": 32,
+                      "size": 12,
+                      "align": 16,
+                      "scalar": "f32",
+                      "components": 3
+                    }
+                  },
+                  {
+                    "name": "reserved",
+                    "mtekType": "f32",
+                    "node": {
+                      "kind": "scalar",
+                      "offset": 44,
+                      "size": 4,
+                      "align": 4,
+                      "scalar": "f32"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "builtin:object",
+      "wgslStruct": "MtekObject",
+      "size": 128,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 128,
+        "align": 16,
+        "members": [
+          {
+            "name": "model",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 0,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          },
+          {
+            "name": "normal_matrix",
+            "mtekType": "mat4",
+            "node": {
+              "kind": "matrix",
+              "offset": 64,
+              "size": 64,
+              "align": 16,
+              "columns": 4,
+              "rows": 4,
+              "columnStride": 16
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "material:std/materials.mtek::Pbr",
+      "wgslStruct": "MtekParams_2b212d15_Pbr",
+      "size": 48,
+      "align": 16,
+      "root": {
+        "kind": "struct",
+        "offset": 0,
+        "size": 48,
+        "align": 16,
+        "members": [
+          {
+            "name": "base_color",
+            "mtekType": "color",
+            "node": {
+              "kind": "vector",
+              "offset": 0,
+              "size": 16,
+              "align": 16,
+              "scalar": "f32",
+              "components": 4
+            }
+          },
+          {
+            "name": "metallic",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 16,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          },
+          {
+            "name": "roughness",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 20,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          },
+          {
+            "name": "normal_scale",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 24,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          },
+          {
+            "name": "occlusion_strength",
+            "mtekType": "f32",
+            "node": {
+              "kind": "scalar",
+              "offset": 28,
+              "size": 4,
+              "align": 4,
+              "scalar": "f32"
+            }
+          },
+          {
+            "name": "emissive",
+            "mtekType": "color",
+            "node": {
+              "kind": "vector",
+              "offset": 32,
+              "size": 16,
+              "align": 16,
+              "scalar": "f32",
+              "components": 4
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "shaders": [
+    {
+      "lighting": 1,
+      "hash": "819eea4642598b4d5abfbb3f85654841094eeda46025b0541103f850c6c9742d",
+      "url": "shaders/819eea4642598b4d.wgsl",
+      "map": "shaders/819eea4642598b4d.mtek-map.json",
+      "material": "std/materials.mtek::Pbr",
+      "vertexEntry": "mtek_vs",
+      "instancedVertexEntry": "mtek_vs_instanced",
+      "fragmentEntry": "mtek_fs",
+      "vertexAttributes": [
+        "position",
+        "normal",
+        "uv",
+        "tangent"
+      ],
+      "surfaceInputs": [
+        "world_position",
+        "world_normal",
+        "uv",
+        "world_tangent"
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "id": "std/materials.mtek::Pbr",
+      "layout": "material:std/materials.mtek::Pbr",
+      "shader": "819eea4642598b4d5abfbb3f85654841094eeda46025b0541103f850c6c9742d",
+      "resources": [
+        {
+          "name": "base_color_texture",
+          "kind": "texture",
+          "binding": 1
+        },
+        {
+          "name": "base_color_sampler",
+          "kind": "sampler",
+          "binding": 2
+        },
+        {
+          "name": "metallic_roughness_texture",
+          "kind": "texture",
+          "binding": 3
+        },
+        {
+          "name": "metallic_roughness_sampler",
+          "kind": "sampler",
+          "binding": 4
+        },
+        {
+          "name": "normal_texture",
+          "kind": "texture",
+          "binding": 5
+        },
+        {
+          "name": "normal_sampler",
+          "kind": "sampler",
+          "binding": 6
+        },
+        {
+          "name": "occlusion_texture",
+          "kind": "texture",
+          "binding": 7
+        },
+        {
+          "name": "occlusion_sampler",
+          "kind": "sampler",
+          "binding": 8
+        },
+        {
+          "name": "emissive_texture",
+          "kind": "texture",
+          "binding": 9
+        },
+        {
+          "name": "emissive_sampler",
+          "kind": "sampler",
+          "binding": 10
+        }
+      ],
+      "params": [
+        {
+          "name": "base_color",
+          "type": "color",
+          "span": 12
+        },
+        {
+          "name": "metallic",
+          "type": "f32",
+          "span": 13
+        },
+        {
+          "name": "roughness",
+          "type": "f32",
+          "span": 14
+        },
+        {
+          "name": "base_color_texture",
+          "type": "texture",
+          "span": 15
+        },
+        {
+          "name": "base_color_sampler",
+          "type": "sampler",
+          "span": 16
+        },
+        {
+          "name": "metallic_roughness_texture",
+          "type": "texture",
+          "span": 17
+        },
+        {
+          "name": "metallic_roughness_sampler",
+          "type": "sampler",
+          "span": 18
+        },
+        {
+          "name": "normal_texture",
+          "type": "texture",
+          "span": 19
+        },
+        {
+          "name": "normal_sampler",
+          "type": "sampler",
+          "span": 20
+        },
+        {
+          "name": "occlusion_texture",
+          "type": "texture",
+          "span": 21
+        },
+        {
+          "name": "occlusion_sampler",
+          "type": "sampler",
+          "span": 22
+        },
+        {
+          "name": "emissive_texture",
+          "type": "texture",
+          "span": 23
+        },
+        {
+          "name": "emissive_sampler",
+          "type": "sampler",
+          "span": 24
+        },
+        {
+          "name": "normal_scale",
+          "type": "f32",
+          "span": 25
+        },
+        {
+          "name": "occlusion_strength",
+          "type": "f32",
+          "span": 26
+        },
+        {
+          "name": "emissive",
+          "type": "color",
+          "span": 27
+        }
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "id": "mesh:0",
+      "kind": "asset",
+      "asset": "assets/d9e2e71811ec4675.bin",
+      "primitive": 0,
+      "skin": {
+        "meshNode": 0,
+        "nodes": [
+          {
+            "name": "Quad",
+            "parent": -1,
+            "translation": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "scale": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "name": "Joint",
+            "parent": -1,
+            "translation": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "scale": [
+              1.4,
+              0.7,
+              1
+            ]
+          }
+        ],
+        "joints": [
+          1
+        ],
+        "inverseBind": [
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "indices": [
+          [
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "weights": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0
+          ]
+        ],
+        "clips": [
+          {
+            "name": "Pose",
+            "duration": 1,
+            "channels": [
+              {
+                "node": 1,
+                "path": "rotation",
+                "interpolation": "linear",
+                "times": [
+                  0,
+                  1
+                ],
+                "values": [
+                  0,
+                  0,
+                  -0.19866933,
+                  0.9800666,
+                  0,
+                  0,
+                  -0.19866933,
+                  0.9800666
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "assets": [
+    {
+      "url": "assets/d9e2e71811ec4675.bin",
+      "sha256": "186bb9d9da5285ff0dfc433e896cb7d9dd67beea6e1b819262236f8aaed42343",
+      "bytes": 204,
+      "kind": "mesh-data",
+      "primitives": [
+        {
+          "source": {
+            "file": "models/model.glb",
+            "mesh": "Quad",
+            "primitive": 0
+          },
+          "vertexCount": 4,
+          "indexCount": 6,
+          "indexFormat": "uint16",
+          "attributes": [
+            "position",
+            "normal",
+            "uv",
+            "tangent"
+          ],
+          "offsets": {
+            "position": 0,
+            "normal": 48,
+            "uv": 96,
+            "tangent": 128,
+            "indices": 192
+          },
+          "boundingSphere": {
+            "center": [
+              0,
+              0,
+              0
+            ],
+            "radius": 1.4142137
+          }
+        }
+      ],
+      "preprocessing": [],
+      "span": 101
+    },
+    {
+      "url": "assets/957a75f926487cfc.png",
+      "sha256": "54e17ed3a1a6a95b464246c27adc416d891d47349c39af9411448ddd1e379d7e",
+      "bytes": 70,
+      "kind": "image",
+      "colorSpace": "linear",
+      "preprocessing": [],
+      "span": 101,
+      "source": "models/model.glb#images[1]"
+    },
+    {
+      "url": "assets/cbc7f14b79387de5.png",
+      "sha256": "18a3d031e513888e09777f55814acadb56830a0f88ae4ebc862a1fb865f9a130",
+      "bytes": 70,
+      "kind": "image",
+      "colorSpace": "srgb",
+      "preprocessing": [],
+      "span": 101,
+      "source": "models/model.glb#images[0]"
+    },
+    {
+      "url": "assets/d340457c6b972e4d.png",
+      "sha256": "18a3d031e513888e09777f55814acadb56830a0f88ae4ebc862a1fb865f9a130",
+      "bytes": 70,
+      "kind": "image",
+      "colorSpace": "linear",
+      "preprocessing": [],
+      "span": 101,
+      "source": "models/model.glb#images[0]"
+    }
+  ],
+  "scene": {
+    "name": "Mapped",
+    "symbol": "src/main.mtek::Mapped",
+    "fields": {
+      "clearColor": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "ambientColor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "ambientIntensity": 0.3,
+      "gravity": [
+        0,
+        -9.81,
+        0
+      ]
+    },
+    "state": [
+      {
+        "name": "sun",
+        "type": "f32",
+        "symbol": "src/main.mtek::Mapped.sun"
+      },
+      {
+        "name": "base_factor",
+        "type": "vec3",
+        "symbol": "src/main.mtek::Mapped.base_factor"
+      },
+      {
+        "name": "normal_scale",
+        "type": "f32",
+        "symbol": "src/main.mtek::Mapped.normal_scale"
+      },
+      {
+        "name": "ao_strength",
+        "type": "f32",
+        "symbol": "src/main.mtek::Mapped.ao_strength"
+      },
+      {
+        "name": "metal",
+        "type": "f32",
+        "symbol": "src/main.mtek::Mapped.metal"
+      },
+      {
+        "name": "rough",
+        "type": "f32",
+        "symbol": "src/main.mtek::Mapped.rough"
+      },
+      {
+        "name": "emission",
+        "type": "vec3",
+        "symbol": "src/main.mtek::Mapped.emission"
+      }
+    ],
+    "cameras": [
+      {
+        "name": "Main",
+        "symbol": "src/main.mtek::Mapped.Main",
+        "projection": "orthographic",
+        "hasTarget": true,
+        "active": true,
+        "exposure": -0.2630344
+      }
+    ],
+    "entities": [
+      {
+        "index": 0,
+        "name": "Sun",
+        "symbol": "src/main.mtek::Mapped.Sun",
+        "parent": null,
+        "mesh": null,
+        "material": null,
+        "light": 0,
+        "body": null,
+        "collider": null,
+        "state": [],
+        "update": false,
+        "fixedUpdate": false
+      },
+      {
+        "index": 1,
+        "name": "Part",
+        "symbol": "src/main.mtek::Mapped.Part",
+        "parent": null,
+        "mesh": "mesh:0",
+        "material": {
+          "id": "std/materials.mtek::Pbr",
+          "instance": 0
+        },
+        "light": null,
+        "body": null,
+        "collider": null,
+        "state": [],
+        "update": false,
+        "fixedUpdate": false,
+        "clip": {
+          "name": "Pose",
+          "duration": 1,
+          "channels": []
+        }
+      }
+    ],
+    "materialInstances": [
+      {
+        "index": 0,
+        "material": "std/materials.mtek::Pbr",
+        "entity": 1,
+        "params": [
+          {
+            "name": "base_color",
+            "class": "imperative"
+          },
+          {
+            "name": "metallic",
+            "class": "imperative"
+          },
+          {
+            "name": "roughness",
+            "class": "imperative"
+          },
+          {
+            "name": "base_color_texture",
+            "class": "resource",
+            "value": {
+              "kind": "asset",
+              "asset": "assets/cbc7f14b79387de5.png"
+            }
+          },
+          {
+            "name": "base_color_sampler",
+            "class": "resource",
+            "value": {
+              "kind": "builtin",
+              "name": "sampler.linear_repeat_level0"
+            }
+          },
+          {
+            "name": "metallic_roughness_texture",
+            "class": "resource",
+            "value": {
+              "kind": "builtin",
+              "name": "texture.white"
+            }
+          },
+          {
+            "name": "metallic_roughness_sampler",
+            "class": "resource",
+            "value": {
+              "kind": "builtin",
+              "name": "sampler.linear_repeat"
+            }
+          },
+          {
+            "name": "normal_texture",
+            "class": "resource",
+            "value": {
+              "kind": "asset",
+              "asset": "assets/957a75f926487cfc.png"
+            }
+          },
+          {
+            "name": "normal_sampler",
+            "class": "resource",
+            "value": {
+              "kind": "builtin",
+              "name": "sampler.linear_repeat_level0"
+            }
+          },
+          {
+            "name": "occlusion_texture",
+            "class": "resource",
+            "value": {
+              "kind": "asset",
+              "asset": "assets/d340457c6b972e4d.png"
+            }
+          },
+          {
+            "name": "occlusion_sampler",
+            "class": "resource",
+            "value": {
+              "kind": "builtin",
+              "name": "sampler.linear_repeat_level0"
+            }
+          },
+          {
+            "name": "emissive_texture",
+            "class": "resource",
+            "value": {
+              "kind": "asset",
+              "asset": "assets/cbc7f14b79387de5.png"
+            }
+          },
+          {
+            "name": "emissive_sampler",
+            "class": "resource",
+            "value": {
+              "kind": "builtin",
+              "name": "sampler.linear_repeat_level0"
+            }
+          },
+          {
+            "name": "normal_scale",
+            "class": "imperative"
+          },
+          {
+            "name": "occlusion_strength",
+            "class": "imperative"
+          },
+          {
+            "name": "emissive",
+            "class": "imperative"
+          }
+        ],
+        "shareable": false
+      }
+    ],
+    "bindings": [
+      {
+        "id": 0,
+        "target": {
+          "kind": "light",
+          "entity": 0,
+          "field": "intensity"
+        },
+        "deps": [
+          {
+            "kind": "state",
+            "name": "sun"
+          }
+        ],
+        "order": 0,
+        "span": 102
+      }
+    ],
+    "hostInputs": [
+      {
+        "name": "ao_strength",
+        "target": {
+          "kind": "state",
+          "name": "ao_strength"
+        },
+        "type": "f32",
+        "codec": "f32"
+      },
+      {
+        "name": "base_factor",
+        "target": {
+          "kind": "state",
+          "name": "base_factor"
+        },
+        "type": "vec3",
+        "codec": "vec3"
+      },
+      {
+        "name": "emission",
+        "target": {
+          "kind": "state",
+          "name": "emission"
+        },
+        "type": "vec3",
+        "codec": "vec3"
+      },
+      {
+        "name": "metal",
+        "target": {
+          "kind": "state",
+          "name": "metal"
+        },
+        "type": "f32",
+        "codec": "f32"
+      },
+      {
+        "name": "normal_scale",
+        "target": {
+          "kind": "state",
+          "name": "normal_scale"
+        },
+        "type": "f32",
+        "codec": "f32"
+      },
+      {
+        "name": "rough",
+        "target": {
+          "kind": "state",
+          "name": "rough"
+        },
+        "type": "f32",
+        "codec": "f32"
+      },
+      {
+        "name": "sun",
+        "target": {
+          "kind": "state",
+          "name": "sun"
+        },
+        "type": "f32",
+        "codec": "f32"
+      }
+    ],
+    "lights": [
+      {
+        "index": 0,
+        "entity": 0,
+        "kind": "directional",
+        "classes": {
+          "color": "initial",
+          "intensity": "bound"
+        }
+      }
+    ]
+  }
+}

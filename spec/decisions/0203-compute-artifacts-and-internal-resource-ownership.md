@@ -1,6 +1,6 @@
 # 0203: Compute artifacts and internal resource ownership
 
-Status: accepted, 2026-10-26. Extends decisions 0201 and 0202. Implemented as
+Status: accepted, 2026-10-26; temporary public gate superseded by [0207](0207-source-compute-acceptance-and-capabilities.md). Extends decisions 0201 and 0202. Implemented as
 development compiler/runtime infrastructure; public compute packaging remains gated.
 
 ## Artifact boundary

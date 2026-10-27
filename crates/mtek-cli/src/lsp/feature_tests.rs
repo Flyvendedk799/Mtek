@@ -10,16 +10,17 @@ use super::prelude_doc::{self, REFERENCE_PATH};
 use super::testkit::TempProject;
 
 #[test]
-fn hover_on_checked_compute_resources_preserves_the_unavailable_dispatch_boundary() {
-    let source = "compute Scale {\ninput source: array<f32, 8>;\noutput result: array<f32, 8>;\nkernel(input: ComputeInput) -> f32 { return source[input.index]; }\n}\nscene Demo { camera Main {} }\n";
+fn hover_on_executable_compute_resources_states_the_host_api_boundary() {
+    let source = "compute Scale {\nparam gain: f32 = 2.0;\ninput source: array<f32, 8>;\noutput result: array<f32, 8>;\nkernel(input: ComputeInput) -> f32 { return source[input.index] * gain; }\n}\nscene Demo { camera Main {} }\n";
     let project = TempProject::new(&[("src/main.mtek", source)]);
     let snapshot = Snapshot::run(&project.dir, &Buffers::new(), false);
     let view = snapshot
         .module_at(&ProjectPath::new("src/main.mtek").unwrap())
         .unwrap();
     for (needle, expected) in [
-        ("Scale", "compute Scale (packaging/dispatch unavailable)"),
+        ("Scale", "compute Scale (host API 1)"),
         ("source:", "input source: array<f32, 8>"),
+        ("gain:", "param gain: f32 = 2.0"),
         ("result:", "output result: array<f32, 8>"),
         ("ComputeInput", "ComputeInput"),
     ] {

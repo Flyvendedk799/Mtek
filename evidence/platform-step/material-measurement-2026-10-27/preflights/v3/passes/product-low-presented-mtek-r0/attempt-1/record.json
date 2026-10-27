@@ -1,0 +1,992 @@
+{
+  "job": {
+    "scene": "product",
+    "quality": "low",
+    "pass": "presented",
+    "implementation": "mtek",
+    "repeat": 0
+  },
+  "attempt": 1,
+  "startedAt": "2026-10-27T10:35:47.476Z",
+  "status": "completed",
+  "pageErrors": [],
+  "setup": {
+    "startupCreationMs": 350,
+    "implementation": "mtek",
+    "scene": "product",
+    "quality": "low",
+    "pass": "presented",
+    "adapter": {
+      "vendor": "amd",
+      "architecture": "rdna-3",
+      "device": "0x744c",
+      "description": "AMD Radeon RX 7900 XTX",
+      "isFallbackAdapter": false
+    },
+    "deviceFeatures": [
+      "core-features-and-limits"
+    ],
+    "crossOriginIsolated": true,
+    "minimumClockDelta": 0.004999995231628418,
+    "resources": [
+      {
+        "path": "/page.js",
+        "decodedBodySize": 23196
+      },
+      {
+        "path": "/chunks/chunk-VGPSZY3X.js",
+        "decodedBodySize": 11551
+      },
+      {
+        "path": "/chunks/mtek-EK6FPOV5.js",
+        "decodedBodySize": 1680
+      },
+      {
+        "path": "/programs/product-low/app.js",
+        "decodedBodySize": 12695
+      },
+      {
+        "path": "/programs/product-low/runtime.511aba6ff69265f4.js",
+        "decodedBodySize": 672833
+      },
+      {
+        "path": "/programs/product-low/program.manifest.json",
+        "decodedBodySize": 31939
+      },
+      {
+        "path": "/programs/product-low/shaders/819eea4642598b4d.wgsl",
+        "decodedBodySize": 15638
+      },
+      {
+        "path": "/programs/product-low/assets/65d4707c69942018.bin",
+        "decodedBodySize": 149412
+      },
+      {
+        "path": "/programs/product-low/assets/fa73d0b665fb5153.bin",
+        "decodedBodySize": 7080
+      },
+      {
+        "path": "/programs/product-low/assets/46ff0580472ae247.png",
+        "decodedBodySize": 59102
+      },
+      {
+        "path": "/programs/product-low/assets/52fc5c949f30db77.png",
+        "decodedBodySize": 3012733
+      },
+      {
+        "path": "/programs/product-low/assets/adf3efac61293fc2.png",
+        "decodedBodySize": 3577832
+      },
+      {
+        "path": "/programs/product-low/assets/dbfab38217771e44.png",
+        "decodedBodySize": 2165850
+      },
+      {
+        "path": "/programs/product-low/shaders/819eea4642598b4d.mtek-map.json",
+        "decodedBodySize": 24754
+      }
+    ],
+    "unknownTextureFormats": []
+  },
+  "warmup": {
+    "frames": 30,
+    "info": {
+      "diagnostics": [],
+      "counters": {
+        "buffersAllocated": 21,
+        "texturesAllocated": 10,
+        "pipelinesCreated": 7,
+        "shaderModulesCreated": 5,
+        "bindGroupsCreated": 61,
+        "uploads": 29,
+        "uploadBytes": 67794272,
+        "liveBuffers": 20,
+        "liveTextures": 9,
+        "liveSamplers": 4,
+        "liveShaderModules": 3,
+        "livePipelines": 5,
+        "liveBindGroups": 9,
+        "liveListeners": 9,
+        "frameTimeMs": 0.11500000953674316,
+        "cpuUpdateMs": 0.030000001192092896,
+        "renderPrepMs": 0.08500000834465027,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 12,
+        "drawCallsTotal": 360,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 30,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 1,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 4,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 30,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    "counters": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 0,
+      "renderPassesBegun": 0,
+      "computePassesBegun": 0,
+      "submits": 0,
+      "drawCalls": 0,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 0,
+      "setPipeline": 0,
+      "setBindGroup": 0,
+      "setVertexBuffer": 0,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 0,
+      "writeBufferBytes": 0,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 0
+    },
+    "lastFrameDraws": []
+  },
+  "browserGpu": {
+    "pid": 26632,
+    "processes": [
+      {
+        "type": "browser",
+        "id": 5232,
+        "cpuTime": 1.284326
+      },
+      {
+        "type": "renderer",
+        "id": 33936,
+        "cpuTime": 0.055816
+      },
+      {
+        "type": "renderer",
+        "id": 17904,
+        "cpuTime": 0.32349
+      },
+      {
+        "type": "renderer",
+        "id": 21820,
+        "cpuTime": 0.270073
+      },
+      {
+        "type": "GPU",
+        "id": 26632,
+        "cpuTime": 1.364911
+      },
+      {
+        "type": "network.mojom.NetworkService",
+        "id": 34232,
+        "cpuTime": 0.205601
+      },
+      {
+        "type": "storage.mojom.StorageService",
+        "id": 30920,
+        "cpuTime": 0.029782
+      }
+    ]
+  },
+  "clocks": {
+    "qpc": {
+      "offsetMs": -0.009450003504753113,
+      "uncertaintyMs": 0.09015000611543655,
+      "attempts": [
+        {
+          "before": 68803412.9266,
+          "after": 68803413.6313,
+          "remote": 68803413.3187,
+          "roundTripMs": 0.7047000080347061,
+          "offsetMs": 0.03974999487400055
+        },
+        {
+          "before": 68803413.634,
+          "after": 68803413.9206,
+          "remote": 68803413.7818,
+          "roundTripMs": 0.2865999937057495,
+          "offsetMs": 0.004500001668930054
+        },
+        {
+          "before": 68803413.9216,
+          "after": 68803414.1559,
+          "remote": 68803414.03889999,
+          "roundTripMs": 0.23430000245571136,
+          "offsetMs": 0.0001499950885772705
+        },
+        {
+          "before": 68803414.1565,
+          "after": 68803414.3558,
+          "remote": 68803414.2521,
+          "roundTripMs": 0.19930000603199005,
+          "offsetMs": -0.004050001502037048
+        },
+        {
+          "before": 68803414.3562,
+          "after": 68803414.5988,
+          "remote": 68803414.44350001,
+          "roundTripMs": 0.24260000884532928,
+          "offsetMs": -0.0339999794960022
+        },
+        {
+          "before": 68803414.601,
+          "after": 68803414.8148,
+          "remote": 68803414.7088,
+          "roundTripMs": 0.21379999816417694,
+          "offsetMs": 0.0009000152349472046
+        },
+        {
+          "before": 68803414.8156,
+          "after": 68803414.9959,
+          "remote": 68803414.8963,
+          "roundTripMs": 0.1803000122308731,
+          "offsetMs": -0.009450003504753113
+        },
+        {
+          "before": 68803414.9963,
+          "after": 68803415.232,
+          "remote": 68803415.1002,
+          "roundTripMs": 0.23569999635219574,
+          "offsetMs": -0.013949990272521973
+        },
+        {
+          "before": 68803415.2324,
+          "after": 68803415.4817,
+          "remote": 68803415.3586,
+          "roundTripMs": 0.2493000030517578,
+          "offsetMs": 0.0015500038862228394
+        },
+        {
+          "before": 68803415.4822,
+          "after": 68803415.794,
+          "remote": 68803415.60360001,
+          "roundTripMs": 0.3118000030517578,
+          "offsetMs": -0.034499987959861755
+        },
+        {
+          "before": 68803415.795,
+          "after": 68803416.1073,
+          "remote": 68803415.9622,
+          "roundTripMs": 0.3122999966144562,
+          "offsetMs": 0.011050000786781311
+        },
+        {
+          "before": 68803416.109,
+          "after": 68803416.3794,
+          "remote": 68803416.2459,
+          "roundTripMs": 0.2704000025987625,
+          "offsetMs": 0.0017000138759613037
+        }
+      ]
+    },
+    "browser": {
+      "offsetMs": -68802335.86020002,
+      "uncertaintyMs": 0.18789999932050705,
+      "attempts": [
+        {
+          "before": 68803416.3902,
+          "after": 68803417.144,
+          "remote": 1081.0049999952316,
+          "roundTripMs": 0.7537999898195267,
+          "offsetMs": -68802335.76210001
+        },
+        {
+          "before": 68803417.1455,
+          "after": 68803417.6305,
+          "remote": 1081.5549999922514,
+          "roundTripMs": 0.48499999940395355,
+          "offsetMs": -68802335.83300002
+        },
+        {
+          "before": 68803417.632,
+          "after": 68803418.0765,
+          "remote": 1081.9800000041723,
+          "roundTripMs": 0.44449999928474426,
+          "offsetMs": -68802335.87425
+        },
+        {
+          "before": 68803418.0782,
+          "after": 68803418.5279,
+          "remote": 1082.4399999976158,
+          "roundTripMs": 0.4496999979019165,
+          "offsetMs": -68802335.86305
+        },
+        {
+          "before": 68803418.5295,
+          "after": 68803418.9296,
+          "remote": 1082.875,
+          "roundTripMs": 0.4001000076532364,
+          "offsetMs": -68802335.85455
+        },
+        {
+          "before": 68803418.931,
+          "after": 68803419.5502,
+          "remote": 1083.4549999982119,
+          "roundTripMs": 0.6192000061273575,
+          "offsetMs": -68802335.78559999
+        },
+        {
+          "before": 68803419.552,
+          "after": 68803420.0096,
+          "remote": 1083.9350000023842,
+          "roundTripMs": 0.4575999975204468,
+          "offsetMs": -68802335.8458
+        },
+        {
+          "before": 68803420.0112,
+          "after": 68803420.3949,
+          "remote": 1084.344999998808,
+          "roundTripMs": 0.3836999982595444,
+          "offsetMs": -68802335.85804999
+        },
+        {
+          "before": 68803420.3964,
+          "after": 68803420.8245,
+          "remote": 1084.734999999404,
+          "roundTripMs": 0.42809998989105225,
+          "offsetMs": -68802335.87545
+        },
+        {
+          "before": 68803420.8261,
+          "after": 68803421.2408,
+          "remote": 1085.1749999970198,
+          "roundTripMs": 0.414699986577034,
+          "offsetMs": -68802335.85845001
+        },
+        {
+          "before": 68803421.2423,
+          "after": 68803421.6181,
+          "remote": 1085.5699999928474,
+          "roundTripMs": 0.3757999986410141,
+          "offsetMs": -68802335.86020002
+        },
+        {
+          "before": 68803421.6195,
+          "after": 68803422.0129,
+          "remote": 1085.9200000017881,
+          "roundTripMs": 0.39339999854564667,
+          "offsetMs": -68802335.89619999
+        }
+      ]
+    },
+    "after": {
+      "offsetMs": -68802335.86285,
+      "uncertaintyMs": 0.18975000083446503,
+      "attempts": [
+        {
+          "before": 68806209.9363,
+          "after": 68806210.8415,
+          "remote": 3874.625,
+          "roundTripMs": 0.9052000045776367,
+          "offsetMs": -68802335.7639
+        },
+        {
+          "before": 68806210.8433,
+          "after": 68806211.5899,
+          "remote": 3875.3799999952316,
+          "roundTripMs": 0.7466000020503998,
+          "offsetMs": -68802335.8366
+        },
+        {
+          "before": 68806211.5917,
+          "after": 68806212.1181,
+          "remote": 3876.030000001192,
+          "roundTripMs": 0.5263999998569489,
+          "offsetMs": -68802335.8249
+        },
+        {
+          "before": 68806212.1197,
+          "after": 68806212.5786,
+          "remote": 3876.4950000047684,
+          "roundTripMs": 0.45890000462532043,
+          "offsetMs": -68802335.85415
+        },
+        {
+          "before": 68806212.5802,
+          "after": 68806213.0257,
+          "remote": 3876.935000002384,
+          "roundTripMs": 0.4455000013113022,
+          "offsetMs": -68802335.86794999
+        },
+        {
+          "before": 68806213.0272,
+          "after": 68806213.4142,
+          "remote": 3877.3550000041723,
+          "roundTripMs": 0.3869999945163727,
+          "offsetMs": -68802335.86569999
+        },
+        {
+          "before": 68806213.4156,
+          "after": 68806213.8737,
+          "remote": 3877.7399999946356,
+          "roundTripMs": 0.45809999108314514,
+          "offsetMs": -68802335.90465
+        },
+        {
+          "before": 68806213.8751,
+          "after": 68806214.2669,
+          "remote": 3878.2000000029802,
+          "roundTripMs": 0.39180000126361847,
+          "offsetMs": -68802335.871
+        },
+        {
+          "before": 68806214.2681,
+          "after": 68806214.6476,
+          "remote": 3878.594999998808,
+          "roundTripMs": 0.37950000166893005,
+          "offsetMs": -68802335.86285
+        },
+        {
+          "before": 68806214.6492,
+          "after": 68806215.0387,
+          "remote": 3878.954999998212,
+          "roundTripMs": 0.3894999921321869,
+          "offsetMs": -68802335.88895
+        },
+        {
+          "before": 68806215.0413,
+          "after": 68806215.5723,
+          "remote": 3879.484999999404,
+          "roundTripMs": 0.5310000032186508,
+          "offsetMs": -68802335.82180001
+        },
+        {
+          "before": 68806215.5738,
+          "after": 68806216.0001,
+          "remote": 3879.920000001788,
+          "roundTripMs": 0.4263000041246414,
+          "offsetMs": -68802335.86694999
+        }
+      ]
+    }
+  },
+  "nativeWindow": {
+    "bounds": {
+      "left": 10,
+      "top": 10,
+      "width": 656,
+      "height": 448,
+      "windowState": "normal"
+    }
+  },
+  "sample": {
+    "frames": 46,
+    "mode": "presented",
+    "renderedFrames": 16,
+    "milliseconds": null,
+    "gpu": null,
+    "counters": null,
+    "presentation": {
+      "captureWindow": {
+        "start": 2309.7899999916553,
+        "end": 2376.5750000029802
+      },
+      "rafTimestamps": [
+        2309.755,
+        2313.22,
+        2316.595,
+        2319.91,
+        2323.215,
+        2326.565,
+        2329.9,
+        2333.24,
+        2336.545,
+        2339.875,
+        2343.205,
+        2346.58,
+        2349.89,
+        2353.21,
+        2356.565,
+        2359.885
+      ],
+      "submissions": [
+        [
+          2310.079999998212,
+          2310.265000000596
+        ],
+        [
+          2313.3049999922514,
+          2313.4749999940395
+        ],
+        [
+          2316.704999998212,
+          2316.859999999404
+        ],
+        [
+          2319.984999999404,
+          2320.155000001192
+        ],
+        [
+          2323.2849999964237,
+          2323.4149999916553
+        ],
+        [
+          2326.6649999916553,
+          2326.7600000053644
+        ],
+        [
+          2329.9650000035763,
+          2330.0900000035763
+        ],
+        [
+          2333.3499999940395,
+          2333.4500000029802
+        ],
+        [
+          2336.594999998808,
+          2336.7099999934435
+        ],
+        [
+          2339.9500000029802,
+          2340.060000002384
+        ],
+        [
+          2343.2699999958277,
+          2343.3649999946356
+        ],
+        [
+          2346.6599999964237,
+          2346.7549999952316
+        ],
+        [
+          2349.954999998212,
+          2350.0499999970198
+        ],
+        [
+          2353.25,
+          2353.3499999940395
+        ],
+        [
+          2356.640000000596,
+          2356.734999999404
+        ],
+        [
+          2359.954999998212,
+          2360.045000001788
+        ]
+      ],
+      "visibilityFailures": [],
+      "visibility": "visible",
+      "focused": true,
+      "canvas": {
+        "x": 0,
+        "y": 0,
+        "width": 640,
+        "height": 360,
+        "top": 0,
+        "right": 640,
+        "bottom": 360,
+        "left": 0
+      },
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "devicePixelRatio": 1
+    },
+    "info": {
+      "diagnostics": [],
+      "counters": {
+        "buffersAllocated": 21,
+        "texturesAllocated": 10,
+        "pipelinesCreated": 7,
+        "shaderModulesCreated": 5,
+        "bindGroupsCreated": 61,
+        "uploads": 29,
+        "uploadBytes": 67794272,
+        "liveBuffers": 20,
+        "liveTextures": 9,
+        "liveSamplers": 4,
+        "liveShaderModules": 3,
+        "livePipelines": 5,
+        "liveBindGroups": 9,
+        "liveListeners": 9,
+        "frameTimeMs": 0.08500000834465027,
+        "cpuUpdateMs": 0.015000000596046448,
+        "renderPrepMs": 0.07000000774860382,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 12,
+        "drawCallsTotal": 552,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 46,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 1,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 4,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 46,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    }
+  },
+  "hostLoad": {
+    "quiet": true,
+    "busyBeforePercent": 8.80983054206719,
+    "gpuBeforePercent": 0,
+    "waitedMs": 561,
+    "observations": [
+      {
+        "cpu": 8.80983054206719,
+        "cpuBefore": {
+          "idle": 1101629367,
+          "total": 1382012377
+        },
+        "cpuAfter": {
+          "idle": 1101638569,
+          "total": 1382022468
+        },
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 688028395051,
+          "id": 30,
+          "kind": "gpu",
+          "counterRows": 381,
+          "qpcEnd": 688031431363,
+          "nonzero": []
+        }
+      }
+    ],
+    "valid": true,
+    "busyDuringPercent": 9.132124352331607,
+    "externalGpuPeakPercent": 0,
+    "logicalCpus": 20,
+    "cpuBefore": {
+      "idle": 1101661789,
+      "total": 1382048141
+    },
+    "cpuAfter": {
+      "idle": 1101663192,
+      "total": 1382049685
+    },
+    "gpuSamples": [
+      {
+        "raw": {
+          "qpc": 688046451288,
+          "id": 43,
+          "kind": "gpu",
+          "counterRows": 381,
+          "qpcEnd": 688049621339,
+          "nonzero": []
+        },
+        "allEnginePeakPercent": 0,
+        "externalEnginePeakPercent": 0
+      }
+    ]
+  },
+  "etw": {
+    "args": [
+      "--process_id",
+      "26632",
+      "--session_name",
+      "MtekMaterials-33448-4d1e10ba",
+      "--output_file",
+      ".out/material-measurement-preflight-v3/passes/product-low-presented-mtek-r0/attempt-1/presentmon.csv",
+      "--v2_metrics",
+      "--qpc_time",
+      "--write_display_time",
+      "--write_frame_id",
+      "--write_display_metadata",
+      "--track_etw_status",
+      "--no_track_gpu",
+      "--no_track_input",
+      "--no_console_stats",
+      "--timed",
+      "120",
+      "--terminate_after_timed"
+    ],
+    "pid": 26632,
+    "sessionName": "MtekMaterials-33448-4d1e10ba",
+    "readiness": {
+      "code": 0,
+      "stdout": "\r\nName:                 MtekMaterials-33448-4d1e10ba\r\nStatus:               Running\r\nRoot Path:            %systemdrive%\\PerfLogs\r\nSegment:              Off\r\nSchedules:            On\r\n\r\nName:                 MtekMaterials-33448-4d1e10ba\\MtekMaterials-33448-4d1e10ba\r\nType:                 Trace\r\nAppend:               Off\r\nCircular:             Off\r\nOverwrite:            Off\r\nBuffer Size:          64\r\nBuffers Lost:         0\r\nBuffers Written:      0\r\nBuffer Flush Timer:   1\r\nClock Type:           Performance\r\nFile Mode:            Real-time\r\n\r\nProvider:\r\nName:                 Microsoft-Windows-D3D9\r\nProvider Guid:        {783ACA0A-790E-4D7F-8451-AA850511C6B9}\r\nLevel:                255\r\nKeywordsAll:          0x8000000000000002 (Events,Microsoft-Windows-Direct3D9/Analytic)\r\nKeywordsAny:          0x8000000000000002 (Events,Microsoft-Windows-Direct3D9/Analytic)\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 Microsoft-Windows-DxgKrnl\r\nProvider Guid:        {802EC45A-1E99-4B83-9920-87C98277BA9D}\r\nLevel:                4 (win:Informational)\r\nKeywordsAll:          0x1 (Base)\r\nKeywordsAny:          0x8000001 (Base,Present)\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 Microsoft-Windows-Dwm-Core\r\nProvider Guid:        {9E9BBA3C-2E38-40CB-99F4-9E8281425164}\r\nLevel:                5 (win:Verbose)\r\nKeywordsAll:          0x0\r\nKeywordsAny:          0x8000000000000081 (Composition,Scheduling,Microsoft-Windows-Dwm-Core/Diagnostic)\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 {8C9DD1AD-E6E5-4B07-B455-684A9D879900}\r\nProvider Guid:        {8C9DD1AD-E6E5-4B07-B455-684A9D879900}\r\nLevel:                5\r\nKeywordsAll:          0x0\r\nKeywordsAny:          0xffffffffffffffff\r\nProperties:           64\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 {AE4F8626-8265-40D1-A70B-11B64240E8E9}\r\nProvider Guid:        {AE4F8626-8265-40D1-A70B-11B64240E8E9}\r\nLevel:                4\r\nKeywordsAll:          0x1000000000000000\r\nKeywordsAny:          0x1000000000000000\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 {65CD4C8A-0848-4583-92A0-31C0FBAF00C0}\r\nProvider Guid:        {65CD4C8A-0848-4583-92A0-31C0FBAF00C0}\r\nLevel:                4\r\nKeywordsAll:          0x0\r\nKeywordsAny:          0x0\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 Microsoft-Windows-DXGI\r\nProvider Guid:        {CA11C036-0102-4A2D-A6AD-F03CFED5D3C9}\r\nLevel:                255\r\nKeywordsAll:          0x8000000000000002 (Events,Microsoft-Windows-DXGI/Analytic)\r\nKeywordsAny:          0x8000000000000002 (Events,Microsoft-Windows-DXGI/Analytic)\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 Microsoft-Windows-Win32k\r\nProvider Guid:        {8C416C79-D49B-4F01-A467-E56D3AA8234C}\r\nLevel:                4 (win:Informational)\r\nKeywordsAll:          0x8000000000001000 (Updates,Microsoft-Windows-Win32k/Tracing)\r\nKeywordsAny:          0x8000000400001000 (Updates,Visualization,Microsoft-Windows-Win32k/Tracing)\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nThe command completed successfully.\r\n",
+      "stderr": ""
+    },
+    "code": 0,
+    "stdout": "Started recording.\r\n[ETW Status] BufferFillPct=3.5% BuffersInUse=9 TotalBuffers=256 EventsLost=0 BuffersLost=0, OverflowedPresents=0\r\n[ETW Status] BufferFillPct=3.1% BuffersInUse=8 TotalBuffers=256 EventsLost=0 BuffersLost=0, OverflowedPresents=0\r\n",
+    "stderr": "warning: PresentMon requires elevated privilege in order to query processes that are\r\n         short-running or started on another account.  Without it, those processes will\r\n         be listed as '<unknown>' and they can't be targeted by --process_name nor trigger\r\n         --terminate_on_proc_exit.\r\n",
+    "stop": {
+      "code": 0,
+      "stdout": "",
+      "stderr": "warning: --terminate_existing_session exits without capturing anything; ignoring all other options.\r\nwarning: --no_console_stats added because stdout does not support statistics reporting.\r\n"
+    }
+  },
+  "presentation": {
+    "source": "PresentMon 2.6.0 ETW",
+    "windowQpc": {
+      "start": 688046456407.5,
+      "end": 688047124257.5001
+    },
+    "processId": 26632,
+    "swapchain": "0x20866D41DA0",
+    "rawRows": 14,
+    "displayedRows": 14,
+    "uniqueDisplayTimes": 14,
+    "notDisplayedOsRows": 0,
+    "cohorts": [
+      {
+        "address": "0x20866D41DA0",
+        "rows": 14
+      }
+    ],
+    "timestampsMs": [
+      1201.8722,
+      1205.1807,
+      1208.4963,
+      1211.87,
+      1215.1836,
+      1221.8416,
+      1225.1714,
+      1228.5267,
+      1231.8484,
+      1235.1742,
+      1238.5354,
+      1241.8488,
+      1245.2016,
+      1248.501
+    ],
+    "intervalsMs": [
+      3.308499999999867,
+      3.3156000000001313,
+      3.3736999999998716,
+      3.3136000000001786,
+      6.657999999999902,
+      3.3297999999999774,
+      3.355299999999943,
+      3.3217000000001917,
+      3.3257999999998447,
+      3.3612000000000535,
+      3.3134000000000015,
+      3.3528000000001157,
+      3.2993999999998778
+    ],
+    "cadence": {
+      "count": 13,
+      "min": 3.2993999999998778,
+      "max": 6.657999999999902,
+      "mean": 3.5868307692307657,
+      "p50": 3.3257999999998447,
+      "p95": 6.657999999999902,
+      "p99": 6.657999999999902
+    },
+    "framesPerSecond": 278.79765295268186,
+    "modes": [
+      "Composed: Flip"
+    ],
+    "boundaries": "OS display events of the isolated browser; no per-JavaScript-frame latency or physical pixel scanout measurement is inferred"
+  },
+  "nativeConsistency": {
+    "path": "native.png",
+    "sha256": "28a7936d6dc0d8ed99e88074aa88a719ae3d809c56b8876b9eaa340e4aa00ef1",
+    "reference": {
+      "path": "offscreen.png",
+      "sha256": "a4fffb17a7f394747fa617b7334dfa2ce7269fdfb594f1ee864256559a76bd1c"
+    },
+    "meanAbsoluteRgb8": 0,
+    "p95MaximumChannelError8": 0,
+    "fractionOver3": 0,
+    "passed": true
+  },
+  "disposed": {
+    "result": {
+      "runtime": {
+        "buffersAllocated": 21,
+        "texturesAllocated": 10,
+        "pipelinesCreated": 7,
+        "shaderModulesCreated": 5,
+        "bindGroupsCreated": 61,
+        "uploads": 29,
+        "uploadBytes": 67794272,
+        "liveBuffers": 0,
+        "liveTextures": 0,
+        "liveSamplers": 0,
+        "liveShaderModules": 0,
+        "livePipelines": 0,
+        "liveBindGroups": 0,
+        "liveListeners": 0,
+        "frameTimeMs": 0.08500000834465027,
+        "cpuUpdateMs": 0.015000000596046448,
+        "renderPrepMs": 0.07000000774860382,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 12,
+        "drawCallsTotal": 552,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 46,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 1,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 4,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 46,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "diagnostics": []
+    },
+    "before": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 0,
+      "renderPassesBegun": 0,
+      "computePassesBegun": 0,
+      "submits": 0,
+      "drawCalls": 0,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 0,
+      "setPipeline": 0,
+      "setBindGroup": 0,
+      "setVertexBuffer": 0,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 0,
+      "writeBufferBytes": 0,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 0
+    },
+    "after": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 0,
+      "renderPassesBegun": 0,
+      "computePassesBegun": 0,
+      "submits": 0,
+      "drawCalls": 0,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 0,
+      "setPipeline": 0,
+      "setBindGroup": 0,
+      "setVertexBuffer": 0,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 0,
+      "writeBufferBytes": 0,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 1
+    },
+    "validation": [],
+    "losses": [],
+    "allDevicesDestroyed": true
+  },
+  "finishedAt": "2026-10-27T10:35:52.067Z",
+  "qualification": {
+    "qualified": true,
+    "errors": []
+  },
+  "artifacts": [
+    {
+      "path": "native.png",
+      "bytes": 25671,
+      "sha256": "28a7936d6dc0d8ed99e88074aa88a719ae3d809c56b8876b9eaa340e4aa00ef1"
+    },
+    {
+      "path": "offscreen.png",
+      "bytes": 32949,
+      "sha256": "a4fffb17a7f394747fa617b7334dfa2ce7269fdfb594f1ee864256559a76bd1c"
+    },
+    {
+      "path": "presentmon-process.json",
+      "bytes": 4955,
+      "sha256": "b791e2ea7c52d8e5bd92c8ed4a84412e94e6f6782bae92980c86a91341dbfa66"
+    },
+    {
+      "path": "presentmon.csv",
+      "bytes": 2332,
+      "sha256": "598cef124acaa513819f5d4f0f3edf49b2aca10427911d70895ca47a03d7bde4"
+    }
+  ]
+}

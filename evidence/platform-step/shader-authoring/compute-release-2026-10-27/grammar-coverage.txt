@@ -1,0 +1,283 @@
+Grammar coverage of spec/grammar.ebnf
+productions:  86/86 hit
+alternatives: 127/127 hit
+rules:        19/19 covered (0 by the E9010 of a gated construct)
+
+Productions
+  Whitespace: syntax/pass/AddExpr (+111)
+  LineComment: syntax/pass/EaseTween (+34)
+  BlockComment: syntax/pass/BlockComment (+2)
+  Ident: syntax/pass/AddExpr (+110)
+  IdentStart: syntax/pass/AddExpr (+110)
+  IdentContinue: syntax/pass/ArgList (+99)
+  Keyword: syntax/pass/AddExpr (+110)
+    | 'bind': syntax/pass/DescField (+9)
+    | 'break': syntax/pass/BreakStmt (+4)
+    | 'const': syntax/pass/AddExpr (+41)
+    | 'continue': syntax/pass/ContinueStmt (+4)
+    | 'cpu': syntax/pass/Escape (+7)
+    | 'else': syntax/pass/IfStmt (+4)
+    | 'entity': syntax/pass/ConstDecl (+24)
+    | 'enum': syntax/pass/EnumDecl
+    | 'export': syntax/pass/ConstDecl (+10)
+    | 'false': syntax/pass/Bool (+6)
+    | 'fn': syntax/pass/AssignOp (+49)
+    | 'for': syntax/pass/BreakStmt (+8)
+    | 'if': syntax/pass/Block (+15)
+    | 'import': syntax/pass/Import (+5)
+    | 'in': syntax/pass/BreakStmt (+8)
+    | 'let': syntax/pass/Block (+14)
+    | 'match': syntax/pass/MatchExpr (+2)
+    | 'material': syntax/pass/FieldInit (+24)
+    | 'on': syntax/pass/EaseTween (+20)
+    | 'param': syntax/pass/ComputeExecutable (+17)
+    | 'prefab': syntax/pass/ConstDecl (+16)
+    | 'return': syntax/pass/Bool (+36)
+    | 'scene': syntax/pass/Block (+37)
+    | 'self': syntax/pass/Expr (+10)
+    | 'state': syntax/pass/EaseTween (+21)
+    | 'struct': syntax/pass/ArrayLength (+11)
+    | 'true': syntax/pass/Bool (+8)
+    | 'var': syntax/pass/Keyword (+5)
+    | 'while': syntax/pass/WhileStmt
+  Reserved [negative]: semantics/fail/e0013_loop_loop (+5)
+    | 'as': syntax/fail/recovery_every_reserved_word
+    | 'async': syntax/fail/recovery_every_reserved_word
+    | 'await': syntax/fail/recovery_every_reserved_word
+    | 'extern': syntax/fail/recovery_every_reserved_word
+    | 'impl': semantics/fail/e0013_reserved_word_as_entity_name (+1)
+    | 'loop': semantics/fail/e0013_loop_loop (+2)
+    | 'mod': syntax/fail/recovery_every_reserved_word
+    | 'move': syntax/fail/recovery_every_reserved_word
+    | 'mut': syntax/fail/recovery_every_reserved_word
+    | 'priv': syntax/fail/recovery_every_reserved_word
+    | 'pub': syntax/fail/recovery_every_reserved_word
+    | 'static': syntax/fail/recovery_every_reserved_word
+    | 'super': syntax/fail/recovery_every_reserved_word
+    | 'trait': syntax/fail/e0013_reserved_in_parameter_and_local (+1)
+    | 'type': syntax/fail/e0013_reserved_field_name (+1)
+    | 'unsafe': syntax/fail/recovery_every_reserved_word
+    | 'use': syntax/fail/recovery_every_reserved_word
+    | 'where': syntax/fail/recovery_every_reserved_word
+    | 'yield': syntax/fail/recovery_every_reserved_word
+    | 'compute': syntax/fail/recovery_every_reserved_word
+    | 'vertex': syntax/fail/recovery_every_reserved_word
+    | 'storage': syntax/fail/recovery_every_reserved_word
+    | 'uniform': syntax/fail/recovery_every_reserved_word
+    | 'workgroup': syntax/fail/recovery_every_reserved_word
+    | 'system': syntax/fail/recovery_every_reserved_word
+    | 'query': syntax/fail/recovery_every_reserved_word
+    | 'component': syntax/fail/recovery_every_reserved_word
+  Int: syntax/pass/ArgList (+58)
+    | '0': syntax/pass/BreakStmt (+28)
+    | [1-9] [0-9]*: syntax/pass/ArgList (+57)
+  Float: syntax/pass/ArgList (+67)
+  IntPart: syntax/pass/ArgList (+67)
+    | '0': syntax/pass/ArrayLiteral (+53)
+    | [1-9] [0-9]*: syntax/pass/ArgList (+55)
+  Exponent: syntax/pass/Exponent (+2)
+  String: syntax/pass/Escape (+15)
+  StringChar: syntax/pass/Escape (+15)
+  Escape: syntax/pass/Escape (+1)
+  Color: syntax/pass/Color (+33)
+  Hex: syntax/pass/Color (+34)
+  Bool: syntax/pass/Bool (+9)
+    | 'true': syntax/pass/Bool (+8)
+    | 'false': syntax/pass/Bool (+6)
+  Module: syntax/pass/AddExpr (+111)
+  Item: syntax/pass/AddExpr (+110)
+    | Import: syntax/pass/Import (+5)
+    | 'export'? ( ConstDecl | FnDecl | StructDecl | EnumDecl | MaterialDecl | ComputeDecl | PrefabDecl | SceneDecl ): syntax/pass/AddExpr (+110)
+  Import: syntax/pass/Import (+5)
+  ConstDecl: syntax/pass/AddExpr (+41)
+  FnDecl: syntax/pass/AssignOp (+49)
+  ParamList: syntax/pass/Block (+50)
+  Param: syntax/pass/Block (+50)
+  StructDecl: syntax/pass/ArrayLength (+11)
+  StructField: syntax/pass/ArrayLength (+11)
+  EnumDecl: syntax/pass/EnumDecl
+  MaterialDecl: syntax/pass/Item (+13)
+  MaterialMember: syntax/pass/Item (+13)
+    | ParamDecl: syntax/pass/Keyword (+8)
+    | StageFn: syntax/pass/Item (+13)
+  ComputeDecl: syntax/pass/ComputeExecutable (+1)
+  ComputeMember: syntax/pass/ComputeExecutable (+1)
+    | ParamDecl: syntax/pass/ComputeExecutable (+1)
+    | StorageDecl: syntax/pass/ComputeExecutable (+1)
+    | ComputeWorkgroup: syntax/pass/compute_stage
+    | StageFn: syntax/pass/ComputeExecutable (+1)
+  StorageDecl: syntax/pass/ComputeExecutable (+1)
+  ComputeWorkgroup: syntax/pass/compute_stage
+  ParamDecl: syntax/pass/ComputeExecutable (+17)
+  StageFn: syntax/pass/ComputeExecutable (+15)
+  SceneDecl: syntax/pass/Block (+37)
+  SceneMember: syntax/pass/Block (+36)
+    | FieldInit: syntax/pass/FieldInit (+4)
+    | ConstDecl: syntax/pass/ConstDecl (+2)
+    | StateDecl: syntax/pass/EaseTween (+16)
+    | SceneObject: syntax/pass/ComputeExecutable (+16)
+    | EntityDecl: syntax/pass/ConstDecl (+24)
+    | LifecycleFn: syntax/pass/Block (+10)
+    | Handler: syntax/pass/EaseTween (+15)
+    | FnDecl: syntax/pass/SceneHelper
+  PrefabDecl: syntax/pass/ConstDecl (+16)
+  EntityDecl: syntax/pass/ConstDecl (+24)
+  EntityMember: syntax/pass/ConstDecl (+25)
+    | FieldInit: syntax/pass/EaseTween (+19)
+    | ConstDecl: syntax/pass/ConstDecl (+1)
+    | StateDecl: syntax/pass/EntityMember (+6)
+    | ParamDecl: syntax/pass/EntityDecl (+9)
+    | EntityDecl: syntax/pass/EntityDecl (+2)
+    | LifecycleFn: syntax/pass/EntityMember (+3)
+    | Handler: syntax/pass/EntityMember (+5)
+  SceneObject: syntax/pass/ComputeExecutable (+16)
+  StateDecl: syntax/pass/EaseTween (+21)
+  FieldInit: syntax/pass/EaseTween (+24)
+  FieldValue: syntax/pass/ArgList (+37)
+    | 'bind' '(' Expr ')': syntax/pass/DescField (+9)
+    | Expr: syntax/pass/ArgList (+37)
+  LifecycleFn: syntax/pass/Block (+13)
+  Handler: syntax/pass/EaseTween (+20)
+  HandlerArgs: syntax/pass/EaseTween (+19)
+  HandlerArg: syntax/pass/EaseTween (+19)
+    | Ident ':' Type: syntax/pass/EntityMember (+9)
+    | Expr: syntax/pass/EaseTween (+13)
+  Type: syntax/pass/ArrayLength (+72)
+  ArrayLength: syntax/pass/ArrayLength (+17)
+    | Int: syntax/pass/ArrayLength (+17)
+    | Ident: syntax/pass/ArrayLength (+1)
+  Block: syntax/pass/AssignOp (+75)
+  Statement: syntax/pass/AssignOp (+69)
+    | LetStmt: syntax/pass/Block (+14)
+    | VarStmt: syntax/pass/Keyword (+5)
+    | ConstDecl: syntax/pass/ConstDecl (+1)
+    | IfStmt: syntax/pass/Block (+15)
+    | ForStmt: syntax/pass/BreakStmt (+8)
+    | WhileStmt: syntax/pass/WhileStmt
+    | TimerStmt: syntax/pass/TimerStmt
+    | MatchStmt: syntax/pass/MatchStmt
+    | ReturnStmt: syntax/pass/Bool (+36)
+    | BreakStmt: syntax/pass/BreakStmt (+4)
+    | ContinueStmt: syntax/pass/ContinueStmt (+4)
+    | Block: syntax/pass/Block (+3)
+    | SimpleStmt: syntax/pass/AssignOp (+35)
+  LetStmt: syntax/pass/Block (+14)
+  VarStmt: syntax/pass/Keyword (+5)
+  SimpleStmt: syntax/pass/AssignOp (+35)
+  AssignOp: syntax/pass/AssignOp (+21)
+    | '=': syntax/pass/AssignOp (+13)
+    | '+=': syntax/pass/AssignOp (+17)
+    | '-=': syntax/pass/AssignOp (+3)
+    | '*=': syntax/pass/AssignOp (+6)
+    | '/=': syntax/pass/AssignOp (+2)
+  IfStmt: syntax/pass/Block (+15)
+  ForStmt: syntax/pass/BreakStmt (+8)
+  WhileStmt: syntax/pass/WhileStmt
+  TimerStmt: syntax/pass/TimerStmt
+  ReturnStmt: syntax/pass/Bool (+36)
+  BreakStmt: syntax/pass/BreakStmt (+4)
+  ContinueStmt: syntax/pass/ContinueStmt (+4)
+  MatchStmt: syntax/pass/MatchStmt
+  MatchStmtArm: syntax/pass/MatchStmt
+  Patterns: syntax/pass/MatchExpr (+2)
+  Pattern: syntax/pass/MatchExpr (+2)
+    | '_': syntax/pass/MatchExpr (+2)
+    | Ident '.' Ident: syntax/pass/MatchExpr (+2)
+  Expr: syntax/pass/AddExpr (+105)
+  OrExpr: syntax/pass/Bool (+4)
+  AndExpr: syntax/pass/AndExpr (+7)
+  EqExpr: syntax/pass/AndExpr (+15)
+  RelExpr: syntax/pass/EqExpr (+11)
+  AddExpr: syntax/pass/AddExpr (+25)
+  MulExpr: syntax/pass/AddExpr (+26)
+  UnaryExpr: syntax/pass/AddExpr (+105)
+    | ( '-' | '!' ) UnaryExpr: syntax/pass/Bool (+13)
+    | PostfixExpr: syntax/pass/AddExpr (+105)
+  PostfixExpr: syntax/pass/ArgList (+69)
+  PostfixOp: syntax/pass/ArgList (+69)
+    | '(' ArgList? ')': syntax/pass/ArgList (+59)
+    | '.' Ident: syntax/pass/ComputeExecutable (+46)
+    | '[' Expr ']': syntax/pass/ComputeExecutable (+6)
+  ArgList: syntax/pass/ArgList (+55)
+  Primary: syntax/pass/AddExpr (+105)
+    | Int: syntax/pass/ArgList (+51)
+    | Float: syntax/pass/ArgList (+67)
+    | String: syntax/pass/Escape (+11)
+    | Color: syntax/pass/Color (+33)
+    | Bool: syntax/pass/Bool (+9)
+    | 'self': syntax/pass/Expr (+10)
+    | Ident: syntax/pass/AddExpr (+93)
+    | '(' Expr ')': syntax/pass/EqExpr (+10)
+    | ArrayLiteral: syntax/pass/ArgList (+15)
+    | DescriptorLiteral: syntax/pass/ArgList (+30)
+    | MatchExpr: syntax/pass/MatchExpr (+1)
+  ArrayLiteral: syntax/pass/ArgList (+15)
+  DescriptorLiteral: syntax/pass/ArgList (+30)
+  DescField: syntax/pass/ArgList (+30)
+  MatchExpr: syntax/pass/MatchExpr (+1)
+  MatchExprArm: syntax/pass/MatchExpr (+1)
+  ExprNoDesc: syntax/pass/Block (+19)
+
+Rules
+  [S: reserved-identifiers] (IdentContinue)
+    E0012: semantics/fail/e0012_underscore_declared (+1)
+    E0011: syntax/fail/e0011_double_underscore_prefix
+  [S: import-specifier] (Import)
+    E2030: semantics/fail/e2030_absolute_import (+1)
+    E2031: semantics/fail/e2031_import_from_reserved_std_directory (+1)
+    E2032: semantics/fail/e2032_import_case_mismatch
+    E2033: semantics/fail/e2033_name_not_declared (+1)
+    E2034: semantics/fail/e2034_package_import
+  [S: enum-variants] (EnumDecl)
+    E2002: semantics/fail/enums/e2002_duplicate_enum_variant
+  [S: stage-name] (StageFn)
+    E4020: semantics/fail/materials/e4020_material_without_fragment (+1)
+    E4021: semantics/fail/materials/e4021_unknown_stage_name
+    E4901: syntax/fail/e4901_compute_stage
+  [S: vertex-payload-limit] (StageFn)
+    E6003: semantics/fail/materials/e6003_vertex_payload_limit
+  [S: prefab-static-assembly-limits] (PrefabDecl)
+    E5040: semantics/fail/e5040_prefab_with_nested_entity (+1)
+  [S: prefab-instance-params] (EntityDecl)
+    E5042: semantics/fail/e5042_instance_declares_members (+2)
+  [S: param-only-in-prefab] (EntityMember)
+    E1040: syntax/fail/e1040_param_in_entity (+1)
+  [S: scene-object-kind] (SceneObject)
+    E5014: semantics/fail/e5014_unknown_scene_object_kind
+  [S: shared-state] (StateDecl)
+    E5202: semantics/fail/game/e5202_shared_state_outside_a_scene
+    E5203: semantics/fail/game/e5203_shared_state_cannot_carry_over
+    E5204: semantics/fail/game/e5204_shared_state_types
+  [S: saved-state] (StateDecl)
+    E5210: semantics/fail/game/e5210_saved_state_outside_a_scene
+    E5211: semantics/fail/game/e5211_saved_state_cannot_be_stored
+    E5212: semantics/fail/game/e5212_saved_state_types
+  [S: bind-bindable-field] (FieldValue)
+    E5004: semantics/fail/e5004_bind_on_unbindable_field
+  [S: lifecycle-signature] (LifecycleFn)
+    E5050: semantics/fail/e5050_lifecycle_wrong_parameter
+    E5051: semantics/fail/e5051_duplicate_lifecycle
+    E5052: semantics/fail/e5052_ui_in_entity (+2)
+  [S: array-type-arguments] (ArrayLength)
+    E3003: semantics/fail/e3003_type_arguments
+    E3031: semantics/fail/types/e3031_array_length_not_an_integer_constant (+1)
+  [S: simple-statement] (SimpleStmt)
+    E1020: syntax/fail/e1020_unused_expression (+1)
+    E3061: semantics/fail/functions/e3061_assign_to_constant (+1)
+  [S: while-loop] (WhileStmt)
+    E3070: semantics/fail/game/e3070_while_condition_not_bool
+    E4010: semantics/fail/game/e4010_while_in_material
+  [S: timer] (TimerStmt)
+    E3001: semantics/fail/game/e3001_timer_time_not_f32
+    E3211: semantics/fail/game/e3211_invalid_timer_time
+    E5080: semantics/fail/game/e5080_timer_in_function
+    E3210: semantics/fail/game/e3210_timer_uses_var
+  [S: match-patterns] (Pattern)
+    E3203: semantics/fail/enums/e3203_match_on_non_enum (+1)
+    E3204: semantics/fail/enums/e3204_invalid_match_pattern
+    E3202: semantics/fail/enums/e3202_arm_after_wildcard (+4)
+    E3201: semantics/fail/enums/e3201_non_exhaustive_match
+  [S: match-arm-types] (MatchExpr)
+    E3206: semantics/fail/enums/e3206_match_arm_types
+
+Problems: 0

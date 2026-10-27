@@ -15,6 +15,24 @@ function fixture() {
 }
 
 describe("skeletal animation", () => {
+  it("copies evaluated diagnostic state without changing poses, clocks or root-motion consumption", () => {
+    const skin = fixture(), rig = new SkeletonPlayer(skin,"reach"), control = new SkeletonPlayer(skin,"reach");
+    for (const player of [rig,control]) {
+      player.setRootMotion("root"); player.layers.set("hands",{clip:"rest",weight:.25,mask:{hand:.5}});
+      player.ik.set("reach",{chain:["root","hand"],target:[1.8,.2,0],weight:.3});
+      player.transition("rest",.5,true,1); player.advance(.1);
+    }
+    const pose = [...rig.pose], revision = rig.revision, time = rig.clock.time(0), info = rig.inspect();
+    expect(info.clip).toBe("rest"); expect(info.transition.progress).toBeCloseTo(.2); expect(info.transition.outgoingClip).toBe("reach");
+    expect(info.layers[0]!.mask).toEqual([0,0,.5]); expect(info.ik[0]!.chain).toEqual([1,2]);
+    expect(info.nodes[2]!.position).toEqual(rig.jointPosition("hand"));
+    Object.assign(info.ik[0]!.target,{x:999}); Object.assign(info.layers[0]!.mask,{2:0});
+    expect(rig.inspect().ik[0]!.target.x).toBe(1.8); expect(rig.inspect().layers[0]!.mask[2]).toBe(.5);
+    expect([...rig.pose]).toEqual(pose); expect(rig.revision).toBe(revision); expect(rig.clock.time(0)).toBe(time);
+    expect(rig.consumeRootMotion()).toEqual(control.consumeRootMotion());
+    rig.locomotion.set({samples:[{clip:"reach",threshold:0},{clip:"reach",threshold:1}],parameter:.25});
+    expect(rig.inspect().locomotion!.samples.map(s=>s.weight)).toEqual([.75,.25]);
+  });
   it("preserves bind vertices, composes parent motion and exposes mesh-local sockets", () => {
     const skin = fixture(); expect(skinProblem(skin, 1)).toBeUndefined();
     expect(new SkeletonPlayer(skin, "missing").jointPosition("hand").x).toBe(2);

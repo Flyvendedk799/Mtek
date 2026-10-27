@@ -29,9 +29,10 @@ fn every_production_alternative_and_rule_is_covered() {
         (hit, alternatives_hit, covered),
         (productions, alternatives, rules)
     );
-    // The grammar as frozen at M2, extended with scene helpers (decision 0184):
+    // Grammar extended with scene helpers (0184); the temporary standalone
+    // compute build-gate annotation is removed by decision 0207.
     // a production, alternative or rule added or removed changes these.
-    assert_eq!((productions, alternatives, rules), (86, 127, 20));
+    assert_eq!((productions, alternatives, rules), (86, 127, 19));
 }
 
 #[test]

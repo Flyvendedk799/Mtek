@@ -1,0 +1,160 @@
+{
+  "cameraOffset": 11.399999999999999,
+  "culledVersusUnculled": {
+    "passed": true,
+    "jointError": 0,
+    "maximumChannelError": 0,
+    "differingPixelFraction": 0,
+    "maximumPhaseDifferingPixelFraction": 0,
+    "maximumForegroundDifferingPixelFraction": 0,
+    "phases": [
+      {
+        "phase": 0,
+        "badPixels": 0,
+        "foreground": 359,
+        "rightForeground": 359,
+        "foregroundUnion": 359
+      },
+      {
+        "phase": 0.25,
+        "badPixels": 0,
+        "foreground": 379,
+        "rightForeground": 379,
+        "foregroundUnion": 379
+      },
+      {
+        "phase": 0.5,
+        "badPixels": 0,
+        "foreground": 396,
+        "rightForeground": 396,
+        "foregroundUnion": 396
+      },
+      {
+        "phase": 0.75,
+        "badPixels": 0,
+        "foreground": 382,
+        "rightForeground": 382,
+        "foregroundUnion": 382
+      }
+    ]
+  },
+  "culledVersusThree": {
+    "passed": true,
+    "jointError": 3.7739251776085623e-7,
+    "maximumChannelError": 0,
+    "differingPixelFraction": 0,
+    "maximumPhaseDifferingPixelFraction": 0,
+    "maximumForegroundDifferingPixelFraction": 0,
+    "phases": [
+      {
+        "phase": 0,
+        "badPixels": 0,
+        "foreground": 359,
+        "rightForeground": 359,
+        "foregroundUnion": 359
+      },
+      {
+        "phase": 0.25,
+        "badPixels": 0,
+        "foreground": 379,
+        "rightForeground": 379,
+        "foregroundUnion": 379
+      },
+      {
+        "phase": 0.5,
+        "badPixels": 0,
+        "foreground": 396,
+        "rightForeground": 396,
+        "foregroundUnion": 396
+      },
+      {
+        "phase": 0.75,
+        "badPixels": 0,
+        "foreground": 382,
+        "rightForeground": 382,
+        "foregroundUnion": 382
+      }
+    ]
+  },
+  "info": {
+    "engine": "mtek",
+    "skinNodes": 26,
+    "joints": 24,
+    "vertices": 1728,
+    "diagnostics": [],
+    "state": "running",
+    "counters": {
+      "buffersAllocated": 43,
+      "texturesAllocated": 2,
+      "pipelinesCreated": 3,
+      "shaderModulesCreated": 2,
+      "bindGroupsCreated": 13,
+      "uploads": 16,
+      "uploadBytes": 129072,
+      "liveBuffers": 39,
+      "liveTextures": 2,
+      "liveSamplers": 0,
+      "liveShaderModules": 2,
+      "livePipelines": 3,
+      "liveBindGroups": 13,
+      "liveListeners": 9,
+      "frameTimeMs": 0.380000002682209,
+      "cpuUpdateMs": 0.11500000208616257,
+      "renderPrepMs": 0.26500000059604645,
+      "gpuTimeAvailable": 0,
+      "drawCalls": 2,
+      "drawCallsTotal": 8,
+      "failedMaterials": 0,
+      "instancedDraws": 0,
+      "instancedDrawsTotal": 0,
+      "culledObjects": 8,
+      "culledObjectsTotal": 32,
+      "rebatchesTotal": 4,
+      "sharedParamBlocks": 1,
+      "ownedParamBlocks": 0,
+      "discardedSteps": 0,
+      "liveEntities": 10,
+      "pendingSpawns": 0,
+      "pendingRemovals": 0,
+      "entitySlots": 10,
+      "entitiesSpawned": 0,
+      "entitiesDestroyed": 0,
+      "physicsBodies": 0,
+      "physicsColliders": 0,
+      "physicsSteps": 0,
+      "physicsFrozenBodies": 0,
+      "framesRendered": 4,
+      "framesSkipped": 0,
+      "deviceLosses": 0,
+      "deviceRecoveries": 0,
+      "recoveryAttempts": 0
+    },
+    "view": {
+      "height": 9,
+      "position": [
+        0,
+        7.2,
+        11.25
+      ],
+      "target": [
+        0,
+        0.7,
+        0
+      ]
+    },
+    "adapter": {
+      "vendor": "amd",
+      "architecture": "rdna-3",
+      "device": "0x744c",
+      "description": "AMD Radeon RX 7900 XTX",
+      "isFallbackAdapter": false
+    },
+    "deviceFeatures": [
+      "core-features-and-limits"
+    ],
+    "clock": {
+      "crossOriginIsolated": true,
+      "observedQuantumMs": 0.004999998956918716
+    }
+  }
+}

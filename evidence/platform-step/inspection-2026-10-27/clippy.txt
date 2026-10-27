@@ -1,0 +1,2 @@
+   Compiling mtek-cli v0.1.0-dev (crates/mtek-cli)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.24s

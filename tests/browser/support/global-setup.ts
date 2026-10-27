@@ -24,6 +24,7 @@ import { buildPulseCube, buildPulseCubeVariants } from "./m3-fixtures.ts";
 import { buildConfigurator } from "./m4-configurator.ts";
 import { buildProductConfigurator } from "./product-configurator.ts";
 import { buildLightingStudio } from "./lighting-studio.ts";
+import { buildInspectionStudio } from "./inspection-studio.ts";
 import { buildM4Fixtures } from "./m4-fixtures.ts";
 import { buildM5Fixtures } from "./m5-fixtures.ts";
 import { buildM6Fixtures } from "./m6-fixtures.ts";
@@ -117,6 +118,7 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   buildConfigurator(cli);
   buildProductConfigurator(cli);
   buildLightingStudio(cli);
+  await buildInspectionStudio(cli);
   const animationExample = join(out,"animation-demo");
   mkdirSync(join(animationExample,"dist"),{recursive:true});
   copyFileSync(join(REPO_ROOT,"examples/incremental-animation/index.html"),join(animationExample,"index.html"));

@@ -1,0 +1,203 @@
+{
+  "request": {
+    "model": "CesiumMan",
+    "count": 10,
+    "engine": "mtek",
+    "pass": "counts",
+    "smoke": false
+  },
+  "result": {
+    "samples": [],
+    "compute": [],
+    "render": [],
+    "passes": [],
+    "computePassCounts": [],
+    "renderPassCounts": [],
+    "counters": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 240,
+      "renderPassesBegun": 120,
+      "computePassesBegun": 120,
+      "submits": 240,
+      "drawCalls": 1200,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 1200,
+      "setPipeline": 120,
+      "setBindGroup": 1440,
+      "setVertexBuffer": 1200,
+      "setIndexBuffer": 1200,
+      "writeBufferCalls": 1200,
+      "writeBufferBytes": 1459200,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 0,
+      "devicesDestroyed": 0
+    },
+    "info": {
+      "engine": "mtek",
+      "skinNodes": 22,
+      "joints": 19,
+      "vertices": 3273,
+      "diagnostics": [],
+      "state": "running",
+      "counters": {
+        "buffersAllocated": 29,
+        "texturesAllocated": 2,
+        "pipelinesCreated": 3,
+        "shaderModulesCreated": 2,
+        "bindGroupsCreated": 13,
+        "uploads": 2408,
+        "uploadBytes": 3158640,
+        "liveBuffers": 29,
+        "liveTextures": 2,
+        "liveSamplers": 0,
+        "liveShaderModules": 2,
+        "livePipelines": 3,
+        "liveBindGroups": 13,
+        "liveListeners": 9,
+        "frameTimeMs": 0.2750000022351742,
+        "cpuUpdateMs": 0.19500000029802322,
+        "renderPrepMs": 0.08000000193715096,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 10,
+        "drawCallsTotal": 2400,
+        "failedMaterials": 0,
+        "instancedDraws": 0,
+        "instancedDrawsTotal": 0,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 1,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 0,
+        "discardedSteps": 0,
+        "liveEntities": 10,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 10,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 240,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "view": {
+        "height": 9,
+        "position": [
+          0,
+          7.2,
+          11.25
+        ],
+        "target": [
+          0,
+          0.7,
+          0
+        ]
+      },
+      "adapter": {
+        "vendor": "amd",
+        "architecture": "rdna-3",
+        "device": "0x744c",
+        "description": "AMD Radeon RX 7900 XTX",
+        "isFallbackAdapter": false
+      },
+      "deviceFeatures": [
+        "core-features-and-limits"
+      ],
+      "clock": {
+        "crossOriginIsolated": true,
+        "observedQuantumMs": 0.004999998956918716
+      }
+    },
+    "errors": []
+  },
+  "disposed": {
+    "counters": {
+      "buffersCreated": 29,
+      "bufferBytesCreated": 649336,
+      "texturesCreated": 2,
+      "textureBytesCreated": 1843200,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 2,
+      "bindGroupsCreated": 13,
+      "bindGroupLayoutsCreated": 4,
+      "pipelineLayoutsCreated": 2,
+      "renderPipelinesCreated": 2,
+      "computePipelinesCreated": 1,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 480,
+      "renderPassesBegun": 240,
+      "computePassesBegun": 240,
+      "submits": 480,
+      "drawCalls": 2400,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 2400,
+      "setPipeline": 240,
+      "setBindGroup": 2880,
+      "setVertexBuffer": 2400,
+      "setIndexBuffer": 2400,
+      "writeBufferCalls": 2408,
+      "writeBufferBytes": 3158640,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 29,
+      "texturesDestroyed": 2,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 1
+    },
+    "devices": [
+      {
+        "destroyed": true,
+        "errors": [],
+        "lost": {
+          "reason": "destroyed",
+          "message": "Device was destroyed."
+        }
+      }
+    ]
+  },
+  "heapBefore": null,
+  "heapWhileLive": null,
+  "heapAfter": null,
+  "hostLoad": {
+    "busyBeforePercent": 22.255981769844283,
+    "waitedForQuietMs": 2806,
+    "noisy": false,
+    "busyDuringPercent": 13.682841510449368
+  },
+  "lock": {
+    "dir": null,
+    "waitedMs": 0
+  },
+  "errors": [],
+  "attempt": 0,
+  "accepted": true
+}

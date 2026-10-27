@@ -1,0 +1,50 @@
+{
+  "recordedAt": "2026-10-27T03:08:11.713Z",
+  "status": "passed",
+  "network": "offline installation of local tarballs",
+  "typecheck": "strict NodeNext, skipLibCheck=false, no source aliases",
+  "runtimeConsumer": "passed without DOM/GPU; frame-queued edit, undo, cleanup, root API and export boundary",
+  "inspectorRuntimeDependencies": [
+    "src/types.ts",
+    "src/controller.ts",
+    "src/panel.ts",
+    "src/overlay.ts",
+    "src/index.ts"
+  ],
+  "packages": [
+    {
+      "name": "@mtek/runtime-web",
+      "version": "0.1.0-dev",
+      "files": [
+        "README.md",
+        "dist/runtime.dev.js",
+        "dist/runtime.dev.js.map",
+        "dist/runtime.js",
+        "dist/runtime.js.map",
+        "dist/runtime.min.js",
+        "package.json",
+        "src/runtime.d.ts"
+      ],
+      "integrity": "sha512-WO7Vr3YdA49ir5Umu0VILj7LDRWBcqED8twOq0qOILeW65xV4/zBSYOsD4EG6qPU7PV75TQcjlbX1aLEeJTwLQ==",
+      "sha256": "5a23d9a07bcd2f61278c6f8373a9edc894c2d9a666e136249e0f79f6fe2e9fff"
+    },
+    {
+      "name": "@mtek/inspector",
+      "version": "0.1.0-dev",
+      "files": [
+        "README.md",
+        "dist/controller.d.ts",
+        "dist/index.d.ts",
+        "dist/index.js",
+        "dist/index.js.map",
+        "dist/metafile.json",
+        "dist/overlay.d.ts",
+        "dist/panel.d.ts",
+        "dist/types.d.ts",
+        "package.json"
+      ],
+      "integrity": "sha512-aHrT/fRR34p2LHZlh1p9/2lJZec7zZ/I4LxHSvWILiwfq9vaP6b97OZWM3bcrANPJmul/PltH0P0mfZseDwmcA==",
+      "sha256": "d4cd20688e645c96fc97b75c80478a232e4afbe00f1b446d2a3a71c997cef0b7"
+    }
+  ]
+}

@@ -1,0 +1,575 @@
+{
+  "format": "mtek-tangent-integration/1",
+  "implementation": "delivered",
+  "platformRoadmapComplete": false,
+  "softwareProductComparison": "open: native Three normal-map visibility gate fails at both profiles",
+  "performanceClaim": false,
+  "browser": {
+    "tangents": 32,
+    "regression": 114,
+    "compute": 18
+  },
+  "samples": [
+    {
+      "backend": "hardware",
+      "kind": "authored",
+      "x": 32,
+      "error": 0,
+      "separation": 76,
+      "actual": [
+        103,
+        118,
+        131
+      ],
+      "expected": [
+        103,
+        118,
+        131
+      ],
+      "counterfactual": [
+        167,
+        188,
+        207
+      ]
+    },
+    {
+      "backend": "hardware",
+      "kind": "degenerate",
+      "x": 32,
+      "error": 0,
+      "separation": 17,
+      "actual": [
+        145,
+        83,
+        212
+      ],
+      "expected": [
+        145,
+        83,
+        212
+      ],
+      "counterfactual": [
+        134,
+        76,
+        195
+      ]
+    },
+    {
+      "backend": "hardware",
+      "kind": "fallback",
+      "x": 32,
+      "error": 0,
+      "separation": 23,
+      "actual": [
+        146,
+        166,
+        184
+      ],
+      "expected": [
+        146,
+        166,
+        184
+      ],
+      "counterfactual": [
+        167,
+        188,
+        207
+      ]
+    },
+    {
+      "backend": "hardware",
+      "kind": "instanced",
+      "x": 32,
+      "error": 0,
+      "separation": 37,
+      "actual": [
+        141,
+        79,
+        207
+      ],
+      "expected": [
+        141,
+        79,
+        207
+      ],
+      "counterfactual": [
+        114,
+        60,
+        170
+      ]
+    },
+    {
+      "backend": "hardware",
+      "kind": "instanced",
+      "x": 96,
+      "error": 0,
+      "separation": 37,
+      "actual": [
+        113,
+        58,
+        169
+      ],
+      "expected": [
+        113,
+        58,
+        169
+      ],
+      "counterfactual": [
+        140,
+        76,
+        206
+      ]
+    },
+    {
+      "backend": "hardware",
+      "kind": "mirrored",
+      "x": 32,
+      "error": 0,
+      "separation": 10,
+      "actual": [
+        119,
+        62,
+        178
+      ],
+      "expected": [
+        119,
+        62,
+        178
+      ],
+      "counterfactual": [
+        126,
+        66,
+        188
+      ]
+    },
+    {
+      "backend": "hardware",
+      "kind": "regular",
+      "x": 32,
+      "error": 0,
+      "separation": 47,
+      "actual": [
+        145,
+        83,
+        212
+      ],
+      "expected": [
+        145,
+        83,
+        212
+      ],
+      "counterfactual": [
+        110,
+        56,
+        165
+      ]
+    },
+    {
+      "backend": "hardware",
+      "kind": "skin",
+      "x": 32,
+      "error": 0,
+      "separation": 24,
+      "actual": [
+        112,
+        57,
+        168
+      ],
+      "expected": [
+        112,
+        57,
+        168
+      ],
+      "counterfactual": [
+        129,
+        68,
+        192
+      ]
+    },
+    {
+      "backend": "hardware",
+      "kind": "transform",
+      "x": 32,
+      "error": 0,
+      "separation": 24,
+      "actual": [
+        112,
+        57,
+        168
+      ],
+      "expected": [
+        112,
+        57,
+        168
+      ],
+      "counterfactual": [
+        129,
+        68,
+        192
+      ]
+    },
+    {
+      "backend": "hardware",
+      "kind": "varying",
+      "x": 32,
+      "error": 0,
+      "separation": 12,
+      "actual": [
+        121,
+        63,
+        180
+      ],
+      "expected": [
+        121,
+        63,
+        180
+      ],
+      "counterfactual": [
+        112,
+        57,
+        168
+      ]
+    },
+    {
+      "backend": "software",
+      "kind": "authored",
+      "x": 32,
+      "error": 0,
+      "separation": 76,
+      "actual": [
+        103,
+        118,
+        131
+      ],
+      "expected": [
+        103,
+        118,
+        131
+      ],
+      "counterfactual": [
+        167,
+        188,
+        207
+      ]
+    },
+    {
+      "backend": "software",
+      "kind": "degenerate",
+      "x": 32,
+      "error": 0,
+      "separation": 17,
+      "actual": [
+        145,
+        83,
+        212
+      ],
+      "expected": [
+        145,
+        83,
+        212
+      ],
+      "counterfactual": [
+        134,
+        76,
+        195
+      ]
+    },
+    {
+      "backend": "software",
+      "kind": "fallback",
+      "x": 32,
+      "error": 0,
+      "separation": 23,
+      "actual": [
+        146,
+        166,
+        184
+      ],
+      "expected": [
+        146,
+        166,
+        184
+      ],
+      "counterfactual": [
+        167,
+        188,
+        207
+      ]
+    },
+    {
+      "backend": "software",
+      "kind": "instanced",
+      "x": 32,
+      "error": 0,
+      "separation": 37,
+      "actual": [
+        141,
+        79,
+        207
+      ],
+      "expected": [
+        141,
+        79,
+        207
+      ],
+      "counterfactual": [
+        114,
+        60,
+        170
+      ]
+    },
+    {
+      "backend": "software",
+      "kind": "instanced",
+      "x": 96,
+      "error": 0,
+      "separation": 37,
+      "actual": [
+        113,
+        58,
+        169
+      ],
+      "expected": [
+        113,
+        58,
+        169
+      ],
+      "counterfactual": [
+        140,
+        76,
+        206
+      ]
+    },
+    {
+      "backend": "software",
+      "kind": "mirrored",
+      "x": 32,
+      "error": 0,
+      "separation": 10,
+      "actual": [
+        119,
+        62,
+        178
+      ],
+      "expected": [
+        119,
+        62,
+        178
+      ],
+      "counterfactual": [
+        126,
+        66,
+        188
+      ]
+    },
+    {
+      "backend": "software",
+      "kind": "regular",
+      "x": 32,
+      "error": 0,
+      "separation": 47,
+      "actual": [
+        145,
+        83,
+        212
+      ],
+      "expected": [
+        145,
+        83,
+        212
+      ],
+      "counterfactual": [
+        110,
+        56,
+        165
+      ]
+    },
+    {
+      "backend": "software",
+      "kind": "skin",
+      "x": 32,
+      "error": 0,
+      "separation": 24,
+      "actual": [
+        112,
+        57,
+        168
+      ],
+      "expected": [
+        112,
+        57,
+        168
+      ],
+      "counterfactual": [
+        129,
+        68,
+        192
+      ]
+    },
+    {
+      "backend": "software",
+      "kind": "transform",
+      "x": 32,
+      "error": 0,
+      "separation": 24,
+      "actual": [
+        112,
+        57,
+        168
+      ],
+      "expected": [
+        112,
+        57,
+        168
+      ],
+      "counterfactual": [
+        129,
+        68,
+        192
+      ]
+    },
+    {
+      "backend": "software",
+      "kind": "varying",
+      "x": 32,
+      "error": 0,
+      "separation": 12,
+      "actual": [
+        121,
+        63,
+        180
+      ],
+      "expected": [
+        121,
+        63,
+        180
+      ],
+      "counterfactual": [
+        112,
+        57,
+        168
+      ]
+    }
+  ],
+  "shadows": [
+    {
+      "backend": "hardware",
+      "file": "tangent-shadows-high-hardware.json",
+      "referenceA": 0,
+      "referenceB": 0,
+      "culling": 0,
+      "recovery": 0,
+      "animation": 228,
+      "shadow": 154
+    },
+    {
+      "backend": "hardware",
+      "file": "tangent-shadows-low-hardware.json",
+      "referenceA": 0,
+      "referenceB": 0,
+      "culling": 0,
+      "recovery": 0,
+      "animation": 221,
+      "shadow": 156
+    },
+    {
+      "backend": "hardware",
+      "file": "tangent-shadows-medium-hardware.json",
+      "referenceA": 0,
+      "referenceB": 0,
+      "culling": 0,
+      "recovery": 0,
+      "animation": 232,
+      "shadow": 156
+    },
+    {
+      "backend": "software",
+      "file": "tangent-shadows-high-software.json",
+      "referenceA": 0,
+      "referenceB": 0,
+      "culling": 0,
+      "recovery": 0,
+      "animation": 228,
+      "shadow": 154
+    },
+    {
+      "backend": "software",
+      "file": "tangent-shadows-low-software.json",
+      "referenceA": 0,
+      "referenceB": 0,
+      "culling": 0,
+      "recovery": 0,
+      "animation": 221,
+      "shadow": 156
+    },
+    {
+      "backend": "software",
+      "file": "tangent-shadows-medium-software.json",
+      "referenceA": 0,
+      "referenceB": 0,
+      "culling": 0,
+      "recovery": 0,
+      "animation": 232,
+      "shadow": 156
+    }
+  ],
+  "materialMatrices": [
+    {
+      "backend": "hardware",
+      "status": "passed",
+      "passed": 10,
+      "failed": [],
+      "performanceEligible": false
+    },
+    {
+      "backend": "software",
+      "status": "failed",
+      "passed": 8,
+      "failed": [
+        {
+          "name": "product",
+          "quality": "low",
+          "normalMapChangedPixels": {
+            "mtek": [
+              31
+            ],
+            "three": [
+              0
+            ]
+          }
+        },
+        {
+          "name": "product",
+          "quality": "standard",
+          "normalMapChangedPixels": {
+            "mtek": [
+              149
+            ],
+            "three": [
+              3
+            ]
+          }
+        }
+      ],
+      "performanceEligible": false
+    }
+  ],
+  "rust": {
+    "runComplete": true,
+    "completedHarnessTotals": {
+      "passed": 1753,
+      "ignored": 1
+    },
+    "singleGreenWorkspaceRun": false,
+    "correction": "The completed workspace run failed only the stale SurfaceInput registry expectation. The corrected target passes all 25 tests; original failed log and revalidation retained.",
+    "grammarInputs": 45034,
+    "grammarSmoke": "passed"
+  },
+  "unitRuntime": 1672,
+  "assetAudit": {
+    "inputs": 21,
+    "checks": 38
+  },
+  "budgets": 11,
+  "intermediateBoundary": "Earlier calibration/reference-strength attempts and misrouted captures are retained for history; shared-directory screenshots were overwritten and are not accepted evidence."
+}

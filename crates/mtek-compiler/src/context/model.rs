@@ -17,7 +17,7 @@ pub const SCHEMA_GUIDE: &str = "A field line reads `name: type = default [flags]
 
 /// The `schemaGuide` text of a cold-start project, whose lines also have a range and the registry's
 /// documentation (decision 0110).
-pub const SCHEMA_GUIDE_DETAILED: &str = "Fields: name: type = default [flags] range R // meaning. R required; W writable in handlers; B bindable via bind(..); C construction-only constant. Unlisted fields do not exist. Function [args] optional; [handler] handlers/lifecycle only.";
+pub const SCHEMA_GUIDE_DETAILED: &str = "Fields: name: type = default [flags] range R // meaning. R required; W writable; B bindable; C construction-only. Unlisted fields do not exist. [args] optional; [handler] handlers/lifecycle only.";
 
 /// One context document.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]

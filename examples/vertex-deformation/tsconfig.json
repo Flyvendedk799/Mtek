@@ -5,6 +5,10 @@
   },
   "include": [
     "characters-probe.ts",
-    "mixed-sampler-probe.ts"
+    "mixed-sampler-probe.ts",
+    "cohort-controls.ts",
+    "cohorts-reference.ts",
+    "cohorts-probe.ts",
+    "cohorts/main.ts"
   ]
 }

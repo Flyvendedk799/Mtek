@@ -4,9 +4,12 @@ export const RUNTIME_ABI = 1;
 /** Version of this runtime build. */
 export const RUNTIME_VERSION = "0.1.0-dev";
 export * from "./animation.js";
+export type {AnimationInspection,AnimationLayerInspection,IKInspection} from "./scene/animation-inspection.js";
 export type { MtekComputeHandle, MtekComputeInspection, MtekComputeBufferInfo, MtekComputeLayout } from "./compute/host.js";
+export type { MtekComputeBounds, MtekComputePositionAttachment } from "./compute/positions.js";
 export {EXTENSION_API_VERSION} from "./host/extensions.js";
 export type {MtekExtension,ExtensionContext,SceneTransform,TransformUpdate} from "./host/extensions.js";
+export type {SceneInspection,SceneSpatialEntity,SceneRenderBounds,ScenePhysicsBody} from "./host/inspection.js";
 export type {MtekRenderingOptions,PostEffect,LightingQuality,LinearEnvironment,EnvironmentLightingOptions,DirectionalShadowOptions} from "./render/options.js";
 export { decodeRadiance } from "./render/environment.js";
 export {AssetPool} from "./assets/pool.js";

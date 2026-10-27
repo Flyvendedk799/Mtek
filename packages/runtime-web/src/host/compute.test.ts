@@ -6,17 +6,31 @@ import { FakeHost, asDom, type FakeHostDevice } from "../test-support/fake-host.
 import { checkProgram } from "../scene/program.js";
 import { checkManifest } from "../abi/validate.js";
 import { mountMtekWith } from "./mount.js";
+import type { FakeBuffer } from "../test-support/fake-gpu.js";
+import type { ExtensionContext } from "./extensions.js";
 
 const id = "src/main.mtek::Required", transform = "src/main.mtek::Transform";
-async function setup() {
+async function setup(instancing = false) {
   const golden = await loadGoldenProgram("compute-contract");
   const host = new FakeHost(); for (const [url, text] of golden.files) host.files.set(url, text);
   const reports: MtekDiagnostic[] = [];
+  let context: ExtensionContext | undefined;
   const app = await mountMtekWith(host.environment, asDom<HTMLCanvasElement>(host.canvas), golden.program, {
-    test: { manualClock: true, renderTarget: { width: 8, height: 8 } }, onDiagnostic: (diagnostic) => reports.push(diagnostic),
+    test: { manualClock: true, disableInstancing: !instancing, renderTarget: { width: 8, height: 8 } }, onDiagnostic: (diagnostic) => reports.push(diagnostic),
+    extensions: [{ id: "compute-test", apiVersion: 1, setup: (ctx) => { context = ctx; } }],
   });
-  return { host, app, golden, reports };
+  return { host, app, golden, reports, context: context! };
 }
+const positionsId = "src/main.mtek::Positions", shape = "src/main.mtek::Demo.Shape";
+const sphere = { center: [0, 0, 0] as const, radius: 2 };
+function positionKernel(device: FakeHostDevice): void {
+  device.compute.kernel = (buffers) => {
+    const shift = new Float32Array(buffers.get(1)!.contents.buffer)[0]!;
+    const input = new Float32Array(buffers.get(2)!.contents.buffer), output = new Float32Array(buffers.get(3)!.contents.buffer);
+    for (let i = 0; i < output.length; i++) output[i] = input[i]! + shift;
+  };
+}
+const positionOutput = (device: FakeHostDevice): FakeBuffer => device.buffers.find((buffer) => !buffer.destroyed && buffer.label === `${positionsId} result`)!;
 function cpuKernel(device: FakeHostDevice): void {
   device.compute.kernel = (buffers) => {
     const domain = new Uint32Array(buffers.get(0)!.contents.buffer);
@@ -31,6 +45,121 @@ async function until(condition: () => boolean): Promise<void> {
 }
 
 describe("mounted compute contract (CPU fake)", () => {
+  it("separates attached geometry from shared-mesh instancing and regroups on detach", async () => {
+    const { host, app } = await setup(true); positionKernel(host.latestDevice);
+    app.debug!.step(1, 1 / 60);
+    expect(host.latestDevice.renderPasses.at(-1)!.draws.map((draw) => draw.instanceCount)).toEqual([2]);
+    const handle = await app.createCompute(positionsId); await handle.dispatch([72]);
+    const attachment = handle.attachPositions(shape, sphere); app.debug!.step(1, 1 / 60);
+    expect(host.latestDevice.renderPasses.at(-1)!.draws.map((draw) => draw.instanceCount)).toEqual([1, 1]);
+    attachment.dispose(); app.debug!.step(1, 1 / 60);
+    expect(host.latestDevice.renderPasses.at(-1)!.draws.map((draw) => draw.instanceCount)).toEqual([2]);
+    app.dispose();
+  });
+  it("borrows completed positions per entity and restores the original mesh without releasing shared buffers", async () => {
+    const { host, app } = await setup(); positionKernel(host.latestDevice);
+    app.debug!.step(1, 1 / 60);
+    const original = host.latestDevice.renderPasses.at(-1)!.draws[0]!.vertexBuffers[0]!;
+    const handle = await app.createCompute(positionsId);
+    expect(() => handle.attachPositions(shape, sphere)).toThrow("completed");
+    handle.upload("source", original.contents); await handle.dispatch([72]);
+    const output = positionOutput(host.latestDevice), attachment = handle.attachPositions(shape, sphere);
+    Object.assign(attachment.inspect().bounds.center, { 0: 999 });
+    expect(attachment.inspect().bounds.center).toEqual([0, 0, 0]);
+    expect(() => handle.attachPositions(shape, sphere)).toThrow("already");
+    app.debug!.step(1, 1 / 60);
+    const draws = host.latestDevice.renderPasses.at(-1)!.draws;
+    expect(draws.map((draw) => draw.vertexBuffers[0])).toEqual([output, original]);
+    expect(draws[0]!.indexBuffer).toBe(draws[1]!.indexBuffer);
+    expect(output.contents).toEqual(original.contents);
+    attachment.dispose(); attachment.dispose();
+    expect(attachment.state).toBe("disposed"); expect(output.destroyed).toBe(false);
+    app.debug!.step(1, 1 / 60);
+    expect(host.latestDevice.renderPasses.at(-1)!.draws.every((draw) => draw.vertexBuffers[0] === original)).toBe(true);
+    handle.dispose(); expect(output.destroyed).toBe(true); expect(original.destroyed).toBe(false);
+    app.dispose(); expect(host.latestDevice.buffers.every((buffer) => buffer.destroyed)).toBe(true);
+  });
+
+  it("hides pending or failed output and rejects partial dispatch while attached", async () => {
+    const { host, app, reports } = await setup(); positionKernel(host.latestDevice);
+    const handle = await app.createCompute(positionsId); await handle.dispatch([72]);
+    const attachment = handle.attachPositions(shape, sphere);
+    await expect(handle.dispatch([71])).rejects.toThrow("complete output");
+    const pending = handle.dispatch([72]);
+    app.debug!.step(1, 1 / 60);
+    expect(host.latestDevice.renderPasses.at(-1)!.draws).toHaveLength(1);
+    await pending; app.debug!.step(1, 1 / 60);
+    expect(host.latestDevice.renderPasses.at(-1)!.draws).toHaveLength(2);
+    host.latestDevice.compute.rejectDispatch = true;
+    await expect(handle.dispatch([72])).rejects.toThrow("validation");
+    app.debug!.step(1, 1 / 60);
+    expect(host.latestDevice.renderPasses.at(-1)!.draws).toHaveLength(1);
+    expect(reports.some((diagnostic) => diagnostic.code === "MTEK-E8050" && diagnostic.source !== null)).toBe(true);
+    attachment.dispose(); app.debug!.step(1, 1 / 60);
+    expect(host.latestDevice.renderPasses.at(-1)!.draws).toHaveLength(2);
+    app.dispose();
+  });
+
+  it("uses explicit position bounds for culling and recomputes their centre after host transforms", async () => {
+    const { host, app, context } = await setup(); positionKernel(host.latestDevice);
+    const handle = await app.createCompute(positionsId, { shift: 10000 }); await handle.dispatch([72]);
+    handle.attachPositions(shape, { center: [10000, 10000, 10000], radius: 2 });
+    app.debug!.step(1, 1 / 60); expect(host.latestDevice.renderPasses.at(-1)!.draws).toHaveLength(1);
+    const entity = context.readTransforms().find((entity) => entity.name === "Shape")!;
+    const outside = context.inspectScene!()!.entities.find(e => e.id === entity.id)!.bounds!;
+    expect(outside.source).toBe("compute"); expect(outside.culled).toBe(true);
+    expect(outside.sphere).toEqual({center:{x:10000,y:10000,z:10000},radius:2});
+    context.writeTransforms([{ id: entity.id, position: { x: -10000, y: -10000, z: -10000 } }]);
+    app.debug!.step(1, 1 / 60); expect(host.latestDevice.renderPasses.at(-1)!.draws).toHaveLength(2);
+    const inside = context.inspectScene!()!.entities.find(e => e.id === entity.id)!.bounds!;
+    expect(inside.culled).toBe(false); expect(inside.sphere).toEqual({center:{x:0,y:0,z:0},radius:2});
+    context.writeTransforms([{ id: entity.id, position: { x: 0, y: 0, z: 0 } }]);
+    app.debug!.step(1, 1 / 60); expect(host.latestDevice.renderPasses.at(-1)!.draws).toHaveLength(1);
+    app.dispose();
+  });
+
+  it("rebinds attached positions after device recovery and invalidates leases on replacement", async () => {
+    const { host, app, golden } = await setup(); positionKernel(host.latestDevice);
+    const handle = await app.createCompute(positionsId); await handle.dispatch([72]);
+    const attachment = handle.attachPositions(shape, sphere), old = positionOutput(host.latestDevice);
+    app.debug!.step(1, 1 / 60); handle.setParam("shift", 1);
+    host.latestDevice.loseDevice("unknown", "position recovery fixture"); await until(() => app.state === "recovering");
+    const acquire = host.adapter!.requestDevice.bind(host.adapter);
+    vi.spyOn(host.adapter!, "requestDevice").mockImplementation(async (descriptor) => { const device = await acquire(descriptor); positionKernel(device); return device; });
+    host.timers.runNext(); await until(() => app.state !== "recovering");
+    expect(app.state).toBe("running"); expect(attachment.state).toBe("attached");
+    const recovered = positionOutput(host.latestDevice); expect(recovered).not.toBe(old); expect(old.destroyed).toBe(true);
+    expect([...new Float32Array(recovered.contents.buffer)]).toEqual(new Array<number>(72).fill(0));
+    app.debug!.step(1, 1 / 60); expect(host.latestDevice.renderPasses.at(-1)!.draws[0]!.vertexBuffers[0]).toBe(recovered);
+    await handle.dispatch([72]); expect(new Float32Array(recovered.contents.buffer)[0]).toBe(1);
+    expect((await app.replaceProgram!(golden.program)).ok).toBe(true); app.debug!.step(1, 1 / 60);
+    expect(attachment.state).toBe("disposed"); expect(handle.state).toBe("disposed"); expect(recovered.destroyed).toBe(true);
+    app.dispose();
+  });
+
+  it("rejects invalid spheres, missing targets and incompatible output before changing geometry", async () => {
+    const { host, app } = await setup(); positionKernel(host.latestDevice);
+    const handle = await app.createCompute(positionsId); await handle.dispatch([72]);
+    for (const bounds of [{ center: [0, 0, 0] as const, radius: 0 }, { center: [Infinity, 0, 0] as const, radius: 1 }]) expect(() => handle.attachPositions(shape, bounds)).toThrow("sphere");
+    expect(() => handle.attachPositions("missing", sphere)).toThrow("declared drawable");
+    const wrong = await app.createCompute("src/main.mtek::VectorCopy");
+    expect(() => wrong.attachPositions(shape, sphere)).toThrow("packed scalar");
+    app.debug!.step(1, 1 / 60); expect(host.latestDevice.renderPasses.at(-1)!.draws).toHaveLength(2);
+    app.dispose();
+  });
+
+  it("keeps program compute handles through scene reset while retiring scene-local attachments", async () => {
+    const { host, app } = await setup(); positionKernel(host.latestDevice);
+    const handle = await app.createCompute(positionsId); await handle.dispatch([72]);
+    const attachment = handle.attachPositions(shape, sphere), output = positionOutput(host.latestDevice);
+    app.debug!.pressKey("KeyR"); app.debug!.step(1, 1 / 60);
+    await vi.waitFor(() => { app.debug!.step(1, 1 / 60); expect(attachment.state).toBe("disposed"); });
+    expect(handle.state).toBe("ready"); expect(output.destroyed).toBe(false);
+    const freshAttachment = handle.attachPositions(shape, sphere); app.debug!.step(1, 1 / 60);
+    expect(host.latestDevice.renderPasses.at(-1)!.draws[0]!.vertexBuffers[0]).toBe(output);
+    expect(freshAttachment.state).toBe("attached");
+    app.dispose(); expect(freshAttachment.state).toBe("disposed"); expect(output.destroyed).toBe(true);
+  });
   it("uses source defaults and generated writers byte-for-byte, including arrays/matrices/structs", async () => {
     const { host, app, golden } = await setup();
     const compute = golden.manifest.computePrograms!.find((compute) => compute.definition.id === transform)!;

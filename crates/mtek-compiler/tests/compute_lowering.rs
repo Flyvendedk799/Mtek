@@ -1,8 +1,7 @@
-//! Development source-to-WGSL evidence. Only this test removes the explicit E4901
-//! gate after asserting it is the sole source error. No public build can bypass it.
+//! Public source-to-WGSL, packaging and GPU acceptance fixture preparation.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use mtek_compiler::diagnostics::{Code, Severity};
+use mtek_compiler::diagnostics::Code;
 use mtek_compiler::emit_wgsl::{print_module, validate_wgsl};
 use mtek_compiler::ir::{self, ExprKind, Program, Stmt};
 use mtek_compiler::lowering::shader::lower_compute;
@@ -23,6 +22,51 @@ compute Scale {
 scene Demo { camera Main {} }
 "#;
 
+#[test]
+fn independent_acceptance_reference_shaders_validate() {
+    let mut source = std::fs::read_to_string(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/browser/support/compute-reference.ts"),
+    )
+    .unwrap();
+    source.push_str(
+        &std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../tests/browser/support/compute-composite-reference.ts"),
+        )
+        .unwrap(),
+    );
+    for name in [
+        "POSITION_WGSL",
+        "INVOCATION_WGSL",
+        "QUAD_WGSL",
+        "COMPOSITE_WGSL",
+    ] {
+        let marker = format!("export const {name} = `");
+        let shader = source
+            .split_once(&marker)
+            .unwrap()
+            .1
+            .split_once("`;")
+            .unwrap()
+            .0;
+        assert!(
+            !shader.contains("${") && !shader.contains('\\'),
+            "reference strings must be literal WGSL"
+        );
+        validate_wgsl(shader).unwrap_or_else(|error| panic!("{name}: {}", error.rendered));
+    }
+    let broken = source
+        .split_once("export const QUAD_WGSL = `")
+        .unwrap()
+        .1
+        .split_once("`;")
+        .unwrap()
+        .0
+        .replace("return frame.color;", "return false;");
+    assert!(validate_wgsl(&broken).is_err());
+}
+
 fn memory(source: &str) -> MemFs {
     let mut memory = MemFs::new();
     memory.insert(
@@ -36,36 +80,18 @@ fn memory(source: &str) -> MemFs {
     memory
 }
 
-fn development_analysis(memory: &MemFs) -> mtek_compiler::Analysis {
-    let mut analysis = mtek_compiler::analyze(&ProjectRoot::at_base(), memory);
-    let errors: Vec<_> = analysis
-        .report
-        .diagnostics
-        .iter()
-        .filter(|d| d.severity == Severity::Error)
-        .map(|d| d.code)
-        .collect();
-    assert!(!errors.is_empty());
-    assert!(
-        errors.iter().all(|code| *code == Code::E4901),
-        "{:?}",
-        analysis.report
-    );
-    assert_eq!(ir::lower_to_ir(&analysis), Err(ir::LowerError::HasErrors));
-    analysis
-        .report
-        .diagnostics
-        .retain(|diagnostic| diagnostic.code != Code::E4901);
-    analysis.report.summary.errors = 0;
+fn checked_analysis(memory: &MemFs) -> mtek_compiler::Analysis {
+    let analysis = mtek_compiler::analyze(&ProjectRoot::at_base(), memory);
+    assert!(analysis.report.summary.errors == 0, "{:?}", analysis.report);
     analysis
 }
 
-fn development_ir(memory: &MemFs) -> Program {
-    ir::lower_to_ir(&development_analysis(memory)).unwrap()
+fn checked_ir(memory: &MemFs) -> Program {
+    ir::lower_to_ir(&checked_analysis(memory)).unwrap()
 }
 
 fn shader(source: &str) -> (Program, mtek_compiler::emit_wgsl::PrintedModule) {
-    let program = development_ir(&memory(source));
+    let program = checked_ir(&memory(source));
     let item = program.computes().next().unwrap();
     let module = lower_compute(&program, item).unwrap();
     let printed = print_module(&module);
@@ -260,7 +286,7 @@ fn evaluate(expr: &Expr, global: [u32; 3], domain: [u32; 3]) -> u32 {
 
 #[test]
 fn rounded_three_dimensional_tails_cannot_alias_logical_slots() {
-    let program = development_ir(&memory(SOURCE));
+    let program = checked_ir(&memory(SOURCE));
     let module = lower_compute(&program, program.computes().next().unwrap()).unwrap();
     let entry = module.functions.last().unwrap();
     let Statement::If { branches, .. } = &entry.body[0] else {
@@ -297,7 +323,7 @@ fn validated_artifact_matches_the_shared_runtime_layout_contract() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../tests/codegen/compute-contract");
     let source = std::fs::read_to_string(root.join("kernel.mtek")).unwrap();
-    let program = development_ir(&memory(&source));
+    let program = checked_ir(&memory(&source));
     let item = program.computes().next().unwrap();
     let artifact = mtek_compiler::emit_wgsl::emit_compute(&program, item).unwrap();
     assert_eq!(
@@ -347,7 +373,7 @@ fn validated_artifact_matches_the_shared_runtime_layout_contract() {
 #[test]
 fn identical_compute_wgsl_keeps_distinct_content_addressed_source_maps() {
     let source = "compute One { output result: array<f32, 8>; kernel(input: ComputeInput) -> f32 { return f32(input.index); } }\ncompute Two { output result: array<f32, 8>; kernel(input: ComputeInput) -> f32 { return f32(input.index); } }\nscene Demo { camera Main {} }";
-    let program = development_ir(&memory(source));
+    let program = checked_ir(&memory(source));
     let artifacts = program
         .computes()
         .map(|item| mtek_compiler::emit_wgsl::emit_compute(&program, item).unwrap())
@@ -374,7 +400,7 @@ fn identical_compute_wgsl_keeps_distinct_content_addressed_source_maps() {
 
 #[test]
 fn compute_artifacts_are_not_returned_when_naga_rejects_the_kernel() {
-    let program = development_ir(&memory(SOURCE));
+    let program = checked_ir(&memory(SOURCE));
     let mut item = program.computes().next().unwrap().clone();
     let Stmt::Return {
         value: Some(value), ..
@@ -402,7 +428,7 @@ fn compute_packaging_keeps_shaders_maps_defaults_writers_and_manifest_together()
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../tests/codegen/compute-contract");
     let source = std::fs::read_to_string(root.join("kernel.mtek")).unwrap();
-    let analysis = development_analysis(&memory(&source));
+    let analysis = checked_analysis(&memory(&source));
     let program = ir::lower_to_ir(&analysis).unwrap();
     let packaged = package(
         analysis.project.as_ref().unwrap(),
@@ -420,7 +446,7 @@ fn compute_packaging_keeps_shaders_maps_defaults_writers_and_manifest_together()
     )
     .unwrap();
     let computes = &packaged.manifest.compute_programs;
-    assert_eq!(computes.len(), 6);
+    assert_eq!(computes.len(), 8);
     let compute = computes
         .iter()
         .find(|compute| compute.definition.id.ends_with("::Transform"))
@@ -454,7 +480,7 @@ fn compute_packaging_keeps_shaders_maps_defaults_writers_and_manifest_together()
         &analysis.project.as_ref().unwrap().sources,
     )
     .unwrap();
-    assert_eq!(views.len(), 6);
+    assert_eq!(views.len(), 8);
     let view = views
         .iter()
         .find(|view| view.bindings.definition.id.ends_with("::Transform"))
@@ -490,6 +516,21 @@ fn compute_packaging_keeps_shaders_maps_defaults_writers_and_manifest_together()
         );
     }
     let out = root.join("packaged");
+    let shaders = packaged
+        .files
+        .keys()
+        .filter(|name| name.starts_with("shaders/"))
+        .cloned()
+        .collect::<std::collections::BTreeSet<_>>();
+    if std::env::var("MTEK_BLESS").is_ok_and(|value| value == "1") {
+        for entry in std::fs::read_dir(out.join("shaders")).unwrap() {
+            let entry = entry.unwrap();
+            let name = format!("shaders/{}", entry.file_name().to_str().unwrap());
+            if entry.file_type().unwrap().is_file() && !shaders.contains(&name) {
+                std::fs::remove_file(entry.path()).unwrap();
+            }
+        }
+    }
     for (name, bytes) in &packaged.files {
         if name == "index.html"
             || name == "runtime.d.ts"
@@ -504,5 +545,115 @@ fn compute_packaging_keeps_shaders_maps_defaults_writers_and_manifest_together()
             std::fs::write(&path, bytes).unwrap();
         }
         assert_eq!(std::fs::read(&path).unwrap(), *bytes, "{name}");
+    }
+    let actual = std::fs::read_dir(out.join("shaders"))
+        .unwrap()
+        .map(|entry| format!("shaders/{}", entry.unwrap().file_name().to_str().unwrap()))
+        .collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(
+        actual, shaders,
+        "packaged fixture must not retain stale shader/maps"
+    );
+    export_acceptance(
+        &analysis,
+        &program,
+        &source,
+        None,
+        "MTEK_COMPUTE_ACCEPTANCE_OUT",
+    );
+}
+
+#[test]
+fn compute_shadow_example_packages_with_bounded_xyz_and_scene_lighting() {
+    let source = std::fs::read_to_string(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../examples/compute-geometry/scene/src/main.mtek"),
+    )
+    .unwrap();
+    let config = std::fs::read(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../examples/compute-geometry/scene/mtek.toml"),
+    )
+    .unwrap();
+    let mut project = memory(&source);
+    project.insert(ProjectPath::new("mtek.toml").unwrap(), config.clone());
+    let analysis = checked_analysis(&project);
+    let program = ir::lower_to_ir(&analysis).unwrap();
+    let compute = program.computes().next().unwrap();
+    assert_eq!(compute.inputs[0].layout.size(), 72 * 4);
+    assert_eq!(compute.output.layout.size(), 72 * 4);
+    assert!(matches!(
+        compute.output.layout,
+        mtek_compiler::layout::LayoutNode::Array { stride: 4, .. }
+    ));
+    let artifact = mtek_compiler::emit_wgsl::emit_compute(&program, compute).unwrap();
+    validate_wgsl(&artifact.wgsl).unwrap();
+    export_acceptance(
+        &analysis,
+        &program,
+        &source,
+        Some(&config),
+        "MTEK_COMPUTE_SHADOW_OUT",
+    );
+}
+
+fn export_acceptance(
+    analysis: &mtek_compiler::Analysis,
+    program: &Program,
+    source: &str,
+    config: Option<&[u8]>,
+    variable: &str,
+) {
+    use mtek_compiler::package::{PackageInput, package};
+    // Explicit test-only export for browser acceptance. Use the real runtime
+    // bytes so all package filenames and identities remain content addressed.
+    if let Ok(directory) = std::env::var(variable) {
+        let runtime_path = std::env::var_os("MTEK_COMPUTE_ACCEPTANCE_RUNTIME")
+            .map(std::path::PathBuf::from)
+            .unwrap_or_else(|| {
+                std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("../../packages/runtime-web/dist")
+            });
+        let runtime = std::fs::read(runtime_path.join("runtime.dev.js")).unwrap();
+        let declarations = std::fs::read(runtime_path.join("runtime.d.ts")).unwrap();
+        let exported = package(
+            analysis.project.as_ref().unwrap(),
+            program,
+            &PackageInput {
+                profile: Default::default(),
+                mode: mtek_compiler::BuildMode::Test,
+                runtime_bundle: &runtime,
+                runtime_declarations: &declarations,
+                physics_bundle: None,
+                force_physics_subsystem: false,
+                loop_budget: None,
+                assets: &analysis.assets,
+            },
+        )
+        .unwrap();
+        let directory = std::path::PathBuf::from(directory);
+        let mut files = Vec::new();
+        for (name, bytes) in &exported.files {
+            assert!(
+                std::path::Path::new(name)
+                    .components()
+                    .all(|part| matches!(part, std::path::Component::Normal(_)))
+            );
+            let path = directory.join(name);
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(path, bytes).unwrap();
+            files.push(serde_json::json!({"path":name,"sha256":mtek_compiler::package::identity::sha256_hex(bytes)}));
+        }
+        let provenance = serde_json::json!({
+            "format":"mtek-compute-acceptance-package/1", "developmentSourceGateBypass":"none: ordinary public analysis",
+            "sourceSha256":mtek_compiler::package::identity::sha256_hex(source.as_bytes()),
+            "projectConfigSha256":config.map(mtek_compiler::package::identity::sha256_hex),
+            "runtimeSha256":mtek_compiler::package::identity::sha256_hex(&runtime), "files":files
+        });
+        std::fs::write(
+            directory.join("acceptance-build.json"),
+            format!("{}\n", serde_json::to_string_pretty(&provenance).unwrap()),
+        )
+        .unwrap();
     }
 }

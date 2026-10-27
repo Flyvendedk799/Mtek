@@ -2,12 +2,12 @@ shaders of scene src/main.mtek::Gallery (target profile webgpu-core-2026)
 
 scene lighting ABI 1: group 3, 256-byte uniform; shadow depth/comparison sampler; GGX cube/filtering sampler; BRDF LUT
 shader of material src/main.mtek::Banded (declared at src/main.mtek:14:1-26:2)
-  file shaders/a77db8997c94c949.wgsl (sha256 a77db8997c94c9493e6b6e1c514cefc2d43ae12a954ed7ccbc9b3a6b4fbb508b)
+  file shaders/3ba567dd88c2d591.wgsl (sha256 3ba567dd88c2d591762a81178f53084de37009d6d14e2b7602911af44005e3d1)
   entry points mtek_vs (vertex), mtek_vs_instanced (instanced vertex), mtek_fs (fragment)
   vertex attributes position, normal, uv
   surface inputs world_position, world_normal, uv
   parameter block material:src/main.mtek::Banded (group 1 binding 0)
-  span map 933 entries over 181 lines; a line is followed by `// <source> <symbol>` where its origin changes
+  span map 934 entries over 181 lines; a line is followed by `// <source> <symbol>` where its origin changes
     1 | struct MtekLight {  // src/main.mtek:14:1-26:2 src/main.mtek::Banded
     2 |     color: vec3<f32>,
     3 |     kind: u32,
@@ -157,7 +157,7 @@ shader of material src/main.mtek::Banded (declared at src/main.mtek:14:1-26:2)
   147 |             }
   148 |         }
   149 |     }
-  150 |     return vec4<f32>((mtek_rgb + (((mtek_c * (1.0 - mtek_m)) * mtek_frame.ambient) + mtek_environment_light(mtek_n, mtek_v, mtek_c, mtek_m, mtek_r, mtek_f0, mtek_nv))) * mtek_frame.exposure, 1.0);
+  150 |     return vec4<f32>((mtek_rgb + (((mtek_c * (1.0 - mtek_m)) * mtek_frame.ambient) + mtek_environment_light(mtek_n, mtek_v, mtek_c, mtek_m, mtek_r, mtek_f0, mtek_nv))) * mtek_frame.exposure, mtek_base_color.w);
   151 | }
   152 |
   153 | fn mtek_fragment(u_p_input: MtekSurfaceInput) -> vec4<f32> {  // src/main.mtek:18:5-25:6 src/main.mtek::Banded.fragment
@@ -192,12 +192,12 @@ shader of material src/main.mtek::Banded (declared at src/main.mtek:14:1-26:2)
 
 scene lighting ABI 1: group 3, 256-byte uniform; shadow depth/comparison sampler; GGX cube/filtering sampler; BRDF LUT
 shader of material src/main.mtek::Shiny (declared at src/main.mtek:4:1-12:2)
-  file shaders/a18eb588f25c34b8.wgsl (sha256 a18eb588f25c34b8d9781f49543131e4f0f344359ac849f0a60a338cd00a683f)
+  file shaders/585daa1d918eb503.wgsl (sha256 585daa1d918eb503eff4f1b160b5f9e98e7eb6d9c43bad1bb8665c08733b0d29)
   entry points mtek_vs (vertex), mtek_vs_instanced (instanced vertex), mtek_fs (fragment)
   vertex attributes position, normal
   surface inputs world_position, world_normal
   parameter block material:src/main.mtek::Shiny (group 1 binding 0)
-  span map 895 entries over 175 lines; a line is followed by `// <source> <symbol>` where its origin changes
+  span map 896 entries over 175 lines; a line is followed by `// <source> <symbol>` where its origin changes
     1 | struct MtekLight {  // src/main.mtek:4:1-12:2 src/main.mtek::Shiny
     2 |     color: vec3<f32>,
     3 |     kind: u32,
@@ -346,7 +346,7 @@ shader of material src/main.mtek::Shiny (declared at src/main.mtek:4:1-12:2)
   146 |             }
   147 |         }
   148 |     }
-  149 |     return vec4<f32>((mtek_rgb + (((mtek_c * (1.0 - mtek_m)) * mtek_frame.ambient) + mtek_environment_light(mtek_n, mtek_v, mtek_c, mtek_m, mtek_r, mtek_f0, mtek_nv))) * mtek_frame.exposure, 1.0);
+  149 |     return vec4<f32>((mtek_rgb + (((mtek_c * (1.0 - mtek_m)) * mtek_frame.ambient) + mtek_environment_light(mtek_n, mtek_v, mtek_c, mtek_m, mtek_r, mtek_f0, mtek_nv))) * mtek_frame.exposure, mtek_base_color.w);
   150 | }
   151 |
   152 | fn mtek_fragment(u_p_input: MtekSurfaceInput) -> vec4<f32> {  // src/main.mtek:9:5-11:6 src/main.mtek::Shiny.fragment
@@ -376,12 +376,12 @@ shader of material src/main.mtek::Shiny (declared at src/main.mtek:4:1-12:2)
 
 scene lighting ABI 1: group 3, 256-byte uniform; shadow depth/comparison sampler; GGX cube/filtering sampler; BRDF LUT
 shader of material std/materials.mtek::Pbr (declared at std/materials.mtek:10:8-39:2)
-  file shaders/cc306e7c4fdef230.wgsl (sha256 cc306e7c4fdef230097df5347603306d53d7cb9c70ffad1a5af1fe7c60414277)
+  file shaders/819eea4642598b4d.wgsl (sha256 819eea4642598b4d5abfbb3f85654841094eeda46025b0541103f850c6c9742d)
   entry points mtek_vs (vertex), mtek_vs_instanced (instanced vertex), mtek_fs (fragment)
-  vertex attributes position, normal, uv
-  surface inputs world_position, world_normal, uv
+  vertex attributes position, normal, uv, tangent
+  surface inputs world_position, world_normal, uv, world_tangent
   parameter block material:std/materials.mtek::Pbr (group 1 binding 0)
-  span map 1114 entries over 215 lines; a line is followed by `// <source> <symbol>` where its origin changes
+  span map 1277 entries over 229 lines; a line is followed by `// <source> <symbol>` where its origin changes
     1 | struct MtekLight {  // std/materials.mtek:10:8-39:2 std/materials.mtek::Pbr
     2 |     color: vec3<f32>,
     3 |     kind: u32,
@@ -427,176 +427,190 @@ shader of material std/materials.mtek::Pbr (declared at std/materials.mtek:10:8-
    43 |     @location(1) world_position: vec3<f32>,
    44 |     @location(2) world_normal: vec3<f32>,
    45 |     @location(3) uv: vec2<f32>,
-   46 | }
-   47 |
-   48 | struct MtekSurfaceInput {
-   49 |     world_position: vec3<f32>,
-   50 |     world_normal: vec3<f32>,
-   51 |     uv: vec2<f32>,
-   52 | }
-   53 |
-   54 | @group(0) @binding(0) var<uniform> mtek_frame: MtekFrame;
-   55 | @group(1) @binding(0) var<uniform> mtek_params: MtekParams_2b212d15_Pbr;
-   56 | @group(1) @binding(1) var mtek_texture_base_color_texture: texture_2d<f32>;
-   57 | @group(1) @binding(2) var mtek_sampler_base_color_sampler: sampler;
-   58 | @group(1) @binding(3) var mtek_texture_metallic_roughness_texture: texture_2d<f32>;
-   59 | @group(1) @binding(4) var mtek_sampler_metallic_roughness_sampler: sampler;
-   60 | @group(1) @binding(5) var mtek_texture_normal_texture: texture_2d<f32>;
-   61 | @group(1) @binding(6) var mtek_sampler_normal_sampler: sampler;
-   62 | @group(1) @binding(7) var mtek_texture_occlusion_texture: texture_2d<f32>;
-   63 | @group(1) @binding(8) var mtek_sampler_occlusion_sampler: sampler;
-   64 | @group(1) @binding(9) var mtek_texture_emissive_texture: texture_2d<f32>;
-   65 | @group(1) @binding(10) var mtek_sampler_emissive_sampler: sampler;
-   66 | @group(3) @binding(0) var<uniform> mtek_scene_lighting: MtekSceneLighting;
-   67 | @group(3) @binding(1) var mtek_shadow_map: texture_depth_2d;
-   68 | @group(3) @binding(2) var mtek_shadow_sampler: sampler_comparison;
-   69 | @group(3) @binding(3) var mtek_environment_map: texture_cube<f32>;
-   70 | @group(3) @binding(4) var mtek_environment_sampler: sampler;
-   71 | @group(3) @binding(5) var mtek_environment_brdf: texture_2d<f32>;
-   72 | @group(2) @binding(0) var<uniform> mtek_object: MtekObject;
-   73 |
-   74 | fn mtek_shadow_visibility(mtek_position: vec3<f32>, mtek_normal: vec3<f32>, mtek_light_index: u32) -> f32 {
-   75 |     if mtek_scene_lighting.shadow_params.x != f32(mtek_light_index + 1u) {
-   76 |         return 1.0;
-   77 |     }
-   78 |     let mtek_shadow_clip = mtek_scene_lighting.shadow_matrix * vec4<f32>(mtek_position + (mtek_normal * mtek_scene_lighting.shadow_params.z), 1.0);
-   79 |     let mtek_shadow_ndc = mtek_shadow_clip.xyz / mtek_shadow_clip.w;
-   80 |     let mtek_shadow_uv = vec2<f32>((mtek_shadow_ndc.x * 0.5) + 0.5, (mtek_shadow_ndc.y * (-0.5)) + 0.5);
-   81 |     if (mtek_shadow_uv.x < 0.0) || (mtek_shadow_uv.x > 1.0) {
-   82 |         return 1.0;
-   83 |     }
-   84 |     if (mtek_shadow_uv.y < 0.0) || (mtek_shadow_uv.y > 1.0) {
-   85 |         return 1.0;
-   86 |     }
-   87 |     if (mtek_shadow_ndc.z < 0.0) || (mtek_shadow_ndc.z > 1.0) {
-   88 |         return 1.0;
-   89 |     }
-   90 |     var mtek_shadow_sum = 0.0;
-   91 |     var mtek_shadow_count = 0.0;
-   92 |     for (var mtek_shadow_y = 0u; mtek_shadow_y < 5u; mtek_shadow_y++) {
-   93 |         for (var mtek_shadow_x = 0u; mtek_shadow_x < 5u; mtek_shadow_x++) {
-   94 |             if mtek_scene_lighting.shadow_filter.y >= max(abs(f32(mtek_shadow_x) - 2.0), abs(f32(mtek_shadow_y) - 2.0)) {
-   95 |                 mtek_shadow_sum = mtek_shadow_sum + textureSampleCompareLevel(mtek_shadow_map, mtek_shadow_sampler, mtek_shadow_uv + (vec2<f32>(f32(mtek_shadow_x) - 2.0, f32(mtek_shadow_y) - 2.0) * mtek_scene_lighting.shadow_filter.x), mtek_shadow_ndc.z - mtek_scene_lighting.shadow_params.y);
-   96 |                 mtek_shadow_count = mtek_shadow_count + 1.0;
-   97 |             }
-   98 |         }
-   99 |     }
-  100 |     return mtek_shadow_sum / mtek_shadow_count;
-  101 | }
-  102 |
-  103 | fn mtek_environment_light(mtek_n: vec3<f32>, mtek_v: vec3<f32>, mtek_c: vec3<f32>, mtek_m: f32, mtek_r: f32, mtek_f0: vec3<f32>, mtek_nv: f32) -> vec3<f32> {
-  104 |     if mtek_scene_lighting.environment.x <= 0.0 {
-  105 |         return vec3<f32>(0.0);
-  106 |     }
-  107 |     let mtek_environment_n = vec3<f32>((mtek_scene_lighting.environment.y * mtek_n.x) + (mtek_scene_lighting.environment.z * mtek_n.z), mtek_n.y, (mtek_scene_lighting.environment.y * mtek_n.z) - (mtek_scene_lighting.environment.z * mtek_n.x));
-  108 |     let mtek_environment_r = vec3<f32>((mtek_scene_lighting.environment.y * reflect(-mtek_v, mtek_n).x) + (mtek_scene_lighting.environment.z * reflect(-mtek_v, mtek_n).z), reflect(-mtek_v, mtek_n).y, (mtek_scene_lighting.environment.y * reflect(-mtek_v, mtek_n).z) - (mtek_scene_lighting.environment.z * reflect(-mtek_v, mtek_n).x));
-  109 |     let mtek_irradiance = max(((((((((vec3<f32>(0.0) + (mtek_scene_lighting.sh[0u].xyz * 0.282095)) + (mtek_scene_lighting.sh[1u].xyz * (0.488603 * mtek_environment_n.y))) + (mtek_scene_lighting.sh[2u].xyz * (0.488603 * mtek_environment_n.z))) + (mtek_scene_lighting.sh[3u].xyz * (0.488603 * mtek_environment_n.x))) + (mtek_scene_lighting.sh[4u].xyz * (1.092548 * (mtek_environment_n.x * mtek_environment_n.y)))) + (mtek_scene_lighting.sh[5u].xyz * (1.092548 * (mtek_environment_n.y * mtek_environment_n.z)))) + (mtek_scene_lighting.sh[6u].xyz * (0.315392 * ((3.0 * (mtek_environment_n.z * mtek_environment_n.z)) - 1.0)))) + (mtek_scene_lighting.sh[7u].xyz * (1.092548 * (mtek_environment_n.x * mtek_environment_n.z)))) + (mtek_scene_lighting.sh[8u].xyz * (0.546274 * ((mtek_environment_n.x * mtek_environment_n.x) - (mtek_environment_n.y * mtek_environment_n.y)))), vec3<f32>(0.0));
-  110 |     let mtek_environment_texel = textureSampleLevel(mtek_environment_map, mtek_environment_sampler, mtek_environment_r, mtek_r * mtek_scene_lighting.environment.w).xyz;
-  111 |     let mtek_brdf = textureSampleLevel(mtek_environment_brdf, mtek_environment_sampler, vec2<f32>(mtek_nv, mtek_r), 0.0);
-  112 |     let mtek_fresnel_power = pow(max(1.0 - mtek_nv, 0.0), 5.0);
-  113 |     let mtek_environment_fresnel = mtek_f0 + ((max(vec3<f32>(1.0 - mtek_r), mtek_f0) - mtek_f0) * mtek_fresnel_power);
-  114 |     let mtek_environment_diffuse = (((vec3<f32>(1.0) - mtek_environment_fresnel) * mtek_c) * (1.0 - mtek_m)) * mtek_irradiance;
-  115 |     let mtek_environment_specular = mtek_environment_texel * ((mtek_f0 * mtek_brdf.x) + vec3<f32>(mtek_brdf.y));
-  116 |     return (mtek_environment_diffuse + mtek_environment_specular) * mtek_scene_lighting.environment.x;
-  117 | }
-  118 |
-  119 | fn mtek_mapped_normal(mtek_surface: MtekSurfaceInput, mtek_texel: vec3<f32>, mtek_scale: f32) -> vec3<f32> {
-  120 |     let mtek_n = mtek_surface.world_normal;
-  121 |     let mtek_q0 = dpdx(mtek_surface.world_position);
-  122 |     let mtek_q1 = dpdy(mtek_surface.world_position);
-  123 |     let mtek_st0 = dpdx(mtek_surface.uv);
-  124 |     let mtek_st1 = dpdy(mtek_surface.uv);
-  125 |     let mtek_q1perp = cross(mtek_q1, mtek_n);
-  126 |     let mtek_q0perp = cross(mtek_n, mtek_q0);
-  127 |     let mtek_t = (mtek_q1perp * mtek_st0.x) + (mtek_q0perp * mtek_st1.x);
-  128 |     let mtek_b = (mtek_q1perp * mtek_st0.y) + (mtek_q0perp * mtek_st1.y);
-  129 |     let mtek_area2 = max(dot(mtek_t, mtek_t), dot(mtek_b, mtek_b));
-  130 |     let mtek_inv = sign(dot(cross(mtek_q0, mtek_q1), mtek_n)) * inverseSqrt(max(mtek_area2, 1e-20));
-  131 |     let mtek_map = (mtek_texel * 2.0) - vec3<f32>(1.0);
-  132 |     let mtek_result = (((mtek_t * mtek_map.x) + (mtek_b * mtek_map.y)) * (mtek_scale * mtek_inv)) + (mtek_n * mtek_map.z);
-  133 |     let mtek_len2 = dot(mtek_result, mtek_result);
-  134 |     return select(mtek_n, mtek_result * inverseSqrt(max(mtek_len2, 1e-20)), (mtek_len2 > 1e-16) && (mtek_area2 > 1e-20));
-  135 | }
-  136 |
-  137 | fn mtek_lighting_pbr_mapped(mtek_surface: MtekSurfaceInput, mtek_base_color: vec4<f32>, mtek_metallic: f32, mtek_roughness: f32, mtek_normal_texel: vec3<f32>, mtek_normal_scale: f32, mtek_occlusion: f32, mtek_emissive: vec3<f32>) -> vec4<f32> {
-  138 |     let mtek_c = mtek_base_color.xyz;
-  139 |     let mtek_r = clamp(mtek_roughness, 0.045, 1.0);
-  140 |     let mtek_alpha = mtek_r * mtek_r;
-  141 |     let mtek_a2 = mtek_alpha * mtek_alpha;
-  142 |     let mtek_m = clamp(mtek_metallic, 0.0, 1.0);
-  143 |     let mtek_f0 = (vec3<f32>(0.04) * (1.0 - mtek_m)) + (mtek_c * mtek_m);
-  144 |     let mtek_n = mtek_mapped_normal(mtek_surface, mtek_normal_texel, mtek_normal_scale);
-  145 |     let mtek_v = normalize(mtek_frame.camera_position - mtek_surface.world_position);
-  146 |     let mtek_nv = max(dot(mtek_n, mtek_v), 0.0001);
-  147 |     var mtek_rgb = vec3<f32>(0.0);
-  148 |     for (var mtek_i = 0u; mtek_i < min(mtek_frame.light_count, 4u); mtek_i++) {
-  149 |         let mtek_light = mtek_frame.lights[mtek_i];
-  150 |         let mtek_range = mtek_light.range;
-  151 |         let mtek_is_point = mtek_light.kind == 1u;
-  152 |         let mtek_to_light = mtek_light.position - mtek_surface.world_position;
-  153 |         let mtek_distance2 = dot(mtek_to_light, mtek_to_light);
-  154 |         let mtek_l = normalize(select(-mtek_light.direction, mtek_to_light, mtek_is_point));
-  155 |         let mtek_nl = max(dot(mtek_n, mtek_l), 0.0);
-  156 |         let mtek_ratio = sqrt(mtek_distance2) / select(mtek_range, 1.0, mtek_range == 0.0);
-  157 |         let mtek_ratio2 = mtek_ratio * mtek_ratio;
-  158 |         let mtek_falloff = clamp(1.0 - (mtek_ratio2 * mtek_ratio2), 0.0, 1.0);
-  159 |         let mtek_window = select(mtek_falloff, 1.0, mtek_range == 0.0);
-  160 |         let mtek_radiance = select(mtek_light.color, mtek_light.color * (mtek_window / max(mtek_distance2, 0.0001)), mtek_is_point);
-  161 |         if mtek_nl > 0.0 {
-  162 |             let mtek_lv = mtek_l + mtek_v;
-  163 |             if dot(mtek_lv, mtek_lv) > 0.0 {
-  164 |                 let mtek_h = normalize(mtek_lv);
-  165 |                 let mtek_nh = max(dot(mtek_n, mtek_h), 0.0);
-  166 |                 let mtek_vh = max(dot(mtek_v, mtek_h), 0.0);
-  167 |                 let mtek_nh2 = mtek_nh * mtek_nh;
-  168 |                 let mtek_spread = (1.0 - mtek_nh2) + (mtek_nh2 * mtek_a2);
-  169 |                 let mtek_d = mtek_a2 / ((3.1415927 * mtek_spread) * mtek_spread);
-  170 |                 let mtek_denominator = (mtek_nl * sqrt(((mtek_nv * mtek_nv) * (1.0 - mtek_a2)) + mtek_a2)) + (mtek_nv * sqrt(((mtek_nl * mtek_nl) * (1.0 - mtek_a2)) + mtek_a2));
-  171 |                 let mtek_vis = select(0.5 / mtek_denominator, 0.0, mtek_denominator == 0.0);
-  172 |                 let mtek_t = 1.0 - mtek_vh;
-  173 |                 let mtek_t5 = ((mtek_t * mtek_t) * (mtek_t * mtek_t)) * mtek_t;
-  174 |                 let mtek_fresnel = mtek_f0 + ((vec3<f32>(1.0) - mtek_f0) * mtek_t5);
-  175 |                 let mtek_fresnel_d = 0.04 + (0.96 * mtek_t5);
-  176 |                 let mtek_specular = mtek_fresnel * (mtek_d * mtek_vis);
-  177 |                 let mtek_diffuse = mtek_c * (((1.0 - mtek_m) * (1.0 - mtek_fresnel_d)) / 3.1415927);
-  178 |                 mtek_rgb = mtek_rgb + ((((mtek_diffuse + mtek_specular) * mtek_radiance) * mtek_shadow_visibility(mtek_surface.world_position, mtek_surface.world_normal, mtek_i)) * mtek_nl);
-  179 |             }
-  180 |         }
-  181 |     }
-  182 |     return vec4<f32>((mtek_rgb + (((((mtek_c * (1.0 - mtek_m)) * mtek_frame.ambient) + mtek_environment_light(mtek_n, mtek_v, mtek_c, mtek_m, mtek_r, mtek_f0, mtek_nv)) * clamp(mtek_occlusion, 0.0, 1.0)) + mtek_emissive)) * mtek_frame.exposure, 1.0);
-  183 | }
-  184 |
-  185 | fn mtek_fragment(u_p_surface: MtekSurfaceInput) -> vec4<f32> {  // std/materials.mtek:29:5-38:6 std/materials.mtek::Pbr.fragment
-  186 |     let u_l_texel = textureSample(mtek_texture_base_color_texture, mtek_sampler_base_color_sampler, u_p_surface.uv);  // std/materials.mtek:30:9-30:84 std/materials.mtek::Pbr.fragment
-  187 |     let u_l_albedo = vec4<f32>(mtek_params.u_base_color.xyz * u_l_texel.xyz, 1.0);  // std/materials.mtek:31:9-31:68 std/materials.mtek::Pbr.fragment
-  188 |     let u_l_mr = textureSample(mtek_texture_metallic_roughness_texture, mtek_sampler_metallic_roughness_sampler, u_p_surface.uv);  // std/materials.mtek:32:9-32:97 std/materials.mtek::Pbr.fragment
-  189 |     let u_l_normal = textureSample(mtek_texture_normal_texture, mtek_sampler_normal_sampler, u_p_surface.uv).xyz;  // std/materials.mtek:33:9-33:81 std/materials.mtek::Pbr.fragment
-  190 |     let u_l_ao = textureSample(mtek_texture_occlusion_texture, mtek_sampler_occlusion_sampler, u_p_surface.uv).x;  // std/materials.mtek:34:9-34:81 std/materials.mtek::Pbr.fragment
-  191 |     let u_l_emissive_texel = textureSample(mtek_texture_emissive_texture, mtek_sampler_emissive_sampler, u_p_surface.uv).xyz;  // std/materials.mtek:35:9-35:93 std/materials.mtek::Pbr.fragment
-  192 |     let u_l_emission = mtek_params.u_emissive.xyz * u_l_emissive_texel;  // std/materials.mtek:36:9-36:54 std/materials.mtek::Pbr.fragment
-  193 |     return mtek_lighting_pbr_mapped(u_p_surface, u_l_albedo, mtek_params.u_metallic * u_l_mr.z, mtek_params.u_roughness * u_l_mr.y, u_l_normal, mtek_params.u_normal_scale, 1.0 + (clamp(mtek_params.u_occlusion_strength, 0.0, 1.0) * (u_l_ao - 1.0)), u_l_emission);  // std/materials.mtek:37:9-37:176 std/materials.mtek::Pbr.fragment
-  194 | }
-  195 |
-  196 | @vertex  // std/materials.mtek:10:8-39:2 std/materials.mtek::Pbr
-  197 | fn mtek_vs(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>, @location(2) mtek_uv: vec2<f32>) -> MtekVertexOutput {
-  198 |     let mtek_world = mtek_object.model * vec4<f32>(mtek_position, 1.0);
-  199 |     let mtek_world_normal = normalize((mtek_object.normal_matrix * vec4<f32>(mtek_normal, 0.0)).xyz);
-  200 |     return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal, mtek_uv);
-  201 | }
-  202 |
-  203 | @vertex
-  204 | fn mtek_vs_instanced(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>, @location(2) mtek_uv: vec2<f32>, @location(3) mtek_model_c0: vec4<f32>, @location(4) mtek_model_c1: vec4<f32>, @location(5) mtek_model_c2: vec4<f32>, @location(6) mtek_model_c3: vec4<f32>, @location(7) mtek_normal_c0: vec4<f32>, @location(8) mtek_normal_c1: vec4<f32>, @location(9) mtek_normal_c2: vec4<f32>, @location(10) mtek_normal_c3: vec4<f32>) -> MtekVertexOutput {
-  205 |     let mtek_world = mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3) * vec4<f32>(mtek_position, 1.0);
-  206 |     let mtek_world_normal = normalize((mat4x4<f32>(mtek_normal_c0, mtek_normal_c1, mtek_normal_c2, mtek_normal_c3) * vec4<f32>(mtek_normal, 0.0)).xyz);
-  207 |     return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal, mtek_uv);
-  208 | }
-  209 |
-  210 | @fragment
-  211 | fn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {
-  212 |     let mtek_surface = MtekSurfaceInput(mtek_in.world_position, normalize(mtek_in.world_normal), mtek_in.uv);
-  213 |     let mtek_color = mtek_fragment(mtek_surface);
-  214 |     return mtek_color;
-  215 | }
+   46 |     @location(4) world_tangent: vec4<f32>,
+   47 | }
+   48 |
+   49 | struct MtekSurfaceInput {
+   50 |     world_position: vec3<f32>,
+   51 |     world_normal: vec3<f32>,
+   52 |     uv: vec2<f32>,
+   53 |     world_tangent: vec4<f32>,
+   54 | }
+   55 |
+   56 | @group(0) @binding(0) var<uniform> mtek_frame: MtekFrame;
+   57 | @group(1) @binding(0) var<uniform> mtek_params: MtekParams_2b212d15_Pbr;
+   58 | @group(1) @binding(1) var mtek_texture_base_color_texture: texture_2d<f32>;
+   59 | @group(1) @binding(2) var mtek_sampler_base_color_sampler: sampler;
+   60 | @group(1) @binding(3) var mtek_texture_metallic_roughness_texture: texture_2d<f32>;
+   61 | @group(1) @binding(4) var mtek_sampler_metallic_roughness_sampler: sampler;
+   62 | @group(1) @binding(5) var mtek_texture_normal_texture: texture_2d<f32>;
+   63 | @group(1) @binding(6) var mtek_sampler_normal_sampler: sampler;
+   64 | @group(1) @binding(7) var mtek_texture_occlusion_texture: texture_2d<f32>;
+   65 | @group(1) @binding(8) var mtek_sampler_occlusion_sampler: sampler;
+   66 | @group(1) @binding(9) var mtek_texture_emissive_texture: texture_2d<f32>;
+   67 | @group(1) @binding(10) var mtek_sampler_emissive_sampler: sampler;
+   68 | @group(3) @binding(0) var<uniform> mtek_scene_lighting: MtekSceneLighting;
+   69 | @group(3) @binding(1) var mtek_shadow_map: texture_depth_2d;
+   70 | @group(3) @binding(2) var mtek_shadow_sampler: sampler_comparison;
+   71 | @group(3) @binding(3) var mtek_environment_map: texture_cube<f32>;
+   72 | @group(3) @binding(4) var mtek_environment_sampler: sampler;
+   73 | @group(3) @binding(5) var mtek_environment_brdf: texture_2d<f32>;
+   74 | @group(2) @binding(0) var<uniform> mtek_object: MtekObject;
+   75 |
+   76 | fn mtek_shadow_visibility(mtek_position: vec3<f32>, mtek_normal: vec3<f32>, mtek_light_index: u32) -> f32 {
+   77 |     if mtek_scene_lighting.shadow_params.x != f32(mtek_light_index + 1u) {
+   78 |         return 1.0;
+   79 |     }
+   80 |     let mtek_shadow_clip = mtek_scene_lighting.shadow_matrix * vec4<f32>(mtek_position + (mtek_normal * mtek_scene_lighting.shadow_params.z), 1.0);
+   81 |     let mtek_shadow_ndc = mtek_shadow_clip.xyz / mtek_shadow_clip.w;
+   82 |     let mtek_shadow_uv = vec2<f32>((mtek_shadow_ndc.x * 0.5) + 0.5, (mtek_shadow_ndc.y * (-0.5)) + 0.5);
+   83 |     if (mtek_shadow_uv.x < 0.0) || (mtek_shadow_uv.x > 1.0) {
+   84 |         return 1.0;
+   85 |     }
+   86 |     if (mtek_shadow_uv.y < 0.0) || (mtek_shadow_uv.y > 1.0) {
+   87 |         return 1.0;
+   88 |     }
+   89 |     if (mtek_shadow_ndc.z < 0.0) || (mtek_shadow_ndc.z > 1.0) {
+   90 |         return 1.0;
+   91 |     }
+   92 |     var mtek_shadow_sum = 0.0;
+   93 |     var mtek_shadow_count = 0.0;
+   94 |     for (var mtek_shadow_y = 0u; mtek_shadow_y < 5u; mtek_shadow_y++) {
+   95 |         for (var mtek_shadow_x = 0u; mtek_shadow_x < 5u; mtek_shadow_x++) {
+   96 |             if mtek_scene_lighting.shadow_filter.y >= max(abs(f32(mtek_shadow_x) - 2.0), abs(f32(mtek_shadow_y) - 2.0)) {
+   97 |                 mtek_shadow_sum = mtek_shadow_sum + textureSampleCompareLevel(mtek_shadow_map, mtek_shadow_sampler, mtek_shadow_uv + (vec2<f32>(f32(mtek_shadow_x) - 2.0, f32(mtek_shadow_y) - 2.0) * mtek_scene_lighting.shadow_filter.x), mtek_shadow_ndc.z - mtek_scene_lighting.shadow_params.y);
+   98 |                 mtek_shadow_count = mtek_shadow_count + 1.0;
+   99 |             }
+  100 |         }
+  101 |     }
+  102 |     return mtek_shadow_sum / mtek_shadow_count;
+  103 | }
+  104 |
+  105 | fn mtek_environment_light(mtek_n: vec3<f32>, mtek_v: vec3<f32>, mtek_c: vec3<f32>, mtek_m: f32, mtek_r: f32, mtek_f0: vec3<f32>, mtek_nv: f32) -> vec3<f32> {
+  106 |     if mtek_scene_lighting.environment.x <= 0.0 {
+  107 |         return vec3<f32>(0.0);
+  108 |     }
+  109 |     let mtek_environment_n = vec3<f32>((mtek_scene_lighting.environment.y * mtek_n.x) + (mtek_scene_lighting.environment.z * mtek_n.z), mtek_n.y, (mtek_scene_lighting.environment.y * mtek_n.z) - (mtek_scene_lighting.environment.z * mtek_n.x));
+  110 |     let mtek_environment_r = vec3<f32>((mtek_scene_lighting.environment.y * reflect(-mtek_v, mtek_n).x) + (mtek_scene_lighting.environment.z * reflect(-mtek_v, mtek_n).z), reflect(-mtek_v, mtek_n).y, (mtek_scene_lighting.environment.y * reflect(-mtek_v, mtek_n).z) - (mtek_scene_lighting.environment.z * reflect(-mtek_v, mtek_n).x));
+  111 |     let mtek_irradiance = max(((((((((vec3<f32>(0.0) + (mtek_scene_lighting.sh[0u].xyz * 0.282095)) + (mtek_scene_lighting.sh[1u].xyz * (0.488603 * mtek_environment_n.y))) + (mtek_scene_lighting.sh[2u].xyz * (0.488603 * mtek_environment_n.z))) + (mtek_scene_lighting.sh[3u].xyz * (0.488603 * mtek_environment_n.x))) + (mtek_scene_lighting.sh[4u].xyz * (1.092548 * (mtek_environment_n.x * mtek_environment_n.y)))) + (mtek_scene_lighting.sh[5u].xyz * (1.092548 * (mtek_environment_n.y * mtek_environment_n.z)))) + (mtek_scene_lighting.sh[6u].xyz * (0.315392 * ((3.0 * (mtek_environment_n.z * mtek_environment_n.z)) - 1.0)))) + (mtek_scene_lighting.sh[7u].xyz * (1.092548 * (mtek_environment_n.x * mtek_environment_n.z)))) + (mtek_scene_lighting.sh[8u].xyz * (0.546274 * ((mtek_environment_n.x * mtek_environment_n.x) - (mtek_environment_n.y * mtek_environment_n.y)))), vec3<f32>(0.0));
+  112 |     let mtek_environment_texel = textureSampleLevel(mtek_environment_map, mtek_environment_sampler, mtek_environment_r, mtek_r * mtek_scene_lighting.environment.w).xyz;
+  113 |     let mtek_brdf = textureSampleLevel(mtek_environment_brdf, mtek_environment_sampler, vec2<f32>(mtek_nv, mtek_r), 0.0);
+  114 |     let mtek_fresnel_power = pow(max(1.0 - mtek_nv, 0.0), 5.0);
+  115 |     let mtek_environment_fresnel = mtek_f0 + ((max(vec3<f32>(1.0 - mtek_r), mtek_f0) - mtek_f0) * mtek_fresnel_power);
+  116 |     let mtek_environment_diffuse = (((vec3<f32>(1.0) - mtek_environment_fresnel) * mtek_c) * (1.0 - mtek_m)) * mtek_irradiance;
+  117 |     let mtek_environment_specular = mtek_environment_texel * ((mtek_f0 * mtek_brdf.x) + vec3<f32>(mtek_brdf.y));
+  118 |     return (mtek_environment_diffuse + mtek_environment_specular) * mtek_scene_lighting.environment.x;
+  119 | }
+  120 |
+  121 | fn mtek_mapped_normal(mtek_surface: MtekSurfaceInput, mtek_texel: vec3<f32>, mtek_scale: f32) -> vec3<f32> {
+  122 |     let mtek_n = mtek_surface.world_normal;
+  123 |     let mtek_q0 = dpdx(mtek_surface.world_position);
+  124 |     let mtek_q1 = dpdy(mtek_surface.world_position);
+  125 |     let mtek_st0 = dpdx(mtek_surface.uv);
+  126 |     let mtek_st1 = dpdy(mtek_surface.uv);
+  127 |     let mtek_q1perp = cross(mtek_q1, mtek_n);
+  128 |     let mtek_q0perp = cross(mtek_n, mtek_q0);
+  129 |     let mtek_t = (mtek_q1perp * mtek_st0.x) + (mtek_q0perp * mtek_st1.x);
+  130 |     let mtek_b = (mtek_q1perp * mtek_st0.y) + (mtek_q0perp * mtek_st1.y);
+  131 |     let mtek_area2 = max(dot(mtek_t, mtek_t), dot(mtek_b, mtek_b));
+  132 |     let mtek_inv = sign(dot(cross(mtek_q0, mtek_q1), mtek_n)) * inverseSqrt(max(mtek_area2, 1e-20));
+  133 |     let mtek_map = (mtek_texel * 2.0) - vec3<f32>(1.0);
+  134 |     let mtek_result = (((mtek_t * mtek_map.x) + (mtek_b * mtek_map.y)) * (mtek_scale * mtek_inv)) + (mtek_n * mtek_map.z);
+  135 |     let mtek_len2 = dot(mtek_result, mtek_result);
+  136 |     let mtek_derivative_normal = select(mtek_n, mtek_result * inverseSqrt(max(mtek_len2, 1e-20)), (mtek_len2 > 1e-16) && (mtek_area2 > 1e-20));
+  137 |     let mtek_authored = mtek_surface.world_tangent;
+  138 |     let mtek_authored_orthogonal = mtek_authored.xyz - (mtek_n * dot(mtek_n, mtek_authored.xyz));
+  139 |     let mtek_authored_length2 = dot(mtek_authored_orthogonal, mtek_authored_orthogonal);
+  140 |     let mtek_authored_t = mtek_authored_orthogonal * inverseSqrt(max(mtek_authored_length2, 1e-20));
+  141 |     let mtek_authored_b = cross(mtek_n, mtek_authored_t) * sign(mtek_authored.w);
+  142 |     let mtek_authored_result = (((mtek_authored_t * mtek_map.x) + (mtek_authored_b * mtek_map.y)) * mtek_scale) + (mtek_n * mtek_map.z);
+  143 |     let mtek_authored_result_length2 = dot(mtek_authored_result, mtek_authored_result);
+  144 |     return select(mtek_derivative_normal, mtek_authored_result * inverseSqrt(max(mtek_authored_result_length2, 1e-20)), (abs(mtek_authored.w) > 0.5) && ((mtek_authored_length2 > 1e-20) && (mtek_authored_result_length2 > 1e-16)));
+  145 | }
+  146 |
+  147 | fn mtek_lighting_pbr_mapped(mtek_surface: MtekSurfaceInput, mtek_base_color: vec4<f32>, mtek_metallic: f32, mtek_roughness: f32, mtek_normal_texel: vec3<f32>, mtek_normal_scale: f32, mtek_occlusion: f32, mtek_emissive: vec3<f32>) -> vec4<f32> {
+  148 |     let mtek_c = mtek_base_color.xyz;
+  149 |     let mtek_r = clamp(mtek_roughness, 0.045, 1.0);
+  150 |     let mtek_alpha = mtek_r * mtek_r;
+  151 |     let mtek_a2 = mtek_alpha * mtek_alpha;
+  152 |     let mtek_m = clamp(mtek_metallic, 0.0, 1.0);
+  153 |     let mtek_f0 = (vec3<f32>(0.04) * (1.0 - mtek_m)) + (mtek_c * mtek_m);
+  154 |     let mtek_n = mtek_mapped_normal(mtek_surface, mtek_normal_texel, mtek_normal_scale);
+  155 |     let mtek_v = normalize(mtek_frame.camera_position - mtek_surface.world_position);
+  156 |     let mtek_nv = max(dot(mtek_n, mtek_v), 0.0001);
+  157 |     var mtek_rgb = vec3<f32>(0.0);
+  158 |     for (var mtek_i = 0u; mtek_i < min(mtek_frame.light_count, 4u); mtek_i++) {
+  159 |         let mtek_light = mtek_frame.lights[mtek_i];
+  160 |         let mtek_range = mtek_light.range;
+  161 |         let mtek_is_point = mtek_light.kind == 1u;
+  162 |         let mtek_to_light = mtek_light.position - mtek_surface.world_position;
+  163 |         let mtek_distance2 = dot(mtek_to_light, mtek_to_light);
+  164 |         let mtek_l = normalize(select(-mtek_light.direction, mtek_to_light, mtek_is_point));
+  165 |         let mtek_nl = max(dot(mtek_n, mtek_l), 0.0);
+  166 |         let mtek_ratio = sqrt(mtek_distance2) / select(mtek_range, 1.0, mtek_range == 0.0);
+  167 |         let mtek_ratio2 = mtek_ratio * mtek_ratio;
+  168 |         let mtek_falloff = clamp(1.0 - (mtek_ratio2 * mtek_ratio2), 0.0, 1.0);
+  169 |         let mtek_window = select(mtek_falloff, 1.0, mtek_range == 0.0);
+  170 |         let mtek_radiance = select(mtek_light.color, mtek_light.color * (mtek_window / max(mtek_distance2, 0.0001)), mtek_is_point);
+  171 |         if mtek_nl > 0.0 {
+  172 |             let mtek_lv = mtek_l + mtek_v;
+  173 |             if dot(mtek_lv, mtek_lv) > 0.0 {
+  174 |                 let mtek_h = normalize(mtek_lv);
+  175 |                 let mtek_nh = max(dot(mtek_n, mtek_h), 0.0);
+  176 |                 let mtek_vh = max(dot(mtek_v, mtek_h), 0.0);
+  177 |                 let mtek_nh2 = mtek_nh * mtek_nh;
+  178 |                 let mtek_spread = (1.0 - mtek_nh2) + (mtek_nh2 * mtek_a2);
+  179 |                 let mtek_d = mtek_a2 / ((3.1415927 * mtek_spread) * mtek_spread);
+  180 |                 let mtek_denominator = (mtek_nl * sqrt(((mtek_nv * mtek_nv) * (1.0 - mtek_a2)) + mtek_a2)) + (mtek_nv * sqrt(((mtek_nl * mtek_nl) * (1.0 - mtek_a2)) + mtek_a2));
+  181 |                 let mtek_vis = select(0.5 / mtek_denominator, 0.0, mtek_denominator == 0.0);
+  182 |                 let mtek_t = 1.0 - mtek_vh;
+  183 |                 let mtek_t5 = ((mtek_t * mtek_t) * (mtek_t * mtek_t)) * mtek_t;
+  184 |                 let mtek_fresnel = mtek_f0 + ((vec3<f32>(1.0) - mtek_f0) * mtek_t5);
+  185 |                 let mtek_fresnel_d = 0.04 + (0.96 * mtek_t5);
+  186 |                 let mtek_specular = mtek_fresnel * (mtek_d * mtek_vis);
+  187 |                 let mtek_diffuse = mtek_c * (((1.0 - mtek_m) * (1.0 - mtek_fresnel_d)) / 3.1415927);
+  188 |                 mtek_rgb = mtek_rgb + ((((mtek_diffuse + mtek_specular) * mtek_radiance) * mtek_shadow_visibility(mtek_surface.world_position, mtek_surface.world_normal, mtek_i)) * mtek_nl);
+  189 |             }
+  190 |         }
+  191 |     }
+  192 |     return vec4<f32>((mtek_rgb + (((((mtek_c * (1.0 - mtek_m)) * mtek_frame.ambient) + mtek_environment_light(mtek_n, mtek_v, mtek_c, mtek_m, mtek_r, mtek_f0, mtek_nv)) * clamp(mtek_occlusion, 0.0, 1.0)) + mtek_emissive)) * mtek_frame.exposure, mtek_base_color.w);
+  193 | }
+  194 |
+  195 | fn mtek_fragment(u_p_surface: MtekSurfaceInput) -> vec4<f32> {  // std/materials.mtek:29:5-38:6 std/materials.mtek::Pbr.fragment
+  196 |     let u_l_texel = textureSample(mtek_texture_base_color_texture, mtek_sampler_base_color_sampler, u_p_surface.uv);  // std/materials.mtek:30:9-30:84 std/materials.mtek::Pbr.fragment
+  197 |     let u_l_albedo = vec4<f32>(mtek_params.u_base_color.xyz * u_l_texel.xyz, mtek_params.u_base_color.w);  // std/materials.mtek:31:9-31:77 std/materials.mtek::Pbr.fragment
+  198 |     let u_l_mr = textureSample(mtek_texture_metallic_roughness_texture, mtek_sampler_metallic_roughness_sampler, u_p_surface.uv);  // std/materials.mtek:32:9-32:97 std/materials.mtek::Pbr.fragment
+  199 |     let u_l_normal = textureSample(mtek_texture_normal_texture, mtek_sampler_normal_sampler, u_p_surface.uv).xyz;  // std/materials.mtek:33:9-33:81 std/materials.mtek::Pbr.fragment
+  200 |     let u_l_ao = textureSample(mtek_texture_occlusion_texture, mtek_sampler_occlusion_sampler, u_p_surface.uv).x;  // std/materials.mtek:34:9-34:81 std/materials.mtek::Pbr.fragment
+  201 |     let u_l_emissive_texel = textureSample(mtek_texture_emissive_texture, mtek_sampler_emissive_sampler, u_p_surface.uv).xyz;  // std/materials.mtek:35:9-35:93 std/materials.mtek::Pbr.fragment
+  202 |     let u_l_emission = mtek_params.u_emissive.xyz * u_l_emissive_texel;  // std/materials.mtek:36:9-36:54 std/materials.mtek::Pbr.fragment
+  203 |     return mtek_lighting_pbr_mapped(u_p_surface, u_l_albedo, mtek_params.u_metallic * u_l_mr.z, mtek_params.u_roughness * u_l_mr.y, u_l_normal, mtek_params.u_normal_scale, 1.0 + (clamp(mtek_params.u_occlusion_strength, 0.0, 1.0) * (u_l_ao - 1.0)), u_l_emission);  // std/materials.mtek:37:9-37:176 std/materials.mtek::Pbr.fragment
+  204 | }
+  205 |
+  206 | @vertex  // std/materials.mtek:10:8-39:2 std/materials.mtek::Pbr
+  207 | fn mtek_vs(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>, @location(2) mtek_uv: vec2<f32>, @location(11) mtek_tangent: vec4<f32>) -> MtekVertexOutput {
+  208 |     let mtek_tangent_model = mtek_object.model;
+  209 |     let mtek_world = mtek_object.model * vec4<f32>(mtek_position, 1.0);
+  210 |     let mtek_world_normal = normalize((mtek_object.normal_matrix * vec4<f32>(mtek_normal, 0.0)).xyz);
+  211 |     let mtek_world_tangent_direction = (mtek_tangent_model * vec4<f32>(mtek_tangent.xyz, 0.0)).xyz;
+  212 |     return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal, mtek_uv, vec4<f32>(mtek_world_tangent_direction * inverseSqrt(max(dot(mtek_world_tangent_direction, mtek_world_tangent_direction), 1e-20)), mtek_tangent.w * sign(dot(mtek_tangent_model[0u].xyz, cross(mtek_tangent_model[1u].xyz, mtek_tangent_model[2u].xyz)))));
+  213 | }
+  214 |
+  215 | @vertex
+  216 | fn mtek_vs_instanced(@location(0) mtek_position: vec3<f32>, @location(1) mtek_normal: vec3<f32>, @location(2) mtek_uv: vec2<f32>, @location(11) mtek_tangent: vec4<f32>, @location(3) mtek_model_c0: vec4<f32>, @location(4) mtek_model_c1: vec4<f32>, @location(5) mtek_model_c2: vec4<f32>, @location(6) mtek_model_c3: vec4<f32>, @location(7) mtek_normal_c0: vec4<f32>, @location(8) mtek_normal_c1: vec4<f32>, @location(9) mtek_normal_c2: vec4<f32>, @location(10) mtek_normal_c3: vec4<f32>) -> MtekVertexOutput {
+  217 |     let mtek_tangent_model = mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3);
+  218 |     let mtek_world = mat4x4<f32>(mtek_model_c0, mtek_model_c1, mtek_model_c2, mtek_model_c3) * vec4<f32>(mtek_position, 1.0);
+  219 |     let mtek_world_normal = normalize((mat4x4<f32>(mtek_normal_c0, mtek_normal_c1, mtek_normal_c2, mtek_normal_c3) * vec4<f32>(mtek_normal, 0.0)).xyz);
+  220 |     let mtek_world_tangent_direction = (mtek_tangent_model * vec4<f32>(mtek_tangent.xyz, 0.0)).xyz;
+  221 |     return MtekVertexOutput(mtek_frame.view_proj * mtek_world, mtek_world.xyz, mtek_world_normal, mtek_uv, vec4<f32>(mtek_world_tangent_direction * inverseSqrt(max(dot(mtek_world_tangent_direction, mtek_world_tangent_direction), 1e-20)), mtek_tangent.w * sign(dot(mtek_tangent_model[0u].xyz, cross(mtek_tangent_model[1u].xyz, mtek_tangent_model[2u].xyz)))));
+  222 | }
+  223 |
+  224 | @fragment
+  225 | fn mtek_fs(mtek_in: MtekVertexOutput) -> @location(0) vec4<f32> {
+  226 |     let mtek_surface = MtekSurfaceInput(mtek_in.world_position, normalize(mtek_in.world_normal), mtek_in.uv, mtek_in.world_tangent);
+  227 |     let mtek_color = mtek_fragment(mtek_surface);
+  228 |     return mtek_color;
+  229 | }
 
 shader of material std/materials.mtek::Unlit (declared at std/materials.mtek:5:8-8:2)
   file shaders/b210f9e70a40be73.wgsl (sha256 b210f9e70a40be73d5343f39f0247957359d67c6f7dab6eadf1dc887efec91e2)

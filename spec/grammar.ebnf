@@ -99,7 +99,6 @@ EnumDecl        ::= 'enum' Ident '{' Ident ( ',' Ident )* ','? '}'
 MaterialDecl    ::= 'material' Ident '{' MaterialMember* '}'
 MaterialMember  ::= ParamDecl | StageFn
 ComputeDecl     ::= 'compute' Ident '{' ComputeMember* '}'
-                    /* [S: source-compute-build-gate: parsed and checked; packaging/dispatch still E4901] */
 ComputeMember   ::= ParamDecl | StorageDecl | ComputeWorkgroup | StageFn
 StorageDecl     ::= ( 'input' | 'output' ) Ident ':' Type ';'
 ComputeWorkgroup ::= 'workgroup_size' ':' Expr ';'

@@ -94,6 +94,7 @@ pub struct GlbPrimitive {
     pub position: Strided,
     pub normal: Option<Strided>,
     pub uv: Option<Strided>,
+    pub tangent: Option<Strided>,
     /// `None`: not indexed, sequential indices are generated when packaging.
     pub indices: Option<IndexSource>,
     pub index_count: u32,
@@ -1248,6 +1249,7 @@ impl<'a> Validator<'a> {
         let mut position = None;
         let mut normal = None;
         let mut uv = None;
+        let mut tangent = None;
         for (semantic, accessor_index) in &primitive.attributes {
             let accessor_index = accessor_index.value();
             let Checked::Valid(semantic) = semantic else {
@@ -1262,6 +1264,9 @@ impl<'a> Validator<'a> {
                 }
                 Semantic::TexCoords(0) => {
                     uv = self.float_attribute(what, "TEXCOORD_0", accessor_index, Type::Vec2);
+                }
+                Semantic::Tangents => {
+                    tangent = self.float_attribute(what, "TANGENT", accessor_index, Type::Vec4);
                 }
                 Semantic::Joints(0) | Semantic::Weights(0) if !self.root.skins.is_empty() => {},
                 Semantic::Joints(_) | Semantic::Weights(_) => self.report(
@@ -1279,11 +1284,11 @@ impl<'a> Validator<'a> {
                     Issue::new(
                         Code::E7009,
                         format!(
-                            "{what} has the attribute {}; the profile supports POSITION, NORMAL and TEXCOORD_0.",
+                            "{what} has the attribute {}; the profile supports POSITION, NORMAL, TEXCOORD_0 and TANGENT.",
                             semantic_name(other)
                         ),
                     )
-                    .help("remove vertex colours, tangents and further UV sets when exporting"),
+                    .help("remove vertex colours and further UV sets when exporting"),
                 ),
             }
         }
@@ -1341,6 +1346,28 @@ impl<'a> Validator<'a> {
             }
             None => None,
         };
+        let tangent_ok = match tangent {
+            Some((index, _)) => {
+                let values = self.read_floats(what, "TANGENT", index, 4, vertex_count)?;
+                if normal_ok.is_none() {
+                    self.report(5, Issue::new(Code::E7010, format!("{what} has TANGENT but no NORMAL; this profile requires normals for authored tangent frames.")));
+                }
+                if let Some((vertex, _)) =
+                    values.as_chunks::<4>().0.iter().enumerate().find(|(_, t)| {
+                        let length2 = t[0] * t[0] + t[1] * t[1] + t[2] * t[2];
+                        (length2 - 1.0).abs() > 0.001 || (t[3] != -1.0 && t[3] != 1.0)
+                    })
+                {
+                    self.report(7, Issue::new(Code::E7027, format!("{what}: TANGENT at vertex {vertex} requires normalized xyz (squared-length error at most 0.001) and w exactly -1 or +1.")).help("normalize tangent xyz and use w -1 or +1 when exporting"));
+                }
+                let at = self.resolve(index, 16, false).ok()?;
+                Some(Strided {
+                    offset: at.offset,
+                    stride: at.stride,
+                })
+            }
+            None => None,
+        };
         let (indices, index_count) = self.check_indices(what, primitive, vertex_count);
         if self.issues.len() > before {
             return None;
@@ -1355,6 +1382,7 @@ impl<'a> Validator<'a> {
             },
             normal: normal_ok,
             uv: uv_ok,
+            tangent: tangent_ok,
             indices: indices?,
             index_count,
             bounds_center: center,
@@ -1786,7 +1814,7 @@ impl<'a> Validator<'a> {
                             "The {what} has alphaMode {mode}; the profile supports OPAQUE only."
                         ),
                     )
-                    .help("v0.1 has no transparency (`spec/materials.md` section 2)"),
+                    .help("use a source-authored Pbr colour alpha; this GLB profile imports opaque materials only"),
                 );
             }
             let alpha = pbr.base_color_factor.0[3];

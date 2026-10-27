@@ -1,0 +1,425 @@
+{
+  "format": "mtek-material-measurement-report/1",
+  "performanceEligible": false,
+  "status": "incomplete",
+  "preflight": true,
+  "runSha256": "27b608cdbb6d4d9760cfa5905268ea332c9c798117d2fe948892e284cc3a88b2",
+  "definition": "0190fa6ee207dcbdbc0ca7962fd9b9b7ec1a2205d8a85278607d6fce5f407e64",
+  "protocol": "47d6e2e914a572ba48869147dcc3b5bb66753917a5fe53fcb4c6494712fd5545",
+  "environment": {
+    "node": "v22.23.2",
+    "os": {
+      "platform": "win32",
+      "release": "10.0.26200"
+    },
+    "cpus": {
+      "model": "13th Gen Intel(R) Core(TM) i5-13600K",
+      "logical": 20
+    },
+    "browser": "153.0.8010.12",
+    "launchArgs": [
+      "--enable-unsafe-webgpu",
+      "--ignore-gpu-blocklist",
+      "--enable-webgpu-developer-features",
+      "--force-color-profile=srgb"
+    ],
+    "systemInfo": {
+      "gpu": {
+        "devices": [
+          {
+            "vendorId": 4098,
+            "deviceId": 29772,
+            "subSysId": 84283459,
+            "revision": 200,
+            "vendorString": "",
+            "deviceString": "AMD Radeon RX 7900 XTX",
+            "driverVendor": "AMD",
+            "driverVersion": "32.0.32015.7029"
+          },
+          {
+            "vendorId": 5140,
+            "deviceId": 140,
+            "subSysId": 0,
+            "revision": 0,
+            "vendorString": "",
+            "deviceString": "Microsoft Basic Render Driver",
+            "driverVendor": "",
+            "driverVersion": "10.0.26100.9711"
+          }
+        ],
+        "auxAttributes": {
+          "amdSwitchable": false,
+          "bgra8OverlaySupport": "SOFTWARE",
+          "canSupportThreadedTextureMailbox": false,
+          "directComposition": true,
+          "directMLFeatureLevel": "Not supported",
+          "directRenderingVersion": "",
+          "displayType": "ANGLE_D3D11",
+          "dx12FeatureLevel": "Not supported",
+          "glExtensions": "GL_AMD_performance_monitor GL_ANGLE_base_vertex_base_instance_shader_builtin GL_ANGLE_blob_cache GL_ANGLE_client_arrays GL_ANGLE_clip_cull_distance GL_ANGLE_copy_texture_3d GL_ANGLE_depth_texture GL_ANGLE_framebuffer_blit GL_ANGLE_framebuffer_multisample GL_ANGLE_get_serialized_context_string GL_ANGLE_get_tex_level_parameter GL_ANGLE_instanced_arrays GL_ANGLE_memory_size GL_ANGLE_multiview_multisample GL_ANGLE_pack_reverse_row_order GL_ANGLE_polygon_mode GL_ANGLE_program_binary_readiness_query GL_ANGLE_program_cache_control GL_ANGLE_provoking_vertex GL_ANGLE_renderability_validation GL_ANGLE_request_extension GL_ANGLE_robust_client_memory GL_ANGLE_shader_pixel_local_storage GL_ANGLE_shader_pixel_local_storage_coherent GL_ANGLE_stencil_texturing GL_ANGLE_texture_compression_dxt3 GL_ANGLE_texture_compression_dxt5 GL_ANGLE_texture_multisample GL_ANGLE_texture_usage GL_ANGLE_translated_shader_source GL_APPLE_clip_distance GL_ARM_rgba8 GL_CHROMIUM_bind_generates_resource GL_CHROMIUM_bind_uniform_location GL_CHROMIUM_copy_compressed_texture GL_CHROMIUM_copy_texture GL_CHROMIUM_lose_context GL_EXT_EGL_image_external_wrap_modes GL_EXT_base_instance GL_EXT_blend_func_extended GL_EXT_blend_minmax GL_EXT_clip_control GL_EXT_clip_cull_distance GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_conservative_depth GL_EXT_debug_label GL_EXT_debug_marker GL_EXT_depth_clamp GL_EXT_discard_framebuffer GL_EXT_disjoint_timer_query GL_EXT_draw_buffers GL_EXT_draw_buffers_indexed GL_EXT_draw_elements_base_vertex GL_EXT_float_blend GL_EXT_frag_depth GL_EXT_instanced_arrays GL_EXT_map_buffer_range GL_EXT_occlusion_query_boolean GL_EXT_polygon_offset_clamp GL_EXT_read_format_bgra GL_EXT_render_snorm GL_EXT_robustness GL_EXT_sRGB GL_EXT_shader_texture_lod GL_EXT_texture_border_clamp GL_EXT_texture_compression_bptc GL_EXT_texture_compression_dxt1 GL_EXT_texture_compression_rgtc GL_EXT_texture_compression_s3tc_srgb GL_EXT_texture_filter_anisotropic GL_EXT_texture_format_BGRA8888 GL_EXT_texture_mirror_clamp_to_edge GL_EXT_texture_norm16 GL_EXT_texture_rg GL_EXT_texture_storage GL_EXT_texture_type_2_10_10_10_REV GL_EXT_unpack_subimage GL_KHR_debug GL_KHR_parallel_shader_compile GL_KHR_robustness GL_NV_EGL_stream_consumer_external GL_NV_fence GL_NV_framebuffer_blit GL_NV_pack_subimage GL_NV_pixel_buffer_object GL_NV_shader_noperspective_interpolation GL_OES_EGL_image GL_OES_EGL_image_external GL_OES_EGL_image_external_essl3 GL_OES_depth24 GL_OES_depth32 GL_OES_draw_buffers_indexed GL_OES_draw_elements_base_vertex GL_OES_element_index_uint GL_OES_fbo_render_mipmap GL_OES_get_program_binary GL_OES_mapbuffer GL_OES_packed_depth_stencil GL_OES_required_internalformat GL_OES_rgb8_rgba8 GL_OES_sample_variables GL_OES_shader_multisample_interpolation GL_OES_standard_derivatives GL_OES_surfaceless_context GL_OES_texture_border_clamp GL_OES_texture_float GL_OES_texture_float_linear GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_texture_npot GL_OES_texture_stencil8 GL_OES_texture_storage_multisample_2d_array GL_OES_vertex_array_object GL_OVR_multiview GL_OVR_multiview2 ",
+          "glImplementationParts": "(gl=egl-angle,angle=d3d11)",
+          "glRenderer": "ANGLE (AMD, AMD Radeon RX 7900 XTX (0x0000744C) Direct3D11 vs_5_0 ps_5_0, D3D11-32.0.32015.7029)",
+          "glResetNotificationStrategy": 33362,
+          "glVendor": "Google Inc. (AMD)",
+          "glVersion": "OpenGL ES 3.0 (ANGLE 2.1.28646 git hash: a6bc9eff8444)",
+          "glWsExtensions": "EGL_EXT_create_context_robustness EGL_ANGLE_d3d_share_handle_client_buffer EGL_ANGLE_d3d_texture_client_buffer EGL_ANGLE_surface_d3d_texture_2d_share_handle EGL_ANGLE_query_surface_pointer EGL_ANGLE_window_fixed_size EGL_ANGLE_keyed_mutex EGL_ANGLE_surface_orientation EGL_ANGLE_direct_composition EGL_NV_post_sub_buffer EGL_KHR_create_context EGL_KHR_image EGL_KHR_image_base EGL_KHR_gl_texture_2D_image EGL_KHR_gl_texture_cubemap_image EGL_KHR_gl_renderbuffer_image EGL_KHR_get_all_proc_addresses EGL_KHR_stream EGL_KHR_stream_consumer_gltexture EGL_NV_stream_consumer_gltexture_yuv EGL_ANGLE_stream_producer_d3d_texture EGL_ANGLE_create_context_webgl_compatibility EGL_CHROMIUM_create_context_bind_generates_resource EGL_CHROMIUM_sync_control EGL_EXT_pixel_format_float EGL_KHR_surfaceless_context EGL_ANGLE_display_texture_share_group EGL_ANGLE_display_semaphore_share_group EGL_ANGLE_create_context_client_arrays EGL_ANGLE_program_cache_control EGL_ANGLE_robust_resource_initialization EGL_ANGLE_create_context_extensions_enabled EGL_ANDROID_blob_cache EGL_ANDROID_recordable EGL_ANGLE_image_d3d11_texture EGL_ANGLE_create_context_backwards_compatible EGL_KHR_no_config_context EGL_KHR_create_context_no_error EGL_KHR_reusable_sync EGL_ANGLE_memory_usage_report ",
+          "glWsVendor": "Google Inc. (AMD)",
+          "glWsVersion": "1.5 (ANGLE 2.1.28646 git hash: a6bc9eff8444)",
+          "inProcessGpu": false,
+          "initializationTime": 0.074925,
+          "isAsan": false,
+          "isClangCoverage": false,
+          "jpegDecodeAcceleratorSupported": false,
+          "maxMsaaSamples": "8",
+          "nv12OverlaySupport": "SCALING",
+          "optimus": false,
+          "p010OverlaySupport": "SCALING",
+          "passthroughCmdDecoder": true,
+          "pixelShaderVersion": "5.0",
+          "processCrashCount": 0,
+          "rgb10a2OverlaySupport": "SCALING",
+          "sandboxed": false,
+          "skiaBackendType": "GaneshGL",
+          "subpixelFontRendering": true,
+          "supportsD3dSharedImages": false,
+          "supportsDirectML": false,
+          "supportsDx12": false,
+          "supportsOverlays": true,
+          "supportsVulkan": false,
+          "targetCpuBits": 64,
+          "vertexShaderVersion": "5.0",
+          "visibilityCallbackCallCount": 0,
+          "vulkanVersion": "Not supported",
+          "yuy2OverlaySupport": "SOFTWARE"
+        },
+        "featureStatus": {
+          "2d_canvas": "enabled",
+          "direct_rendering_display_compositor": "disabled_off_ok",
+          "gpu_compositing": "enabled",
+          "multiple_raster_threads": "enabled_on",
+          "opengl": "enabled_on",
+          "rasterization": "enabled",
+          "raw_draw": "disabled_off_ok",
+          "skia_graphite": "disabled_off",
+          "trees_in_viz": "disabled_off",
+          "video_decode": "enabled",
+          "video_encode": "enabled",
+          "webgl": "enabled",
+          "webgpu": "enabled",
+          "webnn": "disabled_off"
+        },
+        "driverBugWorkarounds": [
+          "disable_d3d11_vp9_ksvc_decoding",
+          "disable_d3d12_video_encoder",
+          "disable_h264_accelerator_sw_brc",
+          "disable_nv12_dynamic_textures",
+          "disable_video_overlay_if_moving",
+          "disable_vp_auto_hdr",
+          "disable_vp_super_resolution",
+          "enable_webgl_timer_query_extensions",
+          "exit_on_context_lost",
+          "force_rgb10a2_overlay_support",
+          "disabled_extension_GL_KHR_blend_equation_advanced",
+          "disabled_extension_GL_KHR_blend_equation_advanced_coherent"
+        ],
+        "videoDecoding": [],
+        "videoEncoding": []
+      },
+      "modelName": "",
+      "modelVersion": "",
+      "commandLine": "\"<external>\" --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,BlockOriginHeaderModificationOnRedirect,Translate,AutoDeElevate,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --disable-updater-scheduler --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --enable-unsafe-webgpu --ignore-gpu-blocklist --enable-webgpu-developer-features --force-color-profile=srgb --user-data-dir=\"<external>\" --remote-debugging-pipe --no-startup-window --noerrdialogs --flag-switches-begin --flag-switches-end --enable-unsafe-swiftshader"
+    }
+  },
+  "workload": {
+    "content": "6c579475ace30385875d3145d299a908799dfe8b9093a421f55c52e6556bbba9",
+    "product": "b337e526fd6a162013c2984aeec163f5fbb4f717252724dfc3f3458bd51df94b",
+    "reference": "0.186.1"
+  },
+  "counts": {
+    "accepted": 7,
+    "total": 8,
+    "attempts": 8
+  },
+  "problems": [
+    "Missing product-low-presented-three-r0"
+  ],
+  "attempts": [
+    {
+      "path": "passes/product-low-counts-mtek-r0/attempt-1/record.json",
+      "sha256": "abac6b8c774df0afa37b862532f0fa66d86de1657a3fc7a7c25e2622c91f5e8d",
+      "status": "completed",
+      "job": {
+        "scene": "product",
+        "quality": "low",
+        "pass": "counts",
+        "implementation": "mtek",
+        "repeat": 0
+      },
+      "attempt": 1,
+      "verified": true
+    },
+    {
+      "path": "passes/product-low-counts-three-r0/attempt-1/record.json",
+      "sha256": "c22dd0d597863e9716b6666b326c6a397f1bdc7c9f5a60447d9ff5f5c96bd1b0",
+      "status": "completed",
+      "job": {
+        "scene": "product",
+        "quality": "low",
+        "pass": "counts",
+        "implementation": "three",
+        "repeat": 0
+      },
+      "attempt": 1,
+      "verified": true
+    },
+    {
+      "path": "passes/product-low-cpu-mtek-r0/attempt-1/record.json",
+      "sha256": "fa6158546030b80f4b5ebfc9bced3363c20391b88f7449adcd571a75fbad2c5c",
+      "status": "completed",
+      "job": {
+        "scene": "product",
+        "quality": "low",
+        "pass": "cpu",
+        "implementation": "mtek",
+        "repeat": 0
+      },
+      "attempt": 1,
+      "verified": true
+    },
+    {
+      "path": "passes/product-low-cpu-three-r0/attempt-1/record.json",
+      "sha256": "6ec4f80f92cbc9ffbb3132b7540532d5715b5ab7a618e5970ed1eb165b15ff02",
+      "status": "completed",
+      "job": {
+        "scene": "product",
+        "quality": "low",
+        "pass": "cpu",
+        "implementation": "three",
+        "repeat": 0
+      },
+      "attempt": 1,
+      "verified": true
+    },
+    {
+      "path": "passes/product-low-gpu-mtek-r0/attempt-1/record.json",
+      "sha256": "e66742a68a147c99f4e5532b94437680ac834dd767219d2bc953486b3d4b1964",
+      "status": "completed",
+      "job": {
+        "scene": "product",
+        "quality": "low",
+        "pass": "gpu",
+        "implementation": "mtek",
+        "repeat": 0
+      },
+      "attempt": 1,
+      "verified": true
+    },
+    {
+      "path": "passes/product-low-gpu-three-r0/attempt-1/record.json",
+      "sha256": "38305a54f80c92dbb2e587c83ee1959ed38e3c081072eef36b85ff1e34d16796",
+      "status": "completed",
+      "job": {
+        "scene": "product",
+        "quality": "low",
+        "pass": "gpu",
+        "implementation": "three",
+        "repeat": 0
+      },
+      "attempt": 1,
+      "verified": true
+    },
+    {
+      "path": "passes/product-low-presented-mtek-r0/attempt-1/record.json",
+      "sha256": "50b2bcd92947b0a7cca7acfc4f929723001bcd272030ca875f3d46a9c4f6ccf1",
+      "status": "completed",
+      "job": {
+        "scene": "product",
+        "quality": "low",
+        "pass": "presented",
+        "implementation": "mtek",
+        "repeat": 0
+      },
+      "attempt": 1,
+      "verified": true
+    },
+    {
+      "path": "passes/product-low-presented-three-r0/attempt-1/record.json",
+      "sha256": "84d64a73977cda86631707a18e9fccfca25c62f3820cee6f28b4450f8d54b91e",
+      "status": "completed",
+      "job": {
+        "scene": "product",
+        "quality": "low",
+        "pass": "presented",
+        "implementation": "three",
+        "repeat": 0
+      },
+      "attempt": 1
+    }
+  ],
+  "groups": [
+    {
+      "scene": "product",
+      "quality": "low",
+      "implementation": "mtek",
+      "cpu": [
+        {
+          "count": 16,
+          "min": 0.0650000125169754,
+          "max": 0.17000000178813934,
+          "mean": 0.09343750309199095,
+          "p50": 0.08500000834465027,
+          "p95": 0.17000000178813934,
+          "p99": 0.17000000178813934
+        }
+      ],
+      "gpu": [
+        {
+          "count": 16,
+          "min": 0.01888,
+          "max": 0.02052,
+          "mean": 0.0193875,
+          "p50": 0.0192,
+          "p95": 0.02052,
+          "p99": 0.02052
+        }
+      ],
+      "gpuSpan": [
+        {
+          "count": 16,
+          "min": 0.0238,
+          "max": 0.02536,
+          "mean": 0.024282500000000002,
+          "p50": 0.02412,
+          "p95": 0.02536,
+          "p99": 0.02536
+        }
+      ],
+      "cadence": [
+        {
+          "count": 13,
+          "min": 3.2993999999998778,
+          "max": 6.657999999999902,
+          "mean": 3.5868307692307657,
+          "p50": 3.3257999999998447,
+          "p95": 6.657999999999902,
+          "p99": 6.657999999999902
+        }
+      ],
+      "buffers": [
+        164060
+      ],
+      "textures": [
+        92665156
+      ],
+      "draws": [
+        {
+          "count": 16,
+          "min": 12,
+          "max": 12,
+          "mean": 12,
+          "p50": 12,
+          "p95": 12,
+          "p99": 12
+        }
+      ],
+      "uploads": [
+        {
+          "count": 16,
+          "min": 0,
+          "max": 0,
+          "mean": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        }
+      ],
+      "medians": {
+        "cpuP95": 0.17000000178813934,
+        "gpuP95": 0.02052,
+        "gpuSpanP95": 0.02536,
+        "cadenceP95": 6.657999999999902,
+        "bufferBytes": 164060,
+        "textureBytes": 92665156,
+        "drawsP95": 12,
+        "uploadBytesP95": 0
+      }
+    },
+    {
+      "scene": "product",
+      "quality": "low",
+      "implementation": "three",
+      "cpu": [
+        {
+          "count": 16,
+          "min": 0.22499999403953552,
+          "max": 0.49000000953674316,
+          "mean": 0.3037499999627471,
+          "p50": 0.26999999582767487,
+          "p95": 0.49000000953674316,
+          "p99": 0.49000000953674316
+        }
+      ],
+      "gpu": [
+        {
+          "count": 16,
+          "min": 0.01932,
+          "max": 0.02036,
+          "mean": 0.019799999999999998,
+          "p50": 0.01964,
+          "p95": 0.02036,
+          "p99": 0.02036
+        }
+      ],
+      "gpuSpan": [
+        {
+          "count": 16,
+          "min": 0.03316,
+          "max": 0.03416,
+          "mean": 0.033639999999999996,
+          "p50": 0.03356,
+          "p95": 0.03416,
+          "p99": 0.03416
+        }
+      ],
+      "cadence": [],
+      "buffers": [
+        195832
+      ],
+      "textures": [
+        96901456
+      ],
+      "draws": [
+        {
+          "count": 16,
+          "min": 10,
+          "max": 10,
+          "mean": 10,
+          "p50": 10,
+          "p95": 10,
+          "p99": 10
+        }
+      ],
+      "uploads": [
+        {
+          "count": 16,
+          "min": 192,
+          "max": 192,
+          "mean": 192,
+          "p50": 192,
+          "p95": 192,
+          "p99": 192
+        }
+      ],
+      "medians": {
+        "cpuP95": 0.49000000953674316,
+        "gpuP95": 0.02036,
+        "gpuSpanP95": 0.03416,
+        "cadenceP95": null,
+        "bufferBytes": 195832,
+        "textureBytes": 96901456,
+        "drawsP95": 10,
+        "uploadBytesP95": 192
+      }
+    }
+  ]
+}

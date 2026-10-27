@@ -1,0 +1,141 @@
+{
+  "performanceEligible": false,
+  "purpose": "Native output and RAF-only negative-control correctness; host-load qualification is not attempted",
+  "cases": [
+    {
+      "implementation": "three",
+      "setup": {
+        "startupCreationMs": 919.9800000041723,
+        "implementation": "three",
+        "scene": "product",
+        "quality": "low",
+        "pass": "presented",
+        "adapter": {
+          "vendor": "amd",
+          "architecture": "rdna-3",
+          "device": "0x744c",
+          "description": "AMD Radeon RX 7900 XTX",
+          "isFallbackAdapter": false
+        },
+        "deviceFeatures": [
+          "bgra8unorm-storage",
+          "clip-distances",
+          "core-features-and-limits",
+          "depth-clip-control",
+          "depth32float-stencil8",
+          "dual-source-blending",
+          "float32-blendable",
+          "float32-filterable",
+          "indirect-first-instance",
+          "rg11b10ufloat-renderable",
+          "shader-f16",
+          "subgroups",
+          "texture-compression-bc",
+          "texture-compression-bc-sliced-3d",
+          "texture-formats-tier1",
+          "texture-formats-tier2",
+          "timestamp-query"
+        ],
+        "crossOriginIsolated": true,
+        "minimumClockDelta": 0.004999995231628418,
+        "resources": [
+          {
+            "path": "/page.js",
+            "decodedBodySize": 23196
+          },
+          {
+            "path": "/chunks/chunk-JFF2QFK4.js",
+            "decodedBodySize": 11771
+          },
+          {
+            "path": "/favicon.ico",
+            "decodedBodySize": 0
+          },
+          {
+            "path": "/chunks/three-HW3WV2UU.js",
+            "decodedBodySize": 2762504
+          },
+          {
+            "path": "/content.glb",
+            "decodedBodySize": 65480
+          },
+          {
+            "path": "/WaterBottle.glb",
+            "decodedBodySize": 8966700
+          }
+        ],
+        "unknownTextureFormats": []
+      },
+      "refSetup": {
+        "startupCreationMs": 922.3149999976158,
+        "implementation": "three",
+        "scene": "product",
+        "quality": "low",
+        "pass": "correctness",
+        "adapter": {
+          "vendor": "amd",
+          "architecture": "rdna-3",
+          "device": "0x744c",
+          "description": "AMD Radeon RX 7900 XTX",
+          "isFallbackAdapter": false
+        },
+        "deviceFeatures": [
+          "bgra8unorm-storage",
+          "clip-distances",
+          "core-features-and-limits",
+          "depth-clip-control",
+          "depth32float-stencil8",
+          "dual-source-blending",
+          "float32-blendable",
+          "float32-filterable",
+          "indirect-first-instance",
+          "rg11b10ufloat-renderable",
+          "shader-f16",
+          "subgroups",
+          "texture-compression-bc",
+          "texture-compression-bc-sliced-3d",
+          "texture-formats-tier1",
+          "texture-formats-tier2",
+          "timestamp-query"
+        ],
+        "crossOriginIsolated": true,
+        "minimumClockDelta": 0.004999995231628418,
+        "resources": [
+          {
+            "path": "/page.js",
+            "decodedBodySize": 23196
+          },
+          {
+            "path": "/chunks/chunk-JFF2QFK4.js",
+            "decodedBodySize": 11771
+          },
+          {
+            "path": "/favicon.ico",
+            "decodedBodySize": 0
+          },
+          {
+            "path": "/chunks/three-HW3WV2UU.js",
+            "decodedBodySize": 2762504
+          },
+          {
+            "path": "/content.glb",
+            "decodedBodySize": 65480
+          },
+          {
+            "path": "/WaterBottle.glb",
+            "decodedBodySize": 8966700
+          }
+        ],
+        "unknownTextureFormats": []
+      },
+      "comparison": {
+        "meanAbsoluteRgb8": 61.64728732638889,
+        "p95MaximumChannelError8": 70,
+        "fractionOver3": 0.9999088541666666,
+        "passed": false
+      }
+    }
+  ],
+  "status": "failed",
+  "error": "AssertionError [ERR_ASSERTION]: Native/offscreen mismatch: three"
+}

@@ -35,8 +35,8 @@ use crate::source::Span;
 
 use super::shader_ir::{
     BinaryOp, BuiltinValue, Component, Expr, FiniteF32, Function, FunctionParam, FunctionResult,
-    GlobalDecl, GlobalKind, IoBinding, Name, ShaderModule, ShaderStage, ShaderType, Statement,
-    StructDecl, StructMember,
+    GlobalDecl, GlobalKind, Intrinsic, IoBinding, Literal, Name, ShaderModule, ShaderStage,
+    ShaderType, Statement, StructDecl, StructMember,
 };
 
 /// The vertex entry point (`vertexEntry` of the manifest's shader entry).
@@ -67,15 +67,17 @@ pub enum SurfaceField {
     WorldPosition,
     WorldNormal,
     Uv,
+    WorldTangent,
 }
 
 impl SurfaceField {
     /// Every field, in varying-location order.
-    pub const ALL: [SurfaceField; 4] = [
+    pub const ALL: [SurfaceField; 5] = [
         SurfaceField::LocalPosition,
         SurfaceField::WorldPosition,
         SurfaceField::WorldNormal,
         SurfaceField::Uv,
+        SurfaceField::WorldTangent,
     ];
 
     /// The Mtek field name, also the WGSL member name.
@@ -85,6 +87,7 @@ impl SurfaceField {
             SurfaceField::WorldPosition => "world_position",
             SurfaceField::WorldNormal => "world_normal",
             SurfaceField::Uv => "uv",
+            SurfaceField::WorldTangent => "world_tangent",
         }
     }
 
@@ -95,6 +98,7 @@ impl SurfaceField {
             SurfaceField::WorldPosition => 1,
             SurfaceField::WorldNormal => 2,
             SurfaceField::Uv => 3,
+            SurfaceField::WorldTangent => 4,
         }
     }
 
@@ -102,6 +106,7 @@ impl SurfaceField {
     pub fn ty(self) -> ShaderType {
         match self {
             SurfaceField::Uv => ShaderType::VEC2,
+            SurfaceField::WorldTangent => ShaderType::VEC4,
             _ => ShaderType::VEC3,
         }
     }
@@ -121,6 +126,10 @@ pub(super) fn surface_input_layout() -> LayoutType {
                         size: super::shader_ir::VectorSize::Two,
                         ..
                     } => LayoutType::Vec2,
+                    ShaderType::Vector {
+                        size: super::shader_ir::VectorSize::Four,
+                        ..
+                    } => LayoutType::Vec4,
                     _ => LayoutType::Vec3,
                 };
                 (field.name().to_owned(), ty)
@@ -137,6 +146,7 @@ pub enum VertexAttribute {
     Position,
     Normal,
     Uv,
+    Tangent,
 }
 
 impl VertexAttribute {
@@ -146,6 +156,7 @@ impl VertexAttribute {
             VertexAttribute::Position => "position",
             VertexAttribute::Normal => "normal",
             VertexAttribute::Uv => "uv",
+            VertexAttribute::Tangent => "tangent",
         }
     }
 
@@ -155,6 +166,7 @@ impl VertexAttribute {
             VertexAttribute::Position => 0,
             VertexAttribute::Normal => 1,
             VertexAttribute::Uv => 2,
+            VertexAttribute::Tangent => 11,
         }
     }
 
@@ -163,6 +175,7 @@ impl VertexAttribute {
         match self {
             VertexAttribute::Position | VertexAttribute::Normal => "float32x3",
             VertexAttribute::Uv => "float32x2",
+            VertexAttribute::Tangent => "float32x4",
         }
     }
 
@@ -171,6 +184,7 @@ impl VertexAttribute {
         match self {
             VertexAttribute::Position | VertexAttribute::Normal => 12,
             VertexAttribute::Uv => 8,
+            VertexAttribute::Tangent => 16,
         }
     }
 
@@ -178,6 +192,7 @@ impl VertexAttribute {
     pub fn ty(self) -> ShaderType {
         match self {
             VertexAttribute::Uv => ShaderType::VEC2,
+            VertexAttribute::Tangent => ShaderType::VEC4,
             _ => ShaderType::VEC3,
         }
     }
@@ -197,6 +212,9 @@ pub fn vertex_attributes(inputs: &BTreeSet<SurfaceField>) -> Vec<VertexAttribute
     }
     if inputs.contains(&SurfaceField::Uv) {
         attributes.push(VertexAttribute::Uv);
+    }
+    if inputs.contains(&SurfaceField::WorldTangent) {
+        attributes.push(VertexAttribute::Tangent);
     }
     attributes
 }
@@ -249,6 +267,7 @@ pub(super) fn vertex_input_struct(span: Span) -> StructDecl {
             VertexAttribute::Position,
             VertexAttribute::Normal,
             VertexAttribute::Uv,
+            VertexAttribute::Tangent,
         ]
         .into_iter()
         .map(|attribute| StructMember {
@@ -402,13 +421,24 @@ pub fn build_standard_stage(material: &MaterialDescription) -> Result<MaterialSh
     let mut attributes = vertex_attributes(&material.surface_inputs);
     if let Some(vertex) = &material.vertex {
         attributes.retain(|attribute| {
+            if *attribute == VertexAttribute::Tangent
+                && !vertex.fields.iter().any(|field| field.name == "tangent")
+            {
+                // An arbitrary authored deformation invalidates the original frame.
+                // A stage may read it, but must explicitly return its replacement.
+                return false;
+            }
             !vertex
                 .fields
                 .iter()
                 .any(|field| field.name == attribute.name())
                 || *attribute == VertexAttribute::Position
         });
-        for attribute in [VertexAttribute::Normal, VertexAttribute::Uv] {
+        for attribute in [
+            VertexAttribute::Normal,
+            VertexAttribute::Uv,
+            VertexAttribute::Tangent,
+        ] {
             if vertex.inputs.contains(&attribute.name()) && !attributes.contains(&attribute) {
                 attributes.push(attribute);
             }
@@ -666,6 +696,7 @@ fn vertex_entry(
             VertexAttribute::Position,
             VertexAttribute::Normal,
             VertexAttribute::Uv,
+            VertexAttribute::Tangent,
         ]
         .into_iter()
         .map(|a| {
@@ -713,6 +744,22 @@ fn vertex_entry(
     let position = output("position", VertexAttribute::Position);
     let normal = output("normal", VertexAttribute::Normal);
     let uv = output("uv", VertexAttribute::Uv);
+    let tangent = if vertex.is_some_and(|v| !v.fields.iter().any(|field| field.name == "tangent")) {
+        Expr::construct(
+            ShaderType::VEC4,
+            vec![Expr::f32(FiniteF32::ZERO, span)],
+            span,
+        )
+    } else {
+        output("tangent", VertexAttribute::Tangent)
+    };
+    if inputs.contains(&SurfaceField::WorldTangent) {
+        body.push(Statement::Let {
+            name: Name::generated("tangent_model"),
+            value: matrix("model", "model"),
+            span,
+        });
+    }
     // Model/camera transforms always follow authored local deformation.
     body.push(Statement::Let {
         name: world_name.clone(),
@@ -765,6 +812,94 @@ fn vertex_entry(
         SurfaceField::WorldPosition => world().swizzle(&XYZ, span),
         SurfaceField::WorldNormal => Expr::local(world_normal_name.clone(), ShaderType::VEC3, span),
         SurfaceField::Uv => uv.clone(),
+        SurfaceField::WorldTangent => {
+            let model = Expr::local(Name::generated("tangent_model"), ShaderType::Mat4, span);
+            let column = |index| {
+                model
+                    .clone()
+                    .index(
+                        Expr::literal(Literal::U32(index), span),
+                        ShaderType::VEC4,
+                        span,
+                    )
+                    .swizzle(&XYZ, span)
+            };
+            let determinant = Expr::intrinsic(
+                Intrinsic::Dot,
+                vec![
+                    column(0),
+                    Expr::intrinsic(
+                        Intrinsic::Cross,
+                        vec![column(1), column(2)],
+                        ShaderType::VEC3,
+                        span,
+                    ),
+                ],
+                ShaderType::F32,
+                span,
+            );
+            let sign = Expr::intrinsic(Intrinsic::Sign, vec![determinant], ShaderType::F32, span);
+            let direction = Expr::binary(
+                BinaryOp::Multiply,
+                model,
+                Expr::construct(
+                    ShaderType::VEC4,
+                    vec![
+                        tangent.clone().swizzle(&XYZ, span),
+                        Expr::f32(FiniteF32::ZERO, span),
+                    ],
+                    span,
+                ),
+                ShaderType::VEC4,
+                span,
+            )
+            .swizzle(&XYZ, span);
+            // Normalize each transformed vertex frame before interpolation. Keeping
+            // model-dependent lengths would bias varying tangent directions under
+            // nonuniform scale. The unavailable zero frame must stay finite.
+            let direction_name = Name::generated("world_tangent_direction");
+            body.push(Statement::Let {
+                name: direction_name.clone(),
+                value: direction,
+                span,
+            });
+            let direction = Expr::local(direction_name, ShaderType::VEC3, span);
+            let length_squared = Expr::intrinsic(
+                Intrinsic::Dot,
+                vec![direction.clone(), direction.clone()],
+                ShaderType::F32,
+                span,
+            );
+            let safe_length = Expr::intrinsic(
+                Intrinsic::Max,
+                vec![
+                    length_squared,
+                    Expr::f32(FiniteF32::new(1e-20).unwrap_or(FiniteF32::ONE), span),
+                ],
+                ShaderType::F32,
+                span,
+            );
+            let direction = Expr::binary(
+                BinaryOp::Multiply,
+                direction,
+                Expr::intrinsic(
+                    Intrinsic::InverseSqrt,
+                    vec![safe_length],
+                    ShaderType::F32,
+                    span,
+                ),
+                ShaderType::VEC3,
+                span,
+            );
+            let handedness = Expr::binary(
+                BinaryOp::Multiply,
+                tangent.clone().swizzle(&[Component::W], span),
+                sign,
+                ShaderType::F32,
+                span,
+            );
+            Expr::construct(ShaderType::VEC4, vec![direction, handedness], span)
+        }
     }));
     if let Some(value) = &deformed {
         fields.extend(
@@ -991,7 +1126,7 @@ mod tests {
 
     /// Every subset of `SurfaceField::ALL`.
     fn subsets() -> Vec<Vec<SurfaceField>> {
-        (0u32..16)
+        (0u32..(1 << SurfaceField::ALL.len()))
             .map(|mask| {
                 SurfaceField::ALL
                     .iter()
@@ -1022,6 +1157,7 @@ mod tests {
             VertexAttribute::Position,
             VertexAttribute::Normal,
             VertexAttribute::Uv,
+            VertexAttribute::Tangent,
         ]
         .iter()
         .map(|a| (a.name(), a.location(), a.format(), a.array_stride()))
@@ -1032,6 +1168,7 @@ mod tests {
                 ("position", 0, "float32x3", 12),
                 ("normal", 1, "float32x3", 12),
                 ("uv", 2, "float32x2", 8),
+                ("tangent", 11, "float32x4", 16),
             ]
         );
         let varyings: Vec<_> = SurfaceField::ALL
@@ -1044,12 +1181,13 @@ mod tests {
                 ("local_position", 0),
                 ("world_position", 1),
                 ("world_normal", 2),
-                ("uv", 3)
+                ("uv", 3),
+                ("world_tangent", 4)
             ]
         );
         assert_eq!(
             serde_json::to_string(&SurfaceField::ALL).expect("serialisable"),
-            r#"["local_position","world_position","world_normal","uv"]"#
+            r#"["local_position","world_position","world_normal","uv","world_tangent"]"#
         );
         assert_eq!(
             serde_json::to_string(&[VertexAttribute::Position, VertexAttribute::Uv])
@@ -1074,6 +1212,9 @@ mod tests {
             }
             if set.contains(&SurfaceField::Uv) {
                 expected.push(VertexAttribute::Uv);
+            }
+            if set.contains(&SurfaceField::WorldTangent) {
+                expected.push(VertexAttribute::Tangent);
             }
             assert_eq!(shader.vertex_attributes, expected, "{inputs:?}");
             assert_eq!(shader.surface_inputs, inputs);
@@ -1265,7 +1406,16 @@ mod tests {
 
     #[test]
     fn the_wrapper_writes_the_fragment_alpha_and_renormalises_the_world_normal() {
-        let shader = build_standard_stage(&material(&SurfaceField::ALL, None)).expect("built");
+        let shader = build_standard_stage(&material(
+            &[
+                SurfaceField::LocalPosition,
+                SurfaceField::WorldPosition,
+                SurfaceField::WorldNormal,
+                SurfaceField::Uv,
+            ],
+            None,
+        ))
+        .expect("built");
         let text = print_module(&shader.module).text;
         assert!(text.contains("    return mtek_color;\n"), "{text}");
         assert!(

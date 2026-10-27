@@ -3,7 +3,7 @@ import {mkdirSync,writeFileSync} from "node:fs";
 import {join,resolve} from "node:path";
 import {startSandbox} from "../../../examples/scene-inspector/serve.mjs";
 
-const root=resolve(import.meta.dirname,"../../.."),out=join(root,"evidence/platform-step/inspector");mkdirSync(out,{recursive:true});
+const root=resolve(import.meta.dirname,"../../.."),out=resolve(process.env.MTEK_INSPECTOR_EVIDENCE_DIR??join(root,".out/inspector-ui"));mkdirSync(out,{recursive:true});
 const server=await startSandbox(0),browser=await chromium.launch({headless:true,args:["--disable-gpu","--disable-webgpu","--disable-background-networking"]});
 const page=await browser.newPage({viewport:{width:1440,height:1100}}),errors=[];page.on("pageerror",error=>errors.push(error.message));
 try{
@@ -25,7 +25,11 @@ try{
   await panel.getByRole("button",{name:"Pause base clip",exact:true}).click();await step.click();
   await panel.getByRole("slider",{name:"Animation time"}).evaluate(element=>{element.value="1";element.dispatchEvent(new Event("change",{bubbles:true}));});await step.click();
   await expect(panel.getByText("clip · paused · 1.000 / 2.000 s",{exact:true})).toBeVisible();
-  await panel.locator("summary").click();await expect(panel.getByRole("cell",{name:"Hand",exact:true})).toBeVisible();
+  await panel.locator("summary").filter({hasText:/^Skeleton ·/}).click();await expect(panel.getByRole("cell",{name:"Hand",exact:true})).toBeVisible();
+  await panel.locator("summary").filter({hasText:/^Transitions, layers/}).click();
+  await expect(panel.getByText("clip · Reach · no active transition",{exact:true})).toBeVisible();
+  await panel.getByText("World transforms, draw bounds and contacts",{exact:true}).click();
+  await expect(panel.getByText("Spatial data unavailable from this runtime/provider.",{exact:true})).toBeVisible();
   await page.screenshot({path:join(out,"sandbox.png"),fullPage:true});
   await page.getByRole("button",{name:"Replace scene",exact:true}).click();await expect(panel.getByText("No entity selected",{exact:true})).toBeVisible();await expect(panel.getByRole("button",{name:"Undo",exact:true})).toBeDisabled();
   await page.getByRole("button",{name:"Disconnect inspector",exact:true}).click();await expect(panel.getByText("Detached",{exact:true})).toBeVisible();

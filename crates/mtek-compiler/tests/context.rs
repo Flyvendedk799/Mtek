@@ -1498,8 +1498,8 @@ fn goldens_are_all_used_and_the_example_projects_have_no_errors() {
 #[test]
 fn symbol_kinds_are_the_documented_ones() {
     let documented: BTreeSet<&str> = [
-        "scene", "entity", "prefab", "material", "struct", "fn", "cpu_fn", "const", "state",
-        "param",
+        "scene", "entity", "prefab", "material", "compute", "input", "output", "kernel", "struct",
+        "fn", "cpu_fn", "const", "state", "param",
     ]
     .into_iter()
     .collect();
@@ -1589,4 +1589,90 @@ fn example_features_are_pinned() {
     let mut text = serde_json::to_string_pretty(&tags).unwrap();
     text.push('\n');
     assert_golden("examples.features.json", &text);
+}
+
+#[test]
+fn standalone_compute_has_capabilities_symbols_and_a_checked_example() {
+    let source = include_str!("../src/context/examples/12-compute-buffer.mtek");
+    let output = ok(&project(source), &default_options());
+    assert!(
+        output
+            .context
+            .supported
+            .features
+            .contains(&"compute-programs".to_owned())
+    );
+    assert!(
+        !output
+            .context
+            .supported
+            .not_supported
+            .contains(&"compute stages".to_owned())
+    );
+    assert!(
+        output
+            .context
+            .supported
+            .not_supported
+            .contains(&"material-local compute stages".to_owned())
+    );
+    for (name, kind) in [
+        ("Scale", "compute"),
+        ("Scale.gain", "param"),
+        ("Scale.source", "input"),
+        ("Scale.result", "output"),
+        ("Scale.kernel", "kernel"),
+    ] {
+        assert!(
+            output
+                .context
+                .symbols
+                .iter()
+                .any(|symbol| symbol.name == name && symbol.kind == kind),
+            "{name}"
+        );
+    }
+    assert!(
+        output
+            .context
+            .examples
+            .iter()
+            .any(|example| example.source == source)
+    );
+    assert_valid(&output);
+    assert_examples_check(&output);
+    // Capability metadata must describe the ordinary build boundary, not just
+    // successful parsing/checking or a development-only lowering path.
+    let built = mtek_compiler::build(
+        &ProjectRoot::at_base(),
+        &project(source),
+        &mtek_compiler::CompileOptions::with_stub_runtime(mtek_compiler::BuildMode::Test),
+    );
+    assert_eq!(built.report.summary.errors, 0, "{:?}", built.report);
+    let manifest: Value = serde_json::from_slice(&built.files["program.manifest.json"]).unwrap();
+    assert_eq!(manifest["computePrograms"].as_array().unwrap().len(), 1);
+    let shader = manifest["computePrograms"][0]["shader"]["url"]
+        .as_str()
+        .unwrap();
+    assert!(built.files.contains_key(shader));
+
+    let local = project(include_str!(
+        "../../../tests/syntax/fail/e4901_compute_stage.mtek"
+    ));
+    let rejected = mtek_compiler::build(
+        &ProjectRoot::at_base(),
+        &local,
+        &mtek_compiler::CompileOptions::with_stub_runtime(mtek_compiler::BuildMode::Test),
+    );
+    assert!(
+        rejected
+            .report
+            .diagnostics
+            .iter()
+            .any(|d| d.code == Code::E4901)
+    );
+    assert!(
+        rejected.files.is_empty(),
+        "unsupported material stage produced a package"
+    );
 }

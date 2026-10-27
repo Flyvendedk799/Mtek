@@ -76,7 +76,9 @@ const KNOWN_DIFFERENCES: [(&str, &str); 2] = [
 /// The fail fixtures whose only error is `E1040`, by verdict: a member in a
 /// body whose production does not have it is ungrammatical; `param` in an
 /// entity is grammatical (the restriction `param-only-in-prefab`).
-const E1040_UNGRAMMATICAL: [&str; 15] = [
+const E1040_UNGRAMMATICAL: [&str; 16] = [
+    // Authored vertex stages no longer mask this fixture's misplaced items.
+    "fail_module_misplaced",
     "recovery_misplaced_members_then_clean",
     "e1040_entity_at_top_level",
     "e1040_field_in_material",

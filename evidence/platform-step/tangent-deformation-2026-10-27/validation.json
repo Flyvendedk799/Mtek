@@ -1,0 +1,822 @@
+{
+  "format": "mtek-tangent-deformation-validation/1",
+  "recordedAt": "2026-10-27T07:22:00.455Z",
+  "gitBase": "986040bd9c9e284a06231121eb64f5262b81b620",
+  "scope": "Internal optional tangent skinning only; full tangent import/shading/product and platform work remain required",
+  "checks": {
+    "runtime": 1667,
+    "cliIntegration": 41,
+    "cliPrebuilt": 2,
+    "browser": 114,
+    "tangentCases": 16,
+    "packageBudgets": 11
+  },
+  "logs": [
+    {
+      "status": "passed",
+      "command": "npm run test:unit -w @mtek/runtime-web -- --maxWorkers=1",
+      "log": "logs/tangent-foundation-runtime-full.log"
+    },
+    {
+      "status": "passed",
+      "command": "npm run test -w @mtek/browser-tests -- specs/animation specs/m4/scene-lighting.spec.ts specs/m4/pbr-maps.spec.ts specs/m4/pbr.spec.ts specs/m4/pbr-alpha.spec.ts specs/m6/sprite-layers.spec.ts --project=hardware --project=software",
+      "log": "logs/tangent-foundation-regression.log"
+    },
+    {
+      "status": "passed",
+      "command": "npm run check:ts",
+      "log": "logs/tangent-foundation-typescript.log"
+    },
+    {
+      "status": "passed",
+      "command": "focused runtime type-aware ESLint",
+      "log": "logs/tangent-foundation-runtime-lint-final.log"
+    },
+    {
+      "status": "passed",
+      "command": "focused browser type-aware ESLint",
+      "log": "logs/tangent-foundation-browser-lint-verified.log"
+    },
+    {
+      "status": "passed",
+      "command": "cargo test -p mtek-cli --test prebuilt --test cli --locked -j 2 -- --test-threads=2",
+      "log": "logs/tangent-foundation-cli-tests.log"
+    },
+    {
+      "status": "passed",
+      "command": "node scripts/prebuilt-runtime.mjs --check --against-dist",
+      "log": "logs/tangent-foundation-prebuilt-check.log"
+    },
+    {
+      "status": "passed",
+      "command": "npm run build -w @mtek/runtime-web",
+      "log": "logs/tangent-foundation-runtime-rebuild.log"
+    },
+    {
+      "status": "passed",
+      "command": "node scripts/prebuilt-runtime.mjs --write",
+      "log": "logs/tangent-foundation-prebuilt-write.log"
+    },
+    {
+      "status": "passed",
+      "command": "cargo build -p mtek-cli --locked -j 2",
+      "log": "logs/tangent-foundation-cli.log"
+    },
+    {
+      "status": "passed",
+      "command": "node scripts/game-budgets.mjs size --mtek .out/tangent-tools/mtek.exe --json <report>",
+      "log": "logs/tangent-foundation-budgets.log"
+    },
+    {
+      "status": "passed",
+      "command": "MTEK_BIN=.out/tangent-tools/mtek.exe npm run check -w @mtek/release-docs",
+      "log": "logs/tangent-foundation-release.log"
+    },
+    {
+      "status": "rejected",
+      "command": "initial readonly report-shape errors; final TypeScript check passes",
+      "log": "logs/tangent-foundation-ts-current.log"
+    },
+    {
+      "status": "rejected",
+      "command": "initial unnecessary assertion; final lint passes",
+      "log": "logs/tangent-foundation-runtime-lint.log"
+    }
+  ],
+  "sources": [
+    {
+      "path": "packages/runtime-web/src/mesh/skinning.ts",
+      "bytes": 2927,
+      "sha256": "288abe4b4918fdc226e4926001ec3327d81e35259b734717309518e2af404ed7"
+    },
+    {
+      "path": "packages/runtime-web/src/mesh/skinning.test.ts",
+      "bytes": 3878,
+      "sha256": "c49a8f24db1d497541f2b15d8443560e547c129718b33228b6ff5507af064ed0"
+    },
+    {
+      "path": "packages/runtime-web/src/render/gpu-skinning.ts",
+      "bytes": 8750,
+      "sha256": "db40c335ca5b5657b3a8e457e9fec81f2ce856a4e70d1690464467bd839bf0bd"
+    },
+    {
+      "path": "packages/runtime-web/src/test-support/tangent-reference.ts",
+      "bytes": 2268,
+      "sha256": "9b06cce16070031fc42eed28fbb1665fe0bf0e09a2280245b8a07c1542cb51f2"
+    },
+    {
+      "path": "tests/browser/support/tangent-skinning-probe.ts",
+      "bytes": 10491,
+      "sha256": "b6dc3e6649cd6a9f0a0eb8663af1031418cdaa4c8443e217de2d3399e944865e"
+    },
+    {
+      "path": "tests/browser/specs/animation/tangent-skinning.spec.ts",
+      "bytes": 2228,
+      "sha256": "ef32cbe8b31b81ed6791bb5b8fb919df72652653d189071fd9362bdfefc82948"
+    },
+    {
+      "path": "tests/browser/deformation.config.ts",
+      "bytes": 507,
+      "sha256": "9e2643fbeed88cc9f53508f390bb10d1c49375780df4b7008e36a7c45176429e"
+    },
+    {
+      "path": "tests/browser/support/deformation-setup.ts",
+      "bytes": 1013,
+      "sha256": "418240c1ba51e589efd1b204dc1448a87f95548ced9e1e1d0d8570a46d5406f6"
+    },
+    {
+      "path": "tests/browser/support/skinning-probe.ts",
+      "bytes": 5151,
+      "sha256": "5f636b6eb6ec47ae64c1ef2e25cdd5b637e14181e74d3bdfda67a608267fd8c5"
+    },
+    {
+      "path": "tests/browser/specs/animation/gpu-skinning.spec.ts",
+      "bytes": 1760,
+      "sha256": "de06a0bc7d275d47c589afebc10983ad98d757a60aeebc0601edf53839996c39"
+    },
+    {
+      "path": "spec/decisions/0211-tangent-frame-deformation.md",
+      "bytes": 3443,
+      "sha256": "8bedd32ac188ba13955a0bbea6469392f155fae2b89801aed85356b502030532"
+    },
+    {
+      "path": "evidence/platform-step/tangent-progress.md",
+      "bytes": 2463,
+      "sha256": "9ca31fe13e1447751f2ce04cd61ac5c6d000052ea3a2d054fa7503738bd82d48"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 195094,
+      "sha256": "58dbca1b3fa8c0d12d56499d77ba212b2f4d98b2b50a2603eb9c53776f494f40"
+    }
+  ],
+  "prebuilt": {
+    "runtime.js": {
+      "bytes": 1177535,
+      "sha256": "e7a540eee2234ede8d568c601601b20c85633c06ca759affd0792c469aa52757"
+    },
+    "runtime.dev.js": {
+      "bytes": 1189721,
+      "sha256": "63cf347e276624e7b434159b169c535ad952d68421c6c12605c448b74558ebca"
+    },
+    "runtime.min.js": {
+      "bytes": 670649,
+      "sha256": "23ea7a26c4fd22e63a802bc5f7fd0c4754893d95107f6176e8d64096dcfc377d"
+    },
+    "runtime.d.ts": {
+      "bytes": 17640,
+      "sha256": "767560890951b19969928c2fe1d68a2142751512c2bc031d360a30e569878c97"
+    },
+    "PROVENANCE.json": {
+      "bytes": 1472,
+      "sha256": "b069a29648487ee03740720ac70b4e55fea93a69e1e15388444a8fe20dc5b62d"
+    }
+  },
+  "evidence": [
+    {
+      "path": "checkpoint.md",
+      "bytes": 4223,
+      "sha256": "5746c27f401eaa1b763d1cd89e4ac05fc8b9dc0dbd60de20f0d79a8d51420c63"
+    },
+    {
+      "path": "intermediate-focused/hardware/artifacts/.last-run.json.gz",
+      "bytes": 61,
+      "sha256": "558b2d6e27ab97f5fb4352d4e8408524122c35d2ba8909a82c2bfefc71ec330d"
+    },
+    {
+      "path": "intermediate-focused/hardware/environment-hardware.json.gz",
+      "bytes": 1424,
+      "sha256": "87d573d1221e49f5118f847b6d104bf299899283fa217197f53dd7008ae4bd5c"
+    },
+    {
+      "path": "intermediate-focused/hardware/tangent-skinning-1-1025-all-hardware.json.gz",
+      "bytes": 14826,
+      "sha256": "256a0d589db71917ea06d6bbbc7737c960a40e3706d2d0daa06ef02584d5f7f9"
+    },
+    {
+      "path": "intermediate-focused/hardware/tangent-skinning-1-63-all-hardware.json.gz",
+      "bytes": 1782,
+      "sha256": "824c1d20b3774205c3893e4b8050f5ffc7e2428b6908069cfc37e0f0c7b4bb53"
+    },
+    {
+      "path": "intermediate-focused/hardware/tangent-skinning-10-1025-all-hardware.json.gz",
+      "bytes": 23302,
+      "sha256": "946a2babe8540ce0790035a350d9c7b2e7e6a32d71608e2a4ee5e3235e00588e"
+    },
+    {
+      "path": "intermediate-focused/hardware/tangent-skinning-10-63-all-hardware.json.gz",
+      "bytes": 3957,
+      "sha256": "80fbd704573d1f5f53ec9d8737f0af76d5e1c9b95e48aa04c9de07c61899502c"
+    },
+    {
+      "path": "intermediate-focused/hardware/tangent-skinning-50-1025-all-hardware.json.gz",
+      "bytes": 60583,
+      "sha256": "cfa3f92246c914365c6e837a1520b2f9b1330712b8fef3a3f60cd3fd9edd52f4"
+    },
+    {
+      "path": "intermediate-focused/hardware/tangent-skinning-50-63-all-hardware.json.gz",
+      "bytes": 13432,
+      "sha256": "89bf99df208842c4847d74422a0f3eb089037ade6c8acd19ea739bd1c197b395"
+    },
+    {
+      "path": "intermediate-focused/hardware/tangent-skinning-6-1025-mixed-hardware.json.gz",
+      "bytes": 15820,
+      "sha256": "5add060b57c1a0457a3295e5b5971583ac2c533ea2da5017e366d88551900f9f"
+    },
+    {
+      "path": "intermediate-focused/hardware/tangent-skinning-6-63-mixed-hardware.json.gz",
+      "bytes": 2050,
+      "sha256": "79c6b634d38f2f17258029099e0e64afff59c4b858d6ce7964012005026dc860"
+    },
+    {
+      "path": "intermediate-focused/hardware/test-results.json.gz",
+      "bytes": 1838,
+      "sha256": "a64eebac3c71bae114cc1b6c7323679b1e82b446603817b97d5986dab0fc7edf"
+    },
+    {
+      "path": "intermediate-focused/software/artifacts/.last-run.json.gz",
+      "bytes": 61,
+      "sha256": "558b2d6e27ab97f5fb4352d4e8408524122c35d2ba8909a82c2bfefc71ec330d"
+    },
+    {
+      "path": "intermediate-focused/software/environment-software.json.gz",
+      "bytes": 1385,
+      "sha256": "dd397fef8ff95ec08e90ebbe653dea5ec4caa7409c8eec092d68d3f34ef41328"
+    },
+    {
+      "path": "intermediate-focused/software/tangent-skinning-1-1025-all-software.json.gz",
+      "bytes": 14829,
+      "sha256": "e1240327adbd2a83291a54600fb14806dd2958e469fe8715305cea96f8e4b880"
+    },
+    {
+      "path": "intermediate-focused/software/tangent-skinning-1-63-all-software.json.gz",
+      "bytes": 1785,
+      "sha256": "7b7c6df83a785dc770c48d7d10564c992afa0dfd57d0a17e63ddefda7354d57b"
+    },
+    {
+      "path": "intermediate-focused/software/tangent-skinning-10-1025-all-software.json.gz",
+      "bytes": 23305,
+      "sha256": "a7a0dda27a94ef8ef927a30fa1a65e8e21b825c88dcc046257fde5efb556757d"
+    },
+    {
+      "path": "intermediate-focused/software/tangent-skinning-10-63-all-software.json.gz",
+      "bytes": 3958,
+      "sha256": "9675cdb33f52632a7c6fd33c1276052fab52ac7a289689c08ac5d82763abe00b"
+    },
+    {
+      "path": "intermediate-focused/software/tangent-skinning-50-1025-all-software.json.gz",
+      "bytes": 60592,
+      "sha256": "357b1ad0fc15f30780f7908b4028d6bc5a5c7fa768a1a36301c718a05c8074bc"
+    },
+    {
+      "path": "intermediate-focused/software/tangent-skinning-50-63-all-software.json.gz",
+      "bytes": 13450,
+      "sha256": "568a12bebe63136451f936e3b0c772eb7380f08d20e7ffeb82ab74da14677ae4"
+    },
+    {
+      "path": "intermediate-focused/software/tangent-skinning-6-1025-mixed-software.json.gz",
+      "bytes": 15826,
+      "sha256": "1ae12f256eb2cbca563d7d3dfbae24aa78e3fc501f47f2d384863b09fd3594cc"
+    },
+    {
+      "path": "intermediate-focused/software/tangent-skinning-6-63-mixed-software.json.gz",
+      "bytes": 2054,
+      "sha256": "10bdbf05394cdc57de7f65f49f2b696b52fd03bbba6958d0d866a3520c8711d5"
+    },
+    {
+      "path": "intermediate-focused/software/test-results.json.gz",
+      "bytes": 1840,
+      "sha256": "e8b4fa18fdb3d41a2eb3e4c9b5135931216c89133202b30d2ec1242fe821c335"
+    },
+    {
+      "path": "logs/tangent-foundation-browser-lint-verified.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/tangent-foundation-budgets.log",
+      "bytes": 933,
+      "sha256": "4572d1ca56a5527af8813ab166d5263f13713607a3626c2ec93317c20ab02ea3"
+    },
+    {
+      "path": "logs/tangent-foundation-cli-tests.log",
+      "bytes": 3209,
+      "sha256": "82b11aa6aacea22d58cd971f239fe808fc44d453807ae826d33aca8fc699dc7e"
+    },
+    {
+      "path": "logs/tangent-foundation-cli.log",
+      "bytes": 125,
+      "sha256": "66e5a24d97c166a45581be1b4bb35f1bcb1b4d469a1a741478f6eb52aa8d6da6"
+    },
+    {
+      "path": "logs/tangent-foundation-prebuilt-check.log",
+      "bytes": 60,
+      "sha256": "4bea32c5cf2559738f3e78f36b5d034a11eafa4f9cb2c9598577d35bb0661d1d"
+    },
+    {
+      "path": "logs/tangent-foundation-prebuilt-write.log",
+      "bytes": 61,
+      "sha256": "81462e43f8b87d472ed00041504997467cc06c1a6eebd9af8146b5b4c1f89516"
+    },
+    {
+      "path": "logs/tangent-foundation-regression.log",
+      "bytes": 18838,
+      "sha256": "3a515f28b0d7df4644af25ea7d497a0da10c219823da2c0d647da58f115c3916"
+    },
+    {
+      "path": "logs/tangent-foundation-release.log",
+      "bytes": 170,
+      "sha256": "abf9123bb39249c6ea320cffe1b7075f9b74a5fdaf2cf797d0357346801fdae1"
+    },
+    {
+      "path": "logs/tangent-foundation-runtime-full.log",
+      "bytes": 677,
+      "sha256": "a7030d62d587e804abe17d9f7e452fa8f4d831a927040a6ef254e8c2b1f5e9c9"
+    },
+    {
+      "path": "logs/tangent-foundation-runtime-lint-final.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/tangent-foundation-runtime-lint.log",
+      "bytes": 306,
+      "sha256": "eaaac7c5e2cd1332faf97268c834002a278d1af0c2d8304432272eb4b7fe75bf"
+    },
+    {
+      "path": "logs/tangent-foundation-runtime-rebuild.log",
+      "bytes": 384,
+      "sha256": "4e712aaf9a957b08faba676eb54cf9ec7ca3bf2bc19405e1987ae3103ec46838"
+    },
+    {
+      "path": "logs/tangent-foundation-ts-current.log",
+      "bytes": 554,
+      "sha256": "9d108ecc142ef9f789153d4c4cc65d8c14be94241380efbe04cd283a8b7e8dfd"
+    },
+    {
+      "path": "logs/tangent-foundation-typescript.log",
+      "bytes": 69,
+      "sha256": "f69b529a81c6522a394d778b79e8ae92367c8d99be0a286dc03f645a434833fc"
+    },
+    {
+      "path": "package-sizes.json",
+      "bytes": 984,
+      "sha256": "5e3ca2b82a5dab827fd01faad0413295bee75b984bf6069109bac62846192a63"
+    },
+    {
+      "path": "regression/animation-distance-hardware.json",
+      "bytes": 1349,
+      "sha256": "163ea47d1da46815d99aa8ede17262e21364a7c9c494180396932c0a3266a522"
+    },
+    {
+      "path": "regression/animation-distance-software.json",
+      "bytes": 1350,
+      "sha256": "2bc9661a8cde2fad358f310c424098694d15bb79c42d64ae5e030c52fa30a3ca"
+    },
+    {
+      "path": "regression/artifacts/.last-run.json",
+      "bytes": 46,
+      "sha256": "fff6299efb51ba9ef550e500ecc967e972c83e86be387042c360caea7fdbae29"
+    },
+    {
+      "path": "regression/artifacts/animation-locomotion-demo--e83f4-oriented-grips-on-both-rigs-hardware/locomotion-demo.png",
+      "bytes": 50467,
+      "sha256": "88ed20a0aa6f00b63f68a92693c461d1fecd86c07cf8e711f98e0eef1d53a95a"
+    },
+    {
+      "path": "regression/artifacts/animation-locomotion-demo--e83f4-oriented-grips-on-both-rigs-software/locomotion-demo.png",
+      "bytes": 50433,
+      "sha256": "2e499e3368b729e33ebf477931dfe61999214650b577240d801f480fb5a47e29"
+    },
+    {
+      "path": "regression/artifacts/m4-scene-lighting-lighting-83be2-s-through-the-rendered-host-hardware/lighting-studio-inspector.png",
+      "bytes": 101073,
+      "sha256": "47d9ff7461f53ebac04876d8b44f9fd72d68e79af4af5f5f3301f6629c9406df"
+    },
+    {
+      "path": "regression/artifacts/m4-scene-lighting-lighting-83be2-s-through-the-rendered-host-software/lighting-studio-inspector.png",
+      "bytes": 97547,
+      "sha256": "db6eae68854d33a4196c18e5937f4a46a413cdff0e9d9e50272a0c55e7051f7e"
+    },
+    {
+      "path": "regression/artifacts/m4-scene-lighting-lighting-965fc-work-without-browser-errors-hardware/lighting-studio.png",
+      "bytes": 93926,
+      "sha256": "732163077d1d40cbe8094b1dab976063cdd7f1c259f3c3e399316328ad6cb5f9"
+    },
+    {
+      "path": "regression/artifacts/m4-scene-lighting-lighting-965fc-work-without-browser-errors-software/lighting-studio.png",
+      "bytes": 90047,
+      "sha256": "dfd7ae68f4a2342808237cf61e96a705d334f88490379107a13e14d8ca3ea385"
+    },
+    {
+      "path": "regression/crowd-1-1-hardware.json",
+      "bytes": 5270,
+      "sha256": "e660302629f700ed486920de2c35153f535de8d63aca1be09e8c5a7280ec2047"
+    },
+    {
+      "path": "regression/crowd-1-1-software.json",
+      "bytes": 5306,
+      "sha256": "557dfb6473fde58c0d59242ef6e9b29260132072d78fbb09e9e7a4acae9f8bdd"
+    },
+    {
+      "path": "regression/crowd-10-1-hardware.json",
+      "bytes": 5330,
+      "sha256": "dc50c086cd1c8535071a0a4be723daf966dba893eb270b6c538f0b954d3abc22"
+    },
+    {
+      "path": "regression/crowd-10-1-software.json",
+      "bytes": 5297,
+      "sha256": "32720b518e92cdfab21252ff645143f87c11226f733282b75e5a39d27acd377a"
+    },
+    {
+      "path": "regression/crowd-50-5-hardware.json",
+      "bytes": 5359,
+      "sha256": "7a8f3a9785a5360d4d768a41276ce70bbc8c8365c89abb41b72caf5e09b5d92d"
+    },
+    {
+      "path": "regression/crowd-50-5-software.json",
+      "bytes": 5341,
+      "sha256": "a4bc01ca8e9156cd0f34cc5b9253555680ad8d23fa0224d001120cedc023437a"
+    },
+    {
+      "path": "regression/crowd-recovery-hardware.json",
+      "bytes": 2717,
+      "sha256": "5d14a5fec044b0541e626c9699684f65757a9878c991d87d90657f2326d0d09c"
+    },
+    {
+      "path": "regression/crowd-recovery-software.json",
+      "bytes": 2687,
+      "sha256": "43d9cbd98b7018310d8c8ff6efb2b29829086f7915e93ac8377adb4201cb9182"
+    },
+    {
+      "path": "regression/environment-constant-hardware.json",
+      "bytes": 1900,
+      "sha256": "200960457059db45a355fd9e747a380158d20f6e4a6b44b0a17ccd35b6497b3d"
+    },
+    {
+      "path": "regression/environment-constant-software.json",
+      "bytes": 1918,
+      "sha256": "eeeb10eda37ba36ba7adf2b9c4186c25c9450ff65e8c9db8b6ba2924a8565044"
+    },
+    {
+      "path": "regression/environment-directions-hardware.json",
+      "bytes": 167,
+      "sha256": "1ed9043f33573380dfee53bef11567c955bd413b01a151992c175f041b87206f"
+    },
+    {
+      "path": "regression/environment-directions-software.json",
+      "bytes": 167,
+      "sha256": "1ed9043f33573380dfee53bef11567c955bd413b01a151992c175f041b87206f"
+    },
+    {
+      "path": "regression/environment-hardware.json",
+      "bytes": 3481,
+      "sha256": "95c3ee19b46fca3ece4cd335e193afc5f9b08268ee4fbe26657e64666f8f57e7"
+    },
+    {
+      "path": "regression/environment-software.json",
+      "bytes": 3418,
+      "sha256": "4bfebeff5e3768fe2cdaf721dae716af440629903b72de23c4d12d155f4bd3dd"
+    },
+    {
+      "path": "regression/inspection-build.json",
+      "bytes": 2209,
+      "sha256": "a8fb6981dfc0fb3d675585ee7375a780438f3ce7dea8bd81d806e68089fb7381"
+    },
+    {
+      "path": "regression/lighting-input-errors-hardware.json",
+      "bytes": 260,
+      "sha256": "28d1c8b25831181532998a3c4867e51386a6d08a8ad3d642f5b394a0b4f82317"
+    },
+    {
+      "path": "regression/lighting-input-errors-software.json",
+      "bytes": 260,
+      "sha256": "28d1c8b25831181532998a3c4867e51386a6d08a8ad3d642f5b394a0b4f82317"
+    },
+    {
+      "path": "regression/lighting-recovery-hardware.json",
+      "bytes": 1201,
+      "sha256": "7a2a50f9852994e7a4015b55e45544a3b69e9c25ef994799cf8744da7ca27e55"
+    },
+    {
+      "path": "regression/lighting-recovery-software.json",
+      "bytes": 1217,
+      "sha256": "8636670df9d685b186ca9d04788f2e8e5e39319654618163c2f07df69f5c5c1d"
+    },
+    {
+      "path": "regression/lighting-studio-hardware.json",
+      "bytes": 88,
+      "sha256": "85e0b0b70df2886c5905860fad7b75d2606371275b1ecb1eace1e737eccc6cef"
+    },
+    {
+      "path": "regression/lighting-studio-inspector-hardware.json",
+      "bytes": 105,
+      "sha256": "760716d986e3b5fd05cd1c07d006d2d4aa1874ab077656a6a1641b08131f5cb2"
+    },
+    {
+      "path": "regression/lighting-studio-inspector-software.json",
+      "bytes": 105,
+      "sha256": "760716d986e3b5fd05cd1c07d006d2d4aa1874ab077656a6a1641b08131f5cb2"
+    },
+    {
+      "path": "regression/lighting-studio-software.json",
+      "bytes": 88,
+      "sha256": "85e0b0b70df2886c5905860fad7b75d2606371275b1ecb1eace1e737eccc6cef"
+    },
+    {
+      "path": "regression/lit_sampler_boundary-hardware.json",
+      "bytes": 1205,
+      "sha256": "b5df2fdb5a4cf792afceac6420c40d80c5403ced3d8dd908619d541db78414b4"
+    },
+    {
+      "path": "regression/lit_sampler_boundary-software.json",
+      "bytes": 1206,
+      "sha256": "72d55c61375a7a5437db33c738ed86a15166dbb04c3fbabe2131b840b4cc3444"
+    },
+    {
+      "path": "regression/lit_texture_boundary-hardware.json",
+      "bytes": 1191,
+      "sha256": "e7048870e12468fa50adf3b710bdd443cf7df50f42db6ec893b79ae7b0355cb5"
+    },
+    {
+      "path": "regression/lit_texture_boundary-software.json",
+      "bytes": 1191,
+      "sha256": "64b0821ffc0fd5110a18880be0f0daff1bc00f6f6eb2e5787facfad8dbcfc33a"
+    },
+    {
+      "path": "regression/locomotion-demo-hardware.json",
+      "bytes": 1462,
+      "sha256": "2d27da8608a60f688444f1cc874b4813ed27aa8df90813db618a2f71bd3eb34e"
+    },
+    {
+      "path": "regression/locomotion-demo-software.json",
+      "bytes": 1460,
+      "sha256": "b205197d0c59458e21d899737d0d54ec23151e7e5cd939513543550f8f79ee03"
+    },
+    {
+      "path": "regression/pbr-alpha-hardware.json",
+      "bytes": 4123,
+      "sha256": "90dd81ec179236210d3e4db07f9150ad234b531990f93f9e2ff872aa3e0e7ac3"
+    },
+    {
+      "path": "regression/pbr-alpha-software.json",
+      "bytes": 4123,
+      "sha256": "3bcbc67694eb7d3a27001e1775d551a60d34cba19fc1b60f0aa04f608c2bb639"
+    },
+    {
+      "path": "regression/pbr-maps-degenerate-hardware.json",
+      "bytes": 2953,
+      "sha256": "5ebae428a8e2a9bec1969e0c8dcf7be8b8f8fde0f76bf2fbedbce97939d469ae"
+    },
+    {
+      "path": "regression/pbr-maps-degenerate-software.json",
+      "bytes": 2955,
+      "sha256": "d1903e71ff0c129be3d79f377945cc386bb1f62880b7fd8153d69e8b5109a48e"
+    },
+    {
+      "path": "regression/pbr-maps-mirrored-hardware.json",
+      "bytes": 2951,
+      "sha256": "6930bf641c7af164ae7a30c52e318754a8ad163ed776b76c10c238f0250f6cdb"
+    },
+    {
+      "path": "regression/pbr-maps-mirrored-software.json",
+      "bytes": 2967,
+      "sha256": "734f931bc0ac0286fad861154f853eb785280766d9073dde785490fd268e21b7"
+    },
+    {
+      "path": "regression/pbr-maps-recovery-hardware.json",
+      "bytes": 1249,
+      "sha256": "286d9e00c24f93cd589ce60dd5f23453332ca73397028361788c839eb0a3ce20"
+    },
+    {
+      "path": "regression/pbr-maps-recovery-software.json",
+      "bytes": 1249,
+      "sha256": "9b17f8b2b0b7a3a9cf3fc2fd2eef132877477f88e60d68569fbbc9f5faec9d50"
+    },
+    {
+      "path": "regression/pbr-maps-regular-hardware.json",
+      "bytes": 2966,
+      "sha256": "cbaa7410fd7232f5bec11274a2470d5fa5d6ea90da3c5379a6751201df5b2cf7"
+    },
+    {
+      "path": "regression/pbr-maps-regular-software.json",
+      "bytes": 2967,
+      "sha256": "63a936bf6b2c97e6d7292f76f2d4d53dc2e41c25f44b0b16f332733fd21cfa57"
+    },
+    {
+      "path": "regression/shadow-skin-hardware.json",
+      "bytes": 2294,
+      "sha256": "08d0520840a4ef006462177aacd2d6c2fd6d71bff98200459f4d3b3e4a3d581f"
+    },
+    {
+      "path": "regression/shadow-skin-software.json",
+      "bytes": 2294,
+      "sha256": "08d0520840a4ef006462177aacd2d6c2fd6d71bff98200459f4d3b3e4a3d581f"
+    },
+    {
+      "path": "regression/shadows-high-hardware.json",
+      "bytes": 2504,
+      "sha256": "89beeaaeb36f6ab18662b6cbb309965a44f8dfadbbf740153e51a0a12377c2ce"
+    },
+    {
+      "path": "regression/shadows-high-software.json",
+      "bytes": 2499,
+      "sha256": "2dcf8805654c65d6df48f636c0deb03893465f4dbd39cd491ce1dd7114ea562c"
+    },
+    {
+      "path": "regression/shadows-low-hardware.json",
+      "bytes": 2471,
+      "sha256": "dba4d0f0f38c70a2252274453789c11c0ae4185a5260cdf68e9913a6a5defc06"
+    },
+    {
+      "path": "regression/shadows-low-software.json",
+      "bytes": 2519,
+      "sha256": "26d9024194513998f8d7c422c0b61197ddbca452fa3d24347063796bcfa02c59"
+    },
+    {
+      "path": "regression/shadows-medium-hardware.json",
+      "bytes": 2487,
+      "sha256": "2b9dd3295de750105ef524f24b78a1feac719a67aecba6a814019e3606cf052c"
+    },
+    {
+      "path": "regression/shadows-medium-software.json",
+      "bytes": 2504,
+      "sha256": "86141afb887466c4e515f26ed7a1bcfb55db8bbe30fbb79b82d4d3a0b025dc67"
+    },
+    {
+      "path": "regression/tangent-skinning-1-1025-all-hardware.json.gz",
+      "bytes": 14851,
+      "sha256": "7b265d1704e42fe633837fe919ba28f4226e7db099580657bca89010a73716dc"
+    },
+    {
+      "path": "regression/tangent-skinning-1-1025-all-software.json.gz",
+      "bytes": 14854,
+      "sha256": "10bae2a0863ad5349b8ff92cfcc5d321072eabbe5668dff65664ba4e92f730fe"
+    },
+    {
+      "path": "regression/tangent-skinning-1-63-all-hardware.json.gz",
+      "bytes": 1801,
+      "sha256": "1506bba29782c6b63ae1a014468bf8f9646c311fe6d87a733c1a2435593f4a9b"
+    },
+    {
+      "path": "regression/tangent-skinning-1-63-all-software.json.gz",
+      "bytes": 1803,
+      "sha256": "be9f9cb23bf60d77a908f34ca888eb81fe7aa450f9cc5527e74db975cf36981a"
+    },
+    {
+      "path": "regression/tangent-skinning-10-1025-all-hardware.json.gz",
+      "bytes": 23325,
+      "sha256": "dec0e0f478a560a752d372c7373da184a1364d0e1deb04a85015d82ba58fe563"
+    },
+    {
+      "path": "regression/tangent-skinning-10-1025-all-software.json.gz",
+      "bytes": 23329,
+      "sha256": "ab8769b66df20ba4f350720762635a0da812943da41512f59883fbc4b55b313a"
+    },
+    {
+      "path": "regression/tangent-skinning-10-63-all-hardware.json.gz",
+      "bytes": 3977,
+      "sha256": "3ff1bc1fed26ccecbc128132eb7b2393ecffedd1835fe02df7992a2d14324d33"
+    },
+    {
+      "path": "regression/tangent-skinning-10-63-all-software.json.gz",
+      "bytes": 3978,
+      "sha256": "dffa61bcc61a01f5d21bed6bfde2c0df09a3c428bee20ca124460bfec297f2eb"
+    },
+    {
+      "path": "regression/tangent-skinning-50-1025-all-hardware.json.gz",
+      "bytes": 60604,
+      "sha256": "e2ac5ce94e2d07ca1483adcf2b64adc8d7afe58b4ab6e5e047163ec7376148b9"
+    },
+    {
+      "path": "regression/tangent-skinning-50-1025-all-software.json.gz",
+      "bytes": 60615,
+      "sha256": "e325ab7f5e12fe2d38c6c43598831d1ea9999da68eb3df51c3ab9b5634c804da"
+    },
+    {
+      "path": "regression/tangent-skinning-50-63-all-hardware.json.gz",
+      "bytes": 13453,
+      "sha256": "d4e9793202121498581880ad4379311f5c3af04da93454b8492fe2086b1d8135"
+    },
+    {
+      "path": "regression/tangent-skinning-50-63-all-software.json.gz",
+      "bytes": 13471,
+      "sha256": "cf257760b3112e7dca01c4d6a94594e3478fbf9ff376fc9c665633dde142f0b7"
+    },
+    {
+      "path": "regression/tangent-skinning-6-1025-mixed-hardware.json.gz",
+      "bytes": 15845,
+      "sha256": "fe6e68620cb8f69a0801a187f3671fa81ed3ae0dc495e2f87bc1230c8d521301"
+    },
+    {
+      "path": "regression/tangent-skinning-6-1025-mixed-software.json.gz",
+      "bytes": 15851,
+      "sha256": "58ff3672832adf44518614937c513091476bb1748d23f5d50763ef8f708fc3f6"
+    },
+    {
+      "path": "regression/tangent-skinning-6-63-mixed-hardware.json.gz",
+      "bytes": 2069,
+      "sha256": "590eb4a52d01a0585849a802601f572b7023f1a3e086c71e028b6135f8bed68c"
+    },
+    {
+      "path": "regression/tangent-skinning-6-63-mixed-software.json.gz",
+      "bytes": 2073,
+      "sha256": "f47f37374933720e5e96bb292450d6bb9accec034a8de5a3c685c4afa1bcd50b"
+    },
+    {
+      "path": "regression/test-results.json",
+      "bytes": 140022,
+      "sha256": "6c94073ef3c531277369ad73f7fd39ff6c9d8befd8ed67b3a1b0f45d9c530508"
+    },
+    {
+      "path": "shaders/normals.wgsl",
+      "bytes": 1509,
+      "sha256": "b7ca0e7c14d8fa9e1137606332c76634689a61a07794822964714e8ef9698f0f"
+    },
+    {
+      "path": "shaders/positions.wgsl",
+      "bytes": 868,
+      "sha256": "99948b7da4f89962f3eff37d2adec535dec2913faff404374b4d2d1dfe44fc9e"
+    },
+    {
+      "path": "shaders/tangents.wgsl",
+      "bytes": 2098,
+      "sha256": "3d808815a7653814c4e71a0f066fc975ba5cddf9977ad13b9f743bfe0cce58ff"
+    },
+    {
+      "path": "sources/evidence/platform-step/tangent-progress.md",
+      "bytes": 2463,
+      "sha256": "9ca31fe13e1447751f2ce04cd61ac5c6d000052ea3a2d054fa7503738bd82d48"
+    },
+    {
+      "path": "sources/package-lock.json",
+      "bytes": 195094,
+      "sha256": "58dbca1b3fa8c0d12d56499d77ba212b2f4d98b2b50a2603eb9c53776f494f40"
+    },
+    {
+      "path": "sources/packages/runtime-web/src/mesh/skinning.test.ts",
+      "bytes": 3878,
+      "sha256": "c49a8f24db1d497541f2b15d8443560e547c129718b33228b6ff5507af064ed0"
+    },
+    {
+      "path": "sources/packages/runtime-web/src/mesh/skinning.ts",
+      "bytes": 2927,
+      "sha256": "288abe4b4918fdc226e4926001ec3327d81e35259b734717309518e2af404ed7"
+    },
+    {
+      "path": "sources/packages/runtime-web/src/render/gpu-skinning.ts",
+      "bytes": 8750,
+      "sha256": "db40c335ca5b5657b3a8e457e9fec81f2ce856a4e70d1690464467bd839bf0bd"
+    },
+    {
+      "path": "sources/packages/runtime-web/src/test-support/tangent-reference.ts",
+      "bytes": 2268,
+      "sha256": "9b06cce16070031fc42eed28fbb1665fe0bf0e09a2280245b8a07c1542cb51f2"
+    },
+    {
+      "path": "sources/spec/decisions/0211-tangent-frame-deformation.md",
+      "bytes": 3443,
+      "sha256": "8bedd32ac188ba13955a0bbea6469392f155fae2b89801aed85356b502030532"
+    },
+    {
+      "path": "sources/tests/browser/deformation.config.ts",
+      "bytes": 507,
+      "sha256": "9e2643fbeed88cc9f53508f390bb10d1c49375780df4b7008e36a7c45176429e"
+    },
+    {
+      "path": "sources/tests/browser/specs/animation/gpu-skinning.spec.ts",
+      "bytes": 1760,
+      "sha256": "de06a0bc7d275d47c589afebc10983ad98d757a60aeebc0601edf53839996c39"
+    },
+    {
+      "path": "sources/tests/browser/specs/animation/tangent-skinning.spec.ts",
+      "bytes": 2228,
+      "sha256": "ef32cbe8b31b81ed6791bb5b8fb919df72652653d189071fd9362bdfefc82948"
+    },
+    {
+      "path": "sources/tests/browser/support/deformation-setup.ts",
+      "bytes": 1013,
+      "sha256": "418240c1ba51e589efd1b204dc1448a87f95548ced9e1e1d0d8570a46d5406f6"
+    },
+    {
+      "path": "sources/tests/browser/support/skinning-probe.ts",
+      "bytes": 5151,
+      "sha256": "5f636b6eb6ec47ae64c1ef2e25cdd5b637e14181e74d3bdfda67a608267fd8c5"
+    },
+    {
+      "path": "sources/tests/browser/support/tangent-skinning-probe.ts",
+      "bytes": 10491,
+      "sha256": "b6dc3e6649cd6a9f0a0eb8663af1031418cdaa4c8443e217de2d3399e944865e"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 21286,
+      "sha256": "71a38c621b5a3d87ebda24750a46c47c8362c5393e75c49b01bcf160c90dbd3d"
+    },
+    {
+      "path": "unchanged-product-rejection.json",
+      "bytes": 1038,
+      "sha256": "d9e6a692eaff10b874b7a39411b42e7dd5af7d91533f55929356a1e1f243ee46"
+    }
+  ]
+}

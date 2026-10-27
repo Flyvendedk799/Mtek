@@ -835,10 +835,10 @@ impl Parser<'_> {
         let name = self.text_of(word);
         let diagnostic = Diagnostic::new(
             Code::E4901,
-            format!("Custom `{name}` stages are not supported in v0.1; they are planned for v0.2."),
+            format!("`{name}` is not a material stage in v0.1; declare a standalone `compute Name {{ ... }}` program."),
         )
         .at(word)
-        .help("a material requires `fragment(input: SurfaceInput) -> color` and may declare `vertex(input: VertexInput) -> vec3`");
+        .help("use `kernel(input: ComputeInput) -> T` inside the standalone compute declaration; materials use fragment and optional vertex stages");
         self.report(diagnostic);
         self.bump();
         drop(self.param_list());

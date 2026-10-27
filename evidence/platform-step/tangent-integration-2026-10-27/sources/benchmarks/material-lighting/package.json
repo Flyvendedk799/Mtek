@@ -1,0 +1,20 @@
+{
+  "name": "@mtek/material-lighting-benchmarks",
+  "version": "0.1.0-dev",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "test:unit": "node test.mjs",
+    "prepare:bench": "node prepare.mjs",
+    "verify:hardware": "node verify.mjs hardware",
+    "verify:software": "node verify.mjs software"
+  },
+  "dependencies": { "three": "0.186.1" },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.63.0",
+    "esbuild": "0.28.2",
+    "eslint": "10.12.0"
+  }
+}

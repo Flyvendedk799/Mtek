@@ -1,5 +1,5 @@
-/** Internal compute resource contract. Public packaging/dispatch remain gated until
- * manifest, mounted lifetime and source-to-GPU validation are connected. */
+/** Internal compute resource contract used by packaged, mounted owners. Public
+ * source builds remain gated pending source-to-GPU acceptance. */
 import type { MtekLayoutArrayNode, MtekLayoutNode, MtekLayoutRecord } from "../abi/manifest-types.js";
 
 export interface ComputeBufferDefinition {

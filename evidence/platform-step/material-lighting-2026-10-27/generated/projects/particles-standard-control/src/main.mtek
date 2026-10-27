@@ -1,0 +1,50 @@
+const MODEL = asset.glb("../models/content.glb");
+
+scene Workload {
+    clear_color: #111a26;
+    ambient_intensity: 0.0;
+    camera Main {
+        position: vec3(8.0, 5.0, 10.0);
+        target: vec3(0.0, 1.0, 0.0);
+        projection: Perspective { fov_y: 0.7; near: 0.1; far: 60.0 };
+        exposure: -0.2630344;
+    }
+    entity Sun {
+        rotation: quat.euler(-0.9, 0.6, 0);
+        light: DirectionalLight { color: #fff2dc; intensity: 2.5 };
+    }
+    entity Floor {
+        position: vec3(0.0, -0.15, 0.0);
+        rotation: quat.euler(0.0, 0.0, 0.0);
+        scale: vec3(16.0, 0.3, 14.0);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Ground");
+    }
+    entity Obstacle {
+        position: vec3(0.0, 0.5, -1.0);
+        rotation: quat.euler(0.0, 0.0, 0.0);
+        scale: vec3(4.0, 1.0, 1.0);
+        mesh: MODEL.mesh("Box");
+        material: MODEL.material("Mapped");
+    }
+    entity Emitter0 {
+        position: vec3(-2.25, 0.2, 0.0);
+        mesh: MODEL.mesh("Quad");
+        material: Unlit { color: color.linear(vec3(1.0, 0.3, 0.05), 0.45) };
+    }
+    entity Emitter1 {
+        position: vec3(-0.75, 0.2, 0.0);
+        mesh: MODEL.mesh("Quad");
+        material: Unlit { color: color.linear(vec3(0.1, 0.65, 0.95), 0.45) };
+    }
+    entity Emitter2 {
+        position: vec3(0.75, 0.2, 0.0);
+        mesh: MODEL.mesh("Quad");
+        material: Unlit { color: color.linear(vec3(1.0, 0.3, 0.05), 0.45) };
+    }
+    entity Emitter3 {
+        position: vec3(2.25, 0.2, 0.0);
+        mesh: MODEL.mesh("Quad");
+        material: Unlit { color: color.linear(vec3(0.1, 0.65, 0.95), 0.45) };
+    }
+}

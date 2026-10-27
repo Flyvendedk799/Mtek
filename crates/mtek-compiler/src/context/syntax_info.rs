@@ -21,14 +21,14 @@ pub struct SyntaxRule {
 }
 
 /// The rules, in the order the context lists them.
-pub const RULES: [SyntaxRule; 8] = [
+pub const RULES: [SyntaxRule; 9] = [
     SyntaxRule {
-        text: "Declarations, fields, assignments and statements end with ';', even before '}'.",
+        text: "Declarations/fields/assignments/statements need ';', before '}' too.",
         violation: "scene Demo {\n    camera Main {}\n    clear_color: #000000\n}\n",
         code: Code::E1003,
     },
     SyntaxRule {
-        text: "Floats: 1.0, 0.5, 2.5e-3; digits required on both sides of '.'. Integers: unsigned decimal, no leading zeros.",
+        text: "Floats 1.0,0.5,2.5e-3: digits around '.'; integers unsigned decimal, no leading zeros.",
         violation: "scene Demo {\n    camera Main {}\n    ambient_intensity: 1.;\n}\n",
         code: Code::E0022,
     },
@@ -43,24 +43,29 @@ pub const RULES: [SyntaxRule; 8] = [
         code: Code::E1010,
     },
     SyntaxRule {
-        text: "No implicit conversions; numeric literals may take expected numeric types.",
+        text: "No implicit conversions; literals take expected numeric types.",
         violation: "scene Demo {\n    camera Main {}\n    state n: i32 = 1;\n    state f: f32 = 1.0;\n    on key_down(Key.Space) {\n        f = n;\n    }\n}\n",
         code: Code::E3001,
     },
     SyntaxRule {
-        text: "import {Name} from \"./path.mtek\"; paths start ./ or ../ and end .mtek.",
+        text: "import {Name} from \"./path.mtek\"; paths: ./ or ../, .mtek suffix.",
         violation: "import { Helper } from \"helper.mtek\";\n\nscene Demo {\n    camera Main {}\n}\n",
         code: Code::E2034,
     },
     SyntaxRule {
-        text: "Scenes need a camera: camera Main {}.",
+        text: "Scene camera: camera Main {}.",
         violation: "scene Demo {\n    entity Cube {\n        mesh: Box {};\n    }\n}\n",
         code: Code::E5012,
     },
     SyntaxRule {
-        text: "Fields/params must exist on their schema/declaration.",
+        text: "Fields/params must be declared.",
         violation: "scene Demo {\n    camera Main {}\n    entity Cube {\n        mesh: Box { sizee: vec3(1.0); };\n    }\n}\n",
         code: Code::E5001,
+    },
+    SyntaxRule {
+        text: "compute P { param gain:f32=2.0; input src:array<T,N>; output dst:array<T,N>; kernel(i:ComputeInput)->T{return src[i.index];} } Host: app.createCompute. Fixed N; <=4 inputs, 1 output.",
+        violation: "compute P { kernel(i:ComputeInput)->f32 { return 0.0; } } scene Demo { camera Main {} }",
+        code: Code::E4050,
     },
 ];
 

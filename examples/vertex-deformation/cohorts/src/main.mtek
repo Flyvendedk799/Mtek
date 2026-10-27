@@ -1,0 +1,160 @@
+// Original pinned Khronos sample assets; see README.md for attribution.
+const FOX = asset.glb("../models/Fox.glb");
+
+const MAN = asset.glb("../models/CesiumMan.glb");
+
+struct UVVertex {
+    position: vec3;
+    uv: vec2;
+    mask: f32;
+}
+
+material FoxShape {
+    param stretch: vec3;
+    param image: texture;
+    param filter: sampler = sampler.linear_repeat();
+    vertex(input: VertexInput) -> UVVertex {
+        return UVVertex {
+            position: input.position * stretch;
+            uv: vec2(input.uv.y, 1.0 - input.uv.x);
+            mask: input.uv.x;
+        };
+    }
+    fragment(surface: SurfaceInput, data: UVVertex) -> color {
+        return color.linear(sample(image, filter, surface.uv).xyz * (0.5 + 0.5 * data.mask), 1.0);
+    }
+}
+
+struct LitVertex {
+    position: vec3;
+    normal: vec3;
+    uv: vec2;
+    mask: f32;
+}
+
+material ManShape {
+    param stretch: vec3;
+    param image: texture;
+    param filter: sampler = sampler.linear_repeat();
+    vertex(input: VertexInput) -> LitVertex {
+        return LitVertex {
+            position: input.position * stretch;
+            normal: normalize(input.normal / stretch);
+            uv: vec2(input.uv.y, 1.0 - input.uv.x);
+            mask: input.uv.x;
+        };
+    }
+    fragment(surface: SurfaceInput, data: LitVertex) -> color {
+        let rgb = sample(image, filter, surface.uv).xyz * (0.5 + 0.5 * data.mask);
+        return lighting.pbr(surface, color.linear(rgb, 1.0), 0.0, 0.7);
+    }
+}
+
+material FoxSurface {
+    param image: texture;
+    param filter: sampler = sampler.linear_repeat();
+    fragment(surface: SurfaceInput) -> color {
+        let uv = vec2(surface.uv.y, 1.0 - surface.uv.x);
+        return color.linear(sample(image, filter, uv).xyz * (0.5 + 0.5 * surface.uv.x), 1.0);
+    }
+}
+
+material ManSurface {
+    param image: texture;
+    param filter: sampler = sampler.linear_repeat();
+    fragment(surface: SurfaceInput) -> color {
+        let uv = vec2(surface.uv.y, 1.0 - surface.uv.x);
+        let rgb = sample(image, filter, uv).xyz * (0.5 + 0.5 * surface.uv.x);
+        return lighting.pbr(surface, color.linear(rgb, 1.0), 0.0, 0.7);
+    }
+}
+
+prefab FoxActor {
+    param origin: vec3;
+    param stretch: vec3;
+    position: origin;
+    rotation: quat.euler(0.0, 0.2, 0.0);
+    scale: vec3(1.1, 0.9, 1.3) * 0.015625;
+    bounds_center: vec3(0.0, 30.0, 0.0) * stretch;
+    bounds_radius: 200.0 * max(stretch.x, max(stretch.y, stretch.z));
+    mesh: FOX.mesh("fox1");
+    material: FoxShape { stretch: stretch; image: FOX.material_texture("fox_material") };
+}
+
+prefab FoxReference {
+    param origin: vec3;
+    param stretch: vec3;
+    position: origin;
+    rotation: quat.euler(0.0, 0.2, 0.0);
+    scale: stretch * vec3(1.1, 0.9, 1.3) * 0.015625;
+    mesh: FOX.mesh("fox1");
+    material: FoxSurface { image: FOX.material_texture("fox_material") };
+}
+
+prefab ManActor {
+    param origin: vec3;
+    param stretch: vec3;
+    position: origin;
+    rotation: quat.euler(-1.5707963, 0.2, 0.0);
+    scale: vec3(1.1, 0.9, 1.3) * 2.0;
+    bounds_center: vec3(0.0, 0.0, 0.75) * stretch;
+    bounds_radius: 2.0 * max(stretch.x, max(stretch.y, stretch.z));
+    mesh: MAN.mesh("Cesium_Man");
+    material: ManShape { stretch: stretch; image: MAN.material_texture("Cesium_Man-effect") };
+}
+
+prefab ManReference {
+    param origin: vec3;
+    param stretch: vec3;
+    position: origin;
+    rotation: quat.euler(-1.5707963, 0.2, 0.0);
+    scale: stretch * vec3(1.1, 0.9, 1.3) * 2.0;
+    mesh: MAN.mesh("Cesium_Man");
+    material: ManSurface { image: MAN.material_texture("Cesium_Man-effect") };
+}
+
+scene Demo {
+    clear_color: #101b25;
+    ambient_intensity: 0.12;
+    state count: i32 = 10;
+    state character: i32 = 0;
+    state reference: bool = false;
+    state shape: vec3 = vec3(0.75, 1.25, 0.5);
+    state created: bool = false;
+    camera Main {
+        position: vec3(16.0, 19.0, 24.0);
+        target: vec3(0.0, 0.5, 0.0);
+        projection: Orthographic { height: 25.0; near: 0.1; far: 80.0 };
+        exposure: -0.2630344;
+    }
+    entity Sun {
+        rotation: quat.euler(-0.7, 1.0, 0.0);
+        light: DirectionalLight { intensity: 3.0 };
+    }
+    entity Floor {
+        mesh: Plane { size: vec2(32.0) };
+        material: Pbr { base_color: #858e9a; roughness: 0.8 };
+    }
+    // Initial host inputs are applied before this first update. Rebuild to change the population.
+    update(dt: f32) {
+        if !created {
+            created = true;
+            for i in 0..clamp(count, 1, 50) {
+                let origin = vec3(f32(i % 10) * 2.3 - 10.35, 0.0, f32(i / 10) * 3.6 - 7.2);
+                if character == 0 {
+                    if reference {
+                        spawn(FoxReference { origin: origin; stretch: shape });
+                    } else {
+                        spawn(FoxActor { origin: origin; stretch: shape });
+                    }
+                } else {
+                    if reference {
+                        spawn(ManReference { origin: origin; stretch: shape });
+                    } else {
+                        spawn(ManActor { origin: origin; stretch: shape });
+                    }
+                }
+            }
+        }
+    }
+}

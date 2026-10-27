@@ -1,5 +1,4 @@
-//! Development source-compute checking. E4901 intentionally prevents packaging
-//! until the checked declarations are connected to WGSL artifacts and dispatch.
+//! Bounded public source-compute checking, effects and packaging.
 
 #![allow(clippy::panic)]
 
@@ -51,9 +50,14 @@ fn codes(analysis: &Analysis) -> Vec<Code> {
 }
 
 #[test]
-fn source_resources_kernel_and_workgroup_are_checked_before_build_gate() {
+fn source_resources_kernel_and_workgroup_are_checked() {
     let analysis = checked(PROGRAM);
-    assert_eq!(codes(&analysis), vec![Code::E4901], "{:?}", analysis.report);
+    assert_eq!(
+        codes(&analysis),
+        Vec::<Code>::new(),
+        "{:?}",
+        analysis.report
+    );
     let types = analysis
         .types
         .as_ref()
@@ -74,6 +78,21 @@ fn source_resources_kernel_and_workgroup_are_checked_before_build_gate() {
     );
     assert!(compute.kernel.is_some());
     assert_eq!(compute.output.as_ref().map(|b| b.capacity), Some(128));
+}
+
+#[test]
+fn invalid_entry_names_reach_the_compute_signature_diagnostic() {
+    for name in ["_", "fragment", "vertex", "not_kernel"] {
+        let source = PROGRAM.replace("kernel(", &format!("{name}("));
+        let mut lexed = lex_str(FileId(0), &source);
+        let mut syntax = Diagnostics::new();
+        lexed.report_into(&mut syntax);
+        let _ = parse_module(&source, &lexed.tokens, &lexed.trivia, &mut syntax);
+        assert!(syntax.is_empty(), "{name}: {syntax:?}");
+        let errors = codes(&checked(&source));
+        assert!(errors.contains(&Code::E4050), "{name}: {errors:?}");
+        assert!(!errors.contains(&Code::E1001), "{name}: {errors:?}");
+    }
 }
 
 #[test]
@@ -121,7 +140,7 @@ fn invocation_fields_are_typed_u32() {
         "local_index",
     ] {
         let source = PROGRAM.replace("input.index", &format!("input.{field}"));
-        assert_eq!(codes(&checked(&source)), vec![Code::E4901], "{field}");
+        assert_eq!(codes(&checked(&source)), Vec::<Code>::new(), "{field}");
     }
     let source = PROGRAM.replace("input.index", "input.unknown");
     assert!(codes(&checked(&source)).contains(&Code::E3023));
@@ -149,14 +168,19 @@ fn buffers_are_resources_and_inputs_are_immutable() {
         );
     }
     let source = PROGRAM.replace("source[input.index]", "((source))[input.index]");
-    assert_eq!(codes(&checked(&source)), vec![Code::E4901]);
+    assert_eq!(codes(&checked(&source)), Vec::<Code>::new());
 }
 
 #[test]
 fn storage_capacity_uses_its_byte_budget_instead_of_uniform_array_cap() {
     let source = PROGRAM.replace("128;", "1000000;").replace("vec4", "f32");
     let analysis = checked(&source);
-    assert_eq!(codes(&analysis), vec![Code::E4901], "{:?}", analysis.report);
+    assert_eq!(
+        codes(&analysis),
+        Vec::<Code>::new(),
+        "{:?}",
+        analysis.report
+    );
     let types = analysis
         .types
         .as_ref()
@@ -282,17 +306,21 @@ fn checked_compute_cannot_silently_disappear_from_a_package() {
     let built = mtek_compiler::build(
         &ProjectRoot::at_base(),
         &fs(PROGRAM),
-        &mtek_compiler::CompileOptions::default(),
+        &mtek_compiler::CompileOptions::with_stub_runtime(mtek_compiler::BuildMode::Test),
     );
-    assert!(built.files.is_empty());
-    assert!(built.build_id.is_none());
-    assert!(
-        built
-            .report
-            .diagnostics
-            .iter()
-            .any(|d| d.code == Code::E4901)
-    );
+    assert!(built.report.summary.errors == 0, "{:?}", built.report);
+    assert!(built.files.contains_key("app.js"));
+    assert!(built.build_id.is_some());
+    let manifest: serde_json::Value = serde_json::from_slice(&built.files["program.manifest.json"])
+        .unwrap_or_else(|error| panic!("{error}"));
+    let programs = manifest["computePrograms"]
+        .as_array()
+        .unwrap_or_else(|| panic!("missing compute programs"));
+    assert_eq!(programs.len(), 1);
+    let shader = programs[0]["shader"]["url"]
+        .as_str()
+        .unwrap_or_else(|| panic!("missing shader URL"));
+    assert!(built.files.contains_key(shader));
 }
 
 #[test]
@@ -353,7 +381,7 @@ fn compute_colour_output_has_no_opaque_material_alpha_warning() {
         .replace("vec4", "color")
         .replace("source[input.index] * gain", "color.linear(vec3(1.0), 0.0)");
     let result = checked(&source);
-    assert_eq!(codes(&result), vec![Code::E4901]);
+    assert_eq!(codes(&result), Vec::<Code>::new());
     assert!(
         !result
             .report
@@ -384,7 +412,7 @@ fn default_workgroup_and_imported_compute_declarations_are_checked() {
         library.into_bytes(),
     );
     let result = analyze(&ProjectRoot::at_base(), &files);
-    assert_eq!(codes(&result), vec![Code::E4901], "{:?}", result.report);
+    assert_eq!(codes(&result), Vec::<Code>::new(), "{:?}", result.report);
     assert!(
         result
             .dependencies

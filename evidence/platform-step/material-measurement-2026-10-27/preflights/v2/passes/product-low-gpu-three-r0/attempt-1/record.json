@@ -1,0 +1,806 @@
+{
+  "job": {
+    "scene": "product",
+    "quality": "low",
+    "pass": "gpu",
+    "implementation": "three",
+    "repeat": 0
+  },
+  "attempt": 1,
+  "startedAt": "2026-10-27T10:33:32.525Z",
+  "status": "completed",
+  "pageErrors": [],
+  "setup": {
+    "startupCreationMs": 642.0049999952316,
+    "implementation": "three",
+    "scene": "product",
+    "quality": "low",
+    "pass": "gpu",
+    "adapter": {
+      "vendor": "amd",
+      "architecture": "rdna-3",
+      "device": "0x744c",
+      "description": "AMD Radeon RX 7900 XTX",
+      "isFallbackAdapter": false
+    },
+    "deviceFeatures": [
+      "bgra8unorm-storage",
+      "clip-distances",
+      "core-features-and-limits",
+      "depth-clip-control",
+      "depth32float-stencil8",
+      "dual-source-blending",
+      "float32-blendable",
+      "float32-filterable",
+      "indirect-first-instance",
+      "rg11b10ufloat-renderable",
+      "shader-f16",
+      "subgroups",
+      "texture-compression-bc",
+      "texture-compression-bc-sliced-3d",
+      "texture-formats-tier1",
+      "texture-formats-tier2",
+      "timestamp-query"
+    ],
+    "crossOriginIsolated": true,
+    "minimumClockDelta": 0.004999995231628418,
+    "resources": [
+      {
+        "path": "/page.js",
+        "decodedBodySize": 23196
+      },
+      {
+        "path": "/chunks/chunk-2FMLDOAA.js",
+        "decodedBodySize": 11377
+      },
+      {
+        "path": "/chunks/three-LSOSNDET.js",
+        "decodedBodySize": 2762536
+      },
+      {
+        "path": "/content.glb",
+        "decodedBodySize": 65480
+      },
+      {
+        "path": "/WaterBottle.glb",
+        "decodedBodySize": 8966700
+      }
+    ],
+    "unknownTextureFormats": []
+  },
+  "warmup": {
+    "frames": 30,
+    "info": {
+      "frames": 30,
+      "particles": 0,
+      "render": {
+        "calls": 77,
+        "frameCalls": 2,
+        "drawCalls": 10,
+        "triangles": 10012,
+        "points": 0,
+        "lines": 0,
+        "timestamp": 0
+      },
+      "memory": {
+        "attributes": 26,
+        "attributesSize": 134376,
+        "geometries": 12,
+        "indexAttributes": 3,
+        "indexAttributesSize": 56952,
+        "indirectStorageAttributes": 0,
+        "indirectStorageAttributesSize": 0,
+        "programs": 18,
+        "programsSize": 143519,
+        "readbackBuffers": 0,
+        "readbackBuffersSize": 0,
+        "renderTargets": 5,
+        "storageAttributes": 0,
+        "storageAttributesSize": 0,
+        "textures": 14,
+        "texturesSize": 96879092,
+        "uniformBuffers": 33,
+        "uniformBuffersSize": 4496,
+        "total": 97218435
+      },
+      "opaqueBatches": 5,
+      "productIdentity": {
+        "sourceSha256": "b337e526fd6a162013c2984aeec163f5fbb4f717252724dfc3f3458bd51df94b",
+        "mesh": "WaterBottle",
+        "material": "BottleMat",
+        "vertices": 2549,
+        "indices": 13530,
+        "tangentComponents": 4,
+        "nodeRotation": [
+          0,
+          1,
+          0,
+          0
+        ],
+        "normalMap": {
+          "width": 2048,
+          "height": 2048,
+          "type": 1009,
+          "format": 1023,
+          "colorSpace": "",
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "scale": [
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "counters": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 0,
+      "renderPassesBegun": 0,
+      "computePassesBegun": 0,
+      "submits": 0,
+      "drawCalls": 0,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 0,
+      "setPipeline": 0,
+      "setBindGroup": 0,
+      "setVertexBuffer": 0,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 0,
+      "writeBufferBytes": 0,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 0
+    },
+    "lastFrameDraws": []
+  },
+  "browserGpu": {
+    "pid": 32936,
+    "processes": [
+      {
+        "type": "browser",
+        "id": 30300,
+        "cpuTime": 1.424752
+      },
+      {
+        "type": "renderer",
+        "id": 32332,
+        "cpuTime": 0.053709
+      },
+      {
+        "type": "renderer",
+        "id": 19884,
+        "cpuTime": 0.534374
+      },
+      {
+        "type": "renderer",
+        "id": 25464,
+        "cpuTime": 0.25203
+      },
+      {
+        "type": "GPU",
+        "id": 32936,
+        "cpuTime": 1.751183
+      },
+      {
+        "type": "network.mojom.NetworkService",
+        "id": 18076,
+        "cpuTime": 0.225146
+      },
+      {
+        "type": "storage.mojom.StorageService",
+        "id": 17604,
+        "cpuTime": 0.031681
+      }
+    ]
+  },
+  "sample": {
+    "frames": 46,
+    "mode": "gpu",
+    "renderedFrames": 16,
+    "milliseconds": null,
+    "gpu": [
+      {
+        "milliseconds": 0.02068,
+        "spanMilliseconds": 0.0354,
+        "passes": [
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 0,
+            "beginNanoseconds": "68686734193720",
+            "endNanoseconds": "68686734208560",
+            "milliseconds": 0.01484
+          },
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 1,
+            "beginNanoseconds": "68686734173160",
+            "endNanoseconds": "68686734179000",
+            "milliseconds": 0.00584
+          }
+        ],
+        "encoders": 2
+      },
+      {
+        "milliseconds": 0.02024,
+        "spanMilliseconds": 0.04704,
+        "passes": [
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 0,
+            "beginNanoseconds": "68686748369440",
+            "endNanoseconds": "68686748383560",
+            "milliseconds": 0.01412
+          },
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 1,
+            "beginNanoseconds": "68686748336520",
+            "endNanoseconds": "68686748342640",
+            "milliseconds": 0.00612
+          }
+        ],
+        "encoders": 2
+      },
+      {
+        "milliseconds": 0.01936,
+        "spanMilliseconds": 0.03328,
+        "passes": [
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 0,
+            "beginNanoseconds": "68686750368160",
+            "endNanoseconds": "68686750382160",
+            "milliseconds": 0.014
+          },
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 1,
+            "beginNanoseconds": "68686750348880",
+            "endNanoseconds": "68686750354240",
+            "milliseconds": 0.00536
+          }
+        ],
+        "encoders": 2
+      },
+      {
+        "milliseconds": 0.01948,
+        "spanMilliseconds": 0.03344,
+        "passes": [
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 0,
+            "beginNanoseconds": "68686757019040",
+            "endNanoseconds": "68686757033200",
+            "milliseconds": 0.01416
+          },
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 1,
+            "beginNanoseconds": "68686756999760",
+            "endNanoseconds": "68686757005080",
+            "milliseconds": 0.00532
+          }
+        ],
+        "encoders": 2
+      },
+      {
+        "milliseconds": 0.01956,
+        "spanMilliseconds": 0.03392,
+        "passes": [
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 0,
+            "beginNanoseconds": "68686760235370",
+            "endNanoseconds": "68686760249610",
+            "milliseconds": 0.01424
+          },
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 1,
+            "beginNanoseconds": "68686760215690",
+            "endNanoseconds": "68686760221010",
+            "milliseconds": 0.00532
+          }
+        ],
+        "encoders": 2
+      },
+      {
+        "milliseconds": 0.01972,
+        "spanMilliseconds": 0.03372,
+        "passes": [
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 0,
+            "beginNanoseconds": "68686765133570",
+            "endNanoseconds": "68686765148010",
+            "milliseconds": 0.01444
+          },
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 1,
+            "beginNanoseconds": "68686765114290",
+            "endNanoseconds": "68686765119570",
+            "milliseconds": 0.00528
+          }
+        ],
+        "encoders": 2
+      },
+      {
+        "milliseconds": 0.0194,
+        "spanMilliseconds": 0.0336,
+        "passes": [
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 0,
+            "beginNanoseconds": "68686770380510",
+            "endNanoseconds": "68686770394590",
+            "milliseconds": 0.01408
+          },
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 1,
+            "beginNanoseconds": "68686770360990",
+            "endNanoseconds": "68686770366310",
+            "milliseconds": 0.00532
+          }
+        ],
+        "encoders": 2
+      },
+      {
+        "milliseconds": 0.0194,
+        "spanMilliseconds": 0.03328,
+        "passes": [
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 0,
+            "beginNanoseconds": "68686775158990",
+            "endNanoseconds": "68686775173150",
+            "milliseconds": 0.01416
+          },
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 1,
+            "beginNanoseconds": "68686775139870",
+            "endNanoseconds": "68686775145110",
+            "milliseconds": 0.00524
+          }
+        ],
+        "encoders": 2
+      },
+      {
+        "milliseconds": 0.0198,
+        "spanMilliseconds": 0.03416,
+        "passes": [
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 0,
+            "beginNanoseconds": "68686776833850",
+            "endNanoseconds": "68686776848370",
+            "milliseconds": 0.01452
+          },
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 1,
+            "beginNanoseconds": "68686776814210",
+            "endNanoseconds": "68686776819490",
+            "milliseconds": 0.00528
+          }
+        ],
+        "encoders": 2
+      },
+      {
+        "milliseconds": 0.01932,
+        "spanMilliseconds": 0.03332,
+        "passes": [
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 0,
+            "beginNanoseconds": "68686780206950",
+            "endNanoseconds": "68686780220990",
+            "milliseconds": 0.01404
+          },
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 1,
+            "beginNanoseconds": "68686780187670",
+            "endNanoseconds": "68686780192950",
+            "milliseconds": 0.00528
+          }
+        ],
+        "encoders": 2
+      },
+      {
+        "milliseconds": 0.0206,
+        "spanMilliseconds": 0.03396,
+        "passes": [
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 0,
+            "beginNanoseconds": "68686783477940",
+            "endNanoseconds": "68686783492700",
+            "milliseconds": 0.01476
+          },
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 1,
+            "beginNanoseconds": "68686783458740",
+            "endNanoseconds": "68686783464580",
+            "milliseconds": 0.00584
+          }
+        ],
+        "encoders": 2
+      },
+      {
+        "milliseconds": 0.0198,
+        "spanMilliseconds": 0.0338,
+        "passes": [
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 0,
+            "beginNanoseconds": "68686788040510",
+            "endNanoseconds": "68686788055030",
+            "milliseconds": 0.01452
+          },
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 1,
+            "beginNanoseconds": "68686788021230",
+            "endNanoseconds": "68686788026510",
+            "milliseconds": 0.00528
+          }
+        ],
+        "encoders": 2
+      },
+      {
+        "milliseconds": 0.01944,
+        "spanMilliseconds": 0.03372,
+        "passes": [
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 0,
+            "beginNanoseconds": "68686795107170",
+            "endNanoseconds": "68686795121370",
+            "milliseconds": 0.0142
+          },
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 1,
+            "beginNanoseconds": "68686795087650",
+            "endNanoseconds": "68686795092890",
+            "milliseconds": 0.00524
+          }
+        ],
+        "encoders": 2
+      },
+      {
+        "milliseconds": 0.01984,
+        "spanMilliseconds": 0.03384,
+        "passes": [
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 0,
+            "beginNanoseconds": "68686800177230",
+            "endNanoseconds": "68686800191790",
+            "milliseconds": 0.01456
+          },
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 1,
+            "beginNanoseconds": "68686800157950",
+            "endNanoseconds": "68686800163230",
+            "milliseconds": 0.00528
+          }
+        ],
+        "encoders": 2
+      },
+      {
+        "milliseconds": 0.01956,
+        "spanMilliseconds": 0.03376,
+        "passes": [
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 0,
+            "beginNanoseconds": "68686803641380",
+            "endNanoseconds": "68686803655620",
+            "milliseconds": 0.01424
+          },
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 1,
+            "beginNanoseconds": "68686803621860",
+            "endNanoseconds": "68686803627180",
+            "milliseconds": 0.00532
+          }
+        ],
+        "encoders": 2
+      },
+      {
+        "milliseconds": 0.02028,
+        "spanMilliseconds": 0.03436,
+        "passes": [
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 0,
+            "beginNanoseconds": "68686806814590",
+            "endNanoseconds": "68686806829470",
+            "milliseconds": 0.01488
+          },
+          {
+            "kind": "render",
+            "label": "",
+            "encoder": 1,
+            "beginNanoseconds": "68686806795110",
+            "endNanoseconds": "68686806800510",
+            "milliseconds": 0.0054
+          }
+        ],
+        "encoders": 2
+      }
+    ],
+    "counters": null,
+    "presentation": null,
+    "info": {
+      "frames": 46,
+      "particles": 0,
+      "render": {
+        "calls": 109,
+        "frameCalls": 2,
+        "drawCalls": 10,
+        "triangles": 10012,
+        "points": 0,
+        "lines": 0,
+        "timestamp": 0
+      },
+      "memory": {
+        "attributes": 26,
+        "attributesSize": 134376,
+        "geometries": 12,
+        "indexAttributes": 3,
+        "indexAttributesSize": 56952,
+        "indirectStorageAttributes": 0,
+        "indirectStorageAttributesSize": 0,
+        "programs": 18,
+        "programsSize": 143519,
+        "readbackBuffers": 0,
+        "readbackBuffersSize": 0,
+        "renderTargets": 5,
+        "storageAttributes": 0,
+        "storageAttributesSize": 0,
+        "textures": 14,
+        "texturesSize": 96879092,
+        "uniformBuffers": 33,
+        "uniformBuffersSize": 4496,
+        "total": 97218435
+      },
+      "opaqueBatches": 5,
+      "productIdentity": {
+        "sourceSha256": "b337e526fd6a162013c2984aeec163f5fbb4f717252724dfc3f3458bd51df94b",
+        "mesh": "WaterBottle",
+        "material": "BottleMat",
+        "vertices": 2549,
+        "indices": 13530,
+        "tangentComponents": 4,
+        "nodeRotation": [
+          0,
+          1,
+          0,
+          0
+        ],
+        "normalMap": {
+          "width": 2048,
+          "height": 2048,
+          "type": 1009,
+          "format": 1023,
+          "colorSpace": "",
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "scale": [
+            1,
+            1
+          ]
+        }
+      }
+    }
+  },
+  "hostLoad": {
+    "quiet": true,
+    "busyBeforePercent": 7.589251731750019,
+    "gpuBeforePercent": 0,
+    "waitedMs": 2230,
+    "observations": [
+      {
+        "cpu": 10.42785701055751,
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 686682617671,
+          "id": 7,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 686685701657,
+          "nonzero": []
+        }
+      },
+      {
+        "cpu": 7.589251731750019,
+        "gpu": 0,
+        "rawGpu": {
+          "qpc": 686698420754,
+          "id": 8,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 686702328011,
+          "nonzero": []
+        }
+      }
+    ],
+    "valid": true,
+    "busyDuringPercent": 13.747810858143607,
+    "externalGpuPeakPercent": 0,
+    "logicalCpus": 20,
+    "cpuBefore": {
+      "idle": 1099248507,
+      "total": 1379360432
+    },
+    "cpuAfter": {
+      "idle": 1099249492,
+      "total": 1379361574
+    },
+    "gpuSamples": [
+      {
+        "raw": {
+          "qpc": 686704916651,
+          "id": 9,
+          "kind": "gpu",
+          "counterRows": 373,
+          "qpcEnd": 686708012678,
+          "nonzero": []
+        },
+        "allEnginePeakPercent": 0,
+        "externalEnginePeakPercent": 0
+      }
+    ]
+  },
+  "disposed": {
+    "result": {
+      "frames": 46,
+      "particles": 0
+    },
+    "before": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 0,
+      "renderPassesBegun": 0,
+      "computePassesBegun": 0,
+      "submits": 0,
+      "drawCalls": 0,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 0,
+      "setPipeline": 0,
+      "setBindGroup": 0,
+      "setVertexBuffer": 0,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 0,
+      "writeBufferBytes": 0,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 0
+    },
+    "after": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 0,
+      "renderPassesBegun": 0,
+      "computePassesBegun": 0,
+      "submits": 0,
+      "drawCalls": 0,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 0,
+      "setPipeline": 0,
+      "setBindGroup": 0,
+      "setVertexBuffer": 0,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 0,
+      "writeBufferBytes": 0,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 1
+    },
+    "validation": [],
+    "losses": [],
+    "allDevicesDestroyed": true
+  },
+  "finishedAt": "2026-10-27T10:33:36.048Z",
+  "qualification": {
+    "qualified": true,
+    "errors": []
+  },
+  "artifacts": []
+}

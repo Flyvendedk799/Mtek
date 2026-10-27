@@ -1,0 +1,1657 @@
+{
+  "format": "mtek-material-lighting-calibration-validation/1",
+  "recordedAt": "2026-10-27T06:58:34.827Z",
+  "gitBase": "986040bd9c9e284a06231121eb64f5262b81b620",
+  "scope": "Procedural material/lighting calibration and PBR alpha correction; unchanged product import rejected; qualified performance remains pending",
+  "checks": {
+    "materialPairsPerBackend": 10,
+    "backends": 2,
+    "focusedGpu": 26,
+    "broaderGpu": 98,
+    "runtimeTests": 1661,
+    "rustOrdinary": 1740,
+    "rustAdapterUnits": 10,
+    "rustIgnored": 1,
+    "grammarConformance": "not rerun in this increment",
+    "packageBudgets": 11,
+    "performanceEligible": false
+  },
+  "logs": [
+    {
+      "status": "passed",
+      "command": "ordinary Rust workspace excluding adapters, -j2 --test-threads=2",
+      "log": "logs/pbr-alpha-workspace-all-targets.log.gz"
+    },
+    {
+      "status": "passed",
+      "command": "adapter library/binary unit tests only",
+      "log": "logs/pbr-alpha-adapter-units.log.gz"
+    },
+    {
+      "status": "passed",
+      "command": "workspace Clippy all targets -D warnings",
+      "log": "logs/pbr-alpha-clippy.log.gz"
+    },
+    {
+      "status": "passed",
+      "command": "runtime Vitest --maxWorkers=1",
+      "log": "logs/pbr-alpha-runtime-unit.log.gz"
+    },
+    {
+      "status": "passed",
+      "command": "npm run check:ts",
+      "log": "logs/pbr-alpha-final-ts.log.gz"
+    },
+    {
+      "status": "passed",
+      "command": "all eleven game package size budgets",
+      "log": "logs/pbr-alpha-budgets.log.gz"
+    },
+    {
+      "status": "passed",
+      "command": "26 PBR/alpha/map browser checks across hardware/software",
+      "log": "logs/pbr-alpha-focused-browser-fixed.log.gz"
+    },
+    {
+      "status": "passed",
+      "command": "98 animation/light/material/sprite browser checks across hardware/software",
+      "log": "logs/pbr-alpha-browser-regression.log.gz"
+    },
+    {
+      "status": "passed",
+      "command": "serialized CLI build with current prebuilt runtime",
+      "log": "logs/material-lighting-cli-serialized.log.gz"
+    },
+    {
+      "status": "passed",
+      "command": "generated release docs and live consistency",
+      "log": "logs/material-lighting-release-docs.log.gz"
+    },
+    {
+      "status": "passed",
+      "command": "generated coverage matrix audit",
+      "log": "logs/material-lighting-coverage.log.gz"
+    },
+    {
+      "status": "passed",
+      "command": "node benchmarks/material-lighting/verify.mjs hardware <results>",
+      "log": "logs/material-lighting-current-hardware.log.gz"
+    },
+    {
+      "status": "passed",
+      "command": "node benchmarks/material-lighting/verify.mjs software <results>",
+      "log": "logs/material-lighting-current-software.log.gz"
+    },
+    {
+      "status": "passed",
+      "command": "node benchmarks/material-lighting/test.mjs",
+      "log": "logs/material-lighting-current-unit.log.gz"
+    },
+    {
+      "status": "passed",
+      "command": "npm run lint -w @mtek/material-lighting-benchmarks",
+      "log": "logs/material-lighting-current-lint.log.gz"
+    },
+    {
+      "status": "passed",
+      "command": "node scripts/prebuilt-runtime.mjs --check --against-dist",
+      "log": "logs/material-lighting-current-prebuilt.log.gz"
+    },
+    {
+      "status": "rejected-or-incomplete",
+      "command": "retained failed candidate; superseded by successful final runs",
+      "log": "logs/pbr-alpha-shader-goldens.log.gz"
+    },
+    {
+      "status": "rejected-or-incomplete",
+      "command": "retained failed candidate; superseded by successful final runs",
+      "log": "logs/pbr-alpha-workspace-initial.log.gz"
+    },
+    {
+      "status": "rejected-or-incomplete",
+      "command": "retained failed candidate; superseded by successful final runs",
+      "log": "logs/pbr-alpha-workspace-final.log.gz"
+    },
+    {
+      "status": "rejected-or-incomplete",
+      "command": "retained failed candidate; superseded by successful final runs",
+      "log": "logs/pbr-alpha-workspace-accepted.log.gz"
+    },
+    {
+      "status": "rejected-or-incomplete",
+      "command": "retained failed candidate; superseded by successful final runs",
+      "log": "logs/pbr-alpha-workspace-verified.log.gz"
+    },
+    {
+      "status": "rejected-or-incomplete",
+      "command": "retained failed candidate; superseded by successful final runs",
+      "log": "logs/material-lighting-final-cli.log.gz"
+    },
+    {
+      "status": "rejected-or-incomplete",
+      "command": "retained failed candidate; superseded by successful final runs",
+      "log": "logs/material-lighting-prepare.log.gz"
+    }
+  ],
+  "sources": [
+    {
+      "path": "benchmarks/material-lighting/.gitignore",
+      "bytes": 7,
+      "sha256": "c1100827109b0b5c2fbe45dfeddf2f22dd4146e239962209d5773120a6ddb7ce"
+    },
+    {
+      "path": "benchmarks/material-lighting/README.md",
+      "bytes": 7005,
+      "sha256": "40249281f7a35e6af36b49099997be296ca4cc374511f625524f2b94e2408761"
+    },
+    {
+      "path": "benchmarks/material-lighting/adapters.mjs",
+      "bytes": 275,
+      "sha256": "72a92386c07b8c7518aa091bfba2b03c0a75d718038b55957e33ef475c3de285"
+    },
+    {
+      "path": "benchmarks/material-lighting/assets.mjs",
+      "bytes": 4165,
+      "sha256": "6e4d433ccb6e02df56b35aa6ba11a3c107094f9d275743061f5160d55a4ed110"
+    },
+    {
+      "path": "benchmarks/material-lighting/eslint.config.mjs",
+      "bytes": 540,
+      "sha256": "115640d9d369cb30ca0af1c5178872c5549f6f05d9935033ee51fce3edb76ba7"
+    },
+    {
+      "path": "benchmarks/material-lighting/gpu-timer.mjs",
+      "bytes": 3677,
+      "sha256": "ba57567ed64ff488ec363f5a203568f522feb790d25a0607048143d1bb8a0012"
+    },
+    {
+      "path": "benchmarks/material-lighting/metrics.mjs",
+      "bytes": 4394,
+      "sha256": "024c7f77732b9a67f67076801cf24b9e0258dea7f98f74a6f269164d02fea2cc"
+    },
+    {
+      "path": "benchmarks/material-lighting/mtek.mjs",
+      "bytes": 1388,
+      "sha256": "91514245669c8a60dbe98d89fa6b20554b289eec6a3b015721ee308a2cf158f6"
+    },
+    {
+      "path": "benchmarks/material-lighting/package.json",
+      "bytes": 517,
+      "sha256": "56c40cb9ceaf09ac2cfa91746cfe66d4aa2925f28fe92a7dfb4093156f5544cf"
+    },
+    {
+      "path": "benchmarks/material-lighting/page.mjs",
+      "bytes": 4926,
+      "sha256": "a5f44446bece58de0226fb6cfaead6e06378efa7d7429865e25051e8837013ce"
+    },
+    {
+      "path": "benchmarks/material-lighting/particles.mjs",
+      "bytes": 1323,
+      "sha256": "b7003c8cb326c1b07aca2d0d974ef56ea71033159acbe3f9c3ef8a2c6edb9c3e"
+    },
+    {
+      "path": "benchmarks/material-lighting/prepare.mjs",
+      "bytes": 4149,
+      "sha256": "29bcca93311af9035fa71f595c95cdc0b954b1ff369494f9e2f422a70cc0f310"
+    },
+    {
+      "path": "benchmarks/material-lighting/probe-gpu.mjs",
+      "bytes": 2916,
+      "sha256": "02db986e73c7ce0af1e801ea743ae3ffb00c05640310aec9fb146ea04a7fabf2"
+    },
+    {
+      "path": "benchmarks/material-lighting/protocol.json",
+      "bytes": 3066,
+      "sha256": "92f4cdc57e4fea6aa8f559055ea603c73d7f96cbe61559fcd25a8db2f9e0baa7"
+    },
+    {
+      "path": "benchmarks/material-lighting/scenes.mjs",
+      "bytes": 5011,
+      "sha256": "f675719fa00b3b3799432bc96a19a16434844cb89c6805f01bc46ec845506983"
+    },
+    {
+      "path": "benchmarks/material-lighting/server.mjs",
+      "bytes": 1085,
+      "sha256": "3cde02daa35005d36ba160e12a7ec22deaa6bb4ef64f2d8f1edd0eed5eb980b4"
+    },
+    {
+      "path": "benchmarks/material-lighting/test.mjs",
+      "bytes": 2884,
+      "sha256": "6ce94fcf3eaf10d00bb49acc29a115daec0fa4503ff53b25ddbc424b5e595c54"
+    },
+    {
+      "path": "benchmarks/material-lighting/three.mjs",
+      "bytes": 8260,
+      "sha256": "d44b758dd389a638858cfe7474b1c58ad12add15bd40bd3cbbc84d63d115f3bb"
+    },
+    {
+      "path": "benchmarks/material-lighting/verify.mjs",
+      "bytes": 8101,
+      "sha256": "b868571a11d8310194906c2bf6d2e6b3f0f0c374ecfb331e34b608e8757a52b5"
+    },
+    {
+      "path": "crates/mtek-compiler/src/assets/glb.rs",
+      "bytes": 83416,
+      "sha256": "005790f41b9fcdd2383ffacf2acb6d1045b514eac30eb370355aef6f209ec794"
+    },
+    {
+      "path": "crates/mtek-compiler/src/lowering/shader/helpers.rs",
+      "bytes": 46306,
+      "sha256": "38ae7d3036cd4d96155f731f83f5778584209e5f40b5a05620a946b4b760a6f3"
+    },
+    {
+      "path": "crates/mtek-compiler/src/stdlib/std/materials.mtek",
+      "bytes": 3366,
+      "sha256": "99fc9afba2aa73629a64caf69c42b38f864f471c48e5ec5b731b94ba02990214"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 195094,
+      "sha256": "58dbca1b3fa8c0d12d56499d77ba212b2f4d98b2b50a2603eb9c53776f494f40"
+    },
+    {
+      "path": "package.json",
+      "bytes": 2300,
+      "sha256": "ff9d793c4993ce77ddb82d7b654ecbbaf11565bced39d52ed80c474a49ac320d"
+    },
+    {
+      "path": "spec/decisions/0210-pbr-colour-alpha.md",
+      "bytes": 1745,
+      "sha256": "d9082e55f087233a0e7af72967276e66fe468a07098fb6dacc3084d5d168f86b"
+    },
+    {
+      "path": "spec/materials.md",
+      "bytes": 27242,
+      "sha256": "9018b2ef0d1079985fb098c28f2288b41335b290ec16669cbd12890f634f68c8"
+    },
+    {
+      "path": "tests/browser/fixtures/m4/pbr_alpha/mtek.toml",
+      "bytes": 87,
+      "sha256": "278f791ef28fa0f8460eb3d210f84c40aa80d922bf1657d2f3eff810ce65af1e"
+    },
+    {
+      "path": "tests/browser/fixtures/m4/pbr_alpha/src/main.mtek",
+      "bytes": 1569,
+      "sha256": "2d3c53e972e7b5b1f6831c36c5882c9a31a582bed783796b2ef0cde37159331a"
+    },
+    {
+      "path": "tests/browser/specs/m4/pbr-alpha.spec.ts",
+      "bytes": 1403,
+      "sha256": "b3d3174370f9c3d9d1b8bbec739df917556a758fd946a0cbac23736bb5a44013"
+    }
+  ],
+  "prebuilt": {
+    "runtime.js": {
+      "bytes": 1174852,
+      "sha256": "3a0a8a07f260f604dc2d827acfb69898abc9fabca425480dc08e85e1a592afd8"
+    },
+    "runtime.dev.js": {
+      "bytes": 1187035,
+      "sha256": "441e91775bbf690b8c21250c00f795157ae7b8f741ef12c3b876e9f7ae487651"
+    },
+    "runtime.min.js": {
+      "bytes": 668929,
+      "sha256": "b68d72530fd1042b40add47226f9800886afc7bcc41fae40ccb3d5c05e1ce167"
+    },
+    "runtime.d.ts": {
+      "bytes": 17640,
+      "sha256": "767560890951b19969928c2fe1d68a2142751512c2bc031d360a30e569878c97"
+    },
+    "PROVENANCE.json": {
+      "bytes": 1472,
+      "sha256": "313b5dad4c8a8b49d3eeb463be9912fa30815364bf3106b917159bf98337e833"
+    }
+  },
+  "evidence": [
+    {
+      "path": "checkpoint.md",
+      "bytes": 5009,
+      "sha256": "166dd11f7413d55fbe30236509da2c641e4abdc8f39cfb60ad3a7df85ffe6f89"
+    },
+    {
+      "path": "generated/build.json",
+      "bytes": 38490,
+      "sha256": "57433d14edff919ea1ca892c6a5176e86f697e24b1241828a1fa1a08539b666e"
+    },
+    {
+      "path": "generated/content.glb",
+      "bytes": 65480,
+      "sha256": "6c579475ace30385875d3145d299a908799dfe8b9093a421f55c52e6556bbba9"
+    },
+    {
+      "path": "generated/projects/indoor-low/mtek.toml",
+      "bytes": 56,
+      "sha256": "616288d34ef98a756ff62db63eba2b752dabc42cb3c3f7d388fa8f06bcca4f68"
+    },
+    {
+      "path": "generated/projects/indoor-low/src/main.mtek",
+      "bytes": 3322,
+      "sha256": "ec8d2b0cdfe6f54620b45df879d4caf5c0cd7245ef098675394c1872a931b813"
+    },
+    {
+      "path": "generated/projects/indoor-standard/mtek.toml",
+      "bytes": 61,
+      "sha256": "17cd90b742156858083e0932d4c84ae05aaa9705592aaba97650435f85020ee5"
+    },
+    {
+      "path": "generated/projects/indoor-standard/src/main.mtek",
+      "bytes": 3332,
+      "sha256": "40219f95a4f3c6b25cfea0f37bd960b6b3f05071a9f8b6dde899bba4b25a1568"
+    },
+    {
+      "path": "generated/projects/outdoor-low/mtek.toml",
+      "bytes": 57,
+      "sha256": "10ddcb6efea1027525c30bfb69eea515962821b87487a79cc7dc639e54f8ebc1"
+    },
+    {
+      "path": "generated/projects/outdoor-low/src/main.mtek",
+      "bytes": 4593,
+      "sha256": "4b87e36c92af7fa82d11a6105a292774e4ad411405a0f86d9dff9a45f99ba56b"
+    },
+    {
+      "path": "generated/projects/outdoor-standard/mtek.toml",
+      "bytes": 62,
+      "sha256": "d936b23b18c2ee4014ebc2ef787f7abcce18488e0c9d60dad8165bc89dad6fde"
+    },
+    {
+      "path": "generated/projects/outdoor-standard/src/main.mtek",
+      "bytes": 4633,
+      "sha256": "9815c5bfe2cafac42e76fa9d403af07c330ec2fdb26a5f5bb90b97cc164e586c"
+    },
+    {
+      "path": "generated/projects/particles-low/mtek.toml",
+      "bytes": 59,
+      "sha256": "ba4dd4060e046de722616391407132e0b386c7031acb35f70a8cc8641bc820a3"
+    },
+    {
+      "path": "generated/projects/particles-low/src/main.mtek",
+      "bytes": 1464,
+      "sha256": "6db2bd6c926ef59e655ae639d411e69248466ac10e99f73ae4d4163a41706454"
+    },
+    {
+      "path": "generated/projects/particles-low-control/mtek.toml",
+      "bytes": 67,
+      "sha256": "4937bc1e7f247f359cb66b09eb580315d0cbe4768b4c3aeca02b29428a74b39a"
+    },
+    {
+      "path": "generated/projects/particles-low-control/src/main.mtek",
+      "bytes": 1272,
+      "sha256": "aefb8cf5f33f6219958d34df87d49cdfae6c6c6d499970db755582954845e021"
+    },
+    {
+      "path": "generated/projects/particles-standard/mtek.toml",
+      "bytes": 64,
+      "sha256": "2b01f196d07abef5839866684a3f616ecb93e4912079aaf2518bd83cf6a0b075"
+    },
+    {
+      "path": "generated/projects/particles-standard/src/main.mtek",
+      "bytes": 2016,
+      "sha256": "007991f3708d50f973c7b7f029b208fbe7d0ec5be50572a4c26333920f8370a4"
+    },
+    {
+      "path": "generated/projects/particles-standard-control/mtek.toml",
+      "bytes": 72,
+      "sha256": "f234d1195a4b158837655daa0fd8f216ca26b134d07db14b39fbf65dc9d6e482"
+    },
+    {
+      "path": "generated/projects/particles-standard-control/src/main.mtek",
+      "bytes": 1632,
+      "sha256": "fbe87df32c99abe3758c9ca82635e2e64da0820fd7d747187b1a510d48779383"
+    },
+    {
+      "path": "generated/projects/product-low/mtek.toml",
+      "bytes": 57,
+      "sha256": "31c1402c8d9346db24be7cd988f7283b900c1374501613c74f0db8976ea7ba29"
+    },
+    {
+      "path": "generated/projects/product-low/src/main.mtek",
+      "bytes": 2052,
+      "sha256": "dee2155fb533a2e996342f22c405e3f66faa3d52baa58a9dff71baa55c3c98e3"
+    },
+    {
+      "path": "generated/projects/product-standard/mtek.toml",
+      "bytes": 62,
+      "sha256": "687d3e575dd768307b56d62b51d7094f2ebc4bece8e1fda374e637bbd8538591"
+    },
+    {
+      "path": "generated/projects/product-standard/src/main.mtek",
+      "bytes": 2062,
+      "sha256": "9161c6439546bb8138fb2fb3480c7d5b6d7331c9f2f779a0bf21079fc74e1d7d"
+    },
+    {
+      "path": "generated/projects/transparency-low/mtek.toml",
+      "bytes": 62,
+      "sha256": "56b42fb4bdf5c40c6da85082433957056a8ccaa521e5fa420b25932eb0b88ff1"
+    },
+    {
+      "path": "generated/projects/transparency-low/src/main.mtek",
+      "bytes": 2537,
+      "sha256": "7867377bee23473a41e9128e74c954bdc4b4ad87236e2defb12bc690ded38f55"
+    },
+    {
+      "path": "generated/projects/transparency-standard/mtek.toml",
+      "bytes": 67,
+      "sha256": "d35770be75385ff9a3c8fe0787ab7582ad90247845584c4eb4ac1f6a27b748ce"
+    },
+    {
+      "path": "generated/projects/transparency-standard/src/main.mtek",
+      "bytes": 2547,
+      "sha256": "1f70f6201d108e3297bd8c6f7248e16ce0546b1c5e67f66499fc3aabf5c59bb4"
+    },
+    {
+      "path": "hardware/hardware.json",
+      "bytes": 329238,
+      "sha256": "e9e3c1d1c142baae0e1ed787f47160b7567f4ec1258b641b9002982a438f8aa9"
+    },
+    {
+      "path": "hardware/indoor-low-mtek-1.png",
+      "bytes": 104851,
+      "sha256": "eaa3e96c1585b77c672a4273a2d42a73ceb473ef39a755b57191c950f170230a"
+    },
+    {
+      "path": "hardware/indoor-low-three-1.png",
+      "bytes": 105003,
+      "sha256": "0d07a9345ba82633dbc917e6b0d4e2d117326b746c3d60cc2bb58f75c0c59af6"
+    },
+    {
+      "path": "hardware/indoor-standard-mtek-1.png",
+      "bytes": 454993,
+      "sha256": "9800b5e0147ff527fffa2dfde616c3249b4748f4571aedfb9853b65083c9d67d"
+    },
+    {
+      "path": "hardware/indoor-standard-three-1.png",
+      "bytes": 456582,
+      "sha256": "2cf1d7474c415ab55125b31123d5e9c11435cbdd96c355f2fbd2277a91fe00f7"
+    },
+    {
+      "path": "hardware/outdoor-low-mtek-1.png",
+      "bytes": 51848,
+      "sha256": "a9a6463bd16e94b9699bec5dcfc3d4707e5cc403f5d66860f221838efc8a945f"
+    },
+    {
+      "path": "hardware/outdoor-low-three-1.png",
+      "bytes": 52119,
+      "sha256": "95181e3440d8cdb6093a016c8352c000085a9ba0f1e19894eaaeebc17109e34c"
+    },
+    {
+      "path": "hardware/outdoor-standard-mtek-1.png",
+      "bytes": 206522,
+      "sha256": "ff99c671775c4aa66c2ae2beac80c1aab1e9c704aeca7cd787c6e2b72c993342"
+    },
+    {
+      "path": "hardware/outdoor-standard-three-1.png",
+      "bytes": 207965,
+      "sha256": "884d7ab25963d3bad94dd01083961eb7dbd0466388a19b6a6d09657e07838a8f"
+    },
+    {
+      "path": "hardware/particles-low-mtek-120.png",
+      "bytes": 19749,
+      "sha256": "e2a48255991ab00bac8d70a640c5faf8829046e2a54d057d953163245de1ad89"
+    },
+    {
+      "path": "hardware/particles-low-mtek-60.png",
+      "bytes": 19662,
+      "sha256": "d344f98c28f59719c240dbadbfcac61616d73f169326710de05c1b94453dfd9a"
+    },
+    {
+      "path": "hardware/particles-low-mtek-90.png",
+      "bytes": 19663,
+      "sha256": "518e4e587498b5f6a51522a3e831a2cf63b45f95e0a3a7102138ab3fb8c6ccd6"
+    },
+    {
+      "path": "hardware/particles-low-mtek-control.png",
+      "bytes": 19391,
+      "sha256": "052f40b7da817137a3481fe7762750cc81685fa8b0aca1920e2ad94944324018"
+    },
+    {
+      "path": "hardware/particles-low-three-120.png",
+      "bytes": 20206,
+      "sha256": "734ba6257a8d2a14531956cf97ad142c49c8f503ce4c19e688ee42aa05454bf5"
+    },
+    {
+      "path": "hardware/particles-low-three-60.png",
+      "bytes": 20124,
+      "sha256": "17e50de29577f6bb07fe91863d711885946228aededc74991bbb6deb0e29003b"
+    },
+    {
+      "path": "hardware/particles-low-three-90.png",
+      "bytes": 20131,
+      "sha256": "1e7e93bdac60dfbcfb76e4deb14dc170497eea8f7f6c6acd576f3b7eed0efe3f"
+    },
+    {
+      "path": "hardware/particles-low-three-control.png",
+      "bytes": 19844,
+      "sha256": "e65616d90f250ed3e2dd8f3f4884fca0979b506706e6f86743e3044be897f910"
+    },
+    {
+      "path": "hardware/particles-standard-mtek-120.png",
+      "bytes": 66368,
+      "sha256": "adf8795f9ba17819cdf13b7f8a4e41d5dde642c4dc7bd4af4262fae2036eff8f"
+    },
+    {
+      "path": "hardware/particles-standard-mtek-60.png",
+      "bytes": 65857,
+      "sha256": "6be9308fd99c97f0876b2b0084736a473e0098b48b4ff4ccf11406af31c761f0"
+    },
+    {
+      "path": "hardware/particles-standard-mtek-90.png",
+      "bytes": 67149,
+      "sha256": "69fb76e4cf3016168ea9519e81b4a056fe48c1bcd9069232e49c213116d53021"
+    },
+    {
+      "path": "hardware/particles-standard-mtek-control.png",
+      "bytes": 66214,
+      "sha256": "aef37b48743a13fb56484ad4a2139db7520c37a56a9ab90195f19ec41d461f5c"
+    },
+    {
+      "path": "hardware/particles-standard-three-120.png",
+      "bytes": 68369,
+      "sha256": "3043bc546cfc99876e566ced1fc60315149f0b093ba468c8d85c4a5b120e17f6"
+    },
+    {
+      "path": "hardware/particles-standard-three-60.png",
+      "bytes": 67846,
+      "sha256": "a5a8667fb3c154306bf21a0cb0baa49c8cdd52078a6ef0a79903ec818dc61eb1"
+    },
+    {
+      "path": "hardware/particles-standard-three-90.png",
+      "bytes": 69195,
+      "sha256": "6c18c23b560300140715c5dd5030f5060a8c6f3434eb0c54dce8fdc9832127e5"
+    },
+    {
+      "path": "hardware/particles-standard-three-control.png",
+      "bytes": 67954,
+      "sha256": "e068296593cafb3b292fb87b6acaa27448199d62b0ea6ca39f8b2f77a71a1d95"
+    },
+    {
+      "path": "hardware/product-low-mtek-1.png",
+      "bytes": 29626,
+      "sha256": "50e0a206b247cc1f23257b7ae6e8c7d60204638ba06b131830d1c152cda2ebf3"
+    },
+    {
+      "path": "hardware/product-low-three-1.png",
+      "bytes": 29917,
+      "sha256": "3ead1f16005461d6b33faf7263f2cc8cb9cae5ce8f9ef24c4612332606eb0bb6"
+    },
+    {
+      "path": "hardware/product-standard-mtek-1.png",
+      "bytes": 117423,
+      "sha256": "4a15919f85cfd9c996b832d171216110927a75955f02ea3fa0a4d6121106ef7b"
+    },
+    {
+      "path": "hardware/product-standard-three-1.png",
+      "bytes": 118252,
+      "sha256": "ee51e662d1d97803498d7ab1e05eb91c377eb09578579b6219dd6348a1fa4b3f"
+    },
+    {
+      "path": "hardware/transparency-low-mtek-1.png",
+      "bytes": 16507,
+      "sha256": "2db3321372026562bea36015b501c0e7ec32c1932f15c043c7141817f2547012"
+    },
+    {
+      "path": "hardware/transparency-low-three-1.png",
+      "bytes": 17005,
+      "sha256": "1dc7b3f15a178f50251e13617b5f8f32e60c86d5501cd7a86133f22c37372856"
+    },
+    {
+      "path": "hardware/transparency-standard-mtek-1.png",
+      "bytes": 50083,
+      "sha256": "427f75d9b59e85477ce3aa1b923c1452cd0306441fda3342b978bd89af4fc804"
+    },
+    {
+      "path": "hardware/transparency-standard-three-1.png",
+      "bytes": 52175,
+      "sha256": "2e94747b2205ad5def7d21e21e66c3939c2895ca4a84171b126d56b46b55c5b3"
+    },
+    {
+      "path": "history/instrument-preflight-paced/probe.json.gz",
+      "bytes": 7919,
+      "sha256": "381f928760e807392acfcc89cbb2b8db45e09b1b0aecc2ff3efaad787db14224"
+    },
+    {
+      "path": "history/instrument-preflight-split/probe.json.gz",
+      "bytes": 8261,
+      "sha256": "8e740c4bf3887642cae2f545b89f4c9d0db0842e9a9a9270cdca7c51258c833c"
+    },
+    {
+      "path": "history/intermediate-alpha-fix/hardware.json.gz",
+      "bytes": 7869,
+      "sha256": "ad77ba110cecf9c17ab7bf54aba617e836cef6aebed7c231d13c10b42f14b8a9"
+    },
+    {
+      "path": "history/intermediate-first-product/hardware.json.gz",
+      "bytes": 6914,
+      "sha256": "78ce50fe6433c2deab4200cfee0e7e56f37d78765e29764ef13057c1004a84b0"
+    },
+    {
+      "path": "history/intermediate-particle-fix/hardware.json.gz",
+      "bytes": 8947,
+      "sha256": "0ffa59b9bad667a3635defc428ce6eb68e42bb2dac4c5946b9493b68c9891169"
+    },
+    {
+      "path": "history/intermediate-shared-bundle-hardware/hardware.json.gz",
+      "bytes": 18846,
+      "sha256": "28c340807d264c6f238a2cdc64049542de61b11d4812d0d0ad1f8deff1a19e3e"
+    },
+    {
+      "path": "history/intermediate-shared-bundle-software/software.json.gz",
+      "bytes": 18781,
+      "sha256": "dcfc260862d316436fcc0fa95f5f3ec584c88da856c8ff98e722ecfb000f5e16"
+    },
+    {
+      "path": "history/intermediate-unbatched-hardware/hardware.json.gz",
+      "bytes": 18663,
+      "sha256": "3ce5d2575e753826789291cba718a0522985f862ee240fe85c211ec958ed59f1"
+    },
+    {
+      "path": "history/intermediate-unbatched-software/software.json.gz",
+      "bytes": 18652,
+      "sha256": "73ba8325189a44a58ea3636dac6f5e1d07466552f71c8c742162ec9eb6dac278"
+    },
+    {
+      "path": "history/intermediate-unpaced-hardware/hardware.json.gz",
+      "bytes": 18193,
+      "sha256": "3da480e3832099c30269eff0a2aac345ca676bbd31621c1623c67dfb25f9c81f"
+    },
+    {
+      "path": "history/intermediate-unpaced-software/software.json.gz",
+      "bytes": 18221,
+      "sha256": "3aec68ee4d546b10d337c8999c698e18a30ec10acdbaa49d2306cada7cf08270"
+    },
+    {
+      "path": "history/intermediate-visual-only-eligibility-hardware/hardware.json.gz",
+      "bytes": 21347,
+      "sha256": "1f8537af97278e10b4c4db37fc768f41fbd916c97697f0e55a7b65a4750a6fd7"
+    },
+    {
+      "path": "history/intermediate-visual-only-eligibility-software/software.json.gz",
+      "bytes": 21295,
+      "sha256": "391dd059d9ee1dd2db49ab3c92fbc1125820df5073cde26899326d83881c4eda"
+    },
+    {
+      "path": "history/rejected-incomplete-frame-timestamps/probe.json.gz",
+      "bytes": 8081,
+      "sha256": "239be5664fa0ef5c5ab81301c30c021eb7b842193d4c6ffd20467539a086ddac"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/hardware.json.gz",
+      "bytes": 14241,
+      "sha256": "692e5b02d22653e4ff8b2c7670a94249bab1975b7704d8b3a7ce8ea2ed4d00fb"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/indoor-low-mtek-1.png",
+      "bytes": 104851,
+      "sha256": "eaa3e96c1585b77c672a4273a2d42a73ceb473ef39a755b57191c950f170230a"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/indoor-low-three-1.png",
+      "bytes": 105017,
+      "sha256": "fc0f63d9dbbdd4bedf1c62e2341a65af03a3ba1a63f6efc9b5b6382942f7997b"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/indoor-standard-mtek-1.png",
+      "bytes": 454993,
+      "sha256": "9800b5e0147ff527fffa2dfde616c3249b4748f4571aedfb9853b65083c9d67d"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/indoor-standard-three-1.png",
+      "bytes": 456580,
+      "sha256": "7c837363dc08604a98edf62da185c398254b3bef317295648bc529b60d0d6041"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/outdoor-low-mtek-1.png",
+      "bytes": 51848,
+      "sha256": "a9a6463bd16e94b9699bec5dcfc3d4707e5cc403f5d66860f221838efc8a945f"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/outdoor-low-three-1.png",
+      "bytes": 52119,
+      "sha256": "95181e3440d8cdb6093a016c8352c000085a9ba0f1e19894eaaeebc17109e34c"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/outdoor-standard-mtek-1.png",
+      "bytes": 206522,
+      "sha256": "ff99c671775c4aa66c2ae2beac80c1aab1e9c704aeca7cd787c6e2b72c993342"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/outdoor-standard-three-1.png",
+      "bytes": 207981,
+      "sha256": "019b459e567ab62fdace8f72ee159302e8fe7125ef8bc805ad44d5aa8106f515"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/particles-low-mtek-120.png",
+      "bytes": 18964,
+      "sha256": "9a532ed8a9640a1932352b369b91252c1abf21ab7a9f38954ed9e3ee779fcf73"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/particles-low-mtek-60.png",
+      "bytes": 18964,
+      "sha256": "9a532ed8a9640a1932352b369b91252c1abf21ab7a9f38954ed9e3ee779fcf73"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/particles-low-mtek-90.png",
+      "bytes": 18964,
+      "sha256": "9a532ed8a9640a1932352b369b91252c1abf21ab7a9f38954ed9e3ee779fcf73"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/particles-low-three-120.png",
+      "bytes": 19769,
+      "sha256": "3a529a0a56d2466f76b72a1504de5277d509fb7f07712f1d95755c8837c47f7f"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/particles-low-three-60.png",
+      "bytes": 19712,
+      "sha256": "17729a4ebd12fce8393fafb15bd4f3ab0cae2e303c5ea40d0de9a47cec2e6401"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/particles-low-three-90.png",
+      "bytes": 19738,
+      "sha256": "a417ee96d0699e869793a23de0595de9e164a4c192b57150d88e6e19c9c3ea6d"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/particles-standard-mtek-120.png",
+      "bytes": 63881,
+      "sha256": "0b1a7d9cfa3c02dbdcba1aa971e3abc96dd25f61c86caf04dff3d4e0a50c17bb"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/particles-standard-mtek-60.png",
+      "bytes": 63853,
+      "sha256": "ce025f9d4b86c616adae97a080229ebbb52fac47bc73ab036c3c8f5aa921b1d5"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/particles-standard-mtek-90.png",
+      "bytes": 63873,
+      "sha256": "5591cbea38ea645a489e913be61b08a1305d138a79f55e4d9cb79fad0414cc9b"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/particles-standard-three-120.png",
+      "bytes": 66017,
+      "sha256": "b98546a9320fab8f318026efffce10e19f0e9982609004c06a6b22434d63da22"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/particles-standard-three-60.png",
+      "bytes": 65398,
+      "sha256": "2eec9c2bfc1d07564bb4c09b20b5e85373421507c56eb97e036932058ba14da3"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/particles-standard-three-90.png",
+      "bytes": 66581,
+      "sha256": "d07d91cfe7a9bc53a4486fc0b6b473be305bdc0f014772568ff6990ee0dc6fff"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/product-low-mtek-1.png",
+      "bytes": 29626,
+      "sha256": "50e0a206b247cc1f23257b7ae6e8c7d60204638ba06b131830d1c152cda2ebf3"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/product-low-three-1.png",
+      "bytes": 29917,
+      "sha256": "3ead1f16005461d6b33faf7263f2cc8cb9cae5ce8f9ef24c4612332606eb0bb6"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/product-standard-mtek-1.png",
+      "bytes": 117423,
+      "sha256": "4a15919f85cfd9c996b832d171216110927a75955f02ea3fa0a4d6121106ef7b"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/product-standard-three-1.png",
+      "bytes": 118245,
+      "sha256": "485f59dcbb672b7ff3bb88e442f6cb2491af3d2b32eb498883de6bab245565c3"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/transparency-low-mtek-1.png",
+      "bytes": 6632,
+      "sha256": "f262ca62cd4472a88133ab5f6570abd54c07e54ed30ef71698360a73ec3dc615"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/transparency-low-three-1.png",
+      "bytes": 17005,
+      "sha256": "1dc7b3f15a178f50251e13617b5f8f32e60c86d5501cd7a86133f22c37372856"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/transparency-standard-mtek-1.png",
+      "bytes": 21365,
+      "sha256": "5873c7f388b1411edc4bcab6bbc6d3fc3b32154c68b326f7015bad3192dd1cef"
+    },
+    {
+      "path": "history/rejected-opaque-and-particle-basis/transparency-standard-three-1.png",
+      "bytes": 52175,
+      "sha256": "2e94747b2205ad5def7d21e21e66c3939c2895ca4a84171b126d56b46b55c5b3"
+    },
+    {
+      "path": "logs/material-lighting-cli-serialized.log.gz",
+      "bytes": 129,
+      "sha256": "86d91d8ced47d29f43635418e9129fd1893e99234d08fd3ca7092a75645aec9f"
+    },
+    {
+      "path": "logs/material-lighting-coverage.log.gz",
+      "bytes": 188,
+      "sha256": "8c4bcc97730624608ba3f4a5a388ac57c98c696e077eb387251b587fba6dae6e"
+    },
+    {
+      "path": "logs/material-lighting-current-hardware.log.gz",
+      "bytes": 362,
+      "sha256": "5ff1b03414a25a79dc0033e7cd2d9dce0962d89eac9e9adf7c3717364e16baea"
+    },
+    {
+      "path": "logs/material-lighting-current-lint.log.gz",
+      "bytes": 86,
+      "sha256": "29d986e3ff0e80d439d4252850af972db49a7be71aab7eb74bc6e7c7336d7829"
+    },
+    {
+      "path": "logs/material-lighting-current-prebuilt.log.gz",
+      "bytes": 69,
+      "sha256": "360b46f9e789f2ad0914619ea993bd8360466b320fccf152b08adf7d3768a455"
+    },
+    {
+      "path": "logs/material-lighting-current-software.log.gz",
+      "bytes": 357,
+      "sha256": "fe1cbde84192dd2f29196ab9333eefd015cb1f6d1e4255e80492a60cfc46e00c"
+    },
+    {
+      "path": "logs/material-lighting-current-unit.log.gz",
+      "bytes": 118,
+      "sha256": "ae532947a53ea95c1c66cacbc28f717acc88facab5d83ff7a454ef3ad1c464b0"
+    },
+    {
+      "path": "logs/material-lighting-final-cli.log.gz",
+      "bytes": 263,
+      "sha256": "d5e08d16c3db8ab413607768c835ee9500f0eb55d87f2c9e1a1c57f7ae774677"
+    },
+    {
+      "path": "logs/material-lighting-prepare.log.gz",
+      "bytes": 915,
+      "sha256": "91b21179b438303fbbc79743f04e24e4f471890f593c5a60e1ee285cfe785216"
+    },
+    {
+      "path": "logs/material-lighting-release-docs.log.gz",
+      "bytes": 339,
+      "sha256": "5d6c79da2c73909745cb16e7845c28f8a1d4966dd1a3011e178bdc20d4d0b458"
+    },
+    {
+      "path": "logs/pbr-alpha-adapter-units.log.gz",
+      "bytes": 526,
+      "sha256": "809bf8e08533a1f440b17742eac39d22154c4f30ca0bdedd8110d064c2e3a748"
+    },
+    {
+      "path": "logs/pbr-alpha-browser-regression.log.gz",
+      "bytes": 2822,
+      "sha256": "889f8098d558f61dc26871a2c83fab34967ca710604c145d3c28cc8517f00d3e"
+    },
+    {
+      "path": "logs/pbr-alpha-budgets.log.gz",
+      "bytes": 352,
+      "sha256": "72625c614526afe50150abff60b3ea855341990e7690246d717ede90fed92ee8"
+    },
+    {
+      "path": "logs/pbr-alpha-clippy.log.gz",
+      "bytes": 192,
+      "sha256": "0439d0f7a4df26618b67a433c3b37a1e904eaae73df603337f6c77fc9ae0eae5"
+    },
+    {
+      "path": "logs/pbr-alpha-final-ts.log.gz",
+      "bytes": 87,
+      "sha256": "be1e9826a376ed24132fa1a9e9b62121a228524eec703c85b8589c4a5ab93f41"
+    },
+    {
+      "path": "logs/pbr-alpha-focused-browser-fixed.log.gz",
+      "bytes": 1111,
+      "sha256": "3251f47e5ac6e293ea84bf4131ce9979bfe62894e932b4ae1f5f67f3958c8b94"
+    },
+    {
+      "path": "logs/pbr-alpha-runtime-unit.log.gz",
+      "bytes": 433,
+      "sha256": "1f539b2efd45ac657a8a41ac662f861f3a77fa1215d3c38666e55329b6cd06ec"
+    },
+    {
+      "path": "logs/pbr-alpha-shader-goldens.log.gz",
+      "bytes": 416,
+      "sha256": "2b7d0c6b7a4e7f794055c33859bf4b2ca3b408fbf8fea10f15d61acfe30ee9bd"
+    },
+    {
+      "path": "logs/pbr-alpha-workspace-accepted.log.gz",
+      "bytes": 29883,
+      "sha256": "f4d461d9d68e77c55e84366ba8e798bb4259f664e2943c2397719f48c1b4703c"
+    },
+    {
+      "path": "logs/pbr-alpha-workspace-all-targets.log.gz",
+      "bytes": 33902,
+      "sha256": "ec72a853eb51716d82414b5b1d639718d9fc18755a87b8858ba15a2660de09ca"
+    },
+    {
+      "path": "logs/pbr-alpha-workspace-final.log.gz",
+      "bytes": 28282,
+      "sha256": "ba277a261fa8c5ee16217afd1776ee6fe01b52afdd575e81a8e7d8e0b0d26458"
+    },
+    {
+      "path": "logs/pbr-alpha-workspace-initial.log.gz",
+      "bytes": 18334,
+      "sha256": "c6857fbf0e3f554e9efc756913337794330cd6c753d1b8a06733b8131e12d668"
+    },
+    {
+      "path": "logs/pbr-alpha-workspace-verified.log.gz",
+      "bytes": 94423,
+      "sha256": "853f116b62822f9175c9b1de4ca596c6bc7e7b758339549729790926302dc31c"
+    },
+    {
+      "path": "product-import/compiler-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "product-import/compiler-stdout.json",
+      "bytes": 1038,
+      "sha256": "d9e6a692eaff10b874b7a39411b42e7dd5af7d91533f55929356a1e1f243ee46"
+    },
+    {
+      "path": "product-import/inspect.mjs",
+      "bytes": 2939,
+      "sha256": "c3b68599e513554fe46e4918d3081b1cd6f96a22311183f1a440a015733f6007"
+    },
+    {
+      "path": "product-import/mtek.toml",
+      "bytes": 58,
+      "sha256": "1e36951196593df9dc7c51bb812d2491b0d4917bf28f78c8860b4e1c9ca54b87"
+    },
+    {
+      "path": "product-import/preflight.json",
+      "bytes": 2373,
+      "sha256": "6f90ca93f21283812bcd21c18d2fc7895e0acfb63a561fd278d24156261ab615"
+    },
+    {
+      "path": "product-import/src/main.mtek",
+      "bytes": 210,
+      "sha256": "1f52d8a6418a124c80e3225765146935eff77b727452433409271ffd87ee97b6"
+    },
+    {
+      "path": "product-import/upstream-directory.json",
+      "bytes": 1336,
+      "sha256": "f25b910279de12c4f6457ad9bb52772a04bc49feebd578f11d722b8bff53261a"
+    },
+    {
+      "path": "product-import/upstream-metadata.json",
+      "bytes": 646,
+      "sha256": "c6a9c800dee98ad0779b97b9995162fe317d5de7eab73b2d01fe2ce80ab089e4"
+    },
+    {
+      "path": "product-import/upstream-README.md",
+      "bytes": 1004,
+      "sha256": "4ddb88bb6b835ab1b658041f1c5391b5b2128be65725d1ef84b1e434d818eb1c"
+    },
+    {
+      "path": "regressions/browser-regression/animation-distance-hardware.json",
+      "bytes": 1335,
+      "sha256": "c548950688ca5f828b4fe7f5725996dbd7fb2a26349bb33ad2072a138636baf9"
+    },
+    {
+      "path": "regressions/browser-regression/animation-distance-software.json",
+      "bytes": 1350,
+      "sha256": "7d03ca94e03450f27106c0580eb9ca030847897e4f8203cad7f383f8d13e3c74"
+    },
+    {
+      "path": "regressions/browser-regression/artifacts/.last-run.json",
+      "bytes": 46,
+      "sha256": "fff6299efb51ba9ef550e500ecc967e972c83e86be387042c360caea7fdbae29"
+    },
+    {
+      "path": "regressions/browser-regression/artifacts/animation-locomotion-demo--e83f4-oriented-grips-on-both-rigs-hardware/locomotion-demo.png",
+      "bytes": 50404,
+      "sha256": "a1f8641916710963030a1e69c82d06f0c8f59e1041ffb1035b01f9f1f2aadfd1"
+    },
+    {
+      "path": "regressions/browser-regression/artifacts/animation-locomotion-demo--e83f4-oriented-grips-on-both-rigs-software/locomotion-demo.png",
+      "bytes": 50428,
+      "sha256": "a46a0d437db0e35c348b3f26b5f260cc8c2ca66e15f67fbdf67f321ae23a4846"
+    },
+    {
+      "path": "regressions/browser-regression/artifacts/m4-scene-lighting-lighting-83be2-s-through-the-rendered-host-hardware/lighting-studio-inspector.png",
+      "bytes": 100940,
+      "sha256": "73d5a5e74b3152b653c704fd272597d054ef8b7b4e64d2bb9fcbdcda9fe97b32"
+    },
+    {
+      "path": "regressions/browser-regression/artifacts/m4-scene-lighting-lighting-83be2-s-through-the-rendered-host-software/lighting-studio-inspector.png",
+      "bytes": 97243,
+      "sha256": "2d1ba259b031d10d70a65945ff6ffc0f9087abaae26bb12d209b8008f0b68620"
+    },
+    {
+      "path": "regressions/browser-regression/artifacts/m4-scene-lighting-lighting-965fc-work-without-browser-errors-hardware/lighting-studio.png",
+      "bytes": 93897,
+      "sha256": "0ddfd96ebb4252df54072e98f49dbbc0f6bc8eb2c8b766220423adadaf224fea"
+    },
+    {
+      "path": "regressions/browser-regression/artifacts/m4-scene-lighting-lighting-965fc-work-without-browser-errors-software/lighting-studio.png",
+      "bytes": 90150,
+      "sha256": "967d9cc8590c853df5029b4e7a4ae9c26e81b8c033e4998b3753afe4dab6ca39"
+    },
+    {
+      "path": "regressions/browser-regression/crowd-1-1-hardware.json",
+      "bytes": 5306,
+      "sha256": "730462e3f1d8f1edc3740a27dad6a71b2a265be54816ca442d641463c49926ad"
+    },
+    {
+      "path": "regressions/browser-regression/crowd-1-1-software.json",
+      "bytes": 5324,
+      "sha256": "786a21d1b18b114e112dc05aa37040190fc0f8a24d6fd2141d26f2db0b8f32e3"
+    },
+    {
+      "path": "regressions/browser-regression/crowd-10-1-hardware.json",
+      "bytes": 5311,
+      "sha256": "a193ae07f955cb17625006c0a99d021d589a44a0577ac19e0ee657547dbd9de3"
+    },
+    {
+      "path": "regressions/browser-regression/crowd-10-1-software.json",
+      "bytes": 5328,
+      "sha256": "61a2273512a9403587027e4fedfddc080656bfd5cc3821d6458c403e11c61a0b"
+    },
+    {
+      "path": "regressions/browser-regression/crowd-50-5-hardware.json",
+      "bytes": 5304,
+      "sha256": "191b5cbb0482bf9ccf912551faec8894e78f7922eb3eea0be750923fc3236ddf"
+    },
+    {
+      "path": "regressions/browser-regression/crowd-50-5-software.json",
+      "bytes": 5359,
+      "sha256": "a25793f4f1782757325b85b593363399399f37018d860b8f00b3d2ecb405f57c"
+    },
+    {
+      "path": "regressions/browser-regression/crowd-recovery-hardware.json",
+      "bytes": 2685,
+      "sha256": "754f3de532fca1ad67503e0b7e64fce070543c394fa8c343f4fde3f6ef8b190b"
+    },
+    {
+      "path": "regressions/browser-regression/crowd-recovery-software.json",
+      "bytes": 2717,
+      "sha256": "3f26304b911d3d4047c6d8fccdd5ee0371064ffb5a2ba68395abd0a570cce649"
+    },
+    {
+      "path": "regressions/browser-regression/environment-constant-hardware.json",
+      "bytes": 1900,
+      "sha256": "161b30aaf92af5999acbd4da37f63dcfe8d9affb8a87348cc21d863c49a40623"
+    },
+    {
+      "path": "regressions/browser-regression/environment-constant-software.json",
+      "bytes": 1918,
+      "sha256": "f8267f19e3a3accad37b6d933bf8b197e878af55f2073c031a7481974b9d4e39"
+    },
+    {
+      "path": "regressions/browser-regression/environment-directions-hardware.json",
+      "bytes": 167,
+      "sha256": "1ed9043f33573380dfee53bef11567c955bd413b01a151992c175f041b87206f"
+    },
+    {
+      "path": "regressions/browser-regression/environment-directions-software.json",
+      "bytes": 167,
+      "sha256": "1ed9043f33573380dfee53bef11567c955bd413b01a151992c175f041b87206f"
+    },
+    {
+      "path": "regressions/browser-regression/environment-hardware.json",
+      "bytes": 3481,
+      "sha256": "fbe9b10f51fb1634852c30027efb2977cb0cb97da7a529995075c4b289f83a3b"
+    },
+    {
+      "path": "regressions/browser-regression/environment-software.json",
+      "bytes": 3418,
+      "sha256": "a320b4331799b77c14a7cb553ea65cc3a9ff37e3288a36df44db2938812b7fc0"
+    },
+    {
+      "path": "regressions/browser-regression/inspection-build.json",
+      "bytes": 2209,
+      "sha256": "88be99c778a84f43b305c7318951c45ae96bb8a5f5139fce228ba24e51d83376"
+    },
+    {
+      "path": "regressions/browser-regression/lighting-input-errors-hardware.json",
+      "bytes": 260,
+      "sha256": "28d1c8b25831181532998a3c4867e51386a6d08a8ad3d642f5b394a0b4f82317"
+    },
+    {
+      "path": "regressions/browser-regression/lighting-input-errors-software.json",
+      "bytes": 260,
+      "sha256": "28d1c8b25831181532998a3c4867e51386a6d08a8ad3d642f5b394a0b4f82317"
+    },
+    {
+      "path": "regressions/browser-regression/lighting-recovery-hardware.json",
+      "bytes": 1217,
+      "sha256": "8d0ae87d96c079fbfa0a971826d496fbd1a17d0f566458803ecc315e65fcee0f"
+    },
+    {
+      "path": "regressions/browser-regression/lighting-recovery-software.json",
+      "bytes": 1202,
+      "sha256": "11d188da34ccb8599b8c98b61855a4e88871693da136b1fcb0b848d10a108bfe"
+    },
+    {
+      "path": "regressions/browser-regression/lighting-studio-hardware.json",
+      "bytes": 88,
+      "sha256": "85e0b0b70df2886c5905860fad7b75d2606371275b1ecb1eace1e737eccc6cef"
+    },
+    {
+      "path": "regressions/browser-regression/lighting-studio-inspector-hardware.json",
+      "bytes": 105,
+      "sha256": "760716d986e3b5fd05cd1c07d006d2d4aa1874ab077656a6a1641b08131f5cb2"
+    },
+    {
+      "path": "regressions/browser-regression/lighting-studio-inspector-software.json",
+      "bytes": 105,
+      "sha256": "760716d986e3b5fd05cd1c07d006d2d4aa1874ab077656a6a1641b08131f5cb2"
+    },
+    {
+      "path": "regressions/browser-regression/lighting-studio-software.json",
+      "bytes": 88,
+      "sha256": "85e0b0b70df2886c5905860fad7b75d2606371275b1ecb1eace1e737eccc6cef"
+    },
+    {
+      "path": "regressions/browser-regression/lit_sampler_boundary-hardware.json",
+      "bytes": 1205,
+      "sha256": "fafbff9e4e47e04fdb9cc1a630f9190a4c5a63604ba14d122fcd829268c392d4"
+    },
+    {
+      "path": "regressions/browser-regression/lit_sampler_boundary-software.json",
+      "bytes": 1206,
+      "sha256": "b3dac31c46cd23b21f1fbfb58ef92af1a5e4c5b245d2dae9002ed3685f4711d2"
+    },
+    {
+      "path": "regressions/browser-regression/lit_texture_boundary-hardware.json",
+      "bytes": 1205,
+      "sha256": "8447cede0ba2f2be3a52d7c66457b25a98ddd78ce674155d12e9e54fac6a4d89"
+    },
+    {
+      "path": "regressions/browser-regression/lit_texture_boundary-software.json",
+      "bytes": 1189,
+      "sha256": "148488123ade36fbc197d85a633cb878c6c9ef57dc65ef70b9a7556fe64efa63"
+    },
+    {
+      "path": "regressions/browser-regression/locomotion-demo-hardware.json",
+      "bytes": 1463,
+      "sha256": "3fc209cfc1edb2c0780cbc964885b1345f44dcaf8084bc1d58ac907295fb8a1b"
+    },
+    {
+      "path": "regressions/browser-regression/locomotion-demo-software.json",
+      "bytes": 1463,
+      "sha256": "eba3f32dfe5bef8de2a195914e5411ddc107798fe98b52273865a2b4b2dbc587"
+    },
+    {
+      "path": "regressions/browser-regression/pbr-alpha-hardware.json",
+      "bytes": 4123,
+      "sha256": "90dd81ec179236210d3e4db07f9150ad234b531990f93f9e2ff872aa3e0e7ac3"
+    },
+    {
+      "path": "regressions/browser-regression/pbr-alpha-software.json",
+      "bytes": 4123,
+      "sha256": "3bcbc67694eb7d3a27001e1775d551a60d34cba19fc1b60f0aa04f608c2bb639"
+    },
+    {
+      "path": "regressions/browser-regression/pbr-maps-degenerate-hardware.json",
+      "bytes": 2952,
+      "sha256": "80a8adbf1b9ead7ad13ea095638cad02a287ccddf7977f96959191bfef057e59"
+    },
+    {
+      "path": "regressions/browser-regression/pbr-maps-degenerate-software.json",
+      "bytes": 2953,
+      "sha256": "67c58a6e50edbc4f6d33c7df9a983ce25952ad6acfedb5accf678302993831ea"
+    },
+    {
+      "path": "regressions/browser-regression/pbr-maps-mirrored-hardware.json",
+      "bytes": 2967,
+      "sha256": "f6bddcb9ed925397eb7a18435f7d652b322596fa46d49592090eb4938917fbdf"
+    },
+    {
+      "path": "regressions/browser-regression/pbr-maps-mirrored-software.json",
+      "bytes": 2951,
+      "sha256": "3feb762e58da759e8e5e45065eebfeadd594902f83e4b4c74d63d85449222a5f"
+    },
+    {
+      "path": "regressions/browser-regression/pbr-maps-recovery-hardware.json",
+      "bytes": 1248,
+      "sha256": "eb0f735a0a64f34aafbf161edb94431ecedd02ac47bafd364ebec886ec42a194"
+    },
+    {
+      "path": "regressions/browser-regression/pbr-maps-recovery-software.json",
+      "bytes": 1249,
+      "sha256": "9b17f8b2b0b7a3a9cf3fc2fd2eef132877477f88e60d68569fbbc9f5faec9d50"
+    },
+    {
+      "path": "regressions/browser-regression/pbr-maps-regular-hardware.json",
+      "bytes": 2916,
+      "sha256": "4ed697e7a8a6b29e96ab85dc891b6c50fc543bb698c3c2981e07507cc731c127"
+    },
+    {
+      "path": "regressions/browser-regression/pbr-maps-regular-software.json",
+      "bytes": 2950,
+      "sha256": "3938bb25d1b5f43df5f1cfaead3a199f935aae21ff026bbf7199224761fea896"
+    },
+    {
+      "path": "regressions/browser-regression/shadow-skin-hardware.json",
+      "bytes": 2366,
+      "sha256": "864a67c831f22f7a4ea2c9de48173e3b5e043fea088b0526e598c268b4618aec"
+    },
+    {
+      "path": "regressions/browser-regression/shadow-skin-software.json",
+      "bytes": 2294,
+      "sha256": "08d0520840a4ef006462177aacd2d6c2fd6d71bff98200459f4d3b3e4a3d581f"
+    },
+    {
+      "path": "regressions/browser-regression/shadows-high-hardware.json",
+      "bytes": 2505,
+      "sha256": "c295df61e908597b3a2daf228a3aef991230ecaded078017ba2d8ee44e35fd61"
+    },
+    {
+      "path": "regressions/browser-regression/shadows-high-software.json",
+      "bytes": 2516,
+      "sha256": "e951ad6ee9639f0d8c00c7ef380e4ff5e4756ac18052b6a3691e489471fa55ba"
+    },
+    {
+      "path": "regressions/browser-regression/shadows-low-hardware.json",
+      "bytes": 2520,
+      "sha256": "86c156a70d9988a1dff6876c2481a2f6649c4b12f9bb4d13818c4ffd25ad63cb"
+    },
+    {
+      "path": "regressions/browser-regression/shadows-low-software.json",
+      "bytes": 2518,
+      "sha256": "b02b91b862a9c2d5b27378a3a92a5e961de228fc487b618263dd25a6070d2df4"
+    },
+    {
+      "path": "regressions/browser-regression/shadows-medium-hardware.json",
+      "bytes": 2520,
+      "sha256": "8fe5922e612d07f12aea53f7e8e311f92700bae0628567943f45b8bb89acaf02"
+    },
+    {
+      "path": "regressions/browser-regression/shadows-medium-software.json",
+      "bytes": 2486,
+      "sha256": "ac9b2b68c322758229b82374ca41d018ce95668df48ba5681ae08467ae2dcbde"
+    },
+    {
+      "path": "regressions/browser-regression/test-results.json",
+      "bytes": 122678,
+      "sha256": "496f39afaeb8cc1abfe5895b56be719d61fcf9333a18297f38ee389f344429db"
+    },
+    {
+      "path": "regressions/focused-browser/artifacts/.last-run.json",
+      "bytes": 46,
+      "sha256": "fff6299efb51ba9ef550e500ecc967e972c83e86be387042c360caea7fdbae29"
+    },
+    {
+      "path": "regressions/focused-browser/environment-hardware.json",
+      "bytes": 3481,
+      "sha256": "bc05af158f5b00975c5c233099ca1488dd8aa5b231a5022f62ce886fbb37610b"
+    },
+    {
+      "path": "regressions/focused-browser/environment-software.json",
+      "bytes": 3418,
+      "sha256": "6b1786d915a034ac211b2cf547a71933c6ac31ca9c62398031e6d22c70ec1e62"
+    },
+    {
+      "path": "regressions/focused-browser/pbr-alpha-hardware.json",
+      "bytes": 4123,
+      "sha256": "90dd81ec179236210d3e4db07f9150ad234b531990f93f9e2ff872aa3e0e7ac3"
+    },
+    {
+      "path": "regressions/focused-browser/pbr-alpha-software.json",
+      "bytes": 4123,
+      "sha256": "3bcbc67694eb7d3a27001e1775d551a60d34cba19fc1b60f0aa04f608c2bb639"
+    },
+    {
+      "path": "regressions/focused-browser/pbr-maps-degenerate-hardware.json",
+      "bytes": 2970,
+      "sha256": "7a2e449876d0bcfaaa43301ee503020b013ae24b19a070454c0a78a7b61a8c55"
+    },
+    {
+      "path": "regressions/focused-browser/pbr-maps-degenerate-software.json",
+      "bytes": 2969,
+      "sha256": "d78c5ad10862d631adc4be87d899239636db68c26f34b9ae98bd7985fd566cae"
+    },
+    {
+      "path": "regressions/focused-browser/pbr-maps-mirrored-hardware.json",
+      "bytes": 2967,
+      "sha256": "9ffaa0e2a6d043ec51e71ca725a72ccf834bd166f440a970888a06c8c9c32e40"
+    },
+    {
+      "path": "regressions/focused-browser/pbr-maps-mirrored-software.json",
+      "bytes": 2951,
+      "sha256": "38d9f15bb85c498134f26eb22b72afeb33b877493c093cab4a4a3a3bf5004bb1"
+    },
+    {
+      "path": "regressions/focused-browser/pbr-maps-recovery-hardware.json",
+      "bytes": 1249,
+      "sha256": "286d9e00c24f93cd589ce60dd5f23453332ca73397028361788c839eb0a3ce20"
+    },
+    {
+      "path": "regressions/focused-browser/pbr-maps-recovery-software.json",
+      "bytes": 1248,
+      "sha256": "b49f66a1acff5954e7d81c00eaa5ee96b4150723177ac3e04391a9c7e06a7888"
+    },
+    {
+      "path": "regressions/focused-browser/pbr-maps-regular-hardware.json",
+      "bytes": 2952,
+      "sha256": "86384512b8e6bbf733deca920e6ab1b116a23c86670e863107cff4c60a0b59a0"
+    },
+    {
+      "path": "regressions/focused-browser/pbr-maps-regular-software.json",
+      "bytes": 2952,
+      "sha256": "46b0860e9236b6bde3ea4616510f1dfe0b6b1a7935b5e4ebd0072663c4b0a11a"
+    },
+    {
+      "path": "regressions/focused-browser/test-results.json",
+      "bytes": 42532,
+      "sha256": "190f34dcc820338f60643740058841345df5875fbc0a3f13f7f5e3de66ca14ab"
+    },
+    {
+      "path": "regressions/package-sizes.json",
+      "bytes": 984,
+      "sha256": "c7aa24c8a36bc247cd8e0c70d6953f6c66ee8979fd8591b14bb39208f2e7f843"
+    },
+    {
+      "path": "software/indoor-low-mtek-1.png",
+      "bytes": 104591,
+      "sha256": "f98c25ebd1b7d42f4c62bdb66a16739b0bd76b15b7c1d2393211c8c16a28802f"
+    },
+    {
+      "path": "software/indoor-low-three-1.png",
+      "bytes": 105241,
+      "sha256": "eb343ba79e446956bae98171f1c168a199613a45cc804b7dee3fb50519d1022a"
+    },
+    {
+      "path": "software/indoor-standard-mtek-1.png",
+      "bytes": 454015,
+      "sha256": "bde09b012df97012831bbb5c91754d9b7e535ce138acad367eee5dbe975b7136"
+    },
+    {
+      "path": "software/indoor-standard-three-1.png",
+      "bytes": 456062,
+      "sha256": "7fd25a42fe9d56e34c217e6e07bace7659ea7e7fbc185b973dbc0f4639b5e85c"
+    },
+    {
+      "path": "software/outdoor-low-mtek-1.png",
+      "bytes": 51855,
+      "sha256": "d5706fb553ab00382703f39b71c184dab134add6ab0dccdb29f85bc4718d511b"
+    },
+    {
+      "path": "software/outdoor-low-three-1.png",
+      "bytes": 52169,
+      "sha256": "239203235ec41764d5d0e3e874626b38a22ecb285b319cdc275598ce3cbadd5f"
+    },
+    {
+      "path": "software/outdoor-standard-mtek-1.png",
+      "bytes": 205801,
+      "sha256": "42da27631b55fe04eada2233dd0b73ee15ed19a6402cb3266707e7797acd070a"
+    },
+    {
+      "path": "software/outdoor-standard-three-1.png",
+      "bytes": 206717,
+      "sha256": "48e2d45979b0100abee462d532298f448c9c7f5f05d40fab529fba16814d52a9"
+    },
+    {
+      "path": "software/particles-low-mtek-120.png",
+      "bytes": 19566,
+      "sha256": "fa53721b979c930695c94675ab1127c09362ec98d4b137328c141691ddd5efbc"
+    },
+    {
+      "path": "software/particles-low-mtek-60.png",
+      "bytes": 19494,
+      "sha256": "015f51997f697f9ad8f8de7b2beb854e036f903b9ab88da0e2be94f0b17e67f3"
+    },
+    {
+      "path": "software/particles-low-mtek-90.png",
+      "bytes": 19478,
+      "sha256": "4bbe4c8c118b9fc419e7f1fc68d3060252f4f456afb49aea95032640b8acced4"
+    },
+    {
+      "path": "software/particles-low-mtek-control.png",
+      "bytes": 19225,
+      "sha256": "8514f2ee54418a4241c98180575e06b96082bb65552ff935f101c59140cdfaf8"
+    },
+    {
+      "path": "software/particles-low-three-120.png",
+      "bytes": 20373,
+      "sha256": "21f51ab47628b91d3d720fc91bec59f3e0e4391cc227a481cf401cd3b93d2cd1"
+    },
+    {
+      "path": "software/particles-low-three-60.png",
+      "bytes": 20318,
+      "sha256": "a23f145320dc13d930c60c705a60e6795557a3526b480a0404b4b062cf0b9358"
+    },
+    {
+      "path": "software/particles-low-three-90.png",
+      "bytes": 20315,
+      "sha256": "f73db165bed2235a5259a78514997558714274db1ac6afb87541cdcf4bc97b97"
+    },
+    {
+      "path": "software/particles-low-three-control.png",
+      "bytes": 20044,
+      "sha256": "6dfc43dbb2b220fb6b22e2329894a64faf4f944ab9f8167ea0df437dd8bc9ffc"
+    },
+    {
+      "path": "software/particles-standard-mtek-120.png",
+      "bytes": 66036,
+      "sha256": "0262ba78b421f397cc5ae849404a05e54262c43c822310db6a43045498c9c094"
+    },
+    {
+      "path": "software/particles-standard-mtek-60.png",
+      "bytes": 65473,
+      "sha256": "04c2d56f0814c97b7e6460766e290acfb75ccd7487e48c2e00aef3d90912c494"
+    },
+    {
+      "path": "software/particles-standard-mtek-90.png",
+      "bytes": 66779,
+      "sha256": "9d96cfe3f6b21bd0f122fc88b9481564910e2911b9a502c5d0b0205b6ea4b357"
+    },
+    {
+      "path": "software/particles-standard-mtek-control.png",
+      "bytes": 65619,
+      "sha256": "277c82c71b2d0ab76671c8c51372c5b9e16987d979c5c79b7fa4cd6d6ac3b50f"
+    },
+    {
+      "path": "software/particles-standard-three-120.png",
+      "bytes": 68148,
+      "sha256": "44ef5286f90c51930ddf950c95be48dc421b2ae2337b5c4c8ae5331d334e0597"
+    },
+    {
+      "path": "software/particles-standard-three-60.png",
+      "bytes": 67445,
+      "sha256": "3160770209a51af282a3b58b033143db5b54be83389c4e532bdf0ef0d2c58284"
+    },
+    {
+      "path": "software/particles-standard-three-90.png",
+      "bytes": 68899,
+      "sha256": "3c71146536ced7f488deefde7deda282b1881b45b00a5895aa2525b34110df4b"
+    },
+    {
+      "path": "software/particles-standard-three-control.png",
+      "bytes": 67407,
+      "sha256": "2bd2c94989155ec7b665f5f5db87cdc0358c4013e921b74f2407460b394fd108"
+    },
+    {
+      "path": "software/product-low-mtek-1.png",
+      "bytes": 29504,
+      "sha256": "e6b68ce0c0cd8bd88a2dc41a3465fa003b18dd071df83374a448c006b9e3c86c"
+    },
+    {
+      "path": "software/product-low-three-1.png",
+      "bytes": 30099,
+      "sha256": "d56baadb98d55273687154b6afcbfd36ea771110e84ea2109a83b6206f6b10ca"
+    },
+    {
+      "path": "software/product-standard-mtek-1.png",
+      "bytes": 116668,
+      "sha256": "3f78a9c1aea38b00d289416ec1de772c2201f1447444cf5983aad3094ea2a8d2"
+    },
+    {
+      "path": "software/product-standard-three-1.png",
+      "bytes": 117435,
+      "sha256": "f8c6ac159c94274156ee09cf18ad115a7277fef355616a9afb8a853d88b395ed"
+    },
+    {
+      "path": "software/software.json",
+      "bytes": 329408,
+      "sha256": "8ef65a8890f6a085228df24682be8dd43e937ae0c2c534e4ed5430b034be4c7c"
+    },
+    {
+      "path": "software/transparency-low-mtek-1.png",
+      "bytes": 16221,
+      "sha256": "e967416c7e087930f9a6a865bec9ae064f703b2c5f55abf5a5f8e77419e54548"
+    },
+    {
+      "path": "software/transparency-low-three-1.png",
+      "bytes": 17098,
+      "sha256": "b5e30038d160ee36a1382cc9667c9ebe18c051fd78b480ec7844a00222182137"
+    },
+    {
+      "path": "software/transparency-standard-mtek-1.png",
+      "bytes": 49541,
+      "sha256": "65378af2a123809c901698c02503b55e7959dae6b3f0ee642ff2af92835fc1dc"
+    },
+    {
+      "path": "software/transparency-standard-three-1.png",
+      "bytes": 51753,
+      "sha256": "f7c3e4b7ba7c6a8231132918e417ea2eba9e04c18c7f6ae2eaf8590edb9fe81f"
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/.gitignore",
+      "bytes": 7,
+      "sha256": "c1100827109b0b5c2fbe45dfeddf2f22dd4146e239962209d5773120a6ddb7ce"
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/adapters.mjs",
+      "bytes": 275,
+      "sha256": "72a92386c07b8c7518aa091bfba2b03c0a75d718038b55957e33ef475c3de285"
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/assets.mjs",
+      "bytes": 4165,
+      "sha256": "6e4d433ccb6e02df56b35aa6ba11a3c107094f9d275743061f5160d55a4ed110"
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/eslint.config.mjs",
+      "bytes": 540,
+      "sha256": "115640d9d369cb30ca0af1c5178872c5549f6f05d9935033ee51fce3edb76ba7"
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/gpu-timer.mjs",
+      "bytes": 3677,
+      "sha256": "ba57567ed64ff488ec363f5a203568f522feb790d25a0607048143d1bb8a0012"
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/metrics.mjs",
+      "bytes": 4394,
+      "sha256": "024c7f77732b9a67f67076801cf24b9e0258dea7f98f74a6f269164d02fea2cc"
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/mtek.mjs",
+      "bytes": 1388,
+      "sha256": "91514245669c8a60dbe98d89fa6b20554b289eec6a3b015721ee308a2cf158f6"
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/package.json",
+      "bytes": 517,
+      "sha256": "56c40cb9ceaf09ac2cfa91746cfe66d4aa2925f28fe92a7dfb4093156f5544cf"
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/page.mjs",
+      "bytes": 4926,
+      "sha256": "a5f44446bece58de0226fb6cfaead6e06378efa7d7429865e25051e8837013ce"
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/particles.mjs",
+      "bytes": 1323,
+      "sha256": "b7003c8cb326c1b07aca2d0d974ef56ea71033159acbe3f9c3ef8a2c6edb9c3e"
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/prepare.mjs",
+      "bytes": 4149,
+      "sha256": "29bcca93311af9035fa71f595c95cdc0b954b1ff369494f9e2f422a70cc0f310"
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/probe-gpu.mjs",
+      "bytes": 2916,
+      "sha256": "02db986e73c7ce0af1e801ea743ae3ffb00c05640310aec9fb146ea04a7fabf2"
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/protocol.json",
+      "bytes": 3066,
+      "sha256": "92f4cdc57e4fea6aa8f559055ea603c73d7f96cbe61559fcd25a8db2f9e0baa7"
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/README.md",
+      "bytes": 7005,
+      "sha256": "40249281f7a35e6af36b49099997be296ca4cc374511f625524f2b94e2408761"
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/scenes.mjs",
+      "bytes": 5011,
+      "sha256": "f675719fa00b3b3799432bc96a19a16434844cb89c6805f01bc46ec845506983"
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/server.mjs",
+      "bytes": 1085,
+      "sha256": "3cde02daa35005d36ba160e12a7ec22deaa6bb4ef64f2d8f1edd0eed5eb980b4"
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/test.mjs",
+      "bytes": 2884,
+      "sha256": "6ce94fcf3eaf10d00bb49acc29a115daec0fa4503ff53b25ddbc424b5e595c54"
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/three.mjs",
+      "bytes": 8260,
+      "sha256": "d44b758dd389a638858cfe7474b1c58ad12add15bd40bd3cbbc84d63d115f3bb"
+    },
+    {
+      "path": "sources/benchmarks/material-lighting/verify.mjs",
+      "bytes": 8101,
+      "sha256": "b868571a11d8310194906c2bf6d2e6b3f0f0c374ecfb331e34b608e8757a52b5"
+    },
+    {
+      "path": "sources/crates/mtek-compiler/src/assets/glb.rs",
+      "bytes": 83416,
+      "sha256": "005790f41b9fcdd2383ffacf2acb6d1045b514eac30eb370355aef6f209ec794"
+    },
+    {
+      "path": "sources/crates/mtek-compiler/src/lowering/shader/helpers.rs",
+      "bytes": 46306,
+      "sha256": "38ae7d3036cd4d96155f731f83f5778584209e5f40b5a05620a946b4b760a6f3"
+    },
+    {
+      "path": "sources/crates/mtek-compiler/src/stdlib/std/materials.mtek",
+      "bytes": 3366,
+      "sha256": "99fc9afba2aa73629a64caf69c42b38f864f471c48e5ec5b731b94ba02990214"
+    },
+    {
+      "path": "sources/package-lock.json",
+      "bytes": 195094,
+      "sha256": "58dbca1b3fa8c0d12d56499d77ba212b2f4d98b2b50a2603eb9c53776f494f40"
+    },
+    {
+      "path": "sources/package.json",
+      "bytes": 2300,
+      "sha256": "ff9d793c4993ce77ddb82d7b654ecbbaf11565bced39d52ed80c474a49ac320d"
+    },
+    {
+      "path": "sources/spec/decisions/0210-pbr-colour-alpha.md",
+      "bytes": 1745,
+      "sha256": "d9082e55f087233a0e7af72967276e66fe468a07098fb6dacc3084d5d168f86b"
+    },
+    {
+      "path": "sources/spec/materials.md",
+      "bytes": 27242,
+      "sha256": "9018b2ef0d1079985fb098c28f2288b41335b290ec16669cbd12890f634f68c8"
+    },
+    {
+      "path": "sources/tests/browser/fixtures/m4/pbr_alpha/mtek.toml",
+      "bytes": 87,
+      "sha256": "278f791ef28fa0f8460eb3d210f84c40aa80d922bf1657d2f3eff810ce65af1e"
+    },
+    {
+      "path": "sources/tests/browser/fixtures/m4/pbr_alpha/src/main.mtek",
+      "bytes": 1569,
+      "sha256": "2d3c53e972e7b5b1f6831c36c5882c9a31a582bed783796b2ef0cde37159331a"
+    },
+    {
+      "path": "sources/tests/browser/specs/m4/pbr-alpha.spec.ts",
+      "bytes": 1403,
+      "sha256": "b3d3174370f9c3d9d1b8bbec739df917556a758fd946a0cbac23736bb5a44013"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 52022,
+      "sha256": "e0ad4fbd235c7022a92e4452cbab4ea1d06467d409e0f4221790f087798248e3"
+    }
+  ]
+}

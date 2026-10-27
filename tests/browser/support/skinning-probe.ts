@@ -9,12 +9,14 @@ import { identity } from "../../../packages/runtime-web/src/math/mat4.js";
 export async function runSkinningProbe(
   actors: number,
   vertices: number,
+  withNormals: boolean | "mixed" = true,
 ): Promise<{
   error: number;
   uploaded: number;
   expectedUpload: number;
   live: number;
   validation: string | null;
+  outputBytes: number;
 }> {
   const adapter = await navigator.gpu.requestAdapter();
   if (adapter === null) throw new Error("No adapter");
@@ -46,21 +48,20 @@ export async function runSkinningProbe(
         0x80,
         positions,
       ),
-      normal = uploadBuffer(registry, device.queue, "normals", 0x80, normals);
+      normal = withNormals !== false ? uploadBuffer(registry, device.queue, "normals", 0x80, normals) : undefined;
     const engine = new GpuSkinning(device, registry),
       source = engine.source(skin, normal, vertices);
-    const instances = Array.from({ length: actors }, () => {
+    const instances = Array.from({ length: actors }, (_, actor) => {
+      const needsNormals = withNormals === "mixed" ? actor % 2 === 0 : withNormals;
       const p = registry.createBuffer({
           size: positions.byteLength,
           usage: 0x84,
         }),
-        n = registry.createBuffer({ size: normals.byteLength, usage: 0x84 });
-      return { p, n, gpu: engine.instance(source, input, p, n, vertices, 3) };
+        n = needsNormals ? registry.createBuffer({ size: normals.byteLength, usage: 0x84 }) : undefined;
+      return { p, n, palette: new Float32Array(48), gpu: engine.instance(source, input, p, n, vertices, 3) };
     });
     const before = registry.snapshot().uploadBytes;
-    let lastPalette = new Float32Array(48);
-    instances.forEach(({ gpu }, actor) => {
-      const palette = new Float32Array(48);
+    instances.forEach(({ gpu, palette }, actor) => {
       for (let j = 0; j < 3; j++) {
         const m = identity(),
           a = actor * 0.1 + j * 0.3;
@@ -73,53 +74,46 @@ export async function runSkinningProbe(
         palette.set(m, j * 16);
       }
       engine.update(gpu, palette, vertices);
-      lastPalette = palette;
     });
     engine.flush();
     const uploaded = registry.snapshot().uploadBytes - before;
+    const outputBytes = instances.reduce((sum, instance) => sum + instance.p.size + (instance.n?.size ?? 0), 0);
     const readback = device.createBuffer({
-        size: positions.byteLength * 2,
+        size: outputBytes,
         usage: 0x09,
       }),
       encoder = device.createCommandEncoder();
-    encoder.copyBufferToBuffer(
-      instances.at(-1)!.p,
-      0,
-      readback,
-      0,
-      positions.byteLength,
-    );
-    encoder.copyBufferToBuffer(
-      instances.at(-1)!.n,
-      0,
-      readback,
-      positions.byteLength,
-      normals.byteLength,
-    );
+    let offset = 0;
+    for (const { p, n } of instances) {
+      encoder.copyBufferToBuffer(p, 0, readback, offset, p.size);
+      offset += p.size;
+      if (n !== undefined) { encoder.copyBufferToBuffer(n, 0, readback, offset, n.size); offset += n.size; }
+    }
     device.queue.submit([encoder.finish()]);
     await readback.mapAsync(1);
     const actual = new Float32Array(readback.getMappedRange()),
       expectedP = new Float32Array(positions.length),
       expectedN = new Float32Array(normals.length);
-    deformSkin(skin, lastPalette, positions, normals, expectedP, expectedN);
     let error = 0;
-    for (let i = 0; i < positions.length; i++)
-      error = Math.max(
-        error,
-        Math.abs(actual[i]! - expectedP[i]!),
-        Math.abs(actual[positions.length + i]! - expectedN[i]!),
-      );
+    offset = 0;
+    for (const { palette, n } of instances) {
+      deformSkin(skin, palette, positions, n === undefined ? undefined : normals, expectedP, expectedN);
+      for (let i = 0; i < positions.length; i++)
+        error = Math.max(error, Math.abs(actual[offset + i]! - expectedP[i]!),
+          n === undefined ? 0 : Math.abs(actual[offset + positions.length + i]! - expectedN[i]!));
+      offset += positions.length * (n === undefined ? 1 : 2);
+    }
     readback.unmap();
     readback.destroy();
     for (const { p, n, gpu } of instances) {
       engine.release(gpu);
       registry.release(p);
-      registry.release(n);
+      if (n !== undefined) registry.release(n);
     }
     engine.releaseSource(source);
     engine.dispose();
     registry.release(input);
-    registry.release(normal);
+    if (normal !== undefined) registry.release(normal);
     const counters = registry.snapshot(),
       live =
         counters.liveBuffers +
@@ -133,6 +127,7 @@ export async function runSkinningProbe(
       expectedUpload: actors * 3 * 64,
       live,
       validation,
+      outputBytes,
     };
   } finally {
     registry.destroyAll();

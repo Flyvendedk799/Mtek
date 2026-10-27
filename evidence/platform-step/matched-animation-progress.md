@@ -4,6 +4,13 @@ Date: 2026-10-26. This increment continues [the animation implementation](animat
 The full platform roadmap remains incomplete. The frozen AI evidence archive and
 original runtime-workload definitions are unchanged.
 
+Follow-up, 2026-10-27: the [optimization checkpoint](animation-optimization-2026-10-27/checkpoint.md)
+retains fresh complete before/after matrices using these unchanged definitions.
+At 50 actors it records about 46% lower logical GPU buffer use and 8–9% lower GPU
+pass time. Whole-frame CPU evidence is mixed and the unchanged Three.js controls
+also drift; no whole-frame CPU win is claimed. The historical results below are
+preserved.
+
 ## Delivered
 
 - Pinned, unmodified Fox and Cesium Man GLBs with original metadata, licenses,
@@ -105,8 +112,11 @@ node benchmarks/runtime/animation/report.ts --run=evidence/platform-step/matched
 node benchmarks/runtime/animation/report.ts --run=evidence/platform-step/matched-animation/verified-2026-10-26 --check
 ```
 
-Further work includes independent-crowd optimization, broader authored-rig
-composition evidence, matched material/lighting scenes, streaming/long-session
-workloads, a second maintained reference runtime and other real hardware tiers.
+Subsequent [optimization](animation-optimization-2026-10-27/checkpoint.md),
+[authored cohorts](shader-authoring/cohorts-2026-10-27/checkpoint.md) and
+[compatible-rig composition](character-composition-2026-10-27/checkpoint.md)
+increments retain their own runtime hashes and correctness/measurement boundaries.
+Matched material/lighting scenes, streaming/long-session workloads, a second
+maintained reference runtime and other real hardware tiers remain open.
 
 ![Paused authored-character demo](matched-animation/demo/in-app.png)

@@ -1,6 +1,6 @@
 # 0202: Bounded source compute checking
 
-Status: accepted, 2026-10-26. Extends decision 0201. Source checking is implemented;
+Status: accepted, 2026-10-26; temporary packaging gate superseded by [0207](0207-source-compute-acceptance-and-capabilities.md). Extends decision 0201. Source checking is implemented;
 packaging, runtime dispatch and hardware acceptance remain required work.
 
 ## Source contract

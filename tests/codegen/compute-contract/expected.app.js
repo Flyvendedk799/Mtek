@@ -85,6 +85,14 @@ function w_builtin_MtekObject(m, base, v) {
   w_builtin_MtekObject_normal_matrix(m, base, v.normal_matrix);
 }
 
+// Generated from layout compute:src/main.mtek::Positions:params (size 4). Do not edit.
+function w_MtekComputeParams_e2cab98b_Positions_shift(m, base, v) {
+  m.f32[(base >>> 2) + 0] = v;
+}
+function w_MtekComputeParams_e2cab98b_Positions(m, base, v) {
+  w_MtekComputeParams_e2cab98b_Positions_shift(m, base, v.shift);
+}
+
 // Generated from layout compute:src/main.mtek::Required:params (size 4). Do not edit.
 function w_MtekComputeParams_e2cab98b_Required_bias(m, base, v) {
   m.f32[(base >>> 2) + 0] = v;
@@ -132,11 +140,17 @@ function w_MtekComputeParams_e2cab98b_Transform(m, base, v) {
 export const writers = {
   "builtin:frame": { all: w_builtin_MtekFrame, fields: { view_proj: w_builtin_MtekFrame_view_proj, camera_position: w_builtin_MtekFrame_camera_position, light_count: w_builtin_MtekFrame_light_count, ambient: w_builtin_MtekFrame_ambient, exposure: w_builtin_MtekFrame_exposure, lights: w_builtin_MtekFrame_lights } },
   "builtin:object": { all: w_builtin_MtekObject, fields: { model: w_builtin_MtekObject_model, normal_matrix: w_builtin_MtekObject_normal_matrix } },
+  "compute:src/main.mtek::Positions:params": { all: w_MtekComputeParams_e2cab98b_Positions, fields: { shift: w_MtekComputeParams_e2cab98b_Positions_shift } },
   "compute:src/main.mtek::Required:params": { all: w_MtekComputeParams_e2cab98b_Required, fields: { bias: w_MtekComputeParams_e2cab98b_Required_bias } },
   "compute:src/main.mtek::Transform:params": { all: w_MtekComputeParams_e2cab98b_Transform, fields: { gain: w_MtekComputeParams_e2cab98b_Transform_gain, enabled: w_MtekComputeParams_e2cab98b_Transform_enabled, offset: w_MtekComputeParams_e2cab98b_Transform_offset, table: w_MtekComputeParams_e2cab98b_Transform_table, matrix: w_MtekComputeParams_e2cab98b_Transform_matrix, settings: w_MtekComputeParams_e2cab98b_Transform_settings } },
 };
 
 export const functions = {};
+
+// on key_down (src/main.mtek::Demo.on_key_down_R)
+function b_0_on_key_down(ctx, self) {
+  ctx.reset();
+}
 
 // scene Demo (src/main.mtek::Demo): the initialisation order of spec/scenes.md section 11
 function s_Demo_init(ctx) {
@@ -146,6 +160,18 @@ function s_Demo_init(ctx) {
   ctx.setCamera("projection.fov_y", 0.8999999761581421);
   ctx.setCamera("projection.near", 0.10000000149011612);
   ctx.setCamera("projection.far", 1000.0);
+  // entity #0 Shape (src/main.mtek::Demo.Shape)
+  const e0 = ctx.e[0];
+  ctx.setTransform(e0, "position", { x: 0.0, y: 0.0, z: 0.0 });
+  ctx.setTransform(e0, "rotation", { x: 0.0, y: 0.0, z: 0.0, w: 1.0 });
+  ctx.setTransform(e0, "scale", { x: 1.0, y: 1.0, z: 1.0 });
+  ctx.setVisible(e0, true);
+  // entity #1 Twin (src/main.mtek::Demo.Twin)
+  const e1 = ctx.e[1];
+  ctx.setTransform(e1, "position", { x: 0.0, y: 0.0, z: 0.0 });
+  ctx.setTransform(e1, "rotation", { x: 0.0, y: 0.0, z: 0.0, w: 1.0 });
+  ctx.setTransform(e1, "scale", { x: 1.0, y: 1.0, z: 1.0 });
+  ctx.setVisible(e1, true);
 }
 
 export const scenes = {
@@ -153,9 +179,9 @@ export const scenes = {
     init: s_Demo_init,
     update: null,
     fixedUpdate: null,
-    entityUpdate: [],
-    entityFixedUpdate: [],
-    events: {},
+    entityUpdate: [null, null],
+    entityFixedUpdate: [null, null],
+    events: { key_down: [{ key: "KeyR", owner: -1, fn: b_0_on_key_down }] },
     bindings: [],
   },
 };

@@ -68,6 +68,6 @@ describe("import/use separation and audit integrity",()=>{
   });
   it("pins every default-corpus source without crawling directories",()=>{
     const corpus=parseCorpus(JSON.parse(readFileSync(join(root,"tools/asset-audit/corpus.json"),"utf8")) as unknown);
-    expect(corpus.entries).toHaveLength(16);for(const entry of corpus.entries){expect(entry.file).not.toContain("benchmarks/results/ai");expect(sha256(readFileSync(resolve(root,"tools/asset-audit",entry.file)))).toBe(entry.sha256);}
+    expect(corpus.entries).toHaveLength(21);for(const entry of corpus.entries){expect(entry.file).not.toContain("benchmarks/results/ai");expect(sha256(readFileSync(resolve(root,"tools/asset-audit",entry.file)))).toBe(entry.sha256);}
   });
 });

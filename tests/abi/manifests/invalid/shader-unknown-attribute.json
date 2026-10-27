@@ -324,7 +324,7 @@
       "vertexEntry": "mtek_vs",
       "fragmentEntry": "mtek_fs",
       "vertexAttributes": [
-        "tangent"
+        "colour"
       ],
       "surfaceInputs": []
     }

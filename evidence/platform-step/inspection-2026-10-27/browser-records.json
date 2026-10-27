@@ -1,0 +1,1045 @@
+{
+  "format": "mtek-inspection-evidence/1",
+  "records": [
+    {
+      "sourceRun": "2026-10-27T02-42-39-396Z",
+      "destination": "rejected/nominal-collider",
+      "stats": {
+        "startTime": "2026-10-27T02:42:39.509Z",
+        "duration": 13503.53,
+        "expected": 3,
+        "skipped": 0,
+        "unexpected": 1,
+        "flaky": 0
+      },
+      "files": [
+        {
+          "path": "artifacts/.last-run.json",
+          "sourceSha256": "f73b337da6b5981986803c39266d7b3a54d6392dd0b88006d3b27fe86526c7cd",
+          "retainedSha256": "c29e10e70005d37057c57068d161b4a30aa057c560c35f1912d21b5bf1889732"
+        },
+        {
+          "path": "artifacts/inspection-overlays-layer--a2043--explain-the-composed-scene-hardware/error-context.md",
+          "sourceSha256": "f5599aac8959c5e622aa8a1353b8c230afb9d440c8f5a95155c4e17c9656ffb7",
+          "retainedSha256": "f5599aac8959c5e622aa8a1353b8c230afb9d440c8f5a95155c4e17c9656ffb7"
+        },
+        {
+          "path": "artifacts/inspection-overlays-lighti-3ae4f-onal-public-package-overlay-hardware/lighting-world-bounds.png",
+          "sourceSha256": "6d5f631e74b892572a1375028c3c7820f2315de05668e08650f11b88bc4353c3",
+          "retainedSha256": "6d5f631e74b892572a1375028c3c7820f2315de05668e08650f11b88bc4353c3"
+        },
+        {
+          "path": "artifacts/inspection-overlays-produc-5a5e6-s-and-resized-content-boxes-hardware/inspection-pose-overlay.png",
+          "sourceSha256": "d407908dd8667c8cc517869b9b6ac5b71a8f28dd7b49de8b141660a86e285d71",
+          "retainedSha256": "d407908dd8667c8cc517869b9b6ac5b71a8f28dd7b49de8b141660a86e285d71"
+        },
+        {
+          "path": "environment-hardware.json",
+          "sourceSha256": "f8b084a2cf915c1ec158fd47da3ccb8436a68593fba3a368d20ef26dd7a3ec7f",
+          "retainedSha256": "f8b084a2cf915c1ec158fd47da3ccb8436a68593fba3a368d20ef26dd7a3ec7f"
+        },
+        {
+          "path": "inspection-build.json",
+          "sourceSha256": "ce87a19f53c8e14e75d767be466e8ad52ed2c61b4d17372a65bf6b5a1ef1c536",
+          "retainedSha256": "ce87a19f53c8e14e75d767be466e8ad52ed2c61b4d17372a65bf6b5a1ef1c536"
+        },
+        {
+          "path": "inspection-lifetime-hardware.json",
+          "sourceSha256": "606e1048fe2a3861b726107619f62cc92673bc3dbbecc12a27a8bc2301929a21",
+          "retainedSha256": "606e1048fe2a3861b726107619f62cc92673bc3dbbecc12a27a8bc2301929a21"
+        },
+        {
+          "path": "inspection-pose-hardware.json",
+          "sourceSha256": "8eed5e2f472c53b2dd020a2ef79c40fa03ea51819fae16a768acfa495a07bbb1",
+          "retainedSha256": "8eed5e2f472c53b2dd020a2ef79c40fa03ea51819fae16a768acfa495a07bbb1"
+        },
+        {
+          "path": "test-results.json",
+          "sourceSha256": "ec273f00a625bb6b39462ef5bf8882675e725ec38875eed500f51a7442607b17",
+          "retainedSha256": "b09d78a351315f78600a02f3f1441bf6ed637643efa5a9556271d1140502e7b6"
+        }
+      ]
+    },
+    {
+      "sourceRun": "2026-10-27T02-43-59-208Z",
+      "destination": "rejected/opaque-overlay-hardware",
+      "stats": {
+        "startTime": "2026-10-27T02:43:59.294Z",
+        "duration": 6944.642,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "files": [
+        {
+          "path": "artifacts/.last-run.json",
+          "sourceSha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+          "retainedSha256": "fff6299efb51ba9ef550e500ecc967e972c83e86be387042c360caea7fdbae29"
+        },
+        {
+          "path": "artifacts/inspection-overlays-layer--a2043--explain-the-composed-scene-hardware/inspection-contacts.png",
+          "sourceSha256": "fdada13a2bc176c4cdb2aeb73e11044b2b9d60e5d0e4f25d102adf8dd856b1cc",
+          "retainedSha256": "fdada13a2bc176c4cdb2aeb73e11044b2b9d60e5d0e4f25d102adf8dd856b1cc"
+        },
+        {
+          "path": "artifacts/inspection-overlays-lighti-3ae4f-onal-public-package-overlay-hardware/lighting-world-bounds.png",
+          "sourceSha256": "6d5f631e74b892572a1375028c3c7820f2315de05668e08650f11b88bc4353c3",
+          "retainedSha256": "6d5f631e74b892572a1375028c3c7820f2315de05668e08650f11b88bc4353c3"
+        },
+        {
+          "path": "artifacts/inspection-overlays-produc-5a5e6-s-and-resized-content-boxes-hardware/inspection-pose-overlay.png",
+          "sourceSha256": "d407908dd8667c8cc517869b9b6ac5b71a8f28dd7b49de8b141660a86e285d71",
+          "retainedSha256": "d407908dd8667c8cc517869b9b6ac5b71a8f28dd7b49de8b141660a86e285d71"
+        },
+        {
+          "path": "environment-hardware.json",
+          "sourceSha256": "4c7a140a4060a6a069155b1d438b4b539f71c721659b00a7af44425095d099aa",
+          "retainedSha256": "4c7a140a4060a6a069155b1d438b4b539f71c721659b00a7af44425095d099aa"
+        },
+        {
+          "path": "inspection-build.json",
+          "sourceSha256": "ce87a19f53c8e14e75d767be466e8ad52ed2c61b4d17372a65bf6b5a1ef1c536",
+          "retainedSha256": "ce87a19f53c8e14e75d767be466e8ad52ed2c61b4d17372a65bf6b5a1ef1c536"
+        },
+        {
+          "path": "inspection-composition-hardware.json",
+          "sourceSha256": "3ec34f87b80cc3795092364b8c695ef5e5b5ea1d22e5e0380ee014fca06b5e47",
+          "retainedSha256": "3ec34f87b80cc3795092364b8c695ef5e5b5ea1d22e5e0380ee014fca06b5e47"
+        },
+        {
+          "path": "inspection-lifetime-hardware.json",
+          "sourceSha256": "f31bef4bf86d92c1d242d362a4e96628239c55769aba8487dc02ef553018d39f",
+          "retainedSha256": "f31bef4bf86d92c1d242d362a4e96628239c55769aba8487dc02ef553018d39f"
+        },
+        {
+          "path": "inspection-pose-hardware.json",
+          "sourceSha256": "8eed5e2f472c53b2dd020a2ef79c40fa03ea51819fae16a768acfa495a07bbb1",
+          "retainedSha256": "8eed5e2f472c53b2dd020a2ef79c40fa03ea51819fae16a768acfa495a07bbb1"
+        },
+        {
+          "path": "test-results.json",
+          "sourceSha256": "b653dfd1415c56e03aef87ea502cbbb89b9f2fe19769877084272268ea0111dc",
+          "retainedSha256": "86ba991fac99eefcdbab1d9e1f4a210bcda4665b203323668749301f12e42538"
+        }
+      ]
+    },
+    {
+      "sourceRun": "2026-10-27T02-44-07-095Z",
+      "destination": "rejected/opaque-overlay-software",
+      "stats": {
+        "startTime": "2026-10-27T02:44:07.173Z",
+        "duration": 13454.904,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "files": [
+        {
+          "path": "artifacts/.last-run.json",
+          "sourceSha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+          "retainedSha256": "fff6299efb51ba9ef550e500ecc967e972c83e86be387042c360caea7fdbae29"
+        },
+        {
+          "path": "artifacts/inspection-overlays-layer--a2043--explain-the-composed-scene-software/inspection-contacts.png",
+          "sourceSha256": "0ea4fe8ca1197ac8871e0adeb1fcf1383d5c61dd2b82f3c101217f2cde06a3d1",
+          "retainedSha256": "0ea4fe8ca1197ac8871e0adeb1fcf1383d5c61dd2b82f3c101217f2cde06a3d1"
+        },
+        {
+          "path": "artifacts/inspection-overlays-lighti-3ae4f-onal-public-package-overlay-software/lighting-world-bounds.png",
+          "sourceSha256": "54396744ea516d8c2f066c3cdcebe8ff4cf10118881a28ca23841cf1fce57cac",
+          "retainedSha256": "54396744ea516d8c2f066c3cdcebe8ff4cf10118881a28ca23841cf1fce57cac"
+        },
+        {
+          "path": "artifacts/inspection-overlays-produc-5a5e6-s-and-resized-content-boxes-software/inspection-pose-overlay.png",
+          "sourceSha256": "f332888dbe27295858ca899f6e8347e40dffc45b59483135d2c9a5c36f6e158e",
+          "retainedSha256": "f332888dbe27295858ca899f6e8347e40dffc45b59483135d2c9a5c36f6e158e"
+        },
+        {
+          "path": "environment-software.json",
+          "sourceSha256": "c4039bf948a09d336f8c4f415e52193a99864883b3b31c55e7ee85332a4fcad3",
+          "retainedSha256": "c4039bf948a09d336f8c4f415e52193a99864883b3b31c55e7ee85332a4fcad3"
+        },
+        {
+          "path": "inspection-build.json",
+          "sourceSha256": "ce87a19f53c8e14e75d767be466e8ad52ed2c61b4d17372a65bf6b5a1ef1c536",
+          "retainedSha256": "ce87a19f53c8e14e75d767be466e8ad52ed2c61b4d17372a65bf6b5a1ef1c536"
+        },
+        {
+          "path": "inspection-composition-software.json",
+          "sourceSha256": "3ec34f87b80cc3795092364b8c695ef5e5b5ea1d22e5e0380ee014fca06b5e47",
+          "retainedSha256": "3ec34f87b80cc3795092364b8c695ef5e5b5ea1d22e5e0380ee014fca06b5e47"
+        },
+        {
+          "path": "inspection-lifetime-software.json",
+          "sourceSha256": "669ee42b1bcb6ff2addac8672055a76758547e57c2cdf528ee188619240bd5e9",
+          "retainedSha256": "669ee42b1bcb6ff2addac8672055a76758547e57c2cdf528ee188619240bd5e9"
+        },
+        {
+          "path": "inspection-pose-software.json",
+          "sourceSha256": "8eed5e2f472c53b2dd020a2ef79c40fa03ea51819fae16a768acfa495a07bbb1",
+          "retainedSha256": "8eed5e2f472c53b2dd020a2ef79c40fa03ea51819fae16a768acfa495a07bbb1"
+        },
+        {
+          "path": "test-results.json",
+          "sourceSha256": "98ff6ad750efcdf71ecd1213644ecdbb0e76f925842f00307b8f67d3610b2250",
+          "retainedSha256": "e9b883eabc85abda84aad8474424252f6fc222bb772c0b8ffa50985079418db7"
+        }
+      ]
+    },
+    {
+      "sourceRun": "2026-10-27T02-48-27-009Z",
+      "destination": "intermediate/transparent-hardware",
+      "stats": {
+        "startTime": "2026-10-27T02:48:27.080Z",
+        "duration": 7268.711,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "files": [
+        {
+          "path": "artifacts/.last-run.json",
+          "sourceSha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+          "retainedSha256": "fff6299efb51ba9ef550e500ecc967e972c83e86be387042c360caea7fdbae29"
+        },
+        {
+          "path": "artifacts/inspection-overlays-layer--a2043--explain-the-composed-scene-hardware/inspection-contacts.png",
+          "sourceSha256": "00fac6240fea4928b8a51233cc44d9ba418e20c5d80336828a30123aa4d76e66",
+          "retainedSha256": "00fac6240fea4928b8a51233cc44d9ba418e20c5d80336828a30123aa4d76e66"
+        },
+        {
+          "path": "artifacts/inspection-overlays-lighti-3ae4f-onal-public-package-overlay-hardware/lighting-world-bounds.png",
+          "sourceSha256": "ea87c056520245794fba2e25a5e03e8ee514154e0a94059231299bbe14096fcd",
+          "retainedSha256": "ea87c056520245794fba2e25a5e03e8ee514154e0a94059231299bbe14096fcd"
+        },
+        {
+          "path": "artifacts/inspection-overlays-produc-5a5e6-s-and-resized-content-boxes-hardware/inspection-pose-overlay.png",
+          "sourceSha256": "c42bf2d5afdb487e21b4113d3510b65ef39f6c5f1601380a6963f818eb7fa130",
+          "retainedSha256": "c42bf2d5afdb487e21b4113d3510b65ef39f6c5f1601380a6963f818eb7fa130"
+        },
+        {
+          "path": "environment-hardware.json",
+          "sourceSha256": "00a6a3ea570ae4876bbc3ac80e8d74d96c472fa73c0a2ac90786002796410939",
+          "retainedSha256": "00a6a3ea570ae4876bbc3ac80e8d74d96c472fa73c0a2ac90786002796410939"
+        },
+        {
+          "path": "inspection-build.json",
+          "sourceSha256": "410bc98f499ef08927746639ae7d54c537af5d1919e77ad98cb74d8bb5590abe",
+          "retainedSha256": "410bc98f499ef08927746639ae7d54c537af5d1919e77ad98cb74d8bb5590abe"
+        },
+        {
+          "path": "inspection-composition-hardware.json",
+          "sourceSha256": "3ec34f87b80cc3795092364b8c695ef5e5b5ea1d22e5e0380ee014fca06b5e47",
+          "retainedSha256": "3ec34f87b80cc3795092364b8c695ef5e5b5ea1d22e5e0380ee014fca06b5e47"
+        },
+        {
+          "path": "inspection-lifetime-hardware.json",
+          "sourceSha256": "318289ace5dca3a0b9cc5fb3d9da9b18d3e384e22269f5107d29d87dce30a0bb",
+          "retainedSha256": "318289ace5dca3a0b9cc5fb3d9da9b18d3e384e22269f5107d29d87dce30a0bb"
+        },
+        {
+          "path": "inspection-pose-hardware.json",
+          "sourceSha256": "8eed5e2f472c53b2dd020a2ef79c40fa03ea51819fae16a768acfa495a07bbb1",
+          "retainedSha256": "8eed5e2f472c53b2dd020a2ef79c40fa03ea51819fae16a768acfa495a07bbb1"
+        },
+        {
+          "path": "test-results.json",
+          "sourceSha256": "32acfc714518ceb341366b5b5d0e2d29066876bc177439d588a92d15217e7efe",
+          "retainedSha256": "b7dec42410b29ce59d9b3652a43d427cabef53dfe0b4ac2010c1c1f3c5a90028"
+        }
+      ]
+    },
+    {
+      "sourceRun": "2026-10-27T02-48-35-186Z",
+      "destination": "rejected/recovery-race-software",
+      "stats": {
+        "startTime": "2026-10-27T02:48:35.258Z",
+        "duration": 18921.408000000003,
+        "expected": 3,
+        "skipped": 0,
+        "unexpected": 1,
+        "flaky": 0
+      },
+      "files": [
+        {
+          "path": "artifacts/.last-run.json",
+          "sourceSha256": "3dadcf6b28d0d587e59dd713988c03ef099571763607eae2bef50d6087083b64",
+          "retainedSha256": "1b18684aa71660843ac042a5466d0841456e8fe23a319f796db5beb71cdfa769"
+        },
+        {
+          "path": "artifacts/inspection-overlays-layer--a2043--explain-the-composed-scene-software/inspection-contacts.png",
+          "sourceSha256": "9fcdc213711adfdbbb0546cb981edbabd9ad3dcb6b13e806ca7d21a1a0050091",
+          "retainedSha256": "9fcdc213711adfdbbb0546cb981edbabd9ad3dcb6b13e806ca7d21a1a0050091"
+        },
+        {
+          "path": "artifacts/inspection-overlays-lighti-3ae4f-onal-public-package-overlay-software/lighting-world-bounds.png",
+          "sourceSha256": "34abd585e5505eb75bfc249a776e14c3826f5c364a33b9692689b7c126acee9e",
+          "retainedSha256": "34abd585e5505eb75bfc249a776e14c3826f5c364a33b9692689b7c126acee9e"
+        },
+        {
+          "path": "artifacts/inspection-overlays-overla-fbf76-esource-lifetime-boundaries-software/error-context.md",
+          "sourceSha256": "ceb3bc851fac2ae82a70d0d1e7545536c7f16b003076463ce491ec1cc34f9f05",
+          "retainedSha256": "ceb3bc851fac2ae82a70d0d1e7545536c7f16b003076463ce491ec1cc34f9f05"
+        },
+        {
+          "path": "artifacts/inspection-overlays-produc-5a5e6-s-and-resized-content-boxes-software/inspection-pose-overlay.png",
+          "sourceSha256": "7b9217f7b0b7e82e49217e50f761b00e4f1e403ed1b35ea928262a90f5a12c94",
+          "retainedSha256": "7b9217f7b0b7e82e49217e50f761b00e4f1e403ed1b35ea928262a90f5a12c94"
+        },
+        {
+          "path": "environment-software.json",
+          "sourceSha256": "e79764e20b16c2a0d0ea3337dbfdd9fb224950988c10a430e43cce2bdff69eff",
+          "retainedSha256": "e79764e20b16c2a0d0ea3337dbfdd9fb224950988c10a430e43cce2bdff69eff"
+        },
+        {
+          "path": "inspection-build.json",
+          "sourceSha256": "410bc98f499ef08927746639ae7d54c537af5d1919e77ad98cb74d8bb5590abe",
+          "retainedSha256": "410bc98f499ef08927746639ae7d54c537af5d1919e77ad98cb74d8bb5590abe"
+        },
+        {
+          "path": "inspection-composition-software.json",
+          "sourceSha256": "3ec34f87b80cc3795092364b8c695ef5e5b5ea1d22e5e0380ee014fca06b5e47",
+          "retainedSha256": "3ec34f87b80cc3795092364b8c695ef5e5b5ea1d22e5e0380ee014fca06b5e47"
+        },
+        {
+          "path": "inspection-pose-software.json",
+          "sourceSha256": "8eed5e2f472c53b2dd020a2ef79c40fa03ea51819fae16a768acfa495a07bbb1",
+          "retainedSha256": "8eed5e2f472c53b2dd020a2ef79c40fa03ea51819fae16a768acfa495a07bbb1"
+        },
+        {
+          "path": "test-results.json",
+          "sourceSha256": "a924234bacf035ba856299ca3625c8984a377c8d844ef48ba6b1d41181341250",
+          "retainedSha256": "1797b498d15df61d5b2e8e229282bcdab2f1a2c8b4f8836534bf67916ad7a328"
+        }
+      ]
+    },
+    {
+      "sourceRun": "2026-10-27T02-52-04-369Z",
+      "destination": "hardware",
+      "stats": {
+        "startTime": "2026-10-27T02:52:04.462Z",
+        "duration": 11886.342999999999,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "files": [
+        {
+          "path": "artifacts/.last-run.json",
+          "sourceSha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+          "retainedSha256": "fff6299efb51ba9ef550e500ecc967e972c83e86be387042c360caea7fdbae29"
+        },
+        {
+          "path": "artifacts/inspection-overlays-layer--a2043--explain-the-composed-scene-hardware/inspection-contacts.png",
+          "sourceSha256": "00fac6240fea4928b8a51233cc44d9ba418e20c5d80336828a30123aa4d76e66",
+          "retainedSha256": "00fac6240fea4928b8a51233cc44d9ba418e20c5d80336828a30123aa4d76e66"
+        },
+        {
+          "path": "artifacts/inspection-overlays-lighti-3ae4f-onal-public-package-overlay-hardware/lighting-world-bounds.png",
+          "sourceSha256": "a8606c660f03913da480cc293f843c256788752da5a5f2d4c06a8dc7dba21b66",
+          "retainedSha256": "a8606c660f03913da480cc293f843c256788752da5a5f2d4c06a8dc7dba21b66"
+        },
+        {
+          "path": "artifacts/inspection-overlays-produc-5a5e6-s-and-resized-content-boxes-hardware/inspection-pose-overlay.png",
+          "sourceSha256": "c42bf2d5afdb487e21b4113d3510b65ef39f6c5f1601380a6963f818eb7fa130",
+          "retainedSha256": "c42bf2d5afdb487e21b4113d3510b65ef39f6c5f1601380a6963f818eb7fa130"
+        },
+        {
+          "path": "environment-hardware.json",
+          "sourceSha256": "a07fa161de75e4cd41679c2c9a42148c64a65bdbdc128fc8e1a359ddaa7af8c6",
+          "retainedSha256": "a07fa161de75e4cd41679c2c9a42148c64a65bdbdc128fc8e1a359ddaa7af8c6"
+        },
+        {
+          "path": "inspection-build.json",
+          "sourceSha256": "edb891ed6da183eedf911e5cf0f2398e0d7894deecc7cbcb57c825743da28b25",
+          "retainedSha256": "edb891ed6da183eedf911e5cf0f2398e0d7894deecc7cbcb57c825743da28b25"
+        },
+        {
+          "path": "inspection-composition-hardware.json",
+          "sourceSha256": "3ec34f87b80cc3795092364b8c695ef5e5b5ea1d22e5e0380ee014fca06b5e47",
+          "retainedSha256": "3ec34f87b80cc3795092364b8c695ef5e5b5ea1d22e5e0380ee014fca06b5e47"
+        },
+        {
+          "path": "inspection-lifetime-hardware.json",
+          "sourceSha256": "f31bef4bf86d92c1d242d362a4e96628239c55769aba8487dc02ef553018d39f",
+          "retainedSha256": "f31bef4bf86d92c1d242d362a4e96628239c55769aba8487dc02ef553018d39f"
+        },
+        {
+          "path": "inspection-pose-hardware.json",
+          "sourceSha256": "8eed5e2f472c53b2dd020a2ef79c40fa03ea51819fae16a768acfa495a07bbb1",
+          "retainedSha256": "8eed5e2f472c53b2dd020a2ef79c40fa03ea51819fae16a768acfa495a07bbb1"
+        },
+        {
+          "path": "test-results.json",
+          "sourceSha256": "1dd694fd5fdfee1faad9da5a7930770bdd226eded0b7ffd34d571d94b783006f",
+          "retainedSha256": "0f177945b2cb56897a3765d3306a93d17f2b30fa5739f864b95533f4cafa7097"
+        }
+      ]
+    },
+    {
+      "sourceRun": "2026-10-27T02-52-17-196Z",
+      "destination": "software",
+      "stats": {
+        "startTime": "2026-10-27T02:52:17.289Z",
+        "duration": 13196.317000000001,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "files": [
+        {
+          "path": "artifacts/.last-run.json",
+          "sourceSha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+          "retainedSha256": "fff6299efb51ba9ef550e500ecc967e972c83e86be387042c360caea7fdbae29"
+        },
+        {
+          "path": "artifacts/inspection-overlays-layer--a2043--explain-the-composed-scene-software/inspection-contacts.png",
+          "sourceSha256": "9fcdc213711adfdbbb0546cb981edbabd9ad3dcb6b13e806ca7d21a1a0050091",
+          "retainedSha256": "9fcdc213711adfdbbb0546cb981edbabd9ad3dcb6b13e806ca7d21a1a0050091"
+        },
+        {
+          "path": "artifacts/inspection-overlays-lighti-3ae4f-onal-public-package-overlay-software/lighting-world-bounds.png",
+          "sourceSha256": "0ffa02da3b207a786945a7911bb13d0b7ce9bb63ca97710e3d9bf0e2d3d93150",
+          "retainedSha256": "0ffa02da3b207a786945a7911bb13d0b7ce9bb63ca97710e3d9bf0e2d3d93150"
+        },
+        {
+          "path": "artifacts/inspection-overlays-produc-5a5e6-s-and-resized-content-boxes-software/inspection-pose-overlay.png",
+          "sourceSha256": "5783da6287647328d6686fa029ede5322030f087c4e875a6f002649cefb5235e",
+          "retainedSha256": "5783da6287647328d6686fa029ede5322030f087c4e875a6f002649cefb5235e"
+        },
+        {
+          "path": "environment-software.json",
+          "sourceSha256": "c8ec41cf6336797568d8ca95edf6b0380202b77a44aa69ce131a3ed38611c935",
+          "retainedSha256": "c8ec41cf6336797568d8ca95edf6b0380202b77a44aa69ce131a3ed38611c935"
+        },
+        {
+          "path": "inspection-build.json",
+          "sourceSha256": "edb891ed6da183eedf911e5cf0f2398e0d7894deecc7cbcb57c825743da28b25",
+          "retainedSha256": "edb891ed6da183eedf911e5cf0f2398e0d7894deecc7cbcb57c825743da28b25"
+        },
+        {
+          "path": "inspection-composition-software.json",
+          "sourceSha256": "3ec34f87b80cc3795092364b8c695ef5e5b5ea1d22e5e0380ee014fca06b5e47",
+          "retainedSha256": "3ec34f87b80cc3795092364b8c695ef5e5b5ea1d22e5e0380ee014fca06b5e47"
+        },
+        {
+          "path": "inspection-lifetime-software.json",
+          "sourceSha256": "2903611b8e3602fd000f35b87be18d8c33055da594b98915cb0028edbe3e2ae2",
+          "retainedSha256": "2903611b8e3602fd000f35b87be18d8c33055da594b98915cb0028edbe3e2ae2"
+        },
+        {
+          "path": "inspection-pose-software.json",
+          "sourceSha256": "8eed5e2f472c53b2dd020a2ef79c40fa03ea51819fae16a768acfa495a07bbb1",
+          "retainedSha256": "8eed5e2f472c53b2dd020a2ef79c40fa03ea51819fae16a768acfa495a07bbb1"
+        },
+        {
+          "path": "test-results.json",
+          "sourceSha256": "e8ef1a8be79bfe5fded52f685fd745e226069a903ed4c352e59bb72f16db4047",
+          "retainedSha256": "add5b75337caefa058528a71ecc6335397142ae9d09ef7ee2263ea34905d33f1"
+        }
+      ]
+    },
+    {
+      "sourceRun": "2026-10-27T03-06-24-876Z",
+      "destination": "release/compute",
+      "stats": {
+        "startTime": "2026-10-27T03:06:24.969Z",
+        "duration": 21154.297,
+        "expected": 18,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "files": [
+        {
+          "path": "artifacts/.last-run.json",
+          "sourceSha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+          "retainedSha256": "fff6299efb51ba9ef550e500ecc967e972c83e86be387042c360caea7fdbae29"
+        },
+        {
+          "path": "artifacts/compute-acceptance-compute-4a417-h-recovery-detach-and-reset-hardware/computed-geometry.png",
+          "sourceSha256": "16ce795fce5357405c291dc3812af5c38614586d1cea88c5b0d10c2f196208f1",
+          "retainedSha256": "16ce795fce5357405c291dc3812af5c38614586d1cea88c5b0d10c2f196208f1"
+        },
+        {
+          "path": "artifacts/compute-acceptance-compute-4a417-h-recovery-detach-and-reset-software/computed-geometry.png",
+          "sourceSha256": "16ce795fce5357405c291dc3812af5c38614586d1cea88c5b0d10c2f196208f1",
+          "retainedSha256": "16ce795fce5357405c291dc3812af5c38614586d1cea88c5b0d10c2f196208f1"
+        },
+        {
+          "path": "artifacts/compute-example-the-public-6242d-etry-without-browser-errors-hardware/compute-example.png",
+          "sourceSha256": "8c81138a6f48a00e5f6ae1bba4a368ef1b51f1f20c300cb1d24d5c80a7eea622",
+          "retainedSha256": "8c81138a6f48a00e5f6ae1bba4a368ef1b51f1f20c300cb1d24d5c80a7eea622"
+        },
+        {
+          "path": "artifacts/compute-example-the-public-6242d-etry-without-browser-errors-software/compute-example.png",
+          "sourceSha256": "8534ad9caef5df56de6dc9fd86ef9de6ea492f22788720b90c7b98699bb56fab",
+          "retainedSha256": "8534ad9caef5df56de6dc9fd86ef9de6ea492f22788720b90c7b98699bb56fab"
+        },
+        {
+          "path": "artifacts/compute-shadows-compute-sh-226a3-bounds-pending-and-recovery-hardware/compute-shadow.png",
+          "sourceSha256": "71d6d85c446b9e7cf69ba52c180e0d2155641590af82a6d504d5b4d9d214bd8e",
+          "retainedSha256": "71d6d85c446b9e7cf69ba52c180e0d2155641590af82a6d504d5b4d9d214bd8e"
+        },
+        {
+          "path": "artifacts/compute-shadows-compute-sh-226a3-bounds-pending-and-recovery-software/compute-shadow.png",
+          "sourceSha256": "f954942e8bf2c488d1a4084a7fe0498a57a173d20ef0e624c5621eab00bec34b",
+          "retainedSha256": "f954942e8bf2c488d1a4084a7fe0498a57a173d20ef0e624c5621eab00bec34b"
+        },
+        {
+          "path": "artifacts/compute-shadows-compute-sh-33dc7-camera-pending-and-recovery-hardware/compute-shadow.png",
+          "sourceSha256": "523d9ede1aaa45449cc85df51711b1b6a70c32c66961e6dedb08e0489a348658",
+          "retainedSha256": "523d9ede1aaa45449cc85df51711b1b6a70c32c66961e6dedb08e0489a348658"
+        },
+        {
+          "path": "artifacts/compute-shadows-compute-sh-33dc7-camera-pending-and-recovery-software/compute-shadow.png",
+          "sourceSha256": "513ed22d29bc0b7b3aa1c3c5942481278d4e870b7fbd17fefc2eba37daf00fd9",
+          "retainedSha256": "513ed22d29bc0b7b3aa1c3c5942481278d4e870b7fbd17fefc2eba37daf00fd9"
+        },
+        {
+          "path": "artifacts/compute-shadows-compute-sh-3edab-bounds-pending-and-recovery-hardware/compute-shadow.png",
+          "sourceSha256": "e85abe5d68dced7a21459f2900978c36b1ac89be56a30f3f186f4ef65369b26f",
+          "retainedSha256": "e85abe5d68dced7a21459f2900978c36b1ac89be56a30f3f186f4ef65369b26f"
+        },
+        {
+          "path": "artifacts/compute-shadows-compute-sh-3edab-bounds-pending-and-recovery-software/compute-shadow.png",
+          "sourceSha256": "4cf95564c129e0aa84c4049fbe0b446eebbc9b18dcf62ffecef7f6e358b79861",
+          "retainedSha256": "4cf95564c129e0aa84c4049fbe0b446eebbc9b18dcf62ffecef7f6e358b79861"
+        },
+        {
+          "path": "artifacts/compute-shadows-compute-sh-978ac-camera-pending-and-recovery-hardware/compute-shadow.png",
+          "sourceSha256": "58d810d45ce7693fcc269edd6e34b349417337ac03a435346d64ecd2d50bdb2c",
+          "retainedSha256": "58d810d45ce7693fcc269edd6e34b349417337ac03a435346d64ecd2d50bdb2c"
+        },
+        {
+          "path": "artifacts/compute-shadows-compute-sh-978ac-camera-pending-and-recovery-software/compute-shadow.png",
+          "sourceSha256": "d813055f5cb613a7d082955af0fa86f869ff0257df846794aa57be6abd9451c8",
+          "retainedSha256": "d813055f5cb613a7d082955af0fa86f869ff0257df846794aa57be6abd9451c8"
+        },
+        {
+          "path": "artifacts/compute-shadows-compute-sh-c08ef-camera-pending-and-recovery-hardware/compute-shadow.png",
+          "sourceSha256": "ceb0ed15553a0a32f8ecddb68c97e9a165618c655f6dfee52f523f9da5499692",
+          "retainedSha256": "ceb0ed15553a0a32f8ecddb68c97e9a165618c655f6dfee52f523f9da5499692"
+        },
+        {
+          "path": "artifacts/compute-shadows-compute-sh-c08ef-camera-pending-and-recovery-software/compute-shadow.png",
+          "sourceSha256": "00a676688adce3f30764b48239b5888c3fb49871178678d3851554950d6f6751",
+          "retainedSha256": "00a676688adce3f30764b48239b5888c3fb49871178678d3851554950d6f6751"
+        },
+        {
+          "path": "artifacts/compute-shadows-compute-sh-e8a57-bounds-pending-and-recovery-hardware/compute-shadow.png",
+          "sourceSha256": "4e97ced720e6ca378c817a18d877626353e08a843d817ddfa631d3242daa6f2d",
+          "retainedSha256": "4e97ced720e6ca378c817a18d877626353e08a843d817ddfa631d3242daa6f2d"
+        },
+        {
+          "path": "artifacts/compute-shadows-compute-sh-e8a57-bounds-pending-and-recovery-software/compute-shadow.png",
+          "sourceSha256": "7e8ecbadde2a009802a6670217afb5bb3ac48586606ab55dc3ddd11260abaaec",
+          "retainedSha256": "7e8ecbadde2a009802a6670217afb5bb3ac48586606ab55dc3ddd11260abaaec"
+        },
+        {
+          "path": "compute-example-hardware.json",
+          "sourceSha256": "4b91b7759d38752263e643a93e890d85762e3ee7bf7b8b95ea870fbfde38a56d",
+          "retainedSha256": "4b91b7759d38752263e643a93e890d85762e3ee7bf7b8b95ea870fbfde38a56d"
+        },
+        {
+          "path": "compute-example-software.json",
+          "sourceSha256": "4b91b7759d38752263e643a93e890d85762e3ee7bf7b8b95ea870fbfde38a56d",
+          "retainedSha256": "4b91b7759d38752263e643a93e890d85762e3ee7bf7b8b95ea870fbfde38a56d"
+        },
+        {
+          "path": "compute-numerical-hardware.json",
+          "sourceSha256": "de1b55c0bed9e098da5ce572e0b74e0d6ee145f4dba6adb55ed95cf40b93ff54",
+          "retainedSha256": "de1b55c0bed9e098da5ce572e0b74e0d6ee145f4dba6adb55ed95cf40b93ff54"
+        },
+        {
+          "path": "compute-numerical-software.json",
+          "sourceSha256": "de1b55c0bed9e098da5ce572e0b74e0d6ee145f4dba6adb55ed95cf40b93ff54",
+          "retainedSha256": "de1b55c0bed9e098da5ce572e0b74e0d6ee145f4dba6adb55ed95cf40b93ff54"
+        },
+        {
+          "path": "compute-package.json",
+          "sourceSha256": "0c5697e8acabc5ddc151284980ca5a452cbc8d9b7d05448c616843de1c08faab",
+          "retainedSha256": "0c5697e8acabc5ddc151284980ca5a452cbc8d9b7d05448c616843de1c08faab"
+        },
+        {
+          "path": "compute-render-hardware.json",
+          "sourceSha256": "53e57011209bbf8e6f92e32bde7bc8f3bbf3b386c89092f9b5c060c642780b61",
+          "retainedSha256": "53e57011209bbf8e6f92e32bde7bc8f3bbf3b386c89092f9b5c060c642780b61"
+        },
+        {
+          "path": "compute-render-software.json",
+          "sourceSha256": "d0034e201f378961cf4d39cd214945c0f6e6c069f62b6b32d3ee731aa1d6ae48",
+          "retainedSha256": "d0034e201f378961cf4d39cd214945c0f6e6c069f62b6b32d3ee731aa1d6ae48"
+        },
+        {
+          "path": "compute-shadow-high-final-bounds-hardware.json",
+          "sourceSha256": "5484dc391298e1c49b4c9da4a686f241cfcfd3cfe3e8d02ebfd489ff424d19db",
+          "retainedSha256": "5484dc391298e1c49b4c9da4a686f241cfcfd3cfe3e8d02ebfd489ff424d19db"
+        },
+        {
+          "path": "compute-shadow-high-final-bounds-software.json",
+          "sourceSha256": "41043e2e260e126d1b80d6cb9c480f4b6e368ad6cd3ae4e6851be8b2c697f242",
+          "retainedSha256": "41043e2e260e126d1b80d6cb9c480f4b6e368ad6cd3ae4e6851be8b2c697f242"
+        },
+        {
+          "path": "compute-shadow-high-off-camera-hardware.json",
+          "sourceSha256": "046c4f97ecf2867d00a853731596c36b12d5352a248ce7366e732b59360f1ee2",
+          "retainedSha256": "046c4f97ecf2867d00a853731596c36b12d5352a248ce7366e732b59360f1ee2"
+        },
+        {
+          "path": "compute-shadow-high-off-camera-software.json",
+          "sourceSha256": "75d4ff6b5f19d9f8cffd4e5c85076d27d7ca9e18a3d6b093368a597a10cffea8",
+          "retainedSha256": "75d4ff6b5f19d9f8cffd4e5c85076d27d7ca9e18a3d6b093368a597a10cffea8"
+        },
+        {
+          "path": "compute-shadow-low-final-bounds-hardware.json",
+          "sourceSha256": "75b1e0f3cfbc465801a22bd3891f13786d929a0159c822056e73924c0a9bdc15",
+          "retainedSha256": "75b1e0f3cfbc465801a22bd3891f13786d929a0159c822056e73924c0a9bdc15"
+        },
+        {
+          "path": "compute-shadow-low-final-bounds-software.json",
+          "sourceSha256": "2180b4a77b1086ed0b214f4d7e390c1de95fcdfc85f446ed2c308c704d5af63f",
+          "retainedSha256": "2180b4a77b1086ed0b214f4d7e390c1de95fcdfc85f446ed2c308c704d5af63f"
+        },
+        {
+          "path": "compute-shadow-low-off-camera-hardware.json",
+          "sourceSha256": "5d10e2e2b5c81b2b3831d46d264fe1183360820be034abd1147a27362f24635b",
+          "retainedSha256": "5d10e2e2b5c81b2b3831d46d264fe1183360820be034abd1147a27362f24635b"
+        },
+        {
+          "path": "compute-shadow-low-off-camera-software.json",
+          "sourceSha256": "a6312a4d10963ea108d46bc0bd9aa56064326067de0eeb3fe1c367626577c8db",
+          "retainedSha256": "a6312a4d10963ea108d46bc0bd9aa56064326067de0eeb3fe1c367626577c8db"
+        },
+        {
+          "path": "compute-shadow-medium-final-bounds-hardware.json",
+          "sourceSha256": "cb8d769f271e4260cc7f673f1003c84e903932c8de4e87f78f7eb99cde4a5592",
+          "retainedSha256": "cb8d769f271e4260cc7f673f1003c84e903932c8de4e87f78f7eb99cde4a5592"
+        },
+        {
+          "path": "compute-shadow-medium-final-bounds-software.json",
+          "sourceSha256": "726309617bd9b764607f205d5bff86e23a1ee123d556f68a14cd321f4fa3ccac",
+          "retainedSha256": "726309617bd9b764607f205d5bff86e23a1ee123d556f68a14cd321f4fa3ccac"
+        },
+        {
+          "path": "compute-shadow-medium-off-camera-hardware.json",
+          "sourceSha256": "15452a0683e55828e517e191d3952f17f09fdae3f0cb7ddc18be9f83944d1400",
+          "retainedSha256": "15452a0683e55828e517e191d3952f17f09fdae3f0cb7ddc18be9f83944d1400"
+        },
+        {
+          "path": "compute-shadow-medium-off-camera-software.json",
+          "sourceSha256": "cec766984169df6a8d497aed7ecafe626dcc916717814a3b3bc6e6718da53275",
+          "retainedSha256": "cec766984169df6a8d497aed7ecafe626dcc916717814a3b3bc6e6718da53275"
+        },
+        {
+          "path": "environment-hardware.json",
+          "sourceSha256": "350205cd95b8676d5efdf479391899124bd2e32170316b54f085c0539a68433b",
+          "retainedSha256": "350205cd95b8676d5efdf479391899124bd2e32170316b54f085c0539a68433b"
+        },
+        {
+          "path": "environment-software.json",
+          "sourceSha256": "7f843cdc806b35c9f6bc67a8183d0797f860dfbe7ebd772cb31b46a7d6dd9de8",
+          "retainedSha256": "7f843cdc806b35c9f6bc67a8183d0797f860dfbe7ebd772cb31b46a7d6dd9de8"
+        },
+        {
+          "path": "test-results.json",
+          "sourceSha256": "680e2602b70d97723200cda63e207d18f936039e48900b6d56d782be60e2f9f4",
+          "retainedSha256": "929376f95af91ee3c4d304b5395b303462ffb7387a3f493c83d0046addc37a21"
+        }
+      ]
+    },
+    {
+      "sourceRun": "2026-10-27T03-06-48-391Z",
+      "destination": "release/inspection",
+      "stats": {
+        "startTime": "2026-10-27T03:06:48.477Z",
+        "duration": 23078.317,
+        "expected": 8,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "files": [
+        {
+          "path": "artifacts/.last-run.json",
+          "sourceSha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+          "retainedSha256": "fff6299efb51ba9ef550e500ecc967e972c83e86be387042c360caea7fdbae29"
+        },
+        {
+          "path": "artifacts/inspection-overlays-layer--a2043--explain-the-composed-scene-hardware/inspection-contacts.png",
+          "sourceSha256": "00fac6240fea4928b8a51233cc44d9ba418e20c5d80336828a30123aa4d76e66",
+          "retainedSha256": "00fac6240fea4928b8a51233cc44d9ba418e20c5d80336828a30123aa4d76e66"
+        },
+        {
+          "path": "artifacts/inspection-overlays-layer--a2043--explain-the-composed-scene-software/inspection-contacts.png",
+          "sourceSha256": "9fcdc213711adfdbbb0546cb981edbabd9ad3dcb6b13e806ca7d21a1a0050091",
+          "retainedSha256": "9fcdc213711adfdbbb0546cb981edbabd9ad3dcb6b13e806ca7d21a1a0050091"
+        },
+        {
+          "path": "artifacts/inspection-overlays-lighti-3ae4f-onal-public-package-overlay-hardware/lighting-world-bounds.png",
+          "sourceSha256": "8ed70ad3fefbd71e9396ca815542fcadbdd544f3c38e6adfbf94167373a4948c",
+          "retainedSha256": "8ed70ad3fefbd71e9396ca815542fcadbdd544f3c38e6adfbf94167373a4948c"
+        },
+        {
+          "path": "artifacts/inspection-overlays-lighti-3ae4f-onal-public-package-overlay-software/lighting-world-bounds.png",
+          "sourceSha256": "451da0470bb9943ea88668de2a559bcb8e2306d6342edbf6b4faa1623b83f463",
+          "retainedSha256": "451da0470bb9943ea88668de2a559bcb8e2306d6342edbf6b4faa1623b83f463"
+        },
+        {
+          "path": "artifacts/inspection-overlays-produc-5a5e6-s-and-resized-content-boxes-hardware/inspection-pose-overlay.png",
+          "sourceSha256": "c42bf2d5afdb487e21b4113d3510b65ef39f6c5f1601380a6963f818eb7fa130",
+          "retainedSha256": "c42bf2d5afdb487e21b4113d3510b65ef39f6c5f1601380a6963f818eb7fa130"
+        },
+        {
+          "path": "artifacts/inspection-overlays-produc-5a5e6-s-and-resized-content-boxes-software/inspection-pose-overlay.png",
+          "sourceSha256": "890cf6d8442b3237e18117960497e443ca9878ce1a6040c659dbfa49c2933c91",
+          "retainedSha256": "890cf6d8442b3237e18117960497e443ca9878ce1a6040c659dbfa49c2933c91"
+        },
+        {
+          "path": "environment-hardware.json",
+          "sourceSha256": "cd8a42b38d60ee05e10876195e63b22b68cc208c0acad828bab1ab8bba1eb355",
+          "retainedSha256": "cd8a42b38d60ee05e10876195e63b22b68cc208c0acad828bab1ab8bba1eb355"
+        },
+        {
+          "path": "environment-software.json",
+          "sourceSha256": "c82f57b060a812e90b3e458e2a6bc5f108869ef9f84ffcd82503801400e8724f",
+          "retainedSha256": "c82f57b060a812e90b3e458e2a6bc5f108869ef9f84ffcd82503801400e8724f"
+        },
+        {
+          "path": "inspection-build.json",
+          "sourceSha256": "4291deb8168b032c9782dc76df4a3609511b1d6d3d709c92c95cc911d444fbff",
+          "retainedSha256": "4291deb8168b032c9782dc76df4a3609511b1d6d3d709c92c95cc911d444fbff"
+        },
+        {
+          "path": "inspection-composition-hardware.json",
+          "sourceSha256": "3ec34f87b80cc3795092364b8c695ef5e5b5ea1d22e5e0380ee014fca06b5e47",
+          "retainedSha256": "3ec34f87b80cc3795092364b8c695ef5e5b5ea1d22e5e0380ee014fca06b5e47"
+        },
+        {
+          "path": "inspection-composition-software.json",
+          "sourceSha256": "3ec34f87b80cc3795092364b8c695ef5e5b5ea1d22e5e0380ee014fca06b5e47",
+          "retainedSha256": "3ec34f87b80cc3795092364b8c695ef5e5b5ea1d22e5e0380ee014fca06b5e47"
+        },
+        {
+          "path": "inspection-lifetime-hardware.json",
+          "sourceSha256": "f31bef4bf86d92c1d242d362a4e96628239c55769aba8487dc02ef553018d39f",
+          "retainedSha256": "f31bef4bf86d92c1d242d362a4e96628239c55769aba8487dc02ef553018d39f"
+        },
+        {
+          "path": "inspection-lifetime-software.json",
+          "sourceSha256": "2903611b8e3602fd000f35b87be18d8c33055da594b98915cb0028edbe3e2ae2",
+          "retainedSha256": "2903611b8e3602fd000f35b87be18d8c33055da594b98915cb0028edbe3e2ae2"
+        },
+        {
+          "path": "inspection-pose-hardware.json",
+          "sourceSha256": "8eed5e2f472c53b2dd020a2ef79c40fa03ea51819fae16a768acfa495a07bbb1",
+          "retainedSha256": "8eed5e2f472c53b2dd020a2ef79c40fa03ea51819fae16a768acfa495a07bbb1"
+        },
+        {
+          "path": "inspection-pose-software.json",
+          "sourceSha256": "8eed5e2f472c53b2dd020a2ef79c40fa03ea51819fae16a768acfa495a07bbb1",
+          "retainedSha256": "8eed5e2f472c53b2dd020a2ef79c40fa03ea51819fae16a768acfa495a07bbb1"
+        },
+        {
+          "path": "test-results.json",
+          "sourceSha256": "c3712f16a76278d3c3ffd9d3d2c601bd9e3281074a85c6b67ebb620a89af8d73",
+          "retainedSha256": "1f42c0a6bcd8300d307ede90ef93780936c0e15e260e7187f5acf908f618c96d"
+        }
+      ]
+    },
+    {
+      "sourceRun": "2026-10-27T03-07-56-592Z",
+      "destination": "release/rendering-regression",
+      "stats": {
+        "startTime": "2026-10-27T03:07:56.664Z",
+        "duration": 64083.941999999995,
+        "expected": 78,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "files": [
+        {
+          "path": "animation-distance-hardware.json",
+          "sourceSha256": "c901f01cd4bf888c6c2ace1ddf0534acb2ace4bbfc3e86a2c38429d9440e3b18",
+          "retainedSha256": "c901f01cd4bf888c6c2ace1ddf0534acb2ace4bbfc3e86a2c38429d9440e3b18"
+        },
+        {
+          "path": "animation-distance-software.json",
+          "sourceSha256": "79835273edf13a48a81e2b054bc6bc8d5630dfd9a94fdfe2de07919974cca1fe",
+          "retainedSha256": "79835273edf13a48a81e2b054bc6bc8d5630dfd9a94fdfe2de07919974cca1fe"
+        },
+        {
+          "path": "artifacts/.last-run.json",
+          "sourceSha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+          "retainedSha256": "fff6299efb51ba9ef550e500ecc967e972c83e86be387042c360caea7fdbae29"
+        },
+        {
+          "path": "artifacts/animation-locomotion-demo--e83f4-oriented-grips-on-both-rigs-hardware/locomotion-demo.png",
+          "sourceSha256": "a9ee45b209fd3b199ead7c89aab2bd5a63d3ba6edf2f9515c4f67961cd5210a8",
+          "retainedSha256": "a9ee45b209fd3b199ead7c89aab2bd5a63d3ba6edf2f9515c4f67961cd5210a8"
+        },
+        {
+          "path": "artifacts/animation-locomotion-demo--e83f4-oriented-grips-on-both-rigs-software/locomotion-demo.png",
+          "sourceSha256": "2a529306dac91cbe64cf1284adcdecd8cd86f587623b9557ebc4c689561c0d91",
+          "retainedSha256": "2a529306dac91cbe64cf1284adcdecd8cd86f587623b9557ebc4c689561c0d91"
+        },
+        {
+          "path": "artifacts/m4-scene-lighting-lighting-83be2-s-through-the-rendered-host-hardware/lighting-studio-inspector.png",
+          "sourceSha256": "b4baad33c26fc44d1d446ef6935a8ba39cb11c161a585b750e03c874a21300a6",
+          "retainedSha256": "b4baad33c26fc44d1d446ef6935a8ba39cb11c161a585b750e03c874a21300a6"
+        },
+        {
+          "path": "artifacts/m4-scene-lighting-lighting-83be2-s-through-the-rendered-host-software/lighting-studio-inspector.png",
+          "sourceSha256": "74561508507e0b7f7a36b9397cfc82e1e9f72d0cecee2512972a02480f4baf2c",
+          "retainedSha256": "74561508507e0b7f7a36b9397cfc82e1e9f72d0cecee2512972a02480f4baf2c"
+        },
+        {
+          "path": "artifacts/m4-scene-lighting-lighting-965fc-work-without-browser-errors-hardware/lighting-studio.png",
+          "sourceSha256": "d63ea40ed692993c97dd338ab10aea57b7e42a839ce6263b7c5cc2eecab9d913",
+          "retainedSha256": "d63ea40ed692993c97dd338ab10aea57b7e42a839ce6263b7c5cc2eecab9d913"
+        },
+        {
+          "path": "artifacts/m4-scene-lighting-lighting-965fc-work-without-browser-errors-software/lighting-studio.png",
+          "sourceSha256": "967d9cc8590c853df5029b4e7a4ae9c26e81b8c033e4998b3753afe4dab6ca39",
+          "retainedSha256": "967d9cc8590c853df5029b4e7a4ae9c26e81b8c033e4998b3753afe4dab6ca39"
+        },
+        {
+          "path": "crowd-1-1-hardware.json",
+          "sourceSha256": "c39d54fa2d06d62ad04e2bec0df3f6692112c9fb6a83243c0487bec186f076de",
+          "retainedSha256": "c39d54fa2d06d62ad04e2bec0df3f6692112c9fb6a83243c0487bec186f076de"
+        },
+        {
+          "path": "crowd-1-1-software.json",
+          "sourceSha256": "137fd128094f5a29c6aa0d6dd05c3eb3ab4a69896ae05c3a952ae1e4f1d27776",
+          "retainedSha256": "137fd128094f5a29c6aa0d6dd05c3eb3ab4a69896ae05c3a952ae1e4f1d27776"
+        },
+        {
+          "path": "crowd-10-1-hardware.json",
+          "sourceSha256": "bc009515a4008b66a91048a2c4557e00c4f943e64b5cf3e11eef0c6fe66790ff",
+          "retainedSha256": "bc009515a4008b66a91048a2c4557e00c4f943e64b5cf3e11eef0c6fe66790ff"
+        },
+        {
+          "path": "crowd-10-1-software.json",
+          "sourceSha256": "9e5c7f7b77f24b81b11370be3353651d6e7602c710f656ee6790a20681b53c20",
+          "retainedSha256": "9e5c7f7b77f24b81b11370be3353651d6e7602c710f656ee6790a20681b53c20"
+        },
+        {
+          "path": "crowd-50-5-hardware.json",
+          "sourceSha256": "ae5e1f86de6b8b35829b6073177f27b71b5060ded9c2db4cb603e9ee6580c1bf",
+          "retainedSha256": "ae5e1f86de6b8b35829b6073177f27b71b5060ded9c2db4cb603e9ee6580c1bf"
+        },
+        {
+          "path": "crowd-50-5-software.json",
+          "sourceSha256": "0bf0edcd834cd8aad542e072d76a26cca4803d623da3ef59a3e4f9490430e229",
+          "retainedSha256": "0bf0edcd834cd8aad542e072d76a26cca4803d623da3ef59a3e4f9490430e229"
+        },
+        {
+          "path": "crowd-recovery-hardware.json",
+          "sourceSha256": "5d14a5fec044b0541e626c9699684f65757a9878c991d87d90657f2326d0d09c",
+          "retainedSha256": "5d14a5fec044b0541e626c9699684f65757a9878c991d87d90657f2326d0d09c"
+        },
+        {
+          "path": "crowd-recovery-software.json",
+          "sourceSha256": "f6621ba214c39425bde231808e033e428a4a6c9168bb387491ec3028a055c302",
+          "retainedSha256": "f6621ba214c39425bde231808e033e428a4a6c9168bb387491ec3028a055c302"
+        },
+        {
+          "path": "environment-constant-hardware.json",
+          "sourceSha256": "c06d879bf0cd83a45645b354719c45eb917a8d045f1541e3aa4d651b334bcd4d",
+          "retainedSha256": "c06d879bf0cd83a45645b354719c45eb917a8d045f1541e3aa4d651b334bcd4d"
+        },
+        {
+          "path": "environment-constant-software.json",
+          "sourceSha256": "c06d879bf0cd83a45645b354719c45eb917a8d045f1541e3aa4d651b334bcd4d",
+          "retainedSha256": "c06d879bf0cd83a45645b354719c45eb917a8d045f1541e3aa4d651b334bcd4d"
+        },
+        {
+          "path": "environment-directions-hardware.json",
+          "sourceSha256": "1ed9043f33573380dfee53bef11567c955bd413b01a151992c175f041b87206f",
+          "retainedSha256": "1ed9043f33573380dfee53bef11567c955bd413b01a151992c175f041b87206f"
+        },
+        {
+          "path": "environment-directions-software.json",
+          "sourceSha256": "1ed9043f33573380dfee53bef11567c955bd413b01a151992c175f041b87206f",
+          "retainedSha256": "1ed9043f33573380dfee53bef11567c955bd413b01a151992c175f041b87206f"
+        },
+        {
+          "path": "environment-hardware.json",
+          "sourceSha256": "18d0f10dfa2a77b4e43e77c3a524bff3c9c6634864c49df081995b30c712f17a",
+          "retainedSha256": "18d0f10dfa2a77b4e43e77c3a524bff3c9c6634864c49df081995b30c712f17a"
+        },
+        {
+          "path": "environment-software.json",
+          "sourceSha256": "a0b62093a2112f855b23d4a64d03ca7614b2bf630632fc2f10a664ce49812262",
+          "retainedSha256": "a0b62093a2112f855b23d4a64d03ca7614b2bf630632fc2f10a664ce49812262"
+        },
+        {
+          "path": "inspection-build.json",
+          "sourceSha256": "4291deb8168b032c9782dc76df4a3609511b1d6d3d709c92c95cc911d444fbff",
+          "retainedSha256": "4291deb8168b032c9782dc76df4a3609511b1d6d3d709c92c95cc911d444fbff"
+        },
+        {
+          "path": "lighting-input-errors-hardware.json",
+          "sourceSha256": "28d1c8b25831181532998a3c4867e51386a6d08a8ad3d642f5b394a0b4f82317",
+          "retainedSha256": "28d1c8b25831181532998a3c4867e51386a6d08a8ad3d642f5b394a0b4f82317"
+        },
+        {
+          "path": "lighting-input-errors-software.json",
+          "sourceSha256": "28d1c8b25831181532998a3c4867e51386a6d08a8ad3d642f5b394a0b4f82317",
+          "retainedSha256": "28d1c8b25831181532998a3c4867e51386a6d08a8ad3d642f5b394a0b4f82317"
+        },
+        {
+          "path": "lighting-recovery-hardware.json",
+          "sourceSha256": "96485ecae98b3223b373ad81c168eac08bc2f97dea5496bfdf53629c31ee52ca",
+          "retainedSha256": "96485ecae98b3223b373ad81c168eac08bc2f97dea5496bfdf53629c31ee52ca"
+        },
+        {
+          "path": "lighting-recovery-software.json",
+          "sourceSha256": "9597128489c166bf465eaedbf50a82676b34dce3bdf0f1bf0b5b61ac568d8107",
+          "retainedSha256": "9597128489c166bf465eaedbf50a82676b34dce3bdf0f1bf0b5b61ac568d8107"
+        },
+        {
+          "path": "lighting-studio-hardware.json",
+          "sourceSha256": "85e0b0b70df2886c5905860fad7b75d2606371275b1ecb1eace1e737eccc6cef",
+          "retainedSha256": "85e0b0b70df2886c5905860fad7b75d2606371275b1ecb1eace1e737eccc6cef"
+        },
+        {
+          "path": "lighting-studio-inspector-hardware.json",
+          "sourceSha256": "760716d986e3b5fd05cd1c07d006d2d4aa1874ab077656a6a1641b08131f5cb2",
+          "retainedSha256": "760716d986e3b5fd05cd1c07d006d2d4aa1874ab077656a6a1641b08131f5cb2"
+        },
+        {
+          "path": "lighting-studio-inspector-software.json",
+          "sourceSha256": "760716d986e3b5fd05cd1c07d006d2d4aa1874ab077656a6a1641b08131f5cb2",
+          "retainedSha256": "760716d986e3b5fd05cd1c07d006d2d4aa1874ab077656a6a1641b08131f5cb2"
+        },
+        {
+          "path": "lighting-studio-software.json",
+          "sourceSha256": "85e0b0b70df2886c5905860fad7b75d2606371275b1ecb1eace1e737eccc6cef",
+          "retainedSha256": "85e0b0b70df2886c5905860fad7b75d2606371275b1ecb1eace1e737eccc6cef"
+        },
+        {
+          "path": "lit_sampler_boundary-hardware.json",
+          "sourceSha256": "f68037882b6d524d50683f86da80b1556029cc9503fa58154ae0f54b6096de8b",
+          "retainedSha256": "f68037882b6d524d50683f86da80b1556029cc9503fa58154ae0f54b6096de8b"
+        },
+        {
+          "path": "lit_sampler_boundary-software.json",
+          "sourceSha256": "1ee655b0fa718486ffb720edf05249a9697ab004df6ce14d8800c61a70c33abe",
+          "retainedSha256": "1ee655b0fa718486ffb720edf05249a9697ab004df6ce14d8800c61a70c33abe"
+        },
+        {
+          "path": "lit_texture_boundary-hardware.json",
+          "sourceSha256": "fafbff9e4e47e04fdb9cc1a630f9190a4c5a63604ba14d122fcd829268c392d4",
+          "retainedSha256": "fafbff9e4e47e04fdb9cc1a630f9190a4c5a63604ba14d122fcd829268c392d4"
+        },
+        {
+          "path": "lit_texture_boundary-software.json",
+          "sourceSha256": "721d9aa39ec3e2a0712e6599ffaad725a5fbc6d1ff9a89ac38d1704c1a931574",
+          "retainedSha256": "721d9aa39ec3e2a0712e6599ffaad725a5fbc6d1ff9a89ac38d1704c1a931574"
+        },
+        {
+          "path": "locomotion-demo-hardware.json",
+          "sourceSha256": "c0c3c0616fd34ac7315ed173880d342e6ba637146989b56e2353fd71f041c773",
+          "retainedSha256": "c0c3c0616fd34ac7315ed173880d342e6ba637146989b56e2353fd71f041c773"
+        },
+        {
+          "path": "locomotion-demo-software.json",
+          "sourceSha256": "e566d08e5fd531169370c145337e7c86c08fef59bdcafe5ef639d1a0074674b9",
+          "retainedSha256": "e566d08e5fd531169370c145337e7c86c08fef59bdcafe5ef639d1a0074674b9"
+        },
+        {
+          "path": "pbr-maps-degenerate-hardware.json",
+          "sourceSha256": "7a2e449876d0bcfaaa43301ee503020b013ae24b19a070454c0a78a7b61a8c55",
+          "retainedSha256": "7a2e449876d0bcfaaa43301ee503020b013ae24b19a070454c0a78a7b61a8c55"
+        },
+        {
+          "path": "pbr-maps-degenerate-software.json",
+          "sourceSha256": "7edc18f6859245cb0223349d34d6c0f6bf2c6dbca22c28e6d9c7b620af341a05",
+          "retainedSha256": "7edc18f6859245cb0223349d34d6c0f6bf2c6dbca22c28e6d9c7b620af341a05"
+        },
+        {
+          "path": "pbr-maps-mirrored-hardware.json",
+          "sourceSha256": "459c5c4117915142657575fcc0eb443a2c9014d2d216f19d393aeaa609613e75",
+          "retainedSha256": "459c5c4117915142657575fcc0eb443a2c9014d2d216f19d393aeaa609613e75"
+        },
+        {
+          "path": "pbr-maps-mirrored-software.json",
+          "sourceSha256": "d594a8d0d75fba43390f87c4c8fc680a9d965b6fe7cb913530783a8ffcdd4538",
+          "retainedSha256": "d594a8d0d75fba43390f87c4c8fc680a9d965b6fe7cb913530783a8ffcdd4538"
+        },
+        {
+          "path": "pbr-maps-recovery-hardware.json",
+          "sourceSha256": "73c7efb8edfdc54f1ee5ca1a1d746a124e2f2335ea7946b4fdfb339fa6dbb53b",
+          "retainedSha256": "73c7efb8edfdc54f1ee5ca1a1d746a124e2f2335ea7946b4fdfb339fa6dbb53b"
+        },
+        {
+          "path": "pbr-maps-recovery-software.json",
+          "sourceSha256": "9b17f8b2b0b7a3a9cf3fc2fd2eef132877477f88e60d68569fbbc9f5faec9d50",
+          "retainedSha256": "9b17f8b2b0b7a3a9cf3fc2fd2eef132877477f88e60d68569fbbc9f5faec9d50"
+        },
+        {
+          "path": "pbr-maps-regular-hardware.json",
+          "sourceSha256": "cbaa7410fd7232f5bec11274a2470d5fa5d6ea90da3c5379a6751201df5b2cf7",
+          "retainedSha256": "cbaa7410fd7232f5bec11274a2470d5fa5d6ea90da3c5379a6751201df5b2cf7"
+        },
+        {
+          "path": "pbr-maps-regular-software.json",
+          "sourceSha256": "0491ea6d8852aaf1655f56dcee1ef1dd2510ed08e0ab1cd3bcb7db4aa972848f",
+          "retainedSha256": "0491ea6d8852aaf1655f56dcee1ef1dd2510ed08e0ab1cd3bcb7db4aa972848f"
+        },
+        {
+          "path": "shadow-skin-hardware.json",
+          "sourceSha256": "08d0520840a4ef006462177aacd2d6c2fd6d71bff98200459f4d3b3e4a3d581f",
+          "retainedSha256": "08d0520840a4ef006462177aacd2d6c2fd6d71bff98200459f4d3b3e4a3d581f"
+        },
+        {
+          "path": "shadow-skin-software.json",
+          "sourceSha256": "864a67c831f22f7a4ea2c9de48173e3b5e043fea088b0526e598c268b4618aec",
+          "retainedSha256": "864a67c831f22f7a4ea2c9de48173e3b5e043fea088b0526e598c268b4618aec"
+        },
+        {
+          "path": "shadows-high-hardware.json",
+          "sourceSha256": "4b95ccb68948295e79d37156ce089f499c951e6018103691071a2072c4044861",
+          "retainedSha256": "4b95ccb68948295e79d37156ce089f499c951e6018103691071a2072c4044861"
+        },
+        {
+          "path": "shadows-high-software.json",
+          "sourceSha256": "85cb227458ad6f65851494df5e1c7c887e93dd68106db87ea0f36a2d93c77fab",
+          "retainedSha256": "85cb227458ad6f65851494df5e1c7c887e93dd68106db87ea0f36a2d93c77fab"
+        },
+        {
+          "path": "shadows-low-hardware.json",
+          "sourceSha256": "658531e616a01e39c99e0ec034356893cad1db72bde703fa0235d1f0218608cf",
+          "retainedSha256": "658531e616a01e39c99e0ec034356893cad1db72bde703fa0235d1f0218608cf"
+        },
+        {
+          "path": "shadows-low-software.json",
+          "sourceSha256": "38ba0556abc631a8ee8c2581076620d6c1a1b77e3c7fd35699bddcfb2372684a",
+          "retainedSha256": "38ba0556abc631a8ee8c2581076620d6c1a1b77e3c7fd35699bddcfb2372684a"
+        },
+        {
+          "path": "shadows-medium-hardware.json",
+          "sourceSha256": "e06eb14f716880f8baba2f02fa78852e45428a0c3a90f8386908c006aff388fb",
+          "retainedSha256": "e06eb14f716880f8baba2f02fa78852e45428a0c3a90f8386908c006aff388fb"
+        },
+        {
+          "path": "shadows-medium-software.json",
+          "sourceSha256": "0774b01b3d4f9a9bf8c4fdf8b95ee41da3e24d8d33310951ff0648ab48fe846e",
+          "retainedSha256": "0774b01b3d4f9a9bf8c4fdf8b95ee41da3e24d8d33310951ff0648ab48fe846e"
+        },
+        {
+          "path": "test-results.json",
+          "sourceSha256": "5343aac666d3b35c0efc801d4f969cfb4b2aba4150b6e08bdd5566d6ae60cb87",
+          "retainedSha256": "c3ece14dffc1f46b1c79b8bebb11360ea2a6ffdf6b28dfa7407671e33e50ff08"
+        }
+      ]
+    }
+  ]
+}

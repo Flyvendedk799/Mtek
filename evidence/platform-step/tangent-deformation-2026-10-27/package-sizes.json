@@ -1,0 +1,49 @@
+{
+  "format": "mtek-size-report/1",
+  "examples": {
+    "arcade-audio": {
+      "folderBytes": 797777,
+      "zipBytes": 799579
+    },
+    "hud-score": {
+      "folderBytes": 762287,
+      "zipBytes": 763413
+    },
+    "lane-runner": {
+      "folderBytes": 761740,
+      "zipBytes": 763548
+    },
+    "material-configurator": {
+      "folderBytes": 829986,
+      "zipBytes": 831528
+    },
+    "modular-scene": {
+      "folderBytes": 727556,
+      "zipBytes": 728682
+    },
+    "physics-playground": {
+      "folderBytes": 5189929,
+      "zipBytes": 5191471
+    },
+    "product-configurator": {
+      "folderBytes": 806423,
+      "zipBytes": 807549
+    },
+    "pulse-cube": {
+      "folderBytes": 713475,
+      "zipBytes": 714601
+    },
+    "small-game": {
+      "folderBytes": 732049,
+      "zipBytes": 733507
+    },
+    "sprite-pop": {
+      "folderBytes": 730504,
+      "zipBytes": 731760
+    },
+    "stage-show": {
+      "folderBytes": 713771,
+      "zipBytes": 715027
+    }
+  }
+}

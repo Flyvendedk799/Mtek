@@ -1,0 +1,127 @@
+{
+  "format": "mtek-compute-acceptance-package/1",
+  "developmentSourceGateBypass": "E4901 only, after proving it is the sole analysis error",
+  "sourceSha256": "f275152a886f38157d4f11ee1c51f836772e888709f2a99f694661a9d49332f9",
+  "runtimeSha256": "994855cc61f21aee714ffde10305f4d75b549effb294d40e5839b9e8158218c8",
+  "files": [
+    {
+      "path": "app.d.ts",
+      "sha256": "72436a45b082d4975bde4c42d22b246f74c8a632495313c29be4473833a51788"
+    },
+    {
+      "path": "app.js",
+      "sha256": "cf92a29e4edb7d00768594dccdaa63554e93765191c92228c2a1a7e26a5c1ca2"
+    },
+    {
+      "path": "app.js.map",
+      "sha256": "287555431b34ecd0300e4a3062e2f7491824f141232068cfb098984df5f0fed2"
+    },
+    {
+      "path": "index.html",
+      "sha256": "5d4c0032c48a5a7a7b57fc46c8b824dd23b1c86f64218cf67b3347a899a24722"
+    },
+    {
+      "path": "program.manifest.json",
+      "sha256": "342275fc3ffa8200c9b0f5bee2645b214ec4782de8c966886b11264bf764cba4"
+    },
+    {
+      "path": "runtime.994855cc61f21aee.js",
+      "sha256": "994855cc61f21aee714ffde10305f4d75b549effb294d40e5839b9e8158218c8"
+    },
+    {
+      "path": "runtime.d.ts",
+      "sha256": "a87baa866b1a1e07e4c28b6ba00851f08cff5518054a70c69438f51885f20996"
+    },
+    {
+      "path": "shaders/0b3085128810cac9.wgsl",
+      "sha256": "0b3085128810cac956b5220e8db9320b3449248d8576affe5712f548505227f7"
+    },
+    {
+      "path": "shaders/357503ee209bd49b.mtek-map.json",
+      "sha256": "357503ee209bd49bb14fa5be9da50158678cbb6639bd65fda0ae6b8f4ffd5bd1"
+    },
+    {
+      "path": "shaders/4cb5089e28a5e471.mtek-map.json",
+      "sha256": "4cb5089e28a5e471f2cc4185419bf1f1500f7dc15e8038cefc26de884530ba91"
+    },
+    {
+      "path": "shaders/6ec0f316a8c9bd00.mtek-map.json",
+      "sha256": "6ec0f316a8c9bd002e5fa189ec25082c8d07353b415de090de59babaa974152c"
+    },
+    {
+      "path": "shaders/7a347620d75c4fcb.mtek-map.json",
+      "sha256": "7a347620d75c4fcb9ade438107d345c962de0f3b9669f208ee50258cbd3d8b2a"
+    },
+    {
+      "path": "shaders/8083d2a6c4354fcd.wgsl",
+      "sha256": "8083d2a6c4354fcd50113d369511dafce750780cca1e6f901898af7a1e0e7304"
+    },
+    {
+      "path": "shaders/85abe07e674f49b1.mtek-map.json",
+      "sha256": "85abe07e674f49b10405322308fced44361a0c6860568dc717abeba8eedb3bb1"
+    },
+    {
+      "path": "shaders/8a6f54e06ee94e33.mtek-map.json",
+      "sha256": "23105188c0043a6e45fd6e29f28e3bf359211739f9eb9f1423a876fd807241c5"
+    },
+    {
+      "path": "shaders/8a6f54e06ee94e33.wgsl",
+      "sha256": "8a6f54e06ee94e3347e5e80e8961f90a3f29b4eeaa6316333aa6923fb77019e9"
+    },
+    {
+      "path": "shaders/8b3015b8cac62c1a.mtek-map.json",
+      "sha256": "8b3015b8cac62c1a1180473bb7c9bfca930a722d1a947a42c5d499f05c369892"
+    },
+    {
+      "path": "shaders/8be158d2289e391b.wgsl",
+      "sha256": "8be158d2289e391bd00aa05c50a65d1874ce8b7a62f743748f73ca107dc165c4"
+    },
+    {
+      "path": "shaders/90ceefd66c94953f.wgsl",
+      "sha256": "90ceefd66c94953f253604ef8d05900cb5ff1efe2fb9e007ebe9e0edf10f1d0e"
+    },
+    {
+      "path": "shaders/90d8881e6ceb3544.wgsl",
+      "sha256": "90d8881e6ceb3544fb27d3b8d804fa1158523a9c4de8d3f45da5b8a5d5f4a5cc"
+    },
+    {
+      "path": "shaders/a203a24cc6f0ccaf.wgsl",
+      "sha256": "a203a24cc6f0ccafcd6f61622acaaf0218567731cc8e53cef06a29dda7c114de"
+    },
+    {
+      "path": "shaders/aebba0b5a4c483b9.mtek-map.json",
+      "sha256": "aebba0b5a4c483b954ce346a3eaee650d999681712b8614dc43bab9bb8d08058"
+    },
+    {
+      "path": "shaders/e49f0a1c71fb8066.wgsl",
+      "sha256": "e49f0a1c71fb8066cc837de1f9db9902fc885a3e194862eccad233991bf0be89"
+    },
+    {
+      "path": "shaders/ee01095dee7c159c.wgsl",
+      "sha256": "ee01095dee7c159cdde17ad42019837c234017d0e1e9bcc23ffd7804294dd767"
+    },
+    {
+      "path": "shaders/eeea09413fc751e0.mtek-map.json",
+      "sha256": "eeea09413fc751e09e2505f3d0281cec1d567120be3dc690095d0c96fa0a76fd"
+    }
+  ],
+  "references": [
+    {
+      "path": "reference/positions.wgsl",
+      "sha256": "f947940329d612165607088afdd9ff4d77ae6ce36d17a27bf1f08f43fe6172fe"
+    },
+    {
+      "path": "reference/invocation.wgsl",
+      "sha256": "8bd9fe01b09b07005f3f7649fa90545aa36409b5c004fa90e1c136e62f613a94"
+    },
+    {
+      "path": "reference/quad.wgsl",
+      "sha256": "7908d4a54eedc307f911af0773a8a7004da381e1d8915fcbb2874d6f13057902"
+    },
+    {
+      "path": "reference/composite.wgsl",
+      "sha256": "332230e410321460e522f7373f57be1a1a01312ac75c30460bf36404e8f7b562"
+    }
+  ],
+  "harnessSha256": "26c46a2c4318e601eb7288d8352b2e80bfaea1fd45ac030a5fcb60180dc69370"
+}

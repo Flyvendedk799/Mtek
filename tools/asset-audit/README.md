@@ -28,8 +28,10 @@ probe then checks one mesh/primitive and optionally a material or clip. Examples
   decides what can play.
 - A multi-primitive mesh can import, fail `.mesh(name)` and pass an explicit
   `.primitive(name, index)` probe.
-- Original Cesium Man is rejected for its mixed min/mag sampler. The source stays
-  unchanged; the audit performs no implicit sampler conversion.
+- Original Cesium Man and WaterBottle pass their named mesh/material probes;
+  the latter retains its authored tangents. The audit performs no implicit
+  sampler or tangent conversion. Invalid tangent direction/handedness and a
+  tangent without normals retain explicit negative import checks.
 
 For a single file, add `--mesh=<name>` and optional `--primitive=<index>`,
 `--material=<name>`, `--clip=<name>`. Without a usage probe the report deliberately

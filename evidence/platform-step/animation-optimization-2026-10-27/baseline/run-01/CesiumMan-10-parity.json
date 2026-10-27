@@ -1,0 +1,38 @@
+{
+  "passed": true,
+  "jointError": 6.366267495005844e-7,
+  "maximumChannelError": 0,
+  "differingPixelFraction": 0,
+  "maximumPhaseDifferingPixelFraction": 0,
+  "maximumForegroundDifferingPixelFraction": 0,
+  "phases": [
+    {
+      "phase": 0,
+      "badPixels": 0,
+      "foreground": 5067,
+      "rightForeground": 5067,
+      "foregroundUnion": 5067
+    },
+    {
+      "phase": 0.25,
+      "badPixels": 0,
+      "foreground": 5079,
+      "rightForeground": 5079,
+      "foregroundUnion": 5079
+    },
+    {
+      "phase": 0.5,
+      "badPixels": 0,
+      "foreground": 5028,
+      "rightForeground": 5028,
+      "foregroundUnion": 5028
+    },
+    {
+      "phase": 0.75,
+      "badPixels": 0,
+      "foreground": 4998,
+      "rightForeground": 4998,
+      "foregroundUnion": 4998
+    }
+  ]
+}

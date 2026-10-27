@@ -33,8 +33,12 @@ material Shifted {
         };
     }
     fragment(surface: SurfaceInput, payload: VertexPayload) -> color {
-        let rgb = vec3(surface.uv.x, payload.heat, (f32(payload.tag) + f32(payload.signed)) * 0.1) * payload.tone.rgb * payload.axis.w;
-        if payload.enabled { return lighting.pbr(surface, color.linear(rgb, 1.0), 0.0, 0.5); }
+        let rgb = vec3(surface.uv.x, payload.heat, (f32(payload.tag) + f32(payload.signed)) * 0.1)
+            * payload.tone.rgb
+            * payload.axis.w;
+        if payload.enabled {
+            return lighting.pbr(surface, color.linear(rgb, 1.0), 0.0, 0.5);
+        }
         return #ff00ff;
     }
 }

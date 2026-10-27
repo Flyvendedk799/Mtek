@@ -1,0 +1,184 @@
+{
+  "date": "2026-10-27",
+  "recordedAt": "2026-10-26T23:37:00.000Z",
+  "baseCommit": "986040bd9c9e284a06231121eb64f5262b81b620",
+  "scope": "Prepare focused source compute GPU acceptance; no GPU execution",
+  "checks": [
+    {
+      "command": "cargo test -p mtek-compiler --locked -j 2 --test compute_lowering -- --test-threads=2",
+      "passed": 11,
+      "failed": 0,
+      "includes": "Naga accepts three independent reference shaders and rejects corrupt fragment return"
+    },
+    {
+      "command": "npx vitest run support/compute-reference.test.ts support/compute-fixtures.test.ts --maxWorkers=1",
+      "cwd": "tests/browser",
+      "passed": 4,
+      "failed": 0,
+      "includes": "real compiler export, runtime/source/file hashes and browser-script bundling without device acquisition"
+    },
+    {
+      "command": "npx vitest run src/host/compute.test.ts src/compute src/abi/abi.test.ts --maxWorkers=1",
+      "cwd": "packages/runtime-web",
+      "passed": 170,
+      "failed": 0
+    },
+    {
+      "command": "npx playwright test --config=compute.config.ts --list",
+      "cwd": "tests/browser",
+      "discovered": 4,
+      "executed": 0,
+      "status": "discovery only; no global GPU setup/browser launch"
+    },
+    {
+      "command": "npx tsc -p tests/browser/tsconfig.json --noEmit",
+      "status": "passed"
+    },
+    {
+      "command": "focused ESLint of new compute page/setup/config/spec/reference files",
+      "status": "passed"
+    },
+    {
+      "command": "cargo clippy -p mtek-compiler --all-targets --locked -j 2 -- -D warnings",
+      "status": "passed"
+    },
+    {
+      "command": "cargo fmt --check",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/prebuilt-runtime.mjs --check --against-dist",
+      "status": "passed; production runtime unchanged from render-bridge checkpoint"
+    },
+    {
+      "command": "tracked diff and changed/new source whitespace scan",
+      "status": "passed"
+    }
+  ],
+  "plannedGpuRuns": {
+    "status": "NOT-RUN",
+    "reason": "GPU execution remains deferred during occupied-PC period",
+    "projects": {
+      "hardware": 2,
+      "software": 2
+    },
+    "numericalCases": {
+      "positionDomains": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          71,
+          1,
+          1
+        ],
+        [
+          72,
+          1,
+          1
+        ],
+        [
+          3,
+          4,
+          6
+        ]
+      ],
+      "invocations": {
+        "domain": [
+          5,
+          3,
+          3
+        ],
+        "workgroup": [
+          4,
+          2,
+          2
+        ],
+        "capacity": 257,
+        "fields": 14,
+        "stride": 56
+      }
+    },
+    "pixelGate": {
+      "channelTolerance": 2,
+      "maxDifferentPixels": 4,
+      "minimumObservableChangedPixels": 101
+    },
+    "rawEvidence": "Three raw numerical buffers; CPU/direct/main/recovered pixels; package/reference/harness hashes; environment and preview screenshot"
+  },
+  "preflightCorrections": [
+    {
+      "issue": "Independent invocation reference initially assumed stride 64",
+      "detectedBy": "CPU compiler-export check reported 56",
+      "resolution": "Use native storage struct alignment 4, fourteen u32 members, stride 56; all CPU checks pass"
+    }
+  ],
+  "boundaries": {
+    "sourceGate": "E4901 retained; explicit compiler-test-only export",
+    "publicCompilerBypassAdded": false,
+    "browserOrGpuProcessLaunched": false,
+    "numericalGpuAcceptance": false,
+    "renderGpuAcceptance": false,
+    "shadowReferencePrepared": false,
+    "compositeArithmeticPrepared": false,
+    "sustainedBenchmarksRun": false,
+    "animationOptimizationRun": false,
+    "frozenEvidenceModified": false,
+    "fullRoadmapComplete": false
+  },
+  "sourceHashBasis": "Working-tree UTF-8 text normalized to LF",
+  "sourceHashes": {
+    "crates/mtek-cli/prebuilt/PROVENANCE.json": "b3327fd108ed2ea44b421f06727f838ab6655f0d1269d0fd9dafd7f202e16a1a",
+    "crates/mtek-cli/prebuilt/runtime.d.ts": "a87baa866b1a1e07e4c28b6ba00851f08cff5518054a70c69438f51885f20996",
+    "crates/mtek-cli/prebuilt/runtime.dev.js": "b68aac510a174f9b2ab7789350043d018bccee69ea9bb1af0f77bd7fccbd56ab",
+    "crates/mtek-cli/prebuilt/runtime.js": "f7c8433abf4405df341c093abccff456ad825968083c0d8e7c0ea9f6f87227b9",
+    "crates/mtek-cli/prebuilt/runtime.min.js": "70c5c8dddf43c71deab3fdb9edb34837fd70073700a39a0cccb5f2e471f525f5",
+    "crates/mtek-compiler/tests/compute_lowering.rs": "e24785ac7906b2d0fb2a232a99eed0686921e0d6817f1b753ecf8ef56da21bc5",
+    "packages/runtime-web/README.md": "efaa31edd68648522b7b991de32ba746f055288a5428481fd2da613d753a3318",
+    "packages/runtime-web/scripts/build.mjs": "ada98f76a1936c4234891c65239d7e652cc53349e091184a2d4f6cc4f3160af3",
+    "packages/runtime-web/src/compute/definition.ts": "e4a720383f0284257a8c9f36d05ad04e2514905e5dec8668d335510cb7685c94",
+    "packages/runtime-web/src/compute/host.ts": "a5d8181f5f563f68eaf9ff55873e4d549a824921d384d6c6d1a902018ca95ebf",
+    "packages/runtime-web/src/compute/instance.ts": "76bdf86068d163c6a74e5e34eeb10abb9e50c8fedf51765af0878b6026131e12",
+    "packages/runtime-web/src/compute/positions.ts": "09fdc54ae84c3ac1f1bf63d5f21f7f2e80e25a8e714af20b1cc99c3a2ffa5ff9",
+    "packages/runtime-web/src/compute/store.ts": "dd7964d107c69830bace39f62eafb2cc7dd04a174c8acd01d669fbef633f02ce",
+    "packages/runtime-web/src/host/app.ts": "e88e8bb6c0442c36f785f71fa0abac7354d9f8f3d6ff5860ea52c2b53d43ee32",
+    "packages/runtime-web/src/host/compute.test.ts": "8db9a402d11034eefcc717e472e9c9678cf61f8ea36a9158e0e1f1fb0a1cef66",
+    "packages/runtime-web/src/index.ts": "546721fae86c4707f7a880cdcbecb7c8b3bb23d8150ea992057eb4cf10db57ed",
+    "packages/runtime-web/src/render/meshes.ts": "ba6ce49e2233bb593173ca3abd6f3075be7ca1b94912367e107e569da81e0bb4",
+    "packages/runtime-web/src/render/renderer.ts": "946c4333f2ff333763ac8a574395528e41fa2af8b82b24dd28e44d928ea0de83",
+    "packages/runtime-web/src/runtime-dts.test.ts": "3d1d789a1ff76c270c7773fe0b6930bc23255e0afba5c8da56e5261b06945211",
+    "packages/runtime-web/src/runtime.d.ts": "70a4f63ad0698046c12c43b70ea8288882d4d1dd34f12bd1f43b7c7359c58ed9",
+    "spec/decisions/0205-compute-position-attachments.md": "3de2d4bc74c502f32b46f990bd097e732bfb89e6e13f9e818ade52345bbb5122",
+    "spec/decisions/0206-compact-shipped-runtime-declarations.md": "7abc88cd4e89b5e382a94bde9bfe10ba7c13e0275039e1e6ea0b8178fc0497eb",
+    "spec/runtime-abi.md": "eeaaf7eed645a519efc99f59b68baf05057670e83ca01c2a8373e7bd638f2168",
+    "tests/abi/manifests/valid/compute.json": "342275fc3ffa8200c9b0f5bee2645b214ec4782de8c966886b11264bf764cba4",
+    "tests/browser/COMPUTE-ACCEPTANCE.md": "3bd98150e94836db826fe8562b5e359484d0dd1b9909961acc556bf7cfaf1482",
+    "tests/browser/compute.config.ts": "5096809c5c61929debd4308cec3237b766c661c9238a45645136f369e9393c54",
+    "tests/browser/pages/compute.html": "bb7d40ef617f1081971648ba8e255d2540c95733b73f2e7f5511852717e46652",
+    "tests/browser/pages/compute.ts": "3c714db8e95c3ecea7b04ccb85bd33f2296bb46a58e9e4c72fa0c77b2949872a",
+    "tests/browser/specs/compute/acceptance.spec.ts": "c5e7f125d1369132b362e3d0f5a39a6fc6f8985d5fefba3c4796c2a5452b7826",
+    "tests/browser/support/compute-fixtures.test.ts": "cc7a419d8b962cc9220a4c2f6ef9ffd165bf9b5b910117ec1d0a8fe0eeb05b3a",
+    "tests/browser/support/compute-fixtures.ts": "da14fd4c115e1562fb7c094f82814980f709fa35aa47783dc8765daa86342b10",
+    "tests/browser/support/compute-reference.test.ts": "3fff066e28dde2fef3fae8b5806dd895110bb947ceb642cf8275f31fdcddb8c8",
+    "tests/browser/support/compute-reference.ts": "f20ea2f88b06397011ca0a20383df21e052bd06510c47c9475f506dfe894283c",
+    "tests/browser/support/compute-setup.ts": "6cdbdd0e10636198ca31e198b097d117fc58b91047718175602320cb09f1b76d",
+    "tests/codegen/compute-contract/expected.app.js": "43d27936c40b987c9e345701a5040773a61fcbae61109b0146c950da741058c2",
+    "tests/codegen/compute-contract/packaged/app.js": "43d27936c40b987c9e345701a5040773a61fcbae61109b0146c950da741058c2",
+    "tests/codegen/compute-contract/packaged/app.js.map": "287555431b34ecd0300e4a3062e2f7491824f141232068cfb098984df5f0fed2",
+    "tests/codegen/compute-contract/packaged/program.manifest.json": "342275fc3ffa8200c9b0f5bee2645b214ec4782de8c966886b11264bf764cba4",
+    "tests/codegen/compute-contract/packaged/shaders/357503ee209bd49b.mtek-map.json": "357503ee209bd49bb14fa5be9da50158678cbb6639bd65fda0ae6b8f4ffd5bd1",
+    "tests/codegen/compute-contract/packaged/shaders/4cb5089e28a5e471.mtek-map.json": "4cb5089e28a5e471f2cc4185419bf1f1500f7dc15e8038cefc26de884530ba91",
+    "tests/codegen/compute-contract/packaged/shaders/6ec0f316a8c9bd00.mtek-map.json": "6ec0f316a8c9bd002e5fa189ec25082c8d07353b415de090de59babaa974152c",
+    "tests/codegen/compute-contract/packaged/shaders/7a347620d75c4fcb.mtek-map.json": "7a347620d75c4fcb9ade438107d345c962de0f3b9669f208ee50258cbd3d8b2a",
+    "tests/codegen/compute-contract/packaged/shaders/85abe07e674f49b1.mtek-map.json": "85abe07e674f49b10405322308fced44361a0c6860568dc717abeba8eedb3bb1",
+    "tests/codegen/compute-contract/packaged/shaders/8a6f54e06ee94e33.mtek-map.json": "23105188c0043a6e45fd6e29f28e3bf359211739f9eb9f1423a876fd807241c5",
+    "tests/codegen/compute-contract/packaged/shaders/8a6f54e06ee94e33.wgsl": "8a6f54e06ee94e3347e5e80e8961f90a3f29b4eeaa6316333aa6923fb77019e9",
+    "tests/codegen/compute-contract/packaged/shaders/8b3015b8cac62c1a.mtek-map.json": "8b3015b8cac62c1a1180473bb7c9bfca930a722d1a947a42c5d499f05c369892",
+    "tests/codegen/compute-contract/packaged/shaders/90ceefd66c94953f.wgsl": "90ceefd66c94953f253604ef8d05900cb5ff1efe2fb9e007ebe9e0edf10f1d0e",
+    "tests/codegen/compute-contract/packaged/shaders/a203a24cc6f0ccaf.wgsl": "a203a24cc6f0ccafcd6f61622acaaf0218567731cc8e53cef06a29dda7c114de",
+    "tests/codegen/compute-contract/packaged/shaders/aebba0b5a4c483b9.mtek-map.json": "aebba0b5a4c483b954ce346a3eaee650d999681712b8614dc43bab9bb8d08058",
+    "tests/codegen/compute-contract/packaged/shaders/eeea09413fc751e0.mtek-map.json": "eeea09413fc751e09e2505f3d0281cec1d567120be3dc690095d0c96fa0a76fd"
+  }
+}

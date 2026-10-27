@@ -1,5 +1,4 @@
-//! Checked source compute declarations to self-contained typed IR. E4901 still
-//! prevents public analysis/build from reaching this path until runtime integration.
+//! Checked public source compute declarations to self-contained typed IR.
 
 use super::*;
 use crate::ir::{ComputeBufferItem, ComputeItem};

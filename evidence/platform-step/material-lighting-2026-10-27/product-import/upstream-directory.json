@@ -1,0 +1,18 @@
+[
+  {
+    "name": "WaterBottle.glb",
+    "path": "Models/WaterBottle/glTF-Binary/WaterBottle.glb",
+    "sha": "27894ec0ce010ba689e04e4801520ebb5ccc849f",
+    "size": 8966700,
+    "url": "https://api.github.com/repos/KhronosGroup/glTF-Sample-Assets/contents/Models/WaterBottle/glTF-Binary/WaterBottle.glb?ref=8f492390ddc7a2ae221a1369ef560589cf8c70fb",
+    "html_url": "https://github.com/KhronosGroup/glTF-Sample-Assets/blob/8f492390ddc7a2ae221a1369ef560589cf8c70fb/Models/WaterBottle/glTF-Binary/WaterBottle.glb",
+    "git_url": "https://api.github.com/repos/KhronosGroup/glTF-Sample-Assets/git/blobs/27894ec0ce010ba689e04e4801520ebb5ccc849f",
+    "download_url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/8f492390ddc7a2ae221a1369ef560589cf8c70fb/Models/WaterBottle/glTF-Binary/WaterBottle.glb",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/KhronosGroup/glTF-Sample-Assets/contents/Models/WaterBottle/glTF-Binary/WaterBottle.glb?ref=8f492390ddc7a2ae221a1369ef560589cf8c70fb",
+      "git": "https://api.github.com/repos/KhronosGroup/glTF-Sample-Assets/git/blobs/27894ec0ce010ba689e04e4801520ebb5ccc849f",
+      "html": "https://github.com/KhronosGroup/glTF-Sample-Assets/blob/8f492390ddc7a2ae221a1369ef560589cf8c70fb/Models/WaterBottle/glTF-Binary/WaterBottle.glb"
+    }
+  }
+]

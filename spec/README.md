@@ -15,6 +15,8 @@ which its subject was delivered.
 | `grammar-notes.md` | Notes for implementers of the grammar | M1 |
 | `scenes.md` | Scenes, Entities and Behaviour | M1 |
 | `materials.md` | Materials, GPU Stages and Lighting | M1 (temporary Unlit path, removed in M2: decision 0044), M2 |
+| `compute.md` | Bounded Source Compute and Host API 1 | platform step (decision 0207) |
+| `inspection.md` | Copied Scene and Animation Inspection | platform step (decision 0208) |
 | `stdlib.md` | Standard Library Registry | M1 |
 | `gpu-layout.md` | GPU Data Layout and Transport | M0 |
 | `runtime-abi.md` | Program Format and Browser Runtime Contract | M0 (bridge spike), M1 |
@@ -29,7 +31,7 @@ which its subject was delivered.
 | `browser-support.md` | Browser Support: WebGPU Only, the Browsers It Covers, and the Unsupported-Browser Screen | small-game extension (decision 0132) |
 | `tooling.md` | Developer Tooling: CLI, Project File, Dev Server, Formatter, LSP | M0 (`--version`), M1 onward |
 | `ai-and-benchmarks.md` | AI Workflow, Untrusted Previews and Benchmarks | M0 (initial benchmark tasks), M6 |
-| `decisions/` | Decision records 0001–0202 (indexed in `README.md`), the sources list `sources.md` | M0 |
+| `decisions/` | Decision records 0001–0212 (indexed in `README.md`), the sources list `sources.md` | M0 |
 
 The "First needed" column is a planning aid taken from the milestone markers inside the documents;
 the documents themselves are authoritative.

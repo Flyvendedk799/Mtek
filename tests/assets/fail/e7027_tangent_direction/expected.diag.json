@@ -1,0 +1,13 @@
+[
+  {
+    "code": "MTEK-E7027",
+    "file": "src/main.mtek",
+    "startByte": 24,
+    "endByte": 45,
+    "message": "The mesh 'Tri' (meshes[0]), primitive 0: TANGENT at vertex 0 requires normalized xyz (squared-length error at most 0.001) and w exactly -1 or +1.",
+    "notes": [
+      "the problem is in the file 'models/model.glb'",
+      "help: normalize tangent xyz and use w -1 or +1 when exporting"
+    ]
+  }
+]

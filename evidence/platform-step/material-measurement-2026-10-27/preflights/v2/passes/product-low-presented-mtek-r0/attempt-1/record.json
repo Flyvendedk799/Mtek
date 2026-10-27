@@ -1,0 +1,818 @@
+{
+  "job": {
+    "scene": "product",
+    "quality": "low",
+    "pass": "presented",
+    "implementation": "mtek",
+    "repeat": 0
+  },
+  "attempt": 1,
+  "startedAt": "2026-10-27T10:33:48.173Z",
+  "status": "failed",
+  "pageErrors": [],
+  "setup": {
+    "startupCreationMs": 360.125,
+    "implementation": "mtek",
+    "scene": "product",
+    "quality": "low",
+    "pass": "presented",
+    "adapter": {
+      "vendor": "amd",
+      "architecture": "rdna-3",
+      "device": "0x744c",
+      "description": "AMD Radeon RX 7900 XTX",
+      "isFallbackAdapter": false
+    },
+    "deviceFeatures": [
+      "core-features-and-limits"
+    ],
+    "crossOriginIsolated": true,
+    "minimumClockDelta": 0.004999995231628418,
+    "resources": [
+      {
+        "path": "/page.js",
+        "decodedBodySize": 23196
+      },
+      {
+        "path": "/chunks/chunk-2FMLDOAA.js",
+        "decodedBodySize": 11377
+      },
+      {
+        "path": "/chunks/mtek-YB5FCG7A.js",
+        "decodedBodySize": 1680
+      },
+      {
+        "path": "/programs/product-low/app.js",
+        "decodedBodySize": 12695
+      },
+      {
+        "path": "/programs/product-low/runtime.511aba6ff69265f4.js",
+        "decodedBodySize": 672833
+      },
+      {
+        "path": "/programs/product-low/program.manifest.json",
+        "decodedBodySize": 31939
+      },
+      {
+        "path": "/programs/product-low/shaders/819eea4642598b4d.wgsl",
+        "decodedBodySize": 15638
+      },
+      {
+        "path": "/programs/product-low/assets/65d4707c69942018.bin",
+        "decodedBodySize": 149412
+      },
+      {
+        "path": "/programs/product-low/assets/fa73d0b665fb5153.bin",
+        "decodedBodySize": 7080
+      },
+      {
+        "path": "/programs/product-low/assets/46ff0580472ae247.png",
+        "decodedBodySize": 59102
+      },
+      {
+        "path": "/programs/product-low/assets/52fc5c949f30db77.png",
+        "decodedBodySize": 3012733
+      },
+      {
+        "path": "/programs/product-low/assets/adf3efac61293fc2.png",
+        "decodedBodySize": 3577832
+      },
+      {
+        "path": "/programs/product-low/assets/dbfab38217771e44.png",
+        "decodedBodySize": 2165850
+      },
+      {
+        "path": "/programs/product-low/shaders/819eea4642598b4d.mtek-map.json",
+        "decodedBodySize": 24754
+      }
+    ],
+    "unknownTextureFormats": []
+  },
+  "warmup": {
+    "frames": 30,
+    "info": {
+      "diagnostics": [],
+      "counters": {
+        "buffersAllocated": 21,
+        "texturesAllocated": 10,
+        "pipelinesCreated": 7,
+        "shaderModulesCreated": 5,
+        "bindGroupsCreated": 61,
+        "uploads": 29,
+        "uploadBytes": 67794272,
+        "liveBuffers": 20,
+        "liveTextures": 9,
+        "liveSamplers": 4,
+        "liveShaderModules": 3,
+        "livePipelines": 5,
+        "liveBindGroups": 9,
+        "liveListeners": 9,
+        "frameTimeMs": 0.11499999463558197,
+        "cpuUpdateMs": 0.030000001192092896,
+        "renderPrepMs": 0.08499999344348907,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 12,
+        "drawCallsTotal": 360,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 30,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 1,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 4,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 30,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    },
+    "counters": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 0,
+      "renderPassesBegun": 0,
+      "computePassesBegun": 0,
+      "submits": 0,
+      "drawCalls": 0,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 0,
+      "setPipeline": 0,
+      "setBindGroup": 0,
+      "setVertexBuffer": 0,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 0,
+      "writeBufferBytes": 0,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 0
+    },
+    "lastFrameDraws": []
+  },
+  "browserGpu": {
+    "pid": 10460,
+    "processes": [
+      {
+        "type": "browser",
+        "id": 7068,
+        "cpuTime": 1.307356
+      },
+      {
+        "type": "renderer",
+        "id": 7036,
+        "cpuTime": 0.055964
+      },
+      {
+        "type": "renderer",
+        "id": 31704,
+        "cpuTime": 0.319958
+      },
+      {
+        "type": "renderer",
+        "id": 24752,
+        "cpuTime": 0.266835
+      },
+      {
+        "type": "GPU",
+        "id": 10460,
+        "cpuTime": 1.346901
+      },
+      {
+        "type": "network.mojom.NetworkService",
+        "id": 10136,
+        "cpuTime": 0.202899
+      },
+      {
+        "type": "storage.mojom.StorageService",
+        "id": 27120,
+        "cpuTime": 0.029693
+      }
+    ]
+  },
+  "clocks": {
+    "qpc": {
+      "offsetMs": -0.00660000741481781,
+      "uncertaintyMs": 0.07660000026226044,
+      "attempts": [
+        {
+          "before": 68684158.9531,
+          "after": 68684159.599,
+          "remote": 68684159.3149,
+          "roundTripMs": 0.6459000110626221,
+          "offsetMs": 0.03884999454021454
+        },
+        {
+          "before": 68684159.6021,
+          "after": 68684159.8763,
+          "remote": 68684159.7321,
+          "roundTripMs": 0.2742000073194504,
+          "offsetMs": -0.007100000977516174
+        },
+        {
+          "before": 68684159.8781,
+          "after": 68684160.0865,
+          "remote": 68684159.9814,
+          "roundTripMs": 0.20840001106262207,
+          "offsetMs": -0.0009000003337860107
+        },
+        {
+          "before": 68684160.0872,
+          "after": 68684160.2883,
+          "remote": 68684160.1929,
+          "roundTripMs": 0.20109999179840088,
+          "offsetMs": 0.005150005221366882
+        },
+        {
+          "before": 68684160.2888,
+          "after": 68684160.4483,
+          "remote": 68684160.36219999,
+          "roundTripMs": 0.15950000286102295,
+          "offsetMs": -0.006350010633468628
+        },
+        {
+          "before": 68684160.4488,
+          "after": 68684160.602,
+          "remote": 68684160.51879999,
+          "roundTripMs": 0.15320000052452087,
+          "offsetMs": -0.00660000741481781
+        },
+        {
+          "before": 68684160.6025,
+          "after": 68684160.7611,
+          "remote": 68684160.6789,
+          "roundTripMs": 0.15859998762607574,
+          "offsetMs": -0.0029000043869018555
+        },
+        {
+          "before": 68684160.7616,
+          "after": 68684160.9158,
+          "remote": 68684160.8341,
+          "roundTripMs": 0.1542000025510788,
+          "offsetMs": -0.004600003361701965
+        },
+        {
+          "before": 68684160.9162,
+          "after": 68684161.078,
+          "remote": 68684160.98719999,
+          "roundTripMs": 0.16179999709129333,
+          "offsetMs": -0.009900003671646118
+        },
+        {
+          "before": 68684161.0783,
+          "after": 68684161.2926,
+          "remote": 68684161.1493,
+          "roundTripMs": 0.2143000066280365,
+          "offsetMs": -0.0361500084400177
+        },
+        {
+          "before": 68684161.2933,
+          "after": 68684161.5582,
+          "remote": 68684161.4364,
+          "roundTripMs": 0.26489999890327454,
+          "offsetMs": 0.010649994015693665
+        },
+        {
+          "before": 68684161.5587,
+          "after": 68684161.9477,
+          "remote": 68684161.7982,
+          "roundTripMs": 0.3889999985694885,
+          "offsetMs": 0.04500000178813934
+        }
+      ]
+    },
+    "browser": {
+      "offsetMs": -68683021.44935001,
+      "uncertaintyMs": 0.19735000282526016,
+      "attempts": [
+        {
+          "before": 68684161.9576,
+          "after": 68684162.8031,
+          "remote": 1141.0249999910593,
+          "roundTripMs": 0.8455000072717667,
+          "offsetMs": -68683021.35535
+        },
+        {
+          "before": 68684162.8048,
+          "after": 68684163.3562,
+          "remote": 1141.6599999964237,
+          "roundTripMs": 0.5513999909162521,
+          "offsetMs": -68683021.42050001
+        },
+        {
+          "before": 68684163.3578,
+          "after": 68684163.8264,
+          "remote": 1142.1449999958277,
+          "roundTripMs": 0.46859999001026154,
+          "offsetMs": -68683021.4471
+        },
+        {
+          "before": 68684163.828,
+          "after": 68684164.2951,
+          "remote": 1142.640000000596,
+          "roundTripMs": 0.46710000932216644,
+          "offsetMs": -68683021.42154999
+        },
+        {
+          "before": 68684164.2965,
+          "after": 68684164.7044,
+          "remote": 1143.0499999970198,
+          "roundTripMs": 0.40790000557899475,
+          "offsetMs": -68683021.45045
+        },
+        {
+          "before": 68684164.7059,
+          "after": 68684165.241,
+          "remote": 1143.5499999970198,
+          "roundTripMs": 0.5350999981164932,
+          "offsetMs": -68683021.42345001
+        },
+        {
+          "before": 68684165.2425,
+          "after": 68684165.6811,
+          "remote": 1144.0199999958277,
+          "roundTripMs": 0.43859998881816864,
+          "offsetMs": -68683021.44180001
+        },
+        {
+          "before": 68684165.6826,
+          "after": 68684166.1094,
+          "remote": 1144.4449999928474,
+          "roundTripMs": 0.4267999976873398,
+          "offsetMs": -68683021.451
+        },
+        {
+          "before": 68684166.1108,
+          "after": 68684166.528,
+          "remote": 1144.875,
+          "roundTripMs": 0.4171999990940094,
+          "offsetMs": -68683021.4444
+        },
+        {
+          "before": 68684166.5295,
+          "after": 68684166.9478,
+          "remote": 1145.2849999964237,
+          "roundTripMs": 0.41830000281333923,
+          "offsetMs": -68683021.45365
+        },
+        {
+          "before": 68684166.9493,
+          "after": 68684167.3654,
+          "remote": 1145.699999988079,
+          "roundTripMs": 0.41609999537467957,
+          "offsetMs": -68683021.45735002
+        },
+        {
+          "before": 68684167.367,
+          "after": 68684167.7617,
+          "remote": 1146.1149999946356,
+          "roundTripMs": 0.3947000056505203,
+          "offsetMs": -68683021.44935001
+        }
+      ]
+    }
+  },
+  "nativeWindow": {
+    "bounds": {
+      "left": 10,
+      "top": 10,
+      "width": 656,
+      "height": 448,
+      "windowState": "normal"
+    }
+  },
+  "sample": {
+    "frames": 46,
+    "mode": "presented",
+    "renderedFrames": 16,
+    "milliseconds": null,
+    "gpu": null,
+    "counters": null,
+    "presentation": {
+      "captureWindow": {
+        "start": 1725.969999998808,
+        "end": 1795.2149999886751
+      },
+      "rafTimestamps": [
+        1723.5,
+        1731.175,
+        1733.52,
+        1736.845,
+        1740.24,
+        1743.565,
+        1746.895,
+        1750.19,
+        1753.51,
+        1756.85,
+        1760.19,
+        1763.57,
+        1766.84,
+        1770.225,
+        1773.51,
+        1776.845
+      ],
+      "submissions": [
+        [
+          1726.2249999940395,
+          1726.405000001192
+        ],
+        [
+          1731.2849999964237,
+          1731.4599999934435
+        ],
+        [
+          1733.5799999982119,
+          1733.719999998808
+        ],
+        [
+          1736.9200000017881,
+          1737.0399999916553
+        ],
+        [
+          1740.3299999982119,
+          1740.4449999928474
+        ],
+        [
+          1743.6499999910593,
+          1743.7899999916553
+        ],
+        [
+          1746.9599999934435,
+          1747.094999998808
+        ],
+        [
+          1750.2899999916553,
+          1750.3849999904633
+        ],
+        [
+          1753.609999999404,
+          1753.7249999940395
+        ],
+        [
+          1756.8999999910593,
+          1756.9899999946356
+        ],
+        [
+          1760.2849999964237,
+          1760.3649999946356
+        ],
+        [
+          1763.6649999916553,
+          1763.7599999904633
+        ],
+        [
+          1766.9249999970198,
+          1767.0199999958277
+        ],
+        [
+          1770.3100000023842,
+          1770.405000001192
+        ],
+        [
+          1773.594999998808,
+          1773.6850000023842
+        ],
+        [
+          1776.9350000023842,
+          1777.0399999916553
+        ]
+      ],
+      "visibilityFailures": [],
+      "visibility": "visible",
+      "focused": true,
+      "canvas": {
+        "x": 0,
+        "y": 0,
+        "width": 640,
+        "height": 360,
+        "top": 0,
+        "right": 640,
+        "bottom": 360,
+        "left": 0
+      },
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "devicePixelRatio": 1
+    },
+    "info": {
+      "diagnostics": [],
+      "counters": {
+        "buffersAllocated": 21,
+        "texturesAllocated": 10,
+        "pipelinesCreated": 7,
+        "shaderModulesCreated": 5,
+        "bindGroupsCreated": 61,
+        "uploads": 29,
+        "uploadBytes": 67794272,
+        "liveBuffers": 20,
+        "liveTextures": 9,
+        "liveSamplers": 4,
+        "liveShaderModules": 3,
+        "livePipelines": 5,
+        "liveBindGroups": 9,
+        "liveListeners": 9,
+        "frameTimeMs": 0.09999999403953552,
+        "cpuUpdateMs": 0.019999995827674866,
+        "renderPrepMs": 0.07999999821186066,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 12,
+        "drawCallsTotal": 552,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 46,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 1,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 4,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 46,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      }
+    }
+  },
+  "hostLoad": {
+    "quiet": true,
+    "busyBeforePercent": 8.89277899343545,
+    "gpuBeforePercent": 2,
+    "waitedMs": 607,
+    "observations": [
+      {
+        "cpu": 8.89277899343545,
+        "gpu": 2,
+        "rawGpu": {
+          "qpc": 686835398300,
+          "id": 31,
+          "kind": "gpu",
+          "counterRows": 381,
+          "qpcEnd": 686838905183,
+          "nonzero": [
+            {
+              "name": "pid_4_luid_0x00000000_0x00013585_phys_0_eng_3_engtype_Copy",
+              "percent": 2
+            }
+          ]
+        }
+      }
+    ],
+    "valid": true,
+    "busyDuringPercent": 21.925754060324827,
+    "externalGpuPeakPercent": 0,
+    "logicalCpus": 20,
+    "cpuBefore": {
+      "idle": 1099488522,
+      "total": 1379644460
+    },
+    "cpuAfter": {
+      "idle": 1099489195,
+      "total": 1379645322
+    },
+    "gpuSamples": [
+      {
+        "raw": {
+          "qpc": 686847468540,
+          "id": 44,
+          "kind": "gpu",
+          "counterRows": 381,
+          "qpcEnd": 686850627724,
+          "nonzero": []
+        },
+        "allEnginePeakPercent": 0,
+        "externalEnginePeakPercent": 0
+      }
+    ]
+  },
+  "etw": {
+    "args": [
+      "--process_id",
+      "10460",
+      "--session_name",
+      "MtekMaterials-29152-ac2875eb",
+      "--output_file",
+      ".out/material-measurement-preflight-v2/passes/product-low-presented-mtek-r0/attempt-1/presentmon.csv",
+      "--v2_metrics",
+      "--qpc_time",
+      "--write_display_time",
+      "--write_frame_id",
+      "--write_display_metadata",
+      "--track_etw_status",
+      "--no_track_gpu",
+      "--no_track_input",
+      "--no_console_stats",
+      "--timed",
+      "120",
+      "--terminate_after_timed"
+    ],
+    "pid": 10460,
+    "sessionName": "MtekMaterials-29152-ac2875eb",
+    "readiness": {
+      "code": 0,
+      "stdout": "\r\nName:                 MtekMaterials-29152-ac2875eb\r\nStatus:               Running\r\nRoot Path:            %systemdrive%\\PerfLogs\r\nSegment:              Off\r\nSchedules:            On\r\n\r\nName:                 MtekMaterials-29152-ac2875eb\\MtekMaterials-29152-ac2875eb\r\nType:                 Trace\r\nAppend:               Off\r\nCircular:             Off\r\nOverwrite:            Off\r\nBuffer Size:          64\r\nBuffers Lost:         0\r\nBuffers Written:      0\r\nBuffer Flush Timer:   1\r\nClock Type:           Performance\r\nFile Mode:            Real-time\r\n\r\nProvider:\r\nName:                 Microsoft-Windows-D3D9\r\nProvider Guid:        {783ACA0A-790E-4D7F-8451-AA850511C6B9}\r\nLevel:                255\r\nKeywordsAll:          0x8000000000000002 (Events,Microsoft-Windows-Direct3D9/Analytic)\r\nKeywordsAny:          0x8000000000000002 (Events,Microsoft-Windows-Direct3D9/Analytic)\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 Microsoft-Windows-DxgKrnl\r\nProvider Guid:        {802EC45A-1E99-4B83-9920-87C98277BA9D}\r\nLevel:                4 (win:Informational)\r\nKeywordsAll:          0x1 (Base)\r\nKeywordsAny:          0x8000001 (Base,Present)\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 Microsoft-Windows-Dwm-Core\r\nProvider Guid:        {9E9BBA3C-2E38-40CB-99F4-9E8281425164}\r\nLevel:                5 (win:Verbose)\r\nKeywordsAll:          0x0\r\nKeywordsAny:          0x8000000000000081 (Composition,Scheduling,Microsoft-Windows-Dwm-Core/Diagnostic)\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 {8C9DD1AD-E6E5-4B07-B455-684A9D879900}\r\nProvider Guid:        {8C9DD1AD-E6E5-4B07-B455-684A9D879900}\r\nLevel:                5\r\nKeywordsAll:          0x0\r\nKeywordsAny:          0xffffffffffffffff\r\nProperties:           64\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 {AE4F8626-8265-40D1-A70B-11B64240E8E9}\r\nProvider Guid:        {AE4F8626-8265-40D1-A70B-11B64240E8E9}\r\nLevel:                4\r\nKeywordsAll:          0x1000000000000000\r\nKeywordsAny:          0x1000000000000000\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 {65CD4C8A-0848-4583-92A0-31C0FBAF00C0}\r\nProvider Guid:        {65CD4C8A-0848-4583-92A0-31C0FBAF00C0}\r\nLevel:                4\r\nKeywordsAll:          0x0\r\nKeywordsAny:          0x0\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 Microsoft-Windows-DXGI\r\nProvider Guid:        {CA11C036-0102-4A2D-A6AD-F03CFED5D3C9}\r\nLevel:                255\r\nKeywordsAll:          0x8000000000000002 (Events,Microsoft-Windows-DXGI/Analytic)\r\nKeywordsAny:          0x8000000000000002 (Events,Microsoft-Windows-DXGI/Analytic)\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nProvider:\r\nName:                 Microsoft-Windows-Win32k\r\nProvider Guid:        {8C416C79-D49B-4F01-A467-E56D3AA8234C}\r\nLevel:                4 (win:Informational)\r\nKeywordsAll:          0x8000000000001000 (Updates,Microsoft-Windows-Win32k/Tracing)\r\nKeywordsAny:          0x8000000400001000 (Updates,Visualization,Microsoft-Windows-Win32k/Tracing)\r\nProperties:           0\r\nFilter Type:          0\r\n\r\nThe command completed successfully.\r\n",
+      "stderr": ""
+    },
+    "code": 0,
+    "stdout": "Started recording.\r\n",
+    "stderr": "warning: PresentMon requires elevated privilege in order to query processes that are\r\n         short-running or started on another account.  Without it, those processes will\r\n         be listed as '<unknown>' and they can't be targeted by --process_name nor trigger\r\n         --terminate_on_proc_exit.\r\n",
+    "stop": {
+      "code": 0,
+      "stdout": "",
+      "stderr": "warning: --terminate_existing_session exits without capturing anything; ignoring all other options.\r\nwarning: --no_console_stats added because stdout does not support statistics reporting.\r\n"
+    }
+  },
+  "error": "AssertionError [ERR_ASSERTION]: No ETW loss-status observation",
+  "disposed": {
+    "result": {
+      "runtime": {
+        "buffersAllocated": 21,
+        "texturesAllocated": 10,
+        "pipelinesCreated": 7,
+        "shaderModulesCreated": 5,
+        "bindGroupsCreated": 61,
+        "uploads": 29,
+        "uploadBytes": 67794272,
+        "liveBuffers": 0,
+        "liveTextures": 0,
+        "liveSamplers": 0,
+        "liveShaderModules": 0,
+        "livePipelines": 0,
+        "liveBindGroups": 0,
+        "liveListeners": 0,
+        "frameTimeMs": 0.09999999403953552,
+        "cpuUpdateMs": 0.019999995827674866,
+        "renderPrepMs": 0.07999999821186066,
+        "gpuTimeAvailable": 0,
+        "drawCalls": 12,
+        "drawCallsTotal": 552,
+        "failedMaterials": 0,
+        "instancedDraws": 1,
+        "instancedDrawsTotal": 46,
+        "culledObjects": 0,
+        "culledObjectsTotal": 0,
+        "rebatchesTotal": 1,
+        "sharedParamBlocks": 1,
+        "ownedParamBlocks": 4,
+        "discardedSteps": 0,
+        "liveEntities": 8,
+        "pendingSpawns": 0,
+        "pendingRemovals": 0,
+        "entitySlots": 8,
+        "entitiesSpawned": 0,
+        "entitiesDestroyed": 0,
+        "physicsBodies": 0,
+        "physicsColliders": 0,
+        "physicsSteps": 0,
+        "physicsFrozenBodies": 0,
+        "framesRendered": 46,
+        "framesSkipped": 0,
+        "deviceLosses": 0,
+        "deviceRecoveries": 0,
+        "recoveryAttempts": 0
+      },
+      "diagnostics": []
+    },
+    "before": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 0,
+      "renderPassesBegun": 0,
+      "computePassesBegun": 0,
+      "submits": 0,
+      "drawCalls": 0,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 0,
+      "setPipeline": 0,
+      "setBindGroup": 0,
+      "setVertexBuffer": 0,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 0,
+      "writeBufferBytes": 0,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 0
+    },
+    "after": {
+      "buffersCreated": 0,
+      "bufferBytesCreated": 0,
+      "texturesCreated": 0,
+      "textureBytesCreated": 0,
+      "samplersCreated": 0,
+      "shaderModulesCreated": 0,
+      "bindGroupsCreated": 0,
+      "bindGroupLayoutsCreated": 0,
+      "pipelineLayoutsCreated": 0,
+      "renderPipelinesCreated": 0,
+      "computePipelinesCreated": 0,
+      "querySetsCreated": 0,
+      "commandEncodersCreated": 0,
+      "renderPassesBegun": 0,
+      "computePassesBegun": 0,
+      "submits": 0,
+      "drawCalls": 0,
+      "instancedDrawCalls": 0,
+      "instancesDrawn": 0,
+      "setPipeline": 0,
+      "setBindGroup": 0,
+      "setVertexBuffer": 0,
+      "setIndexBuffer": 0,
+      "writeBufferCalls": 0,
+      "writeBufferBytes": 0,
+      "writeTextureCalls": 0,
+      "writeTextureBytes": 0,
+      "externalImageCopies": 0,
+      "externalImageBytes": 0,
+      "mappedAtCreationBytes": 0,
+      "buffersDestroyed": 0,
+      "texturesDestroyed": 0,
+      "liveBufferBytes": 0,
+      "liveTextureBytes": 0,
+      "devicesRequested": 1,
+      "devicesDestroyed": 1
+    },
+    "validation": [],
+    "losses": [],
+    "allDevicesDestroyed": true
+  },
+  "finishedAt": "2026-10-27T10:33:50.427Z",
+  "qualification": {
+    "qualified": false,
+    "errors": [
+      "Measurement did not complete",
+      "Missing OS displayed-frame cadence",
+      "Native canvas differs from offscreen reference"
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "presentmon-process.json",
+      "bytes": 4723,
+      "sha256": "2bbd67fee9a26240f1ebd86a71fa36367c6355e97efb3d74a358c0cbee5a4167"
+    },
+    {
+      "path": "presentmon.csv",
+      "bytes": 2293,
+      "sha256": "568e099e429373a596d107771ae337f3af4d16721dee7536d67f98c886f3e63c"
+    }
+  ]
+}

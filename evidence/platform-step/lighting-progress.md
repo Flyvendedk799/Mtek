@@ -1,5 +1,12 @@
 # Shadows and environment lighting
 
+A [2026-10-27 comparison increment](material-lighting-2026-10-27/checkpoint.md)
+fixes source-authored PBR opacity and passes five procedural material/lighting
+calibration categories at two qualities on both desktop backends. The unchanged
+textured-product import currently rejects authored tangents. That implementation,
+qualified timings/presentation and regression budgets remain open; these passing
+visual checks do not close full matched material acceptance.
+
 2026-10-25. Implements the next rendering increment of the platform roadmap.
 The full roadmap remains incomplete; see the [scorecard](scorecard.md).
 The user reported a PC crash during the work. Saved changes and completed logs

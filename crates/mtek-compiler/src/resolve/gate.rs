@@ -43,6 +43,7 @@ pub enum Construct {
     /// `enum Name { … }` (decision 0129).
     Enum,
     Material,
+    Compute,
     Prefab,
     Scene,
     /// `name: value;` in a scene (fields of the schema `Scene`); each field
@@ -86,7 +87,7 @@ pub enum Construct {
 
 impl Construct {
     /// Every construct, in declaration order.
-    pub const ALL: [Construct; 32] = [
+    pub const ALL: [Construct; 33] = [
         Construct::Import,
         Construct::Export,
         Construct::ConstItem,
@@ -96,6 +97,7 @@ impl Construct {
         Construct::Struct,
         Construct::Enum,
         Construct::Material,
+        Construct::Compute,
         Construct::Prefab,
         Construct::Scene,
         Construct::SceneField,
@@ -165,6 +167,7 @@ pub const fn construct_gate(construct: Construct) -> ConstructGate {
         Construct::Enum => row("`enum` declarations", true, M1),
         // Planned for M2; implemented by task M2-04 before the M2 gate (decision 0039).
         Construct::Material => row("`material` declarations", true, M1),
+        Construct::Compute => row("`compute` declarations", true, M1),
         // Planned for M5; implemented by task M5-01 before the M5 gate (decision 0062).
         Construct::Prefab => row("`prefab` declarations", true, M1),
         Construct::Scene => row("Scenes", true, M1),

@@ -1,0 +1,1139 @@
+{
+  "config": {
+    "argv": [
+      "<external>",
+      "node_modules/@playwright/test/cli.js",
+      "test",
+      "--config=.out/pbr-alpha.config.ts"
+    ],
+    "configFile": ".out/pbr-alpha.config.ts",
+    "rootDir": "tests/browser/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": ".out/pbr-alpha-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "hardware",
+        "name": "hardware",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "m4/pbr-alpha.spec.ts",
+          "m4/pbr.spec.ts",
+          "m4/pbr-maps.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "<results>/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "software",
+        "name": "software",
+        "testDir": "tests/browser/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "m4/pbr-alpha.spec.ts",
+          "m4/pbr.spec.ts",
+          "m4/pbr-maps.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<results>/test-results.json"
+        }
+      ],
+      [
+        "tests/browser/support/not-run-reporter.ts",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "m4\\pbr-alpha.spec.ts",
+      "file": "m4/pbr-alpha.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "built-in and authored PBR preserve straight colour alpha through opaque/translucent changes",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 451,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T05:42:44.691Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "cb4ef4130db1f805bf61-1f697c5ffae2e5f3f510",
+          "file": "m4/pbr-alpha.spec.ts",
+          "line": 5,
+          "column": 1
+        },
+        {
+          "title": "built-in and authored PBR preserve straight colour alpha through opaque/translucent changes",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "software",
+              "projectName": "software",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 533,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T05:42:50.885Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "cb4ef4130db1f805bf61-3fe2b9c8da7674d4e29a",
+          "file": "m4/pbr-alpha.spec.ts",
+          "line": 5,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "m4\\pbr-maps.spec.ts",
+      "file": "m4/pbr-maps.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "imported mapped materials survive device recovery and release GPU resources",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 491,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T05:42:46.099Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0de3d68aa32312650113-8492b1e2d9570f4c2785",
+          "file": "m4/pbr-maps.spec.ts",
+          "line": 8,
+          "column": 1
+        },
+        {
+          "title": "GLB PBR maps: regular UVs, factors, colour spaces and indirect-only occlusion",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 347,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T05:42:46.599Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0de3d68aa32312650113-a8d141c4825b2b9730d7",
+          "file": "m4/pbr-maps.spec.ts",
+          "line": 51,
+          "column": 3
+        },
+        {
+          "title": "GLB PBR maps: mirrored UVs, factors, colour spaces and indirect-only occlusion",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 353,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T05:42:46.957Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0de3d68aa32312650113-7a12cfb0ab84ee2f445d",
+          "file": "m4/pbr-maps.spec.ts",
+          "line": 51,
+          "column": 3
+        },
+        {
+          "title": "GLB PBR maps: degenerate UVs, factors, colour spaces and indirect-only occlusion",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "hardware",
+              "projectName": "hardware",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 364,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T05:42:47.320Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0de3d68aa32312650113-051d75b3550c8f2d09c6",
+          "file": "m4/pbr-maps.spec.ts",
+          "line": 51,
+          "column": 3
+        },
+        {
+          "title": "imported mapped materials survive device recovery and release GPU resources",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "software",
+              "projectName": "software",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 565,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T05:42:52.119Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0de3d68aa32312650113-73798945c25705dc2506",
+          "file": "m4/pbr-maps.spec.ts",
+          "line": 8,
+          "column": 1
+        },
+        {
+          "title": "GLB PBR maps: regular UVs, factors, colour spaces and indirect-only occlusion",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "software",
+              "projectName": "software",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 393,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T05:42:52.692Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0de3d68aa32312650113-8c884238c8cf613253e6",
+          "file": "m4/pbr-maps.spec.ts",
+          "line": 51,
+          "column": 3
+        },
+        {
+          "title": "GLB PBR maps: mirrored UVs, factors, colour spaces and indirect-only occlusion",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "software",
+              "projectName": "software",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 434,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T05:42:53.096Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0de3d68aa32312650113-6ad815b0694efe4485cf",
+          "file": "m4/pbr-maps.spec.ts",
+          "line": 51,
+          "column": 3
+        },
+        {
+          "title": "GLB PBR maps: degenerate UVs, factors, colour spaces and indirect-only occlusion",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "software",
+              "projectName": "software",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 391,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-27T05:42:53.538Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0de3d68aa32312650113-e0bb7b22d24f6b66decd",
+          "file": "m4/pbr-maps.spec.ts",
+          "line": 51,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "m4\\pbr.spec.ts",
+      "file": "m4/pbr.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "the PBR material against the CPU oracle (M4-03)",
+          "file": "m4/pbr.spec.ts",
+          "line": 231,
+          "column": 6,
+          "specs": [
+            {
+              "title": "the chosen pixels all see the sphere and the camera geometry matches the fixture",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 10,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T05:42:47.724Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-254a934dcaba697945b8",
+              "file": "m4/pbr.spec.ts",
+              "line": 232,
+              "column": 3
+            },
+            {
+              "title": "the directional light for metallic 0 and 1 and roughness 0.2 and 0.8",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "sun, metallic 0, roughness 0.2: max error 1/255 (pixel 108,73 channel 1: GPU 171, oracle 170 (linear 0.40439)); sun, metallic 0, roughness 0.8: max error 1/255 (pixel 135,175 channel 1: GPU 140, oracle 141 (linear 0.26459)); sun, metallic 1, roughness 0.2: max error 1/255 (pixel 108,73 channel 1: GPU 7, oracle 6 (linear 0.00197)); sun, metallic 1, roughness 0.8: max error 1/255 (pixel 151,105 channel 0: GPU 197, oracle 196 (linear 0.55512))"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 368,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T05:42:47.742Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "sun, metallic 0, roughness 0.2: max error 1/255 (pixel 108,73 channel 1: GPU 171, oracle 170 (linear 0.40439)); sun, metallic 0, roughness 0.8: max error 1/255 (pixel 135,175 channel 1: GPU 140, oracle 141 (linear 0.26459)); sun, metallic 1, roughness 0.2: max error 1/255 (pixel 108,73 channel 1: GPU 7, oracle 6 (linear 0.00197)); sun, metallic 1, roughness 0.8: max error 1/255 (pixel 151,105 channel 0: GPU 197, oracle 196 (linear 0.55512))"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-8f6b47a8a4b760cbb0fe",
+              "file": "m4/pbr.spec.ts",
+              "line": 247,
+              "column": 3
+            },
+            {
+              "title": "a point light with a range: inside the window, across its edge and outside it",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "lamp inside the window, dielectric: max error 1/255 (pixel 163,105 channel 2: GPU 152, oracle 151 (linear 0.31171)); lamp inside the window, metal: max error 1/255 (pixel 160,88 channel 1: GPU 231, oracle 232 (linear 0.80351)); lamp across the window edge, dielectric: max error 1/255 (pixel 128,128 channel 2: GPU 36, oracle 35 (linear 0.01722)); lamp outside the window: max error 0/255 (exact)"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 369,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T05:42:48.117Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "lamp inside the window, dielectric: max error 1/255 (pixel 163,105 channel 2: GPU 152, oracle 151 (linear 0.31171)); lamp inside the window, metal: max error 1/255 (pixel 160,88 channel 1: GPU 231, oracle 232 (linear 0.80351)); lamp across the window edge, dielectric: max error 1/255 (pixel 128,128 channel 2: GPU 36, oracle 35 (linear 0.01722)); lamp outside the window: max error 0/255 (exact)"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-46c3359970094e3fd668",
+              "file": "m4/pbr.spec.ts",
+              "line": 270,
+              "column": 3
+            },
+            {
+              "title": "a point light without a range falls off with the square of the distance",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "free lamp, metallic 0.3, roughness 0.4: max error 1/255 (pixel 151,105 channel 2: GPU 73, oracle 74 (linear 0.06758)); free lamp far away: max error 1/255 (pixel 155,101 channel 0: GPU 119, oracle 118 (linear 0.18264))"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 322,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T05:42:48.495Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "free lamp, metallic 0.3, roughness 0.4: max error 1/255 (pixel 151,105 channel 2: GPU 73, oracle 74 (linear 0.06758)); free lamp far away: max error 1/255 (pixel 155,101 channel 0: GPU 119, oracle 118 (linear 0.18264))"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-08f6a7fad85349223cb7",
+              "file": "m4/pbr.spec.ts",
+              "line": 308,
+              "column": 3
+            },
+            {
+              "title": "ambient light only: (1 − metallic) times base colour times the ambient colour, independent of roughness",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "ambient, dielectric, rough 0.8: max error 0/255 (exact); ambient, metal, rough 0.2: max error 0/255 (exact); ambient, black base: max error 0/255 (exact)"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 426,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T05:42:48.825Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "ambient, dielectric, rough 0.8: max error 0/255 (exact); ambient, metal, rough 0.2: max error 0/255 (exact); ambient, black base: max error 0/255 (exact)"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-0d8aa8ceec0457001ae4",
+              "file": "m4/pbr.spec.ts",
+              "line": 327,
+              "column": 3
+            },
+            {
+              "title": "all three lights together, with a coloured sun",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "three lights, metallic 0.5, roughness 0.35: max error 1/255 (pixel 128,128 channel 2: GPU 134, oracle 133 (linear 0.23646))"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 346,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T05:42:49.260Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "three lights, metallic 0.5, roughness 0.35: max error 1/255 (pixel 128,128 channel 2: GPU 134, oracle 133 (linear 0.23646))"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-06d6b55e60f4ddd95e85",
+              "file": "m4/pbr.spec.ts",
+              "line": 356,
+              "column": 3
+            },
+            {
+              "title": "saturation: a very bright light clips and nothing is tone mapped",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "saturating sun, warm base: max error 1/255 (pixel 100,190 channel 1: GPU 59, oracle 60 (linear 0.04447)); blinding sun: max error 0/255; clipped pixels 8, all-white pixels 16"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 369,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T05:42:49.615Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "saturating sun, warm base: max error 1/255 (pixel 100,190 channel 1: GPU 59, oracle 60 (linear 0.04447)); blinding sun: max error 0/255; clipped pixels 8, all-white pixels 16"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-d9677e96427a7824aa81",
+              "file": "m4/pbr.spec.ts",
+              "line": 374,
+              "column": 3
+            },
+            {
+              "title": "no resource is created after mount while the cases change every input",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "hardware",
+                  "projectName": "hardware",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 313,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T05:42:49.994Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-93cd8fbaae5242e2f010",
+              "file": "m4/pbr.spec.ts",
+              "line": 402,
+              "column": 3
+            },
+            {
+              "title": "the chosen pixels all see the sphere and the camera geometry matches the fixture",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 13,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T05:42:53.968Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-6d550b2ed8c8d70b3646",
+              "file": "m4/pbr.spec.ts",
+              "line": 232,
+              "column": 3
+            },
+            {
+              "title": "the directional light for metallic 0 and 1 and roughness 0.2 and 0.8",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "sun, metallic 0, roughness 0.2: max error 0/255 (exact); sun, metallic 0, roughness 0.8: max error 1/255 (pixel 100,190 channel 1: GPU 70, oracle 71 (linear 0.06216)); sun, metallic 1, roughness 0.2: max error 1/255 (pixel 139,105 channel 1: GPU 182, oracle 181 (linear 0.46377)); sun, metallic 1, roughness 0.8: max error 0/255 (exact)"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 394,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T05:42:53.987Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "sun, metallic 0, roughness 0.2: max error 0/255 (exact); sun, metallic 0, roughness 0.8: max error 1/255 (pixel 100,190 channel 1: GPU 70, oracle 71 (linear 0.06216)); sun, metallic 1, roughness 0.2: max error 1/255 (pixel 139,105 channel 1: GPU 182, oracle 181 (linear 0.46377)); sun, metallic 1, roughness 0.8: max error 0/255 (exact)"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-bd34bdbfa5191aaf61cf",
+              "file": "m4/pbr.spec.ts",
+              "line": 247,
+              "column": 3
+            },
+            {
+              "title": "a point light with a range: inside the window, across its edge and outside it",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "lamp inside the window, dielectric: max error 1/255 (pixel 155,101 channel 0: GPU 195, oracle 196 (linear 0.54896)); lamp inside the window, metal: max error 1/255 (pixel 151,105 channel 1: GPU 237, oracle 238 (linear 0.85133)); lamp across the window edge, dielectric: max error 0/255 (exact); lamp outside the window: max error 0/255 (exact)"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 374,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T05:42:54.388Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "lamp inside the window, dielectric: max error 1/255 (pixel 155,101 channel 0: GPU 195, oracle 196 (linear 0.54896)); lamp inside the window, metal: max error 1/255 (pixel 151,105 channel 1: GPU 237, oracle 238 (linear 0.85133)); lamp across the window edge, dielectric: max error 0/255 (exact); lamp outside the window: max error 0/255 (exact)"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-4efda709ad067cf5381b",
+              "file": "m4/pbr.spec.ts",
+              "line": 270,
+              "column": 3
+            },
+            {
+              "title": "a point light without a range falls off with the square of the distance",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "free lamp, metallic 0.3, roughness 0.4: max error 1/255 (pixel 100,190 channel 0: GPU 88, oracle 89 (linear 0.09876)); free lamp far away: max error 0/255 (exact)"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 345,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T05:42:54.771Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "free lamp, metallic 0.3, roughness 0.4: max error 1/255 (pixel 100,190 channel 0: GPU 88, oracle 89 (linear 0.09876)); free lamp far away: max error 0/255 (exact)"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-fe350e88c75c498c6170",
+              "file": "m4/pbr.spec.ts",
+              "line": 308,
+              "column": 3
+            },
+            {
+              "title": "ambient light only: (1 − metallic) times base colour times the ambient colour, independent of roughness",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "ambient, dielectric, rough 0.8: max error 0/255 (exact); ambient, metal, rough 0.2: max error 0/255 (exact); ambient, black base: max error 0/255 (exact)"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 379,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T05:42:55.122Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "ambient, dielectric, rough 0.8: max error 0/255 (exact); ambient, metal, rough 0.2: max error 0/255 (exact); ambient, black base: max error 0/255 (exact)"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-9f00e00bf711007613df",
+              "file": "m4/pbr.spec.ts",
+              "line": 327,
+              "column": 3
+            },
+            {
+              "title": "all three lights together, with a coloured sun",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "three lights, metallic 0.5, roughness 0.35: max error 1/255 (pixel 163,105 channel 2: GPU 221, oracle 220 (linear 0.71868))"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 337,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T05:42:55.510Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "three lights, metallic 0.5, roughness 0.35: max error 1/255 (pixel 163,105 channel 2: GPU 221, oracle 220 (linear 0.71868))"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-5019f0f571f438f08998",
+              "file": "m4/pbr.spec.ts",
+              "line": 356,
+              "column": 3
+            },
+            {
+              "title": "saturation: a very bright light clips and nothing is tone mapped",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "m4-pbr-max-error",
+                      "description": "saturating sun, warm base: max error 1/255 (pixel 100,190 channel 1: GPU 59, oracle 60 (linear 0.04447)); blinding sun: max error 0/255; clipped pixels 8, all-white pixels 16"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 330,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T05:42:55.854Z",
+                      "annotations": [
+                        {
+                          "type": "m4-pbr-max-error",
+                          "description": "saturating sun, warm base: max error 1/255 (pixel 100,190 channel 1: GPU 59, oracle 60 (linear 0.04447)); blinding sun: max error 0/255; clipped pixels 8, all-white pixels 16"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-f29172de5389cc75bc77",
+              "file": "m4/pbr.spec.ts",
+              "line": 374,
+              "column": 3
+            },
+            {
+              "title": "no resource is created after mount while the cases change every input",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "software",
+                  "projectName": "software",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 314,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-27T05:42:56.193Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f2b47bccce835034e95d-c3b507d31950c6c62054",
+              "file": "m4/pbr.spec.ts",
+              "line": 402,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-27T05:42:36.236Z",
+    "duration": 20419.918,
+    "expected": 26,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

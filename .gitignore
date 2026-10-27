@@ -1,4 +1,5 @@
 /target
+/.out/
 node_modules/
 dist/
 # The itch.io upload of `mtek build --release --itch`
