@@ -395,6 +395,16 @@ export interface LocomotionPlayer {
   crossed(clip:string,seconds:number):boolean;crossedPhase(phase:number):boolean;
   play(looping?:boolean,speed?:number):boolean;pause():boolean;resume():boolean;
 }
+export interface BlendSample {readonly clip:string;readonly x:number;readonly y:number}
+export interface BlendParameter {readonly x:number;readonly y:number}
+export interface BlendOptions {readonly samples:readonly BlendSample[];readonly parameter?:BlendParameter;readonly phase?:number;readonly speed?:number;readonly looping?:boolean}
+/** Phase-synchronized 2D blend space (decision 0220); `player.locomotion` is its 1D view. */
+export interface BlendPlayer {
+  readonly active:boolean;readonly phase:number;readonly parameter:BlendParameter;readonly revision:number;readonly playing:boolean;readonly finished:boolean;readonly duration:number;
+  set(options:BlendOptions|undefined):void;setParameter(x:number,y?:number):void;seek(phase:number):void;
+  crossed(clip:string,seconds:number):boolean;crossedPhase(phase:number):boolean;
+  play(looping?:boolean,speed?:number):boolean;pause():boolean;resume():boolean;
+}
 export interface AnimationControllerOptions {readonly clip?:string;readonly bones?:Readonly<Record<string,AnimationBone>>;readonly updateInterval?:number;readonly updatePolicy?:readonly AnimationUpdateBand[]}
 export interface AnimationClock {
   play(slot:number,looping:boolean,speed:number):boolean;pause(slot:number):boolean;resume(slot:number):boolean;
@@ -407,8 +417,9 @@ export interface AnimationPlayer {
   readonly skin:MtekSkin;readonly palette:Float32Array;readonly pose:Float64Array;readonly revision:number;
   readonly clock:AnimationClock;
   readonly locomotion:LocomotionPlayer;
+  readonly blend:BlendPlayer;
   setUpdatePolicy(bands:readonly AnimationUpdateBand[]|undefined):void;
-  readonly layers:{set(id:string,options:AnimationLayer):void;remove(id:string):void;clear():void;seek(id:string,seconds:number):boolean;crossed(id:string,marker:number):boolean};
+  readonly layers:{set(id:string,options:AnimationLayer):void;remove(id:string):void;clear():void;seek(id:string,seconds:number):boolean;crossed(id:string,marker:number):boolean;fade(id:string,weight:number,seconds:number):boolean};
   readonly ik:{set(id:string,options:IKConstraint):void;remove(id:string):void;clear():void};
   transition(name:string,seconds:number,looping:boolean,speed:number):boolean;
   play(looping:boolean,speed:number):boolean;advance(dt:number,evaluate?:boolean,distance?:number):void;evaluate():void;
@@ -417,7 +428,7 @@ export interface AnimationPlayer {
   setRootMotion(node:string|undefined):void;consumeRootMotion():AnimationVector;
 }
 export interface AnimationLayerInspection {
-  readonly id:string;readonly clip:string;readonly weight:number;readonly additive:boolean;readonly time:number;
+  readonly id:string;readonly clip:string;readonly weight:number;readonly targetWeight:number;readonly fadeRemaining:number;readonly additive:boolean;readonly time:number;
   readonly duration:number;readonly playing:boolean;readonly mask:readonly number[];
 }
 export interface IKInspection {
@@ -425,19 +436,26 @@ export interface IKInspection {
   readonly iterations:number;readonly tolerance:number;readonly rotation?:AnimationQuaternion;readonly rotationWeight:number;
   readonly limits:readonly {readonly node:number;readonly limit:IKHingeLimit}[];
 }
+export interface BlendInspection {
+  readonly phase:number;readonly parameter:BlendParameter;
+  readonly samples:readonly {readonly clip:string;readonly x:number;readonly y:number;readonly weight:number}[];
+}
 export interface AnimationInspection {
   readonly mode:"bind"|"held"|"clip"|"locomotion";readonly clip:string|null;
   readonly transition:{readonly elapsed:number;readonly duration:number;readonly progress:number;readonly outgoingClip:string|null;readonly fromSnapshot:boolean};
   readonly rootMotionNode:number|null;readonly proceduralOverride:boolean;
   readonly nodes:readonly {readonly index:number;readonly name:string;readonly parent:number;readonly joint:boolean;readonly position:AnimationVector}[];
   readonly layers:readonly AnimationLayerInspection[];readonly ik:readonly IKInspection[];
+  readonly blend:BlendInspection|null;
   readonly locomotion:{readonly phase:number;readonly parameter:number;readonly samples:readonly {readonly clip:string;readonly threshold:number;readonly weight:number}[]}|null;
 }
 export declare class AnimationController {
   readonly apiVersion=1;readonly player:AnimationPlayer;
   constructor(skin:MtekSkin,options?:AnimationControllerOptions);
   setUpdateInterval(seconds:number):void;setUpdatePolicy(bands:readonly AnimationUpdateBand[]|undefined):void;
-  setLocomotion(options:LocomotionOptions|undefined):void;setLocomotionParameter(value:number):void;setLayer(id:string,layer:AnimationLayer):void;setIK(id:string,constraint:IKConstraint):void;
+  setLocomotion(options:LocomotionOptions|undefined):void;setLocomotionParameter(value:number):void;
+  setBlendSpace(options:BlendOptions|undefined):void;setBlendParameter(x:number,y:number):void;
+  setLayer(id:string,layer:AnimationLayer):void;fadeLayer(id:string,weight:number,seconds:number):boolean;setIK(id:string,constraint:IKConstraint):void;
   update(dt:number,force?:boolean,distance?:number):boolean;dispose():void;
 }
 export declare function createAnimationController(skin:MtekSkin,options?:AnimationControllerOptions):AnimationController;

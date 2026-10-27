@@ -3,6 +3,7 @@ import { identity, multiplyInto, fromRotationTranslationScaleInto, normalMatrixI
 import { ClipPlayers, sampleChannelInto, type PlayableChannel, type PlayableClip } from "./clips.js";
 import { PoseLayers } from "./pose-layers.js";
 import { PoseIK } from "./ik.js";
+import { BlendSpace } from "./blend-space.js";
 import { LocomotionBlend } from "./locomotion.js";
 import { PoseSchedule, type AnimationUpdateBand } from "./pose-schedule.js";
 import type { AnimationInspection } from "./animation-inspection.js";
@@ -63,6 +64,9 @@ function slerp(out: Float64Array, at: number, a: Float64Array, b: Float64Array, 
 export class SkeletonPlayer {
   readonly layers: PoseLayers;
   readonly ik: PoseIK;
+  /** The phase-synchronized 1D/2D blend that replaces the base clip while active (decision 0220). */
+  readonly blend: BlendSpace;
+  /** The 1D view of `blend`: thresholds are x with y = 0 (decision 0196). */
   readonly locomotion: LocomotionBlend;
   private readonly schedule = new PoseSchedule();
   private evaluatedLocomotion = -1;
@@ -116,14 +120,14 @@ export class SkeletonPlayer {
   /** Copies current evaluated diagnostics. Never advances clocks, consumes root motion or evaluates a pose. */
   inspect(): AnimationInspection {
     const progress = this.blendDuration === 0 ? 1 : Math.min(1, this.blendTime / this.blendDuration);
-    return { mode: this.held ? "held" : this.locomotion.active ? "locomotion" : this.name === "" ? "bind" : "clip", clip: this.name || null,
+    return { mode: this.held ? "held" : this.blend.active ? "locomotion" : this.name === "" ? "bind" : "clip", clip: this.name || null,
       transition: { elapsed: this.blendTime, duration: this.blendDuration, progress, outgoingClip: this.outgoing?.name ?? null, fromSnapshot: progress < 1 && this.outgoing === undefined },
       rootMotionNode: this.rootNode < 0 ? null : this.rootNode, proceduralOverride: this.override !== undefined,
       nodes: this.skin.nodes.map((node, index) => {
         multiplyInto(this.product, this.inverseMesh, this.globals[index]!);
         return { index, name: node.name, parent: node.parent, joint: this.skin.joints.includes(index),
           position: { x: Math.fround(this.product[12]!), y: Math.fround(this.product[13]!), z: Math.fround(this.product[14]!) } };
-      }), layers: this.layers.inspect(), ik: this.ik.inspect(), locomotion: this.locomotion.inspect(),
+      }), layers: this.layers.inspect(), ik: this.ik.inspect(), blend: this.blend.inspect(), locomotion: this.locomotion.inspect(),
     };
   }
   jointPosition(name: string): { x: number; y: number; z: number } {
@@ -153,7 +157,8 @@ export class SkeletonPlayer {
   constructor(readonly skin: MtekSkin, initial?: string) {
     this.layers = new PoseLayers(skin);
     this.ik = new PoseIK(skin);
-    this.locomotion = new LocomotionBlend(skin);
+    this.blend = new BlendSpace(skin);
+    this.locomotion = new LocomotionBlend(this.blend);
     this.bind = new Float64Array(skin.nodes.length*10);
     skin.nodes.forEach((node,i) => {
       this.bind.set(node.translation,i*10);
@@ -175,7 +180,7 @@ export class SkeletonPlayer {
   transition(name: string, seconds: number, looping: boolean, speed: number): boolean {
     const clip = this.skin.clips.find(c=>c.name===name);
     if (clip === undefined || !Number.isFinite(seconds) || seconds<0 || !Number.isFinite(speed) || speed<0) return false;
-    if (this.locomotion.active) { this.locomotion.set(undefined); this.name = ""; }
+    if (this.blend.active) { this.blend.set(undefined); this.name = ""; }
     if (name === this.name) return true; // declarative state selection doesn't restart every update
     this.outgoing = this.name !== "" && !this.held && this.blendTime >= this.blendDuration
       ? { name: this.name, clock: this.clock } : undefined;
@@ -199,7 +204,7 @@ export class SkeletonPlayer {
           || n.translation.some((v,k)=>v!==other.translation[k])
           || n.rotation.some((v,k)=>v!==other.rotation[k]) || n.scale.some((v,k)=>v!==other.scale[k]);
       })) return false;
-    this.locomotion.set(undefined);
+    this.blend.set(undefined);
     this.from.set(source.pose); this.pose.set(source.pose);
     this.held=true; this.name=""; this.outgoing=undefined;
     this.blendDuration=0; this.blendTime=0; this.evaluatedTime=NaN;
@@ -216,8 +221,8 @@ export class SkeletonPlayer {
     }
   }
   play(looping: boolean, speed: number): boolean {
-    if (this.locomotion.active) {
-      const ok = this.locomotion.play(looping,speed); if (ok) this.evaluate(); return ok;
+    if (this.blend.active) {
+      const ok = this.blend.play(looping,speed); if (ok) this.evaluate(); return ok;
     }
     const ok = this.clock.play(0,looping,speed);
     if (ok) { this.from.set(this.sample); this.blendTime=0; this.evaluate(); }
@@ -229,10 +234,10 @@ export class SkeletonPlayer {
     this.clock.advance(dt,()=>undefined);
     this.outgoing?.clock.advance(dt,()=>undefined);
     this.layers.advance(dt);
-    this.locomotion.advance(dt);
+    this.blend.advance(dt);
     this.blendTime=Math.min(this.blendDuration,this.blendTime+dt);
-    if(this.rootNode>=0 && this.locomotion.active) {
-      this.rootSample.fill(0); this.locomotion.rootDelta(this.rootNode,this.rootSample);
+    if(this.rootNode>=0 && this.blend.active) {
+      this.rootSample.fill(0); this.blend.rootDelta(this.rootNode,this.rootSample);
       for (let c=0;c<3;c++) this.rootDelta[c]=this.rootDelta[c]!+this.rootSample[c]!*this.clock.weight(0);
     }
     else if(this.rootNode>=0) {
@@ -269,11 +274,11 @@ export class SkeletonPlayer {
   }
   evaluate(): void {
     const time = this.clock.time(0), weight = this.clock.weight(0);
-    if (this.override === undefined && time === this.evaluatedTime && this.blendTime === this.evaluatedBlend && weight === this.evaluatedWeight && this.evaluatedLayers === this.layers.revision && this.evaluatedIK === this.ik.revision && this.evaluatedLocomotion === this.locomotion.revision) return;
+    if (this.override === undefined && time === this.evaluatedTime && this.blendTime === this.evaluatedBlend && weight === this.evaluatedWeight && this.evaluatedLayers === this.layers.revision && this.evaluatedIK === this.ik.revision && this.evaluatedLocomotion === this.blend.revision) return;
     this.evaluatedTime = time; this.evaluatedBlend = this.blendTime; this.evaluatedWeight = weight;
     this.evaluatedLayers = this.layers.revision;
     this.evaluatedIK = this.ik.revision;
-    this.evaluatedLocomotion = this.locomotion.revision;
+    this.evaluatedLocomotion = this.blend.revision;
     if (this.held) this.sample.set(this.from);
     else this.samplePose(this.name,time,this.sample);
     if (this.outgoing !== undefined) {
@@ -294,8 +299,8 @@ export class SkeletonPlayer {
       for(const c of [0,1,2,7,8,9]) this.pose[at+c]=this.bind[at+c]!+(this.pose[at+c]!-this.bind[at+c]!)*weight;
       slerp(this.pose,at+3,this.bind,this.pose,weight);
     }
-    if (this.locomotion.active) {
-      this.locomotion.apply(this.pose,this.bind);
+    if (this.blend.active) {
+      this.blend.apply(this.pose,this.bind);
       for(let at=0;at<this.pose.length;at+=10) {
         for(const c of [0,1,2,7,8,9]) this.pose[at+c]=this.bind[at+c]!+(this.pose[at+c]!-this.bind[at+c]!)*weight;
         slerp(this.pose,at+3,this.bind,this.pose,weight);

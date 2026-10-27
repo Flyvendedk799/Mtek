@@ -7,7 +7,7 @@ type Mutable<T> = {-readonly [K in keyof T]: T[K]};
 const snapshot = (scene: SceneInspection, animation: AnimationInspection | null = null): InspectorSpatialSnapshot => ({status:"ready",selectedId:"actor",scene,animation,error:null});
 const scene = (): Mutable<SceneInspection> => ({frame:1,renderable:true,viewport:{width:200,height:100},viewProjection:identity,
   entities:[{id:"actor",parentId:null,worldMatrix:identity}],bodies:[]});
-const animation = (): Mutable<AnimationInspection> => ({mode:"clip",clip:"Idle",transition:{elapsed:0,duration:0,progress:1,outgoingClip:null,fromSnapshot:false},rootMotionNode:null,proceduralOverride:false,layers:[],ik:[],locomotion:null,
+const animation = (): Mutable<AnimationInspection> => ({mode:"clip",clip:"Idle",transition:{elapsed:0,duration:0,progress:1,outgoingClip:null,fromSnapshot:false},rootMotionNode:null,proceduralOverride:false,layers:[],ik:[],blend:null,locomotion:null,
   nodes:[{index:0,name:"Same name",parent:-1,joint:true,position:{x:0,y:0,z:.5}},{index:1,name:"Same name",parent:0,joint:true,position:{x:.2,y:0,z:.5}}]});
 
 describe("world-space diagnostic overlays", () => {

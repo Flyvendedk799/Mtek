@@ -4,6 +4,7 @@ import type { IKConstraint } from "./scene/ik.js";
 import { SkeletonPlayer, skinProblem } from "./scene/skeleton.js";
 import { PoseSchedule, type AnimationUpdateBand } from "./scene/pose-schedule.js";
 import type { LocomotionOptions } from "./scene/locomotion.js";
+import type { BlendOptions } from "./scene/blend-space.js";
 
 /** Structural interface implemented by Three.js Bone/Object3D and ordinary host objects. */
 export interface AnimationBone {
@@ -61,9 +62,21 @@ export class AnimationController {
   setLocomotionParameter(value: number): void {
     this.active(); this.player.locomotion.setParameter(value);
   }
+  /** Configure (or with `undefined` clear) the 2D blend space that drives the base pose. */
+  setBlendSpace(options: BlendOptions | undefined): void {
+    this.active(); this.player.blend.set(options);
+  }
+  setBlendParameter(x: number, y: number): void {
+    this.active(); this.player.blend.setParameter(x, y);
+  }
   setLayer(id: string, layer: AnimationLayer): void {
     this.active();
     this.player.layers.set(id, layer);
+  }
+  /** Fade a layer's weight over `seconds`; false when the layer does not exist. */
+  fadeLayer(id: string, weight: number, seconds: number): boolean {
+    this.active();
+    return this.player.layers.fade(id, weight, seconds);
   }
   setIK(id: string, constraint: IKConstraint): void {
     this.active();
@@ -95,7 +108,7 @@ export class AnimationController {
     this.disposed = true;
     this.targets = [];
     this.player.layers.clear();
-    this.player.locomotion.set(undefined);
+    this.player.blend.set(undefined);
     this.player.ik.clear();
     this.player.setProceduralOverride(undefined);
   }
@@ -113,5 +126,6 @@ export {deformSkin} from "./mesh/skinning.js";
 export type { AnimationLayer } from "./scene/pose-layers.js";
 export type { IKConstraint, IKHingeLimit } from "./scene/ik.js";
 export type { LocomotionOptions, LocomotionSample } from "./scene/locomotion.js";
+export type { BlendOptions, BlendSample, BlendParameter } from "./scene/blend-space.js";
 export type { AnimationUpdateBand } from "./scene/pose-schedule.js";
 export type { MtekSkin } from "./abi/manifest-types.js";
