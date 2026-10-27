@@ -39,13 +39,18 @@ fn ground(x: f32, z: f32) -> f32 {
     let strip = 1.0 - smoothstep(2.8, 3.2, abs(x));
     let stairs = 0.15 * smoothstep(3.35, 3.65, z) + 0.15 * smoothstep(4.35, 4.65, z);
     let ramp = 0.3 * clamp((z - 7.5) / 1.5, 0.0, 1.0);
-    let curb = 0.2 * smoothstep(-0.05, 0.05, x) * smoothstep(-0.1, 0.1, z) * (1.0 - smoothstep(1.9, 2.1, z));
+    let curb = 0.2
+        * smoothstep(-0.05, 0.05, x)
+        * smoothstep(-0.1, 0.1, z)
+        * (1.0 - smoothstep(1.9, 2.1, z));
     return strip * (stairs - ramp + curb);
 }
 
 fn ground_normal(x: f32, z: f32) -> vec3 {
     let e = 0.05;
-    return normalize(vec3(ground(x - e, z) - ground(x + e, z), 2.0 * e, ground(x, z - e) - ground(x, z + e)));
+    return normalize(
+        vec3(ground(x - e, z) - ground(x + e, z), 2.0 * e, ground(x, z - e) - ground(x, z + e)),
+    );
 }
 
 scene Stage {
@@ -123,8 +128,8 @@ scene Stage {
     // ---- the Guest: another rig (other names, proportions and rest pose) playing the Hero's clips ----
 
     entity Guest {
-        position: vec3(2.6, 0.0, 1.5);
-        rotation: quat.axis_angle(vec3(0.0, 1.0, 0.0), -1.2);
+        position: vec3(-2.4, 0.0, 1.6);
+        rotation: quat.axis_angle(vec3(0.0, 1.0, 0.0), 1.2);
         mesh: GUEST.mesh("Body");
         clips_from: HERO;
         clip: "Dance";
@@ -273,7 +278,14 @@ scene Stage {
     }
 
     ui(dt: f32) {
-        hud.text("W walk, Shift+W run, Q/E strafe, A/D turn, F wave, G reach, T tail, P feet, 1-4 stations", vec2(-0.95, 0.9), 16.0, #ffffff, 0.0, hud.pixel_font());
+        hud.text(
+            "W walk, Shift+W run, Q/E strafe, A/D turn, F wave, G reach, T tail, P feet, 1-4 stations",
+            vec2(-0.95, 0.9),
+            16.0,
+            #ffffff,
+            0.0,
+            hud.pixel_font(),
+        );
     }
 
     on key_down(Key.F) {
