@@ -344,9 +344,51 @@ class RapierWorld implements PhysicsWorld {
     controller.computeColliderMovement(this.world.getCollider(record.colliderHandle),{x:displacement.x+carried.x,y:displacement.y+carried.y,z:displacement.z+carried.z},flags,options.groups,collider=>collider.handle!==excludeCollider);
     const contacts:ShapeHit[]=[];
     for(let i=0;i<controller.numComputedCollisions();i++) {const hit=controller.computedCollision(i);if(hit===null||hit.collider===null)continue;contacts.push({userId:this.userIds.get(hit.collider.handle)!,fraction:hit.toi,normal:toVec3(hit.normal1),point:toVec3(hit.witness1)});}
-    const result:{displacement:Vec3;grounded:boolean;contacts:ShapeHit[];carried:Vec3;carriedYaw:number;rotation:Quat;ground?:{userId:number;normal:Vec3}}={displacement:toVec3(controller.computedMovement()),grounded:controller.computedGrounded(),contacts,carried,carriedYaw,rotation};
+    const moved=controller.computedMovement();let resolved:Vec3={x:moved.x,y:moved.y,z:moved.z},grounded=controller.computedGrounded();
+    // Step 3b: stair assist. Rapier's autostep has two measured failure modes (decision 0215): its upward cast starts exactly
+    // `offset` from the wall the character rests against, so float noise alone decides whether a flight can be climbed, and it
+    // advances a character only by what is left of this tick's displacement, which cannot put a round shape (a capsule or a
+    // sphere, whose lowest point is its centre) over the edge. When the controller made (almost) no progress against a wall
+    // while stepping is enabled and the character is supported, the adapter performs the same step itself: lift by
+    // `stepHeight`, advance far enough to stand on the step, land within `offset` of it.
+    if(step>0&&(grounded||ground!==undefined)){
+      const want={x:displacement.x+carried.x,y:0,z:displacement.z+carried.z},wantLength=Math.hypot(want.x,want.z);
+      if(wantLength>1e-6){
+        const dir={x:want.x/wantLength,y:0,z:want.z/wantLength},progress=moved.x*dir.x+moved.z*dir.z;
+        const wall=contacts.some(c=>c.normal.y<Math.cos(slope)&&c.normal.y>-.7&&c.normal.x*dir.x+c.normal.z*dir.z<-.1);
+        if(wall&&progress<.25*wantLength){
+          const hop=this.stairAssist(record,body,{x:position.x+moved.x,y:position.y+moved.y,z:position.z+moved.z},rotation,dir,{offset,step,width,slope},flags,options.groups,excludeCollider);
+          if(hop!==undefined){resolved={x:resolved.x+hop.x,y:resolved.y+hop.y,z:resolved.z+hop.z};grounded=true;}
+        }
+      }
+    }
+    const result:{displacement:Vec3;grounded:boolean;contacts:ShapeHit[];carried:Vec3;carriedYaw:number;rotation:Quat;ground?:{userId:number;normal:Vec3}}={displacement:resolved,grounded,contacts,carried,carriedYaw,rotation};
     if(ground!==undefined)result.ground=ground;
     return result;
+  }
+  /**
+   * The step of decision 0215: from `from` (the character against a wall), lift by `step`, advance by
+   * `max(width, extent along dir) + offset` (so even a round shape's centre ends up over the step), then land within `offset`
+   * of the surface below. Returns the displacement from `from`, or undefined when there is no room, no ground or the ground is too steep.
+   */
+  private stairAssist(record:BodyRecord,body:RAPIER.RigidBody,from:Vec3,rotation:Quat,dir:Vec3,p:{offset:number;step:number;width:number;slope:number},flags:RAPIER.QueryFilterFlags|undefined,groups:number|undefined,excludeCollider:number|undefined):Vec3|undefined {
+    const solid=(flags??0)|RAPIER.QueryFilterFlags.EXCLUDE_SENSORS|RAPIER.QueryFilterFlags.EXCLUDE_DYNAMIC;
+    const keep=(collider:RAPIER.Collider)=>collider.handle!==excludeCollider;
+    const cast=(at:Vec3,d:Vec3,target:number,max:number)=>this.world.castShape(at,rotation,d,record.shape,target,max,false,solid,groups,undefined,body,keep);
+    const lift=p.step+p.offset;
+    if(cast(from,{x:0,y:1,z:0},0,lift)!==null)return undefined;
+    const lifted={x:from.x,y:from.y+lift,z:from.z};
+    const reach=Math.max(p.width+p.offset,shapeExtent(record.shape,rotation,dir)+p.offset);
+    if(cast(lifted,dir,0,reach)!==null)return undefined;
+    const over={x:lifted.x+dir.x*reach,y:lifted.y,z:lifted.z+dir.z*reach};
+    const down=cast(over,{x:0,y:-1,z:0},p.offset,lift);
+    if(down===null)return undefined;
+    const n=down.normal1,length=Math.hypot(n.x,n.y,n.z);
+    if(!(length>0)||n.y/length<Math.cos(p.slope)-1e-6)return undefined;
+    const drop=down.time_of_impact;
+    // A landing that is not above the starting height is no step up (the character is at a ledge, not a stair).
+    if(lift-drop<1e-4)return undefined;
+    return {x:dir.x*reach,y:lift-drop,z:dir.z*reach};
   }
   contacts(h:BodyHandle):readonly PhysicsContact[] {
     this.alive();const collider=this.world.getCollider(this.record(h).colliderHandle),result:PhysicsContact[]=[];
@@ -393,6 +435,14 @@ class RapierWorld implements PhysicsWorld {
     if (record === undefined) throw new Error(`physics: unknown body handle ${h}`);
     return record;
   }
+}
+
+/** The extent of `shape` (turned by `rotation`) from its centre along the horizontal unit vector `dir`. */
+function shapeExtent(shape:RAPIER.Shape,rotation:Quat,dir:Vec3):number {
+  if(shape instanceof RAPIER.Ball)return shape.radius;
+  if(shape instanceof RAPIER.Capsule)return shape.radius;
+  if(shape instanceof RAPIER.Cuboid){const l=rotateVec(conjugate(rotation),dir),h=shape.halfExtents;return h.x*Math.abs(l.x)+h.y*Math.abs(l.y)+h.z*Math.abs(l.z);}
+  return 0;
 }
 
 /** Rapier's capsule half-height: the cylindrical half-segment of a capsule whose full height includes both caps. */
