@@ -221,6 +221,10 @@ describe("moving platforms", () => {
       expect(Math.abs(num(committed, "platforms", shape, "carryFalse", "characterMetresMoved"))).toBeLessThan(0.001);
       const run = platformRun(backend, shape, { motion: "yaw", speed: 1, radius: 2, carry: false });
       expect(Math.hypot(run.worldMove.x, run.worldMove.z)).toBeLessThan(0.001);
+      // Walking 1 m/s on a platform that moves 2 m/s: only the walk moves the character (Rapier's own kinematic friction must not leak in).
+      const walking = platformRun(backend, shape, { motion: "horizontal", speed: 2, carry: false, walk: 1 });
+      expect(walking.worldMove.x).toBeCloseTo(3, 2);
+      expect(Math.abs(walking.worldMove.z)).toBeLessThan(0.001);
     }
   });
   it("a character on a platform that rises or falls with program gravity is neither dropped nor lifted off", () => {

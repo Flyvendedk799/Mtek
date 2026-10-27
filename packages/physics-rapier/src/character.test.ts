@@ -156,7 +156,8 @@ describe("moveCharacter, resolution of one move (decision 0214)", () => {
   it("finds the support with a downward cast of the character's own shape and reports its normal", () => {
     const { world, actor } = arena();
     const m = world.moveCharacter!(actor, v(1, 0, 0), { offset: 0.01, snapToGround: 0.2 });
-    expect(m.ground).toEqual({ userId: 1, normal: expect.objectContaining({ y: expect.closeTo(1, 6) }) });
+    expect(m.ground?.userId).toBe(1);
+    expect(m.ground?.normal.y).toBeCloseTo(1, 6);
     expect(m.carried).toEqual(v());
     expect(m.carriedYaw).toBe(0);
   });
@@ -272,7 +273,7 @@ describe("moveCharacter, resolution of one move (decision 0214)", () => {
   });
   it("lets the character walk on and off a kinematic support, and jump from it", () => {
     const world = space();
-    const deck = world.addBody(KINEMATIC, box(4, 0.5, 4), pose(0, -0.25), 1);
+    world.addBody(KINEMATIC, box(4, 0.5, 4), pose(0, -0.25), 1);
     const actor = world.addBody(KINEMATIC, ball(0.5), pose(0, 0.51), 2);
     world.step();
     const move = (d: { x: number; y: number; z: number }) => {
