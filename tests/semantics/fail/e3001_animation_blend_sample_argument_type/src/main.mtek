@@ -1,0 +1,9 @@
+// blend_sample takes a clip name and the point (x, y) of the sample.
+scene Demo {
+    camera Main {}
+    entity Rig {}
+    on key_down(Key.Space) {
+        animation.blend_sample(Rig, 1.0, 0.0, 0.0);
+        animation.blend_sample(Rig, "Walk", vec2(1.0, 0.0), 0.0);
+    }
+}

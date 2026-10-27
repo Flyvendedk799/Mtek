@@ -575,3 +575,38 @@ describe("hot reload", () => {
     expect(codes(next.reported)).toEqual(["E8111"]);
   });
 });
+
+// ---- the manifest side of clips_from ---------------------------------------------------------------------------------
+
+describe("clipSources in the manifest", () => {
+  const resolve = (edit: (json: Record<string, unknown>) => void): ReturnType<typeof resolveStructure> => {
+    const json = minimalManifestJson();
+    edit(json);
+    const checked = checkManifest(json);
+    if (!checked.ok) throw new Error(JSON.stringify(checked.failures));
+    return resolveStructure(checked.manifest);
+  };
+  const source = (): MtekSkin => humanoid("mixamo").skin;
+  const firstEntity = (json: Record<string, unknown>): Record<string, unknown> => (json["scene"] as { entities: Record<string, unknown>[] }).entities[0]!;
+
+  it("resolves the skeleton an entity takes its clips from", () => {
+    const result = resolve((json) => {
+      json["clipSources"] = [{ ...source(), indices: [], weights: [] }];
+      firstEntity(json)["clipsFrom"] = 0;
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.structure.entities[0]!.clipsFrom!.clips.map((c) => c.name)).toEqual(["walk", "wave"]);
+  });
+
+  it("refuses an index the manifest lacks and a skeleton that is invalid", () => {
+    const missing = resolve((json) => {
+      firstEntity(json)["clipsFrom"] = 3;
+    });
+    expect(missing.ok).toBe(false);
+    if (!missing.ok) expect(JSON.stringify(missing.diagnostics)).toContain("clipSources[3]");
+    const broken = resolve((json) => {
+      json["clipSources"] = [{ ...source(), joints: [200], indices: [], weights: [] }];
+    });
+    expect(broken.ok).toBe(false);
+  });
+});
