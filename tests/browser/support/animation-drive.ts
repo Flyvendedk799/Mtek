@@ -30,8 +30,8 @@ export interface LimbRead {
 export interface FootRead {
   requiredDrop: number;
   drop: number;
-  left: { flexion: number; residual: number };
-  right: { flexion: number; residual: number };
+  left: { flexion: number; residual: number; weight: number };
+  right: { flexion: number; residual: number; weight: number };
 }
 export interface IkRead {
   id: string;
@@ -39,7 +39,7 @@ export interface IkRead {
   target: { x: number; y: number; z: number };
 }
 export interface FigureRead {
-  /** Mesh-local joint positions by node name (`inspect().nodes`, after `evaluate()`). */
+  /** Mesh-local joint positions by node name (`inspect().nodes` after `evaluate()`; for `animated` the pose before goals, `animatedJointPosition`). */
   nodes: Record<string, V3>;
   blend: BlendRead | null;
   layers: LayerRead[];
@@ -63,7 +63,7 @@ export interface Sample {
   orb: Pose;
   state: Record<string, number | boolean>;
   model: FigureRead;
-  ghost: FigureRead;
+  animated: FigureRead;
   guest: FigureRead;
 }
 
@@ -72,9 +72,9 @@ export interface DriveArgs {
   target: { width: number; height: number };
   sample: "every" | "boundary";
   /** Node names to read per figure, or "all"; the first sample reads every node regardless. */
-  nodes: { model: readonly string[] | "all"; ghost: readonly string[] | "all"; guest: readonly string[] | "all" };
+  nodes: { model: readonly string[] | "all"; animated: readonly string[] | "all"; guest: readonly string[] | "all" };
   /** After the last frame: read the rendered image and the CPU palettes of these figures. */
-  final?: { pixels: boolean; palettes: readonly ("model" | "ghost" | "guest")[] };
+  final?: { pixels: boolean; palettes: readonly ("model" | "animated" | "guest")[] };
 }
 
 export interface DriveResult {
@@ -84,8 +84,10 @@ export interface DriveResult {
   counters: Record<string, number>;
   disposed: Record<string, number>;
   ids: Record<string, string>;
+  /** The names of the entities of the scene (`debug.scene()`). */
+  entityNames: string[];
   /** The names of the nodes of each figure, in node order. */
-  names: { model: string[]; ghost: string[]; guest: string[] };
+  names: { model: string[]; animated: string[]; guest: string[] };
   pixels?: { width: number; height: number; data: number[] };
   palettes?: Record<string, number[]>;
 }
@@ -109,9 +111,10 @@ export async function drive(args: DriveArgs): Promise<DriveResult> {
       ik: Array<{ id: string; chain: number[]; target: P3 }>;
       blend: { phase: number; parameter: { x: number; y: number }; samples: Array<{ clip: string; x: number; y: number; weight: number }> } | null;
       limbs?: Array<{ id: string; limb: string; target: P3; weight: number; flexion: number; residual: number }>;
-      footPlacement?: { requiredDrop: number; drop: number; left: { flexion: number; residual: number }; right: { flexion: number; residual: number } } | null;
+      footPlacement?: { requiredDrop: number; drop: number; left: { flexion: number; residual: number; weight: number }; right: { flexion: number; residual: number; weight: number } } | null;
     };
     evaluate(): void;
+    animatedJointPosition(name: string): P3;
     palette: Float32Array;
   }
   interface Ctx {
@@ -139,19 +142,23 @@ export async function drive(args: DriveArgs): Promise<DriveResult> {
     extensions: [{ id: "animation-reader", apiVersion: 1, setup(c: Ctx) { context = c; } }],
   });
   const ids: Record<string, string> = {};
-  for (const transform of context?.readTransforms() ?? []) if (["Model", "Ghost", "Guest"].includes(transform.name)) ids[transform.name] = transform.id;
-  const players = { model: context?.animation(ids["Model"] ?? ""), ghost: context?.animation(ids["Ghost"] ?? ""), guest: context?.animation(ids["Guest"] ?? "") };
+  for (const transform of context?.readTransforms() ?? []) if (["Model", "Guest"].includes(transform.name)) ids[transform.name] = transform.id;
+  const players = { model: context?.animation(ids["Model"] ?? ""), animated: context?.animation(ids["Model"] ?? ""), guest: context?.animation(ids["Guest"] ?? "") };
   const pose = (e: { position: P3; rotation: { x: number; y: number; z: number; w: number } } | undefined): Pose => ({
     position: { x: e?.position.x ?? Number.NaN, y: e?.position.y ?? Number.NaN, z: e?.position.z ?? Number.NaN },
     rotation: { x: e?.rotation.x ?? Number.NaN, y: e?.rotation.y ?? Number.NaN, z: e?.rotation.z ?? Number.NaN, w: e?.rotation.w ?? Number.NaN },
   });
-  const read = (player: Player | undefined, want: readonly string[] | "all"): FigureRead => {
+  const read = (player: Player | undefined, want: readonly string[] | "all", animated = false): FigureRead => {
     const empty: FigureRead = { nodes: {}, blend: null, layers: [], limbs: [], footPlacement: null, ik: [], mode: "", rootMotionNode: null };
     if (player === undefined || player.inspect === undefined) return empty;
     player.evaluate();
     const seen = player.inspect();
     const nodes: Record<string, V3> = {};
-    for (const node of seen.nodes) if (want === "all" || want.includes(node.name)) nodes[node.name] = [node.position.x, node.position.y, node.position.z];
+    for (const node of seen.nodes) {
+      if (want !== "all" && !want.includes(node.name)) continue;
+      const at = animated ? player.animatedJointPosition(node.name) : node.position;
+      nodes[node.name] = [at.x, at.y, at.z];
+    }
     return {
       nodes,
       blend: seen.blend === null ? null : { phase: seen.blend.phase, parameter: { ...seen.blend.parameter }, samples: seen.blend.samples.map((s) => ({ ...s })) },
@@ -165,7 +172,7 @@ export async function drive(args: DriveArgs): Promise<DriveResult> {
   };
   const nodeNames = (player: Player | undefined): string[] => player?.inspect?.().nodes.map((n) => n.name) ?? [];
   type V3 = readonly [number, number, number];
-  const names = { model: nodeNames(players.model), ghost: nodeNames(players.ghost), guest: nodeNames(players.guest) };
+  const names = { model: nodeNames(players.model), animated: nodeNames(players.animated), guest: nodeNames(players.guest) };
   const snapshot = (frame: number, time: number): Sample => {
     const scene = app.debug.scene();
     const find = (name: string) => scene.entities.find((e) => e.name === name);
@@ -177,7 +184,7 @@ export async function drive(args: DriveArgs): Promise<DriveResult> {
       orb: pose(find("Orb")),
       state: { ...scene.state },
       model: read(players.model, args.nodes.model),
-      ghost: read(players.ghost, args.nodes.ghost),
+      animated: read(players.animated, args.nodes.animated, true),
       guest: read(players.guest, args.nodes.guest),
     };
   };
@@ -194,6 +201,7 @@ export async function drive(args: DriveArgs): Promise<DriveResult> {
   }
   const counters = { ...app.debug.counters() };
   const stateAfter = app.state;
+  const entityNames = app.debug.scene().entities.map((e) => e.name);
   let pixels: DriveResult["pixels"];
   let palettes: DriveResult["palettes"];
   if (args.final !== undefined) {
@@ -210,5 +218,5 @@ export async function drive(args: DriveArgs): Promise<DriveResult> {
   }
   app.dispose();
   const disposed = { ...app.debug.counters() };
-  return { samples, diagnostics, stateAfter, counters, disposed, ids, names, ...(pixels === undefined ? {} : { pixels }), ...(palettes === undefined ? {} : { palettes }) };
+  return { samples, diagnostics, stateAfter, counters, disposed, ids, entityNames, names, ...(pixels === undefined ? {} : { pixels }), ...(palettes === undefined ? {} : { palettes }) };
 }

@@ -105,6 +105,7 @@ export const CONTEXT_MEMBERS = [
   "animationTransition",
   "animationCopyPose",
   "animationJointPosition",
+  "animationAnimatedJointPosition",
   "animationJointRotation",
   "animationPause",
   "animationResume",
@@ -661,6 +662,7 @@ export class World {
       shuffle: (items: unknown): unknown => shuffled(items, () => services.random()),
       setMaterial: (entity: unknown, value: unknown): void => this.setMaterial(entity, value),
       animationJointPosition: (ref: unknown, name: string): Vec3 => this.dynamic.alive(ref) ? this.clips.skin((ref as EntityRef).slot)?.jointPosition(name) ?? ORIGIN : ORIGIN,
+      animationAnimatedJointPosition: (ref: unknown, name: string): Vec3 => this.dynamic.alive(ref) ? this.clips.skin((ref as EntityRef).slot)?.animatedJointPosition(name) ?? ORIGIN : ORIGIN,
       animationJointRotation: (ref: unknown, name: string): Quat => this.dynamic.alive(ref) ? this.clips.skin((ref as EntityRef).slot)?.jointRotation(name) ?? IDENTITY : IDENTITY,
       animationCopyPose: (target: unknown, source: unknown): boolean =>
         this.dynamic.alive(target) && this.dynamic.alive(source)
@@ -727,8 +729,8 @@ export class World {
       animationLimbGoal: (ref: unknown, limb: string, goal: unknown, weight: number, spanId: number): boolean =>
         this.dynamic.alive(ref) && this.script?.limbGoal((ref as EntityRef).slot, limb, goal, weight, spanId) === true,
       animationClearLimb: (ref: unknown, limb: string, spanId: number): boolean => this.dynamic.alive(ref) && this.script?.clearLimb((ref as EntityRef).slot, limb, spanId) === true,
-      animationFootPlacement: (ref: unknown, left: unknown, right: unknown, leftNormal: unknown, rightNormal: unknown, weight: number, spanId: number): boolean =>
-        this.dynamic.alive(ref) && this.script?.footPlacement((ref as EntityRef).slot, left, right, leftNormal, rightNormal, weight, spanId) === true,
+      animationFootPlacement: (ref: unknown, left: unknown, right: unknown, leftNormal: unknown, rightNormal: unknown, leftWeight: number, rightWeight: number, spanId: number): boolean =>
+        this.dynamic.alive(ref) && this.script?.footPlacement((ref as EntityRef).slot, left, right, leftNormal, rightNormal, leftWeight, rightWeight, spanId) === true,
       animationClearFootPlacement: (ref: unknown): boolean => this.dynamic.alive(ref) && this.script?.clearFootPlacement((ref as EntityRef).slot) === true,
       animationChainGoal: (ref: unknown, id: string, endJoint: string, length: number, goal: unknown, weight: number, spanId: number): boolean =>
         this.dynamic.alive(ref) && this.script?.chainGoal((ref as EntityRef).slot, id, endJoint, length, goal, weight, spanId) === true,

@@ -94,7 +94,7 @@ fn animation_namespace() -> NamespaceDef {
         vec![
             member(
                 "copy_pose",
-                "Holds a copy of a compatible skeleton's pose; a later transition blends from it.",
+                "Holds a compatible skeleton's pose; a later transition blends from it.",
                 vec![target, p("source", exact(TypeRef::EntityRef))],
                 boolean,
                 true,
@@ -102,6 +102,13 @@ fn animation_namespace() -> NamespaceDef {
             member(
                 "joint_position",
                 "Joint position in mesh-local space; zero if missing.",
+                vec![target, p("name", exact(TypeRef::String))],
+                exact(TypeRef::Vec3),
+                false,
+            ),
+            member(
+                "animated_joint_position",
+                "Joint position before goals.",
                 vec![target, p("name", exact(TypeRef::String))],
                 exact(TypeRef::Vec3),
                 false,
@@ -198,14 +205,14 @@ fn animation_namespace() -> NamespaceDef {
             ),
             member(
                 "crossed",
-                "Whether `marker` in (0, duration] was crossed in the latest update (wraps included).",
+                "Whether `marker` in (0, duration] was crossed in the last update (wraps count).",
                 vec![target, p("marker", F32)],
                 boolean,
                 false,
             ),
             member(
                 "set_layer",
-                "Layer `id` plays `clip` over the base at `weight`; `mask` is the root of the moved subtree (\"\" = all); the same clip keeps its phase.",
+                "Layer `id` plays `clip` over the base at `weight`; `mask` roots the moved subtree (\"\" = all); the same clip keeps its phase.",
                 vec![
                     target,
                     p("id", string),
@@ -282,14 +289,15 @@ fn animation_namespace() -> NamespaceDef {
             ),
             member(
                 "foot_placement",
-                "Plants feet on world ground points, lowering the hips as needed; humanoids only.",
+                "Plants feet on world ground points, lowering the hips; humanoids only.",
                 vec![
                     target,
                     p("left", vec3),
                     p("right", vec3),
                     p("left_normal", vec3),
                     p("right_normal", vec3),
-                    p("weight", F32),
+                    p("left_weight", F32),
+                    p("right_weight", F32),
                 ],
                 boolean,
                 true,
@@ -362,7 +370,7 @@ fn hud_namespace() -> NamespaceDef {
         vec![
             member(
                 "text",
-                "Draws text at `at` (canvas NDC, y up) in `size` CSS px (default 24.0), `tint` (white), `align` 0 left, 0.5 centre (default), 1 right, and `font` (default: page sans-serif). Centred vertically.",
+                "Draws text at `at` (canvas NDC, y up), `size` CSS px (24.0), `tint` (white), `align` 0 left, 0.5 centre (default), 1 right, `font` (page sans-serif). Centred vertically.",
                 vec![
                     sig(&[p("content", string), p("at", vec2)], unit),
                     sig(&[p("content", string), p("at", vec2), p("size", F32)], unit),
@@ -424,7 +432,7 @@ fn hud_namespace() -> NamespaceDef {
             ),
             member(
                 "button",
-                "Draws a button at `at` (canvas NDC) labelled `label` (`size` CSS px, default 24.0). True once per click, in the next frame; buttons are told apart by label and order.",
+                "Draws a button at `at` (canvas NDC) labelled `label` (`size` CSS px, 24.0). True once per click, next frame; buttons are told apart by label and order.",
                 vec![
                     sig(&[p("label", string), p("at", vec2)], boolean),
                     sig(
@@ -457,7 +465,7 @@ fn ease_namespace() -> NamespaceDef {
     namespace(
         "easing",
         Milestone::M1,
-        "Easing curves for tweens: `mix(a, b, easing.out_cubic(t))` moves from `a` to `b` as `t` goes from 0 to 1.",
+        "Easing curves for tweens: `mix(a, b, easing.out_cubic(t))` moves `a` to `b` as `t` goes 0 to 1.",
         vec![
             member(
                 "in_quad",
@@ -691,7 +699,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
             // Implemented by task M4-05 ahead of the M4 gate, like textures and samplers
             // (decisions 0054 and 0058): `CURRENT_MILESTONE` does not move.
             Milestone::M1,
-            "Compile-time asset declarations. The argument must be a string literal naming a file inside the project.",
+            "Compile-time asset declarations. The argument is a string literal naming a project file.",
             vec![
                 NamespaceMember::Function(compile_time(
                     "glb",
@@ -970,7 +978,7 @@ pub(super) fn types() -> Vec<TypeDef> {
         handle(
             "entity_ref",
             Milestone::M1,
-            "A generation-checked reference to an entity. Compare it, test `alive`, `destroy` it, command its body, and read `position`, `rotation`, `scale` and `visible`.",
+            "A generation-checked entity reference. Compare it, test `alive`, `destroy` it, command its body, read `position`, `rotation`, `scale`, `visible`.",
         ),
         handle(
             "font",
@@ -980,7 +988,7 @@ pub(super) fn types() -> Vec<TypeDef> {
         handle(
             "sound",
             Milestone::M1,
-            "A sound file declared with `asset.sound(..)`; CPU only. Played with `play`, `play_at` and `play_music` (decision 0130).",
+            "A sound declared with `asset.sound(..)`; CPU only. Played by `play`, `play_at`, `play_music` (decision 0130).",
         ),
         TypeDef {
             methods: glb_methods(),

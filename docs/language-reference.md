@@ -365,7 +365,7 @@ Generated from [spec/stdlib-schema.json](../spec/stdlib-schema.json) (registry v
 | `array` | array | yes |  |  | The generic `array<T, N>`: a fixed-length array of `N` (1 to 65536) elements of type `T`. |
 | `bool` | scalar | yes |  |  | Truth value. |
 | `color` | color | yes |  |  | Linear RGBA, straight alpha; not a `vec4`. A literal `#rrggbb` is sRGB, converted; `color.linear(rgb, a)` takes linear components, `color.srgb(rgb, a)` sRGB ones. Fields `.r .g .b .a`, `.rgb`; no arithmetic. |
-| `entity_ref` | handle | no |  |  | A generation-checked reference to an entity. Compare it, test `alive`, `destroy` it, command its body, and read `position`, `rotation`, `scale` and `visible`. |
+| `entity_ref` | handle | no |  |  | A generation-checked entity reference. Compare it, test `alive`, `destroy` it, command its body, read `position`, `rotation`, `scale`, `visible`. |
 | `f32` | scalar | yes |  |  | IEEE-754 binary32 floating-point number. |
 | `font` | handle | no |  |  | A font for `hud.text`: `asset.font(..)` or the built-in `hud.pixel_font()`; CPU only (decision 0139). |
 | `glb_asset` | handle | no |  | material, material_base_color, material_metallic, material_roughness, material_texture, mesh, node_position, node_rotation, node_scale, primitive | The compile-time handle of `asset.glb(..)`; may be stored only in a `const` and used through its accessors. |
@@ -375,7 +375,7 @@ Generated from [spec/stdlib-schema.json](../spec/stdlib-schema.json) (registry v
 | `mesh` | handle | no |  |  | An immutable mesh: a primitive descriptor or an asset mesh. |
 | `quat` | rotation | yes |  |  | Unit quaternion `(x, y, z, w)`; distinct from `vec4`. |
 | `sampler` | handle | no |  |  | A sampler preset. Usable only as a material parameter. |
-| `sound` | handle | no |  |  | A sound file declared with `asset.sound(..)`; CPU only. Played with `play`, `play_at` and `play_music` (decision 0130). |
+| `sound` | handle | no |  |  | A sound declared with `asset.sound(..)`; CPU only. Played by `play`, `play_at`, `play_music` (decision 0130). |
 | `string` | text | no |  |  | Immutable text. CPU only. |
 | `texture` | handle | no |  |  | An immutable texture. Usable only as a material parameter. |
 | `u32` | scalar | yes |  |  | 32-bit unsigned integer. |
@@ -483,7 +483,7 @@ Entity/prefab: a named transform with optional components.
 | `light` | `light` | none | no | construction only |  | A light (`DirectionalLight`, `PointLight`); fields writable and bindable. Named entities only. |
 | `material` | `material` | `Unlit {}` | no | writable |  | Material instance; a value-only one can be replaced by the same type; params are writable and bindable. Needs `mesh`. |
 | `mesh` | `mesh` | none | no | construction only |  | The mesh: `Box`, `Sphere`, `Plane` or an asset mesh. |
-| `particles` | `emitter` | none | no | construction only |  | Particle emitter: up to 64 camera-facing billboards of the entity's mesh in its material's colour; counted without a mesh too. |
+| `particles` | `emitter` | none | no | construction only |  | Particle emitter: up to 64 camera-facing billboards of the entity's mesh in its material's colour |
 | `position` | `vec3` | `vec3(0.0, 0.0, 0.0)` | no | writable, bindable |  | Position local to the parent, in metres. |
 | `rotation` | `quat` | `quat.identity()` | no | writable, bindable |  | Rotation local to the parent. |
 | `scale` | `vec3` | `vec3(1.0, 1.0, 1.0)` | no | writable, bindable | every component > 0, finite | Parent-local scale; construction-only on bodies, `vec3(1.0)` on dynamic and kinematic ones. |
@@ -497,7 +497,7 @@ The fields of a scene: all construction-only constant expressions.
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
 | `ambient_color` | `color` | `#ffffff` | no | construction only |  | Ambient light colour; only RGB is used. |
-| `ambient_intensity` | `f32` | `0.0` | no | construction only | ≥ 0 | Ambient light scale for lit materials; 0 is off. Times the camera's exposure scale (about 3.14), so 0.3 is near full brightness on white. Unlit ignores it. |
+| `ambient_intensity` | `f32` | `0.0` | no | construction only | ≥ 0 | Ambient light scale for lit materials; 0 is off. Times the exposure scale (about 3.14): 0.3 is near full brightness on white. Unlit ignores it. |
 | `clear_color` | `color` | `#000000` | no | construction only |  | Canvas clear colour; only RGB is used. |
 | `gravity` | `vec3` | `vec3(0.0, -9.81, 0.0)` | no | construction only | finite | Gravitational acceleration in m/s^2; used only with physics bodies. |
 
@@ -723,6 +723,7 @@ Controls an entity's imported node clip (decision 0190).
 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
+| `animation.animated_joint_position` | function | `(target: entity_ref, name: string) -> vec3` | cpu | no | Joint position before goals. |
 | `animation.blend_clear` | function | `(target: entity_ref) -> bool` | cpu | no | Drops the blend space and pending samples. False if none. |
 | `animation.blend_parameter` | function | `(target: entity_ref, x: f32, y: f32) -> bool` | cpu | no | Moves the blend point; the phase stays. |
 | `animation.blend_phase` | function | `(target: entity_ref) -> f32` | cpu | no | Blend cycle position 0..1; zero if unavailable. |
@@ -732,13 +733,13 @@ Controls an entity's imported node clip (decision 0190).
 | `animation.clear_chain` | function | `(target: entity_ref, id: string) -> bool` | cpu | no | Removes chain goal `id`. False if none. |
 | `animation.clear_foot_placement` | function | `(target: entity_ref) -> bool` | cpu | no | Releases foot placement. False if none. |
 | `animation.clear_limb` | function | `(target: entity_ref, id: string) -> bool` | cpu | no | Removes the goal of limb `id`. False if none. |
-| `animation.copy_pose` | function | `(target: entity_ref, source: entity_ref) -> bool` | cpu | no | Holds a copy of a compatible skeleton's pose; a later transition blends from it. |
-| `animation.crossed` | function | `(target: entity_ref, marker: f32) -> bool` | cpu | no | Whether `marker` in (0, duration] was crossed in the latest update (wraps included). |
+| `animation.copy_pose` | function | `(target: entity_ref, source: entity_ref) -> bool` | cpu | no | Holds a compatible skeleton's pose; a later transition blends from it. |
+| `animation.crossed` | function | `(target: entity_ref, marker: f32) -> bool` | cpu | no | Whether `marker` in (0, duration] was crossed in the last update (wraps count). |
 | `animation.duration` | function | `(target: entity_ref) -> f32` | cpu | no | Clip duration in seconds; zero if unavailable. |
 | `animation.fade` | function | `(target: entity_ref, weight: f32, duration: f32) -> bool` | cpu | no | Fades clip weight to 0..1 over `duration`; zero is immediate. |
 | `animation.fade_layer` | function | `(target: entity_ref, id: string, weight: f32, seconds: f32) -> bool` | cpu | no | Fades layer `id` to `weight` over `seconds`; false if none. |
 | `animation.finished` | function | `(target: entity_ref) -> bool` | cpu | no | Whether a one-shot clip reached its end. |
-| `animation.foot_placement` | function | `(target: entity_ref, left: vec3, right: vec3, left_normal: vec3, right_normal: vec3, weight: f32) -> bool` | cpu | no | Plants feet on world ground points, lowering the hips as needed; humanoids only. |
+| `animation.foot_placement` | function | `(target: entity_ref, left: vec3, right: vec3, left_normal: vec3, right_normal: vec3, left_weight: f32, right_weight: f32) -> bool` | cpu | no | Plants feet on world ground points, lowering the hips; humanoids only. |
 | `animation.joint_position` | function | `(target: entity_ref, name: string) -> vec3` | cpu | no | Joint position in mesh-local space; zero if missing. |
 | `animation.joint_rotation` | function | `(target: entity_ref, name: string) -> quat` | cpu | no | Joint rotation in mesh-local space; identity if missing. |
 | `animation.limb_goal` | function | `(target: entity_ref, limb: string, goal: vec3, weight: f32) -> bool` | cpu | no | Reaches `limb` (`left_leg`, `right_leg`, `left_arm`, `right_arm`) to a world `goal`; humanoids only. |
@@ -749,7 +750,7 @@ Controls an entity's imported node clip (decision 0190).
 | `animation.resume` | function | `(target: entity_ref) -> bool` | cpu | no | Continues a paused clip. False if none. |
 | `animation.root_motion` | function | `(target: entity_ref, joint: string) -> bool` | cpu | no | `joint`'s translation drives the entity, not the mesh ("" = off); see `take_root_motion`. |
 | `animation.seek` | function | `(target: entity_ref, time: f32) -> bool` | cpu | no | Jumps to `time` (clamped) at once; crosses no markers, does not resume. |
-| `animation.set_layer` | function | `(target: entity_ref, id: string, clip: string, weight: f32, additive: bool, mask: string) -> bool` | cpu | no | Layer `id` plays `clip` over the base at `weight`; `mask` is the root of the moved subtree ("" = all); the same clip keeps its phase. |
+| `animation.set_layer` | function | `(target: entity_ref, id: string, clip: string, weight: f32, additive: bool, mask: string) -> bool` | cpu | no | Layer `id` plays `clip` over the base at `weight`; `mask` roots the moved subtree ("" = all); the same clip keeps its phase. |
 | `animation.take_root_motion` | function | `(target: entity_ref) -> vec3` | cpu | no | World root displacement since the last call; feed it to `move_character`. |
 | `animation.time` | function | `(target: entity_ref) -> f32` | cpu | no | Current clip time in seconds; zero if unavailable. |
 | `animation.transition` | function | `(target: entity_ref, name: string, seconds: f32, looping: bool, speed: f32) -> bool` | cpu | no | Crossfades to a skeletal clip; the same clip is not restarted. |
@@ -757,7 +758,7 @@ Controls an entity's imported node clip (decision 0190).
 
 #### `asset`
 
-Compile-time asset declarations. The argument must be a string literal naming a file inside the project.
+Compile-time asset declarations. The argument is a string literal naming a project file.
 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
@@ -778,7 +779,7 @@ Colour constructors.
 
 #### `easing`
 
-Easing curves for tweens: `mix(a, b, easing.out_cubic(t))` moves from `a` to `b` as `t` goes from 0 to 1.
+Easing curves for tweens: `mix(a, b, easing.out_cubic(t))` moves `a` to `b` as `t` goes 0 to 1.
 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
@@ -819,10 +820,10 @@ The heads-up display: text, rectangles and buttons drawn over the canvas. Immedi
 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
-| `hud.button` | function | `(label: string, at: vec2) -> bool`<br>`(label: string, at: vec2, size: f32) -> bool` | cpu | no | Draws a button at `at` (canvas NDC) labelled `label` (`size` CSS px, default 24.0). True once per click, in the next frame; buttons are told apart by label and order. |
+| `hud.button` | function | `(label: string, at: vec2) -> bool`<br>`(label: string, at: vec2, size: f32) -> bool` | cpu | no | Draws a button at `at` (canvas NDC) labelled `label` (`size` CSS px, 24.0). True once per click, next frame; buttons are told apart by label and order. |
 | `hud.pixel_font` | function | `() -> font` | cpu | no | Built-in 5x7 bitmap font of printable ASCII; others show as a box. |
 | `hud.rect` | function | `(at: vec2, size: vec2, tint: color) -> ()`<br>`(at: vec2, size: vec2, tint: color, align: f32) -> ()` | cpu | no | Draws a filled rectangle of `size` CSS px at `at` (canvas NDC), aligned like `hud.text`. |
-| `hud.text` | function | `(content: string, at: vec2) -> ()`<br>`(content: string, at: vec2, size: f32) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color, align: f32) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color, align: f32, font: font) -> ()` | cpu | no | Draws text at `at` (canvas NDC, y up) in `size` CSS px (default 24.0), `tint` (white), `align` 0 left, 0.5 centre (default), 1 right, and `font` (default: page sans-serif). Centred vertically. |
+| `hud.text` | function | `(content: string, at: vec2) -> ()`<br>`(content: string, at: vec2, size: f32) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color, align: f32) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color, align: f32, font: font) -> ()` | cpu | no | Draws text at `at` (canvas NDC, y up), `size` CSS px (24.0), `tint` (white), `align` 0 left, 0.5 centre (default), 1 right, `font` (page sans-serif). Centred vertically. |
 
 #### `lighting`
 
@@ -962,7 +963,7 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `sign` | `(x: T) -> T` | both | yes | no | -1, 0 or 1 according to the sign of `x`. |
 | `sin` | `(x: T) -> T` | both | yes | no | Sine of an angle in radians. |
 | `smoothstep` | `(edge0: T, edge1: T, x: T) -> T` | both | yes | no | Smooth Hermite interpolation between `edge0` and `edge1`. |
-| `spawn` | `(prefab: prefab descriptor) -> entity_ref` | cpu | no | yes | Queues a prefab instance as a root entity; the reference is valid now, `alive` after the next flush. |
+| `spawn` | `(prefab: prefab descriptor) -> entity_ref` | cpu | no | yes | Queues a prefab instance as a root entity; valid now, `alive` after the next flush. |
 | `sqrt` | `(x: T) -> T` | both | yes | no | Square root. |
 | `step` | `(edge: T, x: T) -> T` | both | yes | no | 0 where `x < edge`, otherwise 1, component-wise. WGSL argument order: `step(edge, x)`. |
 | `stop_music` | `() -> ()` | cpu | no | yes | Stops the music started with `play_music`; does nothing when none plays. |
@@ -990,7 +991,7 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `grounded` | `bool` | Kinematic | Ground found by the last completed `move_character`. Read-only. |
 | `linear_velocity` | `vec3` | Dynamic, Kinematic | Linear velocity as of the last tick. Read-only. |
 
-## Part C. Features of this build (283)
+## Part C. Features of this build (284)
 
 The list below is `supported.features` of `mtek context`, printed by the compiler this document was generated with. It is derived by the compiler from its construct table and from the registry, never typed in. A feature is supported when a test that would fail without it passes in a recorded environment (`spec/testing.md`); `docs/coverage-matrix.md` shows which program or fixture exercises each one.
 
@@ -1014,9 +1015,9 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 `event:collision_enter` `event:collision_exit` `event:key_down` `event:key_up` `event:message` `event:pointer_down` `event:pointer_move` `event:pointer_up`
 
-### Functions (161)
+### Functions (162)
 
-`function:abs` `function:acos` `function:alive` `function:animation.blend_clear` `function:animation.blend_parameter` `function:animation.blend_phase` `function:animation.blend_play` `function:animation.blend_sample` `function:animation.chain_goal` `function:animation.clear_chain` `function:animation.clear_foot_placement` `function:animation.clear_limb` `function:animation.copy_pose` `function:animation.crossed` `function:animation.duration` `function:animation.fade` `function:animation.fade_layer` `function:animation.finished` `function:animation.foot_placement` `function:animation.joint_position` `function:animation.joint_rotation` `function:animation.limb_goal` `function:animation.pause` `function:animation.play` `function:animation.playing` `function:animation.remove_layer` `function:animation.resume` `function:animation.root_motion` `function:animation.seek` `function:animation.set_layer` `function:animation.take_root_motion` `function:animation.time` `function:animation.transition` `function:animation.weight` `function:asin` `function:asset.font` `function:asset.glb` `function:asset.linear_texture` `function:asset.sound` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:chance` `function:choose` `function:clamp` `function:clear_saved` `function:color.linear` `function:color.srgb` `function:cos` `function:count_tagged` `function:cross` `function:degrees` `function:destroy` `function:destroy_tagged` `function:distance` `function:dot` `function:easing.in_cubic` `function:easing.in_out_cubic` `function:easing.in_out_quad` `function:easing.in_out_sine` `function:easing.in_quad` `function:easing.out_back` `function:easing.out_bounce` `function:easing.out_cubic` `function:easing.out_elastic` `function:easing.out_quad` `function:exp` `function:exp2` `function:first_tagged` `function:floor` `function:fract` `function:gamepad.axis` `function:gamepad.button` `function:gamepad.connected` `function:go_to` `function:has_tag` `function:hud.button` `function:hud.pixel_font` `function:hud.rect` `function:hud.text` `function:inverse_sqrt` `function:is_key_down` `function:is_muted` `function:is_pointer_down` `function:key_pressed` `function:key_released` `function:length` `function:lighting.pbr` `function:lighting.pbr_mapped` `function:load` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:nearest_tagged` `function:normalize` `function:overlap_boxes` `function:overlap_spheres` `function:particle_count` `function:pause` `function:paused` `function:play` `function:play_at` `function:play_music` `function:pointer_position` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:random_int` `function:random_range` `function:reflect` `function:reset` `function:resume` `function:round` `function:sample` `function:sample_mip` `function:sampler.linear_clamp` `function:sampler.linear_clamp_level0` `function:sampler.linear_clamp_mip_nearest` `function:sampler.linear_repeat` `function:sampler.linear_repeat_level0` `function:sampler.linear_repeat_mip_nearest` `function:sampler.nearest_clamp` `function:sampler.nearest_clamp_level0` `function:sampler.nearest_clamp_mip_linear` `function:sampler.nearest_repeat` `function:sampler.nearest_repeat_level0` `function:sampler.nearest_repeat_mip_linear` `function:saturate` `function:save` `function:screen_to_world` `function:send` `function:set_camera` `function:set_muted` `function:set_volume` `function:shuffle` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:stop_music` `function:tagged` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc` `function:world_to_screen`
+`function:abs` `function:acos` `function:alive` `function:animation.animated_joint_position` `function:animation.blend_clear` `function:animation.blend_parameter` `function:animation.blend_phase` `function:animation.blend_play` `function:animation.blend_sample` `function:animation.chain_goal` `function:animation.clear_chain` `function:animation.clear_foot_placement` `function:animation.clear_limb` `function:animation.copy_pose` `function:animation.crossed` `function:animation.duration` `function:animation.fade` `function:animation.fade_layer` `function:animation.finished` `function:animation.foot_placement` `function:animation.joint_position` `function:animation.joint_rotation` `function:animation.limb_goal` `function:animation.pause` `function:animation.play` `function:animation.playing` `function:animation.remove_layer` `function:animation.resume` `function:animation.root_motion` `function:animation.seek` `function:animation.set_layer` `function:animation.take_root_motion` `function:animation.time` `function:animation.transition` `function:animation.weight` `function:asin` `function:asset.font` `function:asset.glb` `function:asset.linear_texture` `function:asset.sound` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:chance` `function:choose` `function:clamp` `function:clear_saved` `function:color.linear` `function:color.srgb` `function:cos` `function:count_tagged` `function:cross` `function:degrees` `function:destroy` `function:destroy_tagged` `function:distance` `function:dot` `function:easing.in_cubic` `function:easing.in_out_cubic` `function:easing.in_out_quad` `function:easing.in_out_sine` `function:easing.in_quad` `function:easing.out_back` `function:easing.out_bounce` `function:easing.out_cubic` `function:easing.out_elastic` `function:easing.out_quad` `function:exp` `function:exp2` `function:first_tagged` `function:floor` `function:fract` `function:gamepad.axis` `function:gamepad.button` `function:gamepad.connected` `function:go_to` `function:has_tag` `function:hud.button` `function:hud.pixel_font` `function:hud.rect` `function:hud.text` `function:inverse_sqrt` `function:is_key_down` `function:is_muted` `function:is_pointer_down` `function:key_pressed` `function:key_released` `function:length` `function:lighting.pbr` `function:lighting.pbr_mapped` `function:load` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:nearest_tagged` `function:normalize` `function:overlap_boxes` `function:overlap_spheres` `function:particle_count` `function:pause` `function:paused` `function:play` `function:play_at` `function:play_music` `function:pointer_position` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:random_int` `function:random_range` `function:reflect` `function:reset` `function:resume` `function:round` `function:sample` `function:sample_mip` `function:sampler.linear_clamp` `function:sampler.linear_clamp_level0` `function:sampler.linear_clamp_mip_nearest` `function:sampler.linear_repeat` `function:sampler.linear_repeat_level0` `function:sampler.linear_repeat_mip_nearest` `function:sampler.nearest_clamp` `function:sampler.nearest_clamp_level0` `function:sampler.nearest_clamp_mip_linear` `function:sampler.nearest_repeat` `function:sampler.nearest_repeat_level0` `function:sampler.nearest_repeat_mip_linear` `function:saturate` `function:save` `function:screen_to_world` `function:send` `function:set_camera` `function:set_muted` `function:set_volume` `function:shuffle` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:stop_music` `function:tagged` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc` `function:world_to_screen`
 
 ### Type methods (10)
 

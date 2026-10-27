@@ -17,7 +17,7 @@ export interface RunOptions {
   sample?: "every" | "boundary";
   seed?: number;
   model?: readonly string[] | "all";
-  ghost?: readonly string[] | "all";
+  animated?: readonly string[] | "all";
   guest?: readonly string[] | "all";
   final?: DriveArgs["final"];
   target?: { width: number; height: number };
@@ -30,7 +30,7 @@ export async function run(page: Page, steps: readonly Step[], options: RunOption
     frames: plan(steps, options.pattern ?? "tick", options.seed ?? 1),
     target: options.target ?? TARGET,
     sample: options.sample ?? "every",
-    nodes: { model: options.model ?? TRACKED, ghost: options.ghost ?? TRACKED, guest: options.guest ?? [] },
+    nodes: { model: options.model ?? TRACKED, animated: options.animated ?? TRACKED, guest: options.guest ?? [] },
     ...(options.final === undefined ? {} : { final: options.final }),
   });
   expect(result.diagnostics, "no runtime diagnostics").toEqual([]);
@@ -56,7 +56,7 @@ export function writeProbe(name: string, record: unknown): void {
   writeFileSync(join(dir, `${name}-${test.info().project.name}.json`), JSON.stringify(record, null, 1));
 }
 
-export const figure = (s: Sample, which: "model" | "ghost" | "guest", name: string): readonly [number, number, number] => {
+export const figure = (s: Sample, which: "model" | "animated" | "guest", name: string): readonly [number, number, number] => {
   const v = s[which].nodes[name];
   if (v === undefined) throw new Error(`no node ${name} in ${which}`);
   return v;

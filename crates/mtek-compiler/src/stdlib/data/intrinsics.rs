@@ -324,7 +324,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "Queues a prefab instance as a root entity; the reference is valid now, `alive` after the next flush.",
+            "Queues a prefab instance as a root entity; valid now, `alive` after the next flush.",
             vec![sig(
                 &[p("prefab", exact(TypeRef::PrefabDescriptor))],
                 exact(TypeRef::EntityRef),

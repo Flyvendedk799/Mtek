@@ -616,6 +616,11 @@ skins whose `indices` and `weights` are empty, and `clipsFrom` on entities and p
 index the array lacks is `E8006`. At mount the runtime retargets the source onto the entity's skin
 (`spec/animation.md` section 4.9).
 
+Decision 0224 adds `ctx.animationAnimatedJointPosition(ref, name)`, which returns the mesh-local position of a joint in
+the pose before the limb, foot and chain goals (a `{x, y, z}` record; zero for an unknown joint), and gives
+`animationFootPlacement` one contact weight per foot: `(ref, left, right, leftNormal, rightNormal, leftWeight,
+rightWeight, spanId)`.
+
 
 ## 13. Optional scene lighting (decision 0195)
 

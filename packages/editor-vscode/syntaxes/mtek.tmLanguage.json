@@ -620,7 +620,7 @@
       }
     },
     "function-animation": {
-      "match": "(?<![A-Za-z0-9_.])(animation)(\\.)((?:clear_foot_placement|take_root_motion|blend_parameter|foot_placement|joint_position|joint_rotation|blend_sample|remove_layer|blend_clear|blend_phase|clear_chain|root_motion|blend_play|chain_goal|clear_limb|fade_layer|transition|copy_pose|limb_goal|set_layer|duration|finished|crossed|playing|resume|weight|pause|fade|play|seek|time))\\s*(?=\\()",
+      "match": "(?<![A-Za-z0-9_.])(animation)(\\.)((?:animated_joint_position|clear_foot_placement|take_root_motion|blend_parameter|foot_placement|joint_position|joint_rotation|blend_sample|remove_layer|blend_clear|blend_phase|clear_chain|root_motion|blend_play|chain_goal|clear_limb|fade_layer|transition|copy_pose|limb_goal|set_layer|duration|finished|crossed|playing|resume|weight|pause|fade|play|seek|time))\\s*(?=\\()",
       "captures": {
         "1": {
           "name": "support.class.namespace.mtek"

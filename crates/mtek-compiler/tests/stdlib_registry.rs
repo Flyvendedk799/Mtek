@@ -935,7 +935,7 @@ fn every_namespace_member_of_section_2_is_present() {
             count("easing"),
             count("animation")
         ],
-        [3, 5, 2, 2, 12, 3, 5, 2, 4, 10, 31]
+        [3, 5, 2, 2, 12, 3, 5, 2, 4, 10, 32]
     );
 }
 

@@ -2,8 +2,8 @@
 //
 //   mask    the `Wave` clip is a whole-body pose (hips, legs, tail and the waving arm), the layer is masked to `Spine1` and its
 //           descendants: every joint outside that subtree must be exactly where the same run without the layer puts it. The
-//           reference run is the example's own `Ghost`, the same blend of the same clips with no layer, no goal and no placement
-//           (keys P and T switch the example's foot placement and tail goal off, so the only difference between the figures is the layer);
+//           reference is a second run of the example with the same frames and no F key (keys P and T switch the example's foot placement
+//           and tail goal off in both, so the only difference between the runs is the layer; the layer is at weight zero in the reference);
 //   fade    weights follow `from + (to - from) * smoothstep(elapsed / 0.4)` from the weight at the moment of each key change
 //           (spec/animation.md 1.2), at every frame partition, because the fade is advanced by the frame time and nothing else;
 //   phase   the layer's clock runs on through weight zero, so its time is the time since it was set, whatever the fades did.
@@ -68,20 +68,24 @@ test.describe("upper-body layer of the example (decision 0224)", () => {
 
   test("the mask moves only the Spine1 subtree: every other joint is where it is without the layer", async ({ page }) => {
     const steps = [hold(["KeyP", "KeyT"], 1), wait(60), hold(F, 90), wait(30)];
-    const result = await run(page, steps, { model: "all", ghost: "all" });
+    const result = await run(page, steps, { model: "all", animated: [] });
+    const unlayered = await run(page, [hold(["KeyP", "KeyT"], 1), wait(60), wait(90), wait(30)], { model: "all", animated: [] });
+    expect(unlayered.samples.length).toBe(result.samples.length);
+    expect(unlayered.samples.every((s) => s.model.layers[0]?.weight === 0), "the reference run never raises the layer").toBe(true);
     const inside = subtree("Spine1");
     expect([...inside].sort()).toEqual(["Head", "HeadTop_End", "LeftArm", "LeftForeArm", "LeftHand", "Neck", "RightArm", "RightForeArm", "RightHand", "Spine1"]);
     const names = Object.keys(result.samples[0]!.model.nodes);
     expect(names.length).toBe(heroRig().skin.nodes.length);
     const before = result.samples[60]!;
     const faded = result.samples[61 + 70]!;
+    const beforeRef = unlayered.samples[60]!, fadedRef = unlayered.samples[61 + 70]!;
     expect(faded.model.layers[0]?.weight, "the layer is fully faded in").toBe(1);
     expect(before.model.layers[0]?.weight, "and out before the key").toBe(0);
     let outsideBefore = 0, outsideFaded = 0, moved = 0;
     const movedBy: Record<string, number> = {};
     for (const name of names) {
-      const dBefore = dist(figure(before, "model", name), figure(before, "ghost", name));
-      const dFaded = dist(figure(faded, "model", name), figure(faded, "ghost", name));
+      const dBefore = dist(figure(before, "model", name), figure(beforeRef, "model", name));
+      const dFaded = dist(figure(faded, "model", name), figure(fadedRef, "model", name));
       if (inside.has(name)) {
         movedBy[name] = dFaded;
         moved = Math.max(moved, dFaded);
@@ -93,7 +97,7 @@ test.describe("upper-body layer of the example (decision 0224)", () => {
     }
     // Over the whole run, whatever the weight: outside the subtree no joint ever differs from the unlayered figure.
     let outsideEver = 0;
-    for (const s of result.samples) for (const name of names) if (!inside.has(name)) outsideEver = Math.max(outsideEver, dist(figure(s, "model", name), figure(s, "ghost", name)));
+    result.samples.forEach((s, i) => { for (const name of names) if (!inside.has(name)) outsideEver = Math.max(outsideEver, dist(figure(s, "model", name), figure(unlayered.samples[i]!, "model", name))); });
     writeProbe("layer-mask", { outsideBefore, outsideFaded, outsideEver, insideMovedBy: movedBy });
     expect(outsideEver, "largest distance of a joint outside the mask from the unlayered figure over the run").toBeLessThan(1e-6);
     // Inside it the waving shows: the right hand is raised and off to the side, and the layer changed the arms, neck and head.
@@ -112,7 +116,7 @@ test.describe("upper-body layer of the example (decision 0224)", () => {
 
   for (const pattern of PATTERNS) {
     test(`the layer weight follows the smoothstep from where it was at each key change, interrupted fades included (frame pattern ${pattern})`, async ({ page }) => {
-      const result = await run(page, FADE_STEPS, { pattern, seed: 7, model: ["Hips"], ghost: ["Hips"] });
+      const result = await run(page, FADE_STEPS, { pattern, seed: 7, model: ["Hips"], animated: ["Hips"] });
       const { press, release } = keyTimes(FADE_STEPS, pattern, "KeyF");
       expect(press.length, "three presses").toBe(3 + 1);
       expect(release.length).toBe(3 + 1);
@@ -144,7 +148,7 @@ test.describe("upper-body layer of the example (decision 0224)", () => {
   }
 
   test("the weight is continuous: it never moves by more than the smoothstep's steepest slope times the time since the last frame", async ({ page }) => {
-    const result = await run(page, FADE_STEPS, { model: ["Hips"], ghost: ["Hips"] });
+    const result = await run(page, FADE_STEPS, { model: ["Hips"], animated: ["Hips"] });
     let worst = 0;
     for (let i = 1; i < result.samples.length; i += 1) {
       const a = result.samples[i - 1]!, b = result.samples[i]!;
@@ -156,13 +160,12 @@ test.describe("upper-body layer of the example (decision 0224)", () => {
     expect(worst).toBeLessThanOrEqual(1.5 / FADE + 1e-9);
   });
 
-  test("hips of the layered figure are those of the unlayered one while the wave is on (nothing moves the body)", async ({ page }) => {
+  test("the animated read includes the layer: with the wave on, animated_joint_position is the layered pose and the final pose is placed from it", async ({ page }) => {
     const steps = [hold(["KeyP", "KeyT"], 1), wait(30), hold(F, 60)];
-    const result = await run(page, steps, { model: ["Hips", "LeftFoot", "RightFoot"], ghost: ["Hips", "LeftFoot", "RightFoot"] });
+    const result = await run(page, steps, { model: ["RightHand", "Hips", "LeftFoot"], animated: ["RightHand", "Hips", "LeftFoot"] });
     const last = result.samples.at(-1)!;
-    const same = (name: string): number => dist(figure(last, "model", name), figure(last, "ghost", name));
-    expect(same("Hips")).toBeLessThan(1e-6);
-    expect(same("LeftFoot")).toBeLessThan(1e-6);
-    expect(same("RightFoot")).toBeLessThan(1e-6);
+    // Foot placement and the tail goal are off: nothing separates the animated pose from the final one but the layer, which is in both.
+    for (const name of ["RightHand", "Hips", "LeftFoot"]) expect(dist(figure(last, "model", name), figure(last, "animated", name)), name).toBeLessThan(1e-6);
+    expect(figure(last, "animated", "RightHand")[1], "the waving hand is up in the animated pose").toBeGreaterThan(1.3);
   });
 });

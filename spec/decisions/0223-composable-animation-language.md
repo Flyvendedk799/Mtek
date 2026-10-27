@@ -72,6 +72,13 @@ decisions and their reasons.
     again (a playing clip does not migrate either, 0190). The new program sets them up in its first
     frames.
 
+## Amendment (decision 0224)
+
+The language surface had two gaps that the demonstration found, closed before release: `animation.foot_placement` takes `left_weight` and `right_weight`
+instead of one `weight` (a stance foot is planted while the swinging one keeps the animation), and `animation.animated_joint_position(target, name) -> vec3`
+reads a joint in the pose before limb, foot and chain goals (`joint_position` is the final pose). The sixteen calls above are therefore seventeen, and the
+cold-start context stays inside its limit (see 0224).
+
 ## Consequences
 
 * **Cold-start context.** The context of an empty project is limited to 30 000 bytes and must leave

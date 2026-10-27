@@ -8,7 +8,7 @@
 //
 // A 2D blend space (idle, walk, run, strafe left and right) is driven by the keys through a parameter that
 // follows them, the clips' root travel moves the capsule through `move_character`, foot placement keeps the
-// feet on the steps, the curb and the ramp, the left hand reaches a world-space target, the tail is a chain
+// feet on the steps, the curb and the ramp (a contact weight for each foot), the left hand reaches a world-space target, the tail is a chain
 // goal, and the Guest plays the Hero's clips on a skeleton with other names, proportions and rest pose.
 
 const HERO = asset.glb("../models/Hero.glb");
@@ -26,6 +26,9 @@ const FOLLOW: f32 = 0.12;
 const FIGURE_BASE: f32 = 0.91;
 
 const SOLE: f32 = 0.08;
+
+// A foot the animation lifts this high above its ankle height is in the air: its contact weight is zero.
+const LIFT_FREE: f32 = 0.12;
 
 // The left arm is 0.57 m long; the hand is asked for no more than this.
 const ARM_REACH: f32 = 0.5;
@@ -166,14 +169,6 @@ scene Stage {
         }
     }
 
-    // The same figure, never shown and never touched by layers or goals: its pose is the animation without any of
-    // them, from which the program reads where the feet would be on flat ground.
-    entity Ghost {
-        visible: false;
-        mesh: HERO.mesh("Body");
-        clip: "Idle";
-    }
-
     update(dt: f32) {
         if !ready {
             animation.set_layer(Model, "wave", "Wave", 0.0, false, "Spine1");
@@ -183,14 +178,7 @@ scene Stage {
             animation.blend_sample(Model, "StrafeLeft", -1.0, 0.0);
             animation.blend_sample(Model, "StrafeRight", 1.0, 0.0);
             animation.blend_play(Model, true, 1.0);
-            animation.blend_sample(Ghost, "Idle", 0.0, 0.0);
-            animation.blend_sample(Ghost, "Walk", 0.0, 1.0);
-            animation.blend_sample(Ghost, "Run", 0.0, 2.0);
-            animation.blend_sample(Ghost, "StrafeLeft", -1.0, 0.0);
-            animation.blend_sample(Ghost, "StrafeRight", 1.0, 0.0);
-            animation.blend_play(Ghost, true, 1.0);
             animation.root_motion(Model, "Root");
-            animation.root_motion(Ghost, "Root");
             ready = true;
         }
 
@@ -220,11 +208,9 @@ scene Stage {
         blend_x += (want_x - blend_x) * follow;
         blend_y += (want_y - blend_y) * follow;
         animation.blend_parameter(Model, blend_x, blend_y);
-        animation.blend_parameter(Ghost, blend_x, blend_y);
 
         // Root motion: the clips' travel, turned into the world by the figure, is what the capsule moves by.
         Hero.travel += animation.take_root_motion(Model);
-        animation.take_root_motion(Ghost);
         heading += turn * TURN_RATE * dt;
         let facing = quat.axis_angle(vec3(0.0, 1.0, 0.0), heading);
         Main.position = Hero.position + facing * vec3(0.0, 1.6, -4.0);
@@ -234,20 +220,25 @@ scene Stage {
         let rot = Hero.rotation;
         let origin = Hero.position - rot * vec3(0.0, FIGURE_BASE, 0.0);
 
-        // Foot placement: where the animated feet would be, put on the ground under them (a foot keeps the height
-        // the animation lifts it to, above whatever the ground is there).
+        // Foot placement: where the animation puts the feet (read before any goal), put on the ground under them. A
+        // foot keeps the height the animation lifts it to above whatever the ground is there, and its contact weight
+        // is one while it stands on the ground and falls to zero as the animation lifts it, so a foot in the air
+        // follows the animation and only the feet in stance plant and lower the hips.
         if feet_on {
-            let lf = animation.joint_position(Ghost, "LeftFoot");
-            let rf = animation.joint_position(Ghost, "RightFoot");
+            let lf = animation.animated_joint_position(Model, "LeftFoot");
+            let rf = animation.animated_joint_position(Model, "RightFoot");
             let lw = origin + rot * lf;
             let rw = origin + rot * rf;
+            let lift_l = max(lf.y - SOLE, 0.0);
+            let lift_r = max(rf.y - SOLE, 0.0);
             animation.foot_placement(
                 Model,
-                vec3(lw.x, ground(lw.x, lw.z) + max(lf.y - SOLE, 0.0), lw.z),
-                vec3(rw.x, ground(rw.x, rw.z) + max(rf.y - SOLE, 0.0), rw.z),
+                vec3(lw.x, ground(lw.x, lw.z) + lift_l, lw.z),
+                vec3(rw.x, ground(rw.x, rw.z) + lift_r, rw.z),
                 ground_normal(lw.x, lw.z),
                 ground_normal(rw.x, rw.z),
-                1.0,
+                1.0 - smoothstep(0.0, LIFT_FREE, lift_l),
+                1.0 - smoothstep(0.0, LIFT_FREE, lift_r),
             );
         } else {
             animation.clear_foot_placement(Model);

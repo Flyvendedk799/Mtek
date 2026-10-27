@@ -1,8 +1,8 @@
 program (entry scene src/main.mtek::Demo)
-  module src/main.mtek @1:1-39:1
-    scene Demo [src/main.mtek::Demo] @3:1-38:2
+  module src/main.mtek @1:1-40:1
+    scene Demo [src/main.mtek::Demo] @3:1-39:2
       fields
-        clear_color = color(0.0, 0.0, 0.0, 1.0) (default @3:1-38:2)
+        clear_color = color(0.0, 0.0, 0.0, 1.0) (default @3:1-39:2)
       camera Main [src/main.mtek::Demo.Main] active @7:5-7:19
         position = vec3(0.0, 0.0, 5.0) (default @7:5-7:19)
         rotation = quat(0.0, 0.0, 0.0, 1.0) (default @7:5-7:19)
@@ -22,7 +22,7 @@ program (entry scene src/main.mtek::Demo)
       state phase: f32 = 0.0 [src/main.mtek::Demo.phase] @4:5-4:28
       state applied: bool = false [src/main.mtek::Demo.applied] @5:5-5:33
       state travel: vec3 = vec3(0.0, 0.0, 0.0) [src/main.mtek::Demo.travel] @6:5-6:46
-      on key_down(Space) of scene [src/main.mtek::Demo.on_key_down_Space] @13:5-31:6
+      on key_down(Space) of scene [src/main.mtek::Demo.on_key_down_Space] @13:5-32:6
         (animation.set_layer(ref entity#0, "wave", "Wave", 1.0, false, "Spine")): bool @14:9-14:71
         (animation.set_layer(ref entity#0, "breath", "Breathe", 0.4, true, "")): bool @15:9-15:70
         (animation.fade_layer(ref entity#0, "wave", 0.0, 0.3)): bool @16:9-16:53
@@ -35,14 +35,15 @@ program (entry scene src/main.mtek::Demo)
         (animation.blend_clear(ref entity#0)): bool @23:9-23:36
         (animation.limb_goal(ref entity#0, "left_leg", vec3(0.0, 0.1, 0.5), 1.0)): bool @24:9-24:72
         (animation.clear_limb(ref entity#0, "left_leg")): bool @25:9-25:47
-        (animation.foot_placement(ref entity#0, vec3(0.1, 0.0, 0.0), vec3(-0.1, 0.2, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 1.0, 0.0), 1.0)): bool @26:9-26:129
+        (animation.foot_placement(ref entity#0, vec3(0.1, 0.0, 0.0), vec3(-0.1, 0.2, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 1.0, 0.0), 1.0, 0.0)): bool @26:9-26:134
         (animation.clear_foot_placement(ref entity#0)): bool @27:9-27:45
-        (animation.chain_goal(ref entity#0, "reach", "Hand", i32(3), vec3(1.0, 1.0, 0.0), 0.8)): bool @28:9-28:81
-        (animation.clear_chain(ref entity#0, "reach")): bool @29:9-29:45
-        (animation.root_motion(ref entity#0, "Hips")): bool @30:9-30:44
-      update of scene [src/main.mtek::Demo.update] @32:5-37:6
-        local #0 dt: f32 (param) @32:12-32:14
-        state.phase = (animation.blend_phase(ref entity#0)): f32 @33:9-33:44
-        state.applied = (animation.fade_layer(ref entity#0, "wave", 1.0, dt#0)): bool @34:9-34:62
-        state.travel = (animation.take_root_motion(ref entity#0)): vec3 @35:9-35:50
-        (entity#1.body.move_character((animation.take_root_motion(ref entity#1)): vec3, entity#1.rotation)): () @36:9-36:83
+        state.travel = (animation.animated_joint_position(ref entity#0, "Hips")): vec3 @28:9-28:65
+        (animation.chain_goal(ref entity#0, "reach", "Hand", i32(3), vec3(1.0, 1.0, 0.0), 0.8)): bool @29:9-29:81
+        (animation.clear_chain(ref entity#0, "reach")): bool @30:9-30:45
+        (animation.root_motion(ref entity#0, "Hips")): bool @31:9-31:44
+      update of scene [src/main.mtek::Demo.update] @33:5-38:6
+        local #0 dt: f32 (param) @33:12-33:14
+        state.phase = (animation.blend_phase(ref entity#0)): f32 @34:9-34:44
+        state.applied = (animation.fade_layer(ref entity#0, "wave", 1.0, dt#0)): bool @35:9-35:62
+        state.travel = (animation.take_root_motion(ref entity#0)): vec3 @36:9-36:50
+        (entity#1.body.move_character((animation.take_root_motion(ref entity#1)): vec3, entity#1.rotation)): () @37:9-37:83

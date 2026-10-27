@@ -421,16 +421,23 @@ Goals are in world space; the runtime converts them with the entity's transform 
             animation.chain_goal(Model, "tail", "Tail4", 4, tip, 1.0);
 ```
 
-`foot_placement` takes a ground point and a normal for each foot. The runtime lowers the hips by the least amount that lets both feet reach and tilts the feet onto the normals. The language has no ray cast, so the program supplies the ground (the example's `ground` function has the same shape as its colliders), and it needs the *animated* feet to know where to put the points. `animation.joint_position` reads the pose after layers and goals, so the example keeps a second figure, `Ghost`, that plays the same blend and is never touched; its feet are the animation's:
+`foot_placement` takes a ground point, a normal and a contact weight for each foot. The runtime lowers the hips by the least amount that lets the feet in contact reach, tilts the feet onto the normals, and leaves a foot with weight zero to the animation. The language has no ray cast, so the program supplies the ground (the example's `ground` function has the same shape as its colliders). Where the animation puts the feet is what `animation.animated_joint_position` returns: the same mesh-local position as `joint_position`, but for the pose before the goals, so it stays the animation's while foot placement, a reach or a chain goal move the final pose. The example puts each foot on the ground under its animated position, at the height the animation lifts it to, with weight one while the foot stands and zero once the animation has lifted it `LIFT_FREE` (12 cm) above the ground, so planted feet stay planted while the character walks over steps and feet in the air follow the clip:
 
 ```mtek from=examples/animation-composition/src/main.mtek
+            let lf = animation.animated_joint_position(Model, "LeftFoot");
+            let rf = animation.animated_joint_position(Model, "RightFoot");
+            let lw = origin + rot * lf;
+            let rw = origin + rot * rf;
+            let lift_l = max(lf.y - SOLE, 0.0);
+            let lift_r = max(rf.y - SOLE, 0.0);
             animation.foot_placement(
                 Model,
-                vec3(lw.x, ground(lw.x, lw.z) + max(lf.y - SOLE, 0.0), lw.z),
-                vec3(rw.x, ground(rw.x, rw.z) + max(rf.y - SOLE, 0.0), rw.z),
+                vec3(lw.x, ground(lw.x, lw.z) + lift_l, lw.z),
+                vec3(rw.x, ground(rw.x, rw.z) + lift_r, rw.z),
                 ground_normal(lw.x, lw.z),
                 ground_normal(rw.x, rw.z),
-                1.0,
+                1.0 - smoothstep(0.0, LIFT_FREE, lift_l),
+                1.0 - smoothstep(0.0, LIFT_FREE, lift_r),
             );
 ```
 

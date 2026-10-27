@@ -116,7 +116,7 @@ fn objects() -> Vec<SchemaDef> {
                 "ambient_intensity",
                 TypeRef::F32,
                 C,
-                "Ambient light scale for lit materials; 0 is off. Times the camera's exposure scale (about 3.14), so 0.3 is near full brightness on white. Unlit ignores it.",
+                "Ambient light scale for lit materials; 0 is off. Times the exposure scale (about 3.14): 0.3 is near full brightness on white. Unlit ignores it.",
             )
             .default(ConstValue::F32(0.0))
             .range(ValueRange::non_negative()),
@@ -217,7 +217,7 @@ fn objects() -> Vec<SchemaDef> {
                 "particles",
                 TypeRef::Descriptor(SchemaCategory::Emitter),
                 C,
-                "Particle emitter: up to 64 camera-facing billboards of the entity's mesh in its material's colour; counted without a mesh too.",
+                "Particle emitter: up to 64 camera-facing billboards of the entity's mesh in its material's colour",
             ),
             field(
                 "clip",
