@@ -395,12 +395,12 @@ export class PhysicsSystem implements BodyService {
       if (entry === undefined) continue;
       const pending = moves.get(entry);
       if (pending === undefined) {
-        moves.set(entry, { displacement: command.displacement, rotation: command.rotation, keepRotation: command.keepRotation, applied: false });
+        moves.set(entry, { displacement: command.displacement, rotation: command.rotation, keepRotation: command.keepRotation === true, applied: false });
       } else {
         const { displacement: sum } = pending;
         pending.displacement = frozenVec3(sum.x + command.displacement.x, sum.y + command.displacement.y, sum.z + command.displacement.z);
         pending.rotation = command.rotation;
-        pending.keepRotation = command.keepRotation;
+        pending.keepRotation = command.keepRotation === true;
       }
     }
     for (const command of batch) {

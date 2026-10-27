@@ -173,7 +173,11 @@ moving-platform carry (a kinematic platform under the character moves it by the
 platform's translation and yaw) without host code. The optional `Kinematic` fields
 `max_slope`, `step_height`, `step_min_width`, `snap_to_ground`, `skin` and `carry`
 tune it (`spec/physics.md` section 2). Gravity is not applied; add your own vertical
-motion. `Dynamic { continuous: true }` asks for continuous collision detection for
+motion. Passing back `self.rotation` keeps the character's facing, and a turning
+platform turns it with the platform (decision 0218). `examples/character-movement`
+is a playable course with stairs, a ledge, two slopes, walls and three kinds of
+moving platform, and its browser spec walks it on both local backends.
+`Dynamic { continuous: true }` asks for continuous collision detection for
 one body; the `physics.continuousCollision` mount option enables it for every dynamic
 body. CCD is opt-in and does not sweep teleports.
 

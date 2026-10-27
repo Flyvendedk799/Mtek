@@ -117,7 +117,6 @@ test.describe("character movement on the real engine (decision 0218)", () => {
     // Never off the ground on the way up, and the height only rises (within the published resting-height variation): each step is taken, none is a jump.
     expect(walk.every((s, i) => i < 2 || grounded(s)), "grounded on every tick of the climb").toBe(true);
     const heights = walk.map((s) => s.player.position.y);
-    writeProbe("stairs", { x: walk.map((s) => s.player.position.x), heights, grounded: walk.map(grounded) });
     // Resting height varies by up to 9 mm between ticks (spec/physics.md 7.2, "Not claimed"); a drop larger than 10 mm would be a step lost.
     const largestDrop = Math.max(...heights.map((y, i) => (i === 0 ? 0 : (heights[i - 1] ?? 0) - y)));
     expect(largestDrop, "largest drop of the height between two ticks").toBeLessThan(0.01);
@@ -125,6 +124,7 @@ test.describe("character movement on the real engine (decision 0218)", () => {
     // 1.3 times that is the corpus's own definition of a clean climb (spec/physics.md 7.2).
     const reachedAt = walk.findIndex((s) => s.player.position.y >= landingY - 0.01);
     const unobstructed = STAIRS.landingFromX / WALK_SPEED / STEP;
+    writeProbe("stairs", { landingY, endY: end?.player.position.y, endX: end?.player.position.x, reachedAtTick: reachedAt, unobstructedTicks: unobstructed, largestDrop });
     expect(reachedAt, "tick at which the landing is reached").toBeGreaterThan(0);
     expect(reachedAt, "tick at which the landing is reached").toBeLessThanOrEqual(1.3 * unobstructed + 4);
 
@@ -139,6 +139,7 @@ test.describe("character movement on the real engine (decision 0218)", () => {
     expect(Math.max(...approach.map((s) => s.player.position.x)), "never past the face").toBeLessThanOrEqual(LEDGE.frontX - RADIUS - SKIN + 0.005);
     // With a jump it is climbed: the character ends on top of the ledge.
     const top = ledge.samples.at(-1);
+    writeProbe("ledge", { blockedX: blocked?.player.position.x, blockedY: blocked?.player.position.y, topX: top?.player.position.x, topY: top?.player.position.y });
     expect(Math.abs((top?.player.position.y ?? Number.NaN) - (LEDGE.height + REST_Y))).toBeLessThan(0.01);
     expect(top?.player.position.x ?? Number.NaN).toBeGreaterThan(LEDGE.frontX);
     expect(top?.state["on_ground"]).toBe(true);
@@ -164,9 +165,11 @@ test.describe("character movement on the real engine (decision 0218)", () => {
     const slopeMeasured = ((b?.player.position.y ?? 0) - (a?.player.position.y ?? 0)) / ((b?.player.position.x ?? 1) - (a?.player.position.x ?? 0));
     expect(Math.abs(slopeMeasured / Math.tan(GENTLE.angle) - 1)).toBeLessThan(0.02);
 
+    writeProbe("gentle", { endY: endG?.player.position.y, topY, rampTicks: onRamp.length, groundUpMin: Math.min(...onRamp.map((s) => Number(s.state["ground_up"]))), groundUpMax: Math.max(...onRamp.map((s) => Number(s.state["ground_up"]))), slopeRatio: slopeMeasured / Math.tan(GENTLE.angle) });
     const steep = await run(page, [wait(30), tap("Digit4"), wait(30), hold(["ArrowRight"], 240), wait(1)]);
     const walkS = steep.samples.slice(30 + 1 + 30);
     // The character walks into the foot of the ramp and stays there: never past the start of the ramp (its radius earlier), never above the floor.
+    writeProbe("steep", { maxX: Math.max(...walkS.map((s) => s.player.position.x)), maxY: Math.max(...walkS.map((s) => s.player.position.y)) });
     expect(Math.max(...walkS.map((s) => s.player.position.x)), "x").toBeLessThan(STEEP.startX);
     expect(Math.max(...walkS.map((s) => s.player.position.y)), "y").toBeLessThan(REST_Y + 0.03);
     expect(walkS.every(grounded), "grounded on the floor throughout").toBe(true);
@@ -201,6 +204,7 @@ test.describe("character movement on the real engine (decision 0218)", () => {
     // The measured apex is the model's, and the character is grounded again by the landing tick (+3 for the snap and the program's one-tick lag).
     const heights = Array.from({ length: 80 }, (_, m) => at(m).player.position.y - y0);
     const measuredApex = heights.indexOf(Math.max(...heights));
+    writeProbe("jump", { modelApexTick: apex, measuredApexTick: measuredApex, modelApex: jumpModel(apex), measuredApex: Math.max(...heights), landingTick: landing, airborneSamples: result.samples.filter((s) => !grounded(s)).length });
     expect(measuredApex).toBe(apex);
     expect(Math.max(...heights)).toBeCloseTo(jumpModel(apex), 2);
     expect(grounded(at(landing + 3)), "grounded again").toBe(true);
@@ -289,6 +293,7 @@ test.describe("character movement on the real engine (decision 0218)", () => {
     expect(Math.max(...walk.map((s) => s.player.position.x)), "never inside the east wall").toBeLessThanOrEqual(wantX + 0.001);
     expect(Math.max(...walk.map((s) => s.player.position.z)), "never inside the south wall").toBeLessThanOrEqual(wantZ + 0.001);
     const last = walk.slice(-60);
+    writeProbe("corner", { wantX, wantZ, finalX: walk.at(-1)?.player.position.x, finalZ: walk.at(-1)?.player.position.z, maxX: Math.max(...walk.map((s) => s.player.position.x)), maxZ: Math.max(...walk.map((s) => s.player.position.z)) });
     for (const s of last) {
       expect(Math.abs(s.player.position.x - wantX)).toBeLessThan(0.005);
       expect(Math.abs(s.player.position.z - wantZ)).toBeLessThan(0.005);
@@ -364,6 +369,7 @@ test.describe("character movement on the real engine (decision 0218)", () => {
   test("the host API answers from the page: a ray hits the expected entity, contacts lists the floor, collision groups change what a cast sees", async ({ page }) => {
     await page.goto(MOVEMENT_URL);
     const r = await page.evaluate(hostApi, { target: TARGET, settleFrames: 60, dt: STEP, idNames: ["Player", "Ground", "Ledge"] });
+    writeProbe("host-api", r);
     expect(r.diagnostics).toEqual([]);
     expect(r.stateAfter).toBe("running");
     expect(r.hasPhysics).toBe(true);

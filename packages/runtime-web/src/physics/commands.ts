@@ -28,7 +28,7 @@ export type QueuedCommand =
   | { readonly category: "teleport"; readonly target: EntityRef; readonly pose: Pose; readonly keepVelocity: boolean }
   | { readonly category: "linearVelocity"; readonly target: EntityRef; readonly vector: Vec3 }
   | { readonly category: "kinematicTarget"; readonly target: EntityRef; readonly pose: Pose }
-  | { readonly category: "characterMove"; readonly target: EntityRef; readonly displacement: Vec3; readonly rotation: Quat; readonly keepRotation: boolean }
+  | { readonly category: "characterMove"; readonly target: EntityRef; readonly displacement: Vec3; readonly rotation: Quat; readonly keepRotation?: boolean }
   | { readonly category: "impulse"; readonly target: EntityRef; readonly vector: Vec3 }
   | { readonly category: "force"; readonly target: EntityRef; readonly vector: Vec3 };
 

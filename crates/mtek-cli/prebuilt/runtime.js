@@ -10225,10 +10225,10 @@ var SUPPORTED = {
       if (entry === void 0) continue;
       let pending = moves.get(entry);
       if (pending === void 0)
-        moves.set(entry, { displacement: command.displacement, rotation: command.rotation, keepRotation: command.keepRotation, applied: !1 });
+        moves.set(entry, { displacement: command.displacement, rotation: command.rotation, keepRotation: command.keepRotation === !0, applied: !1 });
       else {
         let { displacement: sum } = pending;
-        pending.displacement = frozenVec3(sum.x + command.displacement.x, sum.y + command.displacement.y, sum.z + command.displacement.z), pending.rotation = command.rotation, pending.keepRotation = command.keepRotation;
+        pending.displacement = frozenVec3(sum.x + command.displacement.x, sum.y + command.displacement.y, sum.z + command.displacement.z), pending.rotation = command.rotation, pending.keepRotation = command.keepRotation === !0;
       }
     }
     for (let command of batch) {
