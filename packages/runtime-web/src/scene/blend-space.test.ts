@@ -98,8 +98,7 @@ describe("blend weights", () => {
     }
   }, 60000);
   it("gives barycentric weights inside a triangle and splits a grid cell between its diagonal corners", () => {
-    const [a, b, c] = weightsAt(blendWeights(sets.triangle!), 3, 1, 1);
-    expect([a, b, c].map(v => +v.toFixed(12))).toEqual([0.5, 0.25, 0.25]);
+    expect(weightsAt(blendWeights(sets.triangle!), 3, 1, 1).map(v => +v.toFixed(12))).toEqual([0.5, 0.25, 0.25]);
     const cell = weightsAt(blendWeights(grid(3)), 9, 0.5, 0.5);
     expect(sum(cell)).toBeCloseTo(1, 12);
     expect(cell.filter(v => v > 0).length).toBe(2);
