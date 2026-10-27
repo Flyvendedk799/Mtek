@@ -70,7 +70,7 @@ export interface MtekDiagnostic {
 /**
  * The runtime part (`8xxx`) of the catalogue of `spec/diagnostics.md` section 5.8, in the order of
  * that table. A test asserts that this list equals the table. The physics codes (E8101 to E8103,
- * decision 0065; E8104, decision 0066) are catalogued here and reported by `physics/system.ts` and
+ * decision 0065; E8104, decision 0066; E8105, decision 0217) are catalogued here and reported by `physics/system.ts` and
  * `physics/load.ts` (M5-05).
  */
 export const RUNTIME_DIAGNOSTIC_CATALOGUE = {
@@ -103,6 +103,7 @@ export const RUNTIME_DIAGNOSTIC_CATALOGUE = {
   E8102: "physics module failed to load",
   E8103: "non-finite pose produced by the solver",
   E8104: "non-finite value given to a body",
+  E8105: "physics adapter cannot move characters",
   W8201: "audio value clamped",
   W8202: "sound could not be decoded",
   W8203: "too many HUD items",

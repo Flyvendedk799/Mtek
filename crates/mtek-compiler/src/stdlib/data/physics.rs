@@ -53,6 +53,13 @@ pub(super) fn body_commands() -> Vec<BodyCommandDef> {
             since: Milestone::M1,
             doc: "Sets the linear velocity at the start of the next tick.",
         },
+        BodyCommandDef {
+            name: "move_character",
+            params: vec![p("displacement", vec3), p("rotation", quat)],
+            applies_to: KINEMATIC,
+            since: Milestone::M1,
+            doc: "Moves the body by `displacement` metres for this tick, sliding along what it meets, stepping up stairs, staying on slopes and ground and riding a moving kinematic platform, then turns it to `rotation`. Gravity is not applied; add your own vertical motion. Several calls in one tick sum their displacements and the last rotation wins; the move replaces `set_kinematic_target` of the same tick (decisions 0214, 0217).",
+        },
     ]
 }
 
@@ -72,6 +79,20 @@ pub(super) fn body_properties() -> Vec<BodyPropertyDef> {
             applies_to: MOVING,
             since: Milestone::M1,
             doc: "Angular velocity as of the last completed tick. Read-only.",
+        },
+        BodyPropertyDef {
+            name: "grounded",
+            ty: TypeRef::Bool,
+            applies_to: KINEMATIC,
+            since: Milestone::M1,
+            doc: "Whether the last completed `move_character` found ground under the body; false before the first. Read-only.",
+        },
+        BodyPropertyDef {
+            name: "ground_normal",
+            ty: TypeRef::Vec3,
+            applies_to: KINEMATIC,
+            since: Milestone::M1,
+            doc: "The surface normal of the ground found by the last completed `move_character`; zero when not grounded. Read-only.",
         },
     ]
 }

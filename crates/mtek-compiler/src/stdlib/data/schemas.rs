@@ -9,6 +9,8 @@ use crate::stdlib::model::{
 use crate::stdlib::value::{Bound, ConstValue, Limit, ValueRange};
 
 const C: FieldFlags = FieldFlags::CONSTRUCTION_ONLY;
+/// Construction-only, and absent from a completed descriptor unless the program wrote it.
+const CU: FieldFlags = FieldFlags::CONSTRUCTION_ONLY.union(FieldFlags::UNSET_WHEN_OMITTED);
 /// The default `Camera.exposure`, `-log2(1.2 * pi)` (decision 0081): the exposure scale
 /// `1 / (1.2 * 2^EV100)` is then pi, so a white Lambertian surface under 1 lux is 1.0.
 pub(crate) const CAMERA_DEFAULT_EV100: f32 = -1.914_530_5;
@@ -213,7 +215,7 @@ fn objects() -> Vec<SchemaDef> {
                 "collider",
                 TypeRef::Descriptor(SchemaCategory::Collider),
                 C,
-                "A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`.",
+                "A collision shape (`BoxCollider`, `SphereCollider`, `CapsuleCollider`). Requires `body`.",
             ),
             field(
                 "tag",
@@ -254,7 +256,7 @@ fn objects() -> Vec<SchemaDef> {
         field: "body",
         requires: "collider",
         code: Code::E5121,
-        help: Some("add a `collider: BoxCollider { size: ... }` or `SphereCollider { radius: ... }` that gives the body its shape"),
+        help: Some("add a `collider: BoxCollider { size: ... }`, `SphereCollider { radius: ... }` or `CapsuleCollider { radius: ...; height: ... }` that gives the body its shape"),
     });
 
     let camera = schema(
@@ -608,8 +610,62 @@ fn bodies() -> Vec<SchemaDef> {
             "Kinematic",
             SchemaCategory::Body,
             Milestone::M1,
-            "A body whose pose the program sets with `set_kinematic_target`.",
-            vec![],
+            "A body whose pose the program sets with `set_kinematic_target`, or moves with collisions with `move_character`. The optional fields tune `move_character` only (decisions 0214, 0217).",
+            vec![
+                field(
+                    "max_slope",
+                    TypeRef::F32,
+                    CU,
+                    "Steepest slope in radians a character climbs, stands on and counts as ground (`move_character`).",
+                )
+                .default(ConstValue::F32(0.785_398_2))
+                .range(
+                    ValueRange::bounded(
+                        Some(Bound::inclusive(Limit::Int(0))),
+                        Some(Bound::inclusive(Limit::Float(1.570_796_4))),
+                    )
+                    .and_finite(),
+                ),
+                field(
+                    "step_height",
+                    TypeRef::F32,
+                    CU,
+                    "Highest step in metres a character climbs; 0 disables stepping.",
+                )
+                .default(ConstValue::F32(0.25))
+                .range(ValueRange::non_negative().and_finite()),
+                field(
+                    "step_min_width",
+                    TypeRef::F32,
+                    CU,
+                    "Narrowest tread in metres a character steps onto.",
+                )
+                .default(ConstValue::F32(0.1))
+                .range(ValueRange::positive().and_finite()),
+                field(
+                    "snap_to_ground",
+                    TypeRef::F32,
+                    CU,
+                    "Longest drop in metres a character is pulled down to stay on the ground; 0 disables snapping.",
+                )
+                .default(ConstValue::F32(0.2))
+                .range(ValueRange::non_negative().and_finite()),
+                field(
+                    "skin",
+                    TypeRef::F32,
+                    CU,
+                    "Gap in metres a character keeps from what it touches.",
+                )
+                .default(ConstValue::F32(0.01))
+                .range(ValueRange::positive().and_finite()),
+                field(
+                    "carry",
+                    TypeRef::Bool,
+                    CU,
+                    "Whether a moving kinematic platform under the character carries it (translation and yaw).",
+                )
+                .default(ConstValue::Bool(true)),
+            ],
         ),
         schema(
             "Dynamic",
@@ -636,6 +692,13 @@ fn bodies() -> Vec<SchemaDef> {
                 )
                 .default(ConstValue::F32(0.05))
                 .range(ValueRange::non_negative().and_finite()),
+                field(
+                    "continuous",
+                    TypeRef::Bool,
+                    C,
+                    "Continuous collision detection for this body: it is swept against what it would otherwise tunnel through. The host option `physics.continuousCollision` enables it for every dynamic body.",
+                )
+                .default(ConstValue::Bool(false)),
             ],
         ),
     ]
@@ -693,5 +756,32 @@ fn colliders() -> Vec<SchemaDef> {
                 restitution(),
             ],
         ),
+        schema(
+            "CapsuleCollider",
+            SchemaCategory::Collider,
+            Milestone::M1,
+            "A capsule collision shape: a cylinder along local Y with a hemisphere on each end, the usual shape of a character.",
+            vec![
+                field("radius", TypeRef::F32, R_C, "Radius of the cylinder and the caps in metres.")
+                    .range(ValueRange::positive().and_finite()),
+                field(
+                    "height",
+                    TypeRef::F32,
+                    R_C,
+                    "Full height in metres including both caps; greater than twice the `radius`.",
+                )
+                .range(ValueRange::positive().and_finite()),
+                sensor(),
+                friction(),
+                restitution(),
+            ],
+        )
+        .rule(FieldRule::ExceedsMultiple {
+            field: "height",
+            other: "radius",
+            factor: 2,
+            code: Code::E5124,
+            help: "increase `height` or decrease `radius`; the height includes both caps, so a straight part needs `height > 2 * radius`",
+        }),
     ]
 }

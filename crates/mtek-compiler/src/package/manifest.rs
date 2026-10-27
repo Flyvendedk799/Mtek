@@ -788,8 +788,28 @@ pub enum Body {
         mass: Num,
         linear_damping: Num,
         angular_damping: Num,
+        /// Continuous collision detection for this body; listed only when true (decision 0217).
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        continuous: bool,
     },
-    Kinematic,
+    Kinematic {
+        /// The `move_character` settings; listed only when the program wrote at least one
+        /// (decision 0217). The runtime applies the defaults of `spec/physics.md` otherwise.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        character: Option<CharacterSettings>,
+    },
+}
+
+/// The character settings of a kinematic body, every field present (decision 0217).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CharacterSettings {
+    pub max_slope: Num,
+    pub step_height: Num,
+    pub step_min_width: Num,
+    pub snap_to_ground: Num,
+    pub skin: Num,
+    pub carry: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -803,6 +823,13 @@ pub enum Collider {
     },
     Sphere {
         radius: Num,
+        sensor: bool,
+        friction: Num,
+        restitution: Num,
+    },
+    Capsule {
+        radius: Num,
+        height: Num,
         sensor: bool,
         friction: Num,
         restitution: Num,

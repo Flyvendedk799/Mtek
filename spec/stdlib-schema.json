@@ -159,6 +159,74 @@
       ]
     },
     {
+      "name": "CapsuleCollider",
+      "category": "collider",
+      "since": "M1",
+      "doc": "A capsule collision shape: a cylinder along local Y with a hemisphere on each end, the usual shape of a character.",
+      "fields": [
+        {
+          "name": "friction",
+          "type": "f32",
+          "default": "0.5",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "≥ 0, finite",
+          "since": "M1",
+          "doc": "Coulomb friction coefficient."
+        },
+        {
+          "name": "height",
+          "type": "f32",
+          "default": null,
+          "required": true,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "> 0, finite",
+          "since": "M1",
+          "doc": "Full height in metres including both caps; greater than twice the `radius`."
+        },
+        {
+          "name": "radius",
+          "type": "f32",
+          "default": null,
+          "required": true,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "> 0, finite",
+          "since": "M1",
+          "doc": "Radius of the cylinder and the caps in metres."
+        },
+        {
+          "name": "restitution",
+          "type": "f32",
+          "default": "0.0",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "0…1",
+          "since": "M1",
+          "doc": "Bounciness, 0 (none) to 1 (perfect)."
+        },
+        {
+          "name": "sensor",
+          "type": "bool",
+          "default": "false",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "A sensor reports collisions but does not push other bodies."
+        }
+      ]
+    },
+    {
       "name": "DirectionalLight",
       "category": "light",
       "since": "M1",
@@ -207,6 +275,18 @@
           "range": "≥ 0, finite",
           "since": "M1",
           "doc": "Rate at which angular velocity decays."
+        },
+        {
+          "name": "continuous",
+          "type": "bool",
+          "default": "false",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "Continuous collision detection for this body: it is swept against what it would otherwise tunnel through. The host option `physics.continuousCollision` enables it for every dynamic body."
         },
         {
           "name": "linear_damping",
@@ -366,7 +446,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`."
+          "doc": "A collision shape (`BoxCollider`, `SphereCollider`, `CapsuleCollider`). Requires `body`."
         },
         {
           "name": "light",
@@ -483,8 +563,81 @@
       "name": "Kinematic",
       "category": "body",
       "since": "M1",
-      "doc": "A body whose pose the program sets with `set_kinematic_target`.",
-      "fields": []
+      "doc": "A body whose pose the program sets with `set_kinematic_target`, or moves with collisions with `move_character`. The optional fields tune `move_character` only (decisions 0214, 0217).",
+      "fields": [
+        {
+          "name": "carry",
+          "type": "bool",
+          "default": "true",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": null,
+          "since": "M1",
+          "doc": "Whether a moving kinematic platform under the character carries it (translation and yaw)."
+        },
+        {
+          "name": "max_slope",
+          "type": "f32",
+          "default": "0.7853982",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "0…1.5707964, finite",
+          "since": "M1",
+          "doc": "Steepest slope in radians a character climbs, stands on and counts as ground (`move_character`)."
+        },
+        {
+          "name": "skin",
+          "type": "f32",
+          "default": "0.01",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "> 0, finite",
+          "since": "M1",
+          "doc": "Gap in metres a character keeps from what it touches."
+        },
+        {
+          "name": "snap_to_ground",
+          "type": "f32",
+          "default": "0.2",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "≥ 0, finite",
+          "since": "M1",
+          "doc": "Longest drop in metres a character is pulled down to stay on the ground; 0 disables snapping."
+        },
+        {
+          "name": "step_height",
+          "type": "f32",
+          "default": "0.25",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "≥ 0, finite",
+          "since": "M1",
+          "doc": "Highest step in metres a character climbs; 0 disables stepping."
+        },
+        {
+          "name": "step_min_width",
+          "type": "f32",
+          "default": "0.1",
+          "required": false,
+          "writable": false,
+          "bindable": false,
+          "constructionOnly": true,
+          "range": "> 0, finite",
+          "since": "M1",
+          "doc": "Narrowest tread in metres a character steps onto."
+        }
+      ]
     },
     {
       "name": "Orthographic",
@@ -3880,6 +4033,24 @@
       "doc": "Instantaneous change of momentum in newton-seconds, at the centre of mass, applied at the start of the next tick."
     },
     {
+      "name": "move_character",
+      "params": [
+        {
+          "name": "displacement",
+          "type": "vec3"
+        },
+        {
+          "name": "rotation",
+          "type": "quat"
+        }
+      ],
+      "appliesTo": [
+        "Kinematic"
+      ],
+      "since": "M1",
+      "doc": "Moves the body by `displacement` metres for this tick, sliding along what it meets, stepping up stairs, staying on slopes and ground and riding a moving kinematic platform, then turns it to `rotation`. Gravity is not applied; add your own vertical motion. Several calls in one tick sum their displacements and the last rotation wins; the move replaces `set_kinematic_target` of the same tick (decisions 0214, 0217)."
+    },
+    {
       "name": "set_kinematic_target",
       "params": [
         {
@@ -3945,6 +4116,24 @@
       ],
       "since": "M1",
       "doc": "Angular velocity as of the last completed tick. Read-only."
+    },
+    {
+      "name": "ground_normal",
+      "type": "vec3",
+      "appliesTo": [
+        "Kinematic"
+      ],
+      "since": "M1",
+      "doc": "The surface normal of the ground found by the last completed `move_character`; zero when not grounded. Read-only."
+    },
+    {
+      "name": "grounded",
+      "type": "bool",
+      "appliesTo": [
+        "Kinematic"
+      ],
+      "since": "M1",
+      "doc": "Whether the last completed `move_character` found ground under the body; false before the first. Read-only."
     },
     {
       "name": "linear_velocity",

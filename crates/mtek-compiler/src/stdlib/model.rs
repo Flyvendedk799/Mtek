@@ -168,6 +168,10 @@ impl FieldFlags {
     pub const WRITABLE: FieldFlags = FieldFlags(2);
     pub const BINDABLE: FieldFlags = FieldFlags(4);
     pub const CONSTRUCTION_ONLY: FieldFlags = FieldFlags(8);
+    /// The documented default is applied by the consumer: a completed descriptor leaves the
+    /// field out when the program did not write it, so the consumer can tell "written" from
+    /// "defaulted" (the optional `character` object of a kinematic body, decision 0217).
+    pub const UNSET_WHEN_OMITTED: FieldFlags = FieldFlags(16);
 
     /// The flags set in `self` or in `other` (the `const` form of `|`).
     pub const fn union(self, other: FieldFlags) -> FieldFlags {
@@ -193,6 +197,10 @@ impl FieldFlags {
 
     pub const fn is_construction_only(self) -> bool {
         self.contains(Self::CONSTRUCTION_ONLY)
+    }
+
+    pub const fn is_unset_when_omitted(self) -> bool {
+        self.contains(Self::UNSET_WHEN_OMITTED)
     }
 }
 
@@ -275,6 +283,15 @@ pub enum FieldRule {
         field: &'static str,
         excluded_by: &'static str,
         code: Code,
+    },
+    /// The constant `field` must exceed `factor` times the constant `other` (`CapsuleCollider`:
+    /// `height` > 2 * `radius`, `E5124`). A missing field is `E5003`, not this rule.
+    ExceedsMultiple {
+        field: &'static str,
+        other: &'static str,
+        factor: u32,
+        code: Code,
+        help: &'static str,
     },
 }
 

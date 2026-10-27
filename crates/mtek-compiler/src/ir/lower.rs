@@ -17,10 +17,10 @@
 
 use super::lower_fn::SceneCtx;
 use super::model::{
-    Behavior, Binding, Body, BodyDesc, Camera, Collider, ColliderDesc, Const, Entity, Field, Item,
-    Light, LightKind, MaterialInstanceDesc, Mesh, MeshDesc, Module, Origin, Owner, Param,
-    Particles, Program, Projection, ProjectionDesc, Scene, SceneFields, Source, State,
-    StructFieldItem, StructItem, Symbol, UpdateClass, Value,
+    Behavior, Binding, Body, BodyDesc, Camera, CharacterDesc, Collider, ColliderDesc, Const,
+    Entity, Field, Item, Light, LightKind, MaterialInstanceDesc, Mesh, MeshDesc, Module, Origin,
+    Owner, Param, Particles, Program, Projection, ProjectionDesc, Scene, SceneFields, Source,
+    State, StructFieldItem, StructItem, Symbol, UpdateClass, Value,
 };
 use std::collections::BTreeMap;
 
@@ -81,7 +81,7 @@ pub(super) const LIGHT_SCHEMAS: [&str; 2] = ["DirectionalLight", "PointLight"];
 /// The body schemas lowered into [`BodyDesc`].
 pub(super) const BODY_SCHEMAS: [&str; 3] = ["Static", "Kinematic", "Dynamic"];
 /// The collider schemas lowered into [`ColliderDesc`].
-pub(super) const COLLIDER_SCHEMAS: [&str; 2] = ["BoxCollider", "SphereCollider"];
+pub(super) const COLLIDER_SCHEMAS: [&str; 3] = ["BoxCollider", "SphereCollider", "CapsuleCollider"];
 
 /// Why lowering failed: a description of the compiler defect.
 pub(super) type Defect = String;
@@ -1107,16 +1107,58 @@ pub(super) fn body_desc(what: &str, value: &ConstValue) -> Result<BodyDesc, Defe
     }
     match schema {
         "Static" => Ok(BodyDesc::Static),
-        "Kinematic" => Ok(BodyDesc::Kinematic),
+        "Kinematic" => Ok(BodyDesc::Kinematic {
+            character: character_desc(schema, fields)?,
+        }),
         "Dynamic" => Ok(BodyDesc::Dynamic {
             mass: f32_member(schema, fields, "mass")?,
             linear_damping: f32_member(schema, fields, "linear_damping")?,
             angular_damping: f32_member(schema, fields, "angular_damping")?,
+            continuous: bool_member(schema, fields, "continuous")?,
         }),
         other => Err(format!(
             "the body {other} of {what} is not lowered by this build"
         )),
     }
+}
+
+/// The character settings of a completed `Kinematic` descriptor: `None` when the program wrote
+/// none of the six fields (a completed descriptor leaves unwritten ones out), otherwise all six
+/// with the defaults of `spec/physics.md` section 2 for those it did not write.
+fn character_desc(schema: &str, fields: &Fields) -> Result<Option<CharacterDesc>, Defect> {
+    const NAMES: [&str; 6] = [
+        "max_slope",
+        "step_height",
+        "step_min_width",
+        "snap_to_ground",
+        "skin",
+        "carry",
+    ];
+    if !NAMES
+        .iter()
+        .any(|name| fields.iter().any(|(written, _)| written == name))
+    {
+        return Ok(None);
+    }
+    let number = |name: &str, default: f32| -> Result<f32, Defect> {
+        if fields.iter().any(|(written, _)| written == name) {
+            f32_member(schema, fields, name)
+        } else {
+            Ok(default)
+        }
+    };
+    Ok(Some(CharacterDesc {
+        max_slope: number("max_slope", 0.785_398_2)?,
+        step_height: number("step_height", 0.25)?,
+        step_min_width: number("step_min_width", 0.1)?,
+        snap_to_ground: number("snap_to_ground", 0.2)?,
+        skin: number("skin", 0.01)?,
+        carry: if fields.iter().any(|(written, _)| written == "carry") {
+            bool_member(schema, fields, "carry")?
+        } else {
+            true
+        },
+    }))
 }
 
 /// A completed collider descriptor (`spec/physics.md` section 2).
@@ -1139,6 +1181,13 @@ pub(super) fn collider_desc(what: &str, value: &ConstValue) -> Result<ColliderDe
         }),
         "SphereCollider" => Ok(ColliderDesc::Sphere {
             radius: f32_member(schema, fields, "radius")?,
+            sensor,
+            friction,
+            restitution,
+        }),
+        "CapsuleCollider" => Ok(ColliderDesc::Capsule {
+            radius: f32_member(schema, fields, "radius")?,
+            height: f32_member(schema, fields, "height")?,
             sensor,
             friction,
             restitution,

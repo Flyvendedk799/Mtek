@@ -272,6 +272,12 @@ impl Checker<'_> {
             "linear_velocity" => diagnostic
                 .note("a velocity is read as of the last completed tick")
                 .help("set it with `set_linear_velocity(v)`, or change it with `apply_impulse(v)`"),
+            "grounded" => diagnostic
+                .note("`grounded` is the result of the last completed `move_character`")
+                .help("move the body with `move_character(displacement, rotation)`; it is grounded when the move finds ground within `snap_to_ground`"),
+            "ground_normal" => diagnostic
+                .note("`ground_normal` is the result of the last completed `move_character`, zero when not grounded")
+                .help("move the body with `move_character(displacement, rotation)`"),
             _ => diagnostic
                 .note("the angular velocity is read as of the last completed tick; v0.1 has no command that sets it"),
         };
@@ -754,7 +760,7 @@ fn ownership_note(kind: BodyKind) -> (&'static str, Option<&'static str>) {
             None,
         ),
         BodyKind::Kinematic => (
-            "the pose of a kinematic body is set only with `set_kinematic_target` or `teleport`",
+            "the pose of a kinematic body is set only with `set_kinematic_target`, `move_character` or `teleport`",
             None,
         ),
         BodyKind::Static => (

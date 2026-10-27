@@ -1,0 +1,68 @@
+// A kinematic character with a capsule collider: move_character with collisions, the readable
+// grounded and ground_normal, the optional character settings, and per-body continuous
+// collision on a dynamic body.
+scene Demo {
+    state vertical: f32 = 0.0;
+    state landed: bool = false;
+    state slope: f32 = 0.0;
+    camera Main {
+        position: vec3(0.0, 4.0, 12.0);
+        target: vec3(0.0, 1.0, 0.0);
+    }
+    entity Floor {
+        mesh: Box { size: vec3(40.0, 0.2, 40.0) };
+        body: Static {};
+        collider: BoxCollider { size: vec3(40.0, 0.2, 40.0) };
+    }
+    entity Hero {
+        position: vec3(0.0, 1.0, 0.0);
+        mesh: Box { size: vec3(0.8, 1.8, 0.8) };
+        body: Kinematic { max_slope: 0.6; step_height: 0.3; carry: true; };
+        collider: CapsuleCollider { radius: 0.4; height: 1.8; friction: 0.0; };
+        fixed_update(dt: f32) {
+            if self.body.grounded {
+                vertical = 0.0;
+                landed = true;
+                slope = self.body.ground_normal.y;
+            } else {
+                vertical = vertical - 9.81 * dt;
+            }
+            self.body.move_character(vec3(2.0 * dt, vertical * dt, 0.0), quat.identity());
+        }
+        on key_down(Key.Space) {
+            vertical = 5.0;
+        }
+        on key_down(Key.R) {
+            Hero.body.teleport(vec3(0.0, 1.0, 0.0), quat.identity(), false);
+        }
+    }
+    entity Plain {
+        position: vec3(3.0, 0.5, 0.0);
+        mesh: Sphere { radius: 0.4 };
+        body: Kinematic {};
+        collider: SphereCollider { radius: 0.4 };
+        fixed_update(dt: f32) {
+            Plain.body.move_character(vec3(0.0, -1.0 * dt, 0.0), self.rotation);
+        }
+    }
+    entity Elevator {
+        position: vec3(-4.0, 0.2, 0.0);
+        mesh: Box { size: vec3(2.0, 0.2, 2.0) };
+        body: Kinematic { snap_to_ground: 0.0; skin: 0.02; };
+        collider: BoxCollider { size: vec3(2.0, 0.2, 2.0) };
+        fixed_update(dt: f32) {
+            self.body.set_kinematic_target(vec3(-4.0, 0.2 + sin(frame.time), 0.0), quat.identity());
+        }
+    }
+    entity Puck {
+        position: vec3(2.0, 2.0, 0.0);
+        mesh: Sphere { radius: 0.05 };
+        body: Dynamic { mass: 0.1; continuous: true; };
+        collider: SphereCollider { radius: 0.05 };
+        on collision_enter(other: entity_ref) {
+            other.body.move_character(vec3(0.0, 0.0, 0.1), quat.identity());
+            let up = other.body.grounded;
+            let normal: vec3 = other.body.ground_normal;
+        }
+    }
+}

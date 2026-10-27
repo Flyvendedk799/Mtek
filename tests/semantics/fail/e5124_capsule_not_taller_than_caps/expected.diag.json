@@ -1,0 +1,38 @@
+[
+  {
+    "code": "MTEK-E5124",
+    "file": "src/main.mtek",
+    "startByte": 306,
+    "endByte": 309,
+    "message": "Field 'height' of CapsuleCollider must be greater than 2 * 'radius' (1.0), but the value is 0.8.",
+    "related": [
+      {
+        "message": "'radius' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 285,
+        "endByte": 291
+      }
+    ],
+    "notes": [
+      "help: increase `height` or decrease `radius`; the height includes both caps, so a straight part needs `height > 2 * radius`"
+    ]
+  },
+  {
+    "code": "MTEK-E5124",
+    "file": "src/main.mtek",
+    "startByte": 445,
+    "endByte": 448,
+    "message": "Field 'height' of CapsuleCollider must be greater than 2 * 'radius' (1.0), but the value is 1.0.",
+    "related": [
+      {
+        "message": "'radius' is declared here",
+        "file": "src/main.mtek",
+        "startByte": 424,
+        "endByte": 430
+      }
+    ],
+    "notes": [
+      "help: increase `height` or decrease `radius`; the height includes both caps, so a straight part needs `height > 2 * radius`"
+    ]
+  }
+]

@@ -14,7 +14,7 @@
       }
     ],
     "notes": [
-      "commands for a Kinematic body: set_kinematic_target, teleport"
+      "commands for a Kinematic body: set_kinematic_target, teleport, move_character"
     ]
   },
   {
@@ -32,7 +32,7 @@
       }
     ],
     "notes": [
-      "commands for a Kinematic body: set_kinematic_target, teleport"
+      "commands for a Kinematic body: set_kinematic_target, teleport, move_character"
     ]
   }
 ]

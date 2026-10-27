@@ -6,8 +6,8 @@
     "endByte": 286,
     "message": "The body of 'Ball' has no command or property 'explode'.",
     "notes": [
-      "body commands: apply_impulse, apply_force, set_kinematic_target, teleport, set_linear_velocity",
-      "readable body properties: linear_velocity, angular_velocity"
+      "body commands: apply_impulse, apply_force, set_kinematic_target, teleport, set_linear_velocity, move_character",
+      "readable body properties: linear_velocity, angular_velocity, grounded, ground_normal"
     ]
   },
   {
@@ -17,8 +17,8 @@
     "endByte": 333,
     "message": "The body of 'Ball' has no command or property 'mass'.",
     "notes": [
-      "body commands: apply_impulse, apply_force, set_kinematic_target, teleport, set_linear_velocity",
-      "readable body properties: linear_velocity, angular_velocity"
+      "body commands: apply_impulse, apply_force, set_kinematic_target, teleport, set_linear_velocity, move_character",
+      "readable body properties: linear_velocity, angular_velocity, grounded, ground_normal"
     ]
   }
 ]

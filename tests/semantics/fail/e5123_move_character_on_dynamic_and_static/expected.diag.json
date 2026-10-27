@@ -1,0 +1,76 @@
+[
+  {
+    "code": "MTEK-E5123",
+    "file": "src/main.mtek",
+    "startByte": 294,
+    "endByte": 308,
+    "message": "`move_character` is not valid for 'Crate': it applies to Kinematic bodies, but 'Crate' has a Dynamic body.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 159,
+        "endByte": 176
+      }
+    ],
+    "notes": [
+      "commands for a Dynamic body: apply_impulse, apply_force, teleport, set_linear_velocity"
+    ]
+  },
+  {
+    "code": "MTEK-E5123",
+    "file": "src/main.mtek",
+    "startByte": 546,
+    "endByte": 560,
+    "message": "`move_character` is not valid for 'Wall': it applies to Kinematic bodies, but 'Wall' has a Static body.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 412,
+        "endByte": 428
+      }
+    ],
+    "notes": [
+      "static bodies take no commands: their pose is fixed at creation",
+      "help: make the body `Kinematic` for something the program moves, or `Dynamic` for something the solver moves"
+    ]
+  },
+  {
+    "code": "MTEK-E5123",
+    "file": "src/main.mtek",
+    "startByte": 666,
+    "endByte": 674,
+    "message": "`grounded` is not valid for 'Crate': it applies to Kinematic bodies, but 'Crate' has a Dynamic body.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 159,
+        "endByte": 176
+      }
+    ],
+    "notes": [
+      "commands for a Dynamic body: apply_impulse, apply_force, teleport, set_linear_velocity"
+    ]
+  },
+  {
+    "code": "MTEK-E5123",
+    "file": "src/main.mtek",
+    "startByte": 707,
+    "endByte": 720,
+    "message": "`ground_normal` is not valid for 'Wall': it applies to Kinematic bodies, but 'Wall' has a Static body.",
+    "related": [
+      {
+        "message": "the body is declared here",
+        "file": "src/main.mtek",
+        "startByte": 412,
+        "endByte": 428
+      }
+    ],
+    "notes": [
+      "static bodies take no commands: their pose is fixed at creation",
+      "help: make the body `Kinematic` for something the program moves, or `Dynamic` for something the solver moves"
+    ]
+  }
+]

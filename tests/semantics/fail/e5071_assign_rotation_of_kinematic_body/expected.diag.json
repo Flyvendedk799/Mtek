@@ -14,7 +14,7 @@
       }
     ],
     "notes": [
-      "the pose of a kinematic body is set only with `set_kinematic_target` or `teleport`"
+      "the pose of a kinematic body is set only with `set_kinematic_target`, `move_character` or `teleport`"
     ]
   }
 ]

@@ -1,0 +1,158 @@
+program (entry scene src/main.mtek::Demo)
+  module src/main.mtek @1:1-69:1
+    scene Demo [src/main.mtek::Demo] @4:1-68:2
+      fields
+        clear_color = color(0.0, 0.0, 0.0, 1.0) (default @4:1-68:2)
+      camera Main [src/main.mtek::Demo.Main] active @8:5-11:6
+        position = vec3(0.0, 4.0, 12.0) (written @9:9-9:40)
+        target = vec3(0.0, 1.0, 0.0) (written @10:9-10:37)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @8:5-11:6)
+        projection = Perspective { fov_y: 0.9, near: 0.1, far: 1000.0 } (default @8:5-11:6)
+      entity #0 Floor [src/main.mtek::Demo.Floor] root @12:5-16:6
+        position = vec3(0.0, 0.0, 0.0) (default @12:5-16:6)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @12:5-16:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @12:5-16:6)
+        visible = true (default @12:5-16:6)
+        mesh = Box { size: vec3(40.0, 0.2, 40.0) } (written @13:9-13:51)
+        material = std/materials.mtek::Unlit (default @12:5-16:6)
+          color: color = color(1.0, 1.0, 1.0, 1.0)
+        body = Static {} (written @14:9-14:25)
+        collider = BoxCollider { size: vec3(40.0, 0.2, 40.0), sensor: false, friction: 0.5, restitution: 0.0 } (written @15:9-15:63)
+      entity #1 Hero [src/main.mtek::Demo.Hero] root @17:5-38:6
+        position = vec3(0.0, 1.0, 0.0) (written @18:9-18:39)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @17:5-38:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @17:5-38:6)
+        visible = true (default @17:5-38:6)
+        mesh = Box { size: vec3(0.8, 1.8, 0.8) } (written @19:9-19:49)
+        material = std/materials.mtek::Unlit (default @17:5-38:6)
+          color: color = color(1.0, 1.0, 1.0, 1.0)
+        body = Kinematic { max_slope: 0.6, step_height: 0.3, step_min_width: 0.1, snap_to_ground: 0.2, skin: 0.01, carry: true } (written @20:9-20:76)
+        collider = CapsuleCollider { radius: 0.4, height: 1.8, sensor: false, friction: 0.0, restitution: 0.0 } (written @21:9-21:80)
+      entity #2 Plain [src/main.mtek::Demo.Plain] root @39:5-47:6
+        position = vec3(3.0, 0.5, 0.0) (written @40:9-40:39)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @39:5-47:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @39:5-47:6)
+        visible = true (default @39:5-47:6)
+        mesh = Sphere { radius: 0.4, segments: 32, rings: 16 } (written @41:9-41:38)
+        material = std/materials.mtek::Unlit (default @39:5-47:6)
+          color: color = color(1.0, 1.0, 1.0, 1.0)
+        body = Kinematic {} (written @42:9-42:28)
+        collider = SphereCollider { radius: 0.4, sensor: false, friction: 0.5, restitution: 0.0 } (written @43:9-43:50)
+      entity #3 Elevator [src/main.mtek::Demo.Elevator] root @48:5-56:6
+        position = vec3(-4.0, 0.2, 0.0) (written @49:9-49:40)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @48:5-56:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @48:5-56:6)
+        visible = true (default @48:5-56:6)
+        mesh = Box { size: vec3(2.0, 0.2, 2.0) } (written @50:9-50:49)
+        material = std/materials.mtek::Unlit (default @48:5-56:6)
+          color: color = color(1.0, 1.0, 1.0, 1.0)
+        body = Kinematic { max_slope: 0.7853982, step_height: 0.25, step_min_width: 0.1, snap_to_ground: 0.0, skin: 0.02, carry: true } (written @51:9-51:62)
+        collider = BoxCollider { size: vec3(2.0, 0.2, 2.0), sensor: false, friction: 0.5, restitution: 0.0 } (written @52:9-52:61)
+      entity #4 Puck [src/main.mtek::Demo.Puck] root @57:5-67:6
+        position = vec3(2.0, 2.0, 0.0) (written @58:9-58:39)
+        rotation = quat(0.0, 0.0, 0.0, 1.0) (default @57:5-67:6)
+        scale = vec3(1.0, 1.0, 1.0) (default @57:5-67:6)
+        visible = true (default @57:5-67:6)
+        mesh = Sphere { radius: 0.05, segments: 32, rings: 16 } (written @59:9-59:39)
+        material = std/materials.mtek::Unlit (default @57:5-67:6)
+          color: color = color(1.0, 1.0, 1.0, 1.0)
+        body = Dynamic { mass: 0.1, linear_damping: 0.0, angular_damping: 0.05, continuous: true } (written @60:9-60:56)
+        collider = SphereCollider { radius: 0.05, sensor: false, friction: 0.5, restitution: 0.0 } (written @61:9-61:51)
+      state vertical: f32 = 0.0 [src/main.mtek::Demo.vertical] @5:5-5:31
+      state landed: bool = false [src/main.mtek::Demo.landed] @6:5-6:32
+      state slope: f32 = 0.0 [src/main.mtek::Demo.slope] @7:5-7:28
+      fixed_update of entity#1 [src/main.mtek::Demo.Hero.fixed_update] @22:9-31:10
+        local #0 dt: f32 (param) @22:22-22:24
+        if entity#1.body.grounded @23:13-29:14
+          state.vertical = 0.0 @24:17-24:32
+          state.landed = true @25:17-25:31
+          state.slope = (entity#1.body.ground_normal.y): f32 @26:17-26:51
+        else
+          state.vertical = (state.vertical - (9.81 * dt#0): f32): f32 @28:17-28:49
+        (entity#1.body.move_character((vec3((2.0 * dt#0): f32, (state.vertical * dt#0): f32, 0.0)): vec3, quat(0.0, 0.0, 0.0, 1.0))): () @30:13-30:91
+      on key_down(Space) of entity#1 [src/main.mtek::Demo.Hero.on_key_down_Space] @32:9-34:10
+        state.vertical = 5.0 @33:13-33:28
+      on key_down(KeyR) of entity#1 [src/main.mtek::Demo.Hero.on_key_down_R] @35:9-37:10
+        (entity#1.body.teleport(vec3(0.0, 1.0, 0.0), quat(0.0, 0.0, 0.0, 1.0), false)): () @36:13-36:77
+      fixed_update of entity#2 [src/main.mtek::Demo.Plain.fixed_update] @44:9-46:10
+        local #0 dt: f32 (param) @44:22-44:24
+        (entity#2.body.move_character((vec3(0.0, (-1.0 * dt#0): f32, 0.0)): vec3, entity#2.rotation)): () @45:13-45:81
+      fixed_update of entity#3 [src/main.mtek::Demo.Elevator.fixed_update] @53:9-55:10
+        local #0 dt: f32 (param) @53:22-53:24
+        (entity#3.body.set_kinematic_target((vec3(-4.0, (0.2 + (sin(frame.time)): f32): f32, 0.0)): vec3, quat(0.0, 0.0, 0.0, 1.0))): () @54:13-54:101
+      on collision_enter of entity#4 [src/main.mtek::Demo.Puck.on_collision_enter] @62:9-66:10
+        local #0 other: entity_ref (param) @62:28-62:33
+        local #1 up: bool (let) @64:17-64:19
+        local #2 normal: vec3 (let) @65:17-65:23
+        (other#0.body.move_character(vec3(0.0, 0.0, 0.1), quat(0.0, 0.0, 0.0, 1.0))): () @63:13-63:77
+        let up#1 = other#0.body.grounded @64:13-64:42
+        let normal#2 = other#0.body.ground_normal @65:13-65:57
+  module std/materials.mtek @1:1-64:1
+    material Unlit [std/materials.mtek::Unlit] @5:8-8:2
+      param #0 color: color = color(1.0, 1.0, 1.0, 1.0) @6:5-6:34
+      block material:std/materials.mtek::Unlit MtekParams_2b212d15_Unlit (size 16, align 16)
+      fragment -> color [std/materials.mtek::Unlit.fragment] reads none @7:5-7:63
+        local #0 surface: SurfaceInput (param) @7:14-7:21
+        return param color#0 @7:48-7:61
+    material Pbr [std/materials.mtek::Pbr] @10:8-39:2
+      param #0 base_color: color = color(1.0, 1.0, 1.0, 1.0) @11:5-11:39
+      param #1 metallic: f32 = 0.0 @12:5-12:31
+      param #2 roughness: f32 = 0.5 @13:5-13:32
+      param #3 base_color_texture: texture = texture.white() @14:5-14:57
+      param #4 base_color_sampler: sampler = sampler.linear_repeat() @15:5-15:65
+      param #5 metallic_roughness_texture: texture = texture.white() @16:5-16:65
+      param #6 metallic_roughness_sampler: sampler = sampler.linear_repeat() @17:5-17:73
+      param #7 normal_texture: texture = texture.white() @18:5-18:53
+      param #8 normal_sampler: sampler = sampler.linear_repeat() @19:5-19:61
+      param #9 occlusion_texture: texture = texture.white() @20:5-20:56
+      param #10 occlusion_sampler: sampler = sampler.linear_repeat() @21:5-21:64
+      param #11 emissive_texture: texture = texture.white() @22:5-22:55
+      param #12 emissive_sampler: sampler = sampler.linear_repeat() @23:5-23:63
+      param #13 normal_scale: f32 = 0.0 @26:5-26:35
+      param #14 occlusion_strength: f32 = 1.0 @27:5-27:41
+      param #15 emissive: color = color(0.0, 0.0, 0.0, 1.0) @28:5-28:37
+      block material:std/materials.mtek::Pbr MtekParams_2b212d15_Pbr (size 48, align 16)
+      fragment -> color [std/materials.mtek::Pbr.fragment] reads world_position, world_normal, uv, world_tangent @29:5-38:6
+        local #0 surface: SurfaceInput (param) @29:14-29:21
+        local #1 texel: vec4 (let) @30:13-30:18
+        local #2 albedo: color (let) @31:13-31:19
+        local #3 mr: vec4 (let) @32:13-32:15
+        local #4 normal: vec3 (let) @33:13-33:19
+        local #5 ao: f32 (let) @34:13-34:15
+        local #6 emissive_texel: vec3 (let) @35:13-35:27
+        local #7 emission: vec3 (let) @36:13-36:21
+        let texel#1 = (sample_mip(param base_color_texture#3, param base_color_sampler#4, (surface#0.uv): vec2)): vec4 @30:9-30:84
+        let albedo#2 = (color.linear(((param base_color#0.rgb): vec3 * (texel#1.xyz): vec3): vec3, (param base_color#0.a): f32)): color @31:9-31:77
+        let mr#3 = (sample_mip(param metallic_roughness_texture#5, param metallic_roughness_sampler#6, (surface#0.uv): vec2)): vec4 @32:9-32:97
+        let normal#4 = ((sample_mip(param normal_texture#7, param normal_sampler#8, (surface#0.uv): vec2)): vec4.xyz): vec3 @33:9-33:81
+        let ao#5 = ((sample_mip(param occlusion_texture#9, param occlusion_sampler#10, (surface#0.uv): vec2)): vec4.x): f32 @34:9-34:81
+        let emissive_texel#6 = ((sample_mip(param emissive_texture#11, param emissive_sampler#12, (surface#0.uv): vec2)): vec4.xyz): vec3 @35:9-35:93
+        let emission#7 = ((param emissive#15.rgb): vec3 * emissive_texel#6): vec3 @36:9-36:54
+        return (lighting.pbr_mapped(surface#0, albedo#2, (param metallic#1 * (mr#3.z): f32): f32, (param roughness#2 * (mr#3.y): f32): f32, normal#4, param normal_scale#13, (1.0 + ((clamp(param occlusion_strength#14, 0.0, 1.0)): f32 * (ao#5 - 1.0): f32): f32): f32, emission#7)): color @37:9-37:176
+    material Sprite [std/materials.mtek::Sprite] @44:8-63:2
+      param #0 sheet: texture = texture.white() @45:5-45:44
+      param #1 sheet_sampler: sampler = sampler.nearest_clamp() @46:5-46:60
+      param #2 tint: color = color(1.0, 1.0, 1.0, 1.0) @47:5-47:33
+      param #3 cell: f32 = 0.0 @48:5-48:27
+      param #4 columns: f32 = 1.0 @49:5-49:30
+      param #5 rows: f32 = 1.0 @50:5-50:27
+      block material:std/materials.mtek::Sprite MtekParams_2b212d15_Sprite (size 32, align 16)
+      fragment -> color [std/materials.mtek::Sprite.fragment] reads uv @51:5-62:6
+        local #0 surface: SurfaceInput (param) @51:14-51:21
+        local #1 cols: f32 (let) @53:13-53:17
+        local #2 rws: f32 (let) @54:13-54:16
+        local #3 count: f32 (let) @55:13-55:18
+        local #4 index: f32 (let) @56:13-56:18
+        local #5 row: f32 (let) @57:13-57:16
+        local #6 column: f32 (let) @58:13-58:19
+        local #7 uv: vec2 (let) @59:13-59:15
+        local #8 texel: vec4 (let) @60:13-60:18
+        let cols#1 = (clamp((floor(param columns#4)): f32, 1.0, 64.0)): f32 @53:9-53:53
+        let rws#2 = (clamp((floor(param rows#5)): f32, 1.0, 64.0)): f32 @54:9-54:49
+        let count#3 = (cols#1 * rws#2): f32 @55:9-55:32
+        let index#4 = (clamp((floor((param cell#3 - (count#3 * (floor((param cell#3 / count#3): f32)): f32): f32): f32)): f32, 0.0, (count#3 - 1.0): f32)): f32 @56:9-56:88
+        let row#5 = (floor((index#4 / cols#1): f32)): f32 @57:9-57:39
+        let column#6 = (index#4 - (row#5 * cols#1): f32): f32 @58:9-58:41
+        let uv#7 = (((surface#0.uv): vec2 + (vec2(column#6, row#5)): vec2): vec2 / (vec2(cols#1, rws#2)): vec2): vec2 @59:9-59:69
+        let texel#8 = (sample(param sheet#0, param sheet_sampler#1, uv#7)): vec4 @60:9-60:54
+        return (color.linear(((param tint#2.rgb): vec3 * (texel#8.xyz): vec3): vec3, ((param tint#2.a): f32 * (texel#8.w): f32): f32)): color @61:9-61:69

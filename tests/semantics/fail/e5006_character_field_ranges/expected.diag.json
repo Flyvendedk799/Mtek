@@ -1,0 +1,58 @@
+[
+  {
+    "code": "MTEK-E5006",
+    "file": "src/main.mtek",
+    "startByte": 294,
+    "endByte": 297,
+    "message": "Field 'max_slope' of Kinematic must be between 0 and 1.5707964 and finite, but the value is 2.0."
+  },
+  {
+    "code": "MTEK-E5006",
+    "file": "src/main.mtek",
+    "startByte": 451,
+    "endByte": 455,
+    "message": "Field 'step_height' of Kinematic must be at least 0 and finite, but the value is -0.1."
+  },
+  {
+    "code": "MTEK-E5006",
+    "file": "src/main.mtek",
+    "startByte": 473,
+    "endByte": 476,
+    "message": "Field 'step_min_width' of Kinematic must be greater than 0 and finite, but the value is 0.0."
+  },
+  {
+    "code": "MTEK-E5006",
+    "file": "src/main.mtek",
+    "startByte": 494,
+    "endByte": 498,
+    "message": "Field 'snap_to_ground' of Kinematic must be at least 0 and finite, but the value is -1.0."
+  },
+  {
+    "code": "MTEK-E5006",
+    "file": "src/main.mtek",
+    "startByte": 506,
+    "endByte": 509,
+    "message": "Field 'skin' of Kinematic must be greater than 0 and finite, but the value is 0.0."
+  },
+  {
+    "code": "MTEK-E5006",
+    "file": "src/main.mtek",
+    "startByte": 558,
+    "endByte": 561,
+    "message": "Field 'radius' of CapsuleCollider must be greater than 0 and finite, but the value is 0.0."
+  },
+  {
+    "code": "MTEK-E5006",
+    "file": "src/main.mtek",
+    "startByte": 571,
+    "endByte": 575,
+    "message": "Field 'height' of CapsuleCollider must be greater than 0 and finite, but the value is -1.0."
+  },
+  {
+    "code": "MTEK-E5006",
+    "file": "src/main.mtek",
+    "startByte": 667,
+    "endByte": 671,
+    "message": "Field 'max_slope' of Kinematic must be between 0 and 1.5707964 and finite, but the value is -0.5."
+  }
+]
