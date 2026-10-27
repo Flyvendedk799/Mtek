@@ -177,6 +177,52 @@ describe("the order of a tick with character moves (spec/physics.md section 4)",
   });
 });
 
+describe("the rotation a move asks for", () => {
+  /** A mover whose fixed_update asks for `asked`; after the first step a platform has turned the body by 90 degrees. */
+  async function turnedAfterIssue(asked: Quat): Promise<MountedPhysics> {
+    const m = await mountPhysics({ manifest: characters(), entityFixed: { [MOVER]: (ctx, self) => ctx.body(self, 0).moveCharacter(vec(0, 0, 0.5), asked) } });
+    m.world.onStep = (world) => {
+      world.body(MOVER).pose = { position: vec(0, 0, 0), rotation: YAW_90 };
+    };
+    return m;
+  }
+
+  it("keeps the rotation the body has when the move is resolved if it is the one the body had when the move was issued", async () => {
+    // fixed_update of tick 1 asks for the pose it read (the identity); the step then turns the body (the carried yaw of
+    // a platform); tick 2 resolves the move. Asking for the stale rotation would undo the turn: the character would
+    // turn at half the platform's rate.
+    const m = await turnedAfterIssue(IDENTITY);
+    tick(m);
+    tick(m);
+    expect(m.world.moves[0]?.options?.rotation).toEqual(YAW_90);
+    m.app.dispose();
+  });
+
+  it("is the rotation asked for when it differs from the one the body had", async () => {
+    const m = await turnedAfterIssue({ x: 0, y: 1, z: 0, w: 0 });
+    tick(m);
+    tick(m);
+    expect(m.world.moves[0]?.options?.rotation).toEqual({ x: 0, y: 1, z: 0, w: 0 });
+    m.app.dispose();
+  });
+
+  it("the last of several moves decides", async () => {
+    const m = await mountPhysics({
+      manifest: characters(),
+      keys: {
+        KeyM: (ctx) => {
+          const body = ctx.body(mover(ctx), 0);
+          body.moveCharacter(vec(1, 0, 0), IDENTITY);
+          body.moveCharacter(vec(0, 0, 1), YAW_90);
+        },
+      },
+    });
+    press(m, "KeyM");
+    expect(m.world.moves[0]?.options?.rotation).toEqual(YAW_90);
+    m.app.dispose();
+  });
+});
+
 describe("several moves of one body in one tick", () => {
   it("sum their displacements and the last rotation wins", async () => {
     const m = await mountPhysics({

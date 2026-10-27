@@ -10013,7 +10013,11 @@ var CHARACTER_DEFAULTS = Object.freeze({
   snapToGround: 0.2,
   skin: 0.01,
   carry: !0
-}), ZERO = Object.freeze({ x: 0, y: 0, z: 0 }), f32 = Math.fround, MIN_ROTATION_LENGTH_SQUARED = 1e-20;
+});
+function sameRotation(a, b) {
+  return Math.abs(a.x - b.x) <= 1e-6 && Math.abs(a.y - b.y) <= 1e-6 && Math.abs(a.z - b.z) <= 1e-6 && Math.abs(a.w - b.w) <= 1e-6;
+}
+var ZERO = Object.freeze({ x: 0, y: 0, z: 0 }), f32 = Math.fround, MIN_ROTATION_LENGTH_SQUARED = 1e-20;
 function bodyDesc(body, continuous) {
   return body.kind === "dynamic" ? {
     kind: "dynamic",
@@ -10107,7 +10111,8 @@ var SUPPORTED = {
       character: characterSettings(body),
       grounded: !1,
       groundNormal: ZERO,
-      unsupportedReported: !1
+      unsupportedReported: !1,
+      rotationRead: record2.rotation
     };
     this.bodies[ref.slot] = entry;
     let pose = { position: record2.position, rotation: record2.rotation };
@@ -10203,7 +10208,8 @@ var SUPPORTED = {
       );
       return;
     }
-    this.enqueue(entry, spanId, "move_character", { category: "characterMove", target: entry.ref, displacement, rotation: rotation2 }, [displacement, rotation2]);
+    let keepRotation = entry.rotationRead !== void 0 && sameRotation(entry.rotationRead, rotation2);
+    this.enqueue(entry, spanId, "move_character", { category: "characterMove", target: entry.ref, displacement, rotation: rotation2, keepRotation }, [displacement, rotation2]);
   }
   // ---- the tick ----
   /**
@@ -10219,10 +10225,10 @@ var SUPPORTED = {
       if (entry === void 0) continue;
       let pending = moves.get(entry);
       if (pending === void 0)
-        moves.set(entry, { displacement: command.displacement, rotation: command.rotation, applied: !1 });
+        moves.set(entry, { displacement: command.displacement, rotation: command.rotation, keepRotation: command.keepRotation, applied: !1 });
       else {
         let { displacement: sum } = pending;
-        pending.displacement = frozenVec3(sum.x + command.displacement.x, sum.y + command.displacement.y, sum.z + command.displacement.z), pending.rotation = command.rotation;
+        pending.displacement = frozenVec3(sum.x + command.displacement.x, sum.y + command.displacement.y, sum.z + command.displacement.z), pending.rotation = command.rotation, pending.keepRotation = command.keepRotation;
       }
     }
     for (let command of batch) {
@@ -10271,7 +10277,7 @@ var SUPPORTED = {
       stepHeight: settings.stepHeight,
       stepMinWidth: settings.stepMinWidth,
       carry: settings.carry,
-      rotation: move.rotation
+      rotation: move.keepRotation ? from.rotation : move.rotation
     });
     if (result === void 0) return;
     let position = frozenVec3(from.position.x + result.displacement.x, from.position.y + result.displacement.y, from.position.z + result.displacement.z), rotation2 = result.rotation;
@@ -10299,7 +10305,9 @@ var SUPPORTED = {
       }
       let record2 = world.recordAt(entry.ref.slot);
       if (record2 === void 0) continue;
-      setter.setTransform(record2, "position", frozenVec3(pose.position.x, pose.position.y, pose.position.z)), setter.setTransform(record2, "rotation", Object.freeze({ x: f32(pose.rotation.x), y: f32(pose.rotation.y), z: f32(pose.rotation.z), w: f32(pose.rotation.w) }));
+      setter.setTransform(record2, "position", frozenVec3(pose.position.x, pose.position.y, pose.position.z));
+      let rotation2 = Object.freeze({ x: f32(pose.rotation.x), y: f32(pose.rotation.y), z: f32(pose.rotation.z), w: f32(pose.rotation.w) });
+      setter.setTransform(record2, "rotation", rotation2), entry.rotationRead = rotation2;
       let velocities = this.physics.readVelocities(entry.handle);
       entry.linear = frozenVec3(velocities.linear.x, velocities.linear.y, velocities.linear.z), entry.angular = frozenVec3(velocities.angular.x, velocities.angular.y, velocities.angular.z);
     }

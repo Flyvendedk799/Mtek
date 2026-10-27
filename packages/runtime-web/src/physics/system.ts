@@ -115,13 +115,22 @@ interface BodyEntry {
   groundNormal: Vec3;
   /** `E8105` was reported for this body: the loaded adapter cannot move characters (once per body). */
   unsupportedReported: boolean;
+  /** The rotation the entity's record got at the last write-back: what a program reading `self.rotation` sees. */
+  rotationRead: Quat | undefined;
 }
 
 /** A character move of one body in one tick: the displacements of its commands summed, the last rotation. */
 interface PendingMove {
   displacement: Vec3;
   rotation: Quat;
+  /** The rotation asked for is the one the body had when the command was issued: keep whatever it has when the move is resolved. */
+  keepRotation: boolean;
   applied: boolean;
+}
+
+/** Whether two rotations are the same to the precision of the pose a program reads (binary32 components). */
+function sameRotation(a: Quat, b: Quat): boolean {
+  return Math.abs(a.x - b.x) <= 1e-6 && Math.abs(a.y - b.y) <= 1e-6 && Math.abs(a.z - b.z) <= 1e-6 && Math.abs(a.w - b.w) <= 1e-6;
 }
 
 const ZERO: Vec3 = Object.freeze({ x: 0, y: 0, z: 0 });
@@ -255,6 +264,7 @@ export class PhysicsSystem implements BodyService {
       grounded: false,
       groundNormal: ZERO,
       unsupportedReported: false,
+      rotationRead: record.rotation,
     };
     this.bodies[ref.slot] = entry;
     const pose: Pose = { position: record.position, rotation: record.rotation };
@@ -362,7 +372,11 @@ export class PhysicsSystem implements BodyService {
       );
       return;
     }
-    this.enqueue(entry, spanId, "move_character", { category: "characterMove", target: entry.ref, displacement, rotation }, [displacement, rotation]);
+    // A program that passes back the rotation it read (`self.rotation`) means "keep it". What it read is one tick old by
+    // the time the move is resolved, so a platform that turned in between would be undone and the character would turn
+    // at half the platform's rate (decision 0218): the move keeps the rotation the body has when it is resolved.
+    const keepRotation = entry.rotationRead !== undefined && sameRotation(entry.rotationRead, rotation);
+    this.enqueue(entry, spanId, "move_character", { category: "characterMove", target: entry.ref, displacement, rotation, keepRotation }, [displacement, rotation]);
   }
 
   // ---- the tick ----
@@ -381,11 +395,12 @@ export class PhysicsSystem implements BodyService {
       if (entry === undefined) continue;
       const pending = moves.get(entry);
       if (pending === undefined) {
-        moves.set(entry, { displacement: command.displacement, rotation: command.rotation, applied: false });
+        moves.set(entry, { displacement: command.displacement, rotation: command.rotation, keepRotation: command.keepRotation, applied: false });
       } else {
         const { displacement: sum } = pending;
         pending.displacement = frozenVec3(sum.x + command.displacement.x, sum.y + command.displacement.y, sum.z + command.displacement.z);
         pending.rotation = command.rotation;
+        pending.keepRotation = command.keepRotation;
       }
     }
     for (const command of batch) {
@@ -445,7 +460,7 @@ export class PhysicsSystem implements BodyService {
       stepHeight: settings.stepHeight,
       stepMinWidth: settings.stepMinWidth,
       carry: settings.carry,
-      rotation: move.rotation,
+      rotation: move.keepRotation ? from.rotation : move.rotation,
     });
     if (result === undefined) return;
     const position = frozenVec3(from.position.x + result.displacement.x, from.position.y + result.displacement.y, from.position.z + result.displacement.z);
@@ -482,7 +497,9 @@ export class PhysicsSystem implements BodyService {
       const record = world.recordAt(entry.ref.slot);
       if (record === undefined) continue;
       setter.setTransform(record, "position", frozenVec3(pose.position.x, pose.position.y, pose.position.z));
-      setter.setTransform(record, "rotation", Object.freeze({ x: f32(pose.rotation.x), y: f32(pose.rotation.y), z: f32(pose.rotation.z), w: f32(pose.rotation.w) }));
+      const rotation = Object.freeze({ x: f32(pose.rotation.x), y: f32(pose.rotation.y), z: f32(pose.rotation.z), w: f32(pose.rotation.w) });
+      setter.setTransform(record, "rotation", rotation);
+      entry.rotationRead = rotation;
       const velocities = this.physics.readVelocities(entry.handle);
       entry.linear = frozenVec3(velocities.linear.x, velocities.linear.y, velocities.linear.z);
       entry.angular = frozenVec3(velocities.angular.x, velocities.angular.y, velocities.angular.z);
