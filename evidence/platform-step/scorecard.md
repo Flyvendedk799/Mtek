@@ -4,6 +4,22 @@ Date: 2026-10-27. This records an implementation increment against the supplied
 ten-item platform request. **The entire request is not complete.** Existing frozen
 AI benchmark evidence was not modified or used as source examples.
 
+**Areas complete: 1 of 10** (area 6, movement and spatial queries). The other nine remain
+partial; see the table under "Request acceptance status".
+
+The [movement completion](../../spec/decisions/0214-complete-character-movement.md)
+(decisions 0214–0218) closes area 6 against an acceptance contract written before the
+work. Programs move kinematic characters with `move_character` and read `grounded`;
+hosts query rays, shapes, contacts and collision groups by entity ID; kinematic
+platforms carry characters by translation and yaw. A real-engine corpus generates the
+published operating ranges ([7.2](../../spec/physics.md)), the CCD lane matrix fixes
+D06/D08 ([7.1](../../spec/physics.md)), and
+[`examples/character-movement`](../../examples/character-movement/README.md) passes
+11 browser checks on Radeon and SwiftShader, bit-identical across frame rates. The
+full local gate passes except `specs/m4/configurator.spec.ts:230` (live textures 6 vs
+3 after resize), which fails identically on the preceding `main` (`e31c846a`) and is
+a rendering follow-up, not part of this area.
+
 The [compute continuation](shader-authoring/compute-continuation-2026-10-27/checkpoint.md)
 revalidates the current code on both desktop backends and adds shadow restoration
 after pending dispatch plus a second changed output through a recovered handle.

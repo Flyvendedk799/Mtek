@@ -1,6 +1,6 @@
 # 0214 — Complete character movement and spatial queries
 
-Status: accepted contract. Date: 2026-10-27. Extends 0063, 0066, 0068 and 0193.
+Status: accepted contract; **met** on 2026-10-27 by 0215–0218 (scorecard area 6 done). Date: 2026-10-27. Extends 0063, 0066, 0068 and 0193.
 Defines what "done" means for platform scorecard area 6 (movement and spatial
 queries) and splits the work into 0215 (adapter, corpus and operating ranges),
 0216 (continuous collision coverage), 0217 (language, runtime and host API) and
