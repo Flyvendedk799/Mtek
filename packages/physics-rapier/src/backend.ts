@@ -125,6 +125,9 @@ class RapierWorld implements PhysicsWorld {
         requirePositive(collider.shape.radius, "the sphere radius");
         colliderDesc = RAPIER.ColliderDesc.ball(collider.shape.radius);
         break;
+      case "capsule":
+        colliderDesc = RAPIER.ColliderDesc.capsule(capsuleHalfHeight(collider.shape), collider.shape.radius);
+        break;
     }
 
     // Row "sensor, friction, restitution".
@@ -233,6 +236,7 @@ class RapierWorld implements PhysicsWorld {
     this.alive();requirePose(pose,"query pose");requireVec3(displacement,"query displacement");
     let query:RAPIER.Shape;
     if(shape.kind==="sphere"){requirePositive(shape.radius,"query radius");query=new RAPIER.Ball(shape.radius);}
+    else if(shape.kind==="capsule")query=new RAPIER.Capsule(capsuleHalfHeight(shape),shape.radius);
     else {requirePositive(shape.size.x,"query size x");requirePositive(shape.size.y,"query size y");requirePositive(shape.size.z,"query size z");query=new RAPIER.Cuboid(shape.size.x/2,shape.size.y/2,shape.size.z/2);}
     const flags=this.queryFlags(filter),exclude=filter.exclude===undefined?undefined:this.record(filter.exclude).body;
     this.refreshQueries();
@@ -254,7 +258,8 @@ class RapierWorld implements PhysicsWorld {
       controller.computeColliderMovement(this.world.getCollider(record.colliderHandle),displacement,flags,options.groups,collider=>collider.handle!==exclude);
       const contacts:ShapeHit[]=[];
       for(let i=0;i<controller.numComputedCollisions();i++) {const hit=controller.computedCollision(i);if(hit?.collider===null||hit===null)continue;contacts.push({userId:this.userIds.get(hit.collider.handle)!,fraction:hit.toi,normal:toVec3(hit.normal1),point:toVec3(hit.witness1)});}
-      return {displacement:toVec3(controller.computedMovement()),grounded:controller.computedGrounded(),contacts};
+      // Support, carry and rotation (decision 0214 steps 1-2) are decision 0215 work: no carry yet.
+      return {displacement:toVec3(controller.computedMovement()),grounded:controller.computedGrounded(),contacts,carried:{x:0,y:0,z:0},carriedYaw:0,rotation:options.rotation??toQuat(record.body.rotation())};
     }finally{this.world.removeCharacterController(controller);}
   }
   contacts(h:BodyHandle):readonly PhysicsContact[] {
@@ -300,6 +305,13 @@ class RapierWorld implements PhysicsWorld {
     if (record === undefined) throw new Error(`physics: unknown body handle ${h}`);
     return record;
   }
+}
+
+/** Rapier's capsule half-height: the cylindrical half-segment of a capsule whose full height includes both caps. */
+function capsuleHalfHeight(shape:{readonly radius:number;readonly height:number}):number {
+  requirePositive(shape.radius,"the capsule radius");requirePositive(shape.height,"the capsule height");
+  if(!(shape.height>2*shape.radius))throw new RangeError("physics: a capsule height must exceed twice its radius");
+  return shape.height/2-shape.radius;
 }
 
 /** The Rapier backend. Construct it only after `RAPIER.init()` resolved (see `loadPhysics`). */

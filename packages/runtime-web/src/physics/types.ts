@@ -43,7 +43,9 @@ export type BodyDesc =
 export interface ColliderDesc {
   readonly shape:
     | { readonly kind: "box"; readonly size: Vec3 }
-    | { readonly kind: "sphere"; readonly radius: number };
+    | { readonly kind: "sphere"; readonly radius: number }
+    /** Axis along local Y; `height` is the full height including both caps and exceeds `2 * radius` (decision 0214). */
+    | { readonly kind: "capsule"; readonly radius: number; readonly height: number };
   readonly sensor: boolean;
   readonly friction: number;
   readonly restitution: number;
@@ -62,6 +64,8 @@ export interface PhysicsBackend {
 export interface PhysicsWorld {
   /** Optional spatial-query capability; alternative adapters may omit it. Displacement is swept over [0,1]. */
   castShape?(shape:ColliderDesc["shape"],pose:Pose,displacement:Vec3,filter?:PhysicsQueryFilter):ShapeHit|undefined;
+  /** Optional ray query; `direction` need not be normalized, `maxDistance` is in metres along its unit vector. */
+  castRay?(origin:Vec3,direction:Vec3,maxDistance:number,filter?:PhysicsQueryFilter):RayHit|undefined;
   /** Computes safe kinematic movement; caller owns applying the returned displacement. */
   moveCharacter?(body:BodyHandle,displacement:Vec3,options?:CharacterMoveOptions):CharacterMovement;
   contacts?(body:BodyHandle):readonly PhysicsContact[];
@@ -83,12 +87,26 @@ export interface PhysicsWorld {
 
 export interface PhysicsQueryFilter {readonly exclude?:BodyHandle;readonly groups?:number;readonly includeSensors?:boolean}
 export interface ShapeHit {readonly userId:number;readonly fraction:number;readonly normal:Vec3;readonly point:Vec3}
+export interface RayHit {readonly userId:number;readonly distance:number;readonly normal:Vec3;readonly point:Vec3}
 export interface PhysicsContact {readonly userId:number;readonly normal:Vec3;readonly point:Vec3;readonly distance:number}
 export interface CharacterMoveOptions extends PhysicsQueryFilter {
   readonly offset?:number;readonly maxSlope?:number;readonly snapToGround?:number;
   readonly stepHeight?:number;readonly stepMinWidth?:number;
+  /** Carry by a kinematic support body (decision 0214, resolution step 2). Default false at the adapter level. */
+  readonly carry?:boolean;
+  /** The requested rotation; the carried yaw is applied to it in `CharacterMovement.rotation`. */
+  readonly rotation?:Quat;
 }
-export interface CharacterMovement {readonly displacement:Vec3;readonly grounded:boolean;readonly contacts:readonly ShapeHit[]}
+export interface CharacterMovement {
+  /** Resolved displacement including the carry. */
+  readonly displacement:Vec3;readonly grounded:boolean;readonly contacts:readonly ShapeHit[];
+  /** The support found by the downward cast (decision 0214, step 1), if any. */
+  readonly ground?:{readonly userId:number;readonly normal:Vec3};
+  /** Carry included in `displacement` (zero without a kinematic support) and its yaw in radians about +Y. */
+  readonly carried:Vec3;readonly carriedYaw:number;
+  /** `options.rotation` (or the current rotation) with the carried yaw applied. */
+  readonly rotation:Quat;
+}
 
 /** The default export of `physics/<h16>.js`. */
 export type LoadPhysics = () => Promise<PhysicsBackend>;

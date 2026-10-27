@@ -2,8 +2,8 @@ import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  // Generated goldens: writers/ (M0-05) and every codegen fixture's expected/ dist tree.
-  { ignores: [".out/**", "writers/**", "*/expected/**"] },
+  // Generated goldens: writers/ (M0-05), every codegen fixture's expected/ dist tree and the compute contract outputs.
+  { ignores: [".out/**", "writers/**", "*/expected/**", "compute-contract/expected.*", "compute-contract/packaged/**"] },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   {

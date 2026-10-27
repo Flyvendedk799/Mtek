@@ -25,6 +25,7 @@ import { buildConfigurator } from "./m4-configurator.ts";
 import { buildProductConfigurator } from "./product-configurator.ts";
 import { buildLightingStudio } from "./lighting-studio.ts";
 import { buildInspectionStudio } from "./inspection-studio.ts";
+import { buildComputeAcceptance } from "./compute-fixtures.ts";
 import { buildM4Fixtures } from "./m4-fixtures.ts";
 import { buildM5Fixtures } from "./m5-fixtures.ts";
 import { buildM6Fixtures } from "./m6-fixtures.ts";
@@ -133,6 +134,9 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   buildPreviewFixtures(cli);
   // Decision 0087: the built-in material params assigned by name, in `.out/m6/`.
   buildM6Fixtures(cli);
+
+  // Decision 0207: the compute acceptance package and pages, in `.out/compute/` (also built alone by compute.config.ts).
+  writeFileSync(join(resultsDir, "compute-package.json"), JSON.stringify(await buildComputeAcceptance(), null, 2) + "\n");
 
   // The numeric probe (M2-08): the compiler's WGSL for every operation of cpu.json plus a test-only harness.
   buildNumericProbe(cli, join(out, "numeric"));
