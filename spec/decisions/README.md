@@ -229,5 +229,11 @@ recorded here before code depends on it (blueprint §15).
 | 0216 | [Continuous collision coverage](0216-continuous-collision-coverage.md): CCD lane matrix and envelope |
 | 0217 | [Character movement in programs and hosts](0217-character-movement-language-and-host.md): move_character, grounded, CapsuleCollider, continuous, host queries |
 | 0218 | [Character movement demonstration](0218-character-movement-demonstration.md): example, browser acceptance and documentation |
+| 0219 | [Complete composable animation](0219-complete-composable-animation.md): acceptance contract for scorecard area 2, canonical humanoid bones and reserved diagnostics |
+| 0220 | [Blend spaces and layer fades](0220-blend-spaces-and-layer-fades.md): 2D blend spaces with synchronized cycles, fading layers |
+| 0221 | [Humanoid mapping and retargeting](0221-humanoid-mapping-and-retargeting.md): automatic humanoid maps, rest-pose correction and measured retargeting |
+| 0222 | [Anatomical limb solving](0222-anatomical-limb-solving.md): two-bone limbs, anatomical ranges and foot placement |
+| 0223 | [Composable animation in programs](0223-composable-animation-language.md): layers, blend spaces, IK, root motion and clips_from in Mtek source |
+| 0224 | [Composable animation demonstration](0224-composable-animation-demonstration.md): example, browser acceptance and documentation |
 
 Numbers 0157-0169 are unused: the sprites record is 0170 and no record has been written in between. (Earlier versions of this index listed ghost rows 0160-0162 for what are records 0130-0132; they were removed.)
