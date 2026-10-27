@@ -359,12 +359,12 @@ Generated from [spec/stdlib-schema.json](../spec/stdlib-schema.json) (registry v
 | Type | Kind | GPU | Fields | Methods | Description |
 |---|---|---|---|---|---|
 | `ComputeInput` | record | yes | index: u32; global_x: u32; global_y: u32; global_z: u32; local_x: u32; local_y: u32; local_z: u32; group_x: u32; group_y: u32; group_z: u32; group_count_x: u32; group_count_y: u32; group_count_z: u32; local_index: u32 |  | Compute invocation IDs. |
-| `PointerEvent` | record | no | position: vec2; button: i32 |  | A pointer event: `position` in normalised canvas coordinates (x right, y up, both in -1..1) and the `button` (0 primary, 1 middle, 2 secondary). |
+| `PointerEvent` | record | no | position: vec2; button: i32 |  | A pointer event: `position` in canvas coordinates (x right, y up, -1..1) and the `button` (0 primary, 1 middle, 2 secondary). |
 | `SurfaceInput` | record | yes | local_position: vec3; world_position: vec3; world_normal: vec3; uv: vec2; world_tangent: vec4 |  | Interpolated fragment inputs. |
 | `VertexInput` | record | yes | position: vec3; normal: vec3; uv: vec2; tangent: vec4 |  | Skinned local vertex inputs. |
 | `array` | array | yes |  |  | The generic `array<T, N>`: a fixed-length array of `N` (1 to 65536) elements of type `T`. |
 | `bool` | scalar | yes |  |  | Truth value. |
-| `color` | color | yes |  |  | Linear-light RGBA with straight alpha; distinct from `vec4`. A literal `#rrggbb` is sRGB-encoded and converted; `color.linear(rgb, a)` takes linear components, `color.srgb(rgb, a)` sRGB ones. Fields `.r .g .b .a` and `.rgb`; no arithmetic. |
+| `color` | color | yes |  |  | Linear RGBA, straight alpha; not a `vec4`. A literal `#rrggbb` is sRGB, converted; `color.linear(rgb, a)` takes linear components, `color.srgb(rgb, a)` sRGB ones. Fields `.r .g .b .a`, `.rgb`; no arithmetic. |
 | `entity_ref` | handle | no |  |  | A generation-checked reference to an entity. Compare it, test `alive`, `destroy` it, command its body, and read `position`, `rotation`, `scale` and `visible`. |
 | `f32` | scalar | yes |  |  | IEEE-754 binary32 floating-point number. |
 | `font` | handle | no |  |  | A font for `hud.text`: `asset.font(..)` or the built-in `hud.pixel_font()`; CPU only (decision 0139). |
@@ -426,9 +426,21 @@ A box collision shape.
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
 | `friction` | `f32` | `0.5` | no | construction only | ≥ 0, finite | Coulomb friction coefficient. |
-| `restitution` | `f32` | `0.0` | no | construction only | 0…1 | Bounciness, 0 (none) to 1 (perfect). |
-| `sensor` | `bool` | `false` | no | construction only |  | A sensor reports collisions but does not push other bodies. |
+| `restitution` | `f32` | `0.0` | no | construction only | 0…1 | Bounciness, 0 to 1. |
+| `sensor` | `bool` | `false` | no | construction only |  | A sensor reports collisions but pushes nothing. |
 | `size` | `vec3` | none | yes | construction only | every component > 0, finite | Full extents along X, Y and Z. |
+
+##### `CapsuleCollider`
+
+A capsule shape: a cylinder along local Y capped by hemispheres.
+
+| Field | Type | Default | Required | Update | Range | Description |
+|---|---|---|---|---|---|---|
+| `friction` | `f32` | `0.5` | no | construction only | ≥ 0, finite | Coulomb friction coefficient. |
+| `height` | `f32` | none | yes | construction only | > 0, finite | Full height including both caps; > 2 * `radius`. |
+| `radius` | `f32` | none | yes | construction only | > 0, finite | Radius in metres. |
+| `restitution` | `f32` | `0.0` | no | construction only | 0…1 | Bounciness, 0 to 1. |
+| `sensor` | `bool` | `false` | no | construction only |  | A sensor reports collisions but pushes nothing. |
 
 ##### `SphereCollider`
 
@@ -438,23 +450,23 @@ A sphere collision shape.
 |---|---|---|---|---|---|---|
 | `friction` | `f32` | `0.5` | no | construction only | ≥ 0, finite | Coulomb friction coefficient. |
 | `radius` | `f32` | none | yes | construction only | > 0, finite | Radius in metres. |
-| `restitution` | `f32` | `0.0` | no | construction only | 0…1 | Bounciness, 0 (none) to 1 (perfect). |
-| `sensor` | `bool` | `false` | no | construction only |  | A sensor reports collisions but does not push other bodies. |
+| `restitution` | `f32` | `0.0` | no | construction only | 0…1 | Bounciness, 0 to 1. |
+| `sensor` | `bool` | `false` | no | construction only |  | A sensor reports collisions but pushes nothing. |
 
 #### Schemas of the category `object`
 
 ##### `Camera`
 
-The fields of a `camera` scene object. Looks along its local -Z axis, or at `target` when one is declared.
+The fields of a `camera`. Looks along local -Z, or at `target` when declared.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
-| `active` | `bool` | none | no | construction only |  | Marks the active camera. Optional when the scene has exactly one camera; with several cameras exactly one must declare `active: true`. |
-| `exposure` | `f32` | `-1.9145305` | no | construction only |  | Exposure value EV100; lit materials are scaled by 1 / (1.2 * 2^exposure). The default, -log2(1.2 * pi), shows a white Lambertian surface under a 1 lux light as white; a sunny day (about 100 000 lux) is about 15. |
+| `active` | `bool` | none | no | construction only |  | Marks the active camera; optional with one camera, exactly one `active: true` with several. |
+| `exposure` | `f32` | `-1.9145305` | no | construction only |  | EV100; lit materials scale by 1 / (1.2 * 2^exposure). Default -log2(1.2 * pi): white under 1 lux shows white; a sunny day (about 100 000 lux) is about 15. |
 | `position` | `vec3` | `vec3(0.0, 0.0, 5.0)` | no | writable, bindable |  | Camera position in world space, in metres. |
-| `projection` | `projection` | `Perspective {}` | no | construction only |  | `Perspective {..}` or `Orthographic {..}`. The projection kind is construction-only; the fields of the descriptor are writable and bindable. |
+| `projection` | `projection` | `Perspective {}` | no | construction only |  | `Perspective {..}` or `Orthographic {..}`; the kind is construction-only, its fields writable and bindable. |
 | `rotation` | `quat` | `quat.identity()` | no | writable, bindable |  | Orientation when no `target` is declared. |
-| `target` | `vec3` | none | no | writable, bindable |  | Optional point to look at (up is +Y). When declared, `rotation` must not be. |
+| `target` | `vec3` | none | no | writable, bindable |  | Optional point to look at (up is +Y); excludes `rotation`. |
 
 ##### `Entity`
 
@@ -465,28 +477,28 @@ Entity/prefab: a named transform with optional components.
 | `body` | `body` | none | no | construction only |  | A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; requires `collider`. |
 | `bounds_center` | `vec3` | `vec3(0.0, 0.0, 0.0)` | no | writable, bindable | finite | Final deformed local sphere center; used when bounds_radius > 0. |
 | `bounds_radius` | `f32` | `0.0` | no | writable, bindable | ≥ 0, finite | Enclose every final local vertex/pose; 0 uses mesh/skin bounds, or unbounded authored vertices. |
-| `clip` | `string` | none | no | construction only |  | The name of a glTF animation that moves this entity (decision 0156). The mesh must be a mesh of that file. It composes with the entity's own transform (decision 0174). |
-| `collider` | `collider` | none | no | construction only |  | A collision shape (`BoxCollider`, `SphereCollider`). Requires `body`. |
-| `light` | `light` | none | no | construction only |  | A light component (`DirectionalLight`, `PointLight`). Its fields are writable and bindable as their schemas say. Named entities only. |
-| `material` | `material` | `Unlit {}` | no | writable |  | Material instance. Value-only instances can be replaced by the same material type; parameters are writable and bindable. Requires `mesh`. |
-| `mesh` | `mesh` | none | no | construction only |  | The mesh drawn for this entity: a mesh descriptor (`Box`, `Sphere`, `Plane`) or an asset mesh. |
-| `particles` | `emitter` | none | no | construction only |  | A particle emitter (decision 0155). Up to 64 particles live at once. They are drawn with this entity's mesh as camera-facing billboards, in the colour of its material. Without a mesh the particles are still counted. |
+| `clip` | `string` | none | no | construction only |  | A glTF animation name that moves this entity; the mesh must come from that file. |
+| `collider` | `collider` | none | no | construction only |  | A collision shape (`BoxCollider`, `SphereCollider`, `CapsuleCollider`). Requires `body`. |
+| `light` | `light` | none | no | construction only |  | A light (`DirectionalLight`, `PointLight`); its fields are writable and bindable. Named entities only. |
+| `material` | `material` | `Unlit {}` | no | writable |  | Material instance; a value-only one can be replaced by the same material type; params are writable and bindable. Requires `mesh`. |
+| `mesh` | `mesh` | none | no | construction only |  | The mesh drawn: a descriptor (`Box`, `Sphere`, `Plane`) or an asset mesh. |
+| `particles` | `emitter` | none | no | construction only |  | A particle emitter: up to 64 camera-facing billboards of this entity's mesh in its material's colour; counted even without a mesh. |
 | `position` | `vec3` | `vec3(0.0, 0.0, 0.0)` | no | writable, bindable |  | Position local to the parent, in metres. |
 | `rotation` | `quat` | `quat.identity()` | no | writable, bindable |  | Rotation local to the parent. |
-| `scale` | `vec3` | `vec3(1.0, 1.0, 1.0)` | no | writable, bindable | every component > 0, finite | Parent-local scale. Bodies require construction-only scale; dynamic/kinematic bodies require `vec3(1.0)`. |
-| `tag` | `string` | none | no | construction only |  | A group name (`"rock"`) that `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag` and `destroy_tagged` look the entity up by (decision 0150). A string literal of lowercase letters, digits and `_`. |
+| `scale` | `vec3` | `vec3(1.0, 1.0, 1.0)` | no | writable, bindable | every component > 0, finite | Parent-local scale; construction-only on bodies, `vec3(1.0)` on dynamic and kinematic ones. |
+| `tag` | `string` | none | no | construction only |  | A group name (`"rock"`: lowercase letters, digits, `_`) for `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag` and `destroy_tagged`. |
 | `visible` | `bool` | `true` | no | writable, bindable |  | Hide the mesh; behavior keeps running. |
 
 ##### `Scene`
 
-The fields of a scene declaration. All are construction-only and must be constant expressions.
+The fields of a scene: all construction-only constant expressions.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
-| `ambient_color` | `color` | `#ffffff` | no | construction only |  | Colour of the ambient light term of lit materials. Only the RGB channels are used. |
-| `ambient_intensity` | `f32` | `0.0` | no | construction only | ≥ 0 | Scale of the ambient light term of lit materials; 0 turns ambient light off. Like every lit result it is multiplied by the camera's exposure scale (about 3.14 at the default exposure), so 0.3 already gives nearly full brightness on white. Unlit materials ignore it. |
-| `clear_color` | `color` | `#000000` | no | construction only |  | Colour the canvas is cleared to. Only the RGB channels are used. |
-| `gravity` | `vec3` | `vec3(0.0, -9.81, 0.0)` | no | construction only | finite | Gravitational acceleration in metres per second squared. Used only when the scene has physics bodies. |
+| `ambient_color` | `color` | `#ffffff` | no | construction only |  | Colour of the ambient light; only RGB is used. |
+| `ambient_intensity` | `f32` | `0.0` | no | construction only | ≥ 0 | Ambient light scale for lit materials; 0 is off. Multiplied by the camera's exposure scale (about 3.14 by default), so 0.3 is near full brightness on white. Unlit ignores it. |
+| `clear_color` | `color` | `#000000` | no | construction only |  | Colour the canvas is cleared to; only RGB is used. |
+| `gravity` | `vec3` | `vec3(0.0, -9.81, 0.0)` | no | construction only | finite | Gravitational acceleration in m/s^2; used only with physics bodies. |
 
 #### Schemas of the category `light`
 
@@ -518,14 +530,22 @@ A solver-controlled body; forces, impulses and teleports are explicit commands.
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
 | `angular_damping` | `f32` | `0.05` | no | construction only | ≥ 0, finite | Rate at which angular velocity decays. |
+| `continuous` | `bool` | `false` | no | construction only |  | Continuous collision detection for this body. |
 | `linear_damping` | `f32` | `0.0` | no | construction only | ≥ 0, finite | Rate at which linear velocity decays. |
 | `mass` | `f32` | `1.0` | no | construction only | > 0, finite | Mass in kilograms. |
 
 ##### `Kinematic`
 
-A body whose pose the program sets with `set_kinematic_target`.
+Program-moved body: `set_kinematic_target`, or `move_character` with collisions. Fields tune `move_character`.
 
-No fields.
+| Field | Type | Default | Required | Update | Range | Description |
+|---|---|---|---|---|---|---|
+| `carry` | `bool` | `true` | no | construction only |  | Moving platforms carry the character. |
+| `max_slope` | `f32` | `0.7853982` | no | construction only | 0…1.5707964 | Steepest climbable slope in radians. |
+| `skin` | `f32` | `0.01` | no | construction only | > 0, finite | Gap kept from contacts in metres. |
+| `snap_to_ground` | `f32` | `0.2` | no | construction only | ≥ 0, finite | Longest snap-down in metres; 0 disables. |
+| `step_height` | `f32` | `0.25` | no | construction only | ≥ 0, finite | Highest step climbed in metres; 0 disables. |
+| `step_min_width` | `f32` | `0.1` | no | construction only | > 0, finite | Narrowest tread stepped onto in metres. |
 
 ##### `Static`
 
@@ -537,7 +557,7 @@ No fields.
 
 ##### `Emitter`
 
-A bounded particle emitter: at most 64 particles, spawned at `rate` per second in a hemisphere around the entity's up axis.
+A bounded particle emitter: at most 64 particles, `rate` per second, in a hemisphere around the entity's up axis.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
@@ -556,7 +576,7 @@ An orthographic projection (right-handed, clip depth 0 to 1).
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
 | `far` | `f32` | `1000.0` | no | writable, bindable | > near | Distance to the far plane. |
-| `height` | `f32` | `10.0` | no | writable, bindable | > 0 | Height of the view volume in world units; the width follows from the aspect ratio. |
+| `height` | `f32` | `10.0` | no | writable, bindable | > 0 | Height of the view volume in world units; width follows the aspect ratio. |
 | `near` | `f32` | `0.1` | no | writable, bindable | > 0 | Distance to the near plane. |
 
 ##### `Perspective`
@@ -600,11 +620,11 @@ One frame of a sprite sheet, tinted; always translucent.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
-| `cell` | `f32` | `0.0` | no | writable, bindable |  | The cell (animation frame) shown, from 0, left to right then top to bottom; floored and wrapped, so `bind(t * fps)` animates. |
+| `cell` | `f32` | `0.0` | no | writable, bindable |  | Cell (animation frame) shown, from 0, row by row; floored and wrapped, so `bind(t * fps)` animates. |
 | `columns` | `f32` | `1.0` | no | writable, bindable | 1…64 | Cells per row of the sheet. |
 | `rows` | `f32` | `1.0` | no | writable, bindable | 1…64 | Rows of cells in the sheet. |
 | `sheet` | `texture` | `texture.white()` | no | construction only |  | The sprite sheet: `columns` x `rows` equal cells. |
-| `sheet_sampler` | `sampler` | `sampler.nearest_clamp()` | no | construction only |  | Sampler of the sheet (default nearest, clamped: crisp pixels). |
+| `sheet_sampler` | `sampler` | `sampler.nearest_clamp()` | no | construction only |  | Sampler of the sheet (default nearest, clamped). |
 | `tint` | `color` | `#ffffff` | no | writable, bindable |  | Multiplies the texel, alpha included. |
 
 ##### `Unlit`
@@ -625,8 +645,8 @@ Flat colour, no lighting.
 
 | Event | Form | Argument | Allowed in | Needs a collider | Description |
 |---|---|---|---|---|---|
-| `collision_enter` | parameter | `entity_ref` | entity, prefab | yes | The entity's collider started touching another entity's collider; the parameter is the other entity. |
-| `collision_exit` | parameter | `entity_ref` | entity, prefab | yes | The entity's collider stopped touching another entity's collider; the parameter is the other entity. |
+| `collision_enter` | parameter | `entity_ref` | entity, prefab | yes | Its collider started touching another; the parameter is that entity. |
+| `collision_exit` | parameter | `entity_ref` | entity, prefab | yes | Its collider stopped touching another; the parameter is that entity. |
 | `key_down` | filter | `Key` | scene, entity, prefab | no | Delivered when the filtered key transitions to pressed. Auto-repeat is ignored. |
 | `key_up` | filter | `Key` | scene, entity, prefab | no | Delivered when the filtered key is released. |
 | `message` | parameter | `string` | entity, prefab | no | A queued string sent to this entity; delivered before its next unpaused update. |
@@ -638,7 +658,7 @@ Flat colour, no lighting.
 
 #### `Key`
 
-A physical keyboard key, independent of the layout. Written `Key.<Member>` with exactly the members listed (`Key.Space`, `Key.ArrowUp`, `Key.A`, `Key.Digit1`); there is no `Key.Up`, `Key.KeyA` or `Key.Shift`. Maps from the DOM `KeyboardEvent.code`.
+A physical key, layout-independent. Written `Key.<Member>` with exactly the members listed (`Key.Space`, `Key.ArrowUp`, `Key.A`, `Key.Digit1`); there is no `Key.Up`, `Key.KeyA` or `Key.Shift`.
 
 | Member | DOM `KeyboardEvent.code` |
 |---|---|
@@ -702,10 +722,10 @@ Controls an entity's imported node clip (decision 0190).
 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
-| `animation.copy_pose` | function | `(target: entity_ref, source: entity_ref) -> bool` | cpu | no | Copies the displayed pose from a compatible skeleton and holds it. A subsequent transition blends from that pose. |
+| `animation.copy_pose` | function | `(target: entity_ref, source: entity_ref) -> bool` | cpu | no | Copies and holds the displayed pose of a compatible skeleton; a later transition blends from it. |
 | `animation.crossed` | function | `(target: entity_ref, marker: f32) -> bool` | cpu | no | Whether a marker in (0, duration] was crossed in the latest update, including loop wraps. Not consumed by reading. |
 | `animation.duration` | function | `(target: entity_ref) -> f32` | cpu | no | Clip duration in seconds; zero for an unavailable clip. |
-| `animation.fade` | function | `(target: entity_ref, weight: f32, duration: f32) -> bool` | cpu | no | Smoothly blends clip weight toward a clamped 0..1 target over seconds; zero applies immediately. |
+| `animation.fade` | function | `(target: entity_ref, weight: f32, duration: f32) -> bool` | cpu | no | Blends clip weight toward a 0..1 target over seconds; zero applies at once. |
 | `animation.finished` | function | `(target: entity_ref) -> bool` | cpu | no | Whether a one-shot clip reached its end. |
 | `animation.joint_position` | function | `(target: entity_ref, name: string) -> vec3` | cpu | no | Joint position in the skeletal mesh local space; zero if missing. |
 | `animation.joint_rotation` | function | `(target: entity_ref, name: string) -> quat` | cpu | no | Joint rotation in skeletal mesh local space; identity if missing. |
@@ -713,9 +733,9 @@ Controls an entity's imported node clip (decision 0190).
 | `animation.play` | function | `(target: entity_ref, looping: bool, speed: f32) -> bool` | cpu | no | Restarts the clip. Speed must be finite and nonnegative. Returns false for an unavailable clip. |
 | `animation.playing` | function | `(target: entity_ref) -> bool` | cpu | no | Whether clip time is advancing; false for an unavailable clip. |
 | `animation.resume` | function | `(target: entity_ref) -> bool` | cpu | no | Continues a paused clip; returns false for a finished clip. |
-| `animation.seek` | function | `(target: entity_ref, time: f32) -> bool` | cpu | no | Clamps time to the clip duration and applies the pose immediately, without crossing markers or resuming. |
+| `animation.seek` | function | `(target: entity_ref, time: f32) -> bool` | cpu | no | Clamps time to the clip duration and applies the pose at once, crossing no markers and not resuming. |
 | `animation.time` | function | `(target: entity_ref) -> f32` | cpu | no | Current clip time in seconds; zero for an unavailable clip. |
-| `animation.transition` | function | `(target: entity_ref, name: string, seconds: f32, looping: bool, speed: f32) -> bool` | cpu | no | Selects a skeletal clip, crossfading from the current pose. Repeating the current name does not restart it; use play to restart. |
+| `animation.transition` | function | `(target: entity_ref, name: string, seconds: f32, looping: bool, speed: f32) -> bool` | cpu | no | Selects a skeletal clip, crossfading from the current pose; the current name does not restart (use play). |
 | `animation.weight` | function | `(target: entity_ref) -> f32` | cpu | no | Current clip weight; zero for an unavailable clip. |
 
 #### `asset`
@@ -725,7 +745,7 @@ Compile-time asset declarations. The argument must be a string literal naming a 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
 | `asset.font` | function | `(path: string) -> font` | cpu | yes | A font file (`.ttf`, `.otf`, `.woff` or `.woff2`) for `hud.text`. |
-| `asset.glb` | function | `(path: string) -> glb_asset` | cpu | yes | A static GLB model. May be stored only in a `const` and used through its accessors. |
+| `asset.glb` | function | `(path: string) -> glb_asset` | cpu | yes | A static GLB model; only in a `const`, used through its accessors. |
 | `asset.linear_texture` | function | `(path: string) -> texture` | cpu | yes | A linear data texture (masks, normal data). |
 | `asset.sound` | function | `(path: string) -> sound` | cpu | yes | A sound file (`.wav`, `.ogg` or `.mp3`) for `play`, `play_at` and `play_music`. |
 | `asset.texture` | function | `(path: string) -> texture` | cpu | yes | An sRGB colour texture. |
@@ -737,7 +757,7 @@ Colour constructors.
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
 | `color.linear` | function | `(rgb: vec3, a: f32) -> color` | both | yes | A colour from linear-light components. |
-| `color.srgb` | function | `(rgb: vec3, a: f32) -> color` | both | yes | A colour from sRGB-encoded components, converted to linear light with the sRGB transfer function. |
+| `color.srgb` | function | `(rgb: vec3, a: f32) -> color` | both | yes | A colour from sRGB-encoded components, converted to linear light. |
 
 #### `easing`
 
@@ -758,11 +778,11 @@ Easing curves for tweens: `mix(a, b, easing.out_cubic(t))` moves from `a` to `b`
 
 #### `frame`
 
-Per-frame CPU/`bind` values; route to GPU stages through material params. `update(dt)` gets variable frame delta; `fixed_update(dt)` runs zero or more times per frame with a constant fixed step (default 1/60 s).
+Per-frame CPU/`bind` values; route to GPU stages through material params. `update(dt)` gets the variable frame delta; `fixed_update(dt)` runs zero or more times per frame with a constant step (default 1/60 s).
 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
-| `frame.delta` | value | `f32` | cpu | no | The clamped frame delta of the current rendered frame; the value passed to `update`. |
+| `frame.delta` | value | `f32` | cpu | no | The clamped frame delta passed to `update`. |
 | `frame.index` | value | `u32` | cpu | no | Rendered frame counter since mount, wrapping. |
 | `frame.time` | value | `f32` | cpu | no | Active application time in seconds since mount, excluding paused time. |
 
@@ -782,10 +802,10 @@ The heads-up display: text, rectangles and buttons drawn over the canvas. Immedi
 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
-| `hud.button` | function | `(label: string, at: vec2) -> bool`<br>`(label: string, at: vec2, size: f32) -> bool` | cpu | no | Draws a button centred at `at` (canvas NDC) with the label `label` (`size` in CSS pixels, default 24.0). Returns true in the frame after the button was clicked, once per click; buttons are told apart by their label and their order among buttons with that label. |
-| `hud.pixel_font` | function | `() -> font` | cpu | no | The built-in font: a 5x7 pixel bitmap of printable ASCII, the same in every browser (decision 0139). Other characters show as a box. |
-| `hud.rect` | function | `(at: vec2, size: vec2, tint: color) -> ()`<br>`(at: vec2, size: vec2, tint: color, align: f32) -> ()` | cpu | no | Draws a filled rectangle of `size` CSS pixels at `at` (canvas NDC), aligned like `hud.text` (default centred). For panels and bars. |
-| `hud.text` | function | `(content: string, at: vec2) -> ()`<br>`(content: string, at: vec2, size: f32) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color, align: f32) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color, align: f32, font: font) -> ()` | cpu | no | Draws a line of text at `at` (canvas NDC, y up): `size` in CSS pixels (default 24.0), `tint` (default white), `align` 0.0 puts the left edge at `at`, 0.5 the centre (default), 1.0 the right edge, `font` an `asset.font(..)` or `hud.pixel_font()` (default: the page's sans-serif). The line is centred vertically on `at`. |
+| `hud.button` | function | `(label: string, at: vec2) -> bool`<br>`(label: string, at: vec2, size: f32) -> bool` | cpu | no | Draws a button centred at `at` (canvas NDC) labelled `label` (`size` CSS pixels, default 24.0). Returns true in the frame after a click, once per click; buttons are told apart by label and order. |
+| `hud.pixel_font` | function | `() -> font` | cpu | no | The built-in 5x7 pixel bitmap font of printable ASCII; other characters show as a box. |
+| `hud.rect` | function | `(at: vec2, size: vec2, tint: color) -> ()`<br>`(at: vec2, size: vec2, tint: color, align: f32) -> ()` | cpu | no | Draws a filled rectangle of `size` CSS pixels at `at` (canvas NDC), aligned like `hud.text` (default centred). |
+| `hud.text` | function | `(content: string, at: vec2) -> ()`<br>`(content: string, at: vec2, size: f32) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color, align: f32) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color, align: f32, font: font) -> ()` | cpu | no | Draws a line of text at `at` (canvas NDC, y up): `size` CSS pixels (default 24.0), `tint` (default white), `align` 0.0 left edge, 0.5 centre (default), 1.0 right edge, `font` an `asset.font(..)` or `hud.pixel_font()` (default: page sans-serif). Centred vertically on `at`. |
 
 #### `lighting`
 
@@ -814,7 +834,7 @@ Quaternion constructors.
 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
-| `quat.axis_angle` | function | `(axis: vec3, angle: f32) -> quat` | both | yes | Rotation by `angle` radians about `axis`. The axis is normalised; a zero axis gives the identity on the CPU. |
+| `quat.axis_angle` | function | `(axis: vec3, angle: f32) -> quat` | both | yes | Rotation by `angle` radians about `axis` (normalised; a zero axis gives the identity on the CPU). |
 | `quat.euler` | function | `(x: f32, y: f32, z: f32) -> quat` | both | yes | Rotation about Z, then X, then Y, all about fixed world axes: `axis_angle(+Y, y) * axis_angle(+X, x) * axis_angle(+Z, z)`. |
 | `quat.identity` | function | `() -> quat` | both | yes | The rotation that does nothing. |
 
@@ -867,19 +887,19 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `count_tagged` | `(tag: string) -> i32` | cpu | no | no | The number of live entities with the tag. |
 | `cross` | `(a: vec3, b: vec3) -> vec3` | both | yes | no | Cross product of two 3D vectors. |
 | `degrees` | `(x: T) -> T` | both | yes | no | Radians to degrees. |
-| `destroy` | `(target: entity_ref) -> ()` | cpu | no | yes | Queues removal of a spawned entity; it counts as dead from the moment of the call. |
-| `destroy_tagged` | `(tag: string) -> ()` | cpu | no | yes | Queues removal of every live spawned entity with the tag; the tag must not be one a named entity has. |
+| `destroy` | `(target: entity_ref) -> ()` | cpu | no | yes | Queues removal of a spawned entity; it counts as dead at once. |
+| `destroy_tagged` | `(tag: string) -> ()` | cpu | no | yes | Queues removal of every live spawned entity with the tag (not a tag of a named entity). |
 | `distance` | `(a: T, b: T) -> f32` | both | yes | no | Distance between two points. |
 | `dot` | `(a: V, b: V) -> f32` | both | yes | no | Dot product of two vectors. |
 | `exp` | `(x: T) -> T` | both | yes | no | e raised to `x`. |
 | `exp2` | `(x: T) -> T` | both | yes | no | 2 raised to `x`. |
-| `first_tagged` | `(tag: string) -> entity_ref` | cpu | no | no | The first live entity with the tag in instance order; a dead reference (`alive` is false) if there is none. |
+| `first_tagged` | `(tag: string) -> entity_ref` | cpu | no | no | The first live entity with the tag in instance order; a dead reference if there is none. |
 | `floor` | `(x: T) -> T` | both | yes | no | Largest integer value not above `x`. |
 | `fract` | `(x: T) -> T` | both | yes | no | Fractional part of `x`. |
 | `go_to` | `(scene: scene name) -> ()` | cpu | no | yes | Switches scene, keeping shared state. |
 | `has_tag` | `(target: entity_ref, tag: string) -> bool` | cpu | no | no | Whether the entity is live and has the tag. |
 | `inverse_sqrt` | `(x: T) -> T` | both | yes | no | Reciprocal of the square root. |
-| `is_key_down` | `(key: Key) -> bool` | cpu | no | no | Whether the key was down at the end of input handling in the current frame. |
+| `is_key_down` | `(key: Key) -> bool` | cpu | no | no | Whether the key was down at the end of input handling this frame. |
 | `is_muted` | `() -> bool` | cpu | no | no | Whether audio is muted with `set_muted`. |
 | `is_pointer_down` | `(button: i32) -> bool` | cpu | no | no | Whether pointer button `button` was down at the end of input handling. |
 | `key_pressed` | `(key: Key) -> bool` | cpu | no | no | Whether the key went down during input handling of the current frame. |
@@ -893,14 +913,14 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `mix` | `(a: T, b: T, t: f32) -> T`<br>`(a: T, b: T, t: T) -> T` | both | yes | no | Linear interpolation `a * (1 - t) + b * t`, with a scalar or a component-wise `t`. |
 | `nearest_tagged` | `(tag: string, point: vec3) -> entity_ref` | cpu | no | no | The live entity with the tag whose world position is nearest `point`; a dead reference if there is none. |
 | `normalize` | `(v: V) -> V` | both | yes | no | The vector scaled to length 1. |
-| `overlap_boxes` | `(a: vec3, size_a: vec3, rotation_a: quat, b: vec3, size_b: vec3, rotation_b: quat) -> bool` | cpu | no | no | Oriented box intersection; world centers, full sizes and rotations. No physics required. |
+| `overlap_boxes` | `(a: vec3, size_a: vec3, rotation_a: quat, b: vec3, size_b: vec3, rotation_b: quat) -> bool` | cpu | no | no | Oriented box intersection from world centres, full sizes and rotations. No physics needed. |
 | `overlap_spheres` | `(a: vec3, radius_a: f32, b: vec3, radius_b: f32) -> bool` | cpu | no | no | World-space sphere intersection, including touching. No physics required. |
 | `particle_count` | `() -> i32` | cpu | no | no | How many particles are alive. |
 | `pause` | `() -> ()` | cpu | no | yes | Stops update, physics and timers; input goes on. |
 | `paused` | `() -> bool` | cpu | no | no | Whether paused. |
-| `play` | `(sound: sound) -> ()`<br>`(sound: sound, volume: f32) -> ()`<br>`(sound: sound, volume: f32, pitch: f32) -> ()` | cpu | no | yes | Plays a sound once, at a volume (default 1.0, range 0..4) and a pitch (playback rate, default 1.0, range 0.0625..16). |
-| `play_at` | `(sound: sound, position: vec3) -> ()`<br>`(sound: sound, position: vec3, volume: f32) -> ()` | cpu | no | yes | Plays a sound once from a world position: it is quieter further from the active camera and panned left or right. |
-| `play_music` | `(sound: sound) -> ()`<br>`(sound: sound, volume: f32) -> ()` | cpu | no | yes | Starts a sound as looping music, replacing the music that plays (one music track at a time). |
+| `play` | `(sound: sound) -> ()`<br>`(sound: sound, volume: f32) -> ()`<br>`(sound: sound, volume: f32, pitch: f32) -> ()` | cpu | no | yes | Plays a sound once with `volume` (default 1.0, range 0..4) and `pitch` (rate, default 1.0, range 0.0625..16). |
+| `play_at` | `(sound: sound, position: vec3) -> ()`<br>`(sound: sound, position: vec3, volume: f32) -> ()` | cpu | no | yes | Plays a sound once at a world position: quieter with distance from the active camera, and panned. |
+| `play_music` | `(sound: sound) -> ()`<br>`(sound: sound, volume: f32) -> ()` | cpu | no | yes | Starts a sound as looping music, replacing the current music. |
 | `pointer_position` | `() -> vec2` | cpu | no | no | The pointer position at the end of input handling, in canvas NDC. |
 | `pow` | `(base: T, exponent: T) -> T` | both | yes | no | `base` raised to `exponent`, component-wise. |
 | `print` | `(message: string) -> ()` | cpu | no | no | Writes a message to the development console. |
@@ -925,11 +945,11 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `sign` | `(x: T) -> T` | both | yes | no | -1, 0 or 1 according to the sign of `x`. |
 | `sin` | `(x: T) -> T` | both | yes | no | Sine of an angle in radians. |
 | `smoothstep` | `(edge0: T, edge1: T, x: T) -> T` | both | yes | no | Smooth Hermite interpolation between `edge0` and `edge1`. |
-| `spawn` | `(prefab: prefab descriptor) -> entity_ref` | cpu | no | yes | Queues creation of a prefab instance as a root entity; the reference is valid immediately and `alive` turns true after the next lifecycle flush. |
+| `spawn` | `(prefab: prefab descriptor) -> entity_ref` | cpu | no | yes | Queues a prefab instance as a root entity; the reference is valid at once and `alive` turns true after the next flush. |
 | `sqrt` | `(x: T) -> T` | both | yes | no | Square root. |
 | `step` | `(edge: T, x: T) -> T` | both | yes | no | 0 where `x < edge`, otherwise 1, component-wise. WGSL argument order: `step(edge, x)`. |
 | `stop_music` | `() -> ()` | cpu | no | yes | Stops the music started with `play_music`; does nothing when none plays. |
-| `tagged` | `(tag: string) -> tagged entities` | cpu | no | no | The live entities with the tag, in instance order: only the iterable of a `for` loop (`for r in tagged("rock") { .. }`). |
+| `tagged` | `(tag: string) -> tagged entities` | cpu | no | no | The live entities with the tag in instance order; only a `for` iterable. |
 | `tan` | `(x: T) -> T` | both | yes | no | Tangent of an angle in radians. |
 | `transpose` | `(m: mat4) -> mat4` | both | yes | no | Transpose of a 4x4 matrix. |
 | `trunc` | `(x: T) -> T` | both | yes | no | Integer part of `x`, rounding toward zero. |
@@ -941,6 +961,7 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 |---|---|---|---|
 | `apply_force` | force: vec3 | Dynamic | A force in newtons applied for exactly the next tick, then cleared. |
 | `apply_impulse` | impulse: vec3 | Dynamic | Instantaneous change of momentum in newton-seconds, at the centre of mass, applied at the start of the next tick. |
+| `move_character` | displacement: vec3, rotation: quat | Kinematic | Moves the body by `displacement` metres for this tick, sliding along what it meets, stepping up stairs, staying on slopes and ground and riding a moving kinematic platform, then turns it to `rotation`. Gravity is not applied; add your own vertical motion. Several calls in one tick sum their displacements and the last rotation wins; the move replaces `set_kinematic_target` of the same tick (decisions 0214, 0217). |
 | `set_kinematic_target` | position: vec3, rotation: quat | Kinematic | The pose reached at the end of the next tick; the solver derives the velocity. |
 | `set_linear_velocity` | v: vec3 | Dynamic | Sets the linear velocity at the start of the next tick. |
 | `teleport` | position: vec3, rotation: quat, keep_velocity: bool | Dynamic, Kinematic | Sets the pose before the next tick; velocities are zeroed unless `keep_velocity` is true. |
@@ -948,9 +969,11 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | Property | Type | Applies to | Description |
 |---|---|---|---|
 | `angular_velocity` | `vec3` | Dynamic, Kinematic | Angular velocity as of the last completed tick. Read-only. |
+| `ground_normal` | `vec3` | Kinematic | Ground normal of the last `move_character`; zero in the air. Read-only. |
+| `grounded` | `bool` | Kinematic | Ground found by the last completed `move_character`. Read-only. |
 | `linear_velocity` | `vec3` | Dynamic, Kinematic | Linear velocity as of the last completed tick. Read-only. |
 
-## Part C. Features of this build (263)
+## Part C. Features of this build (267)
 
 The list below is `supported.features` of `mtek context`, printed by the compiler this document was generated with. It is derived by the compiler from its construct table and from the registry, never typed in. A feature is supported when a test that would fail without it passes in a recorded environment (`spec/testing.md`); `docs/coverage-matrix.md` shows which program or fixture exercises each one.
 
@@ -958,13 +981,13 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 `imports` `exports` `constants` `body-constants` `functions` `cpu-functions` `structs` `enums` `materials` `compute-programs` `prefabs` `scenes` `scene-fields` `state` `scene-objects` `entities` `entity-fields` `prefab-instances` `lifecycle-functions` `handlers` `bind` `self` `descriptors` `strings` `arrays` `indexing` `negation` `arithmetic` `remainder` `comparison` `equality` `logical` `match`
 
-### Body commands (5)
+### Body commands (6)
 
-`body-command:apply_force` `body-command:apply_impulse` `body-command:set_kinematic_target` `body-command:set_linear_velocity` `body-command:teleport`
+`body-command:apply_force` `body-command:apply_impulse` `body-command:move_character` `body-command:set_kinematic_target` `body-command:set_linear_velocity` `body-command:teleport`
 
-### Body properties (2)
+### Body properties (4)
 
-`body-property:angular_velocity` `body-property:linear_velocity`
+`body-property:angular_velocity` `body-property:ground_normal` `body-property:grounded` `body-property:linear_velocity`
 
 ### Enums (1)
 
@@ -990,9 +1013,9 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 `scene-object:camera`
 
-### Schemas (19)
+### Schemas (20)
 
-`schema:Box` `schema:BoxCollider` `schema:Camera` `schema:DirectionalLight` `schema:Dynamic` `schema:Emitter` `schema:Entity` `schema:Kinematic` `schema:Orthographic` `schema:Pbr` `schema:Perspective` `schema:Plane` `schema:PointLight` `schema:Scene` `schema:Sphere` `schema:SphereCollider` `schema:Sprite` `schema:Static` `schema:Unlit`
+`schema:Box` `schema:BoxCollider` `schema:Camera` `schema:CapsuleCollider` `schema:DirectionalLight` `schema:Dynamic` `schema:Emitter` `schema:Entity` `schema:Kinematic` `schema:Orthographic` `schema:Pbr` `schema:Perspective` `schema:Plane` `schema:PointLight` `schema:Scene` `schema:Sphere` `schema:SphereCollider` `schema:Sprite` `schema:Static` `schema:Unlit`
 
 ### Types (24)
 
@@ -1004,7 +1027,7 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 What the build does **not** support is on [limitations.md](limitations.md); `supported.notSupported` of `mtek context` has the same list.
 
-## Part D. Diagnostics (252 codes)
+## Part D. Diagnostics (254 codes)
 
 Every diagnostic has a stable code: `E` for an error, `W` for a warning, then four digits; the first digit is the area. The full catalogue, the JSON form (`mtek check --format json`), the human rendering and the suggested edits are in [spec/diagnostics.md](../spec/diagnostics.md).
 
@@ -1015,10 +1038,10 @@ Every diagnostic has a stable code: `E` for an error, `W` for a warning, then fo
 | `2xxx` | names, scopes, modules | 14 |
 | `3xxx` | types, values, constant evaluation | 35 |
 | `4xxx` | functions, effects, execution domains, material stages | 20 |
-| `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 65 |
+| `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 66 |
 | `6xxx` | GPU layout, target profile, generated-shader validation | 4 |
 | `7xxx` | assets | 37 |
-| `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 35 |
+| `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 36 |
 | `9xxx` | project, configuration, tooling, internal | 13 |
 
 Within each range the `x9xx` codes mean "specified as not supported in v0.1"; all of them are listed, with their reasons, on [limitations.md](limitations.md).
