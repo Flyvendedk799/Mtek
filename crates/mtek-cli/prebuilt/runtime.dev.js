@@ -266,7 +266,7 @@ var PoseLayers = class {
   inverse = new Float64Array(4);
   revision = 0;
   inspect() {
-    return [...this.layers].map(([id, { options, mask, clock }]) => ({
+    return [...this.layers].map(([id, { options, mask: mask2, clock }]) => ({
       id,
       clip: options.clip,
       weight: options.weight,
@@ -274,7 +274,7 @@ var PoseLayers = class {
       time: clock.time(0),
       duration: clock.duration(0),
       playing: clock.playing(0),
-      mask: [...mask]
+      mask: [...mask2]
     }));
   }
   set(id, options) {
@@ -283,14 +283,14 @@ var PoseLayers = class {
       throw new RangeError("A layer needs an ID and an existing clip");
     if (!Number.isFinite(options.weight) || options.weight < 0 || options.weight > 1 || !Number.isFinite(options.speed ?? 1) || (options.speed ?? 1) < 0)
       throw new RangeError("Invalid animation layer weight or speed");
-    let mask = new Float64Array(this.skin.nodes.length).fill(
+    let mask2 = new Float64Array(this.skin.nodes.length).fill(
       options.mask === void 0 ? 1 : 0
     );
     for (let [name, weight] of Object.entries(options.mask ?? {})) {
       let i = this.skin.nodes.findIndex((n) => n.name === name);
       if (i < 0 || !Number.isFinite(weight) || weight < 0 || weight > 1)
         throw new RangeError(`Invalid bone mask: ${name}`);
-      mask[i] = weight;
+      mask2[i] = weight;
     }
     let previous = this.layers.get(id), clock = previous?.options.clip === options.clip ? previous.clock : new ClipPlayers();
     if (clock !== previous?.clock)
@@ -299,7 +299,7 @@ var PoseLayers = class {
       let time = clock.time(0);
       clock.play(0, options.looping ?? !0, options.speed ?? 1), clock.seek(0, time);
     }
-    this.layers.set(id, { options: { ...options }, mask, clock }), this.revision++;
+    this.layers.set(id, { options: { ...options }, mask: mask2, clock }), this.revision++;
   }
   remove(id) {
     this.layers.delete(id) && this.revision++;
@@ -322,10 +322,10 @@ var PoseLayers = class {
     }
   }
   apply(pose, bind) {
-    for (let { options, mask, clock } of this.layers.values()) {
+    for (let { options, mask: mask2, clock } of this.layers.values()) {
       let clip = this.skin.clips.find((c) => c.name === options.clip);
       for (let channel of clip.channels) {
-        let w = options.weight * mask[channel.node];
+        let w = options.weight * mask2[channel.node];
         if (w === 0) continue;
         sampleChannelInto(channel, clock.time(0), this.value);
         let at3 = channel.node * 10 + (channel.path === "translation" ? 0 : channel.path === "rotation" ? 3 : 7);
@@ -662,13 +662,13 @@ var PoseSchedule = class {
   elapsed = 0;
   previous = -1;
   set(bands) {
-    let copy2 = bands?.map((band) => ({ ...band })) ?? [];
-    for (let i = 0; i < copy2.length; i++) {
-      let band = copy2[i];
-      if (!Number.isFinite(band.distance) || band.distance < 0 || !Number.isFinite(band.interval) || band.interval < 0 || (i === 0 ? band.distance !== 0 : band.distance <= copy2[i - 1].distance))
+    let copy3 = bands?.map((band) => ({ ...band })) ?? [];
+    for (let i = 0; i < copy3.length; i++) {
+      let band = copy3[i];
+      if (!Number.isFinite(band.distance) || band.distance < 0 || !Number.isFinite(band.interval) || band.interval < 0 || (i === 0 ? band.distance !== 0 : band.distance <= copy3[i - 1].distance))
         throw new RangeError("Animation update bands need increasing distances starting at zero and finite nonnegative intervals");
     }
-    this.bands = copy2, this.elapsed = 0, this.previous = -1;
+    this.bands = copy3, this.elapsed = 0, this.previous = -1;
   }
   due(dt, distance2, force = !1) {
     if (!Number.isFinite(distance2) || distance2 < 0)
@@ -1275,12 +1275,51 @@ function createAnimationController(skin, options) {
   return new AnimationController(skin, options);
 }
 
+// src/host/entity-ids.ts
+var EntityIds = class {
+  constructor(getWorld) {
+    this.getWorld = getWorld;
+  }
+  getWorld;
+  epochs = /* @__PURE__ */ new WeakMap();
+  nextEpoch = 0;
+  prefix(world) {
+    let epoch = this.epochs.get(world);
+    return epoch === void 0 && (epoch = ++this.nextEpoch, this.epochs.set(world, epoch)), `scene:${String(epoch)}:`;
+  }
+  /** Every live entity of the current world by ID (named entities, then spawned ones not pending removal). */
+  records() {
+    let world = this.getWorld(), entries = /* @__PURE__ */ new Map(), prefix = this.prefix(world);
+    for (let slot = 0; slot < world.entities.length; slot++) {
+      let entity = world.resolvedAt(slot), record2 = world.recordAt(slot);
+      entity !== void 0 && record2 !== void 0 && entries.set(prefix + entity.symbol, record2);
+    }
+    for (let entity of world.dynamic.live)
+      entity.removing || entries.set(`${prefix}spawn:${String(entity.ref.slot)}:${String(entity.ref.gen)}`, entity.record);
+    return entries;
+  }
+  /**
+   * The ID of the entity in `slot` of the current world, also when it is pending removal (a physics body leaves the
+   * simulation at the next flush, so a query can still hit it); `undefined` for a slot without an entity.
+   */
+  idOfSlot(slot) {
+    let world = this.getWorld(), record2 = world.recordAt(slot);
+    if (record2 === void 0) return;
+    let prefix = this.prefix(world);
+    if (slot < world.entities.length) {
+      let entity = world.resolvedAt(slot);
+      return entity === void 0 ? void 0 : prefix + entity.symbol;
+    }
+    return `${prefix}spawn:${String(slot)}:${String(record2.ref.gen)}`;
+  }
+};
+
 // src/host/extensions.ts
 var EXTENSION_API_VERSION = 1;
 function validateExtensions(extensions) {
   let ids = /* @__PURE__ */ new Set();
   for (let extension of extensions) {
-    if (extension.apiVersion !== 1)
+    if (extension.apiVersion !== EXTENSION_API_VERSION)
       throw new RangeError(
         `Extension '${extension.id}' requires an unsupported API version: ${String(extension.apiVersion)}`
       );
@@ -1291,26 +1330,12 @@ function validateExtensions(extensions) {
     ids.add(extension.id);
   }
 }
-function sceneAccess(getWorld, active, inspect) {
-  let epochs = /* @__PURE__ */ new WeakMap(), nextEpoch = 0, records = () => {
-    let world = getWorld(), entries = /* @__PURE__ */ new Map();
-    epochs.has(world) || epochs.set(world, ++nextEpoch);
-    let prefix = `scene:${String(epochs.get(world))}:`;
-    for (let slot = 0; slot < world.entities.length; slot++) {
-      let entity = world.resolvedAt(slot), record2 = world.recordAt(slot);
-      entity !== void 0 && record2 !== void 0 && entries.set(prefix + entity.symbol, record2);
-    }
-    for (let entity of world.dynamic.live)
-      entity.removing || entries.set(
-        `${prefix}spawn:${String(entity.ref.slot)}:${String(entity.ref.gen)}`,
-        entity.record
-      );
-    return entries;
-  };
+function sceneAccess(getWorld, active, inspect, ids = new EntityIds(getWorld)) {
+  let records = () => ids.records();
   return {
     inspectScene: () => {
       if (active(), inspect === void 0) return;
-      let world = getWorld(), entries = records(), raw = inspect(), ids = new Map([...entries].map(([id, r]) => [r.ref.slot, id])), bounds = new Map(raw.bounds.map((row) => [row.slot, row.value]));
+      let world = getWorld(), entries = records(), raw = inspect(), ids2 = new Map([...entries].map(([id, r]) => [r.ref.slot, id])), bounds = new Map(raw.bounds.map((row) => [row.slot, row.value]));
       return {
         frame: raw.frame,
         renderable: raw.renderable,
@@ -1320,13 +1345,13 @@ function sceneAccess(getWorld, active, inspect) {
           let parent = world.resolvedAt(r.ref.slot)?.parent, bound = bounds.get(r.ref.slot);
           return {
             id,
-            parentId: parent == null ? null : ids.get(parent) ?? null,
+            parentId: parent == null ? null : ids2.get(parent) ?? null,
             worldMatrix: [...world.worldMatrix(r.ref.slot)],
             ...bound === void 0 ? {} : { bounds: structuredClone(bound) }
           };
         }),
         bodies: raw.bodies.flatMap((body) => {
-          let entityId = ids.get(body.slot), record2 = world.recordAt(body.slot);
+          let entityId = ids2.get(body.slot), record2 = world.recordAt(body.slot);
           return entityId === void 0 || record2?.ref.gen !== body.generation ? [] : [{
             entityId,
             kind: body.kind,
@@ -1335,7 +1360,7 @@ function sceneAccess(getWorld, active, inspect) {
             position: { ...body.position },
             rotation: { ...body.rotation },
             ...body.contacts === void 0 ? {} : {
-              contacts: body.contacts.map((c) => ({ otherId: ids.get(c.userId) ?? null, point: { ...c.point }, normal: { ...c.normal }, distance: c.distance }))
+              contacts: body.contacts.map((c) => ({ otherId: ids2.get(c.userId) ?? null, point: { ...c.point }, normal: { ...c.normal }, distance: c.distance }))
             }
           }];
         })
@@ -1455,6 +1480,115 @@ var ExtensionHost = class {
     for (let item of [...this.installed].reverse()) this.remove(item);
   }
 };
+
+// src/host/physics-api.ts
+var MtekPhysicsUnsupportedError = class extends Error {
+  constructor(method, adapter) {
+    super(`The physics adapter '${adapter}' does not support ${method}.`);
+    this.method = method;
+    this.adapter = adapter;
+    this.name = "MtekPhysicsUnsupportedError";
+  }
+  method;
+  adapter;
+}, GROUP_MAX = 65535;
+function vec3(value, what) {
+  let v = value;
+  if (typeof v != "object" || v === null || typeof v.x != "number" || typeof v.y != "number" || typeof v.z != "number")
+    throw new TypeError(`${what} must be an object with numeric x, y and z.`);
+  if (!Number.isFinite(v.x) || !Number.isFinite(v.y) || !Number.isFinite(v.z)) throw new RangeError(`${what} must be finite.`);
+  return { x: v.x, y: v.y, z: v.z };
+}
+function quat(value, what) {
+  let q = value;
+  if (typeof q != "object" || q === null || typeof q.x != "number" || typeof q.y != "number" || typeof q.z != "number" || typeof q.w != "number")
+    throw new TypeError(`${what} must be an object with numeric x, y, z and w.`);
+  let length2 = Math.hypot(q.x, q.y, q.z, q.w);
+  if (!Number.isFinite(length2) || length2 < 1e-8) throw new RangeError(`${what} must be finite and not of zero length.`);
+  return { x: q.x / length2, y: q.y / length2, z: q.z / length2, w: q.w / length2 };
+}
+function positive(value, what) {
+  if (typeof value != "number") throw new TypeError(`${what} must be a number.`);
+  if (!Number.isFinite(value) || value <= 0) throw new RangeError(`${what} must be finite and greater than zero.`);
+  return value;
+}
+function mask(value, what) {
+  if (typeof value != "number") throw new TypeError(`${what} must be a number.`);
+  if (!Number.isInteger(value) || value < 0 || value > GROUP_MAX) throw new RangeError(`${what} must be an integer from 0 to ${String(GROUP_MAX)}.`);
+  return value;
+}
+var pack = (memberships, filter) => (memberships << 16 | filter) >>> 0;
+function shapeOf(value) {
+  let shape = value;
+  if (typeof shape != "object" || shape === null) throw new TypeError("shape must be an object.");
+  switch (shape.kind) {
+    case "sphere":
+      return { kind: "sphere", radius: positive(shape.radius, "shape.radius") };
+    case "box": {
+      let size = vec3(shape.size, "shape.size");
+      return positive(size.x, "shape.size.x"), positive(size.y, "shape.size.y"), positive(size.z, "shape.size.z"), { kind: "box", size };
+    }
+    case "capsule": {
+      let radius = positive(shape.radius, "shape.radius"), height = positive(shape.height, "shape.height");
+      if (height <= 2 * radius) throw new RangeError("shape.height must be greater than twice shape.radius.");
+      return { kind: "capsule", radius, height };
+    }
+    default:
+      throw new TypeError("shape.kind must be 'sphere', 'box' or 'capsule'.");
+  }
+}
+var copy = (v) => ({ x: v.x, y: v.y, z: v.z });
+function createHostPhysics(access) {
+  let live = (method) => {
+    access.active();
+    let queries = access.queries();
+    if (queries === void 0) throw new Error("The running program has no physics.");
+    if (!queries.supports(method)) throw new MtekPhysicsUnsupportedError(method, queries.adapter);
+    return queries;
+  }, bodyOf = (queries, id) => {
+    if (typeof id != "string") throw new TypeError("entityId must be a string.");
+    let record2 = access.ids.records().get(id);
+    if (record2 === void 0) throw new RangeError(`Unknown or stale entity ID: ${id}`);
+    let handle = queries.handleOf(record2.ref.slot, record2.ref.gen);
+    if (handle === void 0) throw new RangeError(`The entity ${id} has no active physics body.`);
+    return handle;
+  }, filterOf = (queries, options) => {
+    if (options === void 0) return {};
+    let groups = options.groups === void 0 ? void 0 : pack(mask(options.groups.memberships, "groups.memberships"), mask(options.groups.filter, "groups.filter"));
+    if (options.includeSensors !== void 0 && typeof options.includeSensors != "boolean") throw new TypeError("includeSensors must be a boolean.");
+    let exclude = options.exclude === void 0 ? void 0 : bodyOf(queries, options.exclude);
+    return {
+      ...groups === void 0 ? {} : { groups },
+      ...options.includeSensors === void 0 ? {} : { includeSensors: options.includeSensors },
+      ...exclude === void 0 ? {} : { exclude }
+    };
+  };
+  return {
+    castRay: (origin, direction, maxDistance, options) => {
+      let queries = live("castRay"), from = vec3(origin, "origin"), along = vec3(direction, "direction");
+      if (along.x === 0 && along.y === 0 && along.z === 0) throw new RangeError("direction must not be zero.");
+      let hit = queries.castRay(from, along, positive(maxDistance, "maxDistance"), filterOf(queries, options)), entityId = hit === void 0 ? void 0 : access.ids.idOfSlot(hit.userId);
+      return hit === void 0 || entityId === void 0 ? void 0 : { entityId, distance: hit.distance, point: copy(hit.point), normal: copy(hit.normal) };
+    },
+    castShape: (shape, pose, displacement, options) => {
+      let queries = live("castShape"), description = shapeOf(shape), placed = { position: vec3(pose?.position, "pose.position"), rotation: pose?.rotation === void 0 ? { x: 0, y: 0, z: 0, w: 1 } : quat(pose.rotation, "pose.rotation") }, sweep = vec3(displacement, "displacement"), hit = queries.castShape(description, placed, sweep, filterOf(queries, options)), entityId = hit === void 0 ? void 0 : access.ids.idOfSlot(hit.userId);
+      return hit === void 0 || entityId === void 0 ? void 0 : { entityId, fraction: hit.fraction, point: copy(hit.point), normal: copy(hit.normal) };
+    },
+    contacts: (entityId) => {
+      let queries = live("contacts");
+      return queries.contacts(bodyOf(queries, entityId)).map((contact) => ({
+        entityId: access.ids.idOfSlot(contact.userId) ?? null,
+        point: copy(contact.point),
+        normal: copy(contact.normal),
+        distance: contact.distance
+      }));
+    },
+    setCollisionGroups: (entityId, memberships, filter) => {
+      let queries = live("setCollisionGroups"), m = mask(memberships, "memberships"), f = mask(filter, "filter");
+      queries.setCollisionGroups(bodyOf(queries, entityId), m, f);
+    }
+  };
+}
 
 // src/render/environment.ts
 var ENVIRONMENT_QUALITY = {
@@ -1805,6 +1939,7 @@ var RUNTIME_DIAGNOSTIC_CATALOGUE = {
   E8102: "physics module failed to load",
   E8103: "non-finite pose produced by the solver",
   E8104: "non-finite value given to a body",
+  E8105: "physics adapter cannot move characters",
   W8201: "audio value clamped",
   W8202: "sound could not be decoded",
   W8203: "too many HUD items",
@@ -2042,7 +2177,7 @@ function checkDeviceCapabilities(required, device) {
 }
 
 // src/abi/generated/validate-manifest.js
-var _mtekDiagnosticString0 = "#/pattern", _mtekDiagnosticString1 = "pattern", _mtekDiagnosticString2 = "#/type", _mtekDiagnosticString3 = "type", _mtekDiagnosticString4 = "must be string", _mtekDiagnosticString5 = "#/items/type", _mtekDiagnosticString6 = "uniqueItems", _mtekDiagnosticString7 = "must be array", _mtekDiagnosticString8 = "#/required", _mtekDiagnosticString9 = "required", _mtekDiagnosticString10 = "#/additionalProperties", _mtekDiagnosticString11 = "additionalProperties", _mtekDiagnosticString12 = "must NOT have additional properties", _mtekDiagnosticString13 = "must be integer", _mtekDiagnosticString14 = "minimum", _mtekDiagnosticString15 = "must be >= 0", _mtekDiagnosticString16 = "must be object", _mtekDiagnosticString17 = "exclusiveMinimum", _mtekDiagnosticString18 = "must be > 0", _mtekDiagnosticString19 = "must be number", _mtekDiagnosticString20 = "must be >= 1", _mtekDiagnosticString21 = "must be boolean", _mtekDiagnosticString22 = "minLength", _mtekDiagnosticString23 = "must NOT have fewer than 1 characters", _mtekDiagnosticString24 = "minItems", _mtekDiagnosticString25 = "must NOT have fewer than 1 items", _mtekDiagnosticString26 = "#/properties/scenes/items/required", _mtekDiagnosticString27 = "enum", _mtekDiagnosticString28 = "must be equal to one of the allowed values", _mtekDiagnosticString29 = "#/properties/kind/const", _mtekDiagnosticString30 = "const", _mtekDiagnosticString31 = "must be equal to constant", _mtekDiagnosticString32 = "maximum", _mtekDiagnosticString33 = "#/discriminator", _mtekDiagnosticString34 = "discriminator", _mtekDiagnosticString35 = 'value of tag "kind" must be in oneOf', _mtekDiagnosticString36 = 'tag "kind" must be string', _mtekDiagnosticString37 = "must be string,null", _mtekDiagnosticString38 = "#/properties/params/type", _mtekDiagnosticString39 = "#/properties/size/const", _mtekDiagnosticString40 = "#/properties/align/const", _mtekDiagnosticString41 = "#/properties/name/enum", _mtekDiagnosticString42 = "maxItems", _mtekDiagnosticString43 = "must NOT have more than 3 items", _mtekDiagnosticString44 = "must NOT have fewer than 3 items", _mtekDiagnosticString45 = "must be <= 256", _mtekDiagnosticString46 = "must NOT have more than 4 items", _mtekDiagnosticString47 = "must be <= 255", _mtekDiagnosticString48 = "#/properties/size/maxItems", _mtekDiagnosticString49 = "#/properties/size/minItems", _mtekDiagnosticString50 = "#/properties/size/items/exclusiveMinimum", _mtekDiagnosticString51 = "#/properties/size/items/type", _mtekDiagnosticString52 = "#/properties/size/type", _mtekDiagnosticString53 = "must NOT have fewer than 4 items", _mtekDiagnosticString54 = "#/properties/name/type", _mtekDiagnosticString55 = "#/properties/source/required", _mtekDiagnosticString56 = "#/properties/source/type", _mtekDiagnosticString57 = "#/properties/source/minLength", _mtekDiagnosticString58 = "#/properties/class/const", _mtekDiagnosticString59 = "#/properties/field/type", _mtekDiagnosticString60 = "#/properties/field/enum", _mtekDiagnosticString61 = "must be object,null", _mtekDiagnosticString62 = "#/properties/material/required", _mtekDiagnosticString63 = 'must match "then" schema', _mtekDiagnosticString64 = "#/properties/state/type", _mtekDiagnosticString65 = "#/properties/fields/required";
+var _mtekDiagnosticString0 = "#/pattern", _mtekDiagnosticString1 = "pattern", _mtekDiagnosticString2 = "#/type", _mtekDiagnosticString3 = "type", _mtekDiagnosticString4 = "must be string", _mtekDiagnosticString5 = "#/items/type", _mtekDiagnosticString6 = "uniqueItems", _mtekDiagnosticString7 = "must be array", _mtekDiagnosticString8 = "#/required", _mtekDiagnosticString9 = "required", _mtekDiagnosticString10 = "#/additionalProperties", _mtekDiagnosticString11 = "additionalProperties", _mtekDiagnosticString12 = "must NOT have additional properties", _mtekDiagnosticString13 = "must be integer", _mtekDiagnosticString14 = "minimum", _mtekDiagnosticString15 = "must be >= 0", _mtekDiagnosticString16 = "must be object", _mtekDiagnosticString17 = "exclusiveMinimum", _mtekDiagnosticString18 = "must be > 0", _mtekDiagnosticString19 = "must be number", _mtekDiagnosticString20 = "must be >= 1", _mtekDiagnosticString21 = "must be boolean", _mtekDiagnosticString22 = "minLength", _mtekDiagnosticString23 = "must NOT have fewer than 1 characters", _mtekDiagnosticString24 = "minItems", _mtekDiagnosticString25 = "must NOT have fewer than 1 items", _mtekDiagnosticString26 = "#/properties/scenes/items/required", _mtekDiagnosticString27 = "enum", _mtekDiagnosticString28 = "must be equal to one of the allowed values", _mtekDiagnosticString29 = "#/properties/kind/const", _mtekDiagnosticString30 = "const", _mtekDiagnosticString31 = "must be equal to constant", _mtekDiagnosticString32 = "maximum", _mtekDiagnosticString33 = "#/discriminator", _mtekDiagnosticString34 = "discriminator", _mtekDiagnosticString35 = 'value of tag "kind" must be in oneOf', _mtekDiagnosticString36 = 'tag "kind" must be string', _mtekDiagnosticString37 = "must be string,null", _mtekDiagnosticString38 = "#/properties/params/type", _mtekDiagnosticString39 = "#/properties/size/const", _mtekDiagnosticString40 = "#/properties/align/const", _mtekDiagnosticString41 = "#/properties/name/enum", _mtekDiagnosticString42 = "maxItems", _mtekDiagnosticString43 = "must NOT have more than 3 items", _mtekDiagnosticString44 = "must NOT have fewer than 3 items", _mtekDiagnosticString45 = "must be <= 256", _mtekDiagnosticString46 = "must NOT have more than 4 items", _mtekDiagnosticString47 = "must be <= 255", _mtekDiagnosticString48 = "#/properties/size/maxItems", _mtekDiagnosticString49 = "#/properties/size/minItems", _mtekDiagnosticString50 = "#/properties/size/items/exclusiveMinimum", _mtekDiagnosticString51 = "#/properties/size/items/type", _mtekDiagnosticString52 = "#/properties/size/type", _mtekDiagnosticString53 = "#/properties/radius/exclusiveMinimum", _mtekDiagnosticString54 = "#/properties/radius/type", _mtekDiagnosticString55 = "must NOT have fewer than 4 items", _mtekDiagnosticString56 = "#/properties/name/type", _mtekDiagnosticString57 = "#/properties/source/required", _mtekDiagnosticString58 = "#/properties/source/type", _mtekDiagnosticString59 = "#/properties/source/minLength", _mtekDiagnosticString60 = "#/properties/class/const", _mtekDiagnosticString61 = "#/properties/sensor/type", _mtekDiagnosticString62 = "#/properties/friction/minimum", _mtekDiagnosticString63 = "#/properties/friction/type", _mtekDiagnosticString64 = "#/properties/restitution/maximum", _mtekDiagnosticString65 = "#/properties/restitution/minimum", _mtekDiagnosticString66 = "#/properties/restitution/type", _mtekDiagnosticString67 = "#/properties/field/type", _mtekDiagnosticString68 = "#/properties/field/enum", _mtekDiagnosticString69 = "must be object,null", _mtekDiagnosticString70 = "#/properties/material/required", _mtekDiagnosticString71 = 'must match "then" schema', _mtekDiagnosticString72 = "#/properties/state/type", _mtekDiagnosticString73 = "#/properties/fields/required";
 var validate_manifest_default = validate52, schema19 = { properties: { manifestSchema: { type: "integer" }, runtimeAbi: { type: "integer" }, languageVersion: { type: "string" }, compilerVersion: { type: "string", minLength: 1 }, buildId: { $ref: "#/$defs/sha256" }, targetProfile: { type: "string", enum: ["webgpu-core-2026"] }, requiredCapabilities: { $ref: "#/$defs/requiredCapabilities" }, subsystems: { type: "object", additionalProperties: !1, required: ["physics"], properties: { physics: { type: "boolean" }, physicsModule: { type: "string", pattern: "^physics/[0-9a-f]{16}\\.js$" } }, if: { properties: { physics: { const: !0 }, physicsModule: {} }, required: ["physics"], additionalProperties: !1 }, then: { properties: { physics: {}, physicsModule: {} }, required: ["physicsModule"], additionalProperties: !1 }, else: { properties: { physics: {}, physicsModule: !1 }, additionalProperties: !1 } }, runtimeConfig: { $ref: "#/$defs/runtimeConfig" }, game: { $ref: "#/$defs/game" }, preview: { type: "object", additionalProperties: !1, required: ["loopBudget"], properties: { loopBudget: { type: "integer", minimum: 1, maximum: 4294967295 } } }, entryScene: { type: "string", minLength: 1 }, sources: { type: "array", items: { $ref: "#/$defs/source" } }, spans: { type: "array", items: { $ref: "#/$defs/span" } }, symbols: { type: "array", items: { $ref: "#/$defs/symbol" } }, layouts: { type: "array", items: { $ref: "#/$defs/layout" } }, shaders: { type: "array", items: { $ref: "#/$defs/shader" } }, materials: { type: "array", items: { $ref: "#/$defs/material" } }, computePrograms: { type: "array", items: { $ref: "#/$defs/computeProgram" } }, meshes: { type: "array", items: { $ref: "#/$defs/mesh" } }, assets: { type: "array", items: { $ref: "#/$defs/asset" } }, prefabs: { type: "array", items: { $ref: "#/$defs/prefab" } }, scene: { $ref: "#/$defs/scene" } } }, func1 = Object.prototype.hasOwnProperty;
 var pattern3 = new RegExp("^[0-9a-f]{64}$", "u");
 function validate53(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
@@ -4000,11 +4135,11 @@ function validate174(data, { instancePath = "", parentData, parentDataProperty, 
       let data2 = data.radius;
       if (typeof data2 == "number" && isFinite(data2)) {
         if (data2 <= 0 || isNaN(data2)) {
-          let err7 = { instancePath: instancePath + "/radius", schemaPath: "#/properties/radius/exclusiveMinimum", keyword: _mtekDiagnosticString17, params: { comparison: ">", limit: 0 }, message: _mtekDiagnosticString18 };
+          let err7 = { instancePath: instancePath + "/radius", schemaPath: _mtekDiagnosticString53, keyword: _mtekDiagnosticString17, params: { comparison: ">", limit: 0 }, message: _mtekDiagnosticString18 };
           vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
         }
       } else {
-        let err8 = { instancePath: instancePath + "/radius", schemaPath: "#/properties/radius/type", keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
+        let err8 = { instancePath: instancePath + "/radius", schemaPath: _mtekDiagnosticString54, keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
         vErrors === null ? vErrors = [err8] : vErrors.push(err8), errors++;
       }
     }
@@ -4201,7 +4336,7 @@ function validate184(data, { instancePath = "", parentData, parentDataProperty, 
           vErrors === null ? vErrors = [err13] : vErrors.push(err13), errors++;
         }
         if (data3.length < 4) {
-          let err14 = { instancePath: instancePath + "/rotation", schemaPath: "#/properties/rotation/minItems", keyword: _mtekDiagnosticString24, params: { limit: 4 }, message: _mtekDiagnosticString53 };
+          let err14 = { instancePath: instancePath + "/rotation", schemaPath: "#/properties/rotation/minItems", keyword: _mtekDiagnosticString24, params: { limit: 4 }, message: _mtekDiagnosticString55 };
           vErrors === null ? vErrors = [err14] : vErrors.push(err14), errors++;
         }
         let len1 = data3.length;
@@ -4242,7 +4377,7 @@ function validate184(data, { instancePath = "", parentData, parentDataProperty, 
       }
     }
     if (data.name !== void 0 && typeof data.name != "string") {
-      let err21 = { instancePath: instancePath + "/name", schemaPath: _mtekDiagnosticString54, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
+      let err21 = { instancePath: instancePath + "/name", schemaPath: _mtekDiagnosticString56, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
       vErrors === null ? vErrors = [err21] : vErrors.push(err21), errors++;
     }
   } else {
@@ -4387,7 +4522,7 @@ function validate186(data, { instancePath = "", parentData, parentDataProperty, 
           vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
         }
       } else {
-        let err5 = { instancePath: instancePath + "/name", schemaPath: _mtekDiagnosticString54, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
+        let err5 = { instancePath: instancePath + "/name", schemaPath: _mtekDiagnosticString56, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
         vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
       }
     }
@@ -4584,7 +4719,7 @@ function validate183(data, { instancePath = "", parentData, parentDataProperty, 
               vErrors === null ? vErrors = [err27] : vErrors.push(err27), errors++;
             }
             if (data9.length < 4) {
-              let err28 = { instancePath: instancePath + "/indices/" + i4, schemaPath: "#/properties/indices/items/minItems", keyword: _mtekDiagnosticString24, params: { limit: 4 }, message: _mtekDiagnosticString53 };
+              let err28 = { instancePath: instancePath + "/indices/" + i4, schemaPath: "#/properties/indices/items/minItems", keyword: _mtekDiagnosticString24, params: { limit: 4 }, message: _mtekDiagnosticString55 };
               vErrors === null ? vErrors = [err28] : vErrors.push(err28), errors++;
             }
             let len5 = data9.length;
@@ -4627,7 +4762,7 @@ function validate183(data, { instancePath = "", parentData, parentDataProperty, 
               vErrors === null ? vErrors = [err34] : vErrors.push(err34), errors++;
             }
             if (data12.length < 4) {
-              let err35 = { instancePath: instancePath + "/weights/" + i6, schemaPath: "#/properties/weights/items/minItems", keyword: _mtekDiagnosticString24, params: { limit: 4 }, message: _mtekDiagnosticString53 };
+              let err35 = { instancePath: instancePath + "/weights/" + i6, schemaPath: "#/properties/weights/items/minItems", keyword: _mtekDiagnosticString24, params: { limit: 4 }, message: _mtekDiagnosticString55 };
               vErrors === null ? vErrors = [err35] : vErrors.push(err35), errors++;
             }
             let len7 = data12.length;
@@ -4802,15 +4937,15 @@ function validate201(data, { instancePath = "", parentData, parentDataProperty, 
       let data0 = data.source;
       if (data0 && typeof data0 == "object" && !Array.isArray(data0)) {
         if (data0.file === void 0) {
-          let err8 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString55, keyword: _mtekDiagnosticString9, params: { missingProperty: "file" }, message: "must have required property 'file'" };
+          let err8 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString57, keyword: _mtekDiagnosticString9, params: { missingProperty: "file" }, message: "must have required property 'file'" };
           vErrors === null ? vErrors = [err8] : vErrors.push(err8), errors++;
         }
         if (data0.mesh === void 0) {
-          let err9 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString55, keyword: _mtekDiagnosticString9, params: { missingProperty: "mesh" }, message: "must have required property 'mesh'" };
+          let err9 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString57, keyword: _mtekDiagnosticString9, params: { missingProperty: "mesh" }, message: "must have required property 'mesh'" };
           vErrors === null ? vErrors = [err9] : vErrors.push(err9), errors++;
         }
         if (data0.primitive === void 0) {
-          let err10 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString55, keyword: _mtekDiagnosticString9, params: { missingProperty: "primitive" }, message: "must have required property 'primitive'" };
+          let err10 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString57, keyword: _mtekDiagnosticString9, params: { missingProperty: "primitive" }, message: "must have required property 'primitive'" };
           vErrors === null ? vErrors = [err10] : vErrors.push(err10), errors++;
         }
         for (let key1 in data0)
@@ -4820,7 +4955,7 @@ function validate201(data, { instancePath = "", parentData, parentDataProperty, 
           }
         data0.file !== void 0 && (validate64(data0.file, { instancePath: instancePath + "/source/file", parentData: data0, parentDataProperty: "file", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate64.errors : vErrors.concat(validate64.errors), errors = vErrors.length)), data0.mesh !== void 0 && (validate64(data0.mesh, { instancePath: instancePath + "/source/mesh", parentData: data0, parentDataProperty: "mesh", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate64.errors : vErrors.concat(validate64.errors), errors = vErrors.length)), data0.primitive !== void 0 && (validate68(data0.primitive, { instancePath: instancePath + "/source/primitive", parentData: data0, parentDataProperty: "primitive", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate68.errors : vErrors.concat(validate68.errors), errors = vErrors.length));
       } else {
-        let err12 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString56, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
+        let err12 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString58, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
         vErrors === null ? vErrors = [err12] : vErrors.push(err12), errors++;
       }
     }
@@ -5093,11 +5228,11 @@ function validate216(data, { instancePath = "", parentData, parentDataProperty, 
       let data7 = data.source;
       if (typeof data7 == "string") {
         if (data7.length < 1) {
-          let err11 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString57, keyword: _mtekDiagnosticString22, params: { limit: 1 }, message: _mtekDiagnosticString23 };
+          let err11 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString59, keyword: _mtekDiagnosticString22, params: { limit: 1 }, message: _mtekDiagnosticString23 };
           vErrors === null ? vErrors = [err11] : vErrors.push(err11), errors++;
         }
       } else {
-        let err12 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString56, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
+        let err12 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString58, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
         vErrors === null ? vErrors = [err12] : vErrors.push(err12), errors++;
       }
     }
@@ -5179,11 +5314,11 @@ function validate222(data, { instancePath = "", parentData, parentDataProperty, 
       let data6 = data.source;
       if (typeof data6 == "string") {
         if (data6.length < 1) {
-          let err14 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString57, keyword: _mtekDiagnosticString22, params: { limit: 1 }, message: _mtekDiagnosticString23 };
+          let err14 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString59, keyword: _mtekDiagnosticString22, params: { limit: 1 }, message: _mtekDiagnosticString23 };
           vErrors === null ? vErrors = [err14] : vErrors.push(err14), errors++;
         }
       } else {
-        let err15 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString56, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
+        let err15 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString58, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
         vErrors === null ? vErrors = [err15] : vErrors.push(err15), errors++;
       }
     }
@@ -5266,11 +5401,11 @@ function validate227(data, { instancePath = "", parentData, parentDataProperty, 
       let data6 = data.source;
       if (typeof data6 == "string") {
         if (data6.length < 1) {
-          let err14 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString57, keyword: _mtekDiagnosticString22, params: { limit: 1 }, message: _mtekDiagnosticString23 };
+          let err14 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString59, keyword: _mtekDiagnosticString22, params: { limit: 1 }, message: _mtekDiagnosticString23 };
           vErrors === null ? vErrors = [err14] : vErrors.push(err14), errors++;
         }
       } else {
-        let err15 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString56, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
+        let err15 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString58, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
         vErrors === null ? vErrors = [err15] : vErrors.push(err15), errors++;
       }
     }
@@ -5329,7 +5464,7 @@ function validate244(data, { instancePath = "", parentData, parentDataProperty, 
         vErrors === null ? vErrors = [err2] : vErrors.push(err2), errors++;
       }
     if (data.name !== void 0 && (validate64(data.name, { instancePath: instancePath + "/name", parentData: data, parentDataProperty: "name", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate64.errors : vErrors.concat(validate64.errors), errors = vErrors.length)), data.class !== void 0 && data.class !== "initial") {
-      let err3 = { instancePath: instancePath + "/class", schemaPath: _mtekDiagnosticString58, keyword: _mtekDiagnosticString30, params: { allowedValue: "initial" }, message: _mtekDiagnosticString31 };
+      let err3 = { instancePath: instancePath + "/class", schemaPath: _mtekDiagnosticString60, keyword: _mtekDiagnosticString30, params: { allowedValue: "initial" }, message: _mtekDiagnosticString31 };
       vErrors === null ? vErrors = [err3] : vErrors.push(err3), errors++;
     }
   } else {
@@ -5356,7 +5491,7 @@ function validate246(data, { instancePath = "", parentData, parentDataProperty, 
         vErrors === null ? vErrors = [err2] : vErrors.push(err2), errors++;
       }
     if (data.name !== void 0 && (validate64(data.name, { instancePath: instancePath + "/name", parentData: data, parentDataProperty: "name", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate64.errors : vErrors.concat(validate64.errors), errors = vErrors.length)), data.class !== void 0 && data.class !== "imperative") {
-      let err3 = { instancePath: instancePath + "/class", schemaPath: _mtekDiagnosticString58, keyword: _mtekDiagnosticString30, params: { allowedValue: "imperative" }, message: _mtekDiagnosticString31 };
+      let err3 = { instancePath: instancePath + "/class", schemaPath: _mtekDiagnosticString60, keyword: _mtekDiagnosticString30, params: { allowedValue: "imperative" }, message: _mtekDiagnosticString31 };
       vErrors === null ? vErrors = [err3] : vErrors.push(err3), errors++;
     }
   } else {
@@ -5387,7 +5522,7 @@ function validate248(data, { instancePath = "", parentData, parentDataProperty, 
         vErrors === null ? vErrors = [err3] : vErrors.push(err3), errors++;
       }
     if (data.name !== void 0 && (validate64(data.name, { instancePath: instancePath + "/name", parentData: data, parentDataProperty: "name", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate64.errors : vErrors.concat(validate64.errors), errors = vErrors.length)), data.class !== void 0 && data.class !== "bound") {
-      let err4 = { instancePath: instancePath + "/class", schemaPath: _mtekDiagnosticString58, keyword: _mtekDiagnosticString30, params: { allowedValue: "bound" }, message: _mtekDiagnosticString31 };
+      let err4 = { instancePath: instancePath + "/class", schemaPath: _mtekDiagnosticString60, keyword: _mtekDiagnosticString30, params: { allowedValue: "bound" }, message: _mtekDiagnosticString31 };
       vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
     }
     data.binding !== void 0 && (validate68(data.binding, { instancePath: instancePath + "/binding", parentData: data, parentDataProperty: "binding", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate68.errors : vErrors.concat(validate68.errors), errors = vErrors.length));
@@ -5422,7 +5557,7 @@ function validate254(data, { instancePath = "", parentData, parentDataProperty, 
     if (data.name !== void 0) {
       let data1 = data.name;
       if (typeof data1 != "string") {
-        let err4 = { instancePath: instancePath + "/name", schemaPath: _mtekDiagnosticString54, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
+        let err4 = { instancePath: instancePath + "/name", schemaPath: _mtekDiagnosticString56, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
         vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
       }
       if (!(data1 === "texture.white" || data1 === "texture.black" || data1 === "sampler.mag_linear_min_nearest_repeat_level0" || data1 === "sampler.mag_linear_min_nearest_repeat_mip_nearest" || data1 === "sampler.mag_linear_min_nearest_repeat_mip_linear" || data1 === "sampler.mag_linear_min_nearest_clamp_level0" || data1 === "sampler.mag_linear_min_nearest_clamp_mip_nearest" || data1 === "sampler.mag_linear_min_nearest_clamp_mip_linear" || data1 === "sampler.mag_nearest_min_linear_repeat_level0" || data1 === "sampler.mag_nearest_min_linear_repeat_mip_nearest" || data1 === "sampler.mag_nearest_min_linear_repeat_mip_linear" || data1 === "sampler.mag_nearest_min_linear_clamp_level0" || data1 === "sampler.mag_nearest_min_linear_clamp_mip_nearest" || data1 === "sampler.mag_nearest_min_linear_clamp_mip_linear" || data1 === "sampler.linear_repeat" || data1 === "sampler.linear_clamp" || data1 === "sampler.nearest_repeat" || data1 === "sampler.nearest_clamp" || data1 === "sampler.linear_repeat_level0" || data1 === "sampler.linear_repeat_mip_nearest" || data1 === "sampler.linear_clamp_level0" || data1 === "sampler.linear_clamp_mip_nearest" || data1 === "sampler.nearest_repeat_level0" || data1 === "sampler.nearest_repeat_mip_linear" || data1 === "sampler.nearest_clamp_level0" || data1 === "sampler.nearest_clamp_mip_linear")) {
@@ -5511,7 +5646,7 @@ function validate251(data, { instancePath = "", parentData, parentDataProperty, 
         vErrors === null ? vErrors = [err3] : vErrors.push(err3), errors++;
       }
     if (data.name !== void 0 && (validate64(data.name, { instancePath: instancePath + "/name", parentData: data, parentDataProperty: "name", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate64.errors : vErrors.concat(validate64.errors), errors = vErrors.length)), data.class !== void 0 && data.class !== "resource") {
-      let err4 = { instancePath: instancePath + "/class", schemaPath: _mtekDiagnosticString58, keyword: _mtekDiagnosticString30, params: { allowedValue: "resource" }, message: _mtekDiagnosticString31 };
+      let err4 = { instancePath: instancePath + "/class", schemaPath: _mtekDiagnosticString60, keyword: _mtekDiagnosticString30, params: { allowedValue: "resource" }, message: _mtekDiagnosticString31 };
       vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
     }
     data.value !== void 0 && (validate253(data.value, { instancePath: instancePath + "/value", parentData: data, parentDataProperty: "value", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate253.errors : vErrors.concat(validate253.errors), errors = vErrors.length));
@@ -5594,7 +5729,7 @@ function validate267(data, { instancePath = "", parentData, parentDataProperty, 
       vErrors === null ? vErrors = [err3] : vErrors.push(err3), errors++;
     }
     for (let key0 in data)
-      if (!(key0 === "kind" || key0 === "mass" || key0 === "linearDamping" || key0 === "angularDamping")) {
+      if (!(key0 === "kind" || key0 === "mass" || key0 === "linearDamping" || key0 === "angularDamping" || key0 === "continuous")) {
         let err4 = { instancePath, schemaPath: _mtekDiagnosticString10, keyword: _mtekDiagnosticString11, params: { additionalProperty: key0 }, message: _mtekDiagnosticString12 };
         vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
       }
@@ -5638,13 +5773,124 @@ function validate267(data, { instancePath = "", parentData, parentDataProperty, 
         vErrors === null ? vErrors = [err11] : vErrors.push(err11), errors++;
       }
     }
+    if (data.continuous !== void 0 && data.continuous !== !0) {
+      let err12 = { instancePath: instancePath + "/continuous", schemaPath: "#/properties/continuous/const", keyword: _mtekDiagnosticString30, params: { allowedValue: !0 }, message: _mtekDiagnosticString31 };
+      vErrors === null ? vErrors = [err12] : vErrors.push(err12), errors++;
+    }
   } else {
-    let err12 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
-    vErrors === null ? vErrors = [err12] : vErrors.push(err12), errors++;
+    let err13 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
+    vErrors === null ? vErrors = [err13] : vErrors.push(err13), errors++;
   }
   return validate267.errors = vErrors, errors === 0;
 }
 validate267.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate269(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate269.evaluated;
+  if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
+    if (data.maxSlope === void 0) {
+      let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "maxSlope" }, message: "must have required property 'maxSlope'" };
+      vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
+    }
+    if (data.stepHeight === void 0) {
+      let err1 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "stepHeight" }, message: "must have required property 'stepHeight'" };
+      vErrors === null ? vErrors = [err1] : vErrors.push(err1), errors++;
+    }
+    if (data.stepMinWidth === void 0) {
+      let err2 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "stepMinWidth" }, message: "must have required property 'stepMinWidth'" };
+      vErrors === null ? vErrors = [err2] : vErrors.push(err2), errors++;
+    }
+    if (data.snapToGround === void 0) {
+      let err3 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "snapToGround" }, message: "must have required property 'snapToGround'" };
+      vErrors === null ? vErrors = [err3] : vErrors.push(err3), errors++;
+    }
+    if (data.skin === void 0) {
+      let err4 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "skin" }, message: "must have required property 'skin'" };
+      vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
+    }
+    if (data.carry === void 0) {
+      let err5 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "carry" }, message: "must have required property 'carry'" };
+      vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
+    }
+    for (let key0 in data)
+      if (!(key0 === "maxSlope" || key0 === "stepHeight" || key0 === "stepMinWidth" || key0 === "snapToGround" || key0 === "skin" || key0 === "carry")) {
+        let err6 = { instancePath, schemaPath: _mtekDiagnosticString10, keyword: _mtekDiagnosticString11, params: { additionalProperty: key0 }, message: _mtekDiagnosticString12 };
+        vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
+      }
+    if (data.maxSlope !== void 0) {
+      let data0 = data.maxSlope;
+      if (typeof data0 == "number" && isFinite(data0)) {
+        if (data0 > 1.5707964 || isNaN(data0)) {
+          let err7 = { instancePath: instancePath + "/maxSlope", schemaPath: "#/properties/maxSlope/maximum", keyword: _mtekDiagnosticString32, params: { comparison: "<=", limit: 1.5707964 }, message: "must be <= 1.5707964" };
+          vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
+        }
+        if (data0 < 0 || isNaN(data0)) {
+          let err8 = { instancePath: instancePath + "/maxSlope", schemaPath: "#/properties/maxSlope/minimum", keyword: _mtekDiagnosticString14, params: { comparison: ">=", limit: 0 }, message: _mtekDiagnosticString15 };
+          vErrors === null ? vErrors = [err8] : vErrors.push(err8), errors++;
+        }
+      } else {
+        let err9 = { instancePath: instancePath + "/maxSlope", schemaPath: "#/properties/maxSlope/type", keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
+        vErrors === null ? vErrors = [err9] : vErrors.push(err9), errors++;
+      }
+    }
+    if (data.stepHeight !== void 0) {
+      let data1 = data.stepHeight;
+      if (typeof data1 == "number" && isFinite(data1)) {
+        if (data1 < 0 || isNaN(data1)) {
+          let err10 = { instancePath: instancePath + "/stepHeight", schemaPath: "#/properties/stepHeight/minimum", keyword: _mtekDiagnosticString14, params: { comparison: ">=", limit: 0 }, message: _mtekDiagnosticString15 };
+          vErrors === null ? vErrors = [err10] : vErrors.push(err10), errors++;
+        }
+      } else {
+        let err11 = { instancePath: instancePath + "/stepHeight", schemaPath: "#/properties/stepHeight/type", keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
+        vErrors === null ? vErrors = [err11] : vErrors.push(err11), errors++;
+      }
+    }
+    if (data.stepMinWidth !== void 0) {
+      let data2 = data.stepMinWidth;
+      if (typeof data2 == "number" && isFinite(data2)) {
+        if (data2 <= 0 || isNaN(data2)) {
+          let err12 = { instancePath: instancePath + "/stepMinWidth", schemaPath: "#/properties/stepMinWidth/exclusiveMinimum", keyword: _mtekDiagnosticString17, params: { comparison: ">", limit: 0 }, message: _mtekDiagnosticString18 };
+          vErrors === null ? vErrors = [err12] : vErrors.push(err12), errors++;
+        }
+      } else {
+        let err13 = { instancePath: instancePath + "/stepMinWidth", schemaPath: "#/properties/stepMinWidth/type", keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
+        vErrors === null ? vErrors = [err13] : vErrors.push(err13), errors++;
+      }
+    }
+    if (data.snapToGround !== void 0) {
+      let data3 = data.snapToGround;
+      if (typeof data3 == "number" && isFinite(data3)) {
+        if (data3 < 0 || isNaN(data3)) {
+          let err14 = { instancePath: instancePath + "/snapToGround", schemaPath: "#/properties/snapToGround/minimum", keyword: _mtekDiagnosticString14, params: { comparison: ">=", limit: 0 }, message: _mtekDiagnosticString15 };
+          vErrors === null ? vErrors = [err14] : vErrors.push(err14), errors++;
+        }
+      } else {
+        let err15 = { instancePath: instancePath + "/snapToGround", schemaPath: "#/properties/snapToGround/type", keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
+        vErrors === null ? vErrors = [err15] : vErrors.push(err15), errors++;
+      }
+    }
+    if (data.skin !== void 0) {
+      let data4 = data.skin;
+      if (typeof data4 == "number" && isFinite(data4)) {
+        if (data4 <= 0 || isNaN(data4)) {
+          let err16 = { instancePath: instancePath + "/skin", schemaPath: "#/properties/skin/exclusiveMinimum", keyword: _mtekDiagnosticString17, params: { comparison: ">", limit: 0 }, message: _mtekDiagnosticString18 };
+          vErrors === null ? vErrors = [err16] : vErrors.push(err16), errors++;
+        }
+      } else {
+        let err17 = { instancePath: instancePath + "/skin", schemaPath: "#/properties/skin/type", keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
+        vErrors === null ? vErrors = [err17] : vErrors.push(err17), errors++;
+      }
+    }
+    if (data.carry !== void 0 && typeof data.carry != "boolean") {
+      let err18 = { instancePath: instancePath + "/carry", schemaPath: "#/properties/carry/type", keyword: _mtekDiagnosticString3, params: { type: "boolean" }, message: _mtekDiagnosticString21 };
+      vErrors === null ? vErrors = [err18] : vErrors.push(err18), errors++;
+    }
+  } else {
+    let err19 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
+    vErrors === null ? vErrors = [err19] : vErrors.push(err19), errors++;
+  }
+  return validate269.errors = vErrors, errors === 0;
+}
+validate269.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 function validate268(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null, errors = 0, evaluated0 = validate268.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
@@ -5653,7 +5899,7 @@ function validate268(data, { instancePath = "", parentData, parentDataProperty, 
       vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
     }
     for (let key0 in data)
-      if (key0 !== "kind") {
+      if (!(key0 === "kind" || key0 === "character")) {
         let err1 = { instancePath, schemaPath: _mtekDiagnosticString10, keyword: _mtekDiagnosticString11, params: { additionalProperty: key0 }, message: _mtekDiagnosticString12 };
         vErrors === null ? vErrors = [err1] : vErrors.push(err1), errors++;
       }
@@ -5661,6 +5907,7 @@ function validate268(data, { instancePath = "", parentData, parentDataProperty, 
       let err2 = { instancePath: instancePath + "/kind", schemaPath: _mtekDiagnosticString29, keyword: _mtekDiagnosticString30, params: { allowedValue: "kinematic" }, message: _mtekDiagnosticString31 };
       vErrors === null ? vErrors = [err2] : vErrors.push(err2), errors++;
     }
+    data.character !== void 0 && (validate269(data.character, { instancePath: instancePath + "/character", parentData: data, parentDataProperty: "character", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate269.errors : vErrors.concat(validate269.errors), errors = vErrors.length));
   } else {
     let err3 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err3] : vErrors.push(err3), errors++;
@@ -5695,8 +5942,8 @@ function validate265(data, { instancePath = "", parentData, parentDataProperty, 
   return validate265.errors = vErrors, evaluated0.props = props0, errors === 0;
 }
 validate265.evaluated = { dynamicProps: !0, dynamicItems: !1 };
-function validate274(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate274.evaluated;
+function validate276(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate276.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -5757,18 +6004,18 @@ function validate274(data, { instancePath = "", parentData, parentDataProperty, 
       }
     }
     if (data.sensor !== void 0 && typeof data.sensor != "boolean") {
-      let err12 = { instancePath: instancePath + "/sensor", schemaPath: "#/properties/sensor/type", keyword: _mtekDiagnosticString3, params: { type: "boolean" }, message: _mtekDiagnosticString21 };
+      let err12 = { instancePath: instancePath + "/sensor", schemaPath: _mtekDiagnosticString61, keyword: _mtekDiagnosticString3, params: { type: "boolean" }, message: _mtekDiagnosticString21 };
       vErrors === null ? vErrors = [err12] : vErrors.push(err12), errors++;
     }
     if (data.friction !== void 0) {
       let data4 = data.friction;
       if (typeof data4 == "number" && isFinite(data4)) {
         if (data4 < 0 || isNaN(data4)) {
-          let err13 = { instancePath: instancePath + "/friction", schemaPath: "#/properties/friction/minimum", keyword: _mtekDiagnosticString14, params: { comparison: ">=", limit: 0 }, message: _mtekDiagnosticString15 };
+          let err13 = { instancePath: instancePath + "/friction", schemaPath: _mtekDiagnosticString62, keyword: _mtekDiagnosticString14, params: { comparison: ">=", limit: 0 }, message: _mtekDiagnosticString15 };
           vErrors === null ? vErrors = [err13] : vErrors.push(err13), errors++;
         }
       } else {
-        let err14 = { instancePath: instancePath + "/friction", schemaPath: "#/properties/friction/type", keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
+        let err14 = { instancePath: instancePath + "/friction", schemaPath: _mtekDiagnosticString63, keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
         vErrors === null ? vErrors = [err14] : vErrors.push(err14), errors++;
       }
     }
@@ -5776,15 +6023,15 @@ function validate274(data, { instancePath = "", parentData, parentDataProperty, 
       let data5 = data.restitution;
       if (typeof data5 == "number" && isFinite(data5)) {
         if (data5 > 1 || isNaN(data5)) {
-          let err15 = { instancePath: instancePath + "/restitution", schemaPath: "#/properties/restitution/maximum", keyword: _mtekDiagnosticString32, params: { comparison: "<=", limit: 1 }, message: "must be <= 1" };
+          let err15 = { instancePath: instancePath + "/restitution", schemaPath: _mtekDiagnosticString64, keyword: _mtekDiagnosticString32, params: { comparison: "<=", limit: 1 }, message: "must be <= 1" };
           vErrors === null ? vErrors = [err15] : vErrors.push(err15), errors++;
         }
         if (data5 < 0 || isNaN(data5)) {
-          let err16 = { instancePath: instancePath + "/restitution", schemaPath: "#/properties/restitution/minimum", keyword: _mtekDiagnosticString14, params: { comparison: ">=", limit: 0 }, message: _mtekDiagnosticString15 };
+          let err16 = { instancePath: instancePath + "/restitution", schemaPath: _mtekDiagnosticString65, keyword: _mtekDiagnosticString14, params: { comparison: ">=", limit: 0 }, message: _mtekDiagnosticString15 };
           vErrors === null ? vErrors = [err16] : vErrors.push(err16), errors++;
         }
       } else {
-        let err17 = { instancePath: instancePath + "/restitution", schemaPath: "#/properties/restitution/type", keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
+        let err17 = { instancePath: instancePath + "/restitution", schemaPath: _mtekDiagnosticString66, keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
         vErrors === null ? vErrors = [err17] : vErrors.push(err17), errors++;
       }
     }
@@ -5792,11 +6039,11 @@ function validate274(data, { instancePath = "", parentData, parentDataProperty, 
     let err18 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err18] : vErrors.push(err18), errors++;
   }
-  return validate274.errors = vErrors, errors === 0;
+  return validate276.errors = vErrors, errors === 0;
 }
-validate274.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate275(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate275.evaluated;
+validate276.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate277(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate277.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -5831,27 +6078,27 @@ function validate275(data, { instancePath = "", parentData, parentDataProperty, 
       let data1 = data.radius;
       if (typeof data1 == "number" && isFinite(data1)) {
         if (data1 <= 0 || isNaN(data1)) {
-          let err7 = { instancePath: instancePath + "/radius", schemaPath: "#/properties/radius/exclusiveMinimum", keyword: _mtekDiagnosticString17, params: { comparison: ">", limit: 0 }, message: _mtekDiagnosticString18 };
+          let err7 = { instancePath: instancePath + "/radius", schemaPath: _mtekDiagnosticString53, keyword: _mtekDiagnosticString17, params: { comparison: ">", limit: 0 }, message: _mtekDiagnosticString18 };
           vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
         }
       } else {
-        let err8 = { instancePath: instancePath + "/radius", schemaPath: "#/properties/radius/type", keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
+        let err8 = { instancePath: instancePath + "/radius", schemaPath: _mtekDiagnosticString54, keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
         vErrors === null ? vErrors = [err8] : vErrors.push(err8), errors++;
       }
     }
     if (data.sensor !== void 0 && typeof data.sensor != "boolean") {
-      let err9 = { instancePath: instancePath + "/sensor", schemaPath: "#/properties/sensor/type", keyword: _mtekDiagnosticString3, params: { type: "boolean" }, message: _mtekDiagnosticString21 };
+      let err9 = { instancePath: instancePath + "/sensor", schemaPath: _mtekDiagnosticString61, keyword: _mtekDiagnosticString3, params: { type: "boolean" }, message: _mtekDiagnosticString21 };
       vErrors === null ? vErrors = [err9] : vErrors.push(err9), errors++;
     }
     if (data.friction !== void 0) {
       let data3 = data.friction;
       if (typeof data3 == "number" && isFinite(data3)) {
         if (data3 < 0 || isNaN(data3)) {
-          let err10 = { instancePath: instancePath + "/friction", schemaPath: "#/properties/friction/minimum", keyword: _mtekDiagnosticString14, params: { comparison: ">=", limit: 0 }, message: _mtekDiagnosticString15 };
+          let err10 = { instancePath: instancePath + "/friction", schemaPath: _mtekDiagnosticString62, keyword: _mtekDiagnosticString14, params: { comparison: ">=", limit: 0 }, message: _mtekDiagnosticString15 };
           vErrors === null ? vErrors = [err10] : vErrors.push(err10), errors++;
         }
       } else {
-        let err11 = { instancePath: instancePath + "/friction", schemaPath: "#/properties/friction/type", keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
+        let err11 = { instancePath: instancePath + "/friction", schemaPath: _mtekDiagnosticString63, keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
         vErrors === null ? vErrors = [err11] : vErrors.push(err11), errors++;
       }
     }
@@ -5859,15 +6106,15 @@ function validate275(data, { instancePath = "", parentData, parentDataProperty, 
       let data4 = data.restitution;
       if (typeof data4 == "number" && isFinite(data4)) {
         if (data4 > 1 || isNaN(data4)) {
-          let err12 = { instancePath: instancePath + "/restitution", schemaPath: "#/properties/restitution/maximum", keyword: _mtekDiagnosticString32, params: { comparison: "<=", limit: 1 }, message: "must be <= 1" };
+          let err12 = { instancePath: instancePath + "/restitution", schemaPath: _mtekDiagnosticString64, keyword: _mtekDiagnosticString32, params: { comparison: "<=", limit: 1 }, message: "must be <= 1" };
           vErrors === null ? vErrors = [err12] : vErrors.push(err12), errors++;
         }
         if (data4 < 0 || isNaN(data4)) {
-          let err13 = { instancePath: instancePath + "/restitution", schemaPath: "#/properties/restitution/minimum", keyword: _mtekDiagnosticString14, params: { comparison: ">=", limit: 0 }, message: _mtekDiagnosticString15 };
+          let err13 = { instancePath: instancePath + "/restitution", schemaPath: _mtekDiagnosticString65, keyword: _mtekDiagnosticString14, params: { comparison: ">=", limit: 0 }, message: _mtekDiagnosticString15 };
           vErrors === null ? vErrors = [err13] : vErrors.push(err13), errors++;
         }
       } else {
-        let err14 = { instancePath: instancePath + "/restitution", schemaPath: "#/properties/restitution/type", keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
+        let err14 = { instancePath: instancePath + "/restitution", schemaPath: _mtekDiagnosticString66, keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
         vErrors === null ? vErrors = [err14] : vErrors.push(err14), errors++;
       }
     }
@@ -5875,19 +6122,120 @@ function validate275(data, { instancePath = "", parentData, parentDataProperty, 
     let err15 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err15] : vErrors.push(err15), errors++;
   }
-  return validate275.errors = vErrors, errors === 0;
+  return validate277.errors = vErrors, errors === 0;
 }
-validate275.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate273(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate273.evaluated;
+validate277.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate278(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate278.evaluated;
+  if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
+    if (data.kind === void 0) {
+      let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
+      vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
+    }
+    if (data.radius === void 0) {
+      let err1 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "radius" }, message: "must have required property 'radius'" };
+      vErrors === null ? vErrors = [err1] : vErrors.push(err1), errors++;
+    }
+    if (data.height === void 0) {
+      let err2 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "height" }, message: "must have required property 'height'" };
+      vErrors === null ? vErrors = [err2] : vErrors.push(err2), errors++;
+    }
+    if (data.sensor === void 0) {
+      let err3 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "sensor" }, message: "must have required property 'sensor'" };
+      vErrors === null ? vErrors = [err3] : vErrors.push(err3), errors++;
+    }
+    if (data.friction === void 0) {
+      let err4 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "friction" }, message: "must have required property 'friction'" };
+      vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
+    }
+    if (data.restitution === void 0) {
+      let err5 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "restitution" }, message: "must have required property 'restitution'" };
+      vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
+    }
+    for (let key0 in data)
+      if (!(key0 === "kind" || key0 === "radius" || key0 === "height" || key0 === "sensor" || key0 === "friction" || key0 === "restitution")) {
+        let err6 = { instancePath, schemaPath: _mtekDiagnosticString10, keyword: _mtekDiagnosticString11, params: { additionalProperty: key0 }, message: _mtekDiagnosticString12 };
+        vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
+      }
+    if (data.kind !== void 0 && data.kind !== "capsule") {
+      let err7 = { instancePath: instancePath + "/kind", schemaPath: _mtekDiagnosticString29, keyword: _mtekDiagnosticString30, params: { allowedValue: "capsule" }, message: _mtekDiagnosticString31 };
+      vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
+    }
+    if (data.radius !== void 0) {
+      let data1 = data.radius;
+      if (typeof data1 == "number" && isFinite(data1)) {
+        if (data1 <= 0 || isNaN(data1)) {
+          let err8 = { instancePath: instancePath + "/radius", schemaPath: _mtekDiagnosticString53, keyword: _mtekDiagnosticString17, params: { comparison: ">", limit: 0 }, message: _mtekDiagnosticString18 };
+          vErrors === null ? vErrors = [err8] : vErrors.push(err8), errors++;
+        }
+      } else {
+        let err9 = { instancePath: instancePath + "/radius", schemaPath: _mtekDiagnosticString54, keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
+        vErrors === null ? vErrors = [err9] : vErrors.push(err9), errors++;
+      }
+    }
+    if (data.height !== void 0) {
+      let data2 = data.height;
+      if (typeof data2 == "number" && isFinite(data2)) {
+        if (data2 <= 0 || isNaN(data2)) {
+          let err10 = { instancePath: instancePath + "/height", schemaPath: "#/properties/height/exclusiveMinimum", keyword: _mtekDiagnosticString17, params: { comparison: ">", limit: 0 }, message: _mtekDiagnosticString18 };
+          vErrors === null ? vErrors = [err10] : vErrors.push(err10), errors++;
+        }
+      } else {
+        let err11 = { instancePath: instancePath + "/height", schemaPath: "#/properties/height/type", keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
+        vErrors === null ? vErrors = [err11] : vErrors.push(err11), errors++;
+      }
+    }
+    if (data.sensor !== void 0 && typeof data.sensor != "boolean") {
+      let err12 = { instancePath: instancePath + "/sensor", schemaPath: _mtekDiagnosticString61, keyword: _mtekDiagnosticString3, params: { type: "boolean" }, message: _mtekDiagnosticString21 };
+      vErrors === null ? vErrors = [err12] : vErrors.push(err12), errors++;
+    }
+    if (data.friction !== void 0) {
+      let data4 = data.friction;
+      if (typeof data4 == "number" && isFinite(data4)) {
+        if (data4 < 0 || isNaN(data4)) {
+          let err13 = { instancePath: instancePath + "/friction", schemaPath: _mtekDiagnosticString62, keyword: _mtekDiagnosticString14, params: { comparison: ">=", limit: 0 }, message: _mtekDiagnosticString15 };
+          vErrors === null ? vErrors = [err13] : vErrors.push(err13), errors++;
+        }
+      } else {
+        let err14 = { instancePath: instancePath + "/friction", schemaPath: _mtekDiagnosticString63, keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
+        vErrors === null ? vErrors = [err14] : vErrors.push(err14), errors++;
+      }
+    }
+    if (data.restitution !== void 0) {
+      let data5 = data.restitution;
+      if (typeof data5 == "number" && isFinite(data5)) {
+        if (data5 > 1 || isNaN(data5)) {
+          let err15 = { instancePath: instancePath + "/restitution", schemaPath: _mtekDiagnosticString64, keyword: _mtekDiagnosticString32, params: { comparison: "<=", limit: 1 }, message: "must be <= 1" };
+          vErrors === null ? vErrors = [err15] : vErrors.push(err15), errors++;
+        }
+        if (data5 < 0 || isNaN(data5)) {
+          let err16 = { instancePath: instancePath + "/restitution", schemaPath: _mtekDiagnosticString65, keyword: _mtekDiagnosticString14, params: { comparison: ">=", limit: 0 }, message: _mtekDiagnosticString15 };
+          vErrors === null ? vErrors = [err16] : vErrors.push(err16), errors++;
+        }
+      } else {
+        let err17 = { instancePath: instancePath + "/restitution", schemaPath: _mtekDiagnosticString66, keyword: _mtekDiagnosticString3, params: { type: "number" }, message: _mtekDiagnosticString19 };
+        vErrors === null ? vErrors = [err17] : vErrors.push(err17), errors++;
+      }
+    }
+  } else {
+    let err18 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
+    vErrors === null ? vErrors = [err18] : vErrors.push(err18), errors++;
+  }
+  return validate278.errors = vErrors, errors === 0;
+}
+validate278.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate275(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate275.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     let tag0 = data.kind;
     if (typeof tag0 == "string")
       if (tag0 === "box") {
-        validate274(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate274.errors : vErrors.concat(validate274.errors), errors = vErrors.length);
+        validate276(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate276.errors : vErrors.concat(validate276.errors), errors = vErrors.length);
         var props0 = !0;
       } else if (tag0 === "sphere")
-        validate275(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate275.errors : vErrors.concat(validate275.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate277(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate277.errors : vErrors.concat(validate277.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+      else if (tag0 === "capsule")
+        validate278(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate278.errors : vErrors.concat(validate278.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else {
         let err0 = { instancePath, schemaPath: _mtekDiagnosticString33, keyword: _mtekDiagnosticString34, params: { error: "mapping", tag: "kind", tagValue: tag0 }, message: _mtekDiagnosticString35 };
         vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
@@ -5900,11 +6248,11 @@ function validate273(data, { instancePath = "", parentData, parentDataProperty, 
     let err2 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err2] : vErrors.push(err2), errors++;
   }
-  return validate273.errors = vErrors, evaluated0.props = props0, errors === 0;
+  return validate275.errors = vErrors, evaluated0.props = props0, errors === 0;
 }
-validate273.evaluated = { dynamicProps: !0, dynamicItems: !1 };
-function validate279(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate279.evaluated;
+validate275.evaluated = { dynamicProps: !0, dynamicItems: !1 };
+function validate283(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate283.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.name === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "name" }, message: "must have required property 'name'" };
@@ -5928,12 +6276,12 @@ function validate279(data, { instancePath = "", parentData, parentDataProperty, 
     let err4 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
   }
-  return validate279.errors = vErrors, errors === 0;
+  return validate283.errors = vErrors, errors === 0;
 }
-validate279.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var schema94 = { properties: { field: { enum: ["position", "rotation", "scale"] } } };
-function validate287(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate287.evaluated;
+validate283.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+var schema96 = { properties: { field: { enum: ["position", "rotation", "scale"] } } };
+function validate291(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate291.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -5959,11 +6307,11 @@ function validate287(data, { instancePath = "", parentData, parentDataProperty, 
     if (data.entity !== void 0 && (validate68(data.entity, { instancePath: instancePath + "/entity", parentData: data, parentDataProperty: "entity", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate68.errors : vErrors.concat(validate68.errors), errors = vErrors.length)), data.field !== void 0) {
       let data2 = data.field;
       if (typeof data2 != "string") {
-        let err5 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString59, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
+        let err5 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString67, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
         vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
       }
       if (!(data2 === "position" || data2 === "rotation" || data2 === "scale")) {
-        let err6 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString60, keyword: _mtekDiagnosticString27, params: { allowedValues: schema94.properties.field.enum }, message: _mtekDiagnosticString28 };
+        let err6 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString68, keyword: _mtekDiagnosticString27, params: { allowedValues: schema96.properties.field.enum }, message: _mtekDiagnosticString28 };
         vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
       }
     }
@@ -5971,12 +6319,12 @@ function validate287(data, { instancePath = "", parentData, parentDataProperty, 
     let err7 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
   }
-  return validate287.errors = vErrors, errors === 0;
+  return validate291.errors = vErrors, errors === 0;
 }
-validate287.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var schema95 = { properties: { field: { enum: ["bounds_center", "bounds_radius"] } } };
-function validate289(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate289.evaluated;
+validate291.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+var schema97 = { properties: { field: { enum: ["bounds_center", "bounds_radius"] } } };
+function validate293(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate293.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -6002,11 +6350,11 @@ function validate289(data, { instancePath = "", parentData, parentDataProperty, 
     if (data.entity !== void 0 && (validate68(data.entity, { instancePath: instancePath + "/entity", parentData: data, parentDataProperty: "entity", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate68.errors : vErrors.concat(validate68.errors), errors = vErrors.length)), data.field !== void 0) {
       let data2 = data.field;
       if (typeof data2 != "string") {
-        let err5 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString59, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
+        let err5 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString67, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
         vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
       }
       if (!(data2 === "bounds_center" || data2 === "bounds_radius")) {
-        let err6 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString60, keyword: _mtekDiagnosticString27, params: { allowedValues: schema95.properties.field.enum }, message: _mtekDiagnosticString28 };
+        let err6 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString68, keyword: _mtekDiagnosticString27, params: { allowedValues: schema97.properties.field.enum }, message: _mtekDiagnosticString28 };
         vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
       }
     }
@@ -6014,11 +6362,11 @@ function validate289(data, { instancePath = "", parentData, parentDataProperty, 
     let err7 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
   }
-  return validate289.errors = vErrors, errors === 0;
+  return validate293.errors = vErrors, errors === 0;
 }
-validate289.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate291(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate291.evaluated;
+validate293.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate295(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate295.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -6042,11 +6390,11 @@ function validate291(data, { instancePath = "", parentData, parentDataProperty, 
     let err4 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
   }
-  return validate291.errors = vErrors, errors === 0;
+  return validate295.errors = vErrors, errors === 0;
 }
-validate291.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate293(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate293.evaluated;
+validate295.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate297(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate297.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -6074,12 +6422,12 @@ function validate293(data, { instancePath = "", parentData, parentDataProperty, 
     let err5 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
   }
-  return validate293.errors = vErrors, errors === 0;
+  return validate297.errors = vErrors, errors === 0;
 }
-validate293.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var schema98 = { properties: { field: { enum: ["position", "target", "rotation", "projection.fov_y", "projection.height", "projection.near", "projection.far"] } } };
-function validate296(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate296.evaluated;
+validate297.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+var schema100 = { properties: { field: { enum: ["position", "target", "rotation", "projection.fov_y", "projection.height", "projection.near", "projection.far"] } } };
+function validate300(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate300.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -6101,11 +6449,11 @@ function validate296(data, { instancePath = "", parentData, parentDataProperty, 
     if (data.field !== void 0) {
       let data1 = data.field;
       if (typeof data1 != "string") {
-        let err4 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString59, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
+        let err4 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString67, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
         vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
       }
       if (!(data1 === "position" || data1 === "target" || data1 === "rotation" || data1 === "projection.fov_y" || data1 === "projection.height" || data1 === "projection.near" || data1 === "projection.far")) {
-        let err5 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString60, keyword: _mtekDiagnosticString27, params: { allowedValues: schema98.properties.field.enum }, message: _mtekDiagnosticString28 };
+        let err5 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString68, keyword: _mtekDiagnosticString27, params: { allowedValues: schema100.properties.field.enum }, message: _mtekDiagnosticString28 };
         vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
       }
     }
@@ -6114,12 +6462,12 @@ function validate296(data, { instancePath = "", parentData, parentDataProperty, 
     let err6 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
   }
-  return validate296.errors = vErrors, errors === 0;
+  return validate300.errors = vErrors, errors === 0;
 }
-validate296.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var schema99 = { properties: { field: { enum: ["color", "intensity"] } } };
-function validate298(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate298.evaluated;
+validate300.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+var schema101 = { properties: { field: { enum: ["color", "intensity"] } } };
+function validate302(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate302.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -6145,11 +6493,11 @@ function validate298(data, { instancePath = "", parentData, parentDataProperty, 
     if (data.entity !== void 0 && (validate68(data.entity, { instancePath: instancePath + "/entity", parentData: data, parentDataProperty: "entity", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate68.errors : vErrors.concat(validate68.errors), errors = vErrors.length)), data.field !== void 0) {
       let data2 = data.field;
       if (typeof data2 != "string") {
-        let err5 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString59, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
+        let err5 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString67, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
         vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
       }
       if (!(data2 === "color" || data2 === "intensity")) {
-        let err6 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString60, keyword: _mtekDiagnosticString27, params: { allowedValues: schema99.properties.field.enum }, message: _mtekDiagnosticString28 };
+        let err6 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString68, keyword: _mtekDiagnosticString27, params: { allowedValues: schema101.properties.field.enum }, message: _mtekDiagnosticString28 };
         vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
       }
     }
@@ -6157,27 +6505,27 @@ function validate298(data, { instancePath = "", parentData, parentDataProperty, 
     let err7 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
   }
-  return validate298.errors = vErrors, errors === 0;
+  return validate302.errors = vErrors, errors === 0;
 }
-validate298.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate286(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate286.evaluated;
+validate302.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate290(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate290.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     let tag0 = data.kind;
     if (typeof tag0 == "string")
       if (tag0 === "transform") {
-        validate287(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate287.errors : vErrors.concat(validate287.errors), errors = vErrors.length);
+        validate291(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate291.errors : vErrors.concat(validate291.errors), errors = vErrors.length);
         var props0 = !0;
       } else if (tag0 === "bounds")
-        validate289(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate289.errors : vErrors.concat(validate289.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
-      else if (tag0 === "visible")
-        validate291(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate291.errors : vErrors.concat(validate291.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
-      else if (tag0 === "param")
         validate293(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate293.errors : vErrors.concat(validate293.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+      else if (tag0 === "visible")
+        validate295(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate295.errors : vErrors.concat(validate295.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+      else if (tag0 === "param")
+        validate297(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate297.errors : vErrors.concat(validate297.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else if (tag0 === "camera")
-        validate296(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate296.errors : vErrors.concat(validate296.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate300(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate300.errors : vErrors.concat(validate300.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else if (tag0 === "light")
-        validate298(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate298.errors : vErrors.concat(validate298.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate302(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate302.errors : vErrors.concat(validate302.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else {
         let err0 = { instancePath, schemaPath: _mtekDiagnosticString33, keyword: _mtekDiagnosticString34, params: { error: "mapping", tag: "kind", tagValue: tag0 }, message: _mtekDiagnosticString35 };
         vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
@@ -6190,11 +6538,11 @@ function validate286(data, { instancePath = "", parentData, parentDataProperty, 
     let err2 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err2] : vErrors.push(err2), errors++;
   }
-  return validate286.errors = vErrors, evaluated0.props = props0, errors === 0;
+  return validate290.errors = vErrors, evaluated0.props = props0, errors === 0;
 }
-validate286.evaluated = { dynamicProps: !0, dynamicItems: !1 };
-function validate308(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate308.evaluated;
+validate290.evaluated = { dynamicProps: !0, dynamicItems: !1 };
+function validate312(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate312.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -6218,12 +6566,12 @@ function validate308(data, { instancePath = "", parentData, parentDataProperty, 
     let err4 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
   }
-  return validate308.errors = vErrors, errors === 0;
+  return validate312.errors = vErrors, errors === 0;
 }
-validate308.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var schema102 = { properties: { name: { enum: ["time", "delta", "index"] } } };
-function validate310(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate310.evaluated;
+validate312.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+var schema104 = { properties: { name: { enum: ["time", "delta", "index"] } } };
+function validate314(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate314.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -6245,11 +6593,11 @@ function validate310(data, { instancePath = "", parentData, parentDataProperty, 
     if (data.name !== void 0) {
       let data1 = data.name;
       if (typeof data1 != "string") {
-        let err4 = { instancePath: instancePath + "/name", schemaPath: _mtekDiagnosticString54, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
+        let err4 = { instancePath: instancePath + "/name", schemaPath: _mtekDiagnosticString56, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
         vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
       }
       if (!(data1 === "time" || data1 === "delta" || data1 === "index")) {
-        let err5 = { instancePath: instancePath + "/name", schemaPath: _mtekDiagnosticString41, keyword: _mtekDiagnosticString27, params: { allowedValues: schema102.properties.name.enum }, message: _mtekDiagnosticString28 };
+        let err5 = { instancePath: instancePath + "/name", schemaPath: _mtekDiagnosticString41, keyword: _mtekDiagnosticString27, params: { allowedValues: schema104.properties.name.enum }, message: _mtekDiagnosticString28 };
         vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
       }
     }
@@ -6257,12 +6605,12 @@ function validate310(data, { instancePath = "", parentData, parentDataProperty, 
     let err6 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
   }
-  return validate310.errors = vErrors, errors === 0;
+  return validate314.errors = vErrors, errors === 0;
 }
-validate310.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var schema103 = { properties: { field: { enum: ["position", "rotation", "scale", "visible", "bounds_center", "bounds_radius"] } } };
-function validate311(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate311.evaluated;
+validate314.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+var schema105 = { properties: { field: { enum: ["position", "rotation", "scale", "visible", "bounds_center", "bounds_radius"] } } };
+function validate315(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate315.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -6288,11 +6636,11 @@ function validate311(data, { instancePath = "", parentData, parentDataProperty, 
     if (data.entity !== void 0 && (validate68(data.entity, { instancePath: instancePath + "/entity", parentData: data, parentDataProperty: "entity", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate68.errors : vErrors.concat(validate68.errors), errors = vErrors.length)), data.field !== void 0) {
       let data2 = data.field;
       if (typeof data2 != "string") {
-        let err5 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString59, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
+        let err5 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString67, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
         vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
       }
       if (!(data2 === "position" || data2 === "rotation" || data2 === "scale" || data2 === "visible" || data2 === "bounds_center" || data2 === "bounds_radius")) {
-        let err6 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString60, keyword: _mtekDiagnosticString27, params: { allowedValues: schema103.properties.field.enum }, message: _mtekDiagnosticString28 };
+        let err6 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString68, keyword: _mtekDiagnosticString27, params: { allowedValues: schema105.properties.field.enum }, message: _mtekDiagnosticString28 };
         vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
       }
     }
@@ -6300,11 +6648,11 @@ function validate311(data, { instancePath = "", parentData, parentDataProperty, 
     let err7 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
   }
-  return validate311.errors = vErrors, errors === 0;
+  return validate315.errors = vErrors, errors === 0;
 }
-validate311.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate313(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate313.evaluated;
+validate315.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate317(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate317.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -6332,11 +6680,11 @@ function validate313(data, { instancePath = "", parentData, parentDataProperty, 
     let err5 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
   }
-  return validate313.errors = vErrors, errors === 0;
+  return validate317.errors = vErrors, errors === 0;
 }
-validate313.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate316(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate316.evaluated;
+validate317.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate320(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate320.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -6364,12 +6712,12 @@ function validate316(data, { instancePath = "", parentData, parentDataProperty, 
     let err5 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
   }
-  return validate316.errors = vErrors, errors === 0;
+  return validate320.errors = vErrors, errors === 0;
 }
-validate316.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var schema106 = { properties: { field: { enum: ["color", "intensity"] } } };
-function validate319(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate319.evaluated;
+validate320.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+var schema108 = { properties: { field: { enum: ["color", "intensity"] } } };
+function validate323(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate323.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -6395,11 +6743,11 @@ function validate319(data, { instancePath = "", parentData, parentDataProperty, 
     if (data.entity !== void 0 && (validate68(data.entity, { instancePath: instancePath + "/entity", parentData: data, parentDataProperty: "entity", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate68.errors : vErrors.concat(validate68.errors), errors = vErrors.length)), data.field !== void 0) {
       let data2 = data.field;
       if (typeof data2 != "string") {
-        let err5 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString59, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
+        let err5 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString67, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
         vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
       }
       if (!(data2 === "color" || data2 === "intensity")) {
-        let err6 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString60, keyword: _mtekDiagnosticString27, params: { allowedValues: schema106.properties.field.enum }, message: _mtekDiagnosticString28 };
+        let err6 = { instancePath: instancePath + "/field", schemaPath: _mtekDiagnosticString68, keyword: _mtekDiagnosticString27, params: { allowedValues: schema108.properties.field.enum }, message: _mtekDiagnosticString28 };
         vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
       }
     }
@@ -6407,27 +6755,27 @@ function validate319(data, { instancePath = "", parentData, parentDataProperty, 
     let err7 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
   }
-  return validate319.errors = vErrors, errors === 0;
+  return validate323.errors = vErrors, errors === 0;
 }
-validate319.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate307(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate307.evaluated;
+validate323.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate311(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate311.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     let tag0 = data.kind;
     if (typeof tag0 == "string")
       if (tag0 === "state") {
-        validate308(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate308.errors : vErrors.concat(validate308.errors), errors = vErrors.length);
+        validate312(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate312.errors : vErrors.concat(validate312.errors), errors = vErrors.length);
         var props0 = !0;
       } else if (tag0 === "frame")
-        validate310(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate310.errors : vErrors.concat(validate310.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate314(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate314.errors : vErrors.concat(validate314.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else if (tag0 === "entityField")
-        validate311(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate311.errors : vErrors.concat(validate311.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate315(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate315.errors : vErrors.concat(validate315.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else if (tag0 === "entityState")
-        validate313(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate313.errors : vErrors.concat(validate313.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate317(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate317.errors : vErrors.concat(validate317.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else if (tag0 === "param")
-        validate316(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate316.errors : vErrors.concat(validate316.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate320(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate320.errors : vErrors.concat(validate320.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else if (tag0 === "light")
-        validate319(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate319.errors : vErrors.concat(validate319.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate323(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate323.errors : vErrors.concat(validate323.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else {
         let err0 = { instancePath, schemaPath: _mtekDiagnosticString33, keyword: _mtekDiagnosticString34, params: { error: "mapping", tag: "kind", tagValue: tag0 }, message: _mtekDiagnosticString35 };
         vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
@@ -6440,11 +6788,11 @@ function validate307(data, { instancePath = "", parentData, parentDataProperty, 
     let err2 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err2] : vErrors.push(err2), errors++;
   }
-  return validate307.errors = vErrors, evaluated0.props = props0, errors === 0;
+  return validate311.errors = vErrors, evaluated0.props = props0, errors === 0;
 }
-validate307.evaluated = { dynamicProps: !0, dynamicItems: !1 };
-function validate284(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate284.evaluated;
+validate311.evaluated = { dynamicProps: !0, dynamicItems: !1 };
+function validate288(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate288.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.id === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "id" }, message: "must have required property 'id'" };
@@ -6471,12 +6819,12 @@ function validate284(data, { instancePath = "", parentData, parentDataProperty, 
         let err5 = { instancePath, schemaPath: _mtekDiagnosticString10, keyword: _mtekDiagnosticString11, params: { additionalProperty: key0 }, message: _mtekDiagnosticString12 };
         vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
       }
-    if (data.id !== void 0 && (validate68(data.id, { instancePath: instancePath + "/id", parentData: data, parentDataProperty: "id", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate68.errors : vErrors.concat(validate68.errors), errors = vErrors.length)), data.target !== void 0 && (validate286(data.target, { instancePath: instancePath + "/target", parentData: data, parentDataProperty: "target", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate286.errors : vErrors.concat(validate286.errors), errors = vErrors.length)), data.deps !== void 0) {
+    if (data.id !== void 0 && (validate68(data.id, { instancePath: instancePath + "/id", parentData: data, parentDataProperty: "id", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate68.errors : vErrors.concat(validate68.errors), errors = vErrors.length)), data.target !== void 0 && (validate290(data.target, { instancePath: instancePath + "/target", parentData: data, parentDataProperty: "target", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate290.errors : vErrors.concat(validate290.errors), errors = vErrors.length)), data.deps !== void 0) {
       let data2 = data.deps;
       if (Array.isArray(data2)) {
         let len0 = data2.length;
         for (let i0 = 0; i0 < len0; i0++)
-          validate307(data2[i0], { instancePath: instancePath + "/deps/" + i0, parentData: data2, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate307.errors : vErrors.concat(validate307.errors), errors = vErrors.length);
+          validate311(data2[i0], { instancePath: instancePath + "/deps/" + i0, parentData: data2, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate311.errors : vErrors.concat(validate311.errors), errors = vErrors.length);
       } else {
         let err6 = { instancePath: instancePath + "/deps", schemaPath: "#/properties/deps/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
@@ -6487,12 +6835,12 @@ function validate284(data, { instancePath = "", parentData, parentDataProperty, 
     let err7 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
   }
-  return validate284.errors = vErrors, errors === 0;
+  return validate288.errors = vErrors, errors === 0;
 }
-validate284.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+validate288.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 var pattern21 = new RegExp("^[a-z][a-z0-9_]{0,31}$", "u");
-function validate332(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate332.evaluated;
+function validate336(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate336.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), typeof data == "string") {
     if (!pattern21.test(data)) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString0, keyword: _mtekDiagnosticString1, params: { pattern: "^[a-z][a-z0-9_]{0,31}$" }, message: 'must match pattern "^[a-z][a-z0-9_]{0,31}$"' };
@@ -6502,11 +6850,11 @@ function validate332(data, { instancePath = "", parentData, parentDataProperty, 
     let err1 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
     vErrors === null ? vErrors = [err1] : vErrors.push(err1), errors++;
   }
-  return validate332.errors = vErrors, errors === 0;
+  return validate336.errors = vErrors, errors === 0;
 }
-validate332.evaluated = { dynamicProps: !1, dynamicItems: !1 };
-function validate334(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate334.evaluated;
+validate336.evaluated = { dynamicProps: !1, dynamicItems: !1 };
+function validate338(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate338.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.rate === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "rate" }, message: "must have required property 'rate'" };
@@ -6592,12 +6940,12 @@ function validate334(data, { instancePath = "", parentData, parentDataProperty, 
     let err15 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err15] : vErrors.push(err15), errors++;
   }
-  return validate334.errors = vErrors, errors === 0;
+  return validate338.errors = vErrors, errors === 0;
 }
-validate334.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var schema110 = { properties: { path: { enum: ["translation", "rotation", "scale"] }, interpolation: { enum: ["linear", "step"] } } };
-function validate338(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate338.evaluated;
+validate338.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+var schema112 = { properties: { path: { enum: ["translation", "rotation", "scale"] }, interpolation: { enum: ["linear", "step"] } } };
+function validate342(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate342.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.path === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "path" }, message: "must have required property 'path'" };
@@ -6627,7 +6975,7 @@ function validate338(data, { instancePath = "", parentData, parentDataProperty, 
         vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
       }
       if (!(data0 === "translation" || data0 === "rotation" || data0 === "scale")) {
-        let err6 = { instancePath: instancePath + "/path", schemaPath: "#/properties/path/enum", keyword: _mtekDiagnosticString27, params: { allowedValues: schema110.properties.path.enum }, message: _mtekDiagnosticString28 };
+        let err6 = { instancePath: instancePath + "/path", schemaPath: "#/properties/path/enum", keyword: _mtekDiagnosticString27, params: { allowedValues: schema112.properties.path.enum }, message: _mtekDiagnosticString28 };
         vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
       }
     }
@@ -6638,7 +6986,7 @@ function validate338(data, { instancePath = "", parentData, parentDataProperty, 
         vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
       }
       if (!(data1 === "linear" || data1 === "step")) {
-        let err8 = { instancePath: instancePath + "/interpolation", schemaPath: "#/properties/interpolation/enum", keyword: _mtekDiagnosticString27, params: { allowedValues: schema110.properties.interpolation.enum }, message: _mtekDiagnosticString28 };
+        let err8 = { instancePath: instancePath + "/interpolation", schemaPath: "#/properties/interpolation/enum", keyword: _mtekDiagnosticString27, params: { allowedValues: schema112.properties.interpolation.enum }, message: _mtekDiagnosticString28 };
         vErrors === null ? vErrors = [err8] : vErrors.push(err8), errors++;
       }
     }
@@ -6678,11 +7026,11 @@ function validate338(data, { instancePath = "", parentData, parentDataProperty, 
     let err13 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err13] : vErrors.push(err13), errors++;
   }
-  return validate338.errors = vErrors, errors === 0;
+  return validate342.errors = vErrors, errors === 0;
 }
-validate338.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate336(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate336.evaluated;
+validate342.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate340(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate340.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.name === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "name" }, message: "must have required property 'name'" };
@@ -6718,7 +7066,7 @@ function validate336(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data2)) {
         let len0 = data2.length;
         for (let i0 = 0; i0 < len0; i0++)
-          validate338(data2[i0], { instancePath: instancePath + "/channels/" + i0, parentData: data2, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate338.errors : vErrors.concat(validate338.errors), errors = vErrors.length);
+          validate342(data2[i0], { instancePath: instancePath + "/channels/" + i0, parentData: data2, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate342.errors : vErrors.concat(validate342.errors), errors = vErrors.length);
       } else {
         let err6 = { instancePath: instancePath + "/channels", schemaPath: "#/properties/channels/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
@@ -6728,9 +7076,9 @@ function validate336(data, { instancePath = "", parentData, parentDataProperty, 
     let err7 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
   }
-  return validate336.errors = vErrors, errors === 0;
+  return validate340.errors = vErrors, errors === 0;
 }
-validate336.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+validate340.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 function validate237(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null, errors = 0, evaluated0 = validate237.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
@@ -6832,20 +7180,20 @@ function validate237(data, { instancePath = "", parentData, parentDataProperty, 
     if (data.material !== void 0) {
       let data7 = data.material;
       if (!(data7 && typeof data7 == "object" && !Array.isArray(data7)) && data7 !== null) {
-        let err20 = { instancePath: instancePath + "/material", schemaPath: "#/properties/material/type", keyword: _mtekDiagnosticString3, params: { type: schema75.properties.material.type }, message: _mtekDiagnosticString61 };
+        let err20 = { instancePath: instancePath + "/material", schemaPath: "#/properties/material/type", keyword: _mtekDiagnosticString3, params: { type: schema75.properties.material.type }, message: _mtekDiagnosticString69 };
         vErrors === null ? vErrors = [err20] : vErrors.push(err20), errors++;
       }
       if (data7 && typeof data7 == "object" && !Array.isArray(data7)) {
         if (data7.id === void 0) {
-          let err21 = { instancePath: instancePath + "/material", schemaPath: _mtekDiagnosticString62, keyword: _mtekDiagnosticString9, params: { missingProperty: "id" }, message: "must have required property 'id'" };
+          let err21 = { instancePath: instancePath + "/material", schemaPath: _mtekDiagnosticString70, keyword: _mtekDiagnosticString9, params: { missingProperty: "id" }, message: "must have required property 'id'" };
           vErrors === null ? vErrors = [err21] : vErrors.push(err21), errors++;
         }
         if (data7.params === void 0) {
-          let err22 = { instancePath: instancePath + "/material", schemaPath: _mtekDiagnosticString62, keyword: _mtekDiagnosticString9, params: { missingProperty: "params" }, message: "must have required property 'params'" };
+          let err22 = { instancePath: instancePath + "/material", schemaPath: _mtekDiagnosticString70, keyword: _mtekDiagnosticString9, params: { missingProperty: "params" }, message: "must have required property 'params'" };
           vErrors === null ? vErrors = [err22] : vErrors.push(err22), errors++;
         }
         if (data7.shareable === void 0) {
-          let err23 = { instancePath: instancePath + "/material", schemaPath: _mtekDiagnosticString62, keyword: _mtekDiagnosticString9, params: { missingProperty: "shareable" }, message: "must have required property 'shareable'" };
+          let err23 = { instancePath: instancePath + "/material", schemaPath: _mtekDiagnosticString70, keyword: _mtekDiagnosticString9, params: { missingProperty: "shareable" }, message: "must have required property 'shareable'" };
           vErrors === null ? vErrors = [err23] : vErrors.push(err23), errors++;
         }
         for (let key2 in data7)
@@ -6873,7 +7221,7 @@ function validate237(data, { instancePath = "", parentData, parentDataProperty, 
     if (data.body !== void 0) {
       let data12 = data.body;
       if (!(data12 && typeof data12 == "object" && !Array.isArray(data12)) && data12 !== null) {
-        let err27 = { instancePath: instancePath + "/body", schemaPath: "#/properties/body/type", keyword: _mtekDiagnosticString3, params: { type: schema75.properties.body.type }, message: _mtekDiagnosticString61 };
+        let err27 = { instancePath: instancePath + "/body", schemaPath: "#/properties/body/type", keyword: _mtekDiagnosticString3, params: { type: schema75.properties.body.type }, message: _mtekDiagnosticString69 };
         vErrors === null ? vErrors = [err27] : vErrors.push(err27), errors++;
       }
       let _errs24 = errors, valid7 = !0, _errs25 = errors;
@@ -6889,14 +7237,14 @@ function validate237(data, { instancePath = "", parentData, parentDataProperty, 
         valid7 = _valid0;
       }
       if (!valid7) {
-        let err29 = { instancePath: instancePath + "/body", schemaPath: "#/properties/body/if", keyword: "if", params: { failingKeyword: "then" }, message: _mtekDiagnosticString63 };
+        let err29 = { instancePath: instancePath + "/body", schemaPath: "#/properties/body/if", keyword: "if", params: { failingKeyword: "then" }, message: _mtekDiagnosticString71 };
         vErrors === null ? vErrors = [err29] : vErrors.push(err29), errors++;
       }
     }
     if (data.collider !== void 0) {
       let data13 = data.collider;
       if (!(data13 && typeof data13 == "object" && !Array.isArray(data13)) && data13 !== null) {
-        let err30 = { instancePath: instancePath + "/collider", schemaPath: "#/properties/collider/type", keyword: _mtekDiagnosticString3, params: { type: schema75.properties.collider.type }, message: _mtekDiagnosticString61 };
+        let err30 = { instancePath: instancePath + "/collider", schemaPath: "#/properties/collider/type", keyword: _mtekDiagnosticString3, params: { type: schema75.properties.collider.type }, message: _mtekDiagnosticString69 };
         vErrors === null ? vErrors = [err30] : vErrors.push(err30), errors++;
       }
       let _errs30 = errors, valid8 = !0, _errs31 = errors;
@@ -6907,12 +7255,12 @@ function validate237(data, { instancePath = "", parentData, parentDataProperty, 
       var _valid1 = _errs31 === errors;
       if (errors = _errs30, vErrors !== null && (_errs30 ? vErrors.length = _errs30 : vErrors = null), _valid1) {
         let _errs33 = errors;
-        validate273(data13, { instancePath: instancePath + "/collider", parentData: data, parentDataProperty: "collider", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate273.errors : vErrors.concat(validate273.errors), errors = vErrors.length);
+        validate275(data13, { instancePath: instancePath + "/collider", parentData: data, parentDataProperty: "collider", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate275.errors : vErrors.concat(validate275.errors), errors = vErrors.length);
         var _valid1 = _errs33 === errors;
         valid8 = _valid1;
       }
       if (!valid8) {
-        let err32 = { instancePath: instancePath + "/collider", schemaPath: "#/properties/collider/if", keyword: "if", params: { failingKeyword: "then" }, message: _mtekDiagnosticString63 };
+        let err32 = { instancePath: instancePath + "/collider", schemaPath: "#/properties/collider/if", keyword: "if", params: { failingKeyword: "then" }, message: _mtekDiagnosticString71 };
         vErrors === null ? vErrors = [err32] : vErrors.push(err32), errors++;
       }
     }
@@ -6921,9 +7269,9 @@ function validate237(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data14)) {
         let len2 = data14.length;
         for (let i2 = 0; i2 < len2; i2++)
-          validate279(data14[i2], { instancePath: instancePath + "/state/" + i2, parentData: data14, parentDataProperty: i2, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate279.errors : vErrors.concat(validate279.errors), errors = vErrors.length);
+          validate283(data14[i2], { instancePath: instancePath + "/state/" + i2, parentData: data14, parentDataProperty: i2, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate283.errors : vErrors.concat(validate283.errors), errors = vErrors.length);
       } else {
-        let err33 = { instancePath: instancePath + "/state", schemaPath: _mtekDiagnosticString64, keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
+        let err33 = { instancePath: instancePath + "/state", schemaPath: _mtekDiagnosticString72, keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err33] : vErrors.push(err33), errors++;
       }
     }
@@ -6940,13 +7288,13 @@ function validate237(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data18)) {
         let len3 = data18.length;
         for (let i3 = 0; i3 < len3; i3++)
-          validate284(data18[i3], { instancePath: instancePath + "/bindings/" + i3, parentData: data18, parentDataProperty: i3, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate284.errors : vErrors.concat(validate284.errors), errors = vErrors.length);
+          validate288(data18[i3], { instancePath: instancePath + "/bindings/" + i3, parentData: data18, parentDataProperty: i3, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate288.errors : vErrors.concat(validate288.errors), errors = vErrors.length);
       } else {
         let err36 = { instancePath: instancePath + "/bindings", schemaPath: "#/properties/bindings/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err36] : vErrors.push(err36), errors++;
       }
     }
-    data.span !== void 0 && (validate81(data.span, { instancePath: instancePath + "/span", parentData: data, parentDataProperty: "span", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate81.errors : vErrors.concat(validate81.errors), errors = vErrors.length)), data.tag !== void 0 && (validate332(data.tag, { instancePath: instancePath + "/tag", parentData: data, parentDataProperty: "tag", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate332.errors : vErrors.concat(validate332.errors), errors = vErrors.length)), data.particles !== void 0 && (validate334(data.particles, { instancePath: instancePath + "/particles", parentData: data, parentDataProperty: "particles", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate334.errors : vErrors.concat(validate334.errors), errors = vErrors.length)), data.clip !== void 0 && (validate336(data.clip, { instancePath: instancePath + "/clip", parentData: data, parentDataProperty: "clip", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate336.errors : vErrors.concat(validate336.errors), errors = vErrors.length));
+    data.span !== void 0 && (validate81(data.span, { instancePath: instancePath + "/span", parentData: data, parentDataProperty: "span", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate81.errors : vErrors.concat(validate81.errors), errors = vErrors.length)), data.tag !== void 0 && (validate336(data.tag, { instancePath: instancePath + "/tag", parentData: data, parentDataProperty: "tag", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate336.errors : vErrors.concat(validate336.errors), errors = vErrors.length)), data.particles !== void 0 && (validate338(data.particles, { instancePath: instancePath + "/particles", parentData: data, parentDataProperty: "particles", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate338.errors : vErrors.concat(validate338.errors), errors = vErrors.length)), data.clip !== void 0 && (validate340(data.clip, { instancePath: instancePath + "/clip", parentData: data, parentDataProperty: "clip", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate340.errors : vErrors.concat(validate340.errors), errors = vErrors.length));
   } else {
     let err37 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err37] : vErrors.push(err37), errors++;
@@ -6954,16 +7302,16 @@ function validate237(data, { instancePath = "", parentData, parentDataProperty, 
   return validate237.errors = vErrors, errors === 0;
 }
 validate237.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var schema111 = { properties: { name: { $ref: "#/$defs/name" }, symbol: { $ref: "#/$defs/symbolId" }, fields: { type: "object", additionalProperties: !1, required: ["clearColor", "ambientColor", "ambientIntensity", "gravity"], properties: { clearColor: { $ref: "#/$defs/vec4" }, ambientColor: { $ref: "#/$defs/vec4" }, ambientIntensity: { type: "number", minimum: 0 }, gravity: { $ref: "#/$defs/vec3" } } }, state: { type: "array", items: { $ref: "#/$defs/sceneStateEntry" } }, cameras: { type: "array", items: { $ref: "#/$defs/camera" } }, entities: { type: "array", items: { $ref: "#/$defs/entity" } }, materialInstances: { type: "array", items: { $ref: "#/$defs/materialInstance" } }, bindings: { type: "array", items: { $ref: "#/$defs/binding" } }, hostInputs: { type: "array", items: { $ref: "#/$defs/hostInput" } }, hostOutputs: { type: "array", items: { $ref: "#/$defs/hostOutput" } }, lights: { type: "array", items: { $ref: "#/$defs/light" } } } };
-function validate345(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate345.evaluated;
+var schema113 = { properties: { name: { $ref: "#/$defs/name" }, symbol: { $ref: "#/$defs/symbolId" }, fields: { type: "object", additionalProperties: !1, required: ["clearColor", "ambientColor", "ambientIntensity", "gravity"], properties: { clearColor: { $ref: "#/$defs/vec4" }, ambientColor: { $ref: "#/$defs/vec4" }, ambientIntensity: { type: "number", minimum: 0 }, gravity: { $ref: "#/$defs/vec3" } } }, state: { type: "array", items: { $ref: "#/$defs/sceneStateEntry" } }, cameras: { type: "array", items: { $ref: "#/$defs/camera" } }, entities: { type: "array", items: { $ref: "#/$defs/entity" } }, materialInstances: { type: "array", items: { $ref: "#/$defs/materialInstance" } }, bindings: { type: "array", items: { $ref: "#/$defs/binding" } }, hostInputs: { type: "array", items: { $ref: "#/$defs/hostInput" } }, hostOutputs: { type: "array", items: { $ref: "#/$defs/hostOutput" } }, lights: { type: "array", items: { $ref: "#/$defs/light" } } } };
+function validate349(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate349.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), Array.isArray(data)) {
     if (data.length > 4) {
       let err0 = { instancePath, schemaPath: "#/maxItems", keyword: _mtekDiagnosticString42, params: { limit: 4 }, message: _mtekDiagnosticString46 };
       vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
     }
     if (data.length < 4) {
-      let err1 = { instancePath, schemaPath: "#/minItems", keyword: _mtekDiagnosticString24, params: { limit: 4 }, message: _mtekDiagnosticString53 };
+      let err1 = { instancePath, schemaPath: "#/minItems", keyword: _mtekDiagnosticString24, params: { limit: 4 }, message: _mtekDiagnosticString55 };
       vErrors === null ? vErrors = [err1] : vErrors.push(err1), errors++;
     }
     let len0 = data.length;
@@ -6978,12 +7326,12 @@ function validate345(data, { instancePath = "", parentData, parentDataProperty, 
     let err3 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
     vErrors === null ? vErrors = [err3] : vErrors.push(err3), errors++;
   }
-  return validate345.errors = vErrors, errors === 0;
+  return validate349.errors = vErrors, errors === 0;
 }
-validate345.evaluated = { items: !0, dynamicProps: !1, dynamicItems: !1 };
-var schema113 = { properties: { persist: { enum: ["saved", "setting"] } } };
-function validate349(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate349.evaluated;
+validate349.evaluated = { items: !0, dynamicProps: !1, dynamicItems: !1 };
+var schema115 = { properties: { persist: { enum: ["saved", "setting"] } } };
+function validate353(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate353.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.name === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "name" }, message: "must have required property 'name'" };
@@ -7016,7 +7364,7 @@ function validate349(data, { instancePath = "", parentData, parentDataProperty, 
     if (data.persist !== void 0) {
       let data4 = data.persist;
       if (!(data4 === "saved" || data4 === "setting")) {
-        let err6 = { instancePath: instancePath + "/persist", schemaPath: "#/properties/persist/enum", keyword: _mtekDiagnosticString27, params: { allowedValues: schema113.properties.persist.enum }, message: _mtekDiagnosticString28 };
+        let err6 = { instancePath: instancePath + "/persist", schemaPath: "#/properties/persist/enum", keyword: _mtekDiagnosticString27, params: { allowedValues: schema115.properties.persist.enum }, message: _mtekDiagnosticString28 };
         vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
       }
     }
@@ -7040,12 +7388,12 @@ function validate349(data, { instancePath = "", parentData, parentDataProperty, 
     let err10 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err10] : vErrors.push(err10), errors++;
   }
-  return validate349.errors = vErrors, errors === 0;
+  return validate353.errors = vErrors, errors === 0;
 }
-validate349.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var schema114 = { properties: { projection: { enum: ["perspective", "orthographic"] } } };
-function validate354(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate354.evaluated;
+validate353.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+var schema116 = { properties: { projection: { enum: ["perspective", "orthographic"] } } };
+function validate358(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate358.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.name === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "name" }, message: "must have required property 'name'" };
@@ -7083,7 +7431,7 @@ function validate354(data, { instancePath = "", parentData, parentDataProperty, 
         vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
       }
       if (!(data2 === "perspective" || data2 === "orthographic")) {
-        let err8 = { instancePath: instancePath + "/projection", schemaPath: "#/properties/projection/enum", keyword: _mtekDiagnosticString27, params: { allowedValues: schema114.properties.projection.enum }, message: _mtekDiagnosticString28 };
+        let err8 = { instancePath: instancePath + "/projection", schemaPath: "#/properties/projection/enum", keyword: _mtekDiagnosticString27, params: { allowedValues: schema116.properties.projection.enum }, message: _mtekDiagnosticString28 };
         vErrors === null ? vErrors = [err8] : vErrors.push(err8), errors++;
       }
     }
@@ -7106,12 +7454,12 @@ function validate354(data, { instancePath = "", parentData, parentDataProperty, 
     let err12 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err12] : vErrors.push(err12), errors++;
   }
-  return validate354.errors = vErrors, errors === 0;
+  return validate358.errors = vErrors, errors === 0;
 }
-validate354.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var schema115 = { properties: { index: { $ref: "#/$defs/index" }, name: { $ref: "#/$defs/name" }, symbol: { $ref: "#/$defs/symbolId" }, parent: { type: ["integer", "null"], minimum: 0 }, mesh: { type: ["string", "null"], pattern: "^mesh:[0-9]+$" }, material: { type: ["object", "null"], additionalProperties: !1, required: ["id", "instance"], properties: { id: { $ref: "#/$defs/symbolId" }, instance: { $ref: "#/$defs/index" } } }, light: { type: ["integer", "null"], minimum: 0 }, body: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/body" } }, collider: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/collider" } }, state: { type: "array", items: { $ref: "#/$defs/stateEntry" } }, update: { type: "boolean" }, fixedUpdate: { type: "boolean" }, tag: { $ref: "#/$defs/tag" }, particles: { $ref: "#/$defs/emitter" }, clip: { $ref: "#/$defs/clip" } } };
-function validate358(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate358.evaluated;
+validate358.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+var schema117 = { properties: { index: { $ref: "#/$defs/index" }, name: { $ref: "#/$defs/name" }, symbol: { $ref: "#/$defs/symbolId" }, parent: { type: ["integer", "null"], minimum: 0 }, mesh: { type: ["string", "null"], pattern: "^mesh:[0-9]+$" }, material: { type: ["object", "null"], additionalProperties: !1, required: ["id", "instance"], properties: { id: { $ref: "#/$defs/symbolId" }, instance: { $ref: "#/$defs/index" } } }, light: { type: ["integer", "null"], minimum: 0 }, body: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/body" } }, collider: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/collider" } }, state: { type: "array", items: { $ref: "#/$defs/stateEntry" } }, update: { type: "boolean" }, fixedUpdate: { type: "boolean" }, tag: { $ref: "#/$defs/tag" }, particles: { $ref: "#/$defs/emitter" }, clip: { $ref: "#/$defs/clip" } } };
+function validate362(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate362.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.index === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "index" }, message: "must have required property 'index'" };
@@ -7162,14 +7510,14 @@ function validate358(data, { instancePath = "", parentData, parentDataProperty, 
       vErrors === null ? vErrors = [err11] : vErrors.push(err11), errors++;
     }
     for (let key0 in data)
-      if (!func1.call(schema115.properties, key0)) {
+      if (!func1.call(schema117.properties, key0)) {
         let err12 = { instancePath, schemaPath: _mtekDiagnosticString10, keyword: _mtekDiagnosticString11, params: { additionalProperty: key0 }, message: _mtekDiagnosticString12 };
         vErrors === null ? vErrors = [err12] : vErrors.push(err12), errors++;
       }
     if (data.index !== void 0 && (validate68(data.index, { instancePath: instancePath + "/index", parentData: data, parentDataProperty: "index", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate68.errors : vErrors.concat(validate68.errors), errors = vErrors.length)), data.name !== void 0 && (validate64(data.name, { instancePath: instancePath + "/name", parentData: data, parentDataProperty: "name", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate64.errors : vErrors.concat(validate64.errors), errors = vErrors.length)), data.symbol !== void 0 && (validate79(data.symbol, { instancePath: instancePath + "/symbol", parentData: data, parentDataProperty: "symbol", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate79.errors : vErrors.concat(validate79.errors), errors = vErrors.length)), data.parent !== void 0) {
       let data3 = data.parent;
       if (!(typeof data3 == "number" && !(data3 % 1) && !isNaN(data3) && isFinite(data3)) && data3 !== null) {
-        let err13 = { instancePath: instancePath + "/parent", schemaPath: "#/properties/parent/type", keyword: _mtekDiagnosticString3, params: { type: schema115.properties.parent.type }, message: "must be integer,null" };
+        let err13 = { instancePath: instancePath + "/parent", schemaPath: "#/properties/parent/type", keyword: _mtekDiagnosticString3, params: { type: schema117.properties.parent.type }, message: "must be integer,null" };
         vErrors === null ? vErrors = [err13] : vErrors.push(err13), errors++;
       }
       if (typeof data3 == "number" && isFinite(data3) && (data3 < 0 || isNaN(data3))) {
@@ -7180,7 +7528,7 @@ function validate358(data, { instancePath = "", parentData, parentDataProperty, 
     if (data.mesh !== void 0) {
       let data4 = data.mesh;
       if (typeof data4 != "string" && data4 !== null) {
-        let err15 = { instancePath: instancePath + "/mesh", schemaPath: "#/properties/mesh/type", keyword: _mtekDiagnosticString3, params: { type: schema115.properties.mesh.type }, message: _mtekDiagnosticString37 };
+        let err15 = { instancePath: instancePath + "/mesh", schemaPath: "#/properties/mesh/type", keyword: _mtekDiagnosticString3, params: { type: schema117.properties.mesh.type }, message: _mtekDiagnosticString37 };
         vErrors === null ? vErrors = [err15] : vErrors.push(err15), errors++;
       }
       if (typeof data4 == "string" && !pattern18.test(data4)) {
@@ -7191,16 +7539,16 @@ function validate358(data, { instancePath = "", parentData, parentDataProperty, 
     if (data.material !== void 0) {
       let data5 = data.material;
       if (!(data5 && typeof data5 == "object" && !Array.isArray(data5)) && data5 !== null) {
-        let err17 = { instancePath: instancePath + "/material", schemaPath: "#/properties/material/type", keyword: _mtekDiagnosticString3, params: { type: schema115.properties.material.type }, message: _mtekDiagnosticString61 };
+        let err17 = { instancePath: instancePath + "/material", schemaPath: "#/properties/material/type", keyword: _mtekDiagnosticString3, params: { type: schema117.properties.material.type }, message: _mtekDiagnosticString69 };
         vErrors === null ? vErrors = [err17] : vErrors.push(err17), errors++;
       }
       if (data5 && typeof data5 == "object" && !Array.isArray(data5)) {
         if (data5.id === void 0) {
-          let err18 = { instancePath: instancePath + "/material", schemaPath: _mtekDiagnosticString62, keyword: _mtekDiagnosticString9, params: { missingProperty: "id" }, message: "must have required property 'id'" };
+          let err18 = { instancePath: instancePath + "/material", schemaPath: _mtekDiagnosticString70, keyword: _mtekDiagnosticString9, params: { missingProperty: "id" }, message: "must have required property 'id'" };
           vErrors === null ? vErrors = [err18] : vErrors.push(err18), errors++;
         }
         if (data5.instance === void 0) {
-          let err19 = { instancePath: instancePath + "/material", schemaPath: _mtekDiagnosticString62, keyword: _mtekDiagnosticString9, params: { missingProperty: "instance" }, message: "must have required property 'instance'" };
+          let err19 = { instancePath: instancePath + "/material", schemaPath: _mtekDiagnosticString70, keyword: _mtekDiagnosticString9, params: { missingProperty: "instance" }, message: "must have required property 'instance'" };
           vErrors === null ? vErrors = [err19] : vErrors.push(err19), errors++;
         }
         for (let key1 in data5)
@@ -7214,7 +7562,7 @@ function validate358(data, { instancePath = "", parentData, parentDataProperty, 
     if (data.light !== void 0) {
       let data8 = data.light;
       if (!(typeof data8 == "number" && !(data8 % 1) && !isNaN(data8) && isFinite(data8)) && data8 !== null) {
-        let err21 = { instancePath: instancePath + "/light", schemaPath: "#/properties/light/type", keyword: _mtekDiagnosticString3, params: { type: schema115.properties.light.type }, message: "must be integer,null" };
+        let err21 = { instancePath: instancePath + "/light", schemaPath: "#/properties/light/type", keyword: _mtekDiagnosticString3, params: { type: schema117.properties.light.type }, message: "must be integer,null" };
         vErrors === null ? vErrors = [err21] : vErrors.push(err21), errors++;
       }
       if (typeof data8 == "number" && isFinite(data8) && (data8 < 0 || isNaN(data8))) {
@@ -7225,7 +7573,7 @@ function validate358(data, { instancePath = "", parentData, parentDataProperty, 
     if (data.body !== void 0) {
       let data9 = data.body;
       if (!(data9 && typeof data9 == "object" && !Array.isArray(data9)) && data9 !== null) {
-        let err23 = { instancePath: instancePath + "/body", schemaPath: "#/properties/body/type", keyword: _mtekDiagnosticString3, params: { type: schema115.properties.body.type }, message: _mtekDiagnosticString61 };
+        let err23 = { instancePath: instancePath + "/body", schemaPath: "#/properties/body/type", keyword: _mtekDiagnosticString3, params: { type: schema117.properties.body.type }, message: _mtekDiagnosticString69 };
         vErrors === null ? vErrors = [err23] : vErrors.push(err23), errors++;
       }
       let _errs18 = errors, valid2 = !0, _errs19 = errors;
@@ -7241,14 +7589,14 @@ function validate358(data, { instancePath = "", parentData, parentDataProperty, 
         valid2 = _valid0;
       }
       if (!valid2) {
-        let err25 = { instancePath: instancePath + "/body", schemaPath: "#/properties/body/if", keyword: "if", params: { failingKeyword: "then" }, message: _mtekDiagnosticString63 };
+        let err25 = { instancePath: instancePath + "/body", schemaPath: "#/properties/body/if", keyword: "if", params: { failingKeyword: "then" }, message: _mtekDiagnosticString71 };
         vErrors === null ? vErrors = [err25] : vErrors.push(err25), errors++;
       }
     }
     if (data.collider !== void 0) {
       let data10 = data.collider;
       if (!(data10 && typeof data10 == "object" && !Array.isArray(data10)) && data10 !== null) {
-        let err26 = { instancePath: instancePath + "/collider", schemaPath: "#/properties/collider/type", keyword: _mtekDiagnosticString3, params: { type: schema115.properties.collider.type }, message: _mtekDiagnosticString61 };
+        let err26 = { instancePath: instancePath + "/collider", schemaPath: "#/properties/collider/type", keyword: _mtekDiagnosticString3, params: { type: schema117.properties.collider.type }, message: _mtekDiagnosticString69 };
         vErrors === null ? vErrors = [err26] : vErrors.push(err26), errors++;
       }
       let _errs24 = errors, valid3 = !0, _errs25 = errors;
@@ -7259,12 +7607,12 @@ function validate358(data, { instancePath = "", parentData, parentDataProperty, 
       var _valid1 = _errs25 === errors;
       if (errors = _errs24, vErrors !== null && (_errs24 ? vErrors.length = _errs24 : vErrors = null), _valid1) {
         let _errs27 = errors;
-        validate273(data10, { instancePath: instancePath + "/collider", parentData: data, parentDataProperty: "collider", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate273.errors : vErrors.concat(validate273.errors), errors = vErrors.length);
+        validate275(data10, { instancePath: instancePath + "/collider", parentData: data, parentDataProperty: "collider", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate275.errors : vErrors.concat(validate275.errors), errors = vErrors.length);
         var _valid1 = _errs27 === errors;
         valid3 = _valid1;
       }
       if (!valid3) {
-        let err28 = { instancePath: instancePath + "/collider", schemaPath: "#/properties/collider/if", keyword: "if", params: { failingKeyword: "then" }, message: _mtekDiagnosticString63 };
+        let err28 = { instancePath: instancePath + "/collider", schemaPath: "#/properties/collider/if", keyword: "if", params: { failingKeyword: "then" }, message: _mtekDiagnosticString71 };
         vErrors === null ? vErrors = [err28] : vErrors.push(err28), errors++;
       }
     }
@@ -7273,9 +7621,9 @@ function validate358(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data11)) {
         let len0 = data11.length;
         for (let i0 = 0; i0 < len0; i0++)
-          validate279(data11[i0], { instancePath: instancePath + "/state/" + i0, parentData: data11, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate279.errors : vErrors.concat(validate279.errors), errors = vErrors.length);
+          validate283(data11[i0], { instancePath: instancePath + "/state/" + i0, parentData: data11, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate283.errors : vErrors.concat(validate283.errors), errors = vErrors.length);
       } else {
-        let err29 = { instancePath: instancePath + "/state", schemaPath: _mtekDiagnosticString64, keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
+        let err29 = { instancePath: instancePath + "/state", schemaPath: _mtekDiagnosticString72, keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err29] : vErrors.push(err29), errors++;
       }
     }
@@ -7287,16 +7635,16 @@ function validate358(data, { instancePath = "", parentData, parentDataProperty, 
       let err31 = { instancePath: instancePath + "/fixedUpdate", schemaPath: "#/properties/fixedUpdate/type", keyword: _mtekDiagnosticString3, params: { type: "boolean" }, message: _mtekDiagnosticString21 };
       vErrors === null ? vErrors = [err31] : vErrors.push(err31), errors++;
     }
-    data.tag !== void 0 && (validate332(data.tag, { instancePath: instancePath + "/tag", parentData: data, parentDataProperty: "tag", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate332.errors : vErrors.concat(validate332.errors), errors = vErrors.length)), data.particles !== void 0 && (validate334(data.particles, { instancePath: instancePath + "/particles", parentData: data, parentDataProperty: "particles", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate334.errors : vErrors.concat(validate334.errors), errors = vErrors.length)), data.clip !== void 0 && (validate336(data.clip, { instancePath: instancePath + "/clip", parentData: data, parentDataProperty: "clip", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate336.errors : vErrors.concat(validate336.errors), errors = vErrors.length));
+    data.tag !== void 0 && (validate336(data.tag, { instancePath: instancePath + "/tag", parentData: data, parentDataProperty: "tag", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate336.errors : vErrors.concat(validate336.errors), errors = vErrors.length)), data.particles !== void 0 && (validate338(data.particles, { instancePath: instancePath + "/particles", parentData: data, parentDataProperty: "particles", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate338.errors : vErrors.concat(validate338.errors), errors = vErrors.length)), data.clip !== void 0 && (validate340(data.clip, { instancePath: instancePath + "/clip", parentData: data, parentDataProperty: "clip", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate340.errors : vErrors.concat(validate340.errors), errors = vErrors.length));
   } else {
     let err32 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err32] : vErrors.push(err32), errors++;
   }
-  return validate358.errors = vErrors, errors === 0;
+  return validate362.errors = vErrors, errors === 0;
 }
-validate358.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate371(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate371.evaluated;
+validate362.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate375(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate375.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.index === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "index" }, message: "must have required property 'index'" };
@@ -7342,12 +7690,12 @@ function validate371(data, { instancePath = "", parentData, parentDataProperty, 
     let err8 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err8] : vErrors.push(err8), errors++;
   }
-  return validate371.errors = vErrors, errors === 0;
+  return validate375.errors = vErrors, errors === 0;
 }
-validate371.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var schema117 = { properties: { type: { enum: ["f32", "i32", "u32", "bool", "vec2", "vec3", "vec4", "color", "string"] }, codec: { enum: ["f32", "i32", "u32", "bool", "vec2", "vec3", "vec4", "color-hex", "color-hex-opaque", "string"] } } };
-function validate378(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate378.evaluated;
+validate375.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+var schema119 = { properties: { type: { enum: ["f32", "i32", "u32", "bool", "vec2", "vec3", "vec4", "color", "string"] }, codec: { enum: ["f32", "i32", "u32", "bool", "vec2", "vec3", "vec4", "color-hex", "color-hex-opaque", "string"] } } };
+function validate382(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate382.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.name === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "name" }, message: "must have required property 'name'" };
@@ -7403,7 +7751,7 @@ function validate378(data, { instancePath = "", parentData, parentDataProperty, 
         vErrors === null ? vErrors = [err10] : vErrors.push(err10), errors++;
       }
       if (!(data4 === "f32" || data4 === "i32" || data4 === "u32" || data4 === "bool" || data4 === "vec2" || data4 === "vec3" || data4 === "vec4" || data4 === "color" || data4 === "string")) {
-        let err11 = { instancePath: instancePath + "/type", schemaPath: "#/properties/type/enum", keyword: _mtekDiagnosticString27, params: { allowedValues: schema117.properties.type.enum }, message: _mtekDiagnosticString28 };
+        let err11 = { instancePath: instancePath + "/type", schemaPath: "#/properties/type/enum", keyword: _mtekDiagnosticString27, params: { allowedValues: schema119.properties.type.enum }, message: _mtekDiagnosticString28 };
         vErrors === null ? vErrors = [err11] : vErrors.push(err11), errors++;
       }
     }
@@ -7414,7 +7762,7 @@ function validate378(data, { instancePath = "", parentData, parentDataProperty, 
         vErrors === null ? vErrors = [err12] : vErrors.push(err12), errors++;
       }
       if (!(data5 === "f32" || data5 === "i32" || data5 === "u32" || data5 === "bool" || data5 === "vec2" || data5 === "vec3" || data5 === "vec4" || data5 === "color-hex" || data5 === "color-hex-opaque" || data5 === "string")) {
-        let err13 = { instancePath: instancePath + "/codec", schemaPath: "#/properties/codec/enum", keyword: _mtekDiagnosticString27, params: { allowedValues: schema117.properties.codec.enum }, message: _mtekDiagnosticString28 };
+        let err13 = { instancePath: instancePath + "/codec", schemaPath: "#/properties/codec/enum", keyword: _mtekDiagnosticString27, params: { allowedValues: schema119.properties.codec.enum }, message: _mtekDiagnosticString28 };
         vErrors === null ? vErrors = [err13] : vErrors.push(err13), errors++;
       }
     }
@@ -7422,12 +7770,12 @@ function validate378(data, { instancePath = "", parentData, parentDataProperty, 
     let err14 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err14] : vErrors.push(err14), errors++;
   }
-  return validate378.errors = vErrors, errors === 0;
+  return validate382.errors = vErrors, errors === 0;
 }
-validate378.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var schema118 = { properties: { type: { enum: ["f32", "i32", "u32", "bool", "vec2", "vec3", "vec4", "color", "string"] } } };
-function validate382(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate382.evaluated;
+validate382.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+var schema120 = { properties: { type: { enum: ["f32", "i32", "u32", "bool", "vec2", "vec3", "vec4", "color", "string"] } } };
+function validate386(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate386.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.name === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "name" }, message: "must have required property 'name'" };
@@ -7450,11 +7798,11 @@ function validate382(data, { instancePath = "", parentData, parentDataProperty, 
       let data1 = data.source;
       if (data1 && typeof data1 == "object" && !Array.isArray(data1)) {
         if (data1.kind === void 0) {
-          let err4 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString55, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
+          let err4 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString57, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
           vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
         }
         if (data1.name === void 0) {
-          let err5 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString55, keyword: _mtekDiagnosticString9, params: { missingProperty: "name" }, message: "must have required property 'name'" };
+          let err5 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString57, keyword: _mtekDiagnosticString9, params: { missingProperty: "name" }, message: "must have required property 'name'" };
           vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
         }
         for (let key1 in data1)
@@ -7468,7 +7816,7 @@ function validate382(data, { instancePath = "", parentData, parentDataProperty, 
         }
         data1.name !== void 0 && (validate64(data1.name, { instancePath: instancePath + "/source/name", parentData: data1, parentDataProperty: "name", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate64.errors : vErrors.concat(validate64.errors), errors = vErrors.length));
       } else {
-        let err8 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString56, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
+        let err8 = { instancePath: instancePath + "/source", schemaPath: _mtekDiagnosticString58, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
         vErrors === null ? vErrors = [err8] : vErrors.push(err8), errors++;
       }
     }
@@ -7479,7 +7827,7 @@ function validate382(data, { instancePath = "", parentData, parentDataProperty, 
         vErrors === null ? vErrors = [err9] : vErrors.push(err9), errors++;
       }
       if (!(data4 === "f32" || data4 === "i32" || data4 === "u32" || data4 === "bool" || data4 === "vec2" || data4 === "vec3" || data4 === "vec4" || data4 === "color" || data4 === "string")) {
-        let err10 = { instancePath: instancePath + "/type", schemaPath: "#/properties/type/enum", keyword: _mtekDiagnosticString27, params: { allowedValues: schema118.properties.type.enum }, message: _mtekDiagnosticString28 };
+        let err10 = { instancePath: instancePath + "/type", schemaPath: "#/properties/type/enum", keyword: _mtekDiagnosticString27, params: { allowedValues: schema120.properties.type.enum }, message: _mtekDiagnosticString28 };
         vErrors === null ? vErrors = [err10] : vErrors.push(err10), errors++;
       }
     }
@@ -7487,12 +7835,12 @@ function validate382(data, { instancePath = "", parentData, parentDataProperty, 
     let err11 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err11] : vErrors.push(err11), errors++;
   }
-  return validate382.errors = vErrors, errors === 0;
+  return validate386.errors = vErrors, errors === 0;
 }
-validate382.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var schema121 = { properties: { color: { enum: ["initial", "imperative", "bound"] }, intensity: { enum: ["initial", "imperative", "bound"] } } };
-function validate390(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate390.evaluated;
+validate386.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+var schema123 = { properties: { color: { enum: ["initial", "imperative", "bound"] }, intensity: { enum: ["initial", "imperative", "bound"] } } };
+function validate394(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate394.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.color === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "color" }, message: "must have required property 'color'" };
@@ -7514,7 +7862,7 @@ function validate390(data, { instancePath = "", parentData, parentDataProperty, 
         vErrors === null ? vErrors = [err3] : vErrors.push(err3), errors++;
       }
       if (!(data0 === "initial" || data0 === "imperative" || data0 === "bound")) {
-        let err4 = { instancePath: instancePath + "/color", schemaPath: "#/properties/color/enum", keyword: _mtekDiagnosticString27, params: { allowedValues: schema121.properties.color.enum }, message: _mtekDiagnosticString28 };
+        let err4 = { instancePath: instancePath + "/color", schemaPath: "#/properties/color/enum", keyword: _mtekDiagnosticString27, params: { allowedValues: schema123.properties.color.enum }, message: _mtekDiagnosticString28 };
         vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
       }
     }
@@ -7525,7 +7873,7 @@ function validate390(data, { instancePath = "", parentData, parentDataProperty, 
         vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
       }
       if (!(data1 === "initial" || data1 === "imperative" || data1 === "bound")) {
-        let err6 = { instancePath: instancePath + "/intensity", schemaPath: "#/properties/intensity/enum", keyword: _mtekDiagnosticString27, params: { allowedValues: schema121.properties.intensity.enum }, message: _mtekDiagnosticString28 };
+        let err6 = { instancePath: instancePath + "/intensity", schemaPath: "#/properties/intensity/enum", keyword: _mtekDiagnosticString27, params: { allowedValues: schema123.properties.intensity.enum }, message: _mtekDiagnosticString28 };
         vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
       }
     }
@@ -7533,11 +7881,11 @@ function validate390(data, { instancePath = "", parentData, parentDataProperty, 
     let err7 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
   }
-  return validate390.errors = vErrors, errors === 0;
+  return validate394.errors = vErrors, errors === 0;
 }
-validate390.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate387(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate387.evaluated;
+validate394.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate391(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate391.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.index === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "index" }, message: "must have required property 'index'" };
@@ -7564,16 +7912,16 @@ function validate387(data, { instancePath = "", parentData, parentDataProperty, 
       let err5 = { instancePath: instancePath + "/kind", schemaPath: _mtekDiagnosticString29, keyword: _mtekDiagnosticString30, params: { allowedValue: "directional" }, message: _mtekDiagnosticString31 };
       vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
     }
-    data.classes !== void 0 && (validate390(data.classes, { instancePath: instancePath + "/classes", parentData: data, parentDataProperty: "classes", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate390.errors : vErrors.concat(validate390.errors), errors = vErrors.length));
+    data.classes !== void 0 && (validate394(data.classes, { instancePath: instancePath + "/classes", parentData: data, parentDataProperty: "classes", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate394.errors : vErrors.concat(validate394.errors), errors = vErrors.length));
   } else {
     let err6 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
   }
-  return validate387.errors = vErrors, errors === 0;
+  return validate391.errors = vErrors, errors === 0;
 }
-validate387.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate392(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate392.evaluated;
+validate391.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate396(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate396.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.index === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "index" }, message: "must have required property 'index'" };
@@ -7616,24 +7964,24 @@ function validate392(data, { instancePath = "", parentData, parentDataProperty, 
         vErrors === null ? vErrors = [err8] : vErrors.push(err8), errors++;
       }
     }
-    data.classes !== void 0 && (validate390(data.classes, { instancePath: instancePath + "/classes", parentData: data, parentDataProperty: "classes", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate390.errors : vErrors.concat(validate390.errors), errors = vErrors.length));
+    data.classes !== void 0 && (validate394(data.classes, { instancePath: instancePath + "/classes", parentData: data, parentDataProperty: "classes", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate394.errors : vErrors.concat(validate394.errors), errors = vErrors.length));
   } else {
     let err9 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err9] : vErrors.push(err9), errors++;
   }
-  return validate392.errors = vErrors, errors === 0;
+  return validate396.errors = vErrors, errors === 0;
 }
-validate392.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate386(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate386.evaluated;
+validate396.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate390(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate390.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     let tag0 = data.kind;
     if (typeof tag0 == "string")
       if (tag0 === "directional") {
-        validate387(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate387.errors : vErrors.concat(validate387.errors), errors = vErrors.length);
+        validate391(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate391.errors : vErrors.concat(validate391.errors), errors = vErrors.length);
         var props0 = !0;
       } else if (tag0 === "point")
-        validate392(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate392.errors : vErrors.concat(validate392.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate396(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate396.errors : vErrors.concat(validate396.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else {
         let err0 = { instancePath, schemaPath: _mtekDiagnosticString33, keyword: _mtekDiagnosticString34, params: { error: "mapping", tag: "kind", tagValue: tag0 }, message: _mtekDiagnosticString35 };
         vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
@@ -7646,11 +7994,11 @@ function validate386(data, { instancePath = "", parentData, parentDataProperty, 
     let err2 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err2] : vErrors.push(err2), errors++;
   }
-  return validate386.errors = vErrors, evaluated0.props = props0, errors === 0;
+  return validate390.errors = vErrors, evaluated0.props = props0, errors === 0;
 }
-validate386.evaluated = { dynamicProps: !0, dynamicItems: !1 };
-function validate342(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate342.evaluated;
+validate390.evaluated = { dynamicProps: !0, dynamicItems: !1 };
+function validate346(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate346.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.name === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "name" }, message: "must have required property 'name'" };
@@ -7693,7 +8041,7 @@ function validate342(data, { instancePath = "", parentData, parentDataProperty, 
       vErrors === null ? vErrors = [err9] : vErrors.push(err9), errors++;
     }
     for (let key0 in data)
-      if (!func1.call(schema111.properties, key0)) {
+      if (!func1.call(schema113.properties, key0)) {
         let err10 = { instancePath, schemaPath: _mtekDiagnosticString10, keyword: _mtekDiagnosticString11, params: { additionalProperty: key0 }, message: _mtekDiagnosticString12 };
         vErrors === null ? vErrors = [err10] : vErrors.push(err10), errors++;
       }
@@ -7701,19 +8049,19 @@ function validate342(data, { instancePath = "", parentData, parentDataProperty, 
       let data2 = data.fields;
       if (data2 && typeof data2 == "object" && !Array.isArray(data2)) {
         if (data2.clearColor === void 0) {
-          let err11 = { instancePath: instancePath + "/fields", schemaPath: _mtekDiagnosticString65, keyword: _mtekDiagnosticString9, params: { missingProperty: "clearColor" }, message: "must have required property 'clearColor'" };
+          let err11 = { instancePath: instancePath + "/fields", schemaPath: _mtekDiagnosticString73, keyword: _mtekDiagnosticString9, params: { missingProperty: "clearColor" }, message: "must have required property 'clearColor'" };
           vErrors === null ? vErrors = [err11] : vErrors.push(err11), errors++;
         }
         if (data2.ambientColor === void 0) {
-          let err12 = { instancePath: instancePath + "/fields", schemaPath: _mtekDiagnosticString65, keyword: _mtekDiagnosticString9, params: { missingProperty: "ambientColor" }, message: "must have required property 'ambientColor'" };
+          let err12 = { instancePath: instancePath + "/fields", schemaPath: _mtekDiagnosticString73, keyword: _mtekDiagnosticString9, params: { missingProperty: "ambientColor" }, message: "must have required property 'ambientColor'" };
           vErrors === null ? vErrors = [err12] : vErrors.push(err12), errors++;
         }
         if (data2.ambientIntensity === void 0) {
-          let err13 = { instancePath: instancePath + "/fields", schemaPath: _mtekDiagnosticString65, keyword: _mtekDiagnosticString9, params: { missingProperty: "ambientIntensity" }, message: "must have required property 'ambientIntensity'" };
+          let err13 = { instancePath: instancePath + "/fields", schemaPath: _mtekDiagnosticString73, keyword: _mtekDiagnosticString9, params: { missingProperty: "ambientIntensity" }, message: "must have required property 'ambientIntensity'" };
           vErrors === null ? vErrors = [err13] : vErrors.push(err13), errors++;
         }
         if (data2.gravity === void 0) {
-          let err14 = { instancePath: instancePath + "/fields", schemaPath: _mtekDiagnosticString65, keyword: _mtekDiagnosticString9, params: { missingProperty: "gravity" }, message: "must have required property 'gravity'" };
+          let err14 = { instancePath: instancePath + "/fields", schemaPath: _mtekDiagnosticString73, keyword: _mtekDiagnosticString9, params: { missingProperty: "gravity" }, message: "must have required property 'gravity'" };
           vErrors === null ? vErrors = [err14] : vErrors.push(err14), errors++;
         }
         for (let key1 in data2)
@@ -7721,7 +8069,7 @@ function validate342(data, { instancePath = "", parentData, parentDataProperty, 
             let err15 = { instancePath: instancePath + "/fields", schemaPath: "#/properties/fields/additionalProperties", keyword: _mtekDiagnosticString11, params: { additionalProperty: key1 }, message: _mtekDiagnosticString12 };
             vErrors === null ? vErrors = [err15] : vErrors.push(err15), errors++;
           }
-        if (data2.clearColor !== void 0 && (validate345(data2.clearColor, { instancePath: instancePath + "/fields/clearColor", parentData: data2, parentDataProperty: "clearColor", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate345.errors : vErrors.concat(validate345.errors), errors = vErrors.length)), data2.ambientColor !== void 0 && (validate345(data2.ambientColor, { instancePath: instancePath + "/fields/ambientColor", parentData: data2, parentDataProperty: "ambientColor", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate345.errors : vErrors.concat(validate345.errors), errors = vErrors.length)), data2.ambientIntensity !== void 0) {
+        if (data2.clearColor !== void 0 && (validate349(data2.clearColor, { instancePath: instancePath + "/fields/clearColor", parentData: data2, parentDataProperty: "clearColor", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate349.errors : vErrors.concat(validate349.errors), errors = vErrors.length)), data2.ambientColor !== void 0 && (validate349(data2.ambientColor, { instancePath: instancePath + "/fields/ambientColor", parentData: data2, parentDataProperty: "ambientColor", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate349.errors : vErrors.concat(validate349.errors), errors = vErrors.length)), data2.ambientIntensity !== void 0) {
           let data5 = data2.ambientIntensity;
           if (typeof data5 == "number" && isFinite(data5)) {
             if (data5 < 0 || isNaN(data5)) {
@@ -7744,9 +8092,9 @@ function validate342(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data7)) {
         let len0 = data7.length;
         for (let i0 = 0; i0 < len0; i0++)
-          validate349(data7[i0], { instancePath: instancePath + "/state/" + i0, parentData: data7, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate349.errors : vErrors.concat(validate349.errors), errors = vErrors.length);
+          validate353(data7[i0], { instancePath: instancePath + "/state/" + i0, parentData: data7, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate353.errors : vErrors.concat(validate353.errors), errors = vErrors.length);
       } else {
-        let err19 = { instancePath: instancePath + "/state", schemaPath: _mtekDiagnosticString64, keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
+        let err19 = { instancePath: instancePath + "/state", schemaPath: _mtekDiagnosticString72, keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err19] : vErrors.push(err19), errors++;
       }
     }
@@ -7755,7 +8103,7 @@ function validate342(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data9)) {
         let len1 = data9.length;
         for (let i1 = 0; i1 < len1; i1++)
-          validate354(data9[i1], { instancePath: instancePath + "/cameras/" + i1, parentData: data9, parentDataProperty: i1, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate354.errors : vErrors.concat(validate354.errors), errors = vErrors.length);
+          validate358(data9[i1], { instancePath: instancePath + "/cameras/" + i1, parentData: data9, parentDataProperty: i1, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate358.errors : vErrors.concat(validate358.errors), errors = vErrors.length);
       } else {
         let err20 = { instancePath: instancePath + "/cameras", schemaPath: "#/properties/cameras/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err20] : vErrors.push(err20), errors++;
@@ -7766,7 +8114,7 @@ function validate342(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data11)) {
         let len2 = data11.length;
         for (let i2 = 0; i2 < len2; i2++)
-          validate358(data11[i2], { instancePath: instancePath + "/entities/" + i2, parentData: data11, parentDataProperty: i2, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate358.errors : vErrors.concat(validate358.errors), errors = vErrors.length);
+          validate362(data11[i2], { instancePath: instancePath + "/entities/" + i2, parentData: data11, parentDataProperty: i2, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate362.errors : vErrors.concat(validate362.errors), errors = vErrors.length);
       } else {
         let err21 = { instancePath: instancePath + "/entities", schemaPath: "#/properties/entities/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err21] : vErrors.push(err21), errors++;
@@ -7777,7 +8125,7 @@ function validate342(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data13)) {
         let len3 = data13.length;
         for (let i3 = 0; i3 < len3; i3++)
-          validate371(data13[i3], { instancePath: instancePath + "/materialInstances/" + i3, parentData: data13, parentDataProperty: i3, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate371.errors : vErrors.concat(validate371.errors), errors = vErrors.length);
+          validate375(data13[i3], { instancePath: instancePath + "/materialInstances/" + i3, parentData: data13, parentDataProperty: i3, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate375.errors : vErrors.concat(validate375.errors), errors = vErrors.length);
       } else {
         let err22 = { instancePath: instancePath + "/materialInstances", schemaPath: "#/properties/materialInstances/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err22] : vErrors.push(err22), errors++;
@@ -7788,7 +8136,7 @@ function validate342(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data15)) {
         let len4 = data15.length;
         for (let i4 = 0; i4 < len4; i4++)
-          validate284(data15[i4], { instancePath: instancePath + "/bindings/" + i4, parentData: data15, parentDataProperty: i4, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate284.errors : vErrors.concat(validate284.errors), errors = vErrors.length);
+          validate288(data15[i4], { instancePath: instancePath + "/bindings/" + i4, parentData: data15, parentDataProperty: i4, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate288.errors : vErrors.concat(validate288.errors), errors = vErrors.length);
       } else {
         let err23 = { instancePath: instancePath + "/bindings", schemaPath: "#/properties/bindings/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err23] : vErrors.push(err23), errors++;
@@ -7799,7 +8147,7 @@ function validate342(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data17)) {
         let len5 = data17.length;
         for (let i5 = 0; i5 < len5; i5++)
-          validate378(data17[i5], { instancePath: instancePath + "/hostInputs/" + i5, parentData: data17, parentDataProperty: i5, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate378.errors : vErrors.concat(validate378.errors), errors = vErrors.length);
+          validate382(data17[i5], { instancePath: instancePath + "/hostInputs/" + i5, parentData: data17, parentDataProperty: i5, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate382.errors : vErrors.concat(validate382.errors), errors = vErrors.length);
       } else {
         let err24 = { instancePath: instancePath + "/hostInputs", schemaPath: "#/properties/hostInputs/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err24] : vErrors.push(err24), errors++;
@@ -7810,7 +8158,7 @@ function validate342(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data19)) {
         let len6 = data19.length;
         for (let i6 = 0; i6 < len6; i6++)
-          validate382(data19[i6], { instancePath: instancePath + "/hostOutputs/" + i6, parentData: data19, parentDataProperty: i6, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate382.errors : vErrors.concat(validate382.errors), errors = vErrors.length);
+          validate386(data19[i6], { instancePath: instancePath + "/hostOutputs/" + i6, parentData: data19, parentDataProperty: i6, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate386.errors : vErrors.concat(validate386.errors), errors = vErrors.length);
       } else {
         let err25 = { instancePath: instancePath + "/hostOutputs", schemaPath: "#/properties/hostOutputs/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err25] : vErrors.push(err25), errors++;
@@ -7821,7 +8169,7 @@ function validate342(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data21)) {
         let len7 = data21.length;
         for (let i7 = 0; i7 < len7; i7++)
-          validate386(data21[i7], { instancePath: instancePath + "/lights/" + i7, parentData: data21, parentDataProperty: i7, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate386.errors : vErrors.concat(validate386.errors), errors = vErrors.length);
+          validate390(data21[i7], { instancePath: instancePath + "/lights/" + i7, parentData: data21, parentDataProperty: i7, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate390.errors : vErrors.concat(validate390.errors), errors = vErrors.length);
       } else {
         let err26 = { instancePath: instancePath + "/lights", schemaPath: "#/properties/lights/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err26] : vErrors.push(err26), errors++;
@@ -7831,9 +8179,9 @@ function validate342(data, { instancePath = "", parentData, parentDataProperty, 
     let err27 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err27] : vErrors.push(err27), errors++;
   }
-  return validate342.errors = vErrors, errors === 0;
+  return validate346.errors = vErrors, errors === 0;
 }
-validate342.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+validate346.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 var pattern7 = new RegExp("^physics/[0-9a-f]{16}\\.js$", "u");
 function validate52(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null, errors = 0, evaluated0 = validate52.evaluated;
@@ -8206,7 +8554,7 @@ function validate52(data, { instancePath = "", parentData, parentDataProperty, r
         vErrors === null ? vErrors = [err58] : vErrors.push(err58), errors++;
       }
     }
-    data.scene !== void 0 && (validate342(data.scene, { instancePath: instancePath + "/scene", parentData: data, parentDataProperty: "scene", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate342.errors : vErrors.concat(validate342.errors), errors = vErrors.length));
+    data.scene !== void 0 && (validate346(data.scene, { instancePath: instancePath + "/scene", parentData: data, parentDataProperty: "scene", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate346.errors : vErrors.concat(validate346.errors), errors = vErrors.length));
   } else {
     let err59 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err59] : vErrors.push(err59), errors++;
@@ -9612,11 +9960,12 @@ function describeValue(value) {
 }
 
 // src/physics/commands.ts
-var COMMAND_CATEGORIES = ["teleport", "linearVelocity", "kinematicTarget", "impulse", "force"], CommandQueue = class {
+var COMMAND_CATEGORIES = ["teleport", "linearVelocity", "kinematicTarget", "characterMove", "impulse", "force"], CommandQueue = class {
   lanes = {
     teleport: [],
     linearVelocity: [],
     kinematicTarget: [],
+    characterMove: [],
     impulse: [],
     force: []
   };
@@ -9657,12 +10006,28 @@ function sortCollisions(pairs) {
 }
 
 // src/physics/system.ts
-var ZERO = Object.freeze({ x: 0, y: 0, z: 0 }), f32 = Math.fround, MIN_ROTATION_LENGTH_SQUARED = 1e-20;
-function bodyDesc(body) {
-  return body.kind === "dynamic" ? { kind: "dynamic", mass: body.mass, linearDamping: body.linearDamping, angularDamping: body.angularDamping } : { kind: body.kind };
+var CHARACTER_DEFAULTS = Object.freeze({
+  maxSlope: 0.7853982,
+  stepHeight: 0.25,
+  stepMinWidth: 0.1,
+  snapToGround: 0.2,
+  skin: 0.01,
+  carry: !0
+}), ZERO = Object.freeze({ x: 0, y: 0, z: 0 }), f32 = Math.fround, MIN_ROTATION_LENGTH_SQUARED = 1e-20;
+function bodyDesc(body, continuous) {
+  return body.kind === "dynamic" ? {
+    kind: "dynamic",
+    mass: body.mass,
+    linearDamping: body.linearDamping,
+    angularDamping: body.angularDamping,
+    ...continuous || body.continuous === !0 ? { continuousCollision: !0 } : {}
+  } : { kind: body.kind };
+}
+function characterSettings(body) {
+  return body.kind === "kinematic" ? Object.freeze({ ...CHARACTER_DEFAULTS, ...body.character }) : void 0;
 }
 function colliderDesc(collider) {
-  return { shape: collider.kind === "box" ? { kind: "box", size: { x: collider.size[0], y: collider.size[1], z: collider.size[2] } } : { kind: "sphere", radius: collider.radius }, sensor: collider.sensor, friction: collider.friction, restitution: collider.restitution };
+  return { shape: collider.kind === "box" ? { kind: "box", size: { x: collider.size[0], y: collider.size[1], z: collider.size[2] } } : collider.kind === "capsule" ? { kind: "capsule", radius: collider.radius, height: collider.height } : { kind: "sphere", radius: collider.radius }, sensor: collider.sensor, friction: collider.friction, restitution: collider.restitution };
 }
 function finiteRotation(rotation2) {
   return isFiniteQuat(rotation2) && rotation2.x * rotation2.x + rotation2.y * rotation2.y + rotation2.z * rotation2.z + rotation2.w * rotation2.w >= MIN_ROTATION_LENGTH_SQUARED;
@@ -9675,9 +10040,12 @@ var SUPPORTED = {
   apply_force: ["dynamic"],
   set_linear_velocity: ["dynamic"],
   set_kinematic_target: ["kinematic"],
+  move_character: ["kinematic"],
   teleport: ["dynamic", "kinematic"],
   linear_velocity: ["dynamic", "kinematic"],
-  angular_velocity: ["dynamic", "kinematic"]
+  angular_velocity: ["dynamic", "kinematic"],
+  grounded: ["kinematic"],
+  ground_normal: ["kinematic"]
 }, PhysicsSystem = class {
   /**
    * Creates the backend world (gravity from `manifest.scene.fields`, the manifest's fixed step) and starts to
@@ -9728,15 +10096,26 @@ var SUPPORTED = {
     entry === void 0 || entry.ref.gen !== entity.ref.gen || (this.bodies[entity.ref.slot] = void 0, entry.handle !== void 0 && this.physics.removeBody(entry.handle));
   }
   addBody(ref, record2, body, collider, name) {
-    let entry = { ref, kind: body.kind, name, collider: colliderDesc(collider), handle: void 0, linear: ZERO, angular: ZERO };
+    let entry = {
+      ref,
+      kind: body.kind,
+      name,
+      collider: colliderDesc(collider),
+      handle: void 0,
+      linear: ZERO,
+      angular: ZERO,
+      character: characterSettings(body),
+      grounded: !1,
+      groundNormal: ZERO,
+      unsupportedReported: !1
+    };
     this.bodies[ref.slot] = entry;
     let pose = { position: record2.position, rotation: record2.rotation };
     if (!isFiniteVec3(pose.position) || !finiteRotation(pose.rotation)) {
       this.report("E8104", ref.slot, `The body of '${name}' was not created: its pose ${describeValue(pose.position)} / ${describeValue(pose.rotation)} is not finite. The entity keeps its pose and does not take part in the simulation.`);
       return;
     }
-    let description = bodyDesc(body);
-    entry.handle = this.physics.addBody(description.kind === "dynamic" && this.options.continuousCollision === !0 ? { ...description, continuousCollision: !0 } : description, entry.collider, pose, ref.slot);
+    entry.handle = this.physics.addBody(bodyDesc(body, this.options.continuousCollision === !0), entry.collider, pose, ref.slot);
   }
   // ---- ctx.body ----
   /** `ctx.body(target, spanId)` (`spec/runtime-abi.md` section 4.2). */
@@ -9809,12 +10188,46 @@ var SUPPORTED = {
     }
     this.queue.push(command);
   }
+  /**
+   * Queues `move_character`. A loaded adapter without `moveCharacter` cannot run it: the command is dropped and `E8105`
+   * is reported, once per body. @internal Used by the handle only.
+   */
+  enqueueMove(entry, spanId, displacement, rotation2) {
+    if (this.physics.moveCharacter === void 0) {
+      if (entry.unsupportedReported) return;
+      entry.unsupportedReported = !0, this.reportAt(
+        "E8105",
+        spanId,
+        `The command move_character on '${entry.name}' was dropped: the physics adapter '${this.options.backend.name}' cannot move characters.`,
+        ["the adapter must implement moveCharacter; the body keeps the pose its other commands give it"]
+      );
+      return;
+    }
+    this.enqueue(entry, spanId, "move_character", { category: "characterMove", target: entry.ref, displacement, rotation: rotation2 }, [displacement, rotation2]);
+  }
   // ---- the tick ----
-  /** Step 2 of the tick: the queued commands, once, by category and issue order (`./commands.ts`). */
+  /**
+   * Step 2 of the tick: the queued commands, once, by category and issue order (`./commands.ts`). The character
+   * moves of one body are one move: displacements summed, the last rotation, resolved where the first of them
+   * stands in the order (after every kinematic target, which a move of the same body replaces).
+   */
   applyCommands() {
-    for (let command of this.queue.take()) {
-      let entry = this.bodies[command.target.slot];
-      if (entry === void 0 || entry.handle === void 0 || entry.ref.gen !== command.target.gen) continue;
+    let batch = this.queue.take(), moves = /* @__PURE__ */ new Map();
+    for (let command of batch) {
+      if (command.category !== "characterMove") continue;
+      let entry = this.liveEntry(command.target);
+      if (entry === void 0) continue;
+      let pending = moves.get(entry);
+      if (pending === void 0)
+        moves.set(entry, { displacement: command.displacement, rotation: command.rotation, applied: !1 });
+      else {
+        let { displacement: sum } = pending;
+        pending.displacement = frozenVec3(sum.x + command.displacement.x, sum.y + command.displacement.y, sum.z + command.displacement.z), pending.rotation = command.rotation;
+      }
+    }
+    for (let command of batch) {
+      let entry = this.liveEntry(command.target);
+      if (entry === void 0 || entry.handle === void 0) continue;
       let handle = entry.handle;
       switch (command.category) {
         case "teleport":
@@ -9824,8 +10237,13 @@ var SUPPORTED = {
           this.physics.setLinearVelocity(handle, command.vector);
           break;
         case "kinematicTarget":
-          this.physics.setKinematicTarget(handle, command.pose);
+          moves.has(entry) || this.physics.setKinematicTarget(handle, command.pose);
           break;
+        case "characterMove": {
+          let move = moves.get(entry);
+          move !== void 0 && !move.applied && (move.applied = !0, this.resolveMove(entry, handle, move));
+          break;
+        }
         case "impulse":
           this.physics.applyImpulse(handle, command.vector);
           break;
@@ -9834,6 +10252,36 @@ var SUPPORTED = {
           break;
       }
     }
+  }
+  /** The entry of a body that still exists and is in the simulation, for a command aimed at `target`. */
+  liveEntry(target) {
+    let entry = this.bodies[target.slot];
+    return entry === void 0 || entry.handle === void 0 || entry.ref.gen !== target.gen ? void 0 : entry;
+  }
+  /**
+   * One character move (decision 0214, "Resolution of one move"): the adapter resolves the displacement from the
+   * pose the body has now (after a teleport of this tick), and the resolved pose becomes the kinematic target the
+   * step reaches. `grounded` and `ground_normal` are recorded for the reads.
+   */
+  resolveMove(entry, handle, move) {
+    let settings = entry.character ?? CHARACTER_DEFAULTS, from = this.physics.readPose(handle), result = this.physics.moveCharacter?.(handle, move.displacement, {
+      offset: settings.skin,
+      maxSlope: settings.maxSlope,
+      snapToGround: settings.snapToGround,
+      stepHeight: settings.stepHeight,
+      stepMinWidth: settings.stepMinWidth,
+      carry: settings.carry,
+      rotation: move.rotation
+    });
+    if (result === void 0) return;
+    let position = frozenVec3(from.position.x + result.displacement.x, from.position.y + result.displacement.y, from.position.z + result.displacement.z), rotation2 = result.rotation;
+    if (!isFiniteVec3(position) || !isFiniteQuat(rotation2)) {
+      this.freeze(entry, { position, rotation: rotation2 });
+      return;
+    }
+    this.physics.setKinematicTarget(handle, { position, rotation: rotation2 }), entry.grounded = result.grounded;
+    let normal = result.grounded ? result.ground?.normal : void 0;
+    entry.groundNormal = normal === void 0 || !isFiniteVec3(normal) ? ZERO : frozenVec3(normal.x, normal.y, normal.z);
   }
   /** Steps 4 to 6 of the tick: `step`, the write-back and the velocities, then the collision events. */
   stepAndDeliver() {
@@ -9862,7 +10310,7 @@ var SUPPORTED = {
    * commands, and the loop goes on. Reported once per body.
    */
   freeze(entry, pose) {
-    entry.handle !== void 0 && (this.physics.removeBody(entry.handle), entry.handle = void 0, entry.linear = ZERO, entry.angular = ZERO, this.frozenCount += 1, this.report(
+    entry.handle !== void 0 && (this.physics.removeBody(entry.handle), entry.handle = void 0, entry.linear = ZERO, entry.angular = ZERO, entry.grounded = !1, entry.groundNormal = ZERO, this.frozenCount += 1, this.report(
       "E8103",
       entry.ref.slot,
       `The solver produced a pose that is not finite for '${entry.name}': position ${describeValue(pose.position)}, rotation ${describeValue(pose.rotation)}. The body is frozen: the entity keeps its last pose and no longer takes part in the simulation.`
@@ -9902,6 +10350,28 @@ var SUPPORTED = {
         ...contacts === void 0 ? {} : { contacts: structuredClone(contacts) }
       }];
     });
+  }
+  /**
+   * The spatial queries of the loaded adapter for the host API (decision 0217), in terms of body references. They
+   * see the world as of the last completed tick (nothing here steps or moves a body); the host layer turns user ids
+   * (entity slots) into entity IDs. @internal
+   */
+  get queries() {
+    let world = this.physics;
+    return {
+      adapter: this.options.backend.name,
+      supports: (method) => !this.disposed && typeof world[method] == "function",
+      handleOf: (slot, generation) => {
+        let entry = this.bodies[slot];
+        return entry === void 0 || entry.ref.gen !== generation ? void 0 : entry.handle;
+      },
+      castRay: (origin, direction, maxDistance, filter) => world.castRay?.(origin, direction, maxDistance, filter),
+      castShape: (shape, pose, displacement, filter) => world.castShape?.(shape, pose, displacement, filter),
+      contacts: (handle) => world.contacts?.(handle) ?? [],
+      setCollisionGroups: (handle, memberships, filter) => {
+        world.setCollisionGroups?.(handle, memberships, filter);
+      }
+    };
   }
   /** Bodies and colliders in the backend's world (both 0 after {@link dispose}). */
   counts() {
@@ -9975,6 +10445,13 @@ var SUPPORTED = {
     let pose = this.pose(position, rotation2, "set_kinematic_target");
     this.system.enqueue(entry, this.span, "set_kinematic_target", { category: "kinematicTarget", target: entry.ref, pose }, [pose.position, pose.rotation]);
   }
+  moveCharacter(displacement, rotation2) {
+    let entry = this.system.entryFor(this.ref, this.span, "move_character");
+    if (entry === void 0) return;
+    let vector = this.vec3(displacement, "move_character");
+    if (!isQuat(rotation2)) throw new RuntimeInternalError(`ctx.body(..) move_character got ${describeValue(rotation2)} for the rotation; expected a quat.`);
+    this.system.enqueueMove(entry, this.span, vector, rotation2);
+  }
   teleport(position, rotation2, keepVelocity) {
     let entry = this.system.entryFor(this.ref, this.span, "teleport");
     if (entry === void 0) return;
@@ -9987,6 +10464,12 @@ var SUPPORTED = {
   }
   get angularVelocity() {
     return this.system.entryForRead(this.ref, this.span, "angular_velocity")?.angular ?? ZERO;
+  }
+  get grounded() {
+    return this.system.entryForRead(this.ref, this.span, "grounded")?.grounded ?? !1;
+  }
+  get groundNormal() {
+    return this.system.entryForRead(this.ref, this.span, "ground_normal")?.groundNormal ?? ZERO;
   }
   vec3(value, command) {
     if (!isVec3(value)) throw new RuntimeInternalError(`ctx.body(..) ${command} got ${describeValue(value)}; expected a vec3.`);
@@ -10132,15 +10615,15 @@ var InputState = class {
 };
 
 // src/math/copy.ts
-function copy(value) {
+function copy2(value) {
   if (Array.isArray(value)) {
     let items = value, out = new Array(items.length);
-    for (let i = 0; i < items.length; i++) out[i] = copy(items[i]);
+    for (let i = 0; i < items.length; i++) out[i] = copy2(items[i]);
     return out;
   }
   if (typeof value == "object" && value !== null && !ArrayBuffer.isView(value)) {
     let out = {};
-    for (let [key, field] of Object.entries(value)) out[key] = copy(field);
+    for (let [key, field] of Object.entries(value)) out[key] = copy2(field);
     return out;
   }
   return value;
@@ -17516,7 +17999,7 @@ function programOfModule(module) {
   return candidate;
 }
 function carryValue(value) {
-  return ArrayBuffer.isView(value) ? copy(value) : Array.isArray(value) ? value.map(carryValue) : typeof value == "object" && value !== null && !Object.isFrozen(value) ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, carryValue(item)])) : value;
+  return ArrayBuffer.isView(value) ? copy2(value) : Array.isArray(value) ? value.map(carryValue) : typeof value == "object" && value !== null && !Object.isFrozen(value) ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, carryValue(item)])) : value;
 }
 var RecoveryAbandoned = class extends Error {
 };
@@ -17600,15 +18083,35 @@ var MountedApp = class {
     );
   }
   extensions;
+  /** The entity IDs of the host boundary, shared by the extensions and `physics` so they agree. */
+  entityIds = new EntityIds(() => this.deps.scene.world);
+  hostPhysics;
+  assertUsable() {
+    if (this.current === "disposed" || this.current === "failed") throw new Error(`The application is ${this.current}`);
+  }
+  /** `MtekApp.physics`: the host's queries by entity ID, `undefined` while the program has no physics. */
+  get physics() {
+    if (this.deps.physics !== void 0)
+      return this.hostPhysics ??= createHostPhysics({
+        queries: () => this.deps.physics?.queries,
+        ids: this.entityIds,
+        active: () => {
+          this.assertUsable();
+        }
+      }), this.hostPhysics;
+  }
   installExtensions(extensions, services = {}) {
     let access = sceneAccess(
       () => this.deps.scene.world,
       () => {
-        if (this.current === "disposed" || this.current === "failed") throw new Error(`The application is ${this.current}`);
+        this.assertUsable();
       },
-      () => ({ ...this.deps.scene.renderer.inspect(), bodies: this.deps.physics?.inspect() ?? [] })
-    );
-    this.extensions = new ExtensionHost({ apiVersion: 1, ...access, service: (name) => services[name] }, (id, error) => {
+      () => ({ ...this.deps.scene.renderer.inspect(), bodies: this.deps.physics?.inspect() ?? [] }),
+      this.entityIds
+    ), physics = () => this.physics;
+    this.extensions = new ExtensionHost({ apiVersion: 1, ...access, service: (name) => services[name], get physics() {
+      return physics();
+    } }, (id, error) => {
       this.report(makeRuntimeDiagnostic("E8050", { phase: "runtime:update", message: `Extension '${id}' failed and was disabled: ${errorText6(error)}` }));
     }), this.extensions.install(extensions);
   }
@@ -19781,7 +20284,7 @@ function v4reflect(i, n) {
 
 // src/math/quat.ts
 var fr4 = Math.fround;
-function quat(x, y, z, w) {
+function quat2(x, y, z, w) {
   return { x: fr4(x), y: fr4(y), z: fr4(z), w: fr4(w) };
 }
 function qidentity() {
@@ -19997,6 +20500,7 @@ export {
   I32_MIN,
   MAX_SCHEMA_FAILURES,
   MtekMountError,
+  MtekPhysicsUnsupportedError,
   RUNTIME_ABI,
   RUNTIME_DIAGNOSTIC_CATALOGUE,
   RUNTIME_VERSION,
@@ -20021,7 +20525,7 @@ export {
   clampIndex,
   clinear,
   color,
-  copy,
+  copy2 as copy,
   cos,
   createAnimationController,
   crgb,
@@ -20091,7 +20595,7 @@ export {
   qidentity,
   qmul,
   qrotate,
-  quat,
+  quat2 as quat,
   radians,
   refEq,
   retargetSkin,
