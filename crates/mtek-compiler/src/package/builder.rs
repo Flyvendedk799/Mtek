@@ -407,8 +407,7 @@ fn package_scene(
         &plan,
         &packed,
         &mut spans,
-        &host_inputs,
-        &host_outputs,
+        (&host_inputs, &host_outputs),
         input.assets,
         &clip_files,
     )
@@ -972,8 +971,7 @@ fn manifest_scene(
     plan: &ResourcePlan,
     packed: &Packed,
     spans: &mut SpanTable,
-    host_inputs: &[ResolvedHostInput],
-    host_outputs: &[ResolvedHostOutput],
+    (host_inputs, host_outputs): (&[ResolvedHostInput], &[ResolvedHostOutput]),
     assets: &AssetStore,
     clip_files: &[String],
 ) -> Result<Scene, String> {

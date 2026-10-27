@@ -653,7 +653,11 @@ fn clips_from_puts_the_source_skeleton_in_the_manifest_once() {
     );
     let manifest = manifest_of(&result);
     let sources = manifest["clipSources"].as_array().unwrap();
-    assert_eq!(sources.len(), 1, "two entities and a prefab share one source");
+    assert_eq!(
+        sources.len(),
+        1,
+        "two entities and a prefab share one source"
+    );
     let source = &sources[0];
     let clips: Vec<&str> = source["clips"]
         .as_array()

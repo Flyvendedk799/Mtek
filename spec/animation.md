@@ -654,4 +654,183 @@ that pass near a limb's singular direction (3.3 item 5) reach 3 to 5.4.
 
 ## 4. Composition in Mtek programs (decision 0223)
 
-<!-- 0223 writes this section. -->
+Decision 0223 gives a `.mtek` program everything sections 1 to 3 give a host: masked layers with fades,
+1D and 2D blend spaces, positional and anatomical goals, root motion as a displacement, and the clips of
+another humanoid. It is acceptance item 1 of decision 0219. The calls are `animation.*` (CPU only, no
+GPU or constant use); the ones that change state are handlers-only like `animation.play` (`E5080` in a
+function or an initialiser, `E5005` in a `bind`). A new entity field, `clips_from`, takes the clips of
+another file's skeleton. The runtime ABI stays 1; the manifest gains optional data (4.9).
+
+### 4.1 The calls
+
+Every call takes the entity first (`target: entity_ref`, a named entity or a reference) and returns
+`bool`, *applied*, unless a result type is shown. A call on a dead reference, an entity without a skeletal
+mesh, or with a number that is not finite does nothing and returns `false`, without a diagnostic (the
+convention of `animation.play`). A weight is clamped to 0..1.
+
+| Call | Meaning |
+| --- | --- |
+| `set_layer(target, id: string, clip: string, weight: f32, additive: bool, mask: string)` | Layer `id` plays `clip` over the base pose (section 1.2). `mask` is the name of a joint: the layer moves that joint and every descendant (`PoseLayers` option `subtree`); `""` is the whole rig. Setting an existing layer with the same clip keeps its clock; setting cancels a fade and applies `weight` at once. |
+| `fade_layer(target, id, weight: f32, seconds: f32)` | Section 1.2 `fade`: smoothstep from the current weight, interruptible, keeps the phase. `false` and `E8111` for a layer that does not exist; a negative `seconds` returns `false`. |
+| `remove_layer(target, id)` | Removes the layer; `false` (no diagnostic) when there is none. |
+| `blend_sample(target, clip, x: f32, y: f32)` | Adds a sample to the entity's **pending** blend definition (at most 32). |
+| `blend_play(target, looping: bool, speed: f32)` | Makes the pending definition the base pose (`player.blend.set`, section 1.1), restarting at phase 0, and **consumes** it, whether it was valid or not. |
+| `blend_parameter(target, x, y)` | Moves the parameter of the active blend; before `blend_play` it is the initial parameter of the pending one (the first sample otherwise). `false` when there is neither. |
+| `blend_clear(target)` | Drops the active blend (the base clip resumes) and the pending definition. |
+| `blend_phase(target) -> f32` | The blend's normalised cycle position, `0` without a blend. |
+| `limb_goal(target, limb: string, goal: vec3, weight: f32)` | Section 3.2 `setLimb`; `limb` is `"left_leg"`, `"right_leg"`, `"left_arm"` or `"right_arm"`, `goal` the world position of the ankle or wrist. One goal per limb; a new call replaces it. |
+| `clear_limb(target, id)` | Removes the goal of the limb named `id`; `false` when there is none. |
+| `foot_placement(target, left: vec3, right: vec3, left_normal: vec3, right_normal: vec3, weight: f32)` | Section 3.4: world ground points and normals; `weight` is the contact weight of both feet. A zero normal means no tilt. |
+| `clear_foot_placement(target)` | Releases foot placement. |
+| `chain_goal(target, id, end_joint: string, length: i32, goal: vec3, weight: f32)` | CCD constraint (decision 0196) on `end_joint` and its `length - 1` ancestors, from the top of the chain to the end; 12 iterations, tolerance 1 mm. `length` is at least 2. |
+| `clear_chain(target, id)` | Removes the constraint; `false` when there is none. |
+| `root_motion(target, joint: string)` | Gives the translation of `joint` to the program (`player.setRootMotion`): the displayed joint stays at bind, `take_root_motion` returns what it moved. `""` hands it back. |
+| `take_root_motion(target) -> vec3` | The root displacement since the last call, in world space; consumed. Zero without root motion. |
+
+`clear_*` and `remove_layer` are idempotent. Layer and chain ids share the namespace of the host API
+(`player.layers`, `player.ik`), so a host can inspect or remove what a program set; limb goals use the
+ids `limb:<name>`.
+
+### 4.2 World space
+
+The solvers work in the skeletal mesh local space of `animation.joint_position`. A goal, ground point or
+normal a program gives is in **world** space, and the runtime carries it into that space with the entity's world
+matrix at the time of the call (pending writes to the entity are propagated first): a position `p` by the
+inverse of the matrix, a normal by its transpose (renormalised), so that an entity that is rotated, moved,
+scaled uniformly or not at all, keeps the end joint on the world goal. The skeleton itself must still have
+uniform bind scales (decision 0209); the *entity's* scale is free. A goal is converted when the call runs and
+is not tied to the entity afterwards: a program that wants a goal to follow a moving entity (or a moving
+target) calls again every `update`, which is cheap. `take_root_motion` multiplies by the linear part of the
+matrix (rotation and scale, no translation).
+
+Root motion is first turned from the space of the root joint's parent into the mesh-local space with the
+displayed transform of that parent relative to the mesh node (`SkeletonPlayer.consumeRootMotionLocal`, a
+rig whose armature is scaled by 0.01 or rotated to Z-up therefore reports correct displacements), then to
+the world. It feeds a character mover directly:
+
+```mtek
+scene Walk {
+    camera Main {}
+    entity Hero {
+        body: Kinematic {};
+        collider: CapsuleCollider { radius: 0.3; height: 1.8; };
+    }
+    on key_down(Key.Space) {
+        animation.root_motion(Hero, "Hips");
+    }
+    update(dt: f32) {
+        Hero.body.move_character(animation.take_root_motion(Hero), Hero.rotation);
+    }
+}
+```
+
+### 4.3 Humanoid commands
+
+`limb_goal` and `foot_placement` need the canonical bones of section 2. The runtime maps the entity's skin
+with `mapHumanoid` the first time one of them is called and gives the result to `setHumanoid` (section 3.2);
+a skeleton that does not map (or whose map `setHumanoid` refuses) is `E8112` once for the entity, and every
+humanoid call is then dropped without further diagnostics. A leg goal while foot placement is set (or the
+reverse) is refused by the solver (section 3.2) and reported as `E8113`.
+
+### 4.4 Names, diagnostics and reporting
+
+The calls that can name something the entity lacks carry the span of the call to the runtime
+(`ctx.animationSetLayer(.., spanId)`), so a diagnostic points at the Mtek source. A call is dropped and returns
+`false` in each case. Each diagnostic is reported **once per entity and name** (a pose cohort counts as one
+entity).
+
+| Code | Reported for |
+| --- | --- |
+| `E8110` | `clips_from`: the source or the target skeleton does not map as a humanoid, or the retarget fails (4.9); once per declaration. The entity keeps its own clips. |
+| `E8111` | An unknown clip (`set_layer`, `blend_sample`), joint (`set_layer` mask, `chain_goal` end joint, `root_motion`), layer (`fade_layer`) or limb (`limb_goal`, `clear_limb`) name, or a `blend_play` with no sample pending. |
+| `E8112` | `limb_goal` or `foot_placement` on a skeleton that is not a humanoid (4.3). |
+| `E8113` | A call the animation system refuses for another reason, with its message: an invalid blend space (two samples at one point, a zero-duration clip, more than 32 samples), a chain that is shorter than 2 or longer than the skeleton, a leg goal next to foot placement, an empty layer id. `E8113` is an addition of decision 0223 to the three codes 0219 reserved. |
+
+Removal and clearing calls report nothing for a name that was never set.
+
+### 4.5 Layers and blend spaces
+
+A layer is the layer of section 1.2; a program that sets a layer every frame with the same clip, weight and
+mask costs a mask rebuild (at most 256 floats) and no phase change. `blend_sample` accumulates;
+`blend_play` builds the blend space with `looping` and `speed`, the pending parameter and phase 0. A program
+therefore defines a blend once (in `init` or on an event), then moves the parameter every frame. A
+later `animation.transition` clears the blend, as in section 1.1; `animation.pause`, `resume`, `seek`,
+`time`, `duration`, `playing`, `finished` and `crossed` act on the blend while it is active (decision 0220).
+All of them evaluate at the next advance of phase 3; the calls of this section do not evaluate the pose
+themselves, so several calls in one handler cost one evaluation.
+
+### 4.6 Hot reload
+
+A hot reload builds a new world: the players, and with them layers, the blend space, pending samples,
+limb, foot and chain goals, root-motion ownership and the once-only diagnostics are not migrated (a
+playing clip is not migrated either, decision 0190). The new program's `init` and handlers set them up again
+in its first frames. State the program keeps in its `state` carries over as always.
+
+### 4.7 Example
+
+```mtek
+const RIG = asset.glb("../models/Hero.glb");
+const MIXAMO = asset.glb("../models/Dance.glb");
+
+scene Demo {
+    state steps: f32 = 0.0;
+    camera Main {}
+    entity Hero {
+        mesh: RIG.mesh("Body");
+        clips_from: MIXAMO;
+        clip: "Walk";
+        body: Kinematic {};
+        collider: CapsuleCollider { radius: 0.3; height: 1.8; };
+    }
+    on key_down(Key.Space) {
+        animation.set_layer(Hero, "wave", "Wave", 1.0, false, "Spine1");
+        animation.fade_layer(Hero, "wave", 0.0, 0.5);
+        animation.root_motion(Hero, "Hips");
+    }
+    update(dt: f32) {
+        animation.foot_placement(Hero, vec3(0.2, 0.0, 0.0), vec3(-0.2, 0.1, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 1.0, 0.0), 1.0);
+        animation.limb_goal(Hero, "right_arm", vec3(1.0, 1.4, 0.5), 0.8);
+        Hero.body.move_character(animation.take_root_motion(Hero), Hero.rotation);
+    }
+}
+```
+
+### 4.8 Chains
+
+`chain_goal` builds the chain from the skeleton hierarchy, so the program names only the end joint and the
+length. The constraint is the one of `player.ik.set`: bounded CCD, no hinge limits, positional only.
+For arms and legs of a humanoid prefer `limb_goal` (an analytic solve with a bend direction and a knee or elbow
+range); use chains for tails, spines, tentacles and rigs `mapHumanoid` rejects.
+
+### 4.9 `clips_from` and the manifest
+
+`clips_from: asset.glb("..")` is a field of entities and prefabs (construction-only, a GLB constant). The
+entity plays the clips of **that file's skeleton**, retargeted onto its own skeletal mesh when the scene
+mounts:
+
+* **Compile time.** The entity must have a skeletal mesh (`mesh` from a file with a skin for it) and the named
+  file must contain a skin with at least one clip, else `E7028`. A `clip: "name"` next to it names a clip of
+  the source skeleton (`E5016` if the source has none of that name); the first skin of the file that has clips
+  is the source. Whether both skeletons are humanoids is only known to the run-time mapper (`E8110`).
+* **Manifest.** The top-level optional array `clipSources` holds each source skeleton once, sorted by file:
+  a `skin` (nodes, joints, inverse bind matrices, clips) with **empty** `indices` and `weights` (vertex
+  influences stay with the mesh). Entities and prefabs carry `clipsFrom`, the index into `clipSources`. The
+  `clip` of such an entity has no channels (the runtime retargets the keyframes). Manifest schema 1 and runtime
+  ABI 1 are unchanged: both fields are optional and absent when no entity uses `clips_from`.
+* **Run time.** At mount (and for every spawn) the runtime calls `retargetHumanoid(source, ownSkin)`
+  (section 2.5) and gives the entity's player the result: the entity's own nodes, joints and inverse bind
+  matrices with the source's clips, so every `animation.*` call sees the **source's** clip names; the entity's
+  own clips are not available while `clips_from` works. The result is cached per source and target, so a crowd
+  of one prefab retargets once. Any `RangeError` of the mapper or the retargeter (not a humanoid, a
+  non-uniform bind scale, a missing bone) is `E8110` at the declaration of the entity, once, and the
+  entity keeps its own skin and clips.
+
+### 4.10 Limits
+
+- A program drives *one* skeleton per call; there is no stacking of retargeted sources on one entity.
+- Goals are not tied to entities (4.2) and limb solving has no ground detection: the program supplies ground
+  points, for example from `body` queries of the host.
+- `clips_from` takes the first skin of a file that has clips; a file with several skeletons needs a
+  dedicated file.
+- Automatic mapping of non-humanoid rigs, facial animation and animation events beyond `crossed` are outside
+  the area (decision 0219).

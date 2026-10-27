@@ -70,22 +70,12 @@ fn emitters() -> Vec<SchemaDef> {
             )
             .default(ConstValue::F32(0.0))
             .range(ValueRange::non_negative()),
-            field(
-                "lifetime",
-                TypeRef::F32,
-                C,
-                "Particle lifetime in seconds.",
-            )
-            .default(ConstValue::F32(1.0))
-            .range(ValueRange::positive().and_finite()),
-            field(
-                "speed",
-                TypeRef::F32,
-                C,
-                "Initial speed in m/s.",
-            )
-            .default(ConstValue::F32(1.0))
-            .range(ValueRange::non_negative()),
+            field("lifetime", TypeRef::F32, C, "Particle lifetime in seconds.")
+                .default(ConstValue::F32(1.0))
+                .range(ValueRange::positive().and_finite()),
+            field("speed", TypeRef::F32, C, "Initial speed in m/s.")
+                .default(ConstValue::F32(1.0))
+                .range(ValueRange::non_negative()),
             field("size", TypeRef::F32, C, "Billboard size in metres.")
                 .default(ConstValue::F32(0.05))
                 .range(ValueRange::positive().and_finite()),

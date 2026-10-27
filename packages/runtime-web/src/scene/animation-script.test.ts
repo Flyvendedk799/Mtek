@@ -3,6 +3,7 @@
 // chain goals in world space with a rotated and scaled entity, root motion in world space, `clips_from`, the diagnostics
 // E8110 to E8113, and what a hot reload keeps. Skeletons: generated humanoids (Mixamo, Unreal naming) and the committed
 // CesiumMan and Fox; the character-composition Source and LongLegs run when the example models are present.
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { checkManifest } from "../abi/validate.js";
@@ -596,6 +597,20 @@ describe("clipSources in the manifest", () => {
     });
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.structure.entities[0]!.clipsFrom!.clips.map((c) => c.name)).toEqual(["walk", "wave"]);
+  });
+
+  it("validates clipsFrom on entities and prefabs and the table of sources", () => {
+    const example = JSON.parse(readFileSync(path.resolve("../../tests/abi/manifests/valid/full.json"), "utf8")) as Record<string, unknown>;
+    const checked = checkManifest(example);
+    expect(checked.ok).toBe(true);
+    if (!checked.ok) return;
+    expect(checked.manifest.clipSources?.map((s) => s.clips.map((c) => c.name))).toEqual([["Spin"]]);
+    expect(checked.manifest.prefabs?.map((p) => p.clipsFrom)).toContain(0);
+    expect(checked.manifest.scene.entities.map((e) => e.clipsFrom)).toContain(0);
+    // A negative or fractional index is a broken manifest.
+    const bad = structuredClone(example);
+    ((bad["scene"] as { entities: Record<string, unknown>[] }).entities.find((e) => e["clipsFrom"] !== undefined))!["clipsFrom"] = -1;
+    expect(checkManifest(bad).ok).toBe(false);
   });
 
   it("refuses an index the manifest lacks and a skeleton that is invalid", () => {

@@ -1,0 +1,13 @@
+scene Walk {
+    camera Main {}
+    entity Hero {
+        body: Kinematic {};
+        collider: CapsuleCollider { radius: 0.3; height: 1.8; };
+    }
+    on key_down(Key.Space) {
+        animation.root_motion(Hero, "Hips");
+    }
+    update(dt: f32) {
+        Hero.body.move_character(animation.take_root_motion(Hero), Hero.rotation);
+    }
+}

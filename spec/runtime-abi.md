@@ -600,6 +600,18 @@ entity has its own player; teardown removes it before slot reuse.
 Decision 0192 adds `ctx.animationCopyPose(target, source) -> boolean` for a held,
 independent skeletal pose snapshot. References must be live and rigs compatible.
 
+Decision 0223 adds the composition calls of `spec/animation.md` section 4 as `ctx.animationSetLayer`,
+`animationFadeLayer`, `animationRemoveLayer`, `animationBlendSample`, `animationBlendPlay`,
+`animationBlendParameter`, `animationBlendClear`, `animationBlendPhase`, `animationLimbGoal`,
+`animationClearLimb`, `animationFootPlacement`, `animationClearFootPlacement`, `animationChainGoal`,
+`animationClearChain`, `animationRootMotion` and `animationTakeRootMotion`, with the arguments of the Mtek
+call in order. Vectors are `{x, y, z}` records in world space; `animationTakeRootMotion` returns one. A call
+that can report `E8110` to `E8113` has one more last argument, the manifest span id of the call. The manifest
+gains two optional fields (manifest schema 1 and runtime ABI 1 stay): the top-level `clipSources`, an array of
+skins whose `indices` and `weights` are empty, and `clipsFrom` on entities and prefabs, an index into it; an
+index the array lacks is `E8006`. At mount the runtime retargets the source onto the entity's skin
+(`spec/animation.md` section 4.9).
+
 
 ## 13. Optional scene lighting (decision 0195)
 

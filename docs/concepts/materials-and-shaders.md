@@ -25,28 +25,28 @@ The parameters of the built-in materials:
 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
-| `color` | `color` | `#ffffff` | assignable, bindable |  | The colour written to the canvas. |
+| `color` | `color` | `#ffffff` | assignable, bindable |  | Colour. |
 
 **`Pbr`**
 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
-| `base_color` | `color` | `#ffffff` | assignable, bindable |  | Linear base colour multiplied with the base colour texture. |
-| `base_color_sampler` | `sampler` | `sampler.linear_repeat()` | fixed at construction |  | Sampler for the base colour texture. |
-| `base_color_texture` | `texture` | `texture.white()` | fixed at construction |  | Base colour texture. |
+| `base_color` | `color` | `#ffffff` | assignable, bindable |  | Linear base colour, multiplied with the texture. |
+| `base_color_sampler` | `sampler` | `sampler.linear_repeat()` | fixed at construction |  | Sampler. |
+| `base_color_texture` | `texture` | `texture.white()` | fixed at construction |  | Texture. |
 | `emissive` | `color` | `#000000` | assignable, bindable |  | Linear emission before exposure. |
-| `emissive_sampler` | `sampler` | `sampler.linear_repeat()` | fixed at construction |  | Sampler of the emissive map. |
+| `emissive_sampler` | `sampler` | `sampler.linear_repeat()` | fixed at construction |  | Sampler. |
 | `emissive_texture` | `texture` | `texture.white()` | fixed at construction |  | sRGB emissive colour, multiplied by emissive. |
-| `metallic` | `f32` | `0.0` | assignable, bindable |  | Metalness; clamped to 0..1 by the lighting model. |
-| `metallic_roughness_sampler` | `sampler` | `sampler.linear_repeat()` | fixed at construction |  | Sampler of the metallic_roughness map. |
+| `metallic` | `f32` | `0.0` | assignable, bindable |  | Metalness, clamped to 0..1. |
+| `metallic_roughness_sampler` | `sampler` | `sampler.linear_repeat()` | fixed at construction |  | Sampler. |
 | `metallic_roughness_texture` | `texture` | `texture.white()` | fixed at construction |  | Linear green roughness and blue metallic factors. |
-| `normal_sampler` | `sampler` | `sampler.linear_repeat()` | fixed at construction |  | Sampler of the normal map. |
+| `normal_sampler` | `sampler` | `sampler.linear_repeat()` | fixed at construction |  | Sampler. |
 | `normal_scale` | `f32` | `0.0` | assignable, bindable |  | Normal XY scale; zero suits the white fallback. GLB map default: one. |
 | `normal_texture` | `texture` | `texture.white()` | fixed at construction |  | Linear tangent-space normal map; enable with normal_scale. |
-| `occlusion_sampler` | `sampler` | `sampler.linear_repeat()` | fixed at construction |  | Sampler of the occlusion map. |
-| `occlusion_strength` | `f32` | `1.0` | assignable, bindable |  | Indirect-light occlusion strength, clamped to 0..1. |
+| `occlusion_sampler` | `sampler` | `sampler.linear_repeat()` | fixed at construction |  | Sampler. |
+| `occlusion_strength` | `f32` | `1.0` | assignable, bindable |  | Occlusion strength, clamped to 0..1. |
 | `occlusion_texture` | `texture` | `texture.white()` | fixed at construction |  | Linear red indirect-light occlusion. |
-| `roughness` | `f32` | `0.5` | assignable, bindable |  | Perceptual roughness; clamped to 0.045..1 by the lighting model. |
+| `roughness` | `f32` | `0.5` | assignable, bindable |  | Perceptual roughness, clamped to 0.045..1. |
 
 ## Why
 

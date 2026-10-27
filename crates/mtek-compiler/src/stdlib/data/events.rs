@@ -48,10 +48,7 @@ pub(super) fn events() -> Vec<EventDef> {
             "Delivered when the filtered key is pressed; auto-repeat is ignored.",
         ),
         key("key_up", "Delivered when the filtered key is released."),
-        pointer(
-            "pointer_down",
-            "A pointer button was pressed.",
-        ),
+        pointer("pointer_down", "A pointer button was pressed."),
         pointer("pointer_up", "A pointer button was released."),
         pointer(
             "pointer_move",
