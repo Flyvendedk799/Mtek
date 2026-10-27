@@ -53,7 +53,16 @@ root motion are approximated over the update interval.
 `retargetSkin(source, destination, mapping, translationScale)` transfers clips onto
 the destination's rest proportions. Every animated source node must be mapped,
 along with its parent chain. Names and destinations must be unique. Use rigs with
-compatible bone axes/rest semantics; arbitrary-rig humanoid inference is not provided.
+compatible bone axes/rest semantics.
+
+For bipeds with different names, proportions or rest poses (T-pose and A-pose),
+`mapHumanoid(skin)` finds the canonical humanoid bones from names and, failing that,
+from the skeleton's shape (it returns `{ error }` for non-humanoids such as the Fox), and
+`retargetHumanoid(source, target)` plays the source clips on the target through both maps,
+with rest-pose correction and the hips translation scaled by the leg-length ratio. Extra
+and unmapped bones keep their bind pose. See
+[decision 0221](../spec/decisions/0221-humanoid-mapping-and-retargeting.md) and
+[`spec/animation.md`](../spec/animation.md) for the rules and measured accuracy.
 
 For CPU inspection call `deformSkin(skin, player.palette, positions, normals,
 outPositions, outNormals)` with reusable output arrays. Normal output uses the

@@ -73,6 +73,8 @@ From a clean checkout:
 | `npm run check:budgets` | packages every example with `mtek build --release --itch` and fails if a folder or zip is over its budget in `budgets/small-games.json` (decision 0137; needs a built CLI, `cargo build -p mtek-cli`) |
 | `npm run ccd:check` | the continuous-collision lane matrix (decision 0216): `evidence/movement/ccd-lanes.json` and the lane table of `spec/physics.md` section 7.1 match a fresh measurement on the real engine (about a minute) |
 | `npm run ccd:write` | re-measures the lane matrix and rewrites that evidence file and table |
+| `npm run humanoid:check` | automatic humanoid mapping and retargeting (decision 0221): `evidence/animation/humanoid-retarget.json` and the tables of `spec/animation.md` section 2.6 match a fresh measurement (a few seconds, no GPU) |
+| `npm run humanoid:write` | re-measures them and rewrites that evidence file and the tables |
 | `npm run test:benchmarks` | the `benchmarks` Playwright project: every benchmark task's fixtures against its three.js baseline reference (hardware configuration; `MTEK_BASELINE_SOURCE=starter` runs the starters instead) |
 | `npm run test:browser:hardware` | the `hardware` project only; with `MTEK_REQUIRE_GPU=1` it fails on any NOT-RUN test or software adapter |
 | `npm test` | `check`, then `cargo test --workspace --locked`, then `test:unit`, then `check:coverage`, then `check:release`, then `check:baseline`, then `test:browser` (NOT-RUN tolerant unless `MTEK_REQUIRE_GPU=1`) |

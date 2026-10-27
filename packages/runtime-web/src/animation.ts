@@ -122,6 +122,10 @@ export function createAnimationController(
 }
 export { retargetSkin } from "./scene/retarget.js";
 export type { RetargetOptions } from "./scene/retarget.js";
+export { mapHumanoid } from "./scene/humanoid.js";
+export type { HumanoidBone, HumanoidMap } from "./scene/humanoid.js";
+export { retargetHumanoid } from "./scene/humanoid-retarget.js";
+export type { HumanoidRetargetOptions } from "./scene/humanoid-retarget.js";
 export {deformSkin} from "./mesh/skinning.js";
 export type { AnimationLayer } from "./scene/pose-layers.js";
 export type { IKConstraint, IKHingeLimit } from "./scene/ik.js";
