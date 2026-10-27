@@ -7,6 +7,7 @@ import { BlendSpace } from "./blend-space.js";
 import { LocomotionBlend } from "./locomotion.js";
 import { PoseSchedule, type AnimationUpdateBand } from "./pose-schedule.js";
 import type { AnimationInspection } from "./animation-inspection.js";
+import type { HumanoidMap } from "./humanoid-types.js";
 
 /** Shared file data, independently evaluated by every entity instance. */
 export function skinProblem(skin: MtekSkin, vertices: number): string | undefined {
@@ -88,6 +89,8 @@ export class SkeletonPlayer {
   private override: ((pose: Float64Array) => void) | undefined;
   private evaluatedLayers = -1;
   private evaluatedIK = -1;
+  /** Supplies the canonical humanoid bones that limb goals and foot placement use (decision 0222); undefined removes them. */
+  setHumanoid(map: HumanoidMap | undefined): void { this.ik.setHumanoid(map); }
   setProceduralOverride(override: ((pose: Float64Array) => void) | undefined): void {
     this.override = override; this.evaluatedTime = NaN;
   }
@@ -127,7 +130,7 @@ export class SkeletonPlayer {
         multiplyInto(this.product, this.inverseMesh, this.globals[index]!);
         return { index, name: node.name, parent: node.parent, joint: this.skin.joints.includes(index),
           position: { x: Math.fround(this.product[12]!), y: Math.fround(this.product[13]!), z: Math.fround(this.product[14]!) } };
-      }), layers: this.layers.inspect(), ik: this.ik.inspect(), blend: this.blend.inspect(), locomotion: this.locomotion.inspect(),
+      }), layers: this.layers.inspect(), ik: this.ik.inspect(), ...this.ik.limbs.inspect(), blend: this.blend.inspect(), locomotion: this.locomotion.inspect(),
     };
   }
   jointPosition(name: string): { x: number; y: number; z: number } {
@@ -234,6 +237,7 @@ export class SkeletonPlayer {
     this.clock.advance(dt,()=>undefined);
     this.outgoing?.clock.advance(dt,()=>undefined);
     this.layers.advance(dt);
+    this.ik.advance(dt);
     this.blend.advance(dt);
     this.blendTime=Math.min(this.blendDuration,this.blendTime+dt);
     if(this.rootNode>=0 && this.blend.active) {
@@ -274,7 +278,7 @@ export class SkeletonPlayer {
   }
   evaluate(): void {
     const time = this.clock.time(0), weight = this.clock.weight(0);
-    if (this.override === undefined && time === this.evaluatedTime && this.blendTime === this.evaluatedBlend && weight === this.evaluatedWeight && this.evaluatedLayers === this.layers.revision && this.evaluatedIK === this.ik.revision && this.evaluatedLocomotion === this.blend.revision) return;
+    if (this.override === undefined && time === this.evaluatedTime && this.blendTime === this.evaluatedBlend && weight === this.evaluatedWeight && this.evaluatedLayers === this.layers.revision && this.evaluatedIK === this.ik.revision && !this.ik.animating && this.evaluatedLocomotion === this.blend.revision) return;
     this.evaluatedTime = time; this.evaluatedBlend = this.blendTime; this.evaluatedWeight = weight;
     this.evaluatedLayers = this.layers.revision;
     this.evaluatedIK = this.ik.revision;

@@ -112,6 +112,17 @@ export function buildInspectorOverlay(snapshot: InspectorSpatialSnapshot, settin
         line("ik",entity.id,target,world(entity.worldMatrix,add(ik.target,rotated(v,ik.rotation))),false,["#ff8070","#8be8a1","#8eb8ff"][axis]);
       }
     }
+    // Anatomical limb goals (decision 0222): the target, the dashed miss to the end joint, and the upper-lower-end bones.
+    if (config.ik) for (const limb of animation.limbs ?? []) {
+      if (full()) return result;
+      const target = world(entity.worldMatrix,limb.target), end = position(limb.nodes[2]);
+      cross("ik",entity.id,target);
+      if (end !== undefined) line("ik",entity.id,end,target,true);
+      for (let i=1;i<3;i++) {
+        const a = position(limb.nodes[i-1]!), b = position(limb.nodes[i]!);
+        if (a !== undefined && b !== undefined) line("ik",entity.id,a,b);
+      }
+    }
   }
   for (const body of scene.bodies) {
     if (full()) return result;

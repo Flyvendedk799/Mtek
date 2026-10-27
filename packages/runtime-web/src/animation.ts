@@ -1,6 +1,8 @@
 import type { MtekSkin } from "./abi/manifest-types.js";
 import type { AnimationLayer } from "./scene/pose-layers.js";
 import type { IKConstraint } from "./scene/ik.js";
+import type { FootPlacement, LimbGoal } from "./scene/limb-ik.js";
+import type { HumanoidMap } from "./scene/humanoid-types.js";
 import { SkeletonPlayer, skinProblem } from "./scene/skeleton.js";
 import { PoseSchedule, type AnimationUpdateBand } from "./scene/pose-schedule.js";
 import type { LocomotionOptions } from "./scene/locomotion.js";
@@ -82,6 +84,19 @@ export class AnimationController {
     this.active();
     this.player.ik.set(id, constraint);
   }
+  /** Names the canonical humanoid bones used by limb goals and foot placement (decision 0222). `undefined` removes the map and every limb goal. */
+  setHumanoid(map: HumanoidMap | undefined): void {
+    this.active();
+    this.player.setHumanoid(map);
+  }
+  setLimb(id: string, goal: LimbGoal): void {
+    this.active();
+    this.player.ik.setLimb(id, goal);
+  }
+  setFootPlacement(placement: FootPlacement | undefined): void {
+    this.active();
+    this.player.ik.setFootPlacement(placement);
+  }
   update(dt: number, force = false, distance = 0): boolean {
     this.active();
     if (!Number.isFinite(dt) || dt < 0)
@@ -129,6 +144,7 @@ export type { HumanoidRetargetOptions } from "./scene/humanoid-retarget.js";
 export {deformSkin} from "./mesh/skinning.js";
 export type { AnimationLayer } from "./scene/pose-layers.js";
 export type { IKConstraint, IKHingeLimit } from "./scene/ik.js";
+export type { LimbName, LimbGoal, FootGround, FootPlacement, LimbInspection, FootGroundInspection, FootPlacementInspection } from "./scene/limb-ik.js";
 export type { LocomotionOptions, LocomotionSample } from "./scene/locomotion.js";
 export type { BlendOptions, BlendSample, BlendParameter } from "./scene/blend-space.js";
 export type { AnimationUpdateBand } from "./scene/pose-schedule.js";

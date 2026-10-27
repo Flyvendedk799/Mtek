@@ -1,5 +1,6 @@
 import type { Vec3, Quat } from "../math/types.js";
 import type { IKHingeLimit } from "./ik.js";
+import type { FootPlacementInspection, LimbInspection } from "./limb-ik.js";
 
 export interface AnimationLayerInspection {
   readonly id: string;
@@ -43,5 +44,8 @@ export interface AnimationInspection {
   readonly ik: readonly IKInspection[];
   /** The active blend space (any dimension); `locomotion` repeats it in 1D form when every sample has y = 0. */
   readonly blend: BlendInspection | null;
+  /** Anatomical limb goals (decision 0222). Optional so earlier inspection producers and fixtures stay valid. */
+  readonly limbs?: readonly LimbInspection[];
+  readonly footPlacement?: FootPlacementInspection | null;
   readonly locomotion: { readonly phase: number; readonly parameter: number; readonly samples: readonly { readonly clip: string; readonly threshold: number; readonly weight: number }[] } | null;
 }

@@ -41,6 +41,8 @@
     "test:browser:hardware": "npm run build && npm run test:hardware -w @mtek/browser-tests --",
     "test": "npm run check && cargo test --workspace --locked && npm run test:unit && npm run check:coverage && npm run check:release && npm run check:baseline && npm run test:browser",
     "check:baseline": "node scripts/gen-m7-baseline.mjs --check",
+    "limbs:check": "node packages/runtime-web/scripts/measure-limb-solving.mjs --check",
+    "limbs:write": "node packages/runtime-web/scripts/measure-limb-solving.mjs --write",
     "ccd:check": "node packages/physics-rapier/scripts/measure-ccd-lanes.ts --check",
     "ccd:write": "node packages/physics-rapier/scripts/measure-ccd-lanes.ts --write",
     "humanoid:check": "node packages/runtime-web/scripts/measure-humanoid-retarget.ts --check",
