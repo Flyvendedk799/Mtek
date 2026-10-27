@@ -396,10 +396,11 @@ test.describe("character movement on the real engine (decision 0218)", () => {
     expect(r.castFloor?.fraction).toBeCloseTo(0.45, 3);
     expect(r.castFloor?.normal.y).toBeCloseTo(1, 3);
 
-    // The character stands on the floor: contacts lists it, with an upward normal and a gap of at most the skin plus the contact margin.
-    const floor = r.contacts.find((c) => c.entityId === Ground);
-    expect(floor, `contacts of the character: ${JSON.stringify(r.contacts)}`).toBeDefined();
-    expect(Math.abs(floor?.normal.y ?? 0)).toBeGreaterThan(0.99);
+    // The character stands on the floor: contacts lists it once, with the floor's upward normal and a gap of at most the skin plus the contact margin.
+    const floors = r.contacts.filter((c) => c.entityId === Ground);
+    expect(floors, `contacts of the character: ${JSON.stringify(r.contacts)}`).toHaveLength(1);
+    const floor = floors[0];
+    expect(floor?.normal.y ?? 0).toBeGreaterThan(0.99);
     expect(floor?.distance ?? Number.NaN).toBeLessThan(0.05);
 
     // Collision groups: with the floor in group 2 only, a query of group 1 does not see it, one of group 2 does, so does a query without groups; restored, group 1 sees it again.

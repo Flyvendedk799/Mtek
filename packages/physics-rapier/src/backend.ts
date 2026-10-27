@@ -522,11 +522,21 @@ class RapierWorld implements PhysicsWorld {
     if(lift-drop<1e-4)return undefined;
     return {x:dir.x*reach,y:lift-drop,z:dir.z*reach};
   }
+  /**
+   * The touching or predicted contacts of a body. The normal is the other body's surface normal pointing toward this
+   * body (a floor under a character gives +Y), as `castShape` reports hits; manifold points at the same position are
+   * listed once (decision 0218).
+   */
   contacts(h:BodyHandle):readonly PhysicsContact[] {
     this.alive();const collider=this.world.getCollider(this.record(h).colliderHandle),result:PhysicsContact[]=[];
     this.world.contactPairsWith(collider,other=>this.world.contactPair(collider,other,(manifold,flipped)=>{
-      const n=manifold.normal(),normal={x:n.x*(flipped?-1:1),y:n.y*(flipped?-1:1),z:n.z*(flipped?-1:1)};
-      for(let i=0;i<manifold.numSolverContacts();i++){const point=manifold.solverContactPoint(i);if(point!==null)result.push({userId:this.userIds.get(other.handle)!,normal,point:toVec3(point),distance:manifold.solverContactDist(i)});}
+      // The manifold normal points from the pair's first collider to its second; corrected for `flipped` it points from this body to the other.
+      const n=manifold.normal(),sign=flipped?1:-1,normal={x:n.x*sign,y:n.y*sign,z:n.z*sign},userId=this.userIds.get(other.handle)!;
+      for(let i=0;i<manifold.numSolverContacts();i++){
+        const raw=manifold.solverContactPoint(i);if(raw===null)continue;const point=toVec3(raw);
+        if(result.some(c=>c.userId===userId&&Math.hypot(c.point.x-point.x,c.point.y-point.y,c.point.z-point.z)<1e-6))continue;
+        result.push({userId,normal,point,distance:manifold.solverContactDist(i)});
+      }
     }));return result;
   }
 

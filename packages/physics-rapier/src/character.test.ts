@@ -97,6 +97,24 @@ describe("castRay", () => {
   });
 });
 
+describe("contacts", () => {
+  it("lists a resting contact once, with the other body's normal pointing toward the queried body", () => {
+    const world = space(v(0, -9.81, 0));
+    world.addBody(STATIC, box(20, 1, 20), pose(0, -0.5), 1);
+    const wall = world.addBody(STATIC, box(0.2, 3, 10), pose(-0.41, 1.5), 3);
+    const actor = world.addBody(KINEMATIC, capsule(0.3, 1.8), pose(0, 0.905), 2);
+    world.step();
+    const floor = world.contacts!(actor).filter((c) => c.userId === 1);
+    expect(floor).toHaveLength(1);
+    expect(floor[0]!.normal.y).toBeCloseTo(1, 5);
+    expect(floor[0]!.distance).toBeLessThan(0.02);
+    // The same pair seen from the wall (on the character's -X side): the character's surface normal points toward the wall (-X).
+    const side = world.contacts!(wall).filter((c) => c.userId === 2);
+    expect(side.length).toBeGreaterThanOrEqual(1);
+    for (const contact of side) expect(contact.normal.x).toBeCloseTo(-1, 5);
+  });
+});
+
 describe("capsules", () => {
   it("rejects a capsule that is not taller than its caps", () => {
     const world = space();

@@ -221,6 +221,6 @@ is rebuilt by a hot reload. Types (`MtekPhysics`, `MtekQueryShape`, `MtekQueryOp
 `MtekRayHit`, `MtekShapeHit`, `MtekContact`) are exported from `@mtek/runtime-web`.
 
 Alternative adapters implement the optional `castRay`, `castShape`, `moveCharacter`,
-`contacts` and `setCollisionGroups` of `spec/physics.md` section 5; without
+`contacts` (normals point from the other body toward the queried one: a floor gives +Y) and `setCollisionGroups` of `spec/physics.md` section 5; without
 `moveCharacter` a `move_character` command is dropped with `MTEK-E8105`. Sweeps take
 displacement over the interval `[0, 1]`.

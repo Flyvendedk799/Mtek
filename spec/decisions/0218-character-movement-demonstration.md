@@ -68,9 +68,9 @@ a second of settling: a ray straight down 5 m above the floor hits `Ground` at 5
 character it hits `Player` at 3.190 m (the top of the capsule at 0.91 + 0.9 m), and with `exclude: Player` it hits
 `Ground` again; along +x at 0.3 m in the ledge's lane it hits `Ledge` at 3.000 m with normal -x; upwards it hits
 nothing; a sphere of radius 0.5 cast 10 m down from 5 m above stops at fraction 0.4500021 on `Ground`;
-`contacts(Player)` lists `Ground` with a gap of 9.98 mm (the skin) and normal (0, -1, 0) (it points from the ground to
-the character's side; the list holds two entries for the one resting contact, the capsule's manifold, with the same
-point); `setCollisionGroups(Ground, 2, 2)` makes a query of groups 1/1 pass through it (nothing is hit), a query of
+`contacts(Player)` lists `Ground` with a gap of 9.98 mm (the skin) and normal (0, -1, 0) and two entries for the one
+resting contact at first; the integration then fixed the adapter (see "Contact normals" below), and the spec now
+requires exactly one `Ground` entry with normal y > 0.99; `setCollisionGroups(Ground, 2, 2)` makes a query of groups 1/1 pass through it (nothing is hit), a query of
 groups 2/2 and one without groups hit it, and restoring the groups (0xffff) makes it visible to 1/1 again; four bad
 inputs throw the documented kinds (`RangeError` for a zero direction, an unknown entity and a mask above 65535,
 `TypeError` for a non-string `exclude`).
@@ -134,8 +134,10 @@ platform's step to the heading each tick and the heading is not fed back); that 
   test fixture without a long scripted walk to each feature.
 * **A one-tick difference between `self.rotation` and the pending target** remains for programs that read it for
   another purpose (the fix concerns the move's request only).
-* **`contacts` lists a resting contact twice** (the capsule's manifold has two points with the same position); the
-  host API of 0217 does not de-duplicate. Not changed here.
+* **Contact normals (fixed at integration).** `contacts` listed a resting contact twice (the capsule's manifold has two
+  points at the same position) and its normal pointed from the queried body to the other. The adapter now lists points
+  at the same position once and reports the other body's surface normal pointing toward the queried body (a floor gives
+  +Y), the convention of `castShape` hits; `packages/physics-rapier/src/character.test.ts` asserts both.
 * **The HUD** (`ui`) is DOM text over the canvas (`data-mtek-hud-text`), not part of the render-target pictures, so the
   spec checks the 3D scene only and the HUD lines ("on the ground", "in the air") are not asserted.
 * **Gravity, jump, speed** are the program's; the example does not claim a particular character feel.
