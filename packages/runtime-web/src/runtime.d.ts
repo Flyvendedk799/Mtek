@@ -443,6 +443,14 @@ export declare class AnimationController {
 export declare function createAnimationController(skin:MtekSkin,options?:AnimationControllerOptions):AnimationController;
 export interface RetargetOptions {readonly translationScale?:number;readonly rotationSpace?:"local"|"world";readonly nodeTranslationScales?:Readonly<Record<string,number>>}
 export declare function retargetSkin(source:MtekSkin,target:MtekSkin,mapping:Readonly<Record<string,string>>,options?:number|RetargetOptions):MtekSkin;
+export type HumanoidBone="hips"|"spine"|"chest"|"upperChest"|"neck"|"head"|"leftShoulder"|"leftUpperArm"|"leftLowerArm"|"leftHand"|"rightShoulder"|"rightUpperArm"|"rightLowerArm"|"rightHand"|"leftUpperLeg"|"leftLowerLeg"|"leftFoot"|"leftToes"|"rightUpperLeg"|"rightLowerLeg"|"rightFoot"|"rightToes";
+export interface HumanoidMap {
+  readonly bones:Readonly<Partial<Record<HumanoidBone,string>>>;readonly evidence:Readonly<Partial<Record<HumanoidBone,"name"|"structure">>>;
+  readonly confidence:number;readonly unmapped:readonly HumanoidBone[];readonly up:readonly [number,number,number];readonly forward:readonly [number,number,number];
+}
+export declare function mapHumanoid(skin:MtekSkin):HumanoidMap|{readonly error:string};
+export interface HumanoidRetargetOptions {readonly translationScale?:number;readonly restCorrection?:boolean;readonly sourceMap?:HumanoidMap;readonly targetMap?:HumanoidMap;readonly maxKeyInterval?:number}
+export declare function retargetHumanoid(source:MtekSkin,target:MtekSkin,options?:HumanoidRetargetOptions):MtekSkin;
 export declare function deformSkin(skin:MtekSkin,palette:Float32Array,positions:Float32Array,normals:Float32Array|undefined,outPositions:Float32Array,outNormals:Float32Array):void;
 export interface AssetDescriptor {readonly url:string;readonly bytes?:number;readonly sha256?:string}
 export interface AssetProgress {readonly loaded:number;readonly total:number|undefined}

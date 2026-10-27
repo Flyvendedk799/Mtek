@@ -177,12 +177,12 @@ function nameAnchors(g: Rig, names: readonly Parsed[]): { legs?: [number, number
   if (ll !== undefined && lr !== undefined) out.legs = [ll, lr];
   if (al !== undefined && ar !== undefined) out.arms = [al, ar];
   const heads = joints.filter((i) => names[i]!.family === "head");
-  if (heads.length === 1) out.head = heads[0];
+  if (heads.length === 1) out.head = heads[0]!;
   else if (heads.length === 0) {
     // A chain of several neck joints (CesiumMan): the last one is the head.
     const necks = joints.filter((i) => names[i]!.family === "neck");
     const tips = necks.filter((i) => !necks.some((o) => g.jp[o] === i));
-    if (necks.length >= 2 && tips.length === 1) out.head = tips[0];
+    if (necks.length >= 2 && tips.length === 1) out.head = tips[0]!;
   }
   return out;
 }
@@ -219,6 +219,7 @@ function build(g: Rig, names: readonly Parsed[], an: Anchors, sided: { legs: boo
   const torso = path.slice(1, ti + 1), above = path.slice(ti + 1, path.length - 1);
   const up = unit(sub(g.P[an.head]!, g.P[hips]!));
   const axis = (l: Leg): V3 => unit(sub(g.P[l.foot]!, g.P[l.upper]!));
+  const legPair = [legs[0], legs[1]];
   const upright = -dot(up, unit(add(axis(legs[0]), axis(legs[1]))));
   if (upright < COSINE_UPRIGHT) return "the spine is not opposed to the legs (not an upright biped)";
   if ([legs[0], legs[1]].some((l) => dot(sub(g.P[l.foot]!, g.P[hips]!), up) >= 0) || dot(sub(g.P[an.head]!, g.P[top]!), up) <= 0)
@@ -227,7 +228,7 @@ function build(g: Rig, names: readonly Parsed[], an: Anchors, sided: { legs: boo
   const vote = (f: V3): { sign: number; source: number } => {
     const scale = (pathLength(g, [legs[0]!.upper, legs[0]!.lower, legs[0]!.foot], 0, 2) + pathLength(g, [legs[1]!.upper, legs[1]!.lower, legs[1]!.foot], 0, 2)) / 2;
     let toes = 0, knees = 0;
-    for (const l of [legs[0], legs[1]]) {
+    for (const l of legPair) {
       if (l.toes !== undefined) toes += dot(orth(sub(g.P[l.toes]!, g.P[l.foot]!), up), f);
       const u = g.P[l.upper]!, w = g.P[l.foot]!, k = g.P[l.lower]!, t = len(sub(k, u)) / (len(sub(k, u)) + len(sub(w, k)));
       knees += dot(sub(k, add(u, mul(sub(w, u), t))), f);

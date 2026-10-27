@@ -379,6 +379,13 @@ describe("runtime.d.ts agrees with the implementation", () => {
       export const limitsMatch:Mutual<D.IKConstraint,A.IKConstraint>=true;
       export const retargetMatch:Mutual<D.RetargetOptions,A.RetargetOptions>=true;
       export const delta=controller.player.consumeRootMotion();
+      export const humanoid:D.HumanoidMap|{readonly error:string}=A.mapHumanoid(skin);
+      export const humanoidRetargeted:D.MtekSkin=A.retargetHumanoid(skin,skin,{translationScale:2,restCorrection:false,maxKeyInterval:0.05});
+      export const humanoidMatch:Mutual<D.HumanoidMap,A.HumanoidMap>=true;
+      export const humanoidBoneMatch:Mutual<D.HumanoidBone,A.HumanoidBone>=true;
+      export const humanoidOptionsMatch:Mutual<D.HumanoidRetargetOptions,A.HumanoidRetargetOptions>=true;
+      export const humanoidMapFunction:Mutual<typeof D.mapHumanoid,typeof A.mapHumanoid>=true;
+      export const humanoidRetargetFunction:Mutual<typeof D.retargetHumanoid,typeof A.retargetHumanoid>=true;
     `,{types:["@webgpu/types"],skipLibCheck:true});
     expect(problems).toEqual([]);
   });

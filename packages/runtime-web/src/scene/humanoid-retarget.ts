@@ -122,7 +122,9 @@ export function retargetHumanoid(source: MtekSkin, target: MtekSkin, options: Hu
   const ground = (x: Side): number => (["leftFoot", "rightFoot"] as const).reduce((sum, b) => sum + dotv(x.rig.P[x.node(b)]!, x.up), 0) / 2;
   const reference = (x: Side, bone: number): V3 => [dotv(x.rig.P[bone]!, x.left), dotv(x.rig.P[bone]!, x.up), dotv(x.rig.P[bone]!, x.forward)];
   const bindS = reference(S, hipsS), bindT = reference(T, hipsT), groundS = ground(S), groundT = ground(T);
-  const orderS = S.rig.order, orderT = T.rig.order;
+  // The pelvis sits a fixed distance above the hip joints; only the height of the hip joints above the ankles follows the leg ratio.
+  const pelvis = (x: Side): number => dotv(x.rig.P[x.node("hips")]!, x.up) - (dotv(x.rig.P[x.node("leftUpperLeg")]!, x.up) + dotv(x.rig.P[x.node("rightUpperLeg")]!, x.up)) / 2;
+  const pelvisS = pelvis(S), pelvisT = pelvis(T);  const orderS = S.rig.order, orderT = T.rig.order;
   const tNode = (i: number) => T.skin.nodes[i]!;
   const hipsParent = tNode(hipsT).parent;
   const hipsParentScale = hipsParent < 0 ? T.rig.origin.scale : T.rig.S[hipsParent]!;
@@ -141,7 +143,7 @@ export function retargetHumanoid(source: MtekSkin, target: MtekSkin, options: Hu
     });
     times = dense;
     const scratch = new Float64Array(4);
-    const sample = (map: Map<number, (typeof clip.channels)[number]>, node: number, t: number, bind: readonly number[]): readonly number[] => {
+    const sample = (map: Map<number, (typeof clip.channels)[number]>, node: number, t: number, bind: readonly number[]): ArrayLike<number> => {
       const c = map.get(node);
       if (c === undefined) return bind;
       sampleChannelInto(c, t, scratch);
@@ -166,14 +168,14 @@ export function retargetHumanoid(source: MtekSkin, target: MtekSkin, options: Hu
         const a = S.node(bone);
         const delta = qmul(Qs[a]!, qconj(restS.get(bone)!));
         Qt[i] = qnorm(qmul(qmul(qmul(B, delta), qconj(B)), restT.get(bone)!));
-        const local = qnorm(qmul(qconj(base), Qt[i]!)), list = rotations.get(i)!, at = list.length - 4;
+        const local = qnorm(qmul(qconj(base), Qt[i])), list = rotations.get(i)!, at = list.length - 4;
         const flip = at >= 0 && list[at]! * local[0] + list[at + 1]! * local[1] + list[at + 2]! * local[2] + list[at + 3]! * local[3] < 0 ? -1 : 1;
         list.push(local[0] * flip, local[1] * flip, local[2] * flip, local[3] * flip);
       }
       if (animatedHips) {
         const meshPos = world.pos[S.skin.meshNode]!, p = mul3(qrot(inverseMesh, sub(world.pos[hipsS]!, meshPos)), 1 / world.scale[S.skin.meshNode]!);
         const c: V3 = [dotv(p, S.left), dotv(p, S.up), dotv(p, S.forward)];
-        const l = bindT[0]! + ratio * (c[0] - bindS[0]!), u = groundT + ratio * (c[1] - groundS), f = bindT[2]! + ratio * (c[2] - bindS[2]!);
+        const l = bindT[0] + ratio * (c[0] - bindS[0]), u = groundT + pelvisT + ratio * (c[1] - pelvisS - groundS), f = bindT[2] + ratio * (c[2] - bindS[2]);
         const mine: V3 = [T.left[0] * l + T.up[0] * u + T.forward[0] * f, T.left[1] * l + T.up[1] * u + T.forward[1] * f, T.left[2] * l + T.up[2] * u + T.forward[2] * f];
         const parentPos: V3 = hipsParent < 0 ? T.rig.origin.pos : T.rig.P[hipsParent]!;
         const parentRot = hipsParent < 0 ? meshInverseT : Qt[hipsParent]!;

@@ -147,14 +147,17 @@ export type Role = "upper" | "lower" | "foot" | "toe" | "shoulder" | "hand";
 export interface Parsed { readonly family?: Family; readonly role?: Role; readonly side: "" | "l" | "r" }
 
 // Stems (the words of a name joined, without side words, digits and rig-prefix words) per family and limb role.
-const NAME_TABLE = new Map<string, { family: Family; role?: Role }>();
-for (const row of ("hips:hips hip pelvis waist cog;torso:spine chest upperchest uppchest torso abdomen back ribcage;neck:neck;head:head;" +
+export const NAME_TABLE_SPEC =
+  "hips:hips hip pelvis waist cog;torso:spine chest upperchest uppchest torso abdomen back ribcage;neck:neck;head:head;" +
   "leg.upper:thigh upleg upperleg uleg femur;leg.lower:calf shin lowerleg lowleg knee tibia;leg.foot:ankle foot;leg.toe:toe toes toebase ball;leg:leg;" +
-  "arm.shoulder:shoulder clavicle collar collarbone clav;arm.upper:upperarm uparm humerus;arm.lower:forearm lowerarm lowarm elbow ulna;arm.hand:hand wrist;arm:arm").split(";")) {
+  "arm.shoulder:shoulder clavicle collar collarbone clav;arm.upper:upperarm uparm humerus;arm.lower:forearm lowerarm lowarm elbow ulna;arm.hand:hand wrist;arm:arm";
+const NAME_TABLE = new Map<string, { family: Family; role?: Role }>();
+for (const row of NAME_TABLE_SPEC.split(";")) {
   const [key, words] = row.split(":") as [string, string], [family, role] = key.split(".") as [Family, Role | undefined];
   for (const word of words.split(" ")) NAME_TABLE.set(word, role === undefined ? { family } : { family, role });
 }
-const NOISE = new Set("mixamorig mixamo def org mch j b bip valvebiped cc base bone joint skeleton armature rig c".split(" "));
+export const NOISE_WORDS = "mixamorig mixamo def org mch j b bip valvebiped cc base bone joint skeleton armature rig c";
+const NOISE = new Set(NOISE_WORDS.split(" "));
 
 /** Family, limb role and side of a joint name; empty when the name is not a humanoid bone name. */
 export function parseName(name: string): Parsed {

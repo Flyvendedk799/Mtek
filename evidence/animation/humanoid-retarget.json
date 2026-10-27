@@ -1,0 +1,436 @@
+{
+  "format": "mtek-humanoid-retarget/1",
+  "decision": "0221",
+  "bounds": {
+    "limbErrorDeg": 0.02,
+    "naiveLimbErrorMinDeg": 25,
+    "hipsRatioError": 0.02,
+    "footHeightError": 0.01,
+    "slideSynthetic": 0.02,
+    "slideReal": 0.05
+  },
+  "mapping": {
+    "matrixSkeletons": 180,
+    "matrixRequiredCorrect": 180,
+    "matrixOptionalCorrect": 180,
+    "proportionSkeletons": 80,
+    "proportionRequiredCorrect": 80,
+    "rows": [
+      {
+        "skeleton": "mixamo (synthetic)",
+        "required": "15/15",
+        "optionalFound": [
+          "chest",
+          "upperChest",
+          "neck",
+          "leftShoulder",
+          "rightShoulder",
+          "leftToes",
+          "rightToes"
+        ],
+        "unmapped": [],
+        "nameEvidence": 22,
+        "structureEvidence": 0,
+        "confidence": 0.973
+      },
+      {
+        "skeleton": "unreal (synthetic)",
+        "required": "15/15",
+        "optionalFound": [
+          "chest",
+          "upperChest",
+          "neck",
+          "leftShoulder",
+          "rightShoulder",
+          "leftToes",
+          "rightToes"
+        ],
+        "unmapped": [],
+        "nameEvidence": 22,
+        "structureEvidence": 0,
+        "confidence": 1
+      },
+      {
+        "skeleton": "unity (synthetic)",
+        "required": "15/15",
+        "optionalFound": [
+          "chest",
+          "upperChest",
+          "neck",
+          "leftShoulder",
+          "rightShoulder",
+          "leftToes",
+          "rightToes"
+        ],
+        "unmapped": [],
+        "nameEvidence": 22,
+        "structureEvidence": 0,
+        "confidence": 1
+      },
+      {
+        "skeleton": "vrm (synthetic)",
+        "required": "15/15",
+        "optionalFound": [
+          "chest",
+          "upperChest",
+          "neck",
+          "leftShoulder",
+          "rightShoulder",
+          "leftToes",
+          "rightToes"
+        ],
+        "unmapped": [],
+        "nameEvidence": 22,
+        "structureEvidence": 0,
+        "confidence": 1
+      },
+      {
+        "skeleton": "rigify (synthetic)",
+        "required": "15/15",
+        "optionalFound": [
+          "chest",
+          "upperChest",
+          "neck",
+          "leftShoulder",
+          "rightShoulder",
+          "leftToes",
+          "rightToes"
+        ],
+        "unmapped": [],
+        "nameEvidence": 20,
+        "structureEvidence": 2,
+        "confidence": 0.977
+      },
+      {
+        "skeleton": "plain (synthetic)",
+        "required": "15/15",
+        "optionalFound": [
+          "chest",
+          "neck"
+        ],
+        "unmapped": [
+          "upperChest",
+          "leftShoulder",
+          "rightShoulder",
+          "leftToes",
+          "rightToes"
+        ],
+        "nameEvidence": 17,
+        "structureEvidence": 0,
+        "confidence": 0.973
+      },
+      {
+        "skeleton": "bip (synthetic)",
+        "required": "15/15",
+        "optionalFound": [
+          "chest",
+          "neck",
+          "leftShoulder",
+          "rightShoulder",
+          "leftToes",
+          "rightToes"
+        ],
+        "unmapped": [
+          "upperChest"
+        ],
+        "nameEvidence": 21,
+        "structureEvidence": 0,
+        "confidence": 1
+      },
+      {
+        "skeleton": "snake (synthetic)",
+        "required": "15/15",
+        "optionalFound": [
+          "chest",
+          "neck",
+          "leftShoulder",
+          "rightShoulder",
+          "leftToes",
+          "rightToes"
+        ],
+        "unmapped": [
+          "upperChest"
+        ],
+        "nameEvidence": 21,
+        "structureEvidence": 0,
+        "confidence": 0.973
+      },
+      {
+        "skeleton": "short (synthetic)",
+        "required": "15/15",
+        "optionalFound": [
+          "chest",
+          "upperChest",
+          "neck",
+          "leftShoulder",
+          "rightShoulder",
+          "leftToes",
+          "rightToes"
+        ],
+        "unmapped": [],
+        "nameEvidence": 22,
+        "structureEvidence": 0,
+        "confidence": 1
+      },
+      {
+        "skeleton": "scrambled (synthetic)",
+        "required": "15/15",
+        "optionalFound": [
+          "chest",
+          "upperChest",
+          "neck",
+          "leftShoulder",
+          "rightShoulder",
+          "leftToes",
+          "rightToes"
+        ],
+        "unmapped": [],
+        "nameEvidence": 0,
+        "structureEvidence": 22,
+        "confidence": 0.75
+      },
+      {
+        "skeleton": "CesiumMan",
+        "required": "15/15",
+        "optionalFound": [
+          "chest",
+          "neck",
+          "leftToes",
+          "rightToes"
+        ],
+        "unmapped": [
+          "upperChest",
+          "leftShoulder",
+          "rightShoulder"
+        ],
+        "nameEvidence": 19,
+        "structureEvidence": 0,
+        "confidence": 0.907
+      },
+      {
+        "skeleton": "CesiumMan, legs x1.2 arms x0.9",
+        "required": "15/15",
+        "optionalFound": [
+          "chest",
+          "neck",
+          "leftToes",
+          "rightToes"
+        ],
+        "unmapped": [
+          "upperChest",
+          "leftShoulder",
+          "rightShoulder"
+        ],
+        "nameEvidence": 19,
+        "structureEvidence": 0,
+        "confidence": 0.907
+      },
+      {
+        "skeleton": "Fox",
+        "required": "rejected: the spine is not opposed to the legs (not an upright biped)",
+        "optionalFound": [],
+        "unmapped": [],
+        "nameEvidence": 0,
+        "structureEvidence": 0,
+        "confidence": 0
+      }
+    ]
+  },
+  "retarget": [
+    {
+      "scenario": "Mixamo T-pose to Unreal A-pose",
+      "clip": "walk",
+      "real": false,
+      "maxLimbErrorDeg": 0,
+      "meanLimbErrorDeg": 0,
+      "naiveMaxLimbErrorDeg": 45,
+      "hipsHeightRatio": 1,
+      "legRatio": 1,
+      "hipsRatioError": 0,
+      "stanceFrames": 69,
+      "maxStanceHeightError": 0,
+      "maxStanceSlide": 0,
+      "meanStanceSlide": 0
+    },
+    {
+      "scenario": "Mixamo T-pose to Unreal A-pose",
+      "clip": "wave",
+      "real": false,
+      "maxLimbErrorDeg": 0,
+      "meanLimbErrorDeg": 0,
+      "naiveMaxLimbErrorDeg": 45,
+      "hipsHeightRatio": 1,
+      "legRatio": 1,
+      "hipsRatioError": 0,
+      "stanceFrames": 238,
+      "maxStanceHeightError": 0,
+      "maxStanceSlide": 0,
+      "meanStanceSlide": 0
+    },
+    {
+      "scenario": "Unreal A-pose to Mixamo T-pose",
+      "clip": "walk",
+      "real": false,
+      "maxLimbErrorDeg": 0,
+      "meanLimbErrorDeg": 0,
+      "naiveMaxLimbErrorDeg": 45,
+      "hipsHeightRatio": 1,
+      "legRatio": 1,
+      "hipsRatioError": 0,
+      "stanceFrames": 69,
+      "maxStanceHeightError": 0,
+      "maxStanceSlide": 0,
+      "meanStanceSlide": 0
+    },
+    {
+      "scenario": "Unreal A-pose to Mixamo T-pose",
+      "clip": "wave",
+      "real": false,
+      "maxLimbErrorDeg": 0,
+      "meanLimbErrorDeg": 0,
+      "naiveMaxLimbErrorDeg": 45,
+      "hipsHeightRatio": 1,
+      "legRatio": 1,
+      "hipsRatioError": 0,
+      "stanceFrames": 238,
+      "maxStanceHeightError": 0,
+      "maxStanceSlide": 0,
+      "meanStanceSlide": 0
+    },
+    {
+      "scenario": "VRM T-pose legs x1.2 to Rigify bent-knee A-pose arms x0.8",
+      "clip": "walk",
+      "real": false,
+      "maxLimbErrorDeg": 0,
+      "meanLimbErrorDeg": 0,
+      "naiveMaxLimbErrorDeg": 45,
+      "hipsHeightRatio": 0.833,
+      "legRatio": 0.833,
+      "hipsRatioError": 0,
+      "stanceFrames": 69,
+      "maxStanceHeightError": 0,
+      "maxStanceSlide": 0.011,
+      "meanStanceSlide": 0.007
+    },
+    {
+      "scenario": "VRM T-pose legs x1.2 to Rigify bent-knee A-pose arms x0.8",
+      "clip": "wave",
+      "real": false,
+      "maxLimbErrorDeg": 0,
+      "meanLimbErrorDeg": 0,
+      "naiveMaxLimbErrorDeg": 45,
+      "hipsHeightRatio": 0.833,
+      "legRatio": 0.833,
+      "hipsRatioError": 0,
+      "stanceFrames": 238,
+      "maxStanceHeightError": 0,
+      "maxStanceSlide": 0,
+      "meanStanceSlide": 0
+    },
+    {
+      "scenario": "Unity T-pose Z-up to plain A-pose, spine x1.2, centimetres, bone axes",
+      "clip": "walk",
+      "real": false,
+      "maxLimbErrorDeg": 0.006,
+      "meanLimbErrorDeg": 0.001,
+      "naiveMaxLimbErrorDeg": 45,
+      "hipsHeightRatio": 100,
+      "legRatio": 100,
+      "hipsRatioError": 0,
+      "stanceFrames": 69,
+      "maxStanceHeightError": 0,
+      "maxStanceSlide": 0,
+      "meanStanceSlide": 0
+    },
+    {
+      "scenario": "Unity T-pose Z-up to plain A-pose, spine x1.2, centimetres, bone axes",
+      "clip": "wave",
+      "real": false,
+      "maxLimbErrorDeg": 0,
+      "meanLimbErrorDeg": 0,
+      "naiveMaxLimbErrorDeg": 45,
+      "hipsHeightRatio": 100,
+      "legRatio": 100,
+      "hipsRatioError": 0,
+      "stanceFrames": 238,
+      "maxStanceHeightError": 0,
+      "maxStanceSlide": 0,
+      "meanStanceSlide": 0
+    },
+    {
+      "scenario": "Scrambled names A-pose facing back to VRM T-pose legs x0.85",
+      "clip": "walk",
+      "real": false,
+      "maxLimbErrorDeg": 0,
+      "meanLimbErrorDeg": 0,
+      "naiveMaxLimbErrorDeg": 45,
+      "hipsHeightRatio": 0.85,
+      "legRatio": 0.85,
+      "hipsRatioError": 0,
+      "stanceFrames": 69,
+      "maxStanceHeightError": 0,
+      "maxStanceSlide": 0.011,
+      "meanStanceSlide": 0.008
+    },
+    {
+      "scenario": "Scrambled names A-pose facing back to VRM T-pose legs x0.85",
+      "clip": "wave",
+      "real": false,
+      "maxLimbErrorDeg": 0,
+      "meanLimbErrorDeg": 0,
+      "naiveMaxLimbErrorDeg": 45,
+      "hipsHeightRatio": 0.85,
+      "legRatio": 0.85,
+      "hipsRatioError": 0,
+      "stanceFrames": 238,
+      "maxStanceHeightError": 0,
+      "maxStanceSlide": 0,
+      "meanStanceSlide": 0
+    },
+    {
+      "scenario": "CesiumMan to CesiumMan with legs x1.2, arms x0.9",
+      "clip": "clip0",
+      "real": true,
+      "maxLimbErrorDeg": 0,
+      "meanLimbErrorDeg": 0,
+      "naiveMaxLimbErrorDeg": 0,
+      "hipsHeightRatio": 1.2,
+      "legRatio": 1.2,
+      "hipsRatioError": 0,
+      "stanceFrames": 11,
+      "maxStanceHeightError": 0.001,
+      "maxStanceSlide": 0.006,
+      "meanStanceSlide": 0.002
+    },
+    {
+      "scenario": "CesiumMan to Mixamo T-pose (Z-up)",
+      "clip": "clip0",
+      "real": true,
+      "maxLimbErrorDeg": 0,
+      "meanLimbErrorDeg": 0,
+      "naiveMaxLimbErrorDeg": 40.4,
+      "hipsHeightRatio": 1.605,
+      "legRatio": 1.605,
+      "hipsRatioError": 0,
+      "stanceFrames": 11,
+      "maxStanceHeightError": 0.001,
+      "maxStanceSlide": 0.021,
+      "meanStanceSlide": 0.013
+    },
+    {
+      "scenario": "Mixamo A-pose walk to CesiumMan",
+      "clip": "walk",
+      "real": true,
+      "maxLimbErrorDeg": 0.007,
+      "meanLimbErrorDeg": 0.001,
+      "naiveMaxLimbErrorDeg": 29.5,
+      "hipsHeightRatio": 0.623,
+      "legRatio": 0.623,
+      "hipsRatioError": 0,
+      "stanceFrames": 69,
+      "maxStanceHeightError": 0.003,
+      "maxStanceSlide": 0.037,
+      "meanStanceSlide": 0.026
+    }
+  ]
+}

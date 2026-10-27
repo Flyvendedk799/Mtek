@@ -37,7 +37,6 @@ interface Convention {
 }
 
 const word = (side: string, left: string, right: string): string => (side === "L" ? left : right);
-const names = (table: Record<string, string>, fallback: (part: string, side: string) => string) => (part: string, side: string): string => table[part] ?? fallback(part, side);
 
 const CONVENTIONS: Record<Exclude<ConventionId, "scrambled">, Convention> = {
   mixamo: {
@@ -174,11 +173,11 @@ function layout(spec: HumanoidSpec, conv: Convention): { parts: Part[]; dims: Fi
   if (conv.has.chest) { at = add(at, [0, 0.15 * ps * s, 0]); top = put("chest", "", top, at); }
   if (conv.has.upperChest) { at = add(at, [0, 0.15 * ps * s, 0]); top = put("upperChest", "", top, at); }
   const torsoTop = at, torsoId = top;
-  let head: string = torsoId, headPos: V3 = torsoTop;
+  let head: string = torsoId;
   let up = torsoTop;
   if (conv.has.neck) { up = add(up, [0, 0.12 * ps * s, 0]); head = put("neck", "", torsoId, up); }
   if (conv.has.neck2) { up = add(up, [0, 0.04 * ps * s, 0]); head = put("neck2", "", head, up); }
-  headPos = add(up, [0, 0.1 * ps * s, 0]);
+  const headPos = add(up, [0, 0.1 * ps * s, 0]);
   head = put("head", "", head, headPos);
   if (conv.has.toeEnd) put("headTop", "", head, add(headPos, [0, 0.2 * s, 0]));
   if (extras.face !== false) {
@@ -238,7 +237,7 @@ const SHUFFLE_ORDER = (n: number): number[] => {
 };
 
 export function buildHumanoid(spec: HumanoidSpec): FixtureRig {
-  const convention = CONVENTIONS[(spec.convention === "scrambled" ? "mixamo" : spec.convention) as Exclude<ConventionId, "scrambled">];
+  const convention = CONVENTIONS[(spec.convention === "scrambled" ? "mixamo" : spec.convention)];
   const conv: Convention = spec.convention === "scrambled" ? { ...convention, has: { ...convention.has, root: true } } : convention;
   const { parts, dims } = layout(spec, conv);
   const frame = FRAMES[spec.frame ?? "yup"], boneAxes = spec.axes === "bone";
@@ -305,7 +304,7 @@ function legIK(hip: V3, ankle: V3, thigh: number, shin: number): [V3, V3] {
   const reach = (thigh + shin) * 0.9995;
   if (d > reach) { axis = mul(axis, reach / d); d = reach; }
   const e = unit(axis), a = (thigh * thigh - shin * shin + d * d) / (2 * d), h = Math.sqrt(Math.max(thigh * thigh - a * a, 0));
-  const n = unit(sub([0, 0, 1], mul(e, e[2]!)));
+  const n = unit(sub([0, 0, 1], mul(e, e[2])));
   const knee = add(add(hip, mul(e, a)), mul(n, h));
   return [unit(sub(knee, hip)), unit(sub(add(hip, axis), knee))];
 }
