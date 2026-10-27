@@ -8,6 +8,8 @@ import {
 import { blendQuat, multiplyQuat } from "./pose-layers.js";
 import type { IKInspection } from "./animation-inspection.js";
 import { numericallyUniformScale } from "./uniform-scale.js";
+import { LimbIK, type FootPlacement, type LimbGoal } from "./limb-ik.js";
+import type { HumanoidMap } from "./humanoid-types.js";
 
 export interface IKHingeLimit {
   /** Hinge axis in the node's bind-local frame. Other rotational degrees of freedom are locked. */
@@ -31,8 +33,13 @@ export interface IKConstraint {
   readonly limits?: Readonly<Record<string, IKHingeLimit>>;
 }
 
-/** Bounded CCD positional IK; evaluated in insertion order after procedural overrides. */
+/**
+ * Procedural IK, evaluated after procedural overrides: first the anatomical limb solver (foot placement, then limb
+ * goals in the fixed order left leg, right leg, left arm, right arm; decision 0222), then bounded CCD positional
+ * constraints in insertion order, so a CCD constraint refines the pose the limbs produced.
+ */
 export class PoseIK {
+  readonly limbs: LimbIK;
   private readonly constraints = new Map<
     string,
     { indices: number[]; options: IKConstraint; limits: ReadonlyMap<number, IKHingeLimit> }
@@ -47,7 +54,19 @@ export class PoseIK {
   private readonly parentRotation = new Float64Array(4);
   private readonly bindRotation = new Float64Array(4);
   private readonly relative = new Float64Array(4);
-  revision = 0;
+  private ccdRevision = 0;
+  /** Changes whenever any constraint, limb goal, foot placement or humanoid map changes. */
+  get revision(): number { return this.ccdRevision + this.limbs.revision; }
+  /** True while foot-placement smoothing is still converging, so a held clock must keep evaluating. */
+  get animating(): boolean { return this.limbs.animating; }
+  advance(dt: number): void { this.limbs.advance(dt); }
+  setHumanoid(map: HumanoidMap | undefined): void { this.limbs.setHumanoid(map); }
+  /** Sets or replaces the anatomical limb goal `id`; an ID is shared with `set`, and the newest definition wins. */
+  setLimb(id: string, goal: LimbGoal): void {
+    this.limbs.set(id, goal);
+    if (this.constraints.delete(id)) this.ccdRevision++;
+  }
+  setFootPlacement(placement: FootPlacement | undefined): void { this.limbs.setFootPlacement(placement); }
   inspect(): readonly IKInspection[] {
     return [...this.constraints].map(([id, { indices, options, limits }]) => ({ id, chain: [...indices],
       target: { x: options.target[0], y: options.target[1], z: options.target[2] }, weight: options.weight ?? 1,
@@ -57,6 +76,7 @@ export class PoseIK {
     }));
   }
   constructor(private readonly skin: MtekSkin) {
+    this.limbs = new LimbIK(skin);
     this.globals = skin.nodes.map(() => identity());
     const seen = new Set<number>();
     const visit = (i: number): void => {
@@ -118,6 +138,7 @@ export class PoseIK {
       for (let node = this.skin.meshNode; node >= 0; node = this.skin.nodes[node]!.parent)
         if (node === indices.at(-1)) throw new RangeError("IK orientation mesh frame cannot descend from the end effector");
     }
+    this.limbs.remove(id);
     this.constraints.set(id, {
       indices,
       limits,
@@ -128,7 +149,7 @@ export class PoseIK {
         chain: [...options.chain],
       },
     });
-    this.revision++;
+    this.ccdRevision++;
   }
   private constrain(pose: Float64Array, node: number, limit: IKHingeLimit): void {
     const at = node * 10 + 3, bind = this.skin.nodes[node]!.rotation, length = Math.hypot(...bind);
@@ -155,13 +176,16 @@ export class PoseIK {
     }
   }
   remove(id: string): void {
-    if (this.constraints.delete(id)) this.revision++;
+    if (this.constraints.delete(id)) this.ccdRevision++;
+    this.limbs.remove(id);
   }
+  /** Removes every CCD constraint, limb goal and foot placement. The humanoid map is configuration and stays. */
   clear(): void {
     if (this.constraints.size > 0) {
       this.constraints.clear();
-      this.revision++;
+      this.ccdRevision++;
     }
+    this.limbs.clear();
   }
   private matrices(pose: Float64Array): void {
     for (const i of this.order) {
@@ -180,6 +204,7 @@ export class PoseIK {
     }
   }
   apply(pose: Float64Array): void {
+    this.limbs.apply(pose);
     for (const { indices, options, limits } of this.constraints.values()) {
       const weight = options.weight ?? 1;
       if (weight === 0) continue;

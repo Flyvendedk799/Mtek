@@ -381,6 +381,37 @@ export interface AnimationLayer {
 }
 export interface IKHingeLimit {readonly axis:readonly [number,number,number];readonly min:number;readonly max:number}
 export interface IKConstraint {readonly chain:readonly string[];readonly target:readonly [number,number,number];readonly weight?:number;readonly iterations?:number;readonly tolerance?:number;readonly rotation?:readonly [number,number,number,number];readonly rotationWeight?:number;readonly limits?:Readonly<Record<string,IKHingeLimit>>}
+/** The canonical humanoid vocabulary (decision 0219); a map names skin nodes. "Left" is the character's left. */
+export type HumanoidBone="hips"|"spine"|"head"|"leftUpperLeg"|"leftLowerLeg"|"leftFoot"|"rightUpperLeg"|"rightLowerLeg"|"rightFoot"|"leftUpperArm"|"leftLowerArm"|"leftHand"|"rightUpperArm"|"rightLowerArm"|"rightHand"|"chest"|"upperChest"|"neck"|"leftShoulder"|"rightShoulder"|"leftToes"|"rightToes";
+export interface HumanoidMap {
+  readonly bones:Readonly<Partial<Record<HumanoidBone,string>>>;
+  readonly evidence:Readonly<Partial<Record<HumanoidBone,"name"|"structure">>>;
+  readonly confidence:number;readonly unmapped:readonly HumanoidBone[];
+  readonly up:readonly [number,number,number];readonly forward:readonly [number,number,number];
+}
+export type LimbName="leftLeg"|"rightLeg"|"leftArm"|"rightArm";
+export interface LimbGoal {
+  readonly limb:LimbName;readonly target:readonly [number,number,number];readonly weight?:number;readonly pole?:readonly [number,number,number];
+  readonly rotation?:readonly [number,number,number,number];readonly rotationWeight?:number;readonly softness?:number;
+  readonly flexion?:{readonly min:number;readonly max:number};
+}
+export interface FootGround {readonly height?:number;readonly point?:readonly [number,number,number];readonly normal?:readonly [number,number,number];readonly weight?:number}
+export interface FootPlacement {
+  readonly left:FootGround;readonly right:FootGround;readonly smoothing?:number;readonly soleOffset?:number;
+  readonly groundLevel?:number;readonly maxDrop?:number;readonly softness?:number;
+}
+export interface LimbInspection {
+  readonly id:string;readonly limb:LimbName;readonly nodes:readonly [number,number,number];readonly target:AnimationVector;readonly weight:number;
+  readonly rotation?:AnimationQuaternion;readonly rotationWeight:number;readonly pole?:AnimationVector;readonly softness:number;
+  readonly flexionRange:{readonly min:number;readonly max:number};readonly flexion:number|null;readonly residual:number|null;
+}
+export interface FootGroundInspection {
+  readonly height?:number;readonly point?:AnimationVector;readonly normal?:AnimationVector;readonly weight:number;readonly flexion:number|null;readonly residual:number|null;
+}
+export interface FootPlacementInspection {
+  readonly left:FootGroundInspection;readonly right:FootGroundInspection;readonly smoothing:number;readonly soleOffset:number;readonly groundLevel:number;
+  readonly maxDrop:number;readonly softness:number;readonly requiredDrop:number;readonly drop:number;
+}
 export interface AnimationBone {
   readonly position:{set(x:number,y:number,z:number):unknown};
   readonly quaternion:{set(x:number,y:number,z:number,w:number):unknown};
@@ -409,7 +440,8 @@ export interface AnimationPlayer {
   readonly locomotion:LocomotionPlayer;
   setUpdatePolicy(bands:readonly AnimationUpdateBand[]|undefined):void;
   readonly layers:{set(id:string,options:AnimationLayer):void;remove(id:string):void;clear():void;seek(id:string,seconds:number):boolean;crossed(id:string,marker:number):boolean};
-  readonly ik:{set(id:string,options:IKConstraint):void;remove(id:string):void;clear():void};
+  readonly ik:{set(id:string,options:IKConstraint):void;setLimb(id:string,goal:LimbGoal):void;setFootPlacement(placement:FootPlacement|undefined):void;remove(id:string):void;clear():void};
+  setHumanoid(map:HumanoidMap|undefined):void;
   transition(name:string,seconds:number,looping:boolean,speed:number):boolean;
   play(looping:boolean,speed:number):boolean;advance(dt:number,evaluate?:boolean,distance?:number):void;evaluate():void;
   jointPosition(name:string):AnimationVector;jointRotation(name:string):AnimationQuaternion;
@@ -431,6 +463,7 @@ export interface AnimationInspection {
   readonly rootMotionNode:number|null;readonly proceduralOverride:boolean;
   readonly nodes:readonly {readonly index:number;readonly name:string;readonly parent:number;readonly joint:boolean;readonly position:AnimationVector}[];
   readonly layers:readonly AnimationLayerInspection[];readonly ik:readonly IKInspection[];
+  readonly limbs?:readonly LimbInspection[];readonly footPlacement?:FootPlacementInspection|null;
   readonly locomotion:{readonly phase:number;readonly parameter:number;readonly samples:readonly {readonly clip:string;readonly threshold:number;readonly weight:number}[]}|null;
 }
 export declare class AnimationController {
@@ -438,6 +471,7 @@ export declare class AnimationController {
   constructor(skin:MtekSkin,options?:AnimationControllerOptions);
   setUpdateInterval(seconds:number):void;setUpdatePolicy(bands:readonly AnimationUpdateBand[]|undefined):void;
   setLocomotion(options:LocomotionOptions|undefined):void;setLocomotionParameter(value:number):void;setLayer(id:string,layer:AnimationLayer):void;setIK(id:string,constraint:IKConstraint):void;
+  setHumanoid(map:HumanoidMap|undefined):void;setLimb(id:string,goal:LimbGoal):void;setFootPlacement(placement:FootPlacement|undefined):void;
   update(dt:number,force?:boolean,distance?:number):boolean;dispose():void;
 }
 export declare function createAnimationController(skin:MtekSkin,options?:AnimationControllerOptions):AnimationController;

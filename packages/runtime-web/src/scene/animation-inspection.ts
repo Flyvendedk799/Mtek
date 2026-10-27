@@ -1,5 +1,6 @@
 import type { Vec3, Quat } from "../math/types.js";
 import type { IKHingeLimit } from "./ik.js";
+import type { FootPlacementInspection, LimbInspection } from "./limb-ik.js";
 
 export interface AnimationLayerInspection {
   readonly id: string;
@@ -32,5 +33,8 @@ export interface AnimationInspection {
   readonly nodes: readonly { readonly index: number; readonly name: string; readonly parent: number; readonly joint: boolean; readonly position: Vec3 }[];
   readonly layers: readonly AnimationLayerInspection[];
   readonly ik: readonly IKInspection[];
+  /** Anatomical limb goals (decision 0222). Optional so earlier inspection producers and fixtures stay valid. */
+  readonly limbs?: readonly LimbInspection[];
+  readonly footPlacement?: FootPlacementInspection | null;
   readonly locomotion: { readonly phase: number; readonly parameter: number; readonly samples: readonly { readonly clip: string; readonly threshold: number; readonly weight: number }[] } | null;
 }
