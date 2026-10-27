@@ -178,6 +178,11 @@ interface Rig {
   readonly u: number; readonly l: number; readonly e: number;
   /** Hinge axis (flexion axis) in the upper node's local frame. */
   readonly hinge: Float64Array;
+  /**
+   * The one direction in which the bend plane is undefined (the hairy-ball singularity of any continuous choice of
+   * bend plane), in the local frame of the upper bone's parent: up for legs, behind the opposite shoulder for arms.
+   */
+  readonly singular: Float64Array;
   /** Bind chord lengths in mesh-local units. */
   readonly reach: number;
   readonly maxFlexion: number;
@@ -415,7 +420,20 @@ export class LimbIK {
       qconj(conj, this.gq.subarray(u * 4, u * 4 + 4));
       const hinge = new Float64Array(3);
       qrotate(hinge, conj, 0, hingeWorld[0]!, hingeWorld[1]!, hingeWorld[2]!);
-      rigs.set(limb, { limb, u, l, e, hinge, reach: total / meshS, maxFlexion: isLeg(limb) ? KNEE_MAX_FLEXION : ELBOW_MAX_FLEXION });
+      // Singular direction (bind): up for a leg, medial and backward for an arm (a hand behind the back on the far side).
+      const singularWorld = new Float64Array(3);
+      if (isLeg(limb)) singularWorld.set(upG);
+      else {
+        const left = new Float64Array(3);
+        cross(left, upG, forwardG); normalize3(left);
+        const outward = limb === "leftArm" ? 1 : -1;
+        for (let c = 0; c < 3; c++) singularWorld[c] = -outward * left[c]! - forwardG[c]!;
+        normalize3(singularWorld);
+      }
+      const parentConj = new Float64Array(4), singular = new Float64Array(3), parent = this.parentOf[u]!;
+      qconj(parentConj, this.gq.subarray(parent * 4, parent * 4 + 4));
+      qrotate(singular, parentConj, 0, singularWorld[0]!, singularWorld[1]!, singularWorld[2]!);
+      rigs.set(limb, { limb, u, l, e, hinge, singular, reach: total / meshS, maxFlexion: isLeg(limb) ? KNEE_MAX_FLEXION : ELBOW_MAX_FLEXION });
     }
     const height = (node: number): number => {
       const dx = this.gp[node * 3]! - this.gp[meshP]!, dy = this.gp[node * 3 + 1]! - this.gp[meshP + 1]!, dz = this.gp[node * 3 + 2]! - this.gp[meshP + 2]!;
@@ -664,6 +682,7 @@ export class LimbIK {
   private solve(pose: Float64Array, request: Request): void {
     const { rig } = request, { u, l, e } = rig, gp = this.gp, gq = this.gq;
     const [du, dl, ehat, hc, hs, q, uDir, lDir, tmp] = [this.s[4]!, this.s[5]!, this.s[6]!, this.s[7]!, this.s[8]!, this.s[9]!, this.s[10]!, this.s[11]!, this.s[12]!];
+    const reference = this.s[13]!, chord = this.s[14]!, work3 = this.s[15]!;
     for (let c = 0; c < 3; c++) { du[c] = gp[l * 3 + c]! - gp[u * 3 + c]!; dl[c] = gp[e * 3 + c]! - gp[l * 3 + c]!; }
     const a = normalize3(du), b = normalize3(dl);
     if (!(a > EPS && b > EPS)) return;
@@ -688,8 +707,20 @@ export class LimbIK {
     }
     const swing = this.r[3]!, turn = this.r[4]!, upper = this.r[5]!, lower = this.r[6]!, work = this.r[7]!, work2 = this.r[8]!;
     if (!explicit) {
-      qfromto(swing, du, ehat, hc, tmp);
-      qrotate(hs, swing, 0, hc[0]!, hc[1]!, hc[2]!);
+      // Carry the animated hinge from the animated chord to the target direction through the reference direction
+      // opposite the singular one. Starting from the chord makes a target on the animated end a no-op.
+      const parent = this.parentOf[u]!;
+      for (let c = 0; c < 3; c++) chord[c] = gp[e * 3 + c]! - gp[u * 3 + c]!;
+      if (normalize3(chord) <= EPS) chord.set(du);
+      const across = dot(hc, chord);
+      for (let c = 0; c < 3; c++) work3[c] = hc[c]! - across * chord[c]!;
+      if (normalize3(work3) < 1e-6) perpendicular(work3, chord);
+      qrotate(reference, gq, parent * 4, rig.singular[0]!, rig.singular[1]!, rig.singular[2]!);
+      for (let c = 0; c < 3; c++) reference[c] = -reference[c]!;
+      qfromto(swing, chord, reference, work3, tmp);
+      qrotate(hs, swing, 0, work3[0]!, work3[1]!, work3[2]!);
+      qfromto(swing, reference, ehat, hs, tmp);
+      qrotate(hs, swing, 0, hs[0]!, hs[1]!, hs[2]!);
       const along = dot(hs, ehat);
       for (let c = 0; c < 3; c++) hs[c] = hs[c]! - along * ehat[c]!;
       if (normalize3(hs) < 1e-6) perpendicular(hs, ehat);
