@@ -362,6 +362,91 @@ A character that walks, jumps, climbs stairs and rides moving platforms is a `Ki
 
 Do all of it in `fixed_update`: the fixed tick is what makes the result the same at 30, 60 or 144 frames per second. Passing `self.rotation` keeps the facing and lets a turning platform turn the character. `examples/character-movement` has a stair flight, a ledge, a gentle and a steep slope, a corner, a sliding platform, a lift and a turntable; a browser test walks it on both local backends. From the host, `app.physics.castRay`, `castShape`, `contacts` and `setCollisionGroups` ask the same world about entities by ID. [Physics](concepts/physics.md) lists the body kinds, the commands and the limits.
 
+## Composing animation
+
+A skinned character is animated from the program with the `animation.*` calls (CPU only, in handlers, `update` and `fixed_update`). They compose what a clip alone cannot: a **blend space** (clips placed at points of a plane, blended by a parameter), **layers** (a clip over part of the skeleton, faded in and out), **limb goals** and **foot placement** (analytic leg and arm solving for a humanoid), **chain goals** (a tail, a spine), **root motion** (the clip's travel handed to the program) and **`clips_from`** (the clips of another humanoid rig, retargeted). `examples/animation-composition` uses all of them in about 300 lines of Mtek source, and no host code.
+
+A blend space is defined with one `blend_sample` per clip and started with `blend_play`; after that the program only moves the parameter. The weights are the barycentric coordinates in the triangle of samples that holds the parameter, and the nearest point of the outline of the samples outside them, so any parameter gives a pose and moving it never jumps. All clips share one cycle, so they must start on the same foot:
+
+```mtek from=examples/animation-composition/src/main.mtek
+            animation.blend_sample(Model, "Idle", 0.0, 0.0);
+            animation.blend_sample(Model, "Walk", 0.0, 1.0);
+            animation.blend_sample(Model, "Run", 0.0, 2.0);
+            animation.blend_sample(Model, "StrafeLeft", -1.0, 0.0);
+            animation.blend_sample(Model, "StrafeRight", 1.0, 0.0);
+            animation.blend_play(Model, true, 1.0);
+```
+
+The keys give the parameter a target, and the program lets the parameter follow it. `1 - exp(-dt / FOLLOW)` is the step that gives the same curve at every frame time:
+
+```mtek from=examples/animation-composition/src/main.mtek
+        let follow = 1.0 - exp(-dt / FOLLOW);
+        blend_x += (want_x - blend_x) * follow;
+        blend_y += (want_y - blend_y) * follow;
+        animation.blend_parameter(Model, blend_x, blend_y);
+```
+
+Root motion: `animation.root_motion(Model, "Root")` keeps the joint `Root` at its rest position and hands its travel to the program. `take_root_motion` returns what it moved since the last call, in world space, turned by the entity (a rotated or scaled rig is handled). A kinematic body moves by it; the program sums it in `update` and spends it in `fixed_update`:
+
+```mtek from=examples/animation-composition/src/main.mtek
+        Hero.travel += animation.take_root_motion(Model);
+```
+
+```mtek from=examples/animation-composition/src/main.mtek
+            self.body.move_character(step, quat.axis_angle(vec3(0.0, 1.0, 0.0), heading));
+```
+
+A layer plays a clip over the base pose. `mask` is a joint name: the layer moves that joint and everything below it, and nothing else, even when its clip animates the whole body. A fade is a smoothstep from the weight the layer has at that moment, so an interrupted fade does not jump, and it depends only on the time, not on the frame times:
+
+```mtek from=examples/animation-composition/src/main.mtek
+            animation.set_layer(Model, "wave", "Wave", 0.0, false, "Spine1");
+```
+
+```mtek from=examples/animation-composition/src/main.mtek
+    on key_down(Key.F) {
+        animation.fade_layer(Model, "wave", 1.0, WAVE_FADE);
+    }
+    on key_up(Key.F) {
+        animation.fade_layer(Model, "wave", 0.0, WAVE_FADE);
+    }
+```
+
+Goals are in world space; the runtime converts them with the entity's transform when the call runs, so a program calls again every frame to follow a moving target. `limb_goal` solves a leg or an arm of a humanoid in closed form: the knee bends forward and the elbow back, within an anatomical range, and a target out of reach is approached without a snap. The example holds the goal to the arm's reach, and a weight that the program raises and lowers blends the hand in and out. A chain goal is for what is not a limb (here the tail, from `Tail4` and its three ancestors):
+
+```mtek from=examples/animation-composition/src/main.mtek
+            animation.limb_goal(Model, "left_arm", goal, reach);
+```
+
+```mtek from=examples/animation-composition/src/main.mtek
+            animation.chain_goal(Model, "tail", "Tail4", 4, tip, 1.0);
+```
+
+`foot_placement` takes a ground point and a normal for each foot. The runtime lowers the hips by the least amount that lets both feet reach and tilts the feet onto the normals. The language has no ray cast, so the program supplies the ground (the example's `ground` function has the same shape as its colliders), and it needs the *animated* feet to know where to put the points. `animation.joint_position` reads the pose after layers and goals, so the example keeps a second figure, `Ghost`, that plays the same blend and is never touched; its feet are the animation's:
+
+```mtek from=examples/animation-composition/src/main.mtek
+            animation.foot_placement(
+                Model,
+                vec3(lw.x, ground(lw.x, lw.z) + max(lf.y - SOLE, 0.0), lw.z),
+                vec3(rw.x, ground(rw.x, rw.z) + max(rf.y - SOLE, 0.0), rw.z),
+                ground_normal(lw.x, lw.z),
+                ground_normal(rw.x, rw.z),
+                1.0,
+            );
+```
+
+`clips_from` takes the clips of another file's skeleton. The two rigs are mapped by name (and by structure when the names fail), and the clips are retargeted to the entity's own bones, proportions and rest pose, at mount. A rig that is not a humanoid is `E8110`, and the entity keeps its own clips. The `Guest` of the example has other joint names, longer legs, shorter arms, clavicles and an A-pose rest, and plays the Hero's `Dance`. A `clip` next to it names a clip of the *source*, and the layer masks and joint names of the calls are the entity's own:
+
+```mtek from=examples/animation-composition/src/main.mtek
+    entity Guest {
+        position: vec3(-2.4, 0.0, 1.6);
+        rotation: quat.axis_angle(vec3(0.0, 1.0, 0.0), 1.2);
+        mesh: GUEST.mesh("Body");
+        clips_from: HERO;
+        clip: "Dance";
+```
+
+The animation clock runs on the frame time, not on the fixed tick, so a result that depends on the blend weights differs a little between display rates (the weights an advance uses are those at its start); the fades, the parameter's own arithmetic and the layers do not. A browser test walks the example on both local backends: the weights against a hand-derived Delaunay layout, the mask and the smoothstep timing, the retarget against a CPU retarget, the hand on its target, the feet on the steps and the hips drop against a derivation from the unplaced pose, root motion against the clips' own travel, and the GPU image against a CPU-skinned silhouette. [`spec/animation.md`](../spec/animation.md) is the contract.
+
 ## The HUD: text, rectangles, buttons and fonts
 
 The HUD is drawn again every frame from `ui`, `update` or a handler; draw it from `ui` when it must stay on screen while the game is paused. `hud.text(content, at, size, tint, align, font)` draws a line, `hud.rect(at, size, tint, align)` a filled box for panels and bars, and `hud.button(label, at, size)` draws a button and returns `true` in the frame after a click. Positions are canvas coordinates from -1 to 1 with y up, sizes are in pixels, and `align` is 0 for the left edge, 0.5 for the centre and 1 for the right edge. A text can contain `${expression}`, with `${value:.1}` for one decimal.
@@ -567,6 +652,6 @@ Players need a browser with WebGPU; [Supported environments](supported-environme
 
 ## See also
 
-- The examples: `examples/small-game` (the template), `examples/character-movement` (a walking character on stairs, slopes and moving platforms), `examples/lane-runner` (three scenes, saved score, difficulty setting), `examples/hud-score` (HUD, timer bar, easing), `examples/arcade-audio`, `examples/sprite-pop` and `examples/stage-show` (cameras, particles, a GLB clip).
+- The examples: `examples/small-game` (the template), `examples/character-movement` (a walking character on stairs, slopes and moving platforms), `examples/animation-composition` (blend space, layers, retargeting, foot placement, goals and root motion), `examples/lane-runner` (three scenes, saved score, difficulty setting), `examples/hud-score` (HUD, timer bar, easing), `examples/arcade-audio`, `examples/sprite-pop` and `examples/stage-show` (cameras, particles, a GLB clip).
 - [Time and input](concepts/time-and-input.md), [Physics](concepts/physics.md) and [State and bindings](concepts/state-and-bindings.md).
 - [Limitations](limitations.md): what is not there yet.
