@@ -1790,7 +1790,7 @@
       "obstacle": "kinematic-toward-12",
       "shape": "sphere",
       "thickness": 0.1,
-      "tunnelled": [16, 16, 16, 16, 16, 16, 16, 16, 16]
+      "tunnelled": [14, 15, 16, 15, 15, 16, 15, 16, 16]
     },
     {
       "ccd": "on",
@@ -2105,7 +2105,7 @@
       "obstacle": "dynamic-heavy-toward-2",
       "shape": "sphere",
       "thickness": 0.1,
-      "tunnelled": [0, 2, 2, 1, 1, 0, 0, 0, 1]
+      "tunnelled": [0, 2, 1, 1, 1, 0, 0, 0, 1]
     },
     {
       "ccd": "on",
@@ -2126,7 +2126,7 @@
       "obstacle": "dynamic-heavy-toward-2",
       "shape": "box",
       "thickness": 0.1,
-      "tunnelled": [0, 2, 2, 1, 1, 0, 0, 0, 1]
+      "tunnelled": [0, 2, 1, 1, 1, 0, 0, 0, 1]
     },
     {
       "ccd": "on",
@@ -2147,7 +2147,7 @@
       "obstacle": "dynamic-heavy-toward-2",
       "shape": "capsule",
       "thickness": 0.1,
-      "tunnelled": [0, 2, 2, 1, 1, 0, 0, 0, 1]
+      "tunnelled": [0, 2, 1, 1, 1, 0, 0, 0, 1]
     },
     {
       "ccd": "on",
@@ -2294,7 +2294,7 @@
       "obstacle": "dynamic-heavy-toward-12",
       "shape": "sphere",
       "thickness": 0.1,
-      "tunnelled": [2, 10, 11, 11, 12, 14, 14, 15, 16]
+      "tunnelled": [2, 10, 10, 11, 12, 14, 14, 15, 16]
     },
     {
       "ccd": "on",
@@ -2315,7 +2315,7 @@
       "obstacle": "dynamic-heavy-toward-12",
       "shape": "box",
       "thickness": 0.1,
-      "tunnelled": [2, 10, 11, 11, 12, 14, 14, 15, 16]
+      "tunnelled": [2, 10, 10, 11, 12, 14, 14, 15, 16]
     },
     {
       "ccd": "on",
@@ -2336,7 +2336,7 @@
       "obstacle": "dynamic-heavy-toward-12",
       "shape": "capsule",
       "thickness": 0.1,
-      "tunnelled": [2, 10, 11, 11, 12, 14, 14, 15, 16]
+      "tunnelled": [2, 10, 10, 11, 12, 14, 14, 15, 16]
     },
     {
       "ccd": "on",
@@ -2483,7 +2483,7 @@
       "obstacle": "dynamic-light-toward-12",
       "shape": "sphere",
       "thickness": 0.1,
-      "tunnelled": [2, 10, 11, 11, 12, 14, 14, 15, 16]
+      "tunnelled": [2, 10, 10, 11, 12, 14, 14, 15, 16]
     },
     {
       "ccd": "on",
@@ -2504,7 +2504,7 @@
       "obstacle": "dynamic-light-toward-12",
       "shape": "box",
       "thickness": 0.1,
-      "tunnelled": [2, 10, 11, 11, 12, 14, 14, 15, 16]
+      "tunnelled": [2, 10, 10, 11, 12, 14, 14, 15, 16]
     },
     {
       "ccd": "on",
@@ -2525,7 +2525,7 @@
       "obstacle": "dynamic-light-toward-12",
       "shape": "capsule",
       "thickness": 0.1,
-      "tunnelled": [2, 10, 11, 11, 12, 14, 14, 15, 16]
+      "tunnelled": [2, 10, 10, 11, 12, 14, 14, 15, 16]
     }
   ],
   "fineScan": {
@@ -3298,8 +3298,8 @@
         "obstacle": "static",
         "thickness": 0.01,
         "speed": 6,
-        "tunnelled": 1,
-        "gap": [0.0201, 0.0201]
+        "tunnelled": 0,
+        "gap": null
       },
       {
         "ccd": "on",
@@ -3334,8 +3334,8 @@
         "obstacle": "static",
         "thickness": 0.05,
         "speed": 6,
-        "tunnelled": 1,
-        "gap": [0.0201, 0.0201]
+        "tunnelled": 0,
+        "gap": null
       },
       {
         "ccd": "on",
@@ -3352,8 +3352,8 @@
         "obstacle": "static",
         "thickness": 0.05,
         "speed": 60,
-        "tunnelled": 1,
-        "gap": [0.02, 0.02]
+        "tunnelled": 0,
+        "gap": null
       },
       {
         "ccd": "on",
@@ -3622,8 +3622,8 @@
         "obstacle": "dynamic-heavy",
         "thickness": 0.01,
         "speed": 6,
-        "tunnelled": 1,
-        "gap": [0.0201, 0.0201]
+        "tunnelled": 0,
+        "gap": null
       },
       {
         "ccd": "on",
@@ -3658,8 +3658,8 @@
         "obstacle": "dynamic-heavy",
         "thickness": 0.05,
         "speed": 6,
-        "tunnelled": 1,
-        "gap": [0.0201, 0.0201]
+        "tunnelled": 0,
+        "gap": null
       },
       {
         "ccd": "on",
@@ -3676,8 +3676,8 @@
         "obstacle": "dynamic-heavy",
         "thickness": 0.05,
         "speed": 60,
-        "tunnelled": 1,
-        "gap": [0.02, 0.02]
+        "tunnelled": 0,
+        "gap": null
       },
       {
         "ccd": "on",

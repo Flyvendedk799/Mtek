@@ -1,7 +1,7 @@
 // M5-06: the high-speed limitation of v0.1, measured on the real physics engine and the real GPU
-// (spec/physics.md sections 5.1 and 7, decision 0068). The engine runs without continuous collision detection
-// (the adapter enables none), so a body that moves farther in one fixed step than a thin obstacle is deep may
-// skip it. `fixtures/m5/physics_tunnel` flies 17 small balls (radius 0.05) at a thin wall (0.1 m thick, midplane
+// (spec/physics.md sections 5.1 and 7, decision 0068). By default the engine runs without continuous collision
+// detection (the host option `physics.continuousCollision` is off; the first test below mounts with it on, decision
+// 0216), so a body that moves farther in one fixed step than a thin obstacle is deep may skip it. `fixtures/m5/physics_tunnel` flies 17 small balls (radius 0.05) at a thin wall (0.1 m thick, midplane
 // x = 5), at speeds from 3 to 240 m/s, each ball with its own starting position, in two groups of lanes: against one
 // long STATIC wall and against a DYNAMIC plate of 10 000 kg.
 //
@@ -50,7 +50,12 @@ const WINDOW = WALL - WINDOW_START;
 const THRESHOLD_SPEED = WINDOW / STEP;
 const TICKS = 120;
 
-test("opt-in CCD retains a reproducible moving-body limitation", async ({
+// Decision 0216: with `physics: { continuousCollision: true }` the host sets the sweep flag on every dynamic body, the
+// plates included. Rapier 0.21 does not sweep against an obstacle that has the flag too, so D06 and D08 (and the other
+// lanes the discrete window lets through) used to fly through their plate. The adapter now flags only the bodies that
+// move fast, so every D lane is stopped on the near side of its plate (x = 4.9; the plate of 10 000 kg gives way by
+// well under a centimetre). The static lanes S are stopped in both modes.
+test("continuous collision stops every lane against the dynamic plates, D06 and D08 included", async ({
   page,
   gpu,
 }, testInfo) => {
@@ -86,13 +91,18 @@ test("opt-in CCD retains a reproducible moving-body limitation", async ({
     body: JSON.stringify(result, null, 2),
     contentType: "application/json",
   });
-  // Keep the failure explicit: all-body CCD is not a general mitigation of this fixture.
-  const leaking = result.entities.find((e) => e.name === "D06");
-  expect(leaking?.x).toBeCloseTo(3.065 + 9 * TICKS * STEP, 1);
-  for (const entity of result.entities.filter(
-    (e) => Number(e.name.slice(1)) <= 4,
-  ))
-    expect(entity.x, entity.name).toBeLessThan(WALL + 1);
+  // Every ball ends on the near side of its plate, 0.05 m (its radius) in front of the near face at 4.95.
+  for (const entity of result.entities) {
+    expect(entity.x, entity.name).toBeGreaterThan(
+      WALL - THICKNESS / 2 - RADIUS - 0.05,
+    );
+    expect(entity.x, entity.name).toBeLessThan(WALL - THICKNESS / 2);
+  }
+  // The two lanes that still passed with the flag on every body before decision 0216.
+  for (const name of ["D06", "D08"])
+    expect(result.entities.find((e) => e.name === name)?.x, name).toBeLessThan(
+      WALL - THICKNESS / 2,
+    );
 });
 
 interface Lane {

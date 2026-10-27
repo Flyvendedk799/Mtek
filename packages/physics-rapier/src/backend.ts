@@ -34,12 +34,23 @@ export const BACKEND_NAME = "rapier3d-compat@0.21.0";
  * prediction distance (0.02 m). A box that starts a step in that 5 mm band before a thin obstacle is therefore seen by
  * neither (measured with the default: 5 % of the start phases of a cube against a plate at 6 m/s, 1.5 % at 20 m/s,
  * with CCD on), and a 240 m/s ball that the sweep stops 5 mm inside a 1 cm heavy plate is carried through by the
- * contact step that follows. Both shrink with the value; 0.1 mm leaves a 0.1 mm band (the measured residual is the
- * fine scan of `spec/physics.md` section 7.1). The setting has no measurable effect on resting contacts (a stack of
- * four crates and a resting ball settle to the same poses, `ccd-matrix.test.ts`) and is applied only when a
+ * contact step that follows. Both shrink with the value; 0.1 mm leaves a 0.1 mm band, which `CCD_CONTACT_SKIN`
+ * covers (the fine scan of `spec/physics.md` section 7.1). The setting alone has no measurable effect on resting
+ * contacts (the rest poses of a stack of crates were identical for every value tried) and is applied only when a
  * continuous body is created, so a world without continuous collision keeps Rapier's defaults.
  */
 const CCD_ALLOWED_LINEAR_ERROR = 0.0001;
+
+/**
+ * The contact skin (m) of the collider of a continuous body, decision 0216: twice the allowed linear error. A contact
+ * skin widens the range in which the discrete test sees a pair by the skin, so the band of `CCD_ALLOWED_LINEAR_ERROR`
+ * that the sweep leaves to the discrete test is covered by it (measured with the allowed error alone: 3 of 9 000 cube
+ * lanes against a static wall at 20.0 to 20.1 mm; with this skin on the shot or on the wall, none). Every skin keeps
+ * resting surfaces this far apart: 0.2 mm between a continuous body and static geometry, 0.4 mm between two continuous
+ * bodies (a stack of four crates stands 1.4 mm higher, `ccd-matrix.test.ts`). A skin of the size of the old 5 mm error
+ * would close the band too but would keep every resting body 1 cm off the ground.
+ */
+const CCD_CONTACT_SKIN = 0.0002;
 
 /**
  * How far past its own smallest half-extent (m) a body moves in one step before it gets the sweep flag (decision
@@ -188,10 +199,13 @@ class RapierWorld implements PhysicsWorld {
     // never even tested, so a kinematic body entering a fixed sensor would raise nothing.
     colliderDesc.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS).setActiveCollisionTypes(RAPIER.ActiveCollisionTypes.ALL);
 
+    const continuous = desc.kind === "dynamic" && desc.continuousCollision === true ? continuousShape(collider.shape) : undefined;
+    // Decision 0216: the contact skin of a continuous body (see the constant) closes the band the allowed error leaves.
+    if (continuous !== undefined) colliderDesc.setContactSkin(CCD_CONTACT_SKIN);
+
     const body = this.world.createRigidBody(bodyDesc);
     const created = this.world.createCollider(colliderDesc, body);
     this.userIds.set(created.handle, userId);
-    const continuous = desc.kind === "dynamic" && desc.continuousCollision === true ? continuousShape(collider.shape) : undefined;
     this.bodies.set(body.handle, continuous === undefined ? { body, colliderHandle: created.handle } : { body, colliderHandle: created.handle, continuous });
     if (continuous !== undefined) {
       this.continuous.add(body.handle);

@@ -5,8 +5,8 @@
  * section 7.1 publishes:
  *
  *  - inside the envelope (static walls, kinematic walls moving at 1 m/s toward or away from the shot, dynamic plates at
- *    rest, 1 kg or 10 000 kg) nothing tunnels with continuous collision on, and the fine scan finds only the box-shaped
- *    residual of one prediction-distance boundary;
+ *    rest, 1 kg or 10 000 kg) nothing tunnels with continuous collision on, in the matrix, the edge scan between its speeds
+ *    and the fine scan of 500 phases;
  *  - with continuous collision off the documented discrete findings still hold (the window model, static walls never
  *    passed by balls and capsules);
  *  - the envelope ends where the table says (obstacles that move faster on their own still tunnel);
@@ -69,19 +69,11 @@ describe("the published envelope: continuous collision on", () => {
     for (const obstacle of OBSTACLES) for (const row of rows("on", obstacle)) expect(row.tunnelled.every((n) => n >= 0)).toBe(true);
   });
 
-  it("the fine scan (500 phases per cell) finds no sphere or capsule lane and under 0.1 % cube lanes", () => {
+  it("the fine scan (500 phases per cell, 36 000 lanes with the flag on) finds no tunnelled lane", () => {
     expect(evidence.fineScan.cells).toHaveLength(2 * 2 * 3 * 3 * 4);
     const cells = evidence.fineScan.cells.filter((cell) => cell.ccd === "on");
-    const hits = cells.filter((cell) => cell.tunnelled > 0);
-    expect(hits.filter((cell) => cell.shape !== "box")).toEqual([]);
-    const total = cells.length * evidence.fineScan.phases;
-    expect(hits.reduce((sum, cell) => sum + cell.tunnelled, 0)).toBeLessThan(total / 1000);
-    // No cell loses more than two phases, and the lanes lost are the ones that start a step at the prediction distance.
-    for (const cell of hits) {
-      expect(cell.tunnelled).toBeLessThanOrEqual(2);
-      expect(cell.gap?.[0] ?? 0, "gap of a missed lane").toBeGreaterThanOrEqual(PREDICTION - 1e-4);
-      expect(cell.gap?.[1] ?? 0, "gap of a missed lane").toBeLessThanOrEqual(PREDICTION + 2e-4);
-    }
+    expect(cells.length * evidence.fineScan.phases).toBe(36_000);
+    expect(cells.filter((cell) => cell.tunnelled > 0)).toEqual([]);
   });
 
   it("without it (continuous collision off) a cube is missed by a static wall only in the band just beyond the prediction distance", () => {
@@ -135,11 +127,11 @@ describe("the envelope ends where the table says", () => {
     for (const obstacle of FAST_OBSTACLES.filter((id) => /toward-(2|3|6|12)$/.test(id))) expect(lanes(obstacle), obstacle).toBeGreaterThan(0);
   });
 
-  it("a dynamic plate that moves fast is itself flagged and the pair is left to the discrete test: no gain at all from 6 m/s", () => {
+  it("a dynamic plate that moves fast is itself flagged and the pair is left to the discrete test: under 1 % gain from 6 m/s", () => {
     // Speeds from index 1 (6 m/s): at 3 m/s the slow shot is unflagged and the fast plate sweeps itself, a partial gain.
     const sum = (ccd: "off" | "on", obstacle: string): number => rows(ccd, obstacle).reduce((s, row) => s + row.tunnelled.slice(1).reduce((n, t) => n + t, 0), 0);
     for (const obstacle of ["dynamic-heavy-toward-6", "dynamic-heavy-toward-12"]) {
-      expect(sum("on", obstacle), obstacle).toBe(sum("off", obstacle));
+      expect(sum("on", obstacle), obstacle).toBeGreaterThan(0.99 * sum("off", obstacle));
       expect(sum("on", obstacle), obstacle).toBeGreaterThan(0);
     }
   });
@@ -296,7 +288,13 @@ describe("continuous collision does not disturb resting contacts", () => {
     };
     const off = settle(false);
     const on = settle(true);
-    off.forEach((y, i) => expect(Math.abs(on[i]! - y), `body ${String(i)}`).toBeLessThan(1e-3));
+    // The contact skin of a continuous body (0.2 mm) keeps resting surfaces apart: 0.2 mm above the static floor and
+    // 0.4 mm between two continuous crates, so crate i stands at most 0.2 + 0.4 i mm higher, plus 0.2 mm of slack.
+    off.forEach((y, i) => {
+      const lift = on[i]! - y;
+      expect(lift, `body ${String(i)} lift`).toBeGreaterThan(-1e-4);
+      expect(lift, `body ${String(i)} lift`).toBeLessThan(0.0002 + 0.0004 * Math.min(i, 3) + 0.0002);
+    });
     expect(off[3]).toBeGreaterThan(3.4);
     expect(off[3]).toBeLessThan(3.8);
   });
