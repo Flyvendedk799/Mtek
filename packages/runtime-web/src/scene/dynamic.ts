@@ -454,6 +454,7 @@ export class DynamicEntities {
       instance,
       ...(prefab.resolved.particles === undefined ? {} : { particles: prefab.resolved.particles }),
       ...(prefab.resolved.clip === undefined ? {} : { clip: prefab.resolved.clip }),
+      ...(prefab.resolved.clipsFrom === undefined ? {} : { clipsFrom: prefab.resolved.clipsFrom }),
     };
     const host = this.options.host;
     const record = host.makeRecord(ref, resolved, prefab, params);

@@ -376,7 +376,7 @@ export interface MtekSkin {
   readonly clips:readonly {readonly name:string;readonly duration:number;readonly channels:readonly {readonly node:number;readonly path:"translation"|"rotation"|"scale";readonly interpolation:"linear"|"step";readonly times:readonly number[];readonly values:readonly number[]}[]}[];
 }
 export interface AnimationLayer {
-  readonly clip:string;readonly weight:number;readonly mask?:Readonly<Record<string,number>>;
+  readonly clip:string;readonly weight:number;readonly mask?:Readonly<Record<string,number>>;readonly subtree?:string;
   readonly additive?:boolean;readonly speed?:number;readonly looping?:boolean;
 }
 export interface IKHingeLimit {readonly axis:readonly [number,number,number];readonly min:number;readonly max:number}
@@ -449,7 +449,7 @@ export interface AnimationPlayer {
   play(looping:boolean,speed:number):boolean;advance(dt:number,evaluate?:boolean,distance?:number):void;evaluate():void;
   jointPosition(name:string):AnimationVector;jointRotation(name:string):AnimationQuaternion;
   setProceduralOverride(override:((pose:Float64Array)=>void)|undefined):void;
-  setRootMotion(node:string|undefined):void;consumeRootMotion():AnimationVector;
+  setRootMotion(node:string|undefined):void;consumeRootMotion():AnimationVector;consumeRootMotionLocal():AnimationVector;
 }
 export interface AnimationLayerInspection {
   readonly id:string;readonly clip:string;readonly weight:number;readonly targetWeight:number;readonly fadeRemaining:number;readonly additive:boolean;readonly time:number;

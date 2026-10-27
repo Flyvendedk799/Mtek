@@ -7,6 +7,8 @@ export interface AnimationLayer {
   readonly weight: number;
   /** Node name to weight; omitted nodes have weight zero. Omit the mask for the whole rig. */
   readonly mask?: Readonly<Record<string, number>>;
+  /** A joint whose whole subtree (itself and every descendant) has weight one; added to `mask` (decision 0223). */
+  readonly subtree?: string;
   readonly additive?: boolean;
   readonly speed?: number;
   readonly looping?: boolean;
@@ -90,8 +92,16 @@ export class PoseLayers {
     )
       throw new RangeError("Invalid animation layer weight or speed");
     const mask = new Float64Array(this.skin.nodes.length).fill(
-      options.mask === undefined ? 1 : 0,
+      options.mask === undefined && options.subtree === undefined ? 1 : 0,
     );
+    if (options.subtree !== undefined) {
+      const root = this.skin.nodes.findIndex((n) => n.name === options.subtree);
+      if (root < 0) throw new RangeError(`Invalid bone mask: ${options.subtree}`);
+      this.skin.nodes.forEach((_, i) => {
+        for (let node = i; node >= 0; node = this.skin.nodes[node]!.parent)
+          if (node === root) { mask[i] = 1; break; }
+      });
+    }
     for (const [name, weight] of Object.entries(options.mask ?? {})) {
       const i = this.skin.nodes.findIndex((n) => n.name === name);
       if (i < 0 || !Number.isFinite(weight) || weight < 0 || weight > 1)

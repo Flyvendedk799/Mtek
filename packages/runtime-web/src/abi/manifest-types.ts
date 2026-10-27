@@ -431,6 +431,8 @@ export interface MtekEntity {
   readonly particles?: MtekParticles;
   /** A glTF clip that moves this entity (decision 0156); absent when it plays none. */
   readonly clip?: MtekClip;
+  /** Index into `clipSources` (decision 0223): the skeleton whose clips this entity plays, retargeted at mount. */
+  readonly clipsFrom?: number;
 }
 
 export interface MtekParticles {
@@ -531,6 +533,8 @@ export interface MtekPrefab {
   readonly particles?: MtekParticles;
   /** The clip every instance plays (decision 0156). */
   readonly clip?: MtekClip;
+  /** Index into `clipSources` (decision 0223). */
+  readonly clipsFrom?: number;
 }
 
 export type MtekBindingTarget =
@@ -670,6 +674,8 @@ export interface MtekManifest {
   readonly materials: readonly MtekMaterial[];
   readonly computePrograms?: readonly MtekComputeProgram[];
   readonly meshes: readonly MtekMesh[];
+  /** The skeletons `clips_from` entities take clips from (decision 0223): a skin with empty vertex influences. Absent when none does. */
+  readonly clipSources?: readonly MtekSkin[];
   readonly assets: readonly MtekAsset[];
   /** The prefabs the program spawns, by symbol; absent when it spawns none (decision 0064). */
   readonly prefabs?: readonly MtekPrefab[];

@@ -1257,6 +1257,41 @@
       }
     }
   ],
+  "clipSources": [
+    {
+      "meshNode": 0,
+      "nodes": [
+        {
+          "name": "Hips",
+          "parent": -1,
+          "translation": [0.0, 1.0, 0.0],
+          "rotation": [0.0, 0.0, 0.0, 1.0],
+          "scale": [1.0, 1.0, 1.0]
+        }
+      ],
+      "joints": [0],
+      "inverseBind": [
+        [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.0, 0.0, 1.0]
+      ],
+      "indices": [],
+      "weights": [],
+      "clips": [
+        {
+          "name": "Spin",
+          "duration": 1.0,
+          "channels": [
+            {
+              "node": 0,
+              "path": "rotation",
+              "interpolation": "linear",
+              "times": [0.0, 1.0],
+              "values": [0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0]
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "assets": [
     {
       "url": "assets/b7f9a53a15a88547.bin",
@@ -1438,6 +1473,7 @@
         "size": 0.05,
         "gravity": 0
       },
+      "clipsFrom": 0,
       "clip": {
         "name": "Spin",
         "duration": 1,
@@ -1670,6 +1706,7 @@
           "size": 0.12,
           "gravity": 3
         },
+        "clipsFrom": 0,
         "clip": {
           "name": "Spin",
           "duration": 1,
