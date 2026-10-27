@@ -507,7 +507,7 @@
           "constructionOnly": true,
           "range": null,
           "since": "M1",
-          "doc": "Particle emitter: up to 64 camera-facing billboards of the entity's mesh in its material's colour; counted without a mesh too."
+          "doc": "Particle emitter: up to 64 camera-facing billboards of the entity's mesh in its material's colour"
         },
         {
           "name": "position",
@@ -1031,7 +1031,7 @@
           "constructionOnly": true,
           "range": "≥ 0",
           "since": "M1",
-          "doc": "Ambient light scale for lit materials; 0 is off. Times the camera's exposure scale (about 3.14), so 0.3 is near full brightness on white. Unlit ignores it."
+          "doc": "Ambient light scale for lit materials; 0 is off. Times the exposure scale (about 3.14): 0.3 is near full brightness on white. Unlit ignores it."
         },
         {
           "name": "clear_color",
@@ -2530,7 +2530,7 @@
       "handlersOnly": true,
       "cpuSemantics": "",
       "since": "M1",
-      "doc": "Queues a prefab instance as a root entity; the reference is valid now, `alive` after the next flush."
+      "doc": "Queues a prefab instance as a root entity; valid now, `alive` after the next flush."
     },
     {
       "name": "sqrt",
@@ -2635,6 +2635,19 @@
       "since": "M1",
       "doc": "Controls an entity's imported node clip (decision 0190).",
       "members": [
+        {
+          "name": "animated_joint_position",
+          "kind": "function",
+          "signatures": [
+            "(target: entity_ref, name: string) -> vec3"
+          ],
+          "domain": "cpu",
+          "constEligible": false,
+          "handlersOnly": false,
+          "cpuSemantics": "",
+          "since": "M1",
+          "doc": "Joint position before goals."
+        },
         {
           "name": "blend_clear",
           "kind": "function",
@@ -2763,7 +2776,7 @@
           "handlersOnly": true,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Holds a copy of a compatible skeleton's pose; a later transition blends from it."
+          "doc": "Holds a compatible skeleton's pose; a later transition blends from it."
         },
         {
           "name": "crossed",
@@ -2776,7 +2789,7 @@
           "handlersOnly": false,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Whether `marker` in (0, duration] was crossed in the latest update (wraps included)."
+          "doc": "Whether `marker` in (0, duration] was crossed in the last update (wraps count)."
         },
         {
           "name": "duration",
@@ -2834,14 +2847,14 @@
           "name": "foot_placement",
           "kind": "function",
           "signatures": [
-            "(target: entity_ref, left: vec3, right: vec3, left_normal: vec3, right_normal: vec3, weight: f32) -> bool"
+            "(target: entity_ref, left: vec3, right: vec3, left_normal: vec3, right_normal: vec3, left_weight: f32, right_weight: f32) -> bool"
           ],
           "domain": "cpu",
           "constEligible": false,
           "handlersOnly": true,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Plants feet on world ground points, lowering the hips as needed; humanoids only."
+          "doc": "Plants feet on world ground points, lowering the hips; humanoids only."
         },
         {
           "name": "joint_position",
@@ -2984,7 +2997,7 @@
           "handlersOnly": true,
           "cpuSemantics": "",
           "since": "M1",
-          "doc": "Layer `id` plays `clip` over the base at `weight`; `mask` is the root of the moved subtree (\"\" = all); the same clip keeps its phase."
+          "doc": "Layer `id` plays `clip` over the base at `weight`; `mask` roots the moved subtree (\"\" = all); the same clip keeps its phase."
         },
         {
           "name": "take_root_motion",
@@ -3043,7 +3056,7 @@
     {
       "name": "asset",
       "since": "M1",
-      "doc": "Compile-time asset declarations. The argument must be a string literal naming a file inside the project.",
+      "doc": "Compile-time asset declarations. The argument is a string literal naming a project file.",
       "members": [
         {
           "name": "font",
@@ -3148,7 +3161,7 @@
     {
       "name": "easing",
       "since": "M1",
-      "doc": "Easing curves for tweens: `mix(a, b, easing.out_cubic(t))` moves from `a` to `b` as `t` goes from 0 to 1.",
+      "doc": "Easing curves for tweens: `mix(a, b, easing.out_cubic(t))` moves `a` to `b` as `t` goes 0 to 1.",
       "members": [
         {
           "name": "in_cubic",
@@ -3376,7 +3389,7 @@
           "handlersOnly": true,
           "cpuSemantics": "A DOM button over the canvas; clicks are queued and reported by the next frame's call.",
           "since": "M1",
-          "doc": "Draws a button at `at` (canvas NDC) labelled `label` (`size` CSS px, default 24.0). True once per click, in the next frame; buttons are told apart by label and order."
+          "doc": "Draws a button at `at` (canvas NDC) labelled `label` (`size` CSS px, 24.0). True once per click, next frame; buttons are told apart by label and order."
         },
         {
           "name": "pixel_font",
@@ -3420,7 +3433,7 @@
           "handlersOnly": true,
           "cpuSemantics": "A DOM element over the canvas; the text is set as text, never as HTML.",
           "since": "M1",
-          "doc": "Draws text at `at` (canvas NDC, y up) in `size` CSS px (default 24.0), `tint` (white), `align` 0 left, 0.5 centre (default), 1 right, and `font` (default: page sans-serif). Centred vertically."
+          "doc": "Draws text at `at` (canvas NDC, y up), `size` CSS px (24.0), `tint` (white), `align` 0 left, 0.5 centre (default), 1 right, `font` (page sans-serif). Centred vertically."
         }
       ]
     },
@@ -3945,7 +3958,7 @@
       "kind": "handle",
       "gpu": false,
       "since": "M1",
-      "doc": "A generation-checked reference to an entity. Compare it, test `alive`, `destroy` it, command its body, and read `position`, `rotation`, `scale` and `visible`.",
+      "doc": "A generation-checked entity reference. Compare it, test `alive`, `destroy` it, command its body, read `position`, `rotation`, `scale`, `visible`.",
       "fields": [],
       "methods": []
     },
@@ -4156,7 +4169,7 @@
       "kind": "handle",
       "gpu": false,
       "since": "M1",
-      "doc": "A sound file declared with `asset.sound(..)`; CPU only. Played with `play`, `play_at` and `play_music` (decision 0130).",
+      "doc": "A sound declared with `asset.sound(..)`; CPU only. Played by `play`, `play_at`, `play_music` (decision 0130).",
       "fields": [],
       "methods": []
     },

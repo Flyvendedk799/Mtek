@@ -352,7 +352,7 @@ describe("limb, foot and chain goals", () => {
           const worldPoint = (p: V): V => toWorld(spec, p);
           // A world normal is the mesh-local one carried by the inverse transpose; for T R S that is R S^-1 n.
           const worldNormal = (n: V): V => { const s = spec.scale; return qrotate(spec.rotation, [n[0] / s[0], n[1] / s[1], n[2] / s[2]]); };
-          expect(w.ctx["animationFootPlacement"]!(w.refs[0], v3(worldPoint(groundL)), v3(worldPoint(groundR)), v3(worldNormal(localNormalL)), v3(worldNormal(localNormalR)), 1, 0)).toBe(true);
+          expect(w.ctx["animationFootPlacement"]!(w.refs[0], v3(worldPoint(groundL)), v3(worldPoint(groundR)), v3(worldNormal(localNormalL)), v3(worldNormal(localNormalR)), 1, 1, 0)).toBe(true);
           w.world.advanceClips(2);
           t.player.ik.setFootPlacement({ left: { point: groundL, normal: localNormalL, weight: 1 }, right: { point: groundR, normal: localNormalR, weight: 1 } });
           t.player.advance(2);
@@ -407,12 +407,76 @@ describe("limb, foot and chain goals", () => {
     expect(dist(toWorld(moved, pos(player(w.world).jointPosition(hand.bones.rightHand!))), goal)).toBeLessThan(2e-3);
   });
 
+  it("reads the animated pose before goals: animated_joint_position equals joint_position without goals, and stays the animation's with foot placement and a chain goal", () => {
+    const { skin } = humanoid("mixamo");
+    const w = skeletalWorld({ skin, clip: "walk", ...PLACED });
+    const c = w.ctx, map = mapHumanoid(skin) as HumanoidMap;
+    const animated = (name: string): V => pos(c["animationAnimatedJointPosition"]!(w.refs[0], name) as Vec3);
+    const final = (name: string): V => pos(player(w.world).jointPosition(name));
+    const names = skin.nodes.map((n) => n.name);
+    w.world.advanceClips(0.3);
+    // No goals: the same pose, to the last bit.
+    for (const name of names) expect(animated(name), name).toEqual(final(name));
+    expect(pos(c["animationAnimatedJointPosition"]!(w.refs[0], "NoSuchJoint") as Vec3)).toEqual([0, 0, 0]);
+    // Goals: the final pose moves, the animated one does not.
+    const before = names.map(animated);
+    const foot = final(map.bones.leftFoot!);
+    const ground = (p: V): Vec3 => v3(toWorld(PLACED, [p[0], p[1] - 0.12, p[2]]));
+    expect(c["animationFootPlacement"]!(w.refs[0], ground(foot), ground(final(map.bones.rightFoot!)), v3([0, 1, 0]), v3([0, 1, 0]), 1, 1, 0)).toBe(true);
+    expect(c["animationChainGoal"]!(w.refs[0], "reach", map.bones.leftHand!, 3, v3(toWorld(PLACED, [0.2, 1.2, 0.3])), 1, 0)).toBe(true);
+    w.world.advanceClips(0);
+    const moved = names.map((name) => dist(final(name), before[names.indexOf(name)]!));
+    expect(Math.max(...moved), "foot placement and the chain goal moved the pose").toBeGreaterThan(0.02);
+    names.forEach((name, i) => expect(animated(name), name).toEqual(before[i]));
+    // The animation goes on: after time passes the animated pose follows the clip, and equals a twin player without any goal.
+    const t = twin(skin, "walk");
+    t.player.advance(0.3);
+    w.world.advanceClips(0.2);
+    t.player.advance(0.2);
+    for (const name of names) expect(dist(animated(name), pos(t.player.jointPosition(name))), name).toBeLessThan(1e-5);
+    // A reload of the goals (clearing them) puts the final pose back on the animated one.
+    expect(c["animationClearFootPlacement"]!(w.refs[0])).toBe(true);
+    expect(c["animationClearChain"]!(w.refs[0], "reach")).toBe(true);
+    w.world.advanceClips(0);
+    for (const name of names) expect(final(name), name).toEqual(animated(name));
+    expect(codes(w.reported)).toEqual([]);
+  });
+
+  it("gives each foot its own contact weight: a foot with weight zero keeps the animation, the other is placed", () => {
+    const { skin } = humanoid("mixamo");
+    const w = skeletalWorld({ skin, clip: "walk", ...PLACED });
+    const c = w.ctx, map = mapHumanoid(skin) as HumanoidMap;
+    w.world.advanceClips(0.3);
+    const animated = (name: string): V => pos(c["animationAnimatedJointPosition"]!(w.refs[0], name) as Vec3);
+    const final = (name: string): V => pos(player(w.world).jointPosition(name));
+    const left = animated(map.bones.leftFoot!), right = animated(map.bones.rightFoot!);
+    const lowered = (p: V): Vec3 => v3(toWorld(PLACED, [p[0], p[1] - 0.05, p[2]]));
+    const place = (lw: number, rw: number): void => {
+      expect(c["animationFootPlacement"]!(w.refs[0], lowered(left), lowered(right), v3([0, 1, 0]), v3([0, 1, 0]), lw, rw, 0)).toBe(true);
+      w.world.advanceClips(1);
+    };
+    place(1, 0);
+    expect(dist(final(map.bones.rightFoot!), right), "the foot with weight zero is where the animation puts it").toBeLessThan(1e-4);
+    expect(dist(final(map.bones.leftFoot!), left), "the other is placed on its ground point").toBeGreaterThan(0.03);
+    const placement = player(w.world).inspect().footPlacement!;
+    expect([placement.left.weight, placement.right.weight]).toEqual([1, 0]);
+    place(0, 1);
+    expect(dist(final(map.bones.leftFoot!), left)).toBeLessThan(1e-4);
+    expect(dist(final(map.bones.rightFoot!), right)).toBeGreaterThan(0.03);
+    expect([player(w.world).inspect().footPlacement!.left.weight, player(w.world).inspect().footPlacement!.right.weight]).toEqual([0, 1]);
+    // Weights are clamped to 0..1 and a non-finite weight drops the call.
+    place(2, -1);
+    expect([player(w.world).inspect().footPlacement!.left.weight, player(w.world).inspect().footPlacement!.right.weight]).toEqual([1, 0]);
+    expect(c["animationFootPlacement"]!(w.refs[0], lowered(left), lowered(right), v3([0, 1, 0]), v3([0, 1, 0]), Number.NaN, 1, 0)).toBe(false);
+    expect(codes(w.reported)).toEqual([]);
+  });
+
   it("reports E8112 once for a skeleton that is no humanoid and drops limb and foot commands", () => {
     const fox = real.fox;
     const w = skeletalWorld({ skin: fox, clip: fox.clips[0]!.name });
     expect(w.ctx["animationLimbGoal"]!(w.refs[0], "left_leg", v3([0, 0, 0]), 1, 0)).toBe(false);
     expect(w.ctx["animationLimbGoal"]!(w.refs[0], "right_arm", v3([0, 0, 0]), 1, 0)).toBe(false);
-    expect(w.ctx["animationFootPlacement"]!(w.refs[0], v3([0, 0, 0]), v3([0, 0, 0]), v3([0, 1, 0]), v3([0, 1, 0]), 1, 0)).toBe(false);
+    expect(w.ctx["animationFootPlacement"]!(w.refs[0], v3([0, 0, 0]), v3([0, 0, 0]), v3([0, 1, 0]), v3([0, 1, 0]), 1, 1, 0)).toBe(false);
     expect(codes(w.reported)).toEqual(["E8112"]);
     expect(w.reported[0]!.source).not.toBeNull();
     expect(w.ctx["animationClearLimb"]!(w.refs[0], "left_leg", 0)).toBe(false);
@@ -438,7 +502,7 @@ describe("limb, foot and chain goals", () => {
     // Foot placement owns both legs: a leg goal next to it is refused.
     const map = mapHumanoid(skin) as HumanoidMap;
     const foot = pos(player(w.world).jointPosition(map.bones.leftFoot!));
-    expect(c["animationFootPlacement"]!(r, v3(foot), v3(foot), v3([0, 1, 0]), v3([0, 1, 0]), 1, 0)).toBe(true);
+    expect(c["animationFootPlacement"]!(r, v3(foot), v3(foot), v3([0, 1, 0]), v3([0, 1, 0]), 1, 1, 0)).toBe(true);
     expect(c["animationLimbGoal"]!(r, "left_leg", v3(foot), 1, 0)).toBe(false);
     expect(codes(w.reported).slice(-1)).toEqual(["E8113"]);
     expect(codes(w.reported).filter((code) => code === "E8112")).toEqual([]);

@@ -449,6 +449,8 @@ export interface AnimationPlayer {
   transition(name:string,seconds:number,looping:boolean,speed:number):boolean;
   play(looping:boolean,speed:number):boolean;advance(dt:number,evaluate?:boolean,distance?:number):void;evaluate():void;
   jointPosition(name:string):AnimationVector;jointRotation(name:string):AnimationQuaternion;
+  /** Like `jointPosition`, for the pose before the limb, foot and chain goals (decision 0224); equal to it when none is set. */
+  animatedJointPosition(name:string):AnimationVector;
   setProceduralOverride(override:((pose:Float64Array)=>void)|undefined):void;
   setRootMotion(node:string|undefined):void;consumeRootMotion():AnimationVector;consumeRootMotionLocal():AnimationVector;
 }

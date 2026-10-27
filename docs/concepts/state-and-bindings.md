@@ -33,7 +33,7 @@ The fields of an entity, a camera and a light, and whether a field can be bound 
 | `light` | `light` | none | fixed at construction |  | A light (`DirectionalLight`, `PointLight`); fields writable and bindable. Named entities only. |
 | `material` | `material` | `Unlit {}` | assignable |  | Material instance; a value-only one can be replaced by the same type; params are writable and bindable. Needs `mesh`. |
 | `mesh` | `mesh` | none | fixed at construction |  | The mesh: `Box`, `Sphere`, `Plane` or an asset mesh. |
-| `particles` | `emitter` | none | fixed at construction |  | Particle emitter: up to 64 camera-facing billboards of the entity's mesh in its material's colour; counted without a mesh too. |
+| `particles` | `emitter` | none | fixed at construction |  | Particle emitter: up to 64 camera-facing billboards of the entity's mesh in its material's colour |
 | `position` | `vec3` | `vec3(0.0, 0.0, 0.0)` | assignable, bindable |  | Position local to the parent, in metres. |
 | `rotation` | `quat` | `quat.identity()` | assignable, bindable |  | Rotation local to the parent. |
 | `scale` | `vec3` | `vec3(1.0, 1.0, 1.0)` | assignable, bindable | every component > 0, finite | Parent-local scale; construction-only on bodies, `vec3(1.0)` on dynamic and kinematic ones. |

@@ -23,8 +23,9 @@ scene Demo {
         animation.blend_clear(Rig);
         animation.limb_goal(Rig, "left_leg", vec3(0.0, 0.1, 0.5), 1.0);
         animation.clear_limb(Rig, "left_leg");
-        animation.foot_placement(Rig, vec3(0.1, 0.0, 0.0), vec3(-0.1, 0.2, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 1.0, 0.0), 1.0);
+        animation.foot_placement(Rig, vec3(0.1, 0.0, 0.0), vec3(-0.1, 0.2, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 1.0, 0.0), 1.0, 0.0);
         animation.clear_foot_placement(Rig);
+        travel = animation.animated_joint_position(Rig, "Hips");
         animation.chain_goal(Rig, "reach", "Hand", 3, vec3(1.0, 1.0, 0.0), 0.8);
         animation.clear_chain(Rig, "reach");
         animation.root_motion(Rig, "Hips");

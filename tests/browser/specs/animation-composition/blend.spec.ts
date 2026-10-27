@@ -111,8 +111,8 @@ test.describe("2D blend space and root motion of the example (decision 0224)", (
       const dw = samples[i]!.model.blend!.samples.reduce((sum, x, k) => sum + Math.abs(x.weight - samples[i - 1]!.model.blend!.samples[k]!.weight), 0);
       for (const name of TRACKED) {
         if (name === "Root") continue;
-        const a = figure(samples[i - 1]!, "ghost", name);
-        const b = figure(samples[i]!, "ghost", name);
+        const a = figure(samples[i - 1]!, "animated", name);
+        const b = figure(samples[i]!, "animated", name);
         const step = dist(a, b);
         const allowed = 1.25 * (bound.get(name)! + 0.5 * dw * apart.get(name)!) + 0.003;
         ratioWorst = Math.max(ratioWorst, step / allowed);

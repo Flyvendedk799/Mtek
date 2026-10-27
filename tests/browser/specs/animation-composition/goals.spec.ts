@@ -31,7 +31,7 @@ test.describe("goals of the example (decision 0224)", () => {
   test.afterEach(() => problems.check());
 
   test("the left hand reaches the orb: the hand is on the world-space target, with the weight the program sets", async ({ page }) => {
-    const result = await run(page, [wait(30), hold(["KeyG"], 120), wait(70)], { model: "all", ghost: [] });
+    const result = await run(page, [wait(30), hold(["KeyG"], 120), wait(70)], { model: "all", animated: [] });
     const samples = result.samples;
     let weightError = 0, flexionMin = Infinity, flexionMax = 0;
     for (const s of samples) {
@@ -62,7 +62,7 @@ test.describe("goals of the example (decision 0224)", () => {
   });
 
   test("walking away while reaching, the hand stops at the arm's reach on the line to the orb, and elbows never bend the wrong way", async ({ page }) => {
-    const result = await run(page, [wait(10), hold(["KeyG", "KeyW"], 150), hold(["KeyG"], 40)], { model: "all", ghost: [] });
+    const result = await run(page, [wait(10), hold(["KeyG", "KeyW"], 150), hold(["KeyG"], 40)], { model: "all", animated: [] });
     const samples = result.samples;
     let worstReach = 0, worstAngle = 0, clamped = 0, wrongSide = Infinity, worstMiss = 0;
     for (const s of samples.slice(30)) {
@@ -95,7 +95,7 @@ test.describe("goals of the example (decision 0224)", () => {
   ];
   for (const { name, steps } of RUNS) {
     test(`knees never bend backwards, ${name}`, async ({ page }) => {
-      const result = await run(page, steps, { model: "all", ghost: [] });
+      const result = await run(page, steps, { model: "all", animated: [] });
       let kneeSide = Infinity, flexionMax = 0, flexionMin = Infinity, frames = 0, drop = 0;
       for (const s of result.samples) {
         for (const side of ["Left", "Right"]) {
@@ -122,7 +122,7 @@ test.describe("goals of the example (decision 0224)", () => {
   }
 
   test("the tail's tip follows the point the chain goal gives it, and the goal is the program's swinging point", async ({ page }) => {
-    const result = await run(page, [wait(240)], { model: "all", ghost: [] });
+    const result = await run(page, [wait(240)], { model: "all", animated: [] });
     let worst = 0, worstGoal = 0, swing = 0;
     for (const s of result.samples.slice(2)) {
       const chain = s.model.ik.find((c) => c.id === "tail");
@@ -149,11 +149,11 @@ test.describe("goals of the example (decision 0224)", () => {
 
   test("T switches the tail goal off and the tail goes back to the animation", async ({ page }) => {
     // Foot placement off (P), so that nothing but the goal differs between the figure and its unlayered twin.
-    const result = await run(page, [hold(["KeyP"], 1), wait(30), tap("KeyT"), wait(30)], { model: "all", ghost: "all" });
+    const result = await run(page, [hold(["KeyP"], 1), wait(30), tap("KeyT"), wait(30)], { model: "all", animated: "all" });
     const last = result.samples.at(-1)!;
     expect(last.model.ik, "no chain goal").toEqual([]);
-    expect(dist(figure(last, "model", "Tail4"), figure(last, "ghost", "Tail4")), "the tail is the animated one").toBeLessThan(1e-6);
+    expect(dist(figure(last, "model", "Tail4"), figure(last, "animated", "Tail4")), "the tail is the animated one").toBeLessThan(1e-6);
     const first = result.samples[20]!;
-    expect(dist(figure(first, "model", "Tail4"), figure(first, "ghost", "Tail4")), "and with the goal it was not").toBeGreaterThan(0.01);
+    expect(dist(figure(first, "model", "Tail4"), figure(first, "animated", "Tail4")), "and with the goal it was not").toBeGreaterThan(0.01);
   });
 });

@@ -2349,6 +2349,7 @@ fn tag_member(function: &str) -> Option<&'static str> {
         "gamepad.axis" => "gamepadAxis",
         "animation.play" => "animationPlay",
         "animation.joint_position" => "animationJointPosition",
+        "animation.animated_joint_position" => "animationAnimatedJointPosition",
         "animation.joint_rotation" => "animationJointRotation",
         "animation.transition" => "animationTransition",
         "animation.copy_pose" => "animationCopyPose",

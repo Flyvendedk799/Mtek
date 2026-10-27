@@ -551,18 +551,18 @@ var LIMBS = { left_leg: "leftLeg", right_leg: "rightLeg", left_arm: "leftArm", r
     let player = this.host.player(slot);
     return player === void 0 ? !1 : LIMBS[limb] === void 0 ? this.unknown(player, slot, spanId, "limb", limb, `animation.clear_limb('${limb}')`) : this.state(player).limbs.delete(limb) ? (player.ik.remove(`limb:${limb}`), !0) : !1;
   }
-  footPlacement(slot, left, right, leftNormal, rightNormal, weight, spanId) {
+  footPlacement(slot, left, right, leftNormal, rightNormal, leftWeight, rightWeight, spanId) {
     let player = this.host.player(slot), [l, r, ln, rn] = [vec3(left), vec3(right), vec3(leftNormal), vec3(rightNormal)];
-    if (player === void 0 || l === void 0 || r === void 0 || ln === void 0 || rn === void 0 || !Number.isFinite(weight)) return !1;
+    if (player === void 0 || l === void 0 || r === void 0 || ln === void 0 || rn === void 0 || !Number.isFinite(leftWeight) || !Number.isFinite(rightWeight)) return !1;
     let what = "animation.foot_placement";
     if (!this.ensureHumanoid(player, slot, spanId, what)) return !1;
     let frame = this.frame(slot);
     if (frame === void 0) return !1;
-    let contact = Math.max(0, Math.min(1, weight)), ground = (point, normal) => {
+    let ground = (point, normal, weight) => {
       let local = frame.normal(normal);
-      return { point: frame.position(point), weight: contact, ...local === void 0 ? {} : { normal: local } };
+      return { point: frame.position(point), weight: Math.max(0, Math.min(1, weight)), ...local === void 0 ? {} : { normal: local } };
     }, applied = this.guarded(player, slot, spanId, what, () => {
-      player.ik.setFootPlacement({ left: ground(l, ln), right: ground(r, rn) });
+      player.ik.setFootPlacement({ left: ground(l, ln, leftWeight), right: ground(r, rn, rightWeight) });
     });
     return applied && (this.state(player).foot = !0), applied;
   }
@@ -2176,7 +2176,7 @@ var SkeletonPlayer = class {
       this.bind.set(node.translation, i * 10);
       let q = node.rotation, norm = Math.hypot(...q);
       this.bind.set(q.map((v) => v / norm), i * 10 + 3), this.bind.set(node.scale, i * 10 + 7);
-    }), this.pose = this.bind.slice(), this.sample = this.bind.slice(), this.from = this.bind.slice(), this.locals = skin.nodes.map(() => identity()), this.globals = skin.nodes.map(() => identity()), this.inverseBind = skin.inverseBind.map((m) => new Float32Array(m)), this.palette = new Float32Array(skin.joints.length * 16), this.paletteEntries = skin.joints.map((_, joint) => this.palette.subarray(joint * 16, joint * 16 + 16));
+    }), this.pose = this.bind.slice(), this.sample = this.bind.slice(), this.from = this.bind.slice(), this.animated = this.bind.slice(), this.animatedGlobals = skin.nodes.map(() => identity()), this.locals = skin.nodes.map(() => identity()), this.globals = skin.nodes.map(() => identity()), this.inverseBind = skin.inverseBind.map((m) => new Float32Array(m)), this.palette = new Float32Array(skin.joints.length * 16), this.paletteEntries = skin.joints.map((_, joint) => this.palette.subarray(joint * 16, joint * 16 + 16));
     let visited = /* @__PURE__ */ new Set(), visit = (i) => {
       if (visited.has(i)) return;
       let parent = skin.nodes[i].parent;
@@ -2238,6 +2238,12 @@ var SkeletonPlayer = class {
   palette;
   pose;
   bind;
+  /** The pose before the limb, foot and chain goals, and what `animatedJointPosition` derives from it (decision 0224). */
+  animated;
+  animatedGlobals;
+  animatedLocal = identity();
+  animatedInverse = identity();
+  animatedStale = !0;
   /** Incoming sample during evaluation; unlayered displayed pose between evaluations. */
   sample;
   from;
@@ -2282,6 +2288,30 @@ var SkeletonPlayer = class {
       blend: this.blend.inspect(),
       locomotion: this.locomotion.inspect()
     };
+  }
+  /**
+   * Like `jointPosition`, for the pose the animation gives before the limb, foot and chain goals (decision 0224): the base clip or
+   * blend, layers, the procedural override and root ownership. With no goal set it equals `jointPosition`; with goals it is the pose
+   * the program would see without them, so a program can place a foot from where the animation puts it. Computed on demand from a copy
+   * of the pose taken at each evaluation; it never evaluates.
+   */
+  animatedJointPosition(name) {
+    let i = this.skin.nodes.findIndex((n) => n.name === name);
+    return i < 0 ? { x: 0, y: 0, z: 0 } : (this.animatedStale && this.forwardAnimated(), multiplyInto(this.product, this.animatedInverse, this.animatedGlobals[i]), { x: Math.fround(this.product[12]), y: Math.fround(this.product[13]), z: Math.fround(this.product[14]) });
+  }
+  forwardAnimated() {
+    let p = this.animated, local = this.animatedLocal, g = this.animatedGlobals;
+    for (let i of this.order) {
+      let a = i * 10;
+      fromRotationTranslationScaleInto(local, this.scratch, { x: p[a + 3], y: p[a + 4], z: p[a + 5], w: p[a + 6] }, { x: p[a], y: p[a + 1], z: p[a + 2] }, { x: p[a + 7], y: p[a + 8], z: p[a + 9] });
+      let parent = this.skin.nodes[i].parent;
+      parent < 0 ? g[i].set(local) : multiplyInto(g[i], g[parent], local);
+    }
+    let mesh = g[this.skin.meshNode], inverse = this.animatedInverse;
+    normalMatrixInto(this.scratch, 0, mesh);
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) inverse[c * 4 + r] = this.scratch[r * 4 + c];
+    for (let r = 0; r < 3; r++) inverse[12 + r] = -(inverse[r] * mesh[12] + inverse[4 + r] * mesh[13] + inverse[8 + r] * mesh[14]);
+    this.animatedStale = !1;
   }
   jointPosition(name) {
     let i = this.skin.nodes.findIndex((n) => n.name === name);
@@ -2405,7 +2435,7 @@ var SkeletonPlayer = class {
       if (length < 1e-8) throw new RangeError("Procedural pose contains a zero quaternion");
       for (let c = 0; c < 4; c++) this.pose[at2 + c] = this.pose[at2 + c] / length;
     }
-    this.ik.apply(this.pose);
+    this.animated.set(this.pose), this.animatedStale = !0, this.ik.apply(this.pose);
     for (let i of this.order) {
       let a = i * 10, p = this.pose;
       fromRotationTranslationScaleInto(

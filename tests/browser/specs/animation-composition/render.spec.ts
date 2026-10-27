@@ -71,7 +71,7 @@ test.describe("GPU output against a CPU skinning reference (decision 0224)", () 
 
   for (const pose of POSES) {
     test(`the Hero, ${pose.name} (${pose.why}): the GPU image is the CPU-skinned silhouette`, async ({ page }) => {
-      const result = await run(page, pose.steps, { sample: "boundary", model: [], ghost: [], guest: [], target: SIZE, final: { pixels: true, palettes: ["model"] } });
+      const result = await run(page, pose.steps, { sample: "boundary", model: [], animated: [], guest: [], target: SIZE, final: { pixels: true, palettes: ["model"] } });
       save(`render-hero-${pose.name.replace(/[^a-z]+/g, "-")}`, result);
       const sample = result.samples.at(-1)!;
       const image = result.pixels!;
@@ -95,7 +95,7 @@ test.describe("GPU output against a CPU skinning reference (decision 0224)", () 
 
   test("the Guest, dancing with the Hero's retargeted clip: the GPU image is the CPU-skinned silhouette", async ({ page }) => {
     // At the curb the camera (4 m behind the Hero, looking at his waist) has the Guest at the right of the picture.
-    const result = await run(page, [tap("Digit2"), wait(75)], { sample: "boundary", model: [], ghost: [], guest: [], target: SIZE, final: { pixels: true, palettes: ["guest"] } });
+    const result = await run(page, [tap("Digit2"), wait(75)], { sample: "boundary", model: [], animated: [], guest: [], target: SIZE, final: { pixels: true, palettes: ["guest"] } });
     save("render-guest", result);
     const sample = result.samples.at(-1)!;
     const image = result.pixels!;

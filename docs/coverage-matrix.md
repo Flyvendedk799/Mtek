@@ -24,7 +24,7 @@ Columns: **CFG** `examples/material-configurator`, **PHY** `examples/physics-pla
 |---|---|
 | Each demonstration exercises a feature no other demonstration does | holds (CFG 24, PHY 22, MOD 21) |
 | Each demonstration exercises its pressure of decision 0002, and no other demonstration does | holds |
-| Every v0.1 feature is exercised by a demonstration or a named positive program | holds (429 features: 178 by a demonstration, 103 by other examples only, 148 by a fixture only) |
+| Every v0.1 feature is exercised by a demonstration or a named positive program | holds (430 features: 178 by a demonstration, 103 by other examples only, 149 by a fixture only) |
 | Every feature belongs to a negative-test area whose codes are all tested | holds (25 areas) |
 | Every nearest unsupported neighbour is rejected by a fixture or a registry reservation | holds (32 entries) |
 | Diagnostic codes without a fail fixture, a named negative test or a registry mark | none |
@@ -80,7 +80,7 @@ Every fact that only this demonstration exercises (21):
 
 `binding/dep:entityState`, `binding/dep:frame`, `expr/state-read:entity`, `fn/cpu-reachable`, `function:sin`, `local/var`, `module/cross-file-call`, `module/cross-file-prefab`, `module/cross-file-spawn`, `namespace:frame`, `op/binary:%`, `op/binary:==`, `place/root:local`, `place/root:state:entity`, `remainder`, `schema:Sphere`, `state/owner:entity`, `state/owner:prefab`, `stmt/assign:=`, `stmt/var`, `value:frame.time`
 
-## 4. Features of the registry (283)
+## 4. Features of the registry (284)
 
 `supported.features` of `mtek context`, by kind.
 
@@ -218,13 +218,14 @@ Every fact that only this demonstration exercises (21):
 | `namespace:sampler` | 1 | x | x |  | x | `tests/semantics/pass/materials/mip_before_conditional` (+132) |
 | `namespace:texture` | 0 | x | x |  | x | `tests/semantics/pass/materials/mip_before_conditional` (+132) |
 
-### Functions (161)
+### Functions (162)
 
 | Feature | Neg | CFG | PHY | MOD | EX | Positive fixture |
 |---|:-:|:-:|:-:|:-:|:-:|---|
 | `function:abs` | 0 |  |  |  | x | `tests/semantics/pass/types/intrinsics_integer_overloads` (+7) |
 | `function:acos` | 0 |  |  |  |  | `tests/semantics/pass/types/intrinsics_component_wise` (+1) |
 | `function:alive` | 0 |  |  |  |  | `tests/semantics/pass/spawn_destroy_in_lifecycle` (+4) |
+| `function:animation.animated_joint_position` | 0 |  |  |  |  | `tests/semantics/pass/animation_composition` |
 | `function:animation.blend_clear` | 0 |  |  |  |  | `tests/semantics/pass/animation_composition` |
 | `function:animation.blend_parameter` | 0 |  |  |  |  | `tests/semantics/pass/animation_composition` |
 | `function:animation.blend_phase` | 0 |  |  |  |  | `tests/semantics/pass/animation_composition` |
@@ -506,7 +507,7 @@ Reference: spec/language.md section 6.
 | `expr/struct-literal` | struct literal |  |  |  | x | `tests/semantics/pass/materials/structured_vertex` (+8) |
 | `expr/state-read:scene` | read of scene `state` | x | x | x | x | `tests/assets/pass/hud_fonts` (+68) |
 | `expr/state-read:entity` | read of entity `state` |  |  | x | x | `tests/semantics/pass/entity_messages` (+15) |
-| `expr/entity-field-read` | read of an entity field (`Cube.position`, `self.rotation`) |  | x |  | x | `tests/semantics/pass/animation_composition` (+18) |
+| `expr/entity-field-read` | read of an entity field (`Cube.position`, `self.rotation`) |  | x |  | x | `tests/semantics/pass/materials/authored_bounds` (+18) |
 | `expr/ref-field-read` | read of `position`, `rotation`, `scale` or `visible` through an `entity_ref` (decision 0151) |  |  |  | x | `tests/semantics/pass/init_hooks` (+1) |
 | `expr/camera-field-read` | read of a camera field |  |  |  |  | `tests/browser/fixtures/m6/camera_named` (+1) |
 | `expr/instance-param-read` | read of a material instance param (`Cube.material.phase`) |  |  |  |  | `tests/semantics/pass/material_replacement` (+6) |
@@ -785,7 +786,7 @@ A feature has no diagnostic of its own that a tool could derive, so the features
 |  |  | E3014 | `tests/semantics/fail/e3014_entity_ref_has_no_ordering` |
 |  |  | E3041 | `tests/semantics/fail/e3041_float_literal_as_integer` |
 |  |  | W3050 | `tests/semantics/pass/redundant_conversion` |
-| Math intrinsics and constructors | 177 | E3001 | `tests/semantics/fail/e3001_animation_blend_sample_argument_type` |
+| Math intrinsics and constructors | 178 | E3001 | `tests/semantics/fail/e3001_animation_blend_sample_argument_type` |
 |  |  | E3002 | `tests/semantics/fail/e3002_animation_set_layer_arity` |
 |  |  | E4012 | `tests/semantics/fail/materials/e4012_builtin_texture_called_in_stage` |
 |  |  | E4013 | `tests/semantics/fail/e4013_gpu_only_builtin_in_cpu_code` |

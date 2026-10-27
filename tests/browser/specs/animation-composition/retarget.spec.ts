@@ -43,7 +43,7 @@ test.describe("clips_from: the Guest plays the Hero's clips (decision 0224)", ()
 
     // Boundaries at 0.3 s, then every 0.45 s over two cycles of the 2 s clip (and so through the wrap).
     const steps = [wait(18), ...Array.from({ length: 9 }, () => wait(27))];
-    const result = await run(page, steps, { sample: "boundary", model: [], ghost: [], guest: "all" });
+    const result = await run(page, steps, { sample: "boundary", model: [], animated: [], guest: "all" });
     expect(result.names.guest, "the mounted figure has the Guest's joint names").toEqual(guest.nodes.map((n) => n.name));
     const rows: Array<Record<string, number>> = [];
     let worstCpu = 0, worstAngle = 0, worstLength = 0, worstStance = 0;

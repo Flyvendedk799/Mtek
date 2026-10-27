@@ -160,7 +160,7 @@ export const BUILTINS: Builtins = {
     "world_to_screen",
   ],
   namespaceFunctions: [
-    ...["blend_clear", "blend_parameter", "blend_phase", "blend_play", "blend_sample", "chain_goal", "clear_chain", "clear_foot_placement", "clear_limb", "copy_pose", "crossed", "duration", "fade", "fade_layer", "finished", "foot_placement", "joint_position", "joint_rotation", "limb_goal", "pause", "play", "playing", "remove_layer", "resume", "root_motion", "seek", "set_layer", "take_root_motion", "time", "transition", "weight"].map(name=>({namespace:"animation",name})),
+    ...["animated_joint_position", "blend_clear", "blend_parameter", "blend_phase", "blend_play", "blend_sample", "chain_goal", "clear_chain", "clear_foot_placement", "clear_limb", "copy_pose", "crossed", "duration", "fade", "fade_layer", "finished", "foot_placement", "joint_position", "joint_rotation", "limb_goal", "pause", "play", "playing", "remove_layer", "resume", "root_motion", "seek", "set_layer", "take_root_motion", "time", "transition", "weight"].map(name=>({namespace:"animation",name})),
     { namespace: "gamepad", name: "axis" },
     { namespace: "gamepad", name: "button" },
     { namespace: "gamepad", name: "connected" },

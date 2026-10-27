@@ -70,6 +70,12 @@ export class SkeletonPlayer {
   readonly palette: Float32Array;
   readonly pose: Float64Array;
   private readonly bind: Float64Array;
+  /** The pose before the limb, foot and chain goals, and what `animatedJointPosition` derives from it (decision 0224). */
+  private readonly animated: Float64Array;
+  private readonly animatedGlobals: Float32Array[];
+  private readonly animatedLocal = identity();
+  private readonly animatedInverse = identity();
+  private animatedStale = true;
   /** Incoming sample during evaluation; unlayered displayed pose between evaluations. */
   private readonly sample: Float64Array;
   private readonly from: Float64Array;
@@ -102,6 +108,33 @@ export class SkeletonPlayer {
           position: { x: Math.fround(this.product[12]!), y: Math.fround(this.product[13]!), z: Math.fround(this.product[14]!) } };
       }), layers: this.layers.inspect(), ik: this.ik.inspect(), ...this.ik.limbs.inspect(), blend: this.blend.inspect(), locomotion: this.locomotion.inspect(),
     };
+  }
+  /**
+   * Like `jointPosition`, for the pose the animation gives before the limb, foot and chain goals (decision 0224): the base clip or
+   * blend, layers, the procedural override and root ownership. With no goal set it equals `jointPosition`; with goals it is the pose
+   * the program would see without them, so a program can place a foot from where the animation puts it. Computed on demand from a copy
+   * of the pose taken at each evaluation; it never evaluates.
+   */
+  animatedJointPosition(name: string): { x: number; y: number; z: number } {
+    const i=this.skin.nodes.findIndex(n=>n.name===name);
+    if(i<0) return {x:0,y:0,z:0};
+    if(this.animatedStale) this.forwardAnimated();
+    multiplyInto(this.product,this.animatedInverse,this.animatedGlobals[i]!);
+    return {x:Math.fround(this.product[12]!),y:Math.fround(this.product[13]!),z:Math.fround(this.product[14]!)};
+  }
+  private forwardAnimated(): void {
+    const p=this.animated,local=this.animatedLocal,g=this.animatedGlobals;
+    for(const i of this.order) {
+      const a=i*10;
+      fromRotationTranslationScaleInto(local,this.scratch,{x:p[a+3]!,y:p[a+4]!,z:p[a+5]!,w:p[a+6]!},{x:p[a]!,y:p[a+1]!,z:p[a+2]!},{x:p[a+7]!,y:p[a+8]!,z:p[a+9]!});
+      const parent=this.skin.nodes[i]!.parent;
+      if(parent<0) g[i]!.set(local); else multiplyInto(g[i]!,g[parent]!,local);
+    }
+    const mesh=g[this.skin.meshNode]!,inverse=this.animatedInverse;
+    normalMatrixInto(this.scratch,0,mesh);
+    for(let r=0;r<3;r++) for(let c=0;c<3;c++) inverse[c*4+r]=this.scratch[r*4+c]!;
+    for(let r=0;r<3;r++) inverse[12+r]=-(inverse[r]!*mesh[12]!+inverse[4+r]!*mesh[13]!+inverse[8+r]!*mesh[14]!);
+    this.animatedStale=false;
   }
   jointPosition(name: string): { x: number; y: number; z: number } {
     const i=this.skin.nodes.findIndex(n=>n.name===name);
@@ -139,7 +172,8 @@ export class SkeletonPlayer {
       this.bind.set(q.map(v=>v/norm),i*10+3);
       this.bind.set(node.scale,i*10+7);
     });
-    this.pose = this.bind.slice(); this.sample = this.bind.slice(); this.from = this.bind.slice();
+    this.pose = this.bind.slice(); this.sample = this.bind.slice(); this.from = this.bind.slice(); this.animated = this.bind.slice();
+    this.animatedGlobals = skin.nodes.map(()=>identity());
     this.locals = skin.nodes.map(()=>identity()); this.globals = skin.nodes.map(()=>identity());
     this.inverseBind = skin.inverseBind.map(m=>new Float32Array(m));
     this.palette = new Float32Array(skin.joints.length*16);
@@ -294,6 +328,7 @@ export class SkeletonPlayer {
       if(length<1e-8) throw new RangeError("Procedural pose contains a zero quaternion");
       for(let c=0;c<4;c++) this.pose[at+c]=this.pose[at+c]!/length;
     }
+    this.animated.set(this.pose); this.animatedStale=true;
     this.ik.apply(this.pose);
     for(const i of this.order) {
       const a=i*10,p=this.pose;

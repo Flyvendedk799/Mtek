@@ -285,21 +285,20 @@ export class AnimationScript {
     return true;
   }
 
-  footPlacement(slot: number, left: unknown, right: unknown, leftNormal: unknown, rightNormal: unknown, weight: number, spanId: number): boolean {
+  footPlacement(slot: number, left: unknown, right: unknown, leftNormal: unknown, rightNormal: unknown, leftWeight: number, rightWeight: number, spanId: number): boolean {
     const player = this.host.player(slot);
     const [l, r, ln, rn] = [vec3(left), vec3(right), vec3(leftNormal), vec3(rightNormal)];
-    if (player === undefined || l === undefined || r === undefined || ln === undefined || rn === undefined || !Number.isFinite(weight)) return false;
+    if (player === undefined || l === undefined || r === undefined || ln === undefined || rn === undefined || !Number.isFinite(leftWeight) || !Number.isFinite(rightWeight)) return false;
     const what = "animation.foot_placement";
     if (!this.ensureHumanoid(player, slot, spanId, what)) return false;
     const frame = this.frame(slot);
     if (frame === undefined) return false;
-    const contact = Math.max(0, Math.min(1, weight));
-    const ground = (point: Vec3, normal: Vec3) => {
+    const ground = (point: Vec3, normal: Vec3, weight: number) => {
       const local = frame.normal(normal);
-      return { point: frame.position(point), weight: contact, ...(local === undefined ? {} : { normal: local }) };
+      return { point: frame.position(point), weight: Math.max(0, Math.min(1, weight)), ...(local === undefined ? {} : { normal: local }) };
     };
     const applied = this.guarded(player, slot, spanId, what, () => {
-      player.ik.setFootPlacement({ left: ground(l, ln), right: ground(r, rn) });
+      player.ik.setFootPlacement({ left: ground(l, ln, leftWeight), right: ground(r, rn, rightWeight) });
     });
     if (applied) this.state(player).foot = true;
     return applied;
