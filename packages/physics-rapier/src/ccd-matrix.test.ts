@@ -40,7 +40,7 @@ let evidence: Evidence;
 beforeAll(async () => {
   backend = await loadPhysics();
   evidence = buildEvidence(backend);
-}, 120_000);
+}, 600_000);
 
 function rows(ccd: "off" | "on", obstacle: string): MatrixRow[] {
   return evidence.matrix.filter((row) => row.ccd === ccd && row.obstacle === obstacle);
@@ -69,15 +69,30 @@ describe("the published envelope: continuous collision on", () => {
     for (const obstacle of OBSTACLES) for (const row of rows("on", obstacle)) expect(row.tunnelled.every((n) => n >= 0)).toBe(true);
   });
 
-  it("the fine scan (500 phases per cell) finds no sphere or capsule lane and under 0.1 % box lanes", () => {
-    const cells = evidence.fineScan.cells;
-    expect(cells).toHaveLength(2 * 3 * 3 * 4);
+  it("the fine scan (500 phases per cell) finds no sphere or capsule lane and under 0.1 % cube lanes", () => {
+    expect(evidence.fineScan.cells).toHaveLength(2 * 2 * 3 * 3 * 4);
+    const cells = evidence.fineScan.cells.filter((cell) => cell.ccd === "on");
     const hits = cells.filter((cell) => cell.tunnelled > 0);
     expect(hits.filter((cell) => cell.shape !== "box")).toEqual([]);
     const total = cells.length * evidence.fineScan.phases;
     expect(hits.reduce((sum, cell) => sum + cell.tunnelled, 0)).toBeLessThan(total / 1000);
-    // Every one is a box against a plate that is not already crossed, and no cell loses more than two phases.
-    for (const cell of hits) expect(cell.tunnelled).toBeLessThanOrEqual(2);
+    // No cell loses more than two phases, and the lanes lost are the ones that start a step at the prediction distance.
+    for (const cell of hits) {
+      expect(cell.tunnelled).toBeLessThanOrEqual(2);
+      expect(cell.gap?.[0] ?? 0, "gap of a missed lane").toBeGreaterThanOrEqual(PREDICTION - 1e-4);
+      expect(cell.gap?.[1] ?? 0, "gap of a missed lane").toBeLessThanOrEqual(PREDICTION + 2e-4);
+    }
+  });
+
+  it("without it (continuous collision off) a cube is missed by a static wall only in the band just beyond the prediction distance", () => {
+    const cells = evidence.fineScan.cells.filter((cell) => cell.ccd === "off" && cell.obstacle === "static");
+    expect(cells.filter((cell) => cell.shape !== "box" && cell.tunnelled > 0)).toEqual([]);
+    const cube = cells.filter((cell) => cell.shape === "box" && cell.tunnelled > 0);
+    expect(cube.length).toBeGreaterThan(0);
+    for (const cell of cube) {
+      expect(cell.gap?.[0] ?? 0).toBeGreaterThanOrEqual(PREDICTION - 1e-4);
+      expect(cell.gap?.[1] ?? 1).toBeLessThanOrEqual(PREDICTION + 0.005 + 1e-4);
+    }
   });
 });
 
@@ -85,7 +100,31 @@ describe("the envelope ends where the table says", () => {
   const lanes = (obstacle: string): number => rows("on", obstacle).reduce((sum, row) => sum + row.tunnelled.reduce((n, t) => n + Math.max(t, 0), 0), 0);
 
   it("obstacles moving toward the shot at 0.5 and 1 m/s are inside the envelope", () => {
-    for (const obstacle of ["dynamic-heavy-toward-0.5", "dynamic-heavy-toward-1"]) expect(lanes(obstacle), obstacle).toBe(0);
+    for (const obstacle of ["dynamic-heavy-toward-0.5", "dynamic-heavy-toward-1", "dynamic-light-toward-1"]) expect(lanes(obstacle), obstacle).toBe(0);
+  });
+
+  it("the edge scan (1.5 to 14 m/s in steps of 0.25, six obstacles, all shapes and thicknesses) finds no tunnelled lane", () => {
+    const cells = evidence.edgeScan.cells;
+    expect(cells).toHaveLength(6 * 3 * 3);
+    expect(evidence.edgeScan.speeds).toHaveLength(51);
+    expect(cells.reduce((n, cell) => n + cell.lanes, 0)).toBeGreaterThan(40_000);
+    expect(cells.filter((cell) => cell.tunnelled > 0)).toEqual([]);
+  });
+
+  it("speed limit: nothing at rest tunnels up to 3000 m/s; a moving obstacle is passed by a sphere from 255 m/s (250 m/s is clean)", () => {
+    const rowsFor = (obstacle: string) => evidence.highSpeeds.rows.filter((row) => row.obstacle === obstacle);
+    const index = (speed: number): number => evidence.highSpeeds.speeds.indexOf(speed);
+    for (const obstacle of ["static", "dynamic-heavy", "dynamic-light"]) {
+      for (const row of rowsFor(obstacle)) expect(row.tunnelled.every((n) => n === 0), `${obstacle} ${row.shape} ${String(row.thickness)} m`).toBe(true);
+    }
+    for (const obstacle of ["kinematic-toward", "dynamic-heavy-toward-1"]) {
+      for (const row of rowsFor(obstacle)) {
+        expect(row.tunnelled[index(250)], `${obstacle} ${row.shape} ${String(row.thickness)} m at 250 m/s`).toBe(0);
+        if (row.shape !== "sphere") expect(row.tunnelled.every((n) => n === 0), `${obstacle} ${row.shape}`).toBe(true);
+      }
+      const thin = rowsFor(obstacle).find((row) => row.shape === "sphere" && row.thickness === 0.01);
+      expect(thin?.tunnelled[index(255)]).toBe(PHASES);
+    }
   });
 
   it("kinematic walls moving away are inside the envelope up to 6 m/s", () => {

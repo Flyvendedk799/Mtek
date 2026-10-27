@@ -54,6 +54,7 @@ export const OBSTACLE_SPECS = {
   "dynamic-heavy-toward-3": { body: "dynamic", mass: HEAVY_MASS, velocity: -3 },
   "dynamic-heavy-toward-6": { body: "dynamic", mass: HEAVY_MASS, velocity: -6 },
   "dynamic-heavy-toward-12": { body: "dynamic", mass: HEAVY_MASS, velocity: -12 },
+  "dynamic-light-toward-1": { body: "dynamic", mass: LIGHT_MASS, velocity: -1 },
   "dynamic-light-toward-3": { body: "dynamic", mass: LIGHT_MASS, velocity: -3 },
   "dynamic-light-toward-12": { body: "dynamic", mass: LIGHT_MASS, velocity: -12 },
 } as const satisfies Record<string, ObstacleSpec>;
@@ -74,6 +75,7 @@ export const FAST_OBSTACLES: readonly Obstacle[] = [
   "dynamic-heavy-toward-3",
   "dynamic-heavy-toward-6",
   "dynamic-heavy-toward-12",
+  "dynamic-light-toward-1",
   "dynamic-light-toward-3",
   "dynamic-light-toward-12",
 ];
@@ -209,32 +211,138 @@ export const FINE_OBSTACLES: readonly Obstacle[] = ["static", "dynamic-heavy"];
 export const FINE_SPEEDS = [6, 12, 60, 240] as const;
 
 export interface FineCell {
+  readonly ccd: "off" | "on";
   readonly shape: ShotShape;
   readonly obstacle: Obstacle;
   readonly thickness: number;
   readonly speed: number;
-  /** Of `FINE_PHASES`, with continuous collision on. */
+  /** Of `FINE_PHASES`. */
   readonly tunnelled: number;
+  /**
+   * Range, in metres rounded to 0.1 mm, of the gap between the shot's front and the plate's near face at the last
+   * step before the shot is past the face, over the tunnelled lanes (null when none): where the engine does not see it.
+   */
+  readonly gap: readonly [number, number] | null;
 }
 
-/** Continuous collision on, `FINE_PHASES` start positions per cell instead of `PHASES`. */
+/** `FINE_PHASES` start positions per cell instead of `PHASES`, with continuous collision off and on. */
 export function runFineScan(backend: PhysicsBackend): FineCell[] {
   const cells: FineCell[] = [];
-  for (const obstacle of FINE_OBSTACLES) {
-    for (const shape of SHAPES) {
-      for (const thickness of THICKNESSES) {
-        for (const speed of FINE_SPEEDS) {
-          const lane = { continuous: true, shape, obstacle, thickness, speed } as const;
-          let tunnelled = 0;
-          for (let phase = 0; phase < FINE_PHASES; phase += 1) {
-            if (runLaneAt(backend, lane, phaseGap(lane, phase, FINE_PHASES)).tunnelled) tunnelled += 1;
+  for (const ccd of ["off", "on"] as const) {
+    for (const obstacle of FINE_OBSTACLES) {
+      for (const shape of SHAPES) {
+        for (const thickness of THICKNESSES) {
+          for (const speed of FINE_SPEEDS) {
+            const lane = { continuous: ccd === "on", shape, obstacle, thickness, speed } as const;
+            const stride = speed * DT;
+            const face = WALL - thickness / 2;
+            let tunnelled = 0;
+            let low = Number.POSITIVE_INFINITY;
+            let high = Number.NEGATIVE_INFINITY;
+            for (let phase = 0; phase < FINE_PHASES; phase += 1) {
+              const firstGap = phaseGap(lane, phase, FINE_PHASES);
+              if (!runLaneAt(backend, lane, firstGap).tunnelled) continue;
+              tunnelled += 1;
+              // The obstacle is at rest: the shot's front (0.05 m ahead of its centre in every shape) is at
+              // `WALL - firstGap + 0.05 + k * stride` at sample k; take the last one that is not past the near face.
+              const front = WALL - firstGap + 0.05;
+              const k = Math.floor((face - front) / stride);
+              const gap = face - (front + k * stride);
+              low = Math.min(low, gap);
+              high = Math.max(high, gap);
+            }
+            const round = (value: number): number => Math.round(value * 1e4) / 1e4;
+            cells.push({ ccd, shape, obstacle, thickness, speed, tunnelled, gap: tunnelled === 0 ? null : [round(low), round(high)] });
           }
-          cells.push({ shape, obstacle, thickness, speed, tunnelled });
         }
       }
     }
   }
   return cells;
+}
+
+// ---- the edge scan and the speed probes ----------------------------------------------------------------------------
+
+/**
+ * The edge scan: the speeds between the matrix's nine, 1.5 to 14 m/s in steps of 0.25, against the obstacles that
+ * move at most 1 m/s (continuous collision on). The matrix's grid cannot show a hole between two speeds, and the
+ * flag rule of the adapter has exactly such a hole one margin too wide (`CCD_FLAG_MARGIN`, a shot of 3.75 m/s).
+ */
+export const EDGE_SPEEDS: readonly number[] = Array.from({ length: 51 }, (_, i) => 1.5 + 0.25 * i);
+export const EDGE_OBSTACLES: readonly Obstacle[] = [
+  "dynamic-heavy",
+  "kinematic-toward",
+  "kinematic-away",
+  "dynamic-heavy-toward-0.5",
+  "dynamic-heavy-toward-1",
+  "dynamic-light-toward-1",
+];
+
+export interface EdgeCell {
+  readonly obstacle: Obstacle;
+  readonly shape: ShotShape;
+  readonly thickness: number;
+  /** Lanes run: speeds x PHASES (kinematic walls moving away are only reached by faster shots). */
+  readonly lanes: number;
+  readonly tunnelled: number;
+  /** The speeds with at least one tunnelled lane. */
+  readonly speeds: readonly number[];
+}
+
+export function runEdgeScan(backend: PhysicsBackend): EdgeCell[] {
+  const cells: EdgeCell[] = [];
+  for (const obstacle of EDGE_OBSTACLES) {
+    for (const shape of SHAPES) {
+      for (const thickness of THICKNESSES) {
+        let lanes = 0;
+        let tunnelled = 0;
+        const bad: number[] = [];
+        for (const speed of EDGE_SPEEDS) {
+          if (speed <= OBSTACLE_SPECS[obstacle].velocity + 0.5) continue;
+          let n = 0;
+          for (let phase = 0; phase < PHASES; phase += 1) {
+            if (runLane(backend, { continuous: true, shape, obstacle, thickness, speed, phase }).tunnelled) n += 1;
+          }
+          lanes += PHASES;
+          tunnelled += n;
+          if (n > 0) bad.push(speed);
+        }
+        cells.push({ obstacle, shape, thickness, lanes, tunnelled, speeds: bad });
+      }
+    }
+  }
+  return cells;
+}
+
+/** Speeds above the matrix's range, continuous collision on: where the envelope ends in speed. */
+export const HIGH_SPEEDS = [250, 255, 260, 300, 400, 1000, 3000] as const;
+export const HIGH_OBSTACLES: readonly Obstacle[] = ["static", "dynamic-heavy", "dynamic-light", "kinematic-toward", "dynamic-heavy-toward-1"];
+
+export interface HighRow {
+  readonly obstacle: Obstacle;
+  readonly shape: ShotShape;
+  readonly thickness: number;
+  /** Tunnelled phases of PHASES per entry of `HIGH_SPEEDS`. */
+  readonly tunnelled: readonly number[];
+}
+
+export function runHighSpeeds(backend: PhysicsBackend): HighRow[] {
+  const rows: HighRow[] = [];
+  for (const obstacle of HIGH_OBSTACLES) {
+    for (const shape of SHAPES) {
+      for (const thickness of THICKNESSES) {
+        const tunnelled = HIGH_SPEEDS.map((speed) => {
+          let n = 0;
+          for (let phase = 0; phase < PHASES; phase += 1) {
+            if (runLane(backend, { continuous: true, shape, obstacle, thickness, speed, phase }).tunnelled) n += 1;
+          }
+          return n;
+        });
+        rows.push({ obstacle, shape, thickness, tunnelled });
+      }
+    }
+  }
+  return rows;
 }
 
 // ---- the evidence file and the table of spec/physics.md section 7.1 ------------------------------------------------
@@ -265,7 +373,16 @@ export interface Evidence {
   readonly fineScan: {
     readonly phases: number;
     readonly speeds: readonly number[];
+    readonly obstacles: readonly Obstacle[];
     readonly cells: readonly FineCell[];
+  };
+  readonly edgeScan: {
+    readonly speeds: readonly number[];
+    readonly cells: readonly EdgeCell[];
+  };
+  readonly highSpeeds: {
+    readonly speeds: readonly number[];
+    readonly rows: readonly HighRow[];
   };
 }
 
@@ -302,7 +419,9 @@ export function buildEvidence(backend: PhysicsBackend): Evidence {
     probeObstacles: FAST_OBSTACLES,
     obstacles,
     matrix,
-    fineScan: { phases: FINE_PHASES, speeds: FINE_SPEEDS, cells: runFineScan(backend) },
+    fineScan: { phases: FINE_PHASES, speeds: FINE_SPEEDS, obstacles: FINE_OBSTACLES, cells: runFineScan(backend) },
+    edgeScan: { speeds: EDGE_SPEEDS, cells: runEdgeScan(backend) },
+    highSpeeds: { speeds: HIGH_SPEEDS, rows: runHighSpeeds(backend) },
   };
 }
 
@@ -381,15 +500,48 @@ export function renderTable(evidence: Evidence): string {
   lines.push("");
   lines.push(...matrixTable(evidence, evidence.envelopeObstacles));
   lines.push("");
-  lines.push("**Beyond the envelope: obstacles that move faster on their own.**");
+  lines.push("**Obstacles that move on their own, around the edge of the envelope:** an obstacle moving 1 m/s or less toward the shot (or away from it at any speed tested) is inside; faster ones are outside, with the result shown.");
   lines.push("");
   lines.push(...matrixTable(evidence, evidence.probeObstacles));
   lines.push("");
-  const fineTotal = evidence.fineScan.cells.length * evidence.fineScan.phases;
-  const fineHits = evidence.fineScan.cells.filter((c) => c.tunnelled > 0);
-  const hitList = fineHits.map((c) => `${c.shape} vs ${c.obstacle === "static" ? "static wall" : "plate"} ${String(c.thickness)} m at ${String(c.speed)} m/s: ${String(c.tunnelled)}`).join("; ");
+  const edgeLanes = evidence.edgeScan.cells.reduce((n, c) => n + c.lanes, 0);
+  const edgeTunnelled = evidence.edgeScan.cells.reduce((n, c) => n + c.tunnelled, 0);
+  const edgeFirst = evidence.edgeScan.speeds[0] ?? 0;
+  const edgeLast = evidence.edgeScan.speeds[evidence.edgeScan.speeds.length - 1] ?? 0;
   lines.push(
-    `**Fine scan** (continuous collision on, ${String(evidence.fineScan.phases)} start phases per cell, static wall and 10 000 kg plate, every shape and thickness, ${evidence.fineScan.speeds.map((s) => `${String(s)} m/s`).join(", ")}): ${String(fineHits.reduce((n, c) => n + c.tunnelled, 0))} tunnelled of ${String(fineTotal)} lanes.${fineHits.length === 0 ? "" : ` Cells with a tunnelled lane: ${hitList}.`}`,
+    `**Edge scan** (continuous collision on): the speeds between the nine of the matrix, ${String(edgeFirst)} to ${String(edgeLast)} m/s in steps of ${String((evidence.edgeScan.speeds[1] ?? 0) - edgeFirst)} m/s, against the obstacles of 1 m/s or less (a dynamic plate of 10 000 kg at rest, a kinematic wall toward or away, dynamic plates of 10 000 kg and 1 kg moving 0.5 or 1 m/s toward the shot), every shape and thickness, ${String(evidence.phases)} phases: ${String(edgeTunnelled)} tunnelled of ${String(edgeLanes)} lanes.`,
   );
+  lines.push("");
+  lines.push(`**Speeds above the matrix** (continuous collision on; tunnelled share of ${String(evidence.shapes.length * evidence.thicknesses.length * evidence.phases)} lanes, in percent):`);
+  lines.push("");
+  lines.push(`| Obstacle | ${evidence.highSpeeds.speeds.map((s) => `${String(s)} m/s`).join(" | ")} |`, `|---|${evidence.highSpeeds.speeds.map(() => "---:").join("|")}|`);
+  for (const obstacle of HIGH_OBSTACLES) {
+    const selected = evidence.highSpeeds.rows.filter((row) => row.obstacle === obstacle);
+    const entries = evidence.highSpeeds.speeds.map((_, i) => percent(selected.reduce((n, row) => n + (row.tunnelled[i] ?? 0), 0), selected.length * evidence.phases));
+    lines.push(`| ${describe(obstacle)} | ${entries.join(" | ")} |`);
+  }
+  const highHits = evidence.highSpeeds.rows.filter((row) => row.tunnelled.some((n) => n > 0));
+  if (highHits.length > 0) {
+    lines.push("");
+    lines.push(
+      `Shape and thickness of the rows with a tunnelled lane: ${highHits.map((row) => `${row.shape} against ${describe(row.obstacle)}, ${String(row.thickness)} m`).join("; ")}.`,
+    );
+  }
+  lines.push("");
+  const perShape = evidence.thicknesses.length * evidence.fineScan.speeds.length * evidence.fineScan.phases;
+  lines.push(
+    `**Fine scan:** ${String(evidence.fineScan.phases)} start phases per cell instead of ${String(evidence.phases)}, at ${evidence.fineScan.speeds.map((s) => `${String(s)} m/s`).join(", ")}, every thickness; tunnelled lanes of ${String(perShape)} per shape. The last column is the gap between the shot's front and the obstacle's near face one step before the shot was past it, over the tunnelled lanes (the discrete contact test sees a pair closer than ${String(evidence.predictionDistance * 1000)} mm).`,
+  );
+  lines.push("");
+  lines.push("| Continuous collision | Obstacle | Sphere | Capsule | Cube | Gap of the tunnelled lanes |", "|---|---|---:|---:|---:|---|");
+  for (const ccd of ["off", "on"] as const) {
+    for (const obstacle of evidence.fineScan.obstacles) {
+      const selected = evidence.fineScan.cells.filter((c) => c.ccd === ccd && c.obstacle === obstacle);
+      const count = (shape: ShotShape): number => selected.filter((c) => c.shape === shape).reduce((n, c) => n + c.tunnelled, 0);
+      const gaps = selected.flatMap((c) => (c.gap === null ? [] : [...c.gap]));
+      const range = gaps.length === 0 ? "-" : `${(Math.min(...gaps) * 1000).toFixed(1)} to ${(Math.max(...gaps) * 1000).toFixed(1)} mm`;
+      lines.push(`| ${ccd} | ${describe(obstacle)} | ${String(count("sphere"))} | ${String(count("capsule"))} | ${String(count("box"))} | ${range} |`);
+    }
+  }
   return lines.join("\n");
 }

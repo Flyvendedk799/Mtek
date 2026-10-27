@@ -32,13 +32,30 @@ export const BACKEND_NAME = "rapier3d-compat@0.21.0";
  * its CCD uses that value twice: a swept body is stopped 5 mm INSIDE the obstacle, and a pair whose surfaces are less
  * than prediction distance + 5 mm apart is left to the discrete contact test, which only sees the pair below the
  * prediction distance (0.02 m). A box that starts a step in that 5 mm band before a thin obstacle is therefore seen by
- * neither (measured: 0.5 % of the phases of a box against any plate, with CCD on), and a 240 m/s ball that the sweep
- * stops 5 mm inside a 1 cm heavy plate is carried through by the contact step that follows. Both shrink with the
- * value; 0.1 mm leaves a 0.1 mm band (the measured residual is in `spec/physics.md` section 7.1). The setting has no
- * measurable effect on resting contacts (an 8-box stack and a resting ball settle to identical poses) and is applied
- * only when a continuous body is created, so a world without continuous collision keeps Rapier's defaults.
+ * neither (measured with the default: 5 % of the start phases of a cube against a plate at 6 m/s, 1.5 % at 20 m/s,
+ * with CCD on), and a 240 m/s ball that the sweep stops 5 mm inside a 1 cm heavy plate is carried through by the
+ * contact step that follows. Both shrink with the value; 0.1 mm leaves a 0.1 mm band (the measured residual is the
+ * fine scan of `spec/physics.md` section 7.1). The setting has no measurable effect on resting contacts (a stack of
+ * four crates and a resting ball settle to the same poses, `ccd-matrix.test.ts`) and is applied only when a
+ * continuous body is created, so a world without continuous collision keeps Rapier's defaults.
  */
 const CCD_ALLOWED_LINEAR_ERROR = 0.0001;
+
+/**
+ * How far past its own smallest half-extent (m) a body moves in one step before it gets the sweep flag (decision
+ * 0216). Two requirements meet in this one number, for obstacles that move up to about 1 m/s (1.7 cm per step):
+ *  - a body without the flag must not be able to skip an obstacle: the contact window of a thin plate is
+ *    `plate half-thickness + own half-extent + prediction distance (2 cm)` and the obstacle's own advance eats into it,
+ *    so the margin must stay under about 2.5 cm minus that advance;
+ *  - an obstacle with the flag is never swept against (see `updateContinuousFlags`), so a 1 cm plate (half-extent
+ *    5 mm) that moves 1 m/s must stay under `5 mm + margin`: the margin must exceed about 1.2 cm.
+ * Measured on a dense speed scan (1.5 to 14 m/s in steps of 0.125, then to 260 m/s) against obstacles at rest and
+ * moving 0.5 and 1 m/s: 11.5 mm lets 1 m/s dynamic plates through at shot speeds of 3.75 to 14 m/s, 13 mm lets 1 m/s
+ * walls through at 3.75 m/s, and 12 mm and 12.5 mm leave only the speeds above 250 m/s in the table of
+ * `spec/physics.md` section 7.1. The window is narrow; `ccd-matrix.test.ts` asserts the scan.
+ */
+const CCD_FLAG_MARGIN = 0.0125;
+
 /**
  * What the adapter remembers about a body that asked for continuous collision (decision 0216): the two lengths the
  * engine's own "moves fast" test uses, taken from the body's single collider.
@@ -246,13 +263,10 @@ class RapierWorld implements PhysicsWorld {
    * flag too (measured: a ball with the flag flies through a plate with the flag that a flag-free plate stops, so
    * enabling the flag on every dynamic body, as the host option used to, left every dynamic-against-dynamic pair
    * unswept). The flag is therefore set only on a body that can skip something: one that moves more than its own
-   * smallest half-extent plus the prediction distance in one step. Below that it cannot skip any obstacle (the contact
-   * window, `obstacle half-thickness + own extent + prediction`, is longer than its step), so clearing the flag loses
-   * nothing and keeps every resting or slow obstacle sweepable. The test is longer than Rapier's own "moves fast"
-   * test (a tenth of the thickness), so a flagged body is always one the engine sweeps.
+   * smallest half-extent plus `CCD_FLAG_MARGIN` in one step. The test is longer than Rapier's own "moves fast" test
+   * (a tenth of the thickness), so a flagged body is always one the engine sweeps.
    */
   private updateContinuousFlags(): void {
-    const prediction = this.world.integrationParameters.normalizedPredictionDistance * this.world.lengthUnit;
     for (const h of this.continuous) {
       const record = this.bodies.get(h);
       const shape = record?.continuous;
@@ -263,7 +277,7 @@ class RapierWorld implements PhysicsWorld {
         const v = body.linvel();
         const w = body.angvel();
         const moved = (Math.hypot(v.x, v.y, v.z) + Math.hypot(w.x, w.y, w.z) * shape.reach) * this.dt;
-        fast = moved > shape.thickness + prediction;
+        fast = moved > shape.thickness + CCD_FLAG_MARGIN;
       }
       if (body.isCcdEnabled() !== fast) body.enableCcd(fast);
     }

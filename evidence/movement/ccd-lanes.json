@@ -31,6 +31,7 @@
     "dynamic-heavy-toward-3",
     "dynamic-heavy-toward-6",
     "dynamic-heavy-toward-12",
+    "dynamic-light-toward-1",
     "dynamic-light-toward-3",
     "dynamic-light-toward-12"
   ],
@@ -114,6 +115,11 @@
       "body": "dynamic",
       "mass": 10000,
       "velocity": -12
+    },
+    "dynamic-light-toward-1": {
+      "body": "dynamic",
+      "mass": 1,
+      "velocity": -1
     },
     "dynamic-light-toward-3": {
       "body": "dynamic",
@@ -1134,6 +1140,69 @@
       "shape": "capsule",
       "thickness": 0.1,
       "tunnelled": [8, 10, 11, 11, 12, 14, 14, 15, 16]
+    },
+    {
+      "ccd": "off",
+      "obstacle": "dynamic-light-toward-1",
+      "shape": "sphere",
+      "thickness": 0.01,
+      "tunnelled": [0, 6, 9, 10, 13, 14, 15, 15, 16]
+    },
+    {
+      "ccd": "off",
+      "obstacle": "dynamic-light-toward-1",
+      "shape": "sphere",
+      "thickness": 0.05,
+      "tunnelled": [0, 3, 7, 9, 12, 14, 15, 15, 16]
+    },
+    {
+      "ccd": "off",
+      "obstacle": "dynamic-light-toward-1",
+      "shape": "sphere",
+      "thickness": 0.1,
+      "tunnelled": [0, 0, 4, 7, 11, 13, 14, 15, 16]
+    },
+    {
+      "ccd": "off",
+      "obstacle": "dynamic-light-toward-1",
+      "shape": "box",
+      "thickness": 0.01,
+      "tunnelled": [0, 6, 9, 10, 13, 14, 15, 15, 16]
+    },
+    {
+      "ccd": "off",
+      "obstacle": "dynamic-light-toward-1",
+      "shape": "box",
+      "thickness": 0.05,
+      "tunnelled": [0, 3, 7, 9, 12, 14, 15, 15, 16]
+    },
+    {
+      "ccd": "off",
+      "obstacle": "dynamic-light-toward-1",
+      "shape": "box",
+      "thickness": 0.1,
+      "tunnelled": [0, 0, 4, 7, 11, 13, 14, 15, 16]
+    },
+    {
+      "ccd": "off",
+      "obstacle": "dynamic-light-toward-1",
+      "shape": "capsule",
+      "thickness": 0.01,
+      "tunnelled": [0, 6, 9, 10, 13, 14, 15, 15, 16]
+    },
+    {
+      "ccd": "off",
+      "obstacle": "dynamic-light-toward-1",
+      "shape": "capsule",
+      "thickness": 0.05,
+      "tunnelled": [0, 3, 7, 9, 12, 14, 15, 15, 16]
+    },
+    {
+      "ccd": "off",
+      "obstacle": "dynamic-light-toward-1",
+      "shape": "capsule",
+      "thickness": 0.1,
+      "tunnelled": [0, 0, 4, 7, 11, 13, 14, 15, 16]
     },
     {
       "ccd": "off",
@@ -2271,6 +2340,69 @@
     },
     {
       "ccd": "on",
+      "obstacle": "dynamic-light-toward-1",
+      "shape": "sphere",
+      "thickness": 0.01,
+      "tunnelled": [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "ccd": "on",
+      "obstacle": "dynamic-light-toward-1",
+      "shape": "sphere",
+      "thickness": 0.05,
+      "tunnelled": [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "ccd": "on",
+      "obstacle": "dynamic-light-toward-1",
+      "shape": "sphere",
+      "thickness": 0.1,
+      "tunnelled": [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "ccd": "on",
+      "obstacle": "dynamic-light-toward-1",
+      "shape": "box",
+      "thickness": 0.01,
+      "tunnelled": [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "ccd": "on",
+      "obstacle": "dynamic-light-toward-1",
+      "shape": "box",
+      "thickness": 0.05,
+      "tunnelled": [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "ccd": "on",
+      "obstacle": "dynamic-light-toward-1",
+      "shape": "box",
+      "thickness": 0.1,
+      "tunnelled": [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "ccd": "on",
+      "obstacle": "dynamic-light-toward-1",
+      "shape": "capsule",
+      "thickness": 0.01,
+      "tunnelled": [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "ccd": "on",
+      "obstacle": "dynamic-light-toward-1",
+      "shape": "capsule",
+      "thickness": 0.05,
+      "tunnelled": [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "ccd": "on",
+      "obstacle": "dynamic-light-toward-1",
+      "shape": "capsule",
+      "thickness": 0.1,
+      "tunnelled": [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "ccd": "on",
       "obstacle": "dynamic-light-toward-3",
       "shape": "sphere",
       "thickness": 0.01,
@@ -2399,510 +2531,2018 @@
   "fineScan": {
     "phases": 500,
     "speeds": [6, 12, 60, 240],
+    "obstacles": [
+      "static",
+      "dynamic-heavy"
+    ],
     "cells": [
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "static",
         "thickness": 0.01,
         "speed": 6,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "static",
         "thickness": 0.01,
         "speed": 12,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "static",
         "thickness": 0.01,
         "speed": 60,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "static",
         "thickness": 0.01,
         "speed": 240,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "static",
         "thickness": 0.05,
         "speed": 6,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "static",
         "thickness": 0.05,
         "speed": 12,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "static",
         "thickness": 0.05,
         "speed": 60,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "static",
         "thickness": 0.05,
         "speed": 240,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "static",
         "thickness": 0.1,
         "speed": 6,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "static",
         "thickness": 0.1,
         "speed": 12,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "static",
         "thickness": 0.1,
         "speed": 60,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "static",
         "thickness": 0.1,
         "speed": 240,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "static",
         "thickness": 0.01,
         "speed": 6,
-        "tunnelled": 1
+        "tunnelled": 25,
+        "gap": [0.0201, 0.0249]
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "static",
         "thickness": 0.01,
         "speed": 12,
-        "tunnelled": 0
+        "tunnelled": 12,
+        "gap": [0.0204, 0.0248]
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "static",
         "thickness": 0.01,
         "speed": 60,
-        "tunnelled": 0
+        "tunnelled": 2,
+        "gap": [0.022, 0.024]
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "static",
         "thickness": 0.01,
         "speed": 240,
-        "tunnelled": 0
+        "tunnelled": 1,
+        "gap": [0.021, 0.021]
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "static",
         "thickness": 0.05,
         "speed": 6,
-        "tunnelled": 1
+        "tunnelled": 25,
+        "gap": [0.0201, 0.0249]
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "static",
         "thickness": 0.05,
         "speed": 12,
-        "tunnelled": 0
+        "tunnelled": 12,
+        "gap": [0.0204, 0.0248]
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "static",
         "thickness": 0.05,
         "speed": 60,
-        "tunnelled": 1
+        "tunnelled": 3,
+        "gap": [0.02, 0.024]
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "static",
         "thickness": 0.05,
         "speed": 240,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "static",
         "thickness": 0.1,
         "speed": 6,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "static",
         "thickness": 0.1,
         "speed": 12,
-        "tunnelled": 0
+        "tunnelled": 13,
+        "gap": [0.0202, 0.025]
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "static",
         "thickness": 0.1,
         "speed": 60,
-        "tunnelled": 0
+        "tunnelled": 3,
+        "gap": [0.021, 0.025]
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "static",
         "thickness": 0.1,
         "speed": 240,
-        "tunnelled": 0
+        "tunnelled": 1,
+        "gap": [0.024, 0.024]
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "static",
         "thickness": 0.01,
         "speed": 6,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "static",
         "thickness": 0.01,
         "speed": 12,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "static",
         "thickness": 0.01,
         "speed": 60,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "static",
         "thickness": 0.01,
         "speed": 240,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "static",
         "thickness": 0.05,
         "speed": 6,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "static",
         "thickness": 0.05,
         "speed": 12,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "static",
         "thickness": 0.05,
         "speed": 60,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "static",
         "thickness": 0.05,
         "speed": 240,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "static",
         "thickness": 0.1,
         "speed": 6,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "static",
         "thickness": 0.1,
         "speed": 12,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "static",
         "thickness": 0.1,
         "speed": 60,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "static",
         "thickness": 0.1,
         "speed": 240,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "dynamic-heavy",
         "thickness": 0.01,
         "speed": 6,
-        "tunnelled": 0
+        "tunnelled": 125,
+        "gap": [0.0201, 0.0449]
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "dynamic-heavy",
         "thickness": 0.01,
         "speed": 12,
-        "tunnelled": 0
+        "tunnelled": 312,
+        "gap": [0.0204, 0.1448]
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "dynamic-heavy",
         "thickness": 0.01,
         "speed": 60,
-        "tunnelled": 0
+        "tunnelled": 462,
+        "gap": [0.022, 0.944]
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "dynamic-heavy",
         "thickness": 0.01,
         "speed": 240,
-        "tunnelled": 0
+        "tunnelled": 492,
+        "gap": [0.021, 3.989]
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "dynamic-heavy",
         "thickness": 0.05,
         "speed": 6,
-        "tunnelled": 0
+        "tunnelled": 25,
+        "gap": [0.0201, 0.0249]
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "dynamic-heavy",
         "thickness": 0.05,
         "speed": 12,
-        "tunnelled": 0
+        "tunnelled": 262,
+        "gap": [0.0204, 0.1248]
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "dynamic-heavy",
         "thickness": 0.05,
         "speed": 60,
-        "tunnelled": 0
+        "tunnelled": 453,
+        "gap": [0.02, 0.924]
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "dynamic-heavy",
         "thickness": 0.05,
         "speed": 240,
-        "tunnelled": 0
+        "tunnelled": 488,
+        "gap": [0.025, 3.921]
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "dynamic-heavy",
         "thickness": 0.1,
         "speed": 6,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "dynamic-heavy",
         "thickness": 0.1,
         "speed": 12,
-        "tunnelled": 0
+        "tunnelled": 200,
+        "gap": [0.0202, 0.0998]
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "dynamic-heavy",
         "thickness": 0.1,
         "speed": 60,
-        "tunnelled": 0
+        "tunnelled": 440,
+        "gap": [0.021, 0.899]
       },
       {
+        "ccd": "off",
         "shape": "sphere",
         "obstacle": "dynamic-heavy",
         "thickness": 0.1,
         "speed": 240,
-        "tunnelled": 0
+        "tunnelled": 485,
+        "gap": [0.024, 3.896]
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "dynamic-heavy",
         "thickness": 0.01,
         "speed": 6,
-        "tunnelled": 1
+        "tunnelled": 125,
+        "gap": [0.0201, 0.0449]
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "dynamic-heavy",
         "thickness": 0.01,
         "speed": 12,
-        "tunnelled": 0
+        "tunnelled": 312,
+        "gap": [0.0204, 0.1448]
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "dynamic-heavy",
         "thickness": 0.01,
         "speed": 60,
-        "tunnelled": 0
+        "tunnelled": 462,
+        "gap": [0.022, 0.944]
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "dynamic-heavy",
         "thickness": 0.01,
         "speed": 240,
-        "tunnelled": 0
+        "tunnelled": 491,
+        "gap": [0.021, 3.941]
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "dynamic-heavy",
         "thickness": 0.05,
         "speed": 6,
-        "tunnelled": 1
+        "tunnelled": 25,
+        "gap": [0.0201, 0.0249]
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "dynamic-heavy",
         "thickness": 0.05,
         "speed": 12,
-        "tunnelled": 0
+        "tunnelled": 262,
+        "gap": [0.0204, 0.1248]
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "dynamic-heavy",
         "thickness": 0.05,
         "speed": 60,
-        "tunnelled": 1
+        "tunnelled": 453,
+        "gap": [0.02, 0.924]
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "dynamic-heavy",
         "thickness": 0.05,
         "speed": 240,
-        "tunnelled": 0
+        "tunnelled": 488,
+        "gap": [0.025, 3.921]
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "dynamic-heavy",
         "thickness": 0.1,
         "speed": 6,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "dynamic-heavy",
         "thickness": 0.1,
         "speed": 12,
-        "tunnelled": 0
+        "tunnelled": 200,
+        "gap": [0.0202, 0.0998]
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "dynamic-heavy",
         "thickness": 0.1,
         "speed": 60,
-        "tunnelled": 0
+        "tunnelled": 440,
+        "gap": [0.021, 0.899]
       },
       {
+        "ccd": "off",
         "shape": "box",
         "obstacle": "dynamic-heavy",
         "thickness": 0.1,
         "speed": 240,
-        "tunnelled": 0
+        "tunnelled": 485,
+        "gap": [0.024, 3.896]
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "dynamic-heavy",
         "thickness": 0.01,
         "speed": 6,
-        "tunnelled": 0
+        "tunnelled": 125,
+        "gap": [0.0201, 0.0449]
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "dynamic-heavy",
         "thickness": 0.01,
         "speed": 12,
-        "tunnelled": 0
+        "tunnelled": 312,
+        "gap": [0.0204, 0.1448]
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "dynamic-heavy",
         "thickness": 0.01,
         "speed": 60,
-        "tunnelled": 0
+        "tunnelled": 463,
+        "gap": [0.022, 0.946]
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "dynamic-heavy",
         "thickness": 0.01,
         "speed": 240,
-        "tunnelled": 0
+        "tunnelled": 491,
+        "gap": [0.021, 3.941]
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "dynamic-heavy",
         "thickness": 0.05,
         "speed": 6,
-        "tunnelled": 0
+        "tunnelled": 25,
+        "gap": [0.0201, 0.0249]
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "dynamic-heavy",
         "thickness": 0.05,
         "speed": 12,
-        "tunnelled": 0
+        "tunnelled": 262,
+        "gap": [0.0204, 0.1248]
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "dynamic-heavy",
         "thickness": 0.05,
         "speed": 60,
-        "tunnelled": 0
+        "tunnelled": 452,
+        "gap": [0.022, 0.924]
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "dynamic-heavy",
         "thickness": 0.05,
         "speed": 240,
-        "tunnelled": 0
+        "tunnelled": 488,
+        "gap": [0.025, 3.921]
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "dynamic-heavy",
         "thickness": 0.1,
         "speed": 6,
-        "tunnelled": 0
+        "tunnelled": 0,
+        "gap": null
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "dynamic-heavy",
         "thickness": 0.1,
         "speed": 12,
-        "tunnelled": 0
+        "tunnelled": 200,
+        "gap": [0.0202, 0.0998]
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "dynamic-heavy",
         "thickness": 0.1,
         "speed": 60,
-        "tunnelled": 0
+        "tunnelled": 440,
+        "gap": [0.021, 0.899]
       },
       {
+        "ccd": "off",
         "shape": "capsule",
         "obstacle": "dynamic-heavy",
         "thickness": 0.1,
         "speed": 240,
-        "tunnelled": 0
+        "tunnelled": 485,
+        "gap": [0.024, 3.896]
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "static",
+        "thickness": 0.01,
+        "speed": 6,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "static",
+        "thickness": 0.01,
+        "speed": 12,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "static",
+        "thickness": 0.01,
+        "speed": 60,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "static",
+        "thickness": 0.01,
+        "speed": 240,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "static",
+        "thickness": 0.05,
+        "speed": 6,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "static",
+        "thickness": 0.05,
+        "speed": 12,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "static",
+        "thickness": 0.05,
+        "speed": 60,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "static",
+        "thickness": 0.05,
+        "speed": 240,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "static",
+        "thickness": 0.1,
+        "speed": 6,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "static",
+        "thickness": 0.1,
+        "speed": 12,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "static",
+        "thickness": 0.1,
+        "speed": 60,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "static",
+        "thickness": 0.1,
+        "speed": 240,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "static",
+        "thickness": 0.01,
+        "speed": 6,
+        "tunnelled": 1,
+        "gap": [0.0201, 0.0201]
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "static",
+        "thickness": 0.01,
+        "speed": 12,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "static",
+        "thickness": 0.01,
+        "speed": 60,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "static",
+        "thickness": 0.01,
+        "speed": 240,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "static",
+        "thickness": 0.05,
+        "speed": 6,
+        "tunnelled": 1,
+        "gap": [0.0201, 0.0201]
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "static",
+        "thickness": 0.05,
+        "speed": 12,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "static",
+        "thickness": 0.05,
+        "speed": 60,
+        "tunnelled": 1,
+        "gap": [0.02, 0.02]
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "static",
+        "thickness": 0.05,
+        "speed": 240,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "static",
+        "thickness": 0.1,
+        "speed": 6,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "static",
+        "thickness": 0.1,
+        "speed": 12,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "static",
+        "thickness": 0.1,
+        "speed": 60,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "static",
+        "thickness": 0.1,
+        "speed": 240,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "static",
+        "thickness": 0.01,
+        "speed": 6,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "static",
+        "thickness": 0.01,
+        "speed": 12,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "static",
+        "thickness": 0.01,
+        "speed": 60,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "static",
+        "thickness": 0.01,
+        "speed": 240,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "static",
+        "thickness": 0.05,
+        "speed": 6,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "static",
+        "thickness": 0.05,
+        "speed": 12,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "static",
+        "thickness": 0.05,
+        "speed": 60,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "static",
+        "thickness": 0.05,
+        "speed": 240,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "static",
+        "thickness": 0.1,
+        "speed": 6,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "static",
+        "thickness": 0.1,
+        "speed": 12,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "static",
+        "thickness": 0.1,
+        "speed": 60,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "static",
+        "thickness": 0.1,
+        "speed": 240,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.01,
+        "speed": 6,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.01,
+        "speed": 12,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.01,
+        "speed": 60,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.01,
+        "speed": 240,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.05,
+        "speed": 6,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.05,
+        "speed": 12,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.05,
+        "speed": 60,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.05,
+        "speed": 240,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.1,
+        "speed": 6,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.1,
+        "speed": 12,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.1,
+        "speed": 60,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "sphere",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.1,
+        "speed": 240,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.01,
+        "speed": 6,
+        "tunnelled": 1,
+        "gap": [0.0201, 0.0201]
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.01,
+        "speed": 12,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.01,
+        "speed": 60,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.01,
+        "speed": 240,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.05,
+        "speed": 6,
+        "tunnelled": 1,
+        "gap": [0.0201, 0.0201]
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.05,
+        "speed": 12,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.05,
+        "speed": 60,
+        "tunnelled": 1,
+        "gap": [0.02, 0.02]
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.05,
+        "speed": 240,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.1,
+        "speed": 6,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.1,
+        "speed": 12,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.1,
+        "speed": 60,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "box",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.1,
+        "speed": 240,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.01,
+        "speed": 6,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.01,
+        "speed": 12,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.01,
+        "speed": 60,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.01,
+        "speed": 240,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.05,
+        "speed": 6,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.05,
+        "speed": 12,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.05,
+        "speed": 60,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.05,
+        "speed": 240,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.1,
+        "speed": 6,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.1,
+        "speed": 12,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.1,
+        "speed": 60,
+        "tunnelled": 0,
+        "gap": null
+      },
+      {
+        "ccd": "on",
+        "shape": "capsule",
+        "obstacle": "dynamic-heavy",
+        "thickness": 0.1,
+        "speed": 240,
+        "tunnelled": 0,
+        "gap": null
+      }
+    ]
+  },
+  "edgeScan": {
+    "speeds": [1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.25, 4.5, 4.75, 5, 5.25, 5.5, 5.75, 6, 6.25, 6.5, 6.75, 7, 7.25, 7.5, 7.75, 8, 8.25, 8.5, 8.75, 9, 9.25, 9.5, 9.75, 10, 10.25, 10.5, 10.75, 11, 11.25, 11.5, 11.75, 12, 12.25, 12.5, 12.75, 13, 13.25, 13.5, 13.75, 14],
+    "cells": [
+      {
+        "obstacle": "dynamic-heavy",
+        "shape": "sphere",
+        "thickness": 0.01,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy",
+        "shape": "sphere",
+        "thickness": 0.05,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy",
+        "shape": "sphere",
+        "thickness": 0.1,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy",
+        "shape": "box",
+        "thickness": 0.01,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy",
+        "shape": "box",
+        "thickness": 0.05,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy",
+        "shape": "box",
+        "thickness": 0.1,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy",
+        "shape": "capsule",
+        "thickness": 0.01,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy",
+        "shape": "capsule",
+        "thickness": 0.05,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy",
+        "shape": "capsule",
+        "thickness": 0.1,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "kinematic-toward",
+        "shape": "sphere",
+        "thickness": 0.01,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "kinematic-toward",
+        "shape": "sphere",
+        "thickness": 0.05,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "kinematic-toward",
+        "shape": "sphere",
+        "thickness": 0.1,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "kinematic-toward",
+        "shape": "box",
+        "thickness": 0.01,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "kinematic-toward",
+        "shape": "box",
+        "thickness": 0.05,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "kinematic-toward",
+        "shape": "box",
+        "thickness": 0.1,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "kinematic-toward",
+        "shape": "capsule",
+        "thickness": 0.01,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "kinematic-toward",
+        "shape": "capsule",
+        "thickness": 0.05,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "kinematic-toward",
+        "shape": "capsule",
+        "thickness": 0.1,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "kinematic-away",
+        "shape": "sphere",
+        "thickness": 0.01,
+        "lanes": 800,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "kinematic-away",
+        "shape": "sphere",
+        "thickness": 0.05,
+        "lanes": 800,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "kinematic-away",
+        "shape": "sphere",
+        "thickness": 0.1,
+        "lanes": 800,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "kinematic-away",
+        "shape": "box",
+        "thickness": 0.01,
+        "lanes": 800,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "kinematic-away",
+        "shape": "box",
+        "thickness": 0.05,
+        "lanes": 800,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "kinematic-away",
+        "shape": "box",
+        "thickness": 0.1,
+        "lanes": 800,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "kinematic-away",
+        "shape": "capsule",
+        "thickness": 0.01,
+        "lanes": 800,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "kinematic-away",
+        "shape": "capsule",
+        "thickness": 0.05,
+        "lanes": 800,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "kinematic-away",
+        "shape": "capsule",
+        "thickness": 0.1,
+        "lanes": 800,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-0.5",
+        "shape": "sphere",
+        "thickness": 0.01,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-0.5",
+        "shape": "sphere",
+        "thickness": 0.05,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-0.5",
+        "shape": "sphere",
+        "thickness": 0.1,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-0.5",
+        "shape": "box",
+        "thickness": 0.01,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-0.5",
+        "shape": "box",
+        "thickness": 0.05,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-0.5",
+        "shape": "box",
+        "thickness": 0.1,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-0.5",
+        "shape": "capsule",
+        "thickness": 0.01,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-0.5",
+        "shape": "capsule",
+        "thickness": 0.05,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-0.5",
+        "shape": "capsule",
+        "thickness": 0.1,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-1",
+        "shape": "sphere",
+        "thickness": 0.01,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-1",
+        "shape": "sphere",
+        "thickness": 0.05,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-1",
+        "shape": "sphere",
+        "thickness": 0.1,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-1",
+        "shape": "box",
+        "thickness": 0.01,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-1",
+        "shape": "box",
+        "thickness": 0.05,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-1",
+        "shape": "box",
+        "thickness": 0.1,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-1",
+        "shape": "capsule",
+        "thickness": 0.01,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-1",
+        "shape": "capsule",
+        "thickness": 0.05,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-1",
+        "shape": "capsule",
+        "thickness": 0.1,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-light-toward-1",
+        "shape": "sphere",
+        "thickness": 0.01,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-light-toward-1",
+        "shape": "sphere",
+        "thickness": 0.05,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-light-toward-1",
+        "shape": "sphere",
+        "thickness": 0.1,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-light-toward-1",
+        "shape": "box",
+        "thickness": 0.01,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-light-toward-1",
+        "shape": "box",
+        "thickness": 0.05,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-light-toward-1",
+        "shape": "box",
+        "thickness": 0.1,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-light-toward-1",
+        "shape": "capsule",
+        "thickness": 0.01,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-light-toward-1",
+        "shape": "capsule",
+        "thickness": 0.05,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      },
+      {
+        "obstacle": "dynamic-light-toward-1",
+        "shape": "capsule",
+        "thickness": 0.1,
+        "lanes": 816,
+        "tunnelled": 0,
+        "speeds": []
+      }
+    ]
+  },
+  "highSpeeds": {
+    "speeds": [250, 255, 260, 300, 400, 1000, 3000],
+    "rows": [
+      {
+        "obstacle": "static",
+        "shape": "sphere",
+        "thickness": 0.01,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "static",
+        "shape": "sphere",
+        "thickness": 0.05,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "static",
+        "shape": "sphere",
+        "thickness": 0.1,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "static",
+        "shape": "box",
+        "thickness": 0.01,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "static",
+        "shape": "box",
+        "thickness": 0.05,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "static",
+        "shape": "box",
+        "thickness": 0.1,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "static",
+        "shape": "capsule",
+        "thickness": 0.01,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "static",
+        "shape": "capsule",
+        "thickness": 0.05,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "static",
+        "shape": "capsule",
+        "thickness": 0.1,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-heavy",
+        "shape": "sphere",
+        "thickness": 0.01,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-heavy",
+        "shape": "sphere",
+        "thickness": 0.05,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-heavy",
+        "shape": "sphere",
+        "thickness": 0.1,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-heavy",
+        "shape": "box",
+        "thickness": 0.01,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-heavy",
+        "shape": "box",
+        "thickness": 0.05,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-heavy",
+        "shape": "box",
+        "thickness": 0.1,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-heavy",
+        "shape": "capsule",
+        "thickness": 0.01,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-heavy",
+        "shape": "capsule",
+        "thickness": 0.05,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-heavy",
+        "shape": "capsule",
+        "thickness": 0.1,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-light",
+        "shape": "sphere",
+        "thickness": 0.01,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-light",
+        "shape": "sphere",
+        "thickness": 0.05,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-light",
+        "shape": "sphere",
+        "thickness": 0.1,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-light",
+        "shape": "box",
+        "thickness": 0.01,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-light",
+        "shape": "box",
+        "thickness": 0.05,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-light",
+        "shape": "box",
+        "thickness": 0.1,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-light",
+        "shape": "capsule",
+        "thickness": 0.01,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-light",
+        "shape": "capsule",
+        "thickness": 0.05,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-light",
+        "shape": "capsule",
+        "thickness": 0.1,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "kinematic-toward",
+        "shape": "sphere",
+        "thickness": 0.01,
+        "tunnelled": [0, 16, 16, 16, 16, 16, 16]
+      },
+      {
+        "obstacle": "kinematic-toward",
+        "shape": "sphere",
+        "thickness": 0.05,
+        "tunnelled": [0, 0, 0, 0, 16, 16, 16]
+      },
+      {
+        "obstacle": "kinematic-toward",
+        "shape": "sphere",
+        "thickness": 0.1,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "kinematic-toward",
+        "shape": "box",
+        "thickness": 0.01,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "kinematic-toward",
+        "shape": "box",
+        "thickness": 0.05,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "kinematic-toward",
+        "shape": "box",
+        "thickness": 0.1,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "kinematic-toward",
+        "shape": "capsule",
+        "thickness": 0.01,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "kinematic-toward",
+        "shape": "capsule",
+        "thickness": 0.05,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "kinematic-toward",
+        "shape": "capsule",
+        "thickness": 0.1,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-1",
+        "shape": "sphere",
+        "thickness": 0.01,
+        "tunnelled": [0, 16, 16, 16, 16, 16, 16]
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-1",
+        "shape": "sphere",
+        "thickness": 0.05,
+        "tunnelled": [0, 0, 0, 0, 16, 16, 16]
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-1",
+        "shape": "sphere",
+        "thickness": 0.1,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-1",
+        "shape": "box",
+        "thickness": 0.01,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-1",
+        "shape": "box",
+        "thickness": 0.05,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-1",
+        "shape": "box",
+        "thickness": 0.1,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-1",
+        "shape": "capsule",
+        "thickness": 0.01,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-1",
+        "shape": "capsule",
+        "thickness": 0.05,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
+      },
+      {
+        "obstacle": "dynamic-heavy-toward-1",
+        "shape": "capsule",
+        "thickness": 0.1,
+        "tunnelled": [0, 0, 0, 0, 0, 0, 0]
       }
     ]
   }
