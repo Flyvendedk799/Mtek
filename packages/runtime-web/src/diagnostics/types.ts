@@ -108,6 +108,7 @@ export const RUNTIME_DIAGNOSTIC_CATALOGUE = {
   E8111: "unknown name in animation command",
   E8112: "limb command on a rig that is not a humanoid",
   E8113: "animation command rejected",
+  E8114: "animation module failed to load",
   W8201: "audio value clamped",
   W8202: "sound could not be decoded",
   W8203: "too many HUD items",
@@ -197,6 +198,7 @@ export type MtekMountErrorKind =
   | "asset-failed"
   | "allocation-failed"
   | "physics-failed"
+  | "animation-failed"
   | "budget-exceeded";
 
 const MOUNT_KIND_BY_CODE: Readonly<Record<string, MtekMountErrorKind>> = {
@@ -211,6 +213,7 @@ const MOUNT_KIND_BY_CODE: Readonly<Record<string, MtekMountErrorKind>> = {
   E7031: "asset-failed",
   E8063: "allocation-failed",
   E8102: "physics-failed",
+  E8114: "animation-failed",
   E8080: "budget-exceeded",
 };
 

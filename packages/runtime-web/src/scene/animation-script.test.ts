@@ -6,6 +6,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { createAnimationBackend } from "../animation-module/entry.js";
 import { checkManifest } from "../abi/validate.js";
 import type { MtekManifest, MtekSkin } from "../abi/manifest-types.js";
 import type { MtekDiagnostic } from "../diagnostics/types.js";
@@ -61,7 +62,7 @@ function skeletalWorld(...specs: readonly Spec[]): { world: World; ctx: Record<s
     return { ...entity, mesh, ...(spec.from === undefined ? {} : { clipsFrom: spec.from }), ...(spec.clip === undefined ? {} : { clip: { name: spec.clip, duration: 1, channels: [] } }) };
   });
   const reported: MtekDiagnostic[] = [];
-  const world = new World({ manifest, structure: { ...resolved.structure, entities }, params: { writeParam: () => undefined }, report: (d) => reported.push(d) });
+  const world = new World({ manifest, structure: { ...resolved.structure, entities }, params: { writeParam: () => undefined }, report: (d) => reported.push(d), animation: createAnimationBackend() });
   const ctx = world.ctx as unknown as Ctx;
   specs.forEach((spec, i) => {
     const entity = world.entities[i];

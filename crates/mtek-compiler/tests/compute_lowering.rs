@@ -439,6 +439,7 @@ fn compute_packaging_keeps_shaders_maps_defaults_writers_and_manifest_together()
             runtime_bundle: b"export const stub = true;\n",
             runtime_declarations: b"// development fixture\n",
             physics_bundle: None,
+            animation_bundle: None,
             force_physics_subsystem: false,
             loop_budget: None,
             assets: &analysis.assets,
@@ -614,7 +615,7 @@ fn export_acceptance(
                 std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
                     .join("../../packages/runtime-web/dist")
             });
-        let runtime = std::fs::read(runtime_path.join("runtime.dev.js")).unwrap();
+        let runtime = std::fs::read(runtime_path.join("core.dev.js")).unwrap();
         let declarations = std::fs::read(runtime_path.join("runtime.d.ts")).unwrap();
         let exported = package(
             analysis.project.as_ref().unwrap(),
@@ -625,6 +626,7 @@ fn export_acceptance(
                 runtime_bundle: &runtime,
                 runtime_declarations: &declarations,
                 physics_bundle: None,
+                animation_bundle: None,
                 force_physics_subsystem: false,
                 loop_budget: None,
                 assets: &analysis.assets,

@@ -598,7 +598,7 @@ fn build_writes_the_output_tree_with_the_embedded_runtime() {
         .find(|k| k.starts_with("runtime.") && k.ends_with(".js"))
         .unwrap()
         .clone();
-    assert_eq!(built[&runtime_name], runtime_file("runtime.min.js"));
+    assert_eq!(built[&runtime_name], runtime_file("core.min.js"));
     assert_eq!(built["runtime.d.ts"], runtime_file("runtime.d.ts"));
 
     // The codegen golden was built with the stub runtime: everything else is identical, except
@@ -651,9 +651,9 @@ fn a_release_build_has_no_overlay_code_and_dev_and_test_builds_do() {
     let scratch = Scratch::new("build-flavours");
     let project = scratch.project("app", VALID);
     for (mode, flavour) in [
-        ("release", "runtime.min.js"),
-        ("dev", "runtime.dev.js"),
-        ("test", "runtime.dev.js"),
+        ("release", "core.min.js"),
+        ("dev", "core.dev.js"),
+        ("test", "core.dev.js"),
     ] {
         let out = run_in(&project, &["build", "--mode", mode, "--out", mode]);
         assert_eq!(out.status.code(), Some(0), "{mode}: {}", stderr(&out));
@@ -675,6 +675,85 @@ fn a_release_build_has_no_overlay_code_and_dev_and_test_builds_do() {
         }
         let page = String::from_utf8_lossy(&built["index.html"]).into_owned();
         assert_eq!(page.contains("devOverlay"), mode == "dev", "{mode}: {page}");
+    }
+}
+
+/// The animation module (decision 0225) is written for a program with a skinned mesh or `clips_from`, as
+/// `animation/<h16>.js` named by the hash of its bytes (the minified file in release builds, the readable one in the
+/// others), and for no other: a program without skeletal animation has no `animation/` and no `animation` key in its
+/// manifest. The core runtime is the same either way, and has no skeletal code.
+#[cfg(mtek_runtime_embedded)]
+#[test]
+fn the_animation_module_is_built_only_for_programs_with_skeletal_animation() {
+    use mtek_compiler::package::identity::h16;
+    let scratch = Scratch::new("build-animation");
+    let skinned = copy_fixture(&scratch, "assets/pass", "clips_from");
+    let plain = scratch.project("app", VALID);
+    for (mode, file) in [
+        ("release", "animation.min.js"),
+        ("dev", "animation.js"),
+        ("test", "animation.js"),
+        ("preview", "animation.js"),
+    ] {
+        let out = run_in(&skinned, &["build", "--mode", mode, "--out", mode]);
+        assert_eq!(out.status.code(), Some(0), "{mode}: {}", stderr(&out));
+        let built = tree(&skinned.join(mode));
+        let module = runtime_file(file);
+        let name = format!("animation/{}.js", h16(&module));
+        assert_eq!(built[&name], module, "{mode}");
+        assert_eq!(
+            built.keys().filter(|k| k.starts_with("animation/")).count(),
+            1,
+            "{mode}"
+        );
+        let manifest: Value = serde_json::from_slice(&built["program.manifest.json"]).unwrap();
+        assert_eq!(
+            manifest["subsystems"]["animation"],
+            serde_json::json!(true),
+            "{mode}"
+        );
+        assert_eq!(
+            manifest["subsystems"]["animationModule"],
+            serde_json::json!(name),
+            "{mode}"
+        );
+        // The module is self-contained: the program and the runtime do not import it statically.
+        for (file, bytes) in &built {
+            if file.ends_with(".js") && !file.starts_with("animation/") {
+                assert!(
+                    !String::from_utf8_lossy(bytes).contains(&name),
+                    "{mode}: {file}"
+                );
+            }
+        }
+        // The core runtime of the same build has no skeletal player.
+        let runtime_name = built
+            .keys()
+            .find(|k| k.starts_with("runtime.") && k.ends_with(".js"))
+            .unwrap();
+        assert!(
+            !String::from_utf8_lossy(&built[runtime_name]).contains("Procedural pose contains"),
+            "{mode}: the core runtime contains the skeletal player"
+        );
+        assert!(
+            String::from_utf8_lossy(&module).contains("Procedural pose contains"),
+            "{mode}: the animation module lacks the skeletal player"
+        );
+
+        let out = run_in(&plain, &["build", "--mode", mode, "--out", mode]);
+        assert_eq!(out.status.code(), Some(0), "{mode}: {}", stderr(&out));
+        let built = tree(&plain.join(mode));
+        assert!(
+            built.keys().all(|k| !k.starts_with("animation")),
+            "{mode}: {:?}",
+            built.keys().collect::<Vec<_>>()
+        );
+        let manifest: Value = serde_json::from_slice(&built["program.manifest.json"]).unwrap();
+        assert!(manifest["subsystems"].get("animation").is_none(), "{mode}");
+        assert!(
+            manifest["subsystems"].get("animationModule").is_none(),
+            "{mode}"
+        );
     }
 }
 
@@ -1150,7 +1229,7 @@ fn a_preview_build_has_the_policy_page_the_bootstrap_the_budget_and_the_release_
         .keys()
         .find(|k| k.starts_with("runtime.") && k.ends_with(".js"))
         .unwrap();
-    assert_eq!(built[runtime_name], runtime_file("runtime.js"));
+    assert_eq!(built[runtime_name], runtime_file("core.js"));
     // The loop is checked, with the default budget; `--loop-budget` changes the manifest.
     let app = String::from_utf8_lossy(&built["app.js"]).into_owned();
     assert!(app.contains("--budget.n < 0"), "{app}");

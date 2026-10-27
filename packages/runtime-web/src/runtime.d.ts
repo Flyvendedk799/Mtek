@@ -71,6 +71,7 @@ export declare class MtekMountError extends Error {
     | "asset-failed"
     | "allocation-failed"
     | "physics-failed"
+    | "animation-failed"
     | "budget-exceeded";
   /** Mapped to Mtek source where possible. */
   readonly diagnostics: readonly MtekDiagnostic[];

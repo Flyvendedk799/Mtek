@@ -1,8 +1,10 @@
 //! Embeds the runtime bundles into the `mtek` binary (`spec/tooling.md` section 1).
 //!
-//! The runtime is `runtime.js`, `runtime.dev.js` and `runtime.d.ts` (the release flavour, the
-//! development flavour with the overlay, and the declarations; decision 0055). They are taken from
-//! the first of these directories that has all three:
+//! The runtime is the core runtime without skeletal animation, `core.js`, `core.dev.js` and
+//! `core.min.js` (the release flavour, the development flavour with the overlay, and the minified
+//! release flavour; decisions 0055, 0136 and 0225), `runtime.d.ts` (the declarations) and the
+//! animation module `animation.js` and `animation.min.js` that programs with a skinned mesh load
+//! (decision 0225). They are taken from the first of these directories that has all of them:
 //!
 //! 1. `packages/runtime-web/dist/`, written by `npm run build`: a checkout that builds the runtime
 //!    embeds what it built;
@@ -29,11 +31,13 @@ use std::path::{Path, PathBuf};
 use std::{env, fs};
 
 /// The runtime files and their names in `OUT_DIR`.
-const FILES: [&str; 4] = [
-    "runtime.js",
-    "runtime.dev.js",
-    "runtime.min.js",
+const FILES: [&str; 6] = [
+    "core.js",
+    "core.dev.js",
+    "core.min.js",
     "runtime.d.ts",
+    "animation.js",
+    "animation.min.js",
 ];
 
 /// The physics bundle; it keeps its name in `OUT_DIR`.
@@ -103,7 +107,7 @@ fn first_with<'a>(
 /// prebuilt copy, so a pull that refreshed the prebuilt files leaves `mtek` embedding the old build.
 fn warn_if_dist_is_stale(dist: &Path, provenance: &Path) {
     let modified = |path: &Path| fs::metadata(path).and_then(|meta| meta.modified()).ok();
-    let (Some(built), Some(recorded)) = (modified(&dist.join("runtime.js")), modified(provenance))
+    let (Some(built), Some(recorded)) = (modified(&dist.join("core.js")), modified(provenance))
     else {
         return;
     };

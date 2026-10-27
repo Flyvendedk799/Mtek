@@ -708,6 +708,97 @@ fn clips_from_puts_the_source_skeleton_in_the_manifest_once() {
     assert_eq!(skinned, 1);
 }
 
+/// The animation module (decision 0225) is written exactly for the programs whose scene has a skinned mesh or
+/// `clips_from`: static glTF meshes and node clips do not need it, and the manifest names it with the hash of its bytes.
+#[test]
+fn the_animation_module_is_written_exactly_when_the_program_needs_skeletal_animation() {
+    use mtek_compiler::STUB_ANIMATION_BUNDLE;
+    use mtek_compiler::package::identity::h16;
+
+    let (mut with_module, mut without_module) = (Vec::new(), Vec::new());
+    for name in names("pass") {
+        let result = build_project("pass", &name);
+        assert!(!result.has_errors(), "{name}");
+        let manifest = manifest_of(&result);
+        let needs = manifest["meshes"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|mesh| !mesh["skin"].is_null())
+            || manifest["clipSources"]
+                .as_array()
+                .is_some_and(|sources| !sources.is_empty());
+        let module = format!("animation/{}.js", h16(STUB_ANIMATION_BUNDLE));
+        let animation_files: Vec<&String> = result
+            .files
+            .keys()
+            .filter(|path| path.starts_with("animation/"))
+            .collect();
+        if needs {
+            assert_eq!(manifest["subsystems"]["animation"], json!(true), "{name}");
+            assert_eq!(
+                manifest["subsystems"]["animationModule"],
+                json!(module),
+                "{name}"
+            );
+            assert_eq!(animation_files, [&module], "{name}");
+            assert_eq!(result.files[&module], STUB_ANIMATION_BUNDLE, "{name}");
+            with_module.push(name);
+        } else {
+            // Not even a key: a manifest without skeletal animation is the manifest of before the module.
+            assert!(manifest["subsystems"].get("animation").is_none(), "{name}");
+            assert!(
+                manifest["subsystems"].get("animationModule").is_none(),
+                "{name}"
+            );
+            assert!(animation_files.is_empty(), "{name}");
+            without_module.push(name);
+        }
+    }
+    assert!(
+        with_module.iter().any(|name| name == "clips_from"),
+        "{with_module:?}"
+    );
+    assert!(
+        without_module.iter().any(|name| name == "animated_clip"),
+        "{without_module:?}"
+    );
+    assert!(
+        without_module.iter().any(|name| name == "assets_supported"),
+        "{without_module:?}"
+    );
+}
+
+/// A program that needs the animation module cannot be built without one (`E9030`), as with physics.
+#[test]
+fn a_skinned_program_without_the_animation_module_is_e9030() {
+    let options = CompileOptions {
+        animation_bundle: None,
+        ..CompileOptions::with_stub_runtime(BuildMode::Release)
+    };
+    let result = build(
+        &ProjectRoot::at_base(),
+        &project_fs("pass", "clips_from", None),
+        &options,
+    );
+    assert!(result.has_errors());
+    assert!(result.files.is_empty());
+    let codes: Vec<Code> = result.report.diagnostics.iter().map(|d| d.code).collect();
+    assert_eq!(codes, [Code::E9030]);
+    assert!(
+        result.report.diagnostics[0]
+            .message
+            .contains("animation module")
+    );
+    // A program that needs no skeletal animation builds without it.
+    let plain = build(
+        &ProjectRoot::at_base(),
+        &project_fs("pass", "animated_clip", None),
+        &options,
+    );
+    assert!(!plain.has_errors());
+}
+
 #[test]
 fn the_supported_project_builds_identically_every_time() {
     let first = build_project("pass", "assets_supported");

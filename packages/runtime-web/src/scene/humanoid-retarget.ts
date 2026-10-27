@@ -9,7 +9,7 @@ import type { MtekSkin } from "../abi/manifest-types.js";
 import { sampleChannelInto } from "./clips.js";
 import { OPTIONAL_HUMANOID_BONES, REQUIRED_HUMANOID_BONES, mapHumanoid, type HumanoidBone, type HumanoidMap } from "./humanoid.js";
 import { analyse, cross, len, qarc, qbasis, qconj, qmul, qnorm, qrot, sub, uniformScales, unit, worldSimilarity, type Quat, type Rig, type V3 } from "./humanoid-rig.js";
-import { skinProblem } from "./skeleton.js";
+import { skinProblem } from "./skin-problem.js";
 
 export interface HumanoidRetargetOptions {
   /** Multiplier for the hips translation. Default: the ratio of the two skeletons' leg lengths. */

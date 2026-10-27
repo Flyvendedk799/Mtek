@@ -1,2496 +1,3 @@
-// src/math/mat4.ts
-function at(a, i) {
-  let value = a[i];
-  if (value === void 0) throw new RangeError(`matrix index ${i} out of range`);
-  return value;
-}
-function identity() {
-  let m = new Float32Array(16);
-  return m[0] = 1, m[5] = 1, m[10] = 1, m[15] = 1, m;
-}
-function translation(v) {
-  let m = identity();
-  return m[12] = v.x, m[13] = v.y, m[14] = v.z, m;
-}
-function scaling(v) {
-  let m = new Float32Array(16);
-  return m[0] = v.x, m[5] = v.y, m[10] = v.z, m[15] = 1, m;
-}
-function transpose(m) {
-  let out = new Float32Array(16);
-  for (let row = 0; row < 4; row++)
-    for (let col = 0; col < 4; col++) out[row * 4 + col] = at(m, col * 4 + row);
-  return out;
-}
-function multiply(a, b) {
-  return multiplyInto(new Float32Array(16), a, b);
-}
-function multiplyInto(out, a, b) {
-  for (let col = 0; col < 4; col++)
-    for (let row = 0; row < 4; row++) {
-      let sum = 0;
-      for (let k = 0; k < 4; k++) sum += a[k * 4 + row] * b[col * 4 + k];
-      out[col * 4 + row] = sum;
-    }
-  return out;
-}
-function rotation(q) {
-  return rotationInto(new Float32Array(16), q);
-}
-function rotationInto(m, q) {
-  let { x, y, z, w } = q, xx = x * x, yy = y * y, zz = z * z, xy = x * y, xz = x * z, yz = y * z, wx = w * x, wy = w * y, wz = w * z;
-  return m[0] = 1 - 2 * (yy + zz), m[1] = 2 * (xy + wz), m[2] = 2 * (xz - wy), m[3] = 0, m[4] = 2 * (xy - wz), m[5] = 1 - 2 * (xx + zz), m[6] = 2 * (yz + wx), m[7] = 0, m[8] = 2 * (xz + wy), m[9] = 2 * (yz - wx), m[10] = 1 - 2 * (xx + yy), m[11] = 0, m[12] = 0, m[13] = 0, m[14] = 0, m[15] = 1, m;
-}
-function fromRotationTranslationScaleInto(out, scratch, rotationQuat, translationVec, scale) {
-  let r = rotationInto(scratch, rotationQuat), sx = scale.x, sy = scale.y, sz = scale.z;
-  return out[0] = r[0] * sx, out[1] = r[1] * sx, out[2] = r[2] * sx, out[3] = 0, out[4] = r[4] * sy, out[5] = r[5] * sy, out[6] = r[6] * sy, out[7] = 0, out[8] = r[8] * sz, out[9] = r[9] * sz, out[10] = r[10] * sz, out[11] = 0, out[12] = translationVec.x, out[13] = translationVec.y, out[14] = translationVec.z, out[15] = 1, out;
-}
-function perspective(fovY, aspect, near, far) {
-  let f = 1 / Math.tan(fovY / 2), m = new Float32Array(16);
-  return m[0] = f / aspect, m[5] = f, m[10] = far / (near - far), m[11] = -1, m[14] = near * far / (near - far), m;
-}
-function orthographic(height, aspect, near, far) {
-  let width = height * aspect, m = new Float32Array(16);
-  return m[0] = 2 / width, m[5] = 2 / height, m[10] = 1 / (near - far), m[14] = near / (near - far), m[15] = 1, m;
-}
-function lookAtRotation(position, target) {
-  let fx = target.x - position.x, fy = target.y - position.y, fz = target.z - position.z, fLength = Math.hypot(fx, fy, fz);
-  if (!(fLength > 0) || !Number.isFinite(fLength))
-    throw new RangeError("look-at needs distinct, finite position and target");
-  fx /= fLength, fy /= fLength, fz /= fLength;
-  let upIsMinusZ = Math.abs(fy) > 1 - 1e-6, ux0 = 0, uy0 = upIsMinusZ ? 0 : 1, uz0 = upIsMinusZ ? -1 : 0, rx = fy * uz0 - fz * uy0, ry = fz * ux0 - fx * uz0, rz = fx * uy0 - fy * ux0, rLength = Math.hypot(rx, ry, rz);
-  rx /= rLength, ry /= rLength, rz /= rLength;
-  let ux = ry * fz - rz * fy, uy = rz * fx - rx * fz, uz = rx * fy - ry * fx, m = new Float32Array(16);
-  return m[0] = rx, m[1] = ry, m[2] = rz, m[4] = ux, m[5] = uy, m[6] = uz, m[8] = -fx, m[9] = -fy, m[10] = -fz, m[15] = 1, m;
-}
-function viewFromRotation(position, r) {
-  return multiply(transpose(r), translation({ x: -position.x, y: -position.y, z: -position.z }));
-}
-function viewMatrix(position, orientation) {
-  let r = "target" in orientation ? lookAtRotation(position, orientation.target) : rotation(orientation.rotation);
-  return viewFromRotation(position, r);
-}
-function normalMatrixInto(out, offset, model) {
-  let a = at(model, 0), b = at(model, 4), c = at(model, 8), d = at(model, 1), e = at(model, 5), f = at(model, 9), g = at(model, 2), h = at(model, 6), i = at(model, 10), c00 = e * i - f * h, c01 = f * g - d * i, c02 = d * h - e * g, c10 = c * h - b * i, c11 = a * i - c * g, c12 = b * g - a * h, c20 = b * f - c * e, c21 = c * d - a * f, c22 = a * e - b * d, det = a * c00 + b * c01 + c * c02;
-  if (det === 0 || !Number.isFinite(det))
-    throw new RangeError("normal matrix of a singular transform is undefined");
-  let inv = 1 / det;
-  return out[offset] = c00 * inv, out[offset + 1] = c10 * inv, out[offset + 2] = c20 * inv, out[offset + 3] = 0, out[offset + 4] = c01 * inv, out[offset + 5] = c11 * inv, out[offset + 6] = c21 * inv, out[offset + 7] = 0, out[offset + 8] = c02 * inv, out[offset + 9] = c12 * inv, out[offset + 10] = c22 * inv, out[offset + 11] = 0, out[offset + 12] = 0, out[offset + 13] = 0, out[offset + 14] = 0, out[offset + 15] = 1, out;
-}
-
-// src/scene/clips.ts
-function sampleChannelInto(channel, time, out) {
-  let comps = channelWidth(channel), times = channel.times, count = times.length, values = channel.values, identity2 = () => {
-    out[0] = 0, out[1] = 0, out[2] = 0, comps === 4 && (out[3] = 1);
-  };
-  if (count === 0) {
-    identity2();
-    return;
-  }
-  let first = times[0] ?? 0;
-  if (time <= first) {
-    for (let i = 0; i < comps; i += 1) out[i] = values[i] ?? 0;
-    comps === 4 && normalizeInto(out);
-    return;
-  }
-  let hi = 1;
-  for (; hi < count && (times[hi] ?? 0) <= time; ) hi += 1;
-  let lo = hi - 1, from = lo * comps;
-  if (channel.interpolation === "step" || hi >= count) {
-    for (let i = 0; i < comps; i += 1) out[i] = values[from + i] ?? 0;
-    comps === 4 && normalizeInto(out);
-    return;
-  }
-  let t0 = times[lo] ?? 0, span = (times[hi] ?? t0) - t0, t = span === 0 ? 0 : (time - t0) / span, to = hi * comps;
-  if (comps === 4) {
-    let dot4 = 0;
-    for (let i = 0; i < 4; i += 1) dot4 += (values[from + i] ?? 0) * (values[to + i] ?? 0);
-    let sign2 = dot4 < 0 ? -1 : 1, angle = Math.acos(Math.min(1, Math.abs(dot4))), sine = Math.sin(angle), aWeight = sine > 1e-6 ? Math.sin((1 - t) * angle) / sine : 1 - t, bWeight = sine > 1e-6 ? Math.sin(t * angle) / sine : t;
-    for (let i = 0; i < 4; i += 1) {
-      let a = values[from + i] ?? 0;
-      out[i] = a * aWeight + sign2 * (values[to + i] ?? 0) * bWeight;
-    }
-    normalizeInto(out);
-    return;
-  }
-  for (let i = 0; i < 3; i += 1) {
-    let a = values[from + i] ?? 0;
-    out[i] = a + ((values[to + i] ?? a) - a) * t;
-  }
-}
-function channelWidth(channel) {
-  return channel.path === "rotation" ? 4 : 3;
-}
-function normalizeInto(value) {
-  let length2 = Math.hypot(value[0] ?? 0, value[1] ?? 0, value[2] ?? 0, value[3] ?? 0);
-  if (!(length2 > 0)) {
-    value[0] = 0, value[1] = 0, value[2] = 0, value[3] = 1;
-    return;
-  }
-  for (let i = 0; i < 4; i += 1) value[i] = (value[i] ?? 0) / length2;
-}
-var ClipPlayers = class {
-  players = [];
-  scratch = new Float64Array(4);
-  add(clip) {
-    this.remove(clip.slot), this.players.push({
-      clip,
-      time: 0,
-      playing: !0,
-      looping: !0,
-      speed: 1,
-      finished: !1,
-      weight: 1,
-      fadeFrom: 1,
-      fadeTo: 1,
-      fadeTime: 0,
-      fadeDuration: 0,
-      previous: 0,
-      travel: 0
-    });
-  }
-  player(slot) {
-    return this.players.find((player) => player.clip.slot === slot);
-  }
-  play(slot, looping, speed) {
-    let p = this.player(slot);
-    return p === void 0 || !Number.isFinite(speed) || speed < 0 ? !1 : (p.time = 0, p.previous = 0, p.travel = 0, p.looping = looping, p.speed = speed, p.finished = !looping && p.clip.duration === 0, p.playing = !p.finished, !0);
-  }
-  pause(slot) {
-    let p = this.player(slot);
-    return p === void 0 ? !1 : (p.playing = !1, !0);
-  }
-  resume(slot) {
-    let p = this.player(slot);
-    return p === void 0 || p.finished ? !1 : (p.playing = !0, !0);
-  }
-  seek(slot, time) {
-    let p = this.player(slot);
-    return p === void 0 || !Number.isFinite(time) ? !1 : (p.time = Math.max(0, Math.min(p.clip.duration, time)), p.previous = p.time, p.travel = 0, p.finished = !p.looping && p.time === p.clip.duration, p.finished && (p.playing = !1), !0);
-  }
-  fade(slot, weight, duration) {
-    let p = this.player(slot);
-    return p === void 0 || !Number.isFinite(weight) || !Number.isFinite(duration) || duration < 0 ? !1 : (p.fadeFrom = p.weight, p.fadeTo = Math.max(0, Math.min(1, weight)), p.fadeDuration = duration, p.fadeTime = 0, duration === 0 && (p.weight = p.fadeTo), !0);
-  }
-  time(slot) {
-    return this.player(slot)?.time ?? 0;
-  }
-  duration(slot) {
-    return this.player(slot)?.clip.duration ?? 0;
-  }
-  weight(slot) {
-    return this.player(slot)?.weight ?? 0;
-  }
-  playing(slot) {
-    return this.player(slot)?.playing ?? !1;
-  }
-  finished(slot) {
-    return this.player(slot)?.finished ?? !1;
-  }
-  /** Number of wraps during the latest advance; seeking and play reset this to zero. */
-  wraps(slot) {
-    let p = this.player(slot);
-    return p === void 0 || p.clip.duration <= 0 ? 0 : Math.max(0, Math.round((p.previous + p.travel - p.time) / p.clip.duration));
-  }
-  /** A marker in (0, duration] crossed during the latest advance, even across wraps/hitches. */
-  crossed(slot, marker) {
-    let p = this.player(slot);
-    if (p === void 0 || !Number.isFinite(marker) || marker <= 0 || marker > p.clip.duration || p.travel <= 0) return !1;
-    let distance2 = marker - p.previous;
-    return distance2 <= 0 && p.looping && (distance2 += p.clip.duration), distance2 > 0 && distance2 <= p.travel;
-  }
-  remove(slot) {
-    let index = this.players.findIndex((player) => player.clip.slot === slot);
-    index >= 0 && this.players.splice(index, 1);
-  }
-  /** Writes every channel at `time` (the player's own time when omitted) without advancing. */
-  pose(apply, time) {
-    for (let player of this.players)
-      for (let channel of player.clip.channels) this.write(apply, player, channel, time ?? player.time);
-  }
-  poseSlot(slot, apply) {
-    let p = this.player(slot);
-    if (p !== void 0) for (let channel of p.clip.channels) this.write(apply, p, channel, p.time);
-  }
-  /** Advances by `dt` seconds, wrapping after the duration, then writes the new pose. */
-  advance(dt, apply) {
-    if (!(!Number.isFinite(dt) || dt < 0))
-      for (let player of this.players) {
-        player.previous = player.time, player.travel = player.playing ? dt * player.speed : 0;
-        let next = player.time + player.travel, { duration } = player.clip;
-        if (!player.looping && next >= duration ? (next = duration, player.travel = duration - player.time, player.finished = !0, player.playing = !1) : duration > 0 && next > duration && (next %= duration), duration === 0 && (next = 0), player.time = next, player.fadeDuration > 0) {
-          player.fadeTime = Math.min(player.fadeDuration, player.fadeTime + dt);
-          let t = player.fadeTime / player.fadeDuration, eased = t * t * (3 - 2 * t);
-          player.weight = player.fadeFrom + (player.fadeTo - player.fadeFrom) * eased;
-        }
-        for (let channel of player.clip.channels) this.write(apply, player, channel, next);
-      }
-  }
-  write(apply, player, channel, time) {
-    sampleChannelInto(channel, time, this.scratch);
-    let weight = player.weight;
-    if (channel.path === "rotation") {
-      let w = this.scratch[3] ?? 1, sign2 = w < 0 ? -1 : 1, angle = Math.acos(Math.min(1, Math.abs(w))), sine = Math.sin(angle), factor = sine > 1e-6 ? Math.sin(weight * angle) / sine : weight;
-      for (let i = 0; i < 3; i += 1) this.scratch[i] = (this.scratch[i] ?? 0) * factor * sign2;
-      this.scratch[3] = Math.cos(weight * angle), normalizeInto(this.scratch);
-    } else {
-      let base = channel.path === "scale" ? 1 : 0;
-      for (let i = 0; i < 3; i += 1) this.scratch[i] = base + ((this.scratch[i] ?? base) - base) * weight;
-    }
-    apply(player.clip.slot, channel, this.scratch);
-  }
-};
-
-// src/scene/pose-layers.ts
-function multiplyQuat(out, at3, a, ai, b, bi) {
-  let x = a[ai], y = a[ai + 1], z = a[ai + 2], w = a[ai + 3], u = b[bi], v = b[bi + 1], s = b[bi + 2], t = b[bi + 3];
-  out[at3] = w * u + x * t + y * s - z * v, out[at3 + 1] = w * v - x * s + y * t + z * u, out[at3 + 2] = w * s + x * v - y * u + z * t, out[at3 + 3] = w * t - x * u - y * v - z * s;
-}
-function blendQuat(out, at3, b, bi, weight) {
-  let dot4 = 0;
-  for (let i = 0; i < 4; i++) dot4 += out[at3 + i] * b[bi + i];
-  let angle = Math.acos(Math.min(1, Math.abs(dot4))), sine = Math.sin(angle), aWeight = sine > 1e-6 ? Math.sin((1 - weight) * angle) / sine : 1 - weight, bWeight = (sine > 1e-6 ? Math.sin(weight * angle) / sine : weight) * (dot4 < 0 ? -1 : 1);
-  for (let i = 0; i < 4; i++)
-    out[at3 + i] = out[at3 + i] * aWeight + b[bi + i] * bWeight;
-  let length2 = Math.hypot(out[at3], out[at3 + 1], out[at3 + 2], out[at3 + 3]);
-  for (let i = 0; i < 4; i++) out[at3 + i] = out[at3 + i] / length2;
-}
-var PoseLayers = class {
-  constructor(skin) {
-    this.skin = skin;
-  }
-  skin;
-  layers = /* @__PURE__ */ new Map();
-  value = new Float64Array(4);
-  rotation = new Float64Array(4);
-  inverse = new Float64Array(4);
-  revision = 0;
-  inspect() {
-    return [...this.layers].map(([id, { options, mask: mask2, clock, weight, fade }]) => ({
-      id,
-      clip: options.clip,
-      weight,
-      targetWeight: fade?.to ?? weight,
-      fadeRemaining: fade === void 0 ? 0 : fade.duration - fade.elapsed,
-      additive: options.additive ?? !1,
-      time: clock.time(0),
-      duration: clock.duration(0),
-      playing: clock.playing(0),
-      mask: [...mask2]
-    }));
-  }
-  set(id, options) {
-    let clip = this.skin.clips.find((c) => c.name === options.clip);
-    if (id === "" || clip === void 0)
-      throw new RangeError("A layer needs an ID and an existing clip");
-    if (!Number.isFinite(options.weight) || options.weight < 0 || options.weight > 1 || !Number.isFinite(options.speed ?? 1) || (options.speed ?? 1) < 0)
-      throw new RangeError("Invalid animation layer weight or speed");
-    let mask2 = new Float64Array(this.skin.nodes.length).fill(
-      options.mask === void 0 ? 1 : 0
-    );
-    for (let [name, weight] of Object.entries(options.mask ?? {})) {
-      let i = this.skin.nodes.findIndex((n) => n.name === name);
-      if (i < 0 || !Number.isFinite(weight) || weight < 0 || weight > 1)
-        throw new RangeError(`Invalid bone mask: ${name}`);
-      mask2[i] = weight;
-    }
-    let previous = this.layers.get(id), clock = previous?.options.clip === options.clip ? previous.clock : new ClipPlayers();
-    if (clock !== previous?.clock)
-      clock.add({ slot: 0, duration: clip.duration, channels: [] }), clock.play(0, options.looping ?? !0, options.speed ?? 1);
-    else if (previous.options.speed !== options.speed || previous.options.looping !== options.looping) {
-      let time = clock.time(0);
-      clock.play(0, options.looping ?? !0, options.speed ?? 1), clock.seek(0, time);
-    }
-    this.layers.set(id, { options: { ...options }, mask: mask2, clock, weight: options.weight }), this.revision++;
-  }
-  /**
-   * Move a layer's weight to `weight` over `seconds` along a smoothstep, from the weight it has now,
-   * replacing any fade in progress. The layer keeps its phase; zero seconds is immediate.
-   */
-  fade(id, weight, seconds) {
-    if (!Number.isFinite(weight) || weight < 0 || weight > 1 || !Number.isFinite(seconds) || seconds < 0)
-      throw new RangeError("Invalid animation layer fade weight or duration");
-    let layer = this.layers.get(id);
-    return layer === void 0 ? !1 : (seconds === 0 || weight === layer.weight ? (delete layer.fade, layer.weight = weight) : layer.fade = { from: layer.weight, to: weight, elapsed: 0, duration: seconds }, this.revision++, !0);
-  }
-  remove(id) {
-    this.layers.delete(id) && this.revision++;
-  }
-  clear() {
-    this.layers.size > 0 && (this.layers.clear(), this.revision++);
-  }
-  seek(id, seconds) {
-    let layer = this.layers.get(id);
-    return layer === void 0 || !layer.clock.seek(0, seconds) ? !1 : (this.revision++, !0);
-  }
-  crossed(id, marker) {
-    return this.layers.get(id)?.clock.crossed(0, marker) ?? !1;
-  }
-  advance(dt) {
-    for (let layer of this.layers.values()) {
-      let before = layer.clock.time(0);
-      layer.clock.advance(dt, () => {
-      }), before !== layer.clock.time(0) && this.revision++;
-      let fade = layer.fade;
-      if (fade === void 0 || dt === 0) continue;
-      fade.elapsed = Math.min(fade.duration, fade.elapsed + dt);
-      let t = fade.elapsed / fade.duration;
-      layer.weight = fade.elapsed === fade.duration ? fade.to : fade.from + (fade.to - fade.from) * t * t * (3 - 2 * t), fade.elapsed === fade.duration && delete layer.fade, this.revision++;
-    }
-  }
-  apply(pose, bind) {
-    for (let { options, mask: mask2, clock, weight } of this.layers.values()) {
-      let clip = this.skin.clips.find((c) => c.name === options.clip);
-      for (let channel of clip.channels) {
-        let w = weight * mask2[channel.node];
-        if (w === 0) continue;
-        sampleChannelInto(channel, clock.time(0), this.value);
-        let at3 = channel.node * 10 + (channel.path === "translation" ? 0 : channel.path === "rotation" ? 3 : 7);
-        if (channel.path === "rotation")
-          if (options.additive === !0) {
-            for (let i = 0; i < 4; i++)
-              this.inverse[i] = bind[at3 + i] * (i < 3 ? -1 : 1);
-            multiplyQuat(this.rotation, 0, this.inverse, 0, this.value, 0), this.value.set([0, 0, 0, 1]), blendQuat(this.value, 0, this.rotation, 0, w), multiplyQuat(pose, at3, pose, at3, this.value, 0);
-          } else blendQuat(pose, at3, this.value, 0, w);
-        else
-          for (let c = 0; c < 3; c++)
-            options.additive !== !0 ? pose[at3 + c] = pose[at3 + c] + (this.value[c] - pose[at3 + c]) * w : channel.path === "scale" ? pose[at3 + c] = pose[at3 + c] * (1 + (this.value[c] / bind[at3 + c] - 1) * w) : pose[at3 + c] = pose[at3 + c] + (this.value[c] - bind[at3 + c]) * w;
-      }
-    }
-  }
-};
-
-// src/scene/uniform-scale.ts
-var FLOAT32_SCALE_ROUND_OFF = 19073486328125e-19;
-function numericallyUniformScale(x, y, z) {
-  return Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z) && x > 0 && y > 0 && z > 0 && Math.abs(x / y - 1) <= FLOAT32_SCALE_ROUND_OFF && Math.abs(x / z - 1) <= FLOAT32_SCALE_ROUND_OFF;
-}
-
-// src/scene/limb-ik.ts
-var LIMB_NAMES = ["leftLeg", "rightLeg", "leftArm", "rightArm"], KNEE_MAX_FLEXION = 150 * Math.PI / 180, ELBOW_MAX_FLEXION = 145 * Math.PI / 180, DEFAULT_SOFTNESS = 0.05, MAX_FLEXION_LIMIT = 175 * Math.PI / 180, BONES = {
-  leftLeg: ["leftUpperLeg", "leftLowerLeg", "leftFoot"],
-  rightLeg: ["rightUpperLeg", "rightLowerLeg", "rightFoot"],
-  leftArm: ["leftUpperArm", "leftLowerArm", "leftHand"],
-  rightArm: ["rightUpperArm", "rightLowerArm", "rightHand"]
-}, isLeg = (limb) => limb === "leftLeg" || limb === "rightLeg", finite = (values) => Array.from(values).every(Number.isFinite), EPS = 1e-9;
-function reachLimits(a, b, minFlexion, maxFlexion, softness) {
-  let min2 = Math.sqrt(Math.max(0, a * a + b * b + 2 * a * b * Math.cos(maxFlexion))), max2 = Math.sqrt(Math.max(0, a * a + b * b + 2 * a * b * Math.cos(minFlexion))), width = softness * (max2 - min2);
-  return { min: min2, max: max2, softMin: min2 + width, softMax: max2 - width };
-}
-function softReach(distance2, limits) {
-  if (distance2 > limits.softMax) {
-    let width = limits.max - limits.softMax;
-    return width > 0 ? limits.softMax + width * (1 - Math.exp(-(distance2 - limits.softMax) / width)) : limits.max;
-  }
-  if (distance2 < limits.softMin) {
-    let width = limits.softMin - limits.min;
-    return width > 0 ? limits.softMin - width * (1 - Math.exp(-(limits.softMin - distance2) / width)) : limits.min;
-  }
-  return distance2;
-}
-function minimumDrop(toTarget, up, reach) {
-  let p = toTarget[0] * up[0] + toTarget[1] * up[1] + toTarget[2] * up[2], q = toTarget[0] ** 2 + toTarget[1] ** 2 + toTarget[2] ** 2 - reach * reach;
-  if (q <= 0) return 0;
-  let discriminant = p * p - q;
-  if (discriminant < 0) return Math.max(0, -p);
-  let root = Math.sqrt(discriminant);
-  return -p + root < 0 ? 0 : Math.max(0, -p - root);
-}
-var dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-function cross(o, a, b) {
-  let x = a[1] * b[2] - a[2] * b[1], y = a[2] * b[0] - a[0] * b[2], z = a[0] * b[1] - a[1] * b[0];
-  o[0] = x, o[1] = y, o[2] = z;
-}
-function length3(a) {
-  return Math.hypot(a[0], a[1], a[2]);
-}
-function normalize3(a) {
-  let length2 = length3(a);
-  return length2 > EPS && (a[0] = a[0] / length2, a[1] = a[1] / length2, a[2] = a[2] / length2), length2;
-}
-function perpendicular(o, a) {
-  let ax = Math.abs(a[0]), ay = Math.abs(a[1]), az = Math.abs(a[2]);
-  ax <= ay && ax <= az ? (o[0] = 0, o[1] = -a[2], o[2] = a[1]) : ay <= az ? (o[0] = a[2], o[1] = 0, o[2] = -a[0]) : (o[0] = -a[1], o[1] = a[0], o[2] = 0), normalize3(o);
-}
-function qmul(o, a, b) {
-  let ax = a[0], ay = a[1], az = a[2], aw = a[3], bx = b[0], by = b[1], bz = b[2], bw = b[3];
-  o[0] = aw * bx + ax * bw + ay * bz - az * by, o[1] = aw * by - ax * bz + ay * bw + az * bx, o[2] = aw * bz + ax * by - ay * bx + az * bw, o[3] = aw * bw - ax * bx - ay * by - az * bz;
-}
-function qconj(o, a) {
-  o[0] = -a[0], o[1] = -a[1], o[2] = -a[2], o[3] = a[3];
-}
-function qnormalize(o) {
-  let length2 = Math.hypot(o[0], o[1], o[2], o[3]);
-  length2 > EPS ? (o[0] = o[0] / length2, o[1] = o[1] / length2, o[2] = o[2] / length2, o[3] = o[3] / length2) : (o[0] = 0, o[1] = 0, o[2] = 0, o[3] = 1);
-}
-function qrotate(o, q, at3, x, y, z) {
-  let qx = q[at3], qy = q[at3 + 1], qz = q[at3 + 2], qw = q[at3 + 3], tx = 2 * (qy * z - qz * y), ty = 2 * (qz * x - qx * z), tz = 2 * (qx * y - qy * x);
-  o[0] = x + qw * tx + (qy * tz - qz * ty), o[1] = y + qw * ty + (qz * tx - qx * tz), o[2] = z + qw * tz + (qx * ty - qy * tx);
-}
-function qaxis(o, axis, angle) {
-  let s = Math.sin(angle / 2);
-  o[0] = axis[0] * s, o[1] = axis[1] * s, o[2] = axis[2] * s, o[3] = Math.cos(angle / 2);
-}
-function qfromto(o, from, to, prefer, scratch) {
-  let d = dot(from, to);
-  if (d < -1 + 1e-12) {
-    if (prefer !== void 0) {
-      let along = dot(prefer, from);
-      scratch[0] = prefer[0] - along * from[0], scratch[1] = prefer[1] - along * from[1], scratch[2] = prefer[2] - along * from[2];
-    } else scratch.fill(0);
-    normalize3(scratch) < 1e-6 && perpendicular(scratch, from), o[0] = scratch[0], o[1] = scratch[1], o[2] = scratch[2], o[3] = 0;
-    return;
-  }
-  cross(o, from, to), o[3] = 1 + d, qnormalize(o);
-}
-function qslerp(o, a, b, t) {
-  let cosine = a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3], sign2 = cosine < 0 ? -1 : 1;
-  cosine = Math.min(1, Math.abs(cosine));
-  let angle = Math.acos(cosine), sine = Math.sin(angle), wa = sine > 1e-6 ? Math.sin((1 - t) * angle) / sine : 1 - t, wb = (sine > 1e-6 ? Math.sin(t * angle) / sine : t) * sign2, x = a[0] * wa + b[0] * wb, y = a[1] * wa + b[1] * wb, z = a[2] * wa + b[2] * wb, w = a[3] * wa + b[3] * wb;
-  o[0] = x, o[1] = y, o[2] = z, o[3] = w, qnormalize(o);
-}
-var clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v)), LimbIK = class {
-  constructor(skin) {
-    this.skin = skin;
-    this.n = skin.nodes.length, this.parentOf = Int32Array.from(skin.nodes.map((node) => node.parent)), this.bind = new Float64Array(this.n * 10), skin.nodes.forEach((node, i) => {
-      this.bind.set(node.translation, i * 10);
-      let length2 = Math.hypot(...node.rotation);
-      this.bind.set(node.rotation.map((v) => v / length2), i * 10 + 3), this.bind.set(node.scale, i * 10 + 7);
-    }), this.gp = new Float64Array(this.n * 3), this.gq = new Float64Array(this.n * 4), this.gs = new Float64Array(this.n);
-    let seen = /* @__PURE__ */ new Set(), visit = (i) => {
-      if (seen.has(i)) return;
-      let parent = this.parentOf[i];
-      parent >= 0 && visit(parent), seen.add(i), this.order.push(i);
-    };
-    for (let i = 0; i < this.n; i++) visit(i);
-    for (let i = 0; i < LIMB_NAMES.length; i++) this.requests.push({ rig: void 0, weight: 1, softness: 0, min: 0, max: 0, target: new Float64Array(3), pole: new Float64Array(3), hasPole: !1, rotation: new Float64Array(4), hasRotation: !1, rotationWeight: 1 });
-  }
-  skin;
-  revision = 0;
-  n;
-  parentOf;
-  order = [];
-  bind;
-  /** Similarity transform of every node (decision 0209 uniform scale): position, rotation, scale. */
-  gp;
-  gq;
-  gs;
-  relevant = new Uint8Array(0);
-  map;
-  rigs = /* @__PURE__ */ new Map();
-  hips = -1;
-  up = new Float64Array([0, 0, 1]);
-  soleDefault = 0;
-  groundDefault = 0;
-  maxDropDefault = 0;
-  goals = /* @__PURE__ */ new Map();
-  byLimb = /* @__PURE__ */ new Map();
-  placement;
-  pendingDt = 0;
-  drop = 0;
-  dropReady = !1;
-  required = 0;
-  converging = !1;
-  states = /* @__PURE__ */ new Map();
-  // scratch
-  requests = [];
-  s = Array.from({ length: 16 }, () => new Float64Array(3));
-  r = Array.from({ length: 13 }, () => new Float64Array(4));
-  spare = new Float64Array(3);
-  local = new Float64Array(3);
-  get humanoid() {
-    return this.map;
-  }
-  /** True while the smoothed hips drop is still converging; the owner must keep evaluating. */
-  get animating() {
-    return this.converging;
-  }
-  get active() {
-    return this.goals.size > 0 || this.placement !== void 0;
-  }
-  /** Accumulates elapsed time for hips smoothing; consumed by the next evaluation. */
-  advance(dt) {
-    this.placement !== void 0 && (this.pendingDt += dt);
-  }
-  // ------------------------------------------------------------------ configuration
-  /** Resolves a map to skin nodes and derives each limb's hinge from the bind pose. `undefined` removes every goal. */
-  setHumanoid(map) {
-    if (map === void 0) {
-      this.map = void 0, this.rigs = /* @__PURE__ */ new Map(), this.goals.clear(), this.byLimb.clear(), this.placement = void 0, this.resetState(), this.revision++;
-      return;
-    }
-    let index = (bone) => {
-      let name = map.bones[bone], found = name === void 0 ? -1 : this.skin.nodes.findIndex((node) => node.name === name);
-      if (found < 0) throw new RangeError(`Humanoid map needs ${bone} to name a skin node`);
-      return found;
-    }, descends = (node, ancestor) => {
-      for (let i = this.parentOf[node]; i >= 0; i = this.parentOf[i]) if (i === ancestor) return !0;
-      return !1;
-    }, up = Float64Array.from(map.up), forward = Float64Array.from(map.forward);
-    if (!finite(map.up) || !finite(map.forward) || map.up.length !== 3 || map.forward.length !== 3 || normalize3(up) < 1e-8 || normalize3(forward) < 1e-8)
-      throw new RangeError("Humanoid map needs finite non-zero up and forward vectors");
-    let hips = index("hips"), nodes = /* @__PURE__ */ new Map();
-    for (let limb of LIMB_NAMES) {
-      let [u, l, e] = BONES[limb].map(index);
-      if (!descends(l, u) || !descends(e, l)) throw new RangeError(`Humanoid map: ${limb} bones must descend upper, lower, end`);
-      nodes.set(limb, [u, l, e]);
-    }
-    this.compute(this.bind, !1);
-    let meshQ = this.skin.meshNode * 4, meshP = this.skin.meshNode * 3, meshS = this.gs[this.skin.meshNode], forwardG = new Float64Array(3), upG = new Float64Array(3);
-    qrotate(forwardG, this.gq, meshQ, forward[0], forward[1], forward[2]), normalize3(forwardG), qrotate(upG, this.gq, meshQ, up[0], up[1], up[2]), normalize3(upG);
-    let rigs = /* @__PURE__ */ new Map(), heights = {};
-    for (let limb of LIMB_NAMES) {
-      let [u, l, e] = nodes.get(limb), pu = this.gp.subarray(u * 3, u * 3 + 3), pl = this.gp.subarray(l * 3, l * 3 + 3), pe = this.gp.subarray(e * 3, e * 3 + 3), axis = new Float64Array([pe[0] - pu[0], pe[1] - pu[1], pe[2] - pu[2]]), upper = new Float64Array([pl[0] - pu[0], pl[1] - pu[1], pl[2] - pu[2]]), total = length3(upper) + Math.hypot(pe[0] - pl[0], pe[1] - pl[1], pe[2] - pl[2]);
-      normalize3(axis) < EPS && axis.set(upper), normalize3(axis);
-      let along = dot(upper, axis), offset = new Float64Array([upper[0] - along * axis[0], upper[1] - along * axis[1], upper[2] - along * axis[2]]), sign2 = isLeg(limb) ? 1 : -1, anatomical = new Float64Array([sign2 * forwardG[0], sign2 * forwardG[1], sign2 * forwardG[2]]), side2 = dot(anatomical, axis);
-      for (let c = 0; c < 3; c++) anatomical[c] = anatomical[c] - side2 * axis[c];
-      let anatomicalLength = normalize3(anatomical), offsetLength = normalize3(offset), bend = new Float64Array(3);
-      if (offsetLength > 3e-3 * total) {
-        if (bend.set(offset), anatomicalLength > 1e-3 && dot(bend, anatomical) < -0.25) for (let c = 0; c < 3; c++) bend[c] = -bend[c];
-      } else if (anatomicalLength > 1e-3) bend.set(anatomical);
-      else {
-        let rise = dot(upG, axis);
-        for (let c = 0; c < 3; c++) bend[c] = upG[c] - rise * axis[c];
-        normalize3(bend) < 1e-3 && perpendicular(bend, axis);
-      }
-      let hingeWorld = new Float64Array(3);
-      cross(hingeWorld, bend, axis), normalize3(hingeWorld);
-      let conj = new Float64Array(4);
-      qconj(conj, this.gq.subarray(u * 4, u * 4 + 4));
-      let hinge = new Float64Array(3);
-      qrotate(hinge, conj, 0, hingeWorld[0], hingeWorld[1], hingeWorld[2]);
-      let singularWorld = new Float64Array(3);
-      if (isLeg(limb)) singularWorld.set(upG);
-      else {
-        let left = new Float64Array(3);
-        cross(left, upG, forwardG), normalize3(left);
-        let outward = limb === "leftArm" ? 1 : -1;
-        for (let c = 0; c < 3; c++) singularWorld[c] = -outward * left[c] - forwardG[c];
-        normalize3(singularWorld);
-      }
-      let parentConj = new Float64Array(4), singular = new Float64Array(3), parent = this.parentOf[u];
-      qconj(parentConj, this.gq.subarray(parent * 4, parent * 4 + 4)), qrotate(singular, parentConj, 0, singularWorld[0], singularWorld[1], singularWorld[2]), rigs.set(limb, { limb, u, l, e, hinge, singular, reach: total / meshS, maxFlexion: isLeg(limb) ? KNEE_MAX_FLEXION : ELBOW_MAX_FLEXION });
-    }
-    let height = (node) => {
-      let dx = this.gp[node * 3] - this.gp[meshP], dy = this.gp[node * 3 + 1] - this.gp[meshP + 1], dz = this.gp[node * 3 + 2] - this.gp[meshP + 2];
-      return (dx * upG[0] + dy * upG[1] + dz * upG[2]) / meshS;
-    };
-    heights.left = height(nodes.get("leftLeg")[2]), heights.right = height(nodes.get("rightLeg")[2]), this.groundDefault = 0, this.soleDefault = Math.max(0, Math.min(heights.left, heights.right)), this.maxDropDefault = 0.5 * Math.min(rigs.get("leftLeg").reach, rigs.get("rightLeg").reach);
-    let relevant = new Uint8Array(this.n), mark = (node) => {
-      for (let i = node; i >= 0 && relevant[i] === 0; i = this.parentOf[i]) relevant[i] = 1;
-    };
-    mark(this.skin.meshNode), mark(hips);
-    for (let [u, l, e] of nodes.values())
-      mark(u), mark(l), mark(e);
-    this.relevant = relevant, this.map = map, this.rigs = rigs, this.hips = hips, this.up = up, this.resetState(), this.revision++;
-  }
-  resetState() {
-    this.drop = 0, this.dropReady = !1, this.required = 0, this.converging = !1, this.pendingDt = 0, this.states.clear();
-  }
-  /** Sets (or replaces) the goal `id`. At most one goal drives each limb, and foot placement owns both legs while it is set. */
-  set(id, goal) {
-    if (this.map === void 0) throw new RangeError("Limb IK needs a humanoid map: call setHumanoid first");
-    if (id === "" || !LIMB_NAMES.includes(goal.limb)) throw new RangeError("A limb goal needs an ID and a limb name");
-    if (this.placement !== void 0 && isLeg(goal.limb)) throw new RangeError("Foot placement owns both legs; clear it before setting a leg goal");
-    let holder = this.byLimb.get(goal.limb);
-    if (holder !== void 0 && holder !== id) throw new RangeError(`Limb ${goal.limb} is already driven by goal ${holder}`);
-    let weight = goal.weight ?? 1, rotationWeight = goal.rotationWeight ?? 1, softness = goal.softness ?? DEFAULT_SOFTNESS, min2 = goal.flexion?.min ?? 0, max2 = goal.flexion?.max ?? (isLeg(goal.limb) ? KNEE_MAX_FLEXION : ELBOW_MAX_FLEXION);
-    if (goal.target.length !== 3 || !finite(goal.target) || !Number.isFinite(weight) || weight < 0 || weight > 1 || !Number.isFinite(rotationWeight) || rotationWeight < 0 || rotationWeight > 1 || !Number.isFinite(softness) || softness < 0 || softness > 0.5)
-      throw new RangeError("Invalid limb target, weight, rotation weight or softness");
-    if (!Number.isFinite(min2) || !Number.isFinite(max2) || min2 < 0 || min2 >= max2 || max2 > MAX_FLEXION_LIMIT)
-      throw new RangeError("Invalid limb flexion range: need 0 <= min < max <= 175 degrees");
-    let pole;
-    if (goal.pole !== void 0) {
-      let length2 = Math.hypot(...goal.pole);
-      if (goal.pole.length !== 3 || !finite(goal.pole) || !Number.isFinite(length2) || length2 < 1e-8) throw new RangeError("Invalid limb pole direction");
-      pole = goal.pole.map((v) => v / length2);
-    }
-    let rotation2;
-    if (goal.rotation !== void 0) {
-      let length2 = Math.hypot(...goal.rotation);
-      if (goal.rotation.length !== 4 || !finite(goal.rotation) || !Number.isFinite(length2) || length2 < 1e-8) throw new RangeError("Invalid limb orientation quaternion");
-      rotation2 = goal.rotation.map((v) => v / length2);
-      let end = this.rigs.get(goal.limb).e;
-      for (let node = this.skin.meshNode; node >= 0; node = this.parentOf[node])
-        if (node === end) throw new RangeError("Limb orientation mesh frame cannot descend from the end effector");
-    }
-    holder === void 0 && this.byLimb.set(goal.limb, id), this.goals.set(id, { id, limb: goal.limb, target: [...goal.target], weight, pole, rotation: rotation2, rotationWeight, softness, min: min2, max: max2 }), this.revision++;
-  }
-  /** Sets or (with `undefined`) clears foot placement. State such as the smoothed drop survives replacement. */
-  setFootPlacement(placement2) {
-    if (placement2 === void 0) {
-      this.placement !== void 0 && (this.placement = void 0, this.resetState(), this.revision++);
-      return;
-    }
-    if (this.map === void 0) throw new RangeError("Foot placement needs a humanoid map: call setHumanoid first");
-    if (this.byLimb.has("leftLeg") || this.byLimb.has("rightLeg")) throw new RangeError("Foot placement owns both legs; remove leg goals first");
-    let smoothing = placement2.smoothing ?? 0.1, softness = placement2.softness ?? DEFAULT_SOFTNESS, soleOffset = placement2.soleOffset ?? this.soleDefault, groundLevel = placement2.groundLevel ?? this.groundDefault, maxDrop = placement2.maxDrop ?? this.maxDropDefault;
-    if (!Number.isFinite(smoothing) || smoothing < 0 || !Number.isFinite(softness) || softness < 0 || softness > 0.5 || !Number.isFinite(soleOffset) || soleOffset < 0 || !Number.isFinite(groundLevel) || !Number.isFinite(maxDrop) || maxDrop < 0)
-      throw new RangeError("Invalid foot placement smoothing, softness, sole offset, ground level or maximum drop");
-    let ground = (side2, g) => {
-      let weight = g.weight ?? 1;
-      if (g.height === void 0 == (g.point === void 0)) throw new RangeError(`Foot placement ${side2} needs exactly one of height or point`);
-      if (g.height !== void 0 && !Number.isFinite(g.height)) throw new RangeError(`Foot placement ${side2} height must be finite`);
-      if (g.point !== void 0 && (g.point.length !== 3 || !finite(g.point))) throw new RangeError(`Foot placement ${side2} point must be three finite numbers`);
-      if (!Number.isFinite(weight) || weight < 0 || weight > 1) throw new RangeError(`Foot placement ${side2} weight must be in [0, 1]`);
-      let normal;
-      if (g.normal !== void 0) {
-        let length2 = Math.hypot(...g.normal);
-        if (g.normal.length !== 3 || !finite(g.normal) || !Number.isFinite(length2) || length2 < 1e-8) throw new RangeError(`Foot placement ${side2} normal must be a finite non-zero vector`);
-        normal = g.normal.map((v) => v / length2);
-      }
-      return { height: g.height, point: g.point === void 0 ? void 0 : [...g.point], normal, weight };
-    }, left = ground("left", placement2.left), right = ground("right", placement2.right);
-    this.placement = { left, right, smoothing, soleOffset, groundLevel, maxDrop, softness }, this.revision++;
-  }
-  remove(id) {
-    let goal = this.goals.get(id);
-    return goal === void 0 ? !1 : (this.goals.delete(id), this.byLimb.delete(goal.limb), this.states.delete(goal.limb), this.revision++, !0);
-  }
-  has(id) {
-    return this.goals.has(id);
-  }
-  /** Removes every goal and foot placement; the humanoid map stays. */
-  clear() {
-    this.goals.size === 0 && this.placement === void 0 || (this.goals.clear(), this.byLimb.clear(), this.placement = void 0, this.resetState(), this.revision++);
-  }
-  inspect() {
-    let vec = (v) => ({ x: v[0], y: v[1], z: v[2] }), limbs = [...this.goals.values()].map((goal) => {
-      let rig = this.rigs.get(goal.limb), state = this.states.get(goal.limb);
-      return {
-        id: goal.id,
-        limb: goal.limb,
-        nodes: [rig.u, rig.l, rig.e],
-        target: vec(goal.target),
-        weight: goal.weight,
-        ...goal.rotation === void 0 ? {} : { rotation: { x: goal.rotation[0], y: goal.rotation[1], z: goal.rotation[2], w: goal.rotation[3] } },
-        rotationWeight: goal.rotationWeight,
-        ...goal.pole === void 0 ? {} : { pole: vec(goal.pole) },
-        softness: goal.softness,
-        flexionRange: { min: goal.min, max: goal.max },
-        flexion: state?.flexion ?? null,
-        residual: state?.residual ?? null
-      };
-    }), ground = (g, limb) => ({
-      ...g.height === void 0 ? {} : { height: g.height },
-      ...g.point === void 0 ? {} : { point: vec(g.point) },
-      ...g.normal === void 0 ? {} : { normal: vec(g.normal) },
-      weight: g.weight,
-      flexion: this.states.get(limb)?.flexion ?? null,
-      residual: this.states.get(limb)?.residual ?? null
-    }), p = this.placement;
-    return { limbs, footPlacement: p === void 0 ? null : {
-      left: ground(p.left, "leftLeg"),
-      right: ground(p.right, "rightLeg"),
-      smoothing: p.smoothing,
-      soleOffset: p.soleOffset,
-      groundLevel: p.groundLevel,
-      maxDrop: p.maxDrop,
-      softness: p.softness,
-      requiredDrop: this.required,
-      drop: this.drop
-    } };
-  }
-  // ------------------------------------------------------------------ evaluation
-  /** Global similarity transforms (position, rotation, uniform scale) of the pose, in double precision. */
-  compute(pose, check) {
-    for (let i of this.order) {
-      let at3 = i * 10, parent = this.parentOf[i], sx = pose[at3 + 7];
-      if (check && this.relevant[i] === 1 && !numericallyUniformScale(sx, pose[at3 + 8], pose[at3 + 9]))
-        throw new RangeError("Limb IK requires uniform ancestor scales");
-      if (parent < 0) {
-        this.gp[i * 3] = pose[at3], this.gp[i * 3 + 1] = pose[at3 + 1], this.gp[i * 3 + 2] = pose[at3 + 2];
-        for (let c = 0; c < 4; c++) this.gq[i * 4 + c] = pose[at3 + 3 + c];
-        this.gs[i] = sx;
-      } else {
-        let scale = this.gs[parent];
-        qrotate(this.spare, this.gq, parent * 4, pose[at3], pose[at3 + 1], pose[at3 + 2]), this.gp[i * 3] = this.gp[parent * 3] + scale * this.spare[0], this.gp[i * 3 + 1] = this.gp[parent * 3 + 1] + scale * this.spare[1], this.gp[i * 3 + 2] = this.gp[parent * 3 + 2] + scale * this.spare[2];
-        let q = this.r[9];
-        q[0] = pose[at3 + 3], q[1] = pose[at3 + 4], q[2] = pose[at3 + 5], q[3] = pose[at3 + 6], qmul(q, this.gq.subarray(parent * 4, parent * 4 + 4), q);
-        for (let c = 0; c < 4; c++) this.gq[i * 4 + c] = q[c];
-        this.gs[i] = scale * sx;
-      }
-    }
-  }
-  apply(pose) {
-    let rigs = this.rigs;
-    if (this.map === void 0 || this.goals.size === 0 && this.placement === void 0) {
-      this.converging = !1;
-      return;
-    }
-    this.compute(pose, !0);
-    let mesh = this.skin.meshNode, requests = [], used = this.requests, slot = 0, prepare = (rig) => {
-      let r = used[slot++];
-      return r.rig = rig, r;
-    };
-    if (this.placement !== void 0) {
-      let left = prepare(rigs.get("leftLeg")), right = prepare(rigs.get("rightLeg"));
-      this.placeFeet(pose, left, right), left.weight > 0 && requests.push(left), right.weight > 0 && requests.push(right);
-    }
-    for (let limb of LIMB_NAMES) {
-      let id = this.byLimb.get(limb);
-      if (id === void 0) continue;
-      let goal = this.goals.get(id);
-      if (goal.weight === 0) continue;
-      let r = prepare(rigs.get(limb));
-      r.weight = goal.weight, r.softness = goal.softness, r.min = goal.min, r.max = goal.max, r.rotationWeight = goal.rotationWeight, qrotate(r.target, this.gq, mesh * 4, goal.target[0], goal.target[1], goal.target[2]);
-      for (let c = 0; c < 3; c++) r.target[c] = this.gp[mesh * 3 + c] + this.gs[mesh] * r.target[c];
-      r.hasPole = goal.pole !== void 0, goal.pole !== void 0 && (qrotate(r.pole, this.gq, mesh * 4, goal.pole[0], goal.pole[1], goal.pole[2]), normalize3(r.pole)), r.hasRotation = goal.rotation !== void 0, goal.rotation !== void 0 && qmul(r.rotation, this.gq.subarray(mesh * 4, mesh * 4 + 4), goal.rotation), requests.push(r);
-    }
-    for (let request of requests) this.solve(pose, request);
-  }
-  /** Foot targets, minimum hips drop, hips shift and (re)computed transforms; fills the two leg requests. */
-  placeFeet(pose, left, right) {
-    let placement2 = this.placement, mesh = this.skin.meshNode, meshQ = mesh * 4, sMesh = this.gs[mesh], upG = this.s[0];
-    qrotate(upG, this.gq, meshQ, this.up[0], this.up[1], this.up[2]), normalize3(upG);
-    let required = 0, toTarget = this.s[1], normalG = this.s[2], targetG = this.s[3];
-    for (let [request, ground] of [[left, placement2.left], [right, placement2.right]]) {
-      let rig = request.rig, u = rig.u, e = rig.e;
-      request.weight = ground.weight, request.softness = placement2.softness, request.min = 0, request.max = KNEE_MAX_FLEXION, request.rotationWeight = 1, request.hasPole = !1, request.hasRotation = !0;
-      let hasNormal = !1;
-      ground.normal !== void 0 && (qrotate(normalG, this.gq, meshQ, ground.normal[0], ground.normal[1], ground.normal[2]), normalize3(normalG), hasNormal = !0);
-      let pe = e * 3;
-      if (ground.point !== void 0) {
-        let clearance = placement2.soleOffset, n = hasNormal ? ground.normal : this.up;
-        qrotate(targetG, this.gq, meshQ, ground.point[0] + n[0] * clearance, ground.point[1] + n[1] * clearance, ground.point[2] + n[2] * clearance);
-        for (let c = 0; c < 3; c++) targetG[c] = this.gp[mesh * 3 + c] + sMesh * targetG[c];
-      } else {
-        let height = ground.height, animated = ((this.gp[pe] - this.gp[mesh * 3]) * upG[0] + (this.gp[pe + 1] - this.gp[mesh * 3 + 1]) * upG[1] + (this.gp[pe + 2] - this.gp[mesh * 3 + 2]) * upG[2]) / sMesh, slope = hasNormal ? Math.max(0.5, dot(normalG, upG)) : 1, lifted = animated + (height - placement2.groundLevel), floor2 = height + placement2.soleOffset / slope, wanted2 = Math.max(lifted, floor2);
-        for (let c = 0; c < 3; c++) targetG[c] = this.gp[pe + c] + upG[c] * sMesh * (wanted2 - animated);
-      }
-      for (let c = 0; c < 3; c++) request.target[c] = targetG[c];
-      let qe = this.r[0], tilt = this.r[1];
-      for (let c = 0; c < 4; c++) qe[c] = this.gq[e * 4 + c];
-      hasNormal ? (qfromto(tilt, upG, normalG, void 0, this.spare), qmul(request.rotation, tilt, qe)) : request.rotation.set(qe);
-      let a = Math.hypot(this.gp[rig.l * 3] - this.gp[u * 3], this.gp[rig.l * 3 + 1] - this.gp[u * 3 + 1], this.gp[rig.l * 3 + 2] - this.gp[u * 3 + 2]), b = Math.hypot(this.gp[pe] - this.gp[rig.l * 3], this.gp[pe + 1] - this.gp[rig.l * 3 + 1], this.gp[pe + 2] - this.gp[rig.l * 3 + 2]), limits = reachLimits(a, b, 0, KNEE_MAX_FLEXION, placement2.softness);
-      for (let c = 0; c < 3; c++) toTarget[c] = targetG[c] - this.gp[u * 3 + c];
-      required = Math.max(required, ground.weight * minimumDrop(toTarget, upG, limits.softMax) / sMesh);
-    }
-    this.required = required;
-    let wanted = Math.min(required, placement2.maxDrop);
-    if (!this.dropReady || placement2.smoothing === 0 ? (this.drop = wanted, this.dropReady = !0) : this.drop += (wanted - this.drop) * (1 - Math.exp(-this.pendingDt / placement2.smoothing)), this.pendingDt = 0, this.converging = Math.abs(this.drop - wanted) > 1e-9, this.converging || (this.drop = wanted), this.drop > 0 && this.hips >= 0) {
-      let displacement = this.drop * sMesh, parent = this.parentOf[this.hips], delta = this.local;
-      if (delta[0] = -upG[0] * displacement, delta[1] = -upG[1] * displacement, delta[2] = -upG[2] * displacement, parent >= 0) {
-        let conj = this.r[2];
-        qconj(conj, this.gq.subarray(parent * 4, parent * 4 + 4)), qrotate(delta, conj, 0, delta[0], delta[1], delta[2]);
-        let scale = this.gs[parent];
-        for (let c = 0; c < 3; c++) delta[c] = delta[c] / scale;
-      }
-      for (let c = 0; c < 3; c++) pose[this.hips * 10 + c] = pose[this.hips * 10 + c] + delta[c];
-      this.compute(pose, !1);
-    }
-  }
-  /** Solves one limb in skeleton-root space and writes the blended local rotations of upper, lower and (optionally) end. */
-  solve(pose, request) {
-    let { rig } = request, { u, l, e } = rig, gp = this.gp, gq = this.gq, [du, dl, ehat, hc, hs, q, uDir, lDir, tmp] = [this.s[4], this.s[5], this.s[6], this.s[7], this.s[8], this.s[9], this.s[10], this.s[11], this.s[12]], reference = this.s[13], chord = this.s[14], work3 = this.s[15];
-    for (let c = 0; c < 3; c++)
-      du[c] = gp[l * 3 + c] - gp[u * 3 + c], dl[c] = gp[e * 3 + c] - gp[l * 3 + c];
-    let a = normalize3(du), b = normalize3(dl);
-    if (!(a > EPS && b > EPS)) return;
-    for (let c = 0; c < 3; c++) ehat[c] = request.target[c] - gp[u * 3 + c];
-    let distance2 = normalize3(ehat);
-    if (distance2 <= EPS) {
-      for (let c = 0; c < 3; c++) ehat[c] = gp[e * 3 + c] - gp[u * 3 + c];
-      normalize3(ehat) <= EPS && ehat.set(du);
-    }
-    let limits = reachLimits(a, b, request.min, request.max, request.softness), effective = Math.max(softReach(distance2, limits), 1e-12), flexion = Math.acos(clamp((effective * effective - a * a - b * b) / (2 * a * b), -1, 1)), hipAngle = Math.acos(clamp((a * a + effective * effective - b * b) / (2 * a * effective), -1, 1));
-    qrotate(hc, gq, u * 4, rig.hinge[0], rig.hinge[1], rig.hinge[2]);
-    let explicit = !1;
-    if (request.hasPole) {
-      let along = dot(request.pole, ehat);
-      for (let c = 0; c < 3; c++) q[c] = request.pole[c] - along * ehat[c];
-      normalize3(q) > 1e-3 && (cross(hs, q, ehat), explicit = !0);
-    }
-    let swing = this.r[3], turn = this.r[4], upper = this.r[5], lower = this.r[6], work = this.r[7], work2 = this.r[8];
-    if (!explicit) {
-      let parent = this.parentOf[u];
-      for (let c = 0; c < 3; c++) chord[c] = gp[e * 3 + c] - gp[u * 3 + c];
-      normalize3(chord) <= EPS && chord.set(du);
-      let across = dot(hc, chord);
-      for (let c = 0; c < 3; c++) work3[c] = hc[c] - across * chord[c];
-      normalize3(work3) < 1e-6 && perpendicular(work3, chord), qrotate(reference, gq, parent * 4, rig.singular[0], rig.singular[1], rig.singular[2]);
-      for (let c = 0; c < 3; c++) reference[c] = -reference[c];
-      qfromto(swing, chord, reference, work3, tmp), qrotate(hs, swing, 0, work3[0], work3[1], work3[2]), qfromto(swing, reference, ehat, hs, tmp), qrotate(hs, swing, 0, hs[0], hs[1], hs[2]);
-      let along = dot(hs, ehat);
-      for (let c = 0; c < 3; c++) hs[c] = hs[c] - along * ehat[c];
-      normalize3(hs) < 1e-6 && perpendicular(hs, ehat);
-    }
-    cross(q, ehat, hs);
-    let sine = Math.sin(hipAngle), cosine = Math.cos(hipAngle);
-    for (let c = 0; c < 3; c++) uDir[c] = cosine * ehat[c] + sine * q[c];
-    for (let c = 0; c < 3; c++) lDir[c] = gp[u * 3 + c] + effective * ehat[c] - (gp[u * 3 + c] + a * uDir[c]);
-    normalize3(lDir) < EPS && lDir.set(ehat), qfromto(swing, du, uDir, hs, tmp), qrotate(tmp, swing, 0, hc[0], hc[1], hc[2]), cross(q, tmp, hs);
-    let twist = Math.atan2(dot(uDir, q), dot(tmp, hs));
-    qaxis(turn, uDir, twist), qmul(upper, turn, swing), qrotate(tmp, upper, 0, dl[0], dl[1], dl[2]), qfromto(lower, tmp, lDir, hs, this.spare);
-    let w = request.weight, parentU = this.parentOf[u], parentL = this.parentOf[l], parentE = this.parentOf[e], animatedParent = this.r[0], solved = this.r[1], write = (node, rotation2, weight) => {
-      let at3 = node * 10 + 3;
-      for (let c = 0; c < 4; c++) animatedParent[c] = pose[at3 + c];
-      qslerp(solved, animatedParent, rotation2, weight);
-      for (let c = 0; c < 4; c++) pose[at3 + c] = solved[c];
-    };
-    parentU >= 0 ? qconj(work, gq.subarray(parentU * 4, parentU * 4 + 4)) : (work[0] = 0, work[1] = 0, work[2] = 0, work[3] = 1), qmul(work2, upper, gq.subarray(u * 4, u * 4 + 4));
-    let lowerCarry = this.r[2], endCarry = this.r[9];
-    qmul(work2, work, work2), qnormalize(work2);
-    let upperLocal = this.r[10];
-    upperLocal.set(work2), qmul(lowerCarry, lower, upper), qnormalize(lowerCarry), qmul(work, upper, gq.subarray(parentL * 4, parentL * 4 + 4)), qconj(work, work), qmul(work2, lowerCarry, gq.subarray(l * 4, l * 4 + 4)), qmul(work2, work, work2), qnormalize(work2);
-    let lowerLocal = this.r[11];
-    lowerLocal.set(work2);
-    let endLocal = this.r[12];
-    request.hasRotation && (qmul(endCarry, lowerCarry, gq.subarray(parentE * 4, parentE * 4 + 4)), qconj(endCarry, endCarry), qmul(endLocal, endCarry, request.rotation), qnormalize(endLocal)), write(u, upperLocal, w), write(l, lowerLocal, w), request.hasRotation && write(e, endLocal, w * request.rotationWeight);
-    let reachError = 0;
-    for (let c = 0; c < 3; c++) reachError += (request.target[c] - (gp[u * 3 + c] + effective * ehat[c])) ** 2;
-    this.states.set(rig.limb, { flexion, residual: Math.sqrt(reachError) / this.gs[this.skin.meshNode] });
-  }
-};
-
-// src/scene/ik.ts
-var PoseIK = class {
-  constructor(skin) {
-    this.skin = skin;
-    this.limbs = new LimbIK(skin), this.globals = skin.nodes.map(() => identity());
-    let seen = /* @__PURE__ */ new Set(), visit = (i) => {
-      if (seen.has(i)) return;
-      let p = skin.nodes[i].parent;
-      p >= 0 && visit(p), seen.add(i), this.order.push(i);
-    };
-    skin.nodes.forEach((_, i) => visit(i));
-  }
-  skin;
-  limbs;
-  constraints = /* @__PURE__ */ new Map();
-  globals;
-  local = identity();
-  scratch = identity();
-  inverse = identity();
-  delta = new Float64Array(4);
-  order = [];
-  orientation = new Float64Array(4);
-  parentRotation = new Float64Array(4);
-  bindRotation = new Float64Array(4);
-  relative = new Float64Array(4);
-  ccdRevision = 0;
-  /** Changes whenever any constraint, limb goal, foot placement or humanoid map changes. */
-  get revision() {
-    return this.ccdRevision + this.limbs.revision;
-  }
-  /** True while foot-placement smoothing is still converging, so a held clock must keep evaluating. */
-  get animating() {
-    return this.limbs.animating;
-  }
-  advance(dt) {
-    this.limbs.advance(dt);
-  }
-  setHumanoid(map) {
-    this.limbs.setHumanoid(map);
-  }
-  /** Sets or replaces the anatomical limb goal `id`; an ID is shared with `set`, and the newest definition wins. */
-  setLimb(id, goal) {
-    this.limbs.set(id, goal), this.constraints.delete(id) && this.ccdRevision++;
-  }
-  setFootPlacement(placement2) {
-    this.limbs.setFootPlacement(placement2);
-  }
-  inspect() {
-    return [...this.constraints].map(([id, { indices, options, limits }]) => ({
-      id,
-      chain: [...indices],
-      target: { x: options.target[0], y: options.target[1], z: options.target[2] },
-      weight: options.weight ?? 1,
-      iterations: options.iterations ?? 12,
-      tolerance: options.tolerance ?? 1e-3,
-      rotationWeight: options.rotationWeight ?? 1,
-      ...options.rotation === void 0 ? {} : { rotation: { x: options.rotation[0], y: options.rotation[1], z: options.rotation[2], w: options.rotation[3] } },
-      limits: [...limits].map(([node, limit]) => ({ node, limit: { ...limit, axis: [...limit.axis] } }))
-    }));
-  }
-  set(id, options) {
-    let indices = options.chain.map(
-      (name) => this.skin.nodes.findIndex((n) => n.name === name)
-    );
-    if (id === "" || indices.length < 2 || indices.some(
-      (i, k) => i < 0 || k > 0 && this.skin.nodes[i].parent !== indices[k - 1]
-    ))
-      throw new RangeError(
-        "IK needs a contiguous chain of at least two named nodes"
-      );
-    if (options.target.length !== 3 || options.target.some((x) => !Number.isFinite(x)) || !Number.isFinite(options.weight ?? 1) || (options.weight ?? 1) < 0 || (options.weight ?? 1) > 1 || !Number.isInteger(options.iterations ?? 12) || (options.iterations ?? 12) < 1 || (options.iterations ?? 12) > 64 || !Number.isFinite(options.tolerance ?? 1e-3) || (options.tolerance ?? 1e-3) <= 0 || !Number.isFinite(options.rotationWeight ?? 1) || (options.rotationWeight ?? 1) < 0 || (options.rotationWeight ?? 1) > 1)
-      throw new RangeError(
-        "Invalid IK target, weight, iterations or tolerance"
-      );
-    let limits = /* @__PURE__ */ new Map();
-    for (let [name, limit] of Object.entries(options.limits ?? {})) {
-      let node = this.skin.nodes.findIndex((node2) => node2.name === name), length2 = Math.hypot(...limit.axis);
-      if (!indices.includes(node) || limit.axis.length !== 3 || !limit.axis.every(Number.isFinite) || !Number.isFinite(length2) || length2 < 1e-8 || !Number.isFinite(limit.min) || !Number.isFinite(limit.max) || limit.min < -Math.PI || limit.max > Math.PI || limit.min > limit.max)
-        throw new RangeError(`Invalid IK hinge limit: ${name}`);
-      limits.set(node, { axis: limit.axis.map((value) => value / length2), min: limit.min, max: limit.max });
-    }
-    let rotation2;
-    if (options.rotation !== void 0) {
-      let length2 = Math.hypot(...options.rotation);
-      if (options.rotation.length !== 4 || !options.rotation.every(Number.isFinite) || !Number.isFinite(length2) || length2 < 1e-8)
-        throw new RangeError("Invalid IK orientation quaternion");
-      rotation2 = options.rotation.map((value) => value / length2);
-      for (let node = this.skin.meshNode; node >= 0; node = this.skin.nodes[node].parent)
-        if (node === indices.at(-1)) throw new RangeError("IK orientation mesh frame cannot descend from the end effector");
-    }
-    this.limbs.remove(id), this.constraints.set(id, {
-      indices,
-      limits,
-      options: {
-        ...options,
-        ...rotation2 === void 0 ? {} : { rotation: rotation2 },
-        target: [...options.target],
-        chain: [...options.chain]
-      }
-    }), this.ccdRevision++;
-  }
-  constrain(pose, node, limit) {
-    let at3 = node * 10 + 3, bind = this.skin.nodes[node].rotation, length2 = Math.hypot(...bind);
-    for (let c = 0; c < 4; c++) this.bindRotation[c] = bind[c] / length2;
-    for (let c = 0; c < 4; c++) this.relative[c] = this.bindRotation[c] * (c < 3 ? -1 : 1);
-    multiplyQuat(this.relative, 0, this.relative, 0, pose, at3);
-    let axis = limit.axis, projection = this.relative[0] * axis[0] + this.relative[1] * axis[1] + this.relative[2] * axis[2], angle = Math.hypot(projection, this.relative[3]) < 1e-10 ? 0 : 2 * Math.atan2(projection, this.relative[3]);
-    angle > Math.PI && (angle -= 2 * Math.PI), angle < -Math.PI && (angle += 2 * Math.PI), angle = Math.max(limit.min, Math.min(limit.max, angle));
-    let sine = Math.sin(angle / 2);
-    this.relative.set([axis[0] * sine, axis[1] * sine, axis[2] * sine, Math.cos(angle / 2)]), multiplyQuat(pose, at3, this.bindRotation, 0, this.relative, 0);
-  }
-  worldRotation(pose, node, out) {
-    out.set([0, 0, 0, 1]);
-    for (let i = node; i >= 0; i = this.skin.nodes[i].parent) {
-      let at3 = i * 10;
-      if (!numericallyUniformScale(pose[at3 + 7], pose[at3 + 8], pose[at3 + 9]))
-        throw new RangeError("IK orientation requires uniform ancestor scales");
-      multiplyQuat(out, 0, pose, at3 + 3, out, 0);
-    }
-  }
-  remove(id) {
-    this.constraints.delete(id) && this.ccdRevision++, this.limbs.remove(id);
-  }
-  /** Removes every CCD constraint, limb goal and foot placement. The humanoid map is configuration and stays. */
-  clear() {
-    this.constraints.size > 0 && (this.constraints.clear(), this.ccdRevision++), this.limbs.clear();
-  }
-  matrices(pose) {
-    for (let i of this.order) {
-      let at3 = i * 10, p = pose;
-      fromRotationTranslationScaleInto(
-        this.local,
-        this.scratch,
-        { x: p[at3 + 3], y: p[at3 + 4], z: p[at3 + 5], w: p[at3 + 6] },
-        { x: p[at3], y: p[at3 + 1], z: p[at3 + 2] },
-        { x: p[at3 + 7], y: p[at3 + 8], z: p[at3 + 9] }
-      );
-      let parent = this.skin.nodes[i].parent;
-      parent < 0 ? this.globals[i].set(this.local) : multiplyInto(this.globals[i], this.globals[parent], this.local);
-    }
-  }
-  apply(pose) {
-    this.limbs.apply(pose);
-    for (let { indices, options, limits } of this.constraints.values()) {
-      let weight = options.weight ?? 1;
-      if (weight === 0) continue;
-      for (let [node, limit] of limits) this.constrain(pose, node, limit);
-      this.matrices(pose);
-      let mesh = this.globals[this.skin.meshNode], t = options.target, end = this.globals[indices.at(-1)], tx = end[12] + (mesh[0] * t[0] + mesh[4] * t[1] + mesh[8] * t[2] + mesh[12] - end[12]) * weight, ty = end[13] + (mesh[1] * t[0] + mesh[5] * t[1] + mesh[9] * t[2] + mesh[13] - end[13]) * weight, tz = end[14] + (mesh[2] * t[0] + mesh[6] * t[1] + mesh[10] * t[2] + mesh[14] - end[14]) * weight;
-      for (let iteration = 0; iteration < (options.iterations ?? 12) && !(Math.hypot(end[12] - tx, end[13] - ty, end[14] - tz) < (options.tolerance ?? 1e-3)); iteration++)
-        for (let k = indices.length - 2; k >= 0; k--) {
-          let i = indices[k], joint = this.globals[i], parent = this.skin.nodes[i].parent;
-          parent < 0 ? this.inverse.set(identity()) : normalMatrixInto(this.inverse, 0, this.globals[parent]);
-          let ax = end[12] - joint[12], ay = end[13] - joint[13], az = end[14] - joint[14], bx = tx - joint[12], by = ty - joint[13], bz = tz - joint[14], m = this.inverse, x = m[0] * ax + m[1] * ay + m[2] * az, y = m[4] * ax + m[5] * ay + m[6] * az, z = m[8] * ax + m[9] * ay + m[10] * az, u = m[0] * bx + m[1] * by + m[2] * bz, v = m[4] * bx + m[5] * by + m[6] * bz, s = m[8] * bx + m[9] * by + m[10] * bz, a = Math.hypot(x, y, z), b = Math.hypot(u, v, s);
-          if (a < 1e-10 || b < 1e-10) continue;
-          x /= a, y /= a, z /= a, u /= b, v /= b, s /= b;
-          let qx = y * s - z * v, qy = z * u - x * s, qz = x * v - y * u, qw = 1 + Math.max(-1, Math.min(1, x * u + y * v + z * s));
-          qw < 1e-8 && (Math.abs(x) < 0.9 ? (qx = 0, qy = z, qz = -y) : (qx = -z, qy = 0, qz = x), qw = 0);
-          let length2 = Math.hypot(qx, qy, qz, qw);
-          if (this.delta.set([qx / length2, qy / length2, qz / length2, qw / length2]), this.delta[3] < Math.SQRT1_2) {
-            let axis = Math.hypot(
-              this.delta[0],
-              this.delta[1],
-              this.delta[2]
-            );
-            for (let c = 0; c < 3; c++)
-              this.delta[c] = this.delta[c] / axis * Math.SQRT1_2;
-            this.delta[3] = Math.SQRT1_2;
-          }
-          multiplyQuat(pose, i * 10 + 3, this.delta, 0, pose, i * 10 + 3);
-          let limit = limits.get(i);
-          limit !== void 0 && this.constrain(pose, i, limit), this.matrices(pose);
-        }
-      if (options.rotation !== void 0) {
-        let node = indices.at(-1);
-        this.worldRotation(pose, this.skin.meshNode, this.orientation), multiplyQuat(this.orientation, 0, this.orientation, 0, options.rotation, 0), this.worldRotation(pose, this.skin.nodes[node].parent, this.parentRotation);
-        for (let c = 0; c < 3; c++) this.parentRotation[c] = -this.parentRotation[c];
-        multiplyQuat(this.orientation, 0, this.parentRotation, 0, this.orientation, 0), blendQuat(pose, node * 10 + 3, this.orientation, 0, weight * (options.rotationWeight ?? 1));
-        let limit = limits.get(node);
-        limit !== void 0 && this.constrain(pose, node, limit);
-      }
-    }
-  }
-};
-
-// src/scene/blend-space.ts
-var MAX_BLEND_SAMPLES = 32;
-function blendWeights(points) {
-  let n = points.length;
-  if (n < 1 || n > MAX_BLEND_SAMPLES || points.some((p) => !Number.isFinite(p[0]) || !Number.isFinite(p[1])))
-    throw new RangeError(`A blend space needs 1 to ${MAX_BLEND_SAMPLES} samples at finite points`);
-  if (points.some((p, i) => points.some((q, j) => j < i && p[0] === q[0] && p[1] === q[1])))
-    throw new RangeError("Blend samples must be at distinct points");
-  let ox = points[0][0], oy = points[0][1], X = points.map((p) => p[0] - ox), Y = points.map((p) => p[1] - oy), L = Math.max(Math.max(...X) - Math.min(...X), Math.max(Math.max(...Y) - Math.min(...Y))) || 1, Z = X.map((x, i) => x * x + Y[i] * Y[i]), W = X.map((_, i) => {
-    let h = Math.imul(i + 1, 2654435761);
-    return h ^= h >>> 15, h = Math.imul(h, 2246822507), h ^= h >>> 13, (h >>> 0) / 2 ** 32;
-  }), inside = (a, b, c, d, z) => {
-    let ax = X[a] - X[d], ay = Y[a] - Y[d], bx = X[b] - X[d], by = Y[b] - Y[d], cx = X[c] - X[d], cy = Y[c] - Y[d], az = z[a] - z[d], bz = z[b] - z[d], cz = z[c] - z[d];
-    return ax * (by * cz - bz * cy) - ay * (bx * cz - bz * cx) + az * (bx * cy - by * cx);
-  }, triangles = [];
-  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) for (let k = j + 1; k < n; k++) {
-    let area = (X[j] - X[i]) * (Y[k] - Y[i]) - (X[k] - X[i]) * (Y[j] - Y[i]);
-    if (Math.abs(area) <= 1e-12 * L * L) continue;
-    let [b, c] = area > 0 ? [j, k] : [k, j], empty = !0;
-    for (let d = 0; d < n && empty; d++) {
-      if (d === i || d === j || d === k) continue;
-      let lifted = inside(i, b, c, d, Z);
-      empty = !(lifted > 1e-11 * L ** 4 || lifted >= -1e-11 * L ** 4 && inside(i, b, c, d, W) > 0);
-    }
-    empty && triangles.push([i, b, c]);
-  }
-  if (triangles.length === 0) {
-    let order = X.map((_, i) => i).sort((a, b) => X[a] - X[b] || Y[a] - Y[b]), first = order[0], last = order[n - 1], length2 = Math.hypot(X[last] - X[first], Y[last] - Y[first]), dx = n > 1 ? (X[last] - X[first]) / length2 : 0, dy = n > 1 ? (Y[last] - Y[first]) / length2 : 0, along = (x, y) => (x - X[first]) * dx + (y - Y[first]) * dy, t = order.map((i) => along(X[i], Y[i]));
-    if (t.some((v, i) => i > 0 && v - t[i - 1] <= 1e-12 * L))
-      throw new RangeError("Blend samples must be at distinct points");
-    return (x, y, out) => {
-      out.fill(0), x -= ox, y -= oy;
-      let s = Math.min(t[n - 1], Math.max(t[0], along(x, y))), k = 1;
-      for (; k < n && t[k] < s; ) k++;
-      if (k === n) out[order[0]] = 1;
-      else {
-        let w = (s - t[k - 1]) / (t[k] - t[k - 1]);
-        out[order[k - 1]] = 1 - w, out[order[k]] = w;
-      }
-    };
-  }
-  let counts = /* @__PURE__ */ new Map();
-  for (let [a, b, c] of triangles) for (let [p, q] of [[a, b], [b, c], [c, a]]) {
-    let key = Math.min(p, q) * 64 + Math.max(p, q);
-    counts.set(key, (counts.get(key) ?? 0) + 1);
-  }
-  let areas = triangles.map(([a, b, c]) => (X[b] - X[a]) * (Y[c] - Y[a]) - (X[c] - X[a]) * (Y[b] - Y[a])), hull = [...counts].filter(([, count]) => count === 1).map(([key]) => [Math.floor(key / 64), key % 64]);
-  return (x, y, out) => {
-    out.fill(0), x -= ox, y -= oy;
-    let cross5 = (p, q) => (X[p] - x) * (Y[q] - y) - (Y[p] - y) * (X[q] - x), best = -1 / 0, at3 = 0, u = 0, v = 0, w = 0;
-    if (triangles.forEach(([a, b, c], t) => {
-      let p = cross5(b, c) / areas[t], q = cross5(c, a) / areas[t], r = cross5(a, b) / areas[t], least = Math.min(p, q, r);
-      least > best && (best = least, at3 = t, u = p, v = q, w = r);
-    }), best >= -1e-9) {
-      let [a, b, c] = triangles[at3];
-      u = Math.max(0, u), v = Math.max(0, v), w = Math.max(0, w);
-      let total = u + v + w;
-      out[a] = u / total, out[b] = v / total, out[c] = w / total;
-      return;
-    }
-    let nearest = 1 / 0;
-    for (let [a, b] of hull) {
-      let ex = X[b] - X[a], ey = Y[b] - Y[a], t = Math.min(1, Math.max(0, ((x - X[a]) * ex + (y - Y[a]) * ey) / (ex * ex + ey * ey))), distance2 = Math.hypot(X[a] + ex * t - x, Y[a] + ey * t - y);
-      distance2 < nearest && (nearest = distance2, out.fill(0), out[a] = 1 - t, out[b] = t);
-    }
-  };
-}
-var BlendSpace = class {
-  constructor(skin) {
-    this.skin = skin;
-    this.other = new Float64Array(skin.nodes.length * 10);
-  }
-  skin;
-  samples = [];
-  solver;
-  key = "";
-  px = 0;
-  py = 0;
-  speed = 1;
-  phaseValue = 0;
-  previous = 0;
-  running = !1;
-  ended = !1;
-  looping = !0;
-  wraps = 0;
-  current = new Float64Array(MAX_BLEND_SAMPLES);
-  last = new Float64Array(MAX_BLEND_SAMPLES);
-  fresh = !1;
-  lastValid = !1;
-  other;
-  value = new Float64Array(4);
-  revision = 0;
-  get active() {
-    return this.samples.length > 0;
-  }
-  get phase() {
-    return this.phaseValue;
-  }
-  get parameter() {
-    return { x: this.px, y: this.py };
-  }
-  get playing() {
-    return this.active && this.running;
-  }
-  get finished() {
-    return this.active && this.ended;
-  }
-  /** Current weights, one per sample in the order given to `set`. Do not retain the array. */
-  weights() {
-    return !this.fresh && this.solver !== void 0 && (this.solver(this.px, this.py, this.current), this.fresh = !0), this.current;
-  }
-  rate(w) {
-    let rate = 0;
-    return this.samples.forEach((sample, i) => {
-      rate += w[i] / sample.clip.duration;
-    }), rate;
-  }
-  get duration() {
-    return this.active ? 1 / this.rate(this.weights()) : 0;
-  }
-  inspect() {
-    if (!this.active) return null;
-    let w = this.weights();
-    return {
-      phase: this.phase,
-      parameter: this.parameter,
-      samples: this.samples.map((s, i) => ({ clip: s.clip.name, x: s.x, y: s.y, weight: w[i] }))
-    };
-  }
-  pause() {
-    return this.active ? (this.running = !1, !0) : !1;
-  }
-  resume() {
-    return !this.active || this.ended ? !1 : (this.running = !0, !0);
-  }
-  play(looping = !0, speed = 1) {
-    return !this.active || !Number.isFinite(speed) || speed < 0 ? !1 : (this.looping = looping, this.speed = speed, this.running = !0, this.ended = !1, this.seek(0), !0);
-  }
-  set(options) {
-    if (options === void 0) {
-      this.samples = [], this.solver = void 0, this.key = "", this.wraps = 0, this.lastValid = !1, this.revision++;
-      return;
-    }
-    let samples = options.samples.map((sample) => {
-      let clip = this.skin.clips.find((clip2) => clip2.name === sample.clip);
-      if (clip === void 0 || clip.duration <= 0)
-        throw new RangeError("Blend samples need existing nonzero-duration clips");
-      return { x: sample.x, y: sample.y, clip };
-    }), key = samples.map((s) => `${s.x},${s.y}`).join(";"), solver = key === this.key && this.solver !== void 0 ? this.solver : blendWeights(samples.map((s) => [s.x, s.y])), px = options.parameter?.x ?? samples[0].x, py = options.parameter?.y ?? samples[0].y, phase = options.phase ?? 0, speed = options.speed ?? 1;
-    if (!Number.isFinite(px) || !Number.isFinite(py) || !Number.isFinite(speed) || speed < 0 || !Number.isFinite(phase) || phase < 0 || phase >= 1)
-      throw new RangeError("Invalid blend parameter, speed or phase");
-    this.samples = samples, this.solver = solver, this.key = key, this.px = px, this.py = py, this.fresh = !1, this.speed = speed, this.running = !0, this.ended = !1, this.looping = options.looping ?? !0, this.phaseValue = phase, this.previous = phase, this.wraps = 0, this.lastValid = !1, this.revision++;
-  }
-  setParameter(x, y = 0) {
-    if (!Number.isFinite(x) || !Number.isFinite(y)) throw new RangeError("Blend parameter must be finite");
-    (x !== this.px || y !== this.py) && (this.px = x, this.py = y, this.fresh = !1, this.revision++);
-  }
-  seek(phase) {
-    if (!Number.isFinite(phase) || phase < 0 || phase > 1)
-      throw new RangeError("Blend phase must be in [0,1]");
-    this.phaseValue = phase, this.previous = phase, this.wraps = 0, this.lastValid = !1, this.revision++, this.ended = !1;
-  }
-  advance(dt) {
-    if (!Number.isFinite(dt) || dt < 0) throw new RangeError("Blend delta must be finite and nonnegative");
-    if (this.previous = this.phaseValue, this.wraps = 0, !this.active || !this.running || dt === 0) {
-      this.lastValid = !1;
-      return;
-    }
-    let w = this.weights();
-    this.last.set(w), this.lastValid = !0;
-    let next = this.phaseValue + dt * this.speed * this.rate(w);
-    if (!Number.isFinite(next) || next > Number.MAX_SAFE_INTEGER)
-      throw new RangeError("Blend update exceeds the supported cycle range");
-    !this.looping && next >= 1 ? (this.phaseValue = 1, this.running = !1, this.ended = !0) : (this.wraps = Math.floor(next), this.phaseValue = next - this.wraps), dt > 0 && this.speed > 0 && this.revision++;
-  }
-  /** Marker seconds in a contributing clip; crossings remain available between pose updates. */
-  crossed(name, seconds) {
-    if (!this.active || !this.lastValid || !Number.isFinite(seconds) || seconds < 0) return !1;
-    let at3 = this.samples.findIndex((sample, i) => sample.clip.name === name && this.last[i] > 0);
-    return at3 < 0 || seconds > this.samples[at3].clip.duration ? !1 : this.crossedPhase(seconds / this.samples[at3].clip.duration);
-  }
-  crossedPhase(marker) {
-    return !this.lastValid || !Number.isFinite(marker) || marker < 0 || marker > 1 ? !1 : this.wraps > 1 || (this.wraps === 1 ? marker > this.previous || marker <= this.phaseValue : marker > this.previous && marker <= this.phaseValue);
-  }
-  sample(clip, out, bind) {
-    out.set(bind);
-    for (let channel of clip.channels) {
-      sampleChannelInto(channel, this.phaseValue * clip.duration, this.value);
-      let at3 = channel.node * 10 + (channel.path === "translation" ? 0 : channel.path === "rotation" ? 3 : 7);
-      out.set(this.value.subarray(0, channel.path === "rotation" ? 4 : 3), at3);
-    }
-  }
-  /** Weighted pose: clips in sample order, each blended in by its share of the weight so far. */
-  apply(out, bind) {
-    let w = this.weights(), total = 0;
-    this.samples.forEach((sample, i) => {
-      if (w[i] === 0) return;
-      if (total === 0) {
-        this.sample(sample.clip, out, bind), total = w[i];
-        return;
-      }
-      this.sample(sample.clip, this.other, bind);
-      let t = w[i] / (total + w[i]);
-      total += w[i];
-      for (let at3 = 0; at3 < out.length; at3 += 10) {
-        for (let c of [0, 1, 2, 7, 8, 9]) out[at3 + c] = out[at3 + c] + (this.other[at3 + c] - out[at3 + c]) * t;
-        blendQuat(out, at3 + 3, this.other, at3 + 3, t);
-      }
-    });
-  }
-  /** Accumulate displacement across every wrap, independently of pose evaluation cadence. */
-  rootDelta(node, out) {
-    let w = this.weights();
-    this.samples.forEach(({ clip }, i) => {
-      let influence = w[i], channel = influence === 0 ? void 0 : clip.channels.find((channel2) => channel2.node === node && channel2.path === "translation");
-      if (channel !== void 0)
-        for (let [time, factor] of [[this.previous * clip.duration, -1], [this.phaseValue * clip.duration, 1], [0, -this.wraps], [clip.duration, this.wraps]]) {
-          sampleChannelInto(channel, time, this.value);
-          for (let c = 0; c < 3; c++) out[c] = out[c] + this.value[c] * influence * factor;
-        }
-    });
-  }
-};
-
-// src/scene/locomotion.ts
-var LocomotionBlend = class {
-  constructor(space) {
-    this.space = space;
-  }
-  space;
-  get active() {
-    return this.space.active;
-  }
-  get phase() {
-    return this.space.phase;
-  }
-  get parameter() {
-    return this.space.parameter.x;
-  }
-  get playing() {
-    return this.space.playing;
-  }
-  get finished() {
-    return this.space.finished;
-  }
-  get duration() {
-    return this.space.duration;
-  }
-  get revision() {
-    return this.space.revision;
-  }
-  inspect() {
-    let blend = this.space.inspect();
-    return blend === null || blend.samples.some((sample) => sample.y !== 0) ? null : {
-      phase: blend.phase,
-      parameter: blend.parameter.x,
-      samples: blend.samples.map((sample) => ({ clip: sample.clip, threshold: sample.x, weight: sample.weight }))
-    };
-  }
-  pause() {
-    return this.space.pause();
-  }
-  resume() {
-    return this.space.resume();
-  }
-  play(looping = !0, speed = 1) {
-    return this.space.play(looping, speed);
-  }
-  set(options) {
-    if (options === void 0) {
-      this.space.set(void 0);
-      return;
-    }
-    let { samples } = options;
-    if (samples.length < 2 || samples.some((sample, i) => i > 0 && sample.threshold <= samples[i - 1].threshold))
-      throw new RangeError("Locomotion needs at least two samples with strictly increasing thresholds");
-    this.space.set({
-      ...options,
-      samples: samples.map((sample) => ({ clip: sample.clip, x: sample.threshold, y: 0 })),
-      parameter: { x: options.parameter ?? samples[0].threshold, y: 0 }
-    });
-  }
-  setParameter(value) {
-    this.space.setParameter(value, this.space.parameter.y);
-  }
-  seek(phase) {
-    this.space.seek(phase);
-  }
-  crossed(name, seconds) {
-    return this.space.crossed(name, seconds);
-  }
-  crossedPhase(marker) {
-    return this.space.crossedPhase(marker);
-  }
-};
-
-// src/scene/pose-schedule.ts
-var PoseSchedule = class {
-  bands = [];
-  elapsed = 0;
-  previous = -1;
-  set(bands) {
-    let copy3 = bands?.map((band) => ({ ...band })) ?? [];
-    for (let i = 0; i < copy3.length; i++) {
-      let band = copy3[i];
-      if (!Number.isFinite(band.distance) || band.distance < 0 || !Number.isFinite(band.interval) || band.interval < 0 || (i === 0 ? band.distance !== 0 : band.distance <= copy3[i - 1].distance))
-        throw new RangeError("Animation update bands need increasing distances starting at zero and finite nonnegative intervals");
-    }
-    this.bands = copy3, this.elapsed = 0, this.previous = -1;
-  }
-  due(dt, distance2, force = !1) {
-    if (!Number.isFinite(distance2) || distance2 < 0)
-      throw new RangeError("Animation distance must be finite and nonnegative");
-    let selected = 0;
-    for (let i = 1; i < this.bands.length && !(distance2 < this.bands[i].distance); i++)
-      selected = i;
-    let interval = this.bands[selected]?.interval ?? 0;
-    this.elapsed += dt;
-    let closer = this.previous >= 0 && selected < this.previous;
-    return this.previous = selected, !force && !closer && this.elapsed + 1e-12 < interval ? !1 : (this.elapsed = interval > 0 ? this.elapsed % interval : 0, interval > 0 && interval - this.elapsed < 1e-12 && (this.elapsed = 0), !0);
-  }
-};
-
-// src/scene/skeleton.ts
-function skinProblem(skin, vertices) {
-  let n = skin.nodes.length;
-  if (n > 256 || skin.joints.length > 128) return "skin exceeds the 256-node or 128-joint profile";
-  let index = (i, max2) => Number.isInteger(i) && i >= 0 && i < max2, finite6 = (values, length2) => values.length === length2 && values.every(Number.isFinite);
-  if (!index(skin.meshNode, n) || skin.joints.length === 0 || skin.joints.some((j) => !index(j, n)) || skin.inverseBind.length !== skin.joints.length || skin.inverseBind.some((m) => !finite6(m, 16))) return "skin node or inverse-bind count is invalid";
-  if (skin.indices.length !== vertices || skin.weights.length !== vertices) return "skin influences do not match the vertex count";
-  for (let i = 0; i < n; i++) {
-    let node = skin.nodes[i];
-    if (node.parent !== -1 && !index(node.parent, n) || !finite6(node.translation, 3) || !finite6(node.rotation, 4) || !finite6(node.scale, 3) || node.scale.some((v) => v <= 0) || Math.hypot(...node.rotation) < 1e-8) return "invalid skeletal bind transform";
-    let parent = i;
-    for (let depth = 0; parent >= 0; depth++) {
-      if (!index(parent, n)) return "invalid skeletal bind transform";
-      if (depth >= n) return "cyclic skeletal hierarchy";
-      parent = skin.nodes[parent].parent;
-    }
-  }
-  for (let i = 0; i < vertices; i++) {
-    let weights = skin.weights[i];
-    if (skin.indices[i].length !== 4 || skin.indices[i].some((j) => !index(j, skin.joints.length)) || !finite6(weights, 4) || weights.some((w) => w < 0) || Math.abs(weights.reduce((a, b) => a + b, 0) - 1) > 1e-3) return "invalid vertex joint indices or weights";
-  }
-  let names = /* @__PURE__ */ new Set();
-  for (let clip of skin.clips) {
-    if (names.has(clip.name)) return "duplicate skeletal clip name";
-    if (!Number.isFinite(clip.duration) || clip.duration < 0) return "invalid skeletal clip duration";
-    names.add(clip.name);
-    let channels = /* @__PURE__ */ new Set();
-    for (let c of clip.channels) {
-      let key = String(c.node) + c.path;
-      if (!index(c.node, n) || channels.has(key) || c.times.length === 0 || c.values.length !== c.times.length * (c.path === "rotation" ? 4 : 3) || c.values.some((v) => !Number.isFinite(v)) || c.times.some((t, i) => !Number.isFinite(t) || t < 0 || t > clip.duration || i > 0 && t <= c.times[i - 1]) || c.path === "scale" && c.values.some((v) => v <= 0)) return "invalid skeletal clip channel";
-      if (c.path === "rotation") {
-        for (let k = 0; k < c.values.length; k += 4) if (Math.hypot(...c.values.slice(k, k + 4)) < 1e-8) return "invalid skeletal rotation";
-      }
-      channels.add(key);
-    }
-  }
-}
-function slerp(out, at3, a, b, t) {
-  let dot4 = 0;
-  for (let i = 0; i < 4; i++) dot4 += a[at3 + i] * b[at3 + i];
-  let sign2 = dot4 < 0 ? -1 : 1, angle = Math.acos(Math.min(1, Math.abs(dot4))), sin2 = Math.sin(angle), wa = sin2 > 1e-6 ? Math.sin((1 - t) * angle) / sin2 : 1 - t, wb = sin2 > 1e-6 ? Math.sin(t * angle) / sin2 : t;
-  for (let i = 0; i < 4; i++) out[at3 + i] = a[at3 + i] * wa + b[at3 + i] * wb * sign2;
-  let norm = Math.hypot(out[at3], out[at3 + 1], out[at3 + 2], out[at3 + 3]);
-  for (let i = 0; i < 4; i++) out[at3 + i] = out[at3 + i] / norm;
-}
-var SkeletonPlayer = class {
-  constructor(skin, initial) {
-    this.skin = skin;
-    this.layers = new PoseLayers(skin), this.ik = new PoseIK(skin), this.blend = new BlendSpace(skin), this.locomotion = new LocomotionBlend(this.blend), this.bind = new Float64Array(skin.nodes.length * 10), skin.nodes.forEach((node, i) => {
-      this.bind.set(node.translation, i * 10);
-      let q = node.rotation, norm = Math.hypot(...q);
-      this.bind.set(q.map((v) => v / norm), i * 10 + 3), this.bind.set(node.scale, i * 10 + 7);
-    }), this.pose = this.bind.slice(), this.sample = this.bind.slice(), this.from = this.bind.slice(), this.locals = skin.nodes.map(() => identity()), this.globals = skin.nodes.map(() => identity()), this.inverseBind = skin.inverseBind.map((m) => new Float32Array(m)), this.palette = new Float32Array(skin.joints.length * 16), this.paletteEntries = skin.joints.map((_, joint) => this.palette.subarray(joint * 16, joint * 16 + 16));
-    let visited = /* @__PURE__ */ new Set(), visit = (i) => {
-      if (visited.has(i)) return;
-      let parent = skin.nodes[i].parent;
-      parent >= 0 && visit(parent), visited.add(i), this.order.push(i);
-    };
-    skin.nodes.forEach((_, i) => visit(i)), (initial === void 0 || !this.transition(initial, 0, !0, 1)) && (this.clock.add({ slot: 0, duration: 0, channels: [] }), this.clock.pause(0), this.evaluate());
-  }
-  skin;
-  layers;
-  ik;
-  /** The phase-synchronized 1D/2D blend that replaces the base clip while active (decision 0220). */
-  blend;
-  /** The 1D view of `blend`: thresholds are x with y = 0 (decision 0196). */
-  locomotion;
-  schedule = new PoseSchedule();
-  evaluatedLocomotion = -1;
-  /** Camera-distance bands; omit to evaluate on every update. Clocks and root motion are never throttled. */
-  setUpdatePolicy(bands) {
-    this.schedule.set(bands);
-  }
-  rootNode = -1;
-  rootDelta = new Float64Array(3);
-  rootSample = new Float64Array(4);
-  /** Host ownership extracts base-clip translation; the displayed root stays at bind translation. */
-  setRootMotion(node) {
-    let index = node === void 0 ? -1 : this.skin.nodes.findIndex((n) => n.name === node);
-    if (node !== void 0 && index < 0) throw new RangeError(`Unknown root-motion node: ${node}`);
-    this.rootNode = index, this.rootDelta.fill(0), this.evaluatedTime = NaN;
-  }
-  consumeRootMotion() {
-    let result = { x: this.rootDelta[0], y: this.rootDelta[1], z: this.rootDelta[2] };
-    return this.rootDelta.fill(0), result;
-  }
-  /** Final local-pose adjustment, after layers and before world matrices/sockets. */
-  override;
-  evaluatedLayers = -1;
-  evaluatedIK = -1;
-  /** Supplies the canonical humanoid bones that limb goals and foot placement use (decision 0222); undefined removes them. */
-  setHumanoid(map) {
-    this.ik.setHumanoid(map);
-  }
-  setProceduralOverride(override) {
-    this.override = override, this.evaluatedTime = NaN;
-  }
-  clock = new ClipPlayers();
-  outgoing;
-  held = !1;
-  palette;
-  pose;
-  bind;
-  /** Incoming sample during evaluation; unlayered displayed pose between evaluations. */
-  sample;
-  from;
-  locals;
-  globals;
-  inverseBind;
-  paletteEntries;
-  order = [];
-  scratch = identity();
-  inverseMesh = identity();
-  product = identity();
-  value = new Float64Array(4);
-  name = "";
-  blendTime = 0;
-  blendDuration = 0;
-  revisionValue = 0;
-  evaluatedTime = NaN;
-  evaluatedBlend = NaN;
-  evaluatedWeight = NaN;
-  get revision() {
-    return this.revisionValue;
-  }
-  /** Copies current evaluated diagnostics. Never advances clocks, consumes root motion or evaluates a pose. */
-  inspect() {
-    let progress = this.blendDuration === 0 ? 1 : Math.min(1, this.blendTime / this.blendDuration);
-    return {
-      mode: this.held ? "held" : this.blend.active ? "locomotion" : this.name === "" ? "bind" : "clip",
-      clip: this.name || null,
-      transition: { elapsed: this.blendTime, duration: this.blendDuration, progress, outgoingClip: this.outgoing?.name ?? null, fromSnapshot: progress < 1 && this.outgoing === void 0 },
-      rootMotionNode: this.rootNode < 0 ? null : this.rootNode,
-      proceduralOverride: this.override !== void 0,
-      nodes: this.skin.nodes.map((node, index) => (multiplyInto(this.product, this.inverseMesh, this.globals[index]), {
-        index,
-        name: node.name,
-        parent: node.parent,
-        joint: this.skin.joints.includes(index),
-        position: { x: Math.fround(this.product[12]), y: Math.fround(this.product[13]), z: Math.fround(this.product[14]) }
-      })),
-      layers: this.layers.inspect(),
-      ik: this.ik.inspect(),
-      ...this.ik.limbs.inspect(),
-      blend: this.blend.inspect(),
-      locomotion: this.locomotion.inspect()
-    };
-  }
-  jointPosition(name) {
-    let i = this.skin.nodes.findIndex((n) => n.name === name);
-    return i < 0 ? { x: 0, y: 0, z: 0 } : (multiplyInto(this.product, this.inverseMesh, this.globals[i]), { x: Math.fround(this.product[12]), y: Math.fround(this.product[13]), z: Math.fround(this.product[14]) });
-  }
-  jointRotation(name) {
-    let i = this.skin.nodes.findIndex((n2) => n2.name === name);
-    if (i < 0) return { x: 0, y: 0, z: 0, w: 1 };
-    multiplyInto(this.product, this.inverseMesh, this.globals[i]);
-    let m = this.product, sx = Math.hypot(m[0], m[1], m[2]), sy = Math.hypot(m[4], m[5], m[6]), sz = Math.hypot(m[8], m[9], m[10]), a = m[0] / sx, b = m[4] / sy, c = m[8] / sz, d = m[1] / sx, e = m[5] / sy, f = m[9] / sz, g = m[2] / sx, h = m[6] / sy, j = m[10] / sz, x, y, z, w, trace = a + e + j;
-    if (trace > 0) {
-      let s = Math.sqrt(trace + 1) * 2;
-      w = s / 4, x = (h - f) / s, y = (c - g) / s, z = (d - b) / s;
-    } else if (a > e && a > j) {
-      let s = Math.sqrt(1 + a - e - j) * 2;
-      w = (h - f) / s, x = s / 4, y = (b + d) / s, z = (c + g) / s;
-    } else if (e > j) {
-      let s = Math.sqrt(1 + e - a - j) * 2;
-      w = (c - g) / s, x = (b + d) / s, y = s / 4, z = (f + h) / s;
-    } else {
-      let s = Math.sqrt(1 + j - a - e) * 2;
-      w = (d - b) / s, x = (c + g) / s, y = (f + h) / s, z = s / 4;
-    }
-    let n = Math.hypot(x, y, z), length2 = Math.hypot(n, w);
-    return { x: Math.fround(x / length2), y: Math.fround(y / length2), z: Math.fround(z / length2), w: Math.fround(w / length2) };
-  }
-  transition(name, seconds, looping, speed) {
-    let clip = this.skin.clips.find((c) => c.name === name);
-    return clip === void 0 || !Number.isFinite(seconds) || seconds < 0 || !Number.isFinite(speed) || speed < 0 ? !1 : (this.blend.active && (this.blend.set(void 0), this.name = ""), name === this.name || (this.outgoing = this.name !== "" && !this.held && this.blendTime >= this.blendDuration ? { name: this.name, clock: this.clock } : void 0, this.from.set(this.sample), this.held = !1, this.clock = new ClipPlayers(), this.name = name, this.evaluatedTime = NaN, this.blendTime = 0, this.blendDuration = seconds, this.clock.add({ slot: 0, duration: clip.duration, channels: [] }), this.clock.play(0, looping, speed), this.evaluate()), !0);
-  }
-  /** Snapshot only: the destination owns its pose and never follows source lifetime. */
-  copyPose(source) {
-    return this.skin.meshNode !== source.skin.meshNode || this.skin.nodes.length !== source.skin.nodes.length || this.skin.nodes.some((n, i) => {
-      let other = source.skin.nodes[i];
-      return n.name !== other.name || n.parent !== other.parent || n.translation.some((v, k) => v !== other.translation[k]) || n.rotation.some((v, k) => v !== other.rotation[k]) || n.scale.some((v, k) => v !== other.scale[k]);
-    }) ? !1 : (this.blend.set(void 0), this.from.set(source.pose), this.pose.set(source.pose), this.held = !0, this.name = "", this.outgoing = void 0, this.blendDuration = 0, this.blendTime = 0, this.evaluatedTime = NaN, this.clock = new ClipPlayers(), this.clock.add({ slot: 0, duration: 0, channels: [] }), this.clock.pause(0), this.evaluate(), !0);
-  }
-  samplePose(name, time, out) {
-    out.set(this.bind);
-    let clip = this.skin.clips.find((c) => c.name === name);
-    for (let channel of clip?.channels ?? []) {
-      sampleChannelInto(channel, time, this.value);
-      let offset = channel.node * 10 + (channel.path === "translation" ? 0 : channel.path === "rotation" ? 3 : 7);
-      out.set(this.value.subarray(0, channel.path === "rotation" ? 4 : 3), offset);
-    }
-  }
-  play(looping, speed) {
-    if (this.blend.active) {
-      let ok2 = this.blend.play(looping, speed);
-      return ok2 && this.evaluate(), ok2;
-    }
-    let ok = this.clock.play(0, looping, speed);
-    return ok && (this.from.set(this.sample), this.blendTime = 0, this.evaluate()), ok;
-  }
-  advance(dt, evaluate = !0, distance2 = 0) {
-    if (!Number.isFinite(dt) || dt < 0) return;
-    let previous = this.clock.time(0), outgoingTime = this.outgoing?.clock.time(0) ?? 0, oldBlend = this.blendTime;
-    if (this.clock.advance(dt, () => {
-    }), this.outgoing?.clock.advance(dt, () => {
-    }), this.layers.advance(dt), this.ik.advance(dt), this.blend.advance(dt), this.blendTime = Math.min(this.blendDuration, this.blendTime + dt), this.rootNode >= 0 && this.blend.active) {
-      this.rootSample.fill(0), this.blend.rootDelta(this.rootNode, this.rootSample);
-      for (let c = 0; c < 3; c++) this.rootDelta[c] = this.rootDelta[c] + this.rootSample[c] * this.clock.weight(0);
-    } else if (this.rootNode >= 0) {
-      let integral = (t) => t * t * t - 0.5 * t * t * t * t, duration = this.blendDuration, blend = 1;
-      if (duration > 0 && dt > 0 && oldBlend < duration) {
-        let end = Math.min(duration, oldBlend + dt);
-        blend = (duration * (integral(end / duration) - integral(oldBlend / duration)) + Math.max(0, oldBlend + dt - duration)) / dt;
-      }
-      this.extractRoot(this.name, this.clock, previous, blend * this.clock.weight(0)), this.outgoing !== void 0 && this.extractRoot(this.outgoing.name, this.outgoing.clock, outgoingTime, (1 - blend) * this.outgoing.clock.weight(0));
-    }
-    this.blendTime >= this.blendDuration && (this.outgoing = void 0), evaluate && this.schedule.due(dt, distance2) && this.evaluate();
-  }
-  extractRoot(name, clock, previous, weight) {
-    if (weight === 0 || this.held) return;
-    let clip = this.skin.clips.find((c) => c.name === name), channel = clip?.channels.find((c) => c.node === this.rootNode && c.path === "translation");
-    if (channel === void 0 || clip === void 0) return;
-    sampleChannelInto(channel, previous, this.rootSample);
-    for (let c = 0; c < 3; c++) this.rootDelta[c] = this.rootDelta[c] - this.rootSample[c] * weight;
-    sampleChannelInto(channel, clock.time(0), this.rootSample);
-    for (let c = 0; c < 3; c++) this.rootDelta[c] = this.rootDelta[c] + this.rootSample[c] * weight;
-    let wraps = clock.wraps(0);
-    if (wraps > 0) {
-      sampleChannelInto(channel, 0, this.rootSample);
-      for (let c = 0; c < 3; c++) this.rootDelta[c] = this.rootDelta[c] - this.rootSample[c] * weight * wraps;
-      sampleChannelInto(channel, clip.duration, this.rootSample);
-      for (let c = 0; c < 3; c++) this.rootDelta[c] = this.rootDelta[c] + this.rootSample[c] * weight * wraps;
-    }
-  }
-  evaluate() {
-    let time = this.clock.time(0), weight = this.clock.weight(0);
-    if (this.override === void 0 && time === this.evaluatedTime && this.blendTime === this.evaluatedBlend && weight === this.evaluatedWeight && this.evaluatedLayers === this.layers.revision && this.evaluatedIK === this.ik.revision && !this.ik.animating && this.evaluatedLocomotion === this.blend.revision) return;
-    if (this.evaluatedTime = time, this.evaluatedBlend = this.blendTime, this.evaluatedWeight = weight, this.evaluatedLayers = this.layers.revision, this.evaluatedIK = this.ik.revision, this.evaluatedLocomotion = this.blend.revision, this.held ? this.sample.set(this.from) : this.samplePose(this.name, time, this.sample), this.outgoing !== void 0) {
-      this.samplePose(this.outgoing.name, this.outgoing.clock.time(0), this.from);
-      let oldWeight = this.outgoing.clock.weight(0);
-      for (let i = 0; i < this.skin.nodes.length; i++) {
-        let at3 = i * 10;
-        for (let c of [0, 1, 2, 7, 8, 9]) this.from[at3 + c] = this.bind[at3 + c] + (this.from[at3 + c] - this.bind[at3 + c]) * oldWeight;
-        slerp(this.from, at3 + 3, this.bind, this.from, oldWeight);
-      }
-    }
-    let t = this.blendDuration > 0 ? Math.min(1, this.blendTime / this.blendDuration) : 1, blend = t * t * (3 - 2 * t);
-    for (let i = 0; i < this.skin.nodes.length; i++) {
-      let at3 = i * 10;
-      for (let c = 0; c < 10; c++) this.pose[at3 + c] = this.from[at3 + c] + (this.sample[at3 + c] - this.from[at3 + c]) * blend;
-      slerp(this.pose, at3 + 3, this.from, this.sample, blend);
-      for (let c of [0, 1, 2, 7, 8, 9]) this.pose[at3 + c] = this.bind[at3 + c] + (this.pose[at3 + c] - this.bind[at3 + c]) * weight;
-      slerp(this.pose, at3 + 3, this.bind, this.pose, weight);
-    }
-    if (this.blend.active) {
-      this.blend.apply(this.pose, this.bind);
-      for (let at3 = 0; at3 < this.pose.length; at3 += 10) {
-        for (let c of [0, 1, 2, 7, 8, 9]) this.pose[at3 + c] = this.bind[at3 + c] + (this.pose[at3 + c] - this.bind[at3 + c]) * weight;
-        slerp(this.pose, at3 + 3, this.bind, this.pose, weight);
-      }
-    }
-    if (this.sample.set(this.pose), this.layers.apply(this.pose, this.bind), this.override?.(this.pose), this.rootNode >= 0) for (let c = 0; c < 3; c++) this.pose[this.rootNode * 10 + c] = this.bind[this.rootNode * 10 + c];
-    for (let i = 0; i < this.pose.length; i++)
-      if (!Number.isFinite(this.pose[i]) || i % 10 >= 7 && this.pose[i] <= 0) throw new RangeError("Procedural pose contains an invalid transform");
-    for (let at3 = 3; at3 < this.pose.length; at3 += 10) {
-      let length2 = Math.hypot(this.pose[at3], this.pose[at3 + 1], this.pose[at3 + 2], this.pose[at3 + 3]);
-      if (length2 < 1e-8) throw new RangeError("Procedural pose contains a zero quaternion");
-      for (let c = 0; c < 4; c++) this.pose[at3 + c] = this.pose[at3 + c] / length2;
-    }
-    this.ik.apply(this.pose);
-    for (let i of this.order) {
-      let a = i * 10, p = this.pose;
-      fromRotationTranslationScaleInto(
-        this.locals[i],
-        this.scratch,
-        { x: p[a + 3], y: p[a + 4], z: p[a + 5], w: p[a + 6] },
-        { x: p[a], y: p[a + 1], z: p[a + 2] },
-        { x: p[a + 7], y: p[a + 8], z: p[a + 9] }
-      );
-      let parent = this.skin.nodes[i].parent;
-      parent < 0 ? this.globals[i].set(this.locals[i]) : multiplyInto(this.globals[i], this.globals[parent], this.locals[i]);
-    }
-    let mesh = this.globals[this.skin.meshNode];
-    normalMatrixInto(this.scratch, 0, mesh);
-    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) this.inverseMesh[c * 4 + r] = this.scratch[r * 4 + c];
-    for (let r = 0; r < 3; r++) this.inverseMesh[12 + r] = -(this.inverseMesh[r] * mesh[12] + this.inverseMesh[4 + r] * mesh[13] + this.inverseMesh[8 + r] * mesh[14]);
-    for (let j = 0; j < this.skin.joints.length; j++)
-      multiplyInto(this.product, this.globals[this.skin.joints[j]], this.inverseBind[j]), multiplyInto(this.paletteEntries[j], this.inverseMesh, this.product);
-    this.revisionValue++;
-  }
-}, AnimationPlayers = class {
-  nodes = new ClipPlayers();
-  rigs = /* @__PURE__ */ new Map();
-  groups = /* @__PURE__ */ new Map();
-  skin(slot) {
-    return this.rigs.get(slot);
-  }
-  /** Explicit pose cohorts: all members intentionally share clocks, layers, IK and a palette. */
-  share(source, targets) {
-    let player = this.rigs.get(source);
-    if (player === void 0) throw new RangeError("Animation sharing needs a skinned source");
-    for (let target of targets) {
-      let other = this.rigs.get(target);
-      if (other === void 0 || other !== player && other.skin !== player.skin && JSON.stringify(other.skin) !== JSON.stringify(player.skin))
-        throw new RangeError("Animation sharing needs identical skeletal assets");
-    }
-    let changed = !1;
-    for (let target of targets) this.rigs.get(target) !== player && (this.rigs.set(target, player), changed = !0);
-    return changed;
-  }
-  detach(slot) {
-    let source = this.rigs.get(slot);
-    if (source === void 0) throw new RangeError("Animation detaching needs a skinned entity");
-    let player = new SkeletonPlayer(source.skin);
-    return player.copyPose(source), this.rigs.set(slot, player), player;
-  }
-  add(clip) {
-    this.nodes.add(clip);
-  }
-  addSkin(slot, skin, clip) {
-    this.rigs.set(slot, new SkeletonPlayer(skin, clip));
-  }
-  remove(slot) {
-    this.nodes.remove(slot), this.rigs.delete(slot);
-  }
-  copyPose(target, source) {
-    let a = this.rigs.get(target), b = this.rigs.get(source);
-    return a !== void 0 && b !== void 0 && a.copyPose(b);
-  }
-  transition(slot, name, seconds, looping, speed) {
-    return this.rigs.get(slot)?.transition(name, seconds, looping, speed) ?? !1;
-  }
-  play(slot, looping, speed) {
-    let r = this.rigs.get(slot);
-    return r === void 0 ? this.nodes.play(slot, looping, speed) : r.play(looping, speed);
-  }
-  clock(slot) {
-    let r = this.rigs.get(slot);
-    return r === void 0 ? [this.nodes, slot] : [r.clock, 0];
-  }
-  pause(slot) {
-    let blend = this.rigs.get(slot)?.locomotion;
-    if (blend?.active === !0) return blend.pause();
-    let [c, s] = this.clock(slot);
-    return c.pause(s);
-  }
-  resume(slot) {
-    let blend = this.rigs.get(slot)?.locomotion;
-    if (blend?.active === !0) return blend.resume();
-    let [c, s] = this.clock(slot);
-    return c.resume(s);
-  }
-  seek(slot, time) {
-    let blend = this.rigs.get(slot)?.locomotion;
-    if (blend?.active === !0)
-      return !Number.isFinite(time) || time < 0 || time > blend.duration ? !1 : (blend.seek(time / blend.duration), !0);
-    let [c, s] = this.clock(slot);
-    return c.seek(s, time);
-  }
-  fade(slot, weight, duration) {
-    let [c, s] = this.clock(slot);
-    return c.fade(s, weight, duration);
-  }
-  time(slot) {
-    let blend = this.rigs.get(slot)?.locomotion;
-    if (blend?.active === !0) return blend.phase * blend.duration;
-    let [c, s] = this.clock(slot);
-    return c.time(s);
-  }
-  duration(slot) {
-    let blend = this.rigs.get(slot)?.locomotion;
-    if (blend?.active === !0) return blend.duration;
-    let [c, s] = this.clock(slot);
-    return c.duration(s);
-  }
-  weight(slot) {
-    let [c, s] = this.clock(slot);
-    return c.weight(s);
-  }
-  playing(slot) {
-    let blend = this.rigs.get(slot)?.locomotion;
-    if (blend?.active === !0) return blend.playing;
-    let [c, s] = this.clock(slot);
-    return c.playing(s);
-  }
-  finished(slot) {
-    let blend = this.rigs.get(slot)?.locomotion;
-    if (blend?.active === !0) return blend.finished;
-    let [c, s] = this.clock(slot);
-    return c.finished(s);
-  }
-  crossed(slot, marker) {
-    let blend = this.rigs.get(slot)?.locomotion;
-    if (blend?.active === !0) return blend.crossedPhase(marker / blend.duration);
-    let [c, s] = this.clock(slot);
-    return c.crossed(s, marker);
-  }
-  advance(dt, apply, distance2) {
-    this.nodes.advance(dt, apply), this.groups.clear();
-    for (let [slot, player] of this.rigs) this.groups.set(player, Math.min(this.groups.get(player) ?? 1 / 0, distance2?.(slot) ?? 0));
-    for (let [player, nearest] of this.groups) player.advance(dt, !0, nearest);
-    this.groups.clear();
-  }
-  pose(apply, time) {
-    this.nodes.pose(apply, time);
-    for (let r of this.rigs.values()) r.evaluate();
-  }
-  poseSlot(slot, apply) {
-    this.nodes.poseSlot(slot, apply), this.rigs.get(slot)?.evaluate();
-  }
-};
-
-// src/scene/retarget.ts
-function bindRotations(skin) {
-  let result = [], visit = (node) => {
-    if (result[node] !== void 0) return result[node];
-    let local = skin.nodes[node], length2 = Math.hypot(...local.rotation), q = new Float64Array(local.rotation.map((value) => value / length2));
-    return local.parent >= 0 && multiplyQuat(q, 0, visit(local.parent), 0, q, 0), result[node] = q, q;
-  };
-  return skin.nodes.forEach((_, i) => visit(i)), result;
-}
-function retargetSkin(source, target, mapping, options = 1) {
-  let translationScale = typeof options == "number" ? options : options.translationScale ?? 1, worldSpace = typeof options != "number" && options.rotationSpace === "world";
-  if (typeof options != "number" && options.rotationSpace !== void 0 && options.rotationSpace !== "local" && !worldSpace)
-    throw new RangeError("Unknown retarget rotation space");
-  if (!Number.isFinite(translationScale) || translationScale <= 0)
-    throw new RangeError("Retarget translation scale must be positive");
-  for (let skin of [source, target]) {
-    let problem2 = skinProblem(skin, skin.indices.length);
-    if (problem2 !== void 0) throw new RangeError(problem2);
-  }
-  for (let skin of [source, target])
-    if (new Set(skin.nodes.map((n) => n.name)).size !== skin.nodes.length)
-      throw new RangeError("Retargeting needs unique node names");
-  let indices = /* @__PURE__ */ new Map(), used = /* @__PURE__ */ new Set();
-  for (let [from, to] of Object.entries(mapping)) {
-    let a = source.nodes.findIndex((n) => n.name === from), b = target.nodes.findIndex((n) => n.name === to);
-    if (a < 0 || b < 0 || used.has(b))
-      throw new RangeError(`Invalid retarget mapping: ${from} -> ${to}`);
-    indices.set(a, b), used.add(b);
-  }
-  for (let [a, b] of indices) {
-    if (worldSpace) {
-      let from = source.nodes[a].parent, to = target.nodes[b].parent;
-      for (; from >= 0 && !indices.has(from); ) from = source.nodes[from].parent;
-      for (; to >= 0 && !used.has(to); ) to = target.nodes[to].parent;
-      if (from < 0 ? to >= 0 : indices.get(from) !== to)
-        throw new RangeError("Retarget mapping must preserve mapped ancestor relationships");
-      continue;
-    }
-    let parent = source.nodes[a].parent;
-    if (parent >= 0 && (!indices.has(parent) || indices.get(parent) !== target.nodes[b].parent))
-      throw new RangeError(
-        "Retarget mapping must preserve mapped parent relationships"
-      );
-    if (parent < 0 && target.nodes[b].parent >= 0)
-      throw new RangeError("Retarget roots must map to roots");
-  }
-  let nodeScales = typeof options == "number" ? {} : { ...options.nodeTranslationScales };
-  for (let [name, scale] of Object.entries(nodeScales)) {
-    let node = source.nodes.findIndex((node2) => node2.name === name);
-    if (!indices.has(node) || !Number.isFinite(scale) || scale <= 0)
-      throw new RangeError(`Invalid retarget translation scale: ${name}`);
-  }
-  if (worldSpace) {
-    for (let skin of [source, target])
-      if (skin.nodes.some((node) => !numericallyUniformScale(node.scale[0], node.scale[1], node.scale[2])))
-        throw new RangeError("World-space retargeting requires uniform bind scales");
-    for (let clip of source.clips) for (let channel of clip.channels)
-      if (channel.path === "scale" && channel.values.some((_, i, values) => i % 3 === 0 && !numericallyUniformScale(values[i], values[i + 1], values[i + 2])))
-        throw new RangeError("World-space retargeting requires uniform animated scales");
-  }
-  let sourceRotations = worldSpace ? bindRotations(source) : [], targetRotations = worldSpace ? bindRotations(target) : [], q = new Float64Array(4), inverse = new Float64Array(4), correction = new Float64Array(4), frame = new Float64Array([0, 0, 0, 1]), inverseFrame = new Float64Array(4), targetBind = new Float64Array(4), clips = source.clips.map((clip) => ({
-    ...clip,
-    channels: clip.channels.map((channel) => {
-      let node = indices.get(channel.node);
-      if (node === void 0)
-        throw new RangeError(
-          `Unmapped animated node: ${source.nodes[channel.node].name}`
-        );
-      let a = source.nodes[channel.node], b = target.nodes[node], values = [...channel.values], width = channel.path === "rotation" ? 4 : 3;
-      if (frame.set([0, 0, 0, 1]), worldSpace) {
-        let parent = b.parent < 0 ? [0, 0, 0, 1] : targetRotations[b.parent];
-        for (let k = 0; k < 4; k++) inverseFrame[k] = parent[k] * (k < 3 ? -1 : 1);
-        multiplyQuat(frame, 0, inverseFrame, 0, a.parent < 0 ? [0, 0, 0, 1] : sourceRotations[a.parent], 0);
-        for (let k = 0; k < 4; k++) inverseFrame[k] = frame[k] * (k < 3 ? -1 : 1);
-      }
-      if (channel.path === "rotation") {
-        let al = Math.hypot(...a.rotation), bl = Math.hypot(...b.rotation);
-        for (let k = 0; k < 4; k++)
-          inverse[k] = a.rotation[k] / al * (k < 3 ? -1 : 1), q[k] = b.rotation[k] / bl;
-        multiplyQuat(correction, 0, q, 0, inverse, 0), targetBind.set(q);
-      }
-      for (let at3 = 0; at3 < values.length; at3 += width)
-        if (channel.path === "rotation") {
-          worldSpace ? (multiplyQuat(q, 0, values, at3, inverse, 0), multiplyQuat(q, 0, frame, 0, q, 0), multiplyQuat(q, 0, q, 0, inverseFrame, 0), multiplyQuat(q, 0, q, 0, targetBind, 0)) : multiplyQuat(q, 0, correction, 0, values, at3);
-          let length2 = Math.hypot(...q);
-          for (let k = 0; k < 4; k++) values[at3 + k] = q[k] / length2;
-        } else {
-          if (worldSpace && channel.path === "translation") {
-            let x = values[at3] - a.translation[0], y = values[at3 + 1] - a.translation[1], z = values[at3 + 2] - a.translation[2], tx = 2 * (frame[1] * z - frame[2] * y), ty = 2 * (frame[2] * x - frame[0] * z), tz = 2 * (frame[0] * y - frame[1] * x);
-            values[at3] = a.translation[0] + x + frame[3] * tx + frame[1] * tz - frame[2] * ty, values[at3 + 1] = a.translation[1] + y + frame[3] * ty + frame[2] * tx - frame[0] * tz, values[at3 + 2] = a.translation[2] + z + frame[3] * tz + frame[0] * ty - frame[1] * tx;
-          }
-          for (let k = 0; k < 3; k++)
-            values[at3 + k] = channel.path === "scale" ? b.scale[k] * values[at3 + k] / a.scale[k] : b.translation[k] + (values[at3 + k] - a.translation[k]) * (Object.hasOwn(nodeScales, a.name) ? nodeScales[a.name] : translationScale);
-        }
-      return { ...channel, node, values };
-    })
-  })), result = { ...target, clips }, problem = skinProblem(result, result.indices.length);
-  if (problem !== void 0) throw new RangeError(problem);
-  return result;
-}
-
-// src/scene/humanoid-rig.ts
-var REQUIRED_HUMANOID_BONES = [
-  "hips",
-  "spine",
-  "head",
-  "leftUpperLeg",
-  "leftLowerLeg",
-  "leftFoot",
-  "rightUpperLeg",
-  "rightLowerLeg",
-  "rightFoot",
-  "leftUpperArm",
-  "leftLowerArm",
-  "leftHand",
-  "rightUpperArm",
-  "rightLowerArm",
-  "rightHand"
-], OPTIONAL_HUMANOID_BONES = [
-  "chest",
-  "upperChest",
-  "neck",
-  "leftShoulder",
-  "rightShoulder",
-  "leftToes",
-  "rightToes"
-], sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], mul = (a, s) => [a[0] * s, a[1] * s, a[2] * s], dot2 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2], cross2 = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]], len = (a) => Math.hypot(a[0], a[1], a[2]), unit = (a) => {
-  let l = len(a);
-  return l < 1e-12 ? [0, 0, 0] : [a[0] / l, a[1] / l, a[2] / l];
-}, orth = (a, n) => sub(a, mul(n, dot2(a, n))), qmul2 = (a, b) => [
-  a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1],
-  a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0],
-  a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3],
-  a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]
-], qconj2 = (q) => [-q[0], -q[1], -q[2], q[3]], qnorm = (q) => {
-  let l = Math.hypot(q[0], q[1], q[2], q[3]);
-  return [q[0] / l, q[1] / l, q[2] / l, q[3] / l];
-}, qrot = (q, v) => {
-  let t = mul(cross2(q, v), 2);
-  return add(add(v, mul(t, q[3])), cross2(q, t));
-};
-function qarc(a, b) {
-  let d = dot2(a, b);
-  if (d < -1 + 1e-9) {
-    let axis = unit(len(cross2(a, [1, 0, 0])) > 1e-3 ? cross2(a, [1, 0, 0]) : cross2(a, [0, 1, 0]));
-    return [axis[0], axis[1], axis[2], 0];
-  }
-  let c = cross2(a, b);
-  return qnorm([c[0], c[1], c[2], 1 + d]);
-}
-function qbasis(x, y, z) {
-  let [m00, m10, m20] = [x[0], x[1], x[2]], [m01, m11, m21] = [y[0], y[1], y[2]], [m02, m12, m22] = [z[0], z[1], z[2]], t = m00 + m11 + m22;
-  if (t > 0) {
-    let s2 = Math.sqrt(t + 1) * 2;
-    return qnorm([(m21 - m12) / s2, (m02 - m20) / s2, (m10 - m01) / s2, s2 / 4]);
-  }
-  if (m00 > m11 && m00 > m22) {
-    let s2 = Math.sqrt(1 + m00 - m11 - m22) * 2;
-    return qnorm([s2 / 4, (m01 + m10) / s2, (m02 + m20) / s2, (m21 - m12) / s2]);
-  }
-  if (m11 > m22) {
-    let s2 = Math.sqrt(1 + m11 - m00 - m22) * 2;
-    return qnorm([(m01 + m10) / s2, s2 / 4, (m12 + m21) / s2, (m02 - m20) / s2]);
-  }
-  let s = Math.sqrt(1 + m22 - m00 - m11) * 2;
-  return qnorm([(m02 + m20) / s, (m12 + m21) / s, s / 4, (m10 - m01) / s]);
-}
-function worldSimilarity(skin, order, local) {
-  let rot = [], scale = [], pos = [];
-  for (let i of order) {
-    let { t, r, s } = local(i), p = skin.nodes[i].parent;
-    p < 0 ? (rot[i] = qnorm(r), scale[i] = s, pos[i] = [t[0], t[1], t[2]]) : (rot[i] = qnorm(qmul2(rot[p], r)), scale[i] = scale[p] * s, pos[i] = add(pos[p], mul(qrot(rot[p], t), scale[p])));
-  }
-  return { rot, scale, pos };
-}
-function nodeOrder(skin) {
-  let seen = /* @__PURE__ */ new Set(), out = [], visit = (i) => {
-    if (seen.has(i)) return;
-    let p = skin.nodes[i].parent;
-    p >= 0 && visit(p), seen.add(i), out.push(i);
-  };
-  return skin.nodes.forEach((_, i) => visit(i)), out;
-}
-function analyse(skin) {
-  let n = skin.nodes.length, order = nodeOrder(skin), bind = worldSimilarity(skin, order, (i) => {
-    let node = skin.nodes[i];
-    return { t: node.translation, r: node.rotation, s: node.scale[0] };
-  }), m = skin.meshNode, inv = qconj2(bind.rot[m]), P = bind.pos.map((p) => mul(qrot(inv, sub(p, bind.pos[m])), 1 / bind.scale[m])), Q = bind.rot.map((r) => qnorm(qmul2(inv, r))), S = bind.scale.map((s) => s / bind.scale[m]), isJoint = skin.nodes.map((_, i) => skin.joints.includes(i)), jp = skin.nodes.map((_, i) => {
-    let p = skin.nodes[i].parent;
-    for (; p >= 0 && !isJoint[p]; ) p = skin.nodes[p].parent;
-    return p;
-  }), kids = skin.nodes.map(() => []);
-  for (let i = 0; i < n; i++) isJoint[i] && jp[i] >= 0 && kids[jp[i]].push(i);
-  let height = new Array(n).fill(0), size = new Array(n).fill(1);
-  for (let k = order.length - 1; k >= 0; k--) {
-    let i = order[k];
-    !isJoint[i] || jp[i] < 0 || (height[jp[i]] = Math.max(height[jp[i]], height[i] + 1), size[jp[i]] = size[jp[i]] + size[i]);
-  }
-  return { skin, count: n, order, isJoint, P, Q, S, meshRot: bind.rot[m], origin: { pos: mul(qrot(inv, mul(bind.pos[m], -1)), 1 / bind.scale[m]), scale: 1 / bind.scale[m] }, jp, kids, height, size };
-}
-var uniformScales = (skin) => skin.nodes.every((n) => numericallyUniformScale(n.scale[0], n.scale[1], n.scale[2])), NAME_TABLE_SPEC = "hips:hips hip pelvis waist cog;torso:spine chest upperchest uppchest torso abdomen back ribcage;neck:neck;head:head;leg.upper:thigh upleg upperleg uleg femur;leg.lower:calf shin lowerleg lowleg knee tibia;leg.foot:ankle foot;leg.toe:toe toes toebase ball;leg:leg;arm.shoulder:shoulder clavicle collar collarbone clav;arm.upper:upperarm uparm humerus;arm.lower:forearm lowerarm lowarm elbow ulna;arm.hand:hand wrist;arm:arm", NAME_TABLE = /* @__PURE__ */ new Map();
-for (let row of NAME_TABLE_SPEC.split(";")) {
-  let [key, words] = row.split(":"), [family, role] = key.split(".");
-  for (let word of words.split(" ")) NAME_TABLE.set(word, role === void 0 ? { family } : { family, role });
-}
-var NOISE_WORDS = "mixamorig mixamo def org mch j b bip valvebiped cc base bone joint skeleton armature rig c", NOISE = new Set(NOISE_WORDS.split(" "));
-function parseName(name) {
-  let words = name.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2").split(/[^A-Za-z]+/).filter((w) => w !== "").map((w) => w.toLowerCase()), side2 = "", stem = [];
-  for (let w of words)
-    NOISE.has(w) || (w === "left" || w === "l" ? side2 = "l" : w === "right" || w === "r" ? side2 = "r" : stem.push(w));
-  let key = stem.join(""), found = key === "hip" ? side2 === "" ? { family: "hips" } : { family: "leg", role: "upper" } : NAME_TABLE.get(key);
-  return found === void 0 || (found.family === "leg" || found.family === "arm") != (side2 !== "") ? { side: side2 } : found.role === void 0 ? { family: found.family, side: side2 } : { family: found.family, role: found.role, side: side2 };
-}
-
-// src/scene/humanoid.ts
-var ankleBend = Math.cos(50 * Math.PI / 180);
-function continuation(g, from, kids) {
-  let far = (k) => len(sub(g.P[k], g.P[from]));
-  return [...kids].sort((a, b) => g.height[b] - g.height[a] || far(b) - far(a) || a - b)[0];
-}
-function limbChain(g, start, names) {
-  let out = [start];
-  for (let cur = start; ; ) {
-    let kids = g.kids[cur], role = names[cur].role;
-    if (kids.length === 0 || role === "hand" || role === "toe" || kids.filter((k) => g.height[k] >= 1).length >= 2) return out;
-    cur = continuation(g, cur, kids), out.push(cur);
-  }
-}
-var pathLength = (g, c, from, to) => {
-  let sum = 0;
-  for (let i = from; i < to; i++) sum += len(sub(g.P[c[i + 1]], g.P[c[i]]));
-  return sum;
-}, hint = (names, joint, role) => names[joint].role === void 0 ? 0 : names[joint].role === role ? -0.7 : 0.7;
-function splitLeg(g, c, names) {
-  let n = c.length - 1;
-  if (n < 2) return;
-  let a = c.findIndex((j, i) => i >= 2 && names[j].role === "foot");
-  if (a < 0) {
-    a = n;
-    for (let i = 2; i < n; i++)
-      if (dot2(unit(sub(g.P[c[i + 1]], g.P[c[i]])), unit(sub(g.P[c[i]], g.P[c[0]]))) < ankleBend) {
-        a = i;
-        break;
-      }
-    a === n && n >= 3 && pathLength(g, c, n - 1, n) < 0.5 * pathLength(g, c, n - 2, n - 1) && (a = n - 1);
-  }
-  let k = -1, cost = 1 / 0;
-  for (let i = 1; i < a; i++) {
-    let upper = pathLength(g, c, 0, i), lower = pathLength(g, c, i, a);
-    if (upper < 1e-9 || lower < 1e-9) continue;
-    let here = Math.abs(Math.log(upper / lower)) + hint(names, c[i], "lower");
-    here < cost && (cost = here, k = i);
-  }
-  if (!(k < 0))
-    return a < n ? { upper: c[0], lower: c[k], foot: c[a], toes: c[a + 1] } : { upper: c[0], lower: c[k], foot: c[a] };
-}
-function splitArm(g, whole, names) {
-  let last = whole.length - 1;
-  for (let i = 2; i < last; i++)
-    if (dot2(unit(sub(g.P[whole[i + 1]], g.P[whole[i]])), unit(sub(g.P[whole[i]], g.P[whole[0]]))) < 0.5) {
-      last = i;
-      break;
-    }
-  let c = whole.slice(0, last + 1), best, cost = 1 / 0;
-  for (let u = 0; u <= 1; u++)
-    for (let e = u + 1; e < last; e++)
-      for (let n = e + 1; n <= last; n++) {
-        let upper = pathLength(g, c, u, e), lower = pathLength(g, c, e, n);
-        if (upper < 1e-9 || lower < 1e-9) continue;
-        let here = Math.abs(Math.log(upper / lower)) + 0.1 * (n - e - 1) + hint(names, c[u], "upper") + hint(names, c[e], "lower") + hint(names, c[n], "hand") + (u === 1 ? hint(names, c[0], "shoulder") : names[c[0]].role === "shoulder" ? 0.7 : 0);
-        here < cost && (cost = here, best = u === 1 ? { shoulder: c[0], upper: c[1], lower: c[e], hand: c[n] } : { upper: c[0], lower: c[e], hand: c[n] });
-      }
-  return best;
-}
-function mirrorError(g, a, b, n) {
-  let m = Math.min(3, a.length, b.length), mid = mul(add(g.P[a[0]], g.P[b[0]]), 0.5), scale = len(sub(g.P[a[m - 1]], g.P[a[0]]));
-  if (scale < 1e-9) return 1 / 0;
-  let sum = 0;
-  for (let j = 0; j < m; j++) {
-    let p = g.P[a[j]], mirrored = sub(p, mul(n, 2 * dot2(sub(p, mid), n)));
-    sum += len(sub(mirrored, g.P[b[j]]));
-  }
-  return sum / m / scale;
-}
-function spinePath(g, s, up, lat, names) {
-  let path = [s], arms, top = -1, pick = (cur, list) => list.filter((k) => {
-    let o = sub(g.P[k], g.P[cur]);
-    return Math.abs(dot2(o, lat)) <= 0.35 * len(o);
-  }).sort((a, b) => g.height[b] - g.height[a] || dot2(up, sub(g.P[b], g.P[a])))[0];
-  for (let cur = s; ; ) {
-    let kids = g.kids[cur];
-    if (kids.length === 0) break;
-    let rest = kids;
-    if (arms === void 0) {
-      let limbs = kids.filter((k) => g.height[k] >= 2);
-      for (let i = 0; i < limbs.length && arms === void 0; i++)
-        for (let j = i + 1; j < limbs.length && arms === void 0; j++) {
-          let p = limbs[i], q = limbs[j], sp = dot2(sub(g.P[p], g.P[cur]), lat), sq = dot2(sub(g.P[q], g.P[cur]), lat);
-          sp * sq < 0 && Math.abs(sp + sq) <= 0.35 * Math.max(Math.abs(sp), Math.abs(sq)) && mirrorError(g, limbChain(g, p, names), limbChain(g, q, names), lat) <= 0.35 && (arms = [p, q], top = cur);
-        }
-      arms !== void 0 && (rest = kids.filter((k) => k !== arms[0] && k !== arms[1]));
-    }
-    let next = pick(cur, rest);
-    if (next === void 0) break;
-    path.push(next), cur = next;
-  }
-  if (arms === void 0) return;
-  let above = path.slice(path.indexOf(top) + 1), m = above.length;
-  if (m === 0) return;
-  let head = above[m - 1];
-  return (m >= 2 && g.kids[above[m - 2]].length >= 2 || m >= 3 && g.kids[head].length === 0 && len(sub(g.P[head], g.P[above[m - 2]])) > 1.5 * len(sub(g.P[above[m - 2]], g.P[above[m - 3]]))) && (head = above[m - 2]), { arms, head };
-}
-function structure(g, names) {
-  let best, bestKey = -1;
-  for (let h = 0; h < g.count; h++) {
-    if (!g.isJoint[h]) continue;
-    let limbs = g.kids[h].filter((k) => g.height[k] >= 2);
-    if (!(limbs.length < 3))
-      for (let i = 0; i < limbs.length; i++)
-        for (let j = i + 1; j < limbs.length; j++) {
-          let a = limbs[i], b = limbs[j], A = limbChain(g, a, names), B = limbChain(g, b, names);
-          if (A.length < 3 || B.length < 3) continue;
-          let n = unit(sub(g.P[a], g.P[b]));
-          if (mirrorError(g, A, B, n) > 0.2) continue;
-          let dA = unit(sub(g.P[A[2]], g.P[a])), dB = unit(sub(g.P[B[2]], g.P[b]));
-          if (dot2(dA, dB) < 0.8) continue;
-          let up = unit(mul(add(dA, dB), -1)), lat = unit(orth(n, up));
-          for (let s of limbs) {
-            if (s === a || s === b) continue;
-            let sp = spinePath(g, s, up, lat, names);
-            if (sp === void 0 || dot2(unit(sub(g.P[sp.head], g.P[h])), up) < 0.6) continue;
-            let key = g.size[h] * 1e3 + g.size[s];
-            key > bestKey && (bestKey = key, best = { legs: [a, b], arms: sp.arms, head: sp.head });
-          }
-        }
-  }
-  return best;
-}
-function nameAnchors(g, names) {
-  let joints = names.map((_, i) => i).filter((i) => g.isJoint[i]), top = (family, side2) => {
-    let same = (i) => names[i].family === family && names[i].side === side2, tops = joints.filter((i) => same(i) && !(g.jp[i] >= 0 && same(g.jp[i])));
-    return tops.length === 1 ? tops[0] : void 0;
-  }, out = {}, [ll, lr, al, ar] = [top("leg", "l"), top("leg", "r"), top("arm", "l"), top("arm", "r")];
-  ll !== void 0 && lr !== void 0 && (out.legs = [ll, lr]), al !== void 0 && ar !== void 0 && (out.arms = [al, ar]);
-  let heads = joints.filter((i) => names[i].family === "head");
-  if (heads.length === 1) out.head = heads[0];
-  else if (heads.length === 0) {
-    let necks = joints.filter((i) => names[i].family === "neck"), tips = necks.filter((i) => !necks.some((o) => g.jp[o] === i));
-    necks.length >= 2 && tips.length === 1 && (out.head = tips[0]);
-  }
-  return out;
-}
-var ancestors = (g, i) => {
-  let out = [];
-  for (let c = i; c >= 0; c = g.jp[c]) out.push(c);
-  return out;
-};
-function lca(g, of) {
-  let common = ancestors(g, of[0]);
-  for (let i of of) {
-    let up = new Set(ancestors(g, i));
-    common = common.filter((c) => up.has(c));
-  }
-  return common[0] ?? -1;
-}
-var COSINE_UPRIGHT = 0.75;
-function build(g, names, an, sided) {
-  let hips = lca(g, [an.legs[0], an.legs[1], an.head]);
-  if (hips < 0 || [an.legs[0], an.legs[1], an.head].includes(hips)) return "the legs and the head do not meet at a hips joint";
-  let legs = an.legs.map((s) => splitLeg(g, limbChain(g, s, names), names)), arms = an.arms.map((s) => splitArm(g, limbChain(g, s, names), names));
-  if (legs[0] === void 0 || legs[1] === void 0) return "a leg chain has fewer than hip, knee and ankle joints";
-  if (arms[0] === void 0 || arms[1] === void 0) return "an arm chain has fewer than shoulder, elbow and wrist joints";
-  let above0 = ancestors(g, an.head), path = above0.slice(0, above0.indexOf(hips) + 1).reverse(), top = lca(g, [g.jp[an.arms[0]], g.jp[an.arms[1]]]);
-  for (; top >= 0 && !path.includes(top); ) top = g.jp[top];
-  let ti = path.indexOf(top);
-  if (ti < 1 || ti >= path.length - 1) return "the arms do not attach to a spine between the hips and the head";
-  let torso = path.slice(1, ti + 1), above = path.slice(ti + 1, path.length - 1), up = unit(sub(g.P[an.head], g.P[hips])), axis = (l) => unit(sub(g.P[l.foot], g.P[l.upper])), legPair = [legs[0], legs[1]], upright = -dot2(up, unit(add(axis(legs[0]), axis(legs[1]))));
-  if (upright < COSINE_UPRIGHT) return "the spine is not opposed to the legs (not an upright biped)";
-  if ([legs[0], legs[1]].some((l) => dot2(sub(g.P[l.foot], g.P[hips]), up) >= 0) || dot2(sub(g.P[an.head], g.P[top]), up) <= 0)
-    return "the feet are not below the hips or the head is not above the arms";
-  let vote = (f) => {
-    let scale = (pathLength(g, [legs[0].upper, legs[0].lower, legs[0].foot], 0, 2) + pathLength(g, [legs[1].upper, legs[1].lower, legs[1].foot], 0, 2)) / 2, toes = 0, knees = 0;
-    for (let l of legPair) {
-      l.toes !== void 0 && (toes += dot2(orth(sub(g.P[l.toes], g.P[l.foot]), up), f));
-      let u = g.P[l.upper], w = g.P[l.foot], k = g.P[l.lower], t = len(sub(k, u)) / (len(sub(k, u)) + len(sub(w, k)));
-      knees += dot2(sub(k, add(u, mul(sub(w, u), t))), f);
-    }
-    return Math.abs(toes) > 0.1 * scale ? { sign: Math.sign(toes), source: 1 } : Math.abs(knees) > 0.02 * scale ? { sign: Math.sign(knees), source: 0.95 } : { sign: dot2(qrot(qconj2(g.meshRot), [0, 0, 1]), f) >= 0 ? 1 : -1, source: 0.85 };
-  }, left, factor;
-  if (sided.legs || sided.arms) {
-    let pair = sided.legs ? an.legs : an.arms;
-    left = unit(orth(sub(g.P[pair[0]], g.P[pair[1]]), up)), factor = sided.legs && sided.arms && dot2(left, unit(orth(sub(g.P[an.arms[0]], g.P[an.arms[1]]), up))) <= 0 ? 0.5 : 1;
-    let v = vote(unit(cross2(left, up)));
-    v.source === 1 && v.sign < 0 && (factor *= 0.5);
-  } else {
-    let provisional = unit(orth(sub(g.P[an.legs[0]], g.P[an.legs[1]]), up)), v = vote(unit(cross2(provisional, up)));
-    left = v.sign < 0 ? mul(provisional, -1) : provisional, factor = v.source;
-  }
-  let forward = unit(cross2(left, up)), order = (pair, about, named) => named || dot2(sub(g.P[pair[0]], g.P[about]), left) >= dot2(sub(g.P[pair[1]], g.P[about]), left) ? [0, 1] : [1, 0], [ll, rl] = order(an.legs, hips, sided.legs), [la, ra] = order(an.arms, top, sided.arms), [LL, RL, LA, RA] = [legs[ll], legs[rl], arms[la], arms[ra]], bones = {
-    hips,
-    spine: torso[0],
-    head: an.head,
-    leftUpperLeg: LL.upper,
-    leftLowerLeg: LL.lower,
-    leftFoot: LL.foot,
-    rightUpperLeg: RL.upper,
-    rightLowerLeg: RL.lower,
-    rightFoot: RL.foot,
-    leftUpperArm: LA.upper,
-    leftLowerArm: LA.lower,
-    leftHand: LA.hand,
-    rightUpperArm: RA.upper,
-    rightLowerArm: RA.lower,
-    rightHand: RA.hand
-  }, optional = [
-    ["chest", torso[1]],
-    ["upperChest", torso.length >= 3 ? torso[torso.length - 1] : void 0],
-    ["neck", above.find((j) => names[j].family === "neck") ?? above[0]],
-    ["leftShoulder", LA.shoulder],
-    ["rightShoulder", RA.shoulder],
-    ["leftToes", LL.toes],
-    ["rightToes", RL.toes]
-  ];
-  for (let [bone, joint] of optional) joint !== void 0 && (bones[bone] = joint);
-  let tilt = upright >= 0.95 ? 1 : 0.6 + 0.4 * (upright - COSINE_UPRIGHT) / (0.95 - COSINE_UPRIGHT);
-  return { bones, up, forward, factor: factor * tilt };
-}
-function nameMatch(g, names, bone, joint) {
-  let p = names[joint], side2 = bone.startsWith("left") ? "l" : bone.startsWith("right") ? "r" : "", rest = side2 === "" ? bone : bone.slice(side2 === "l" ? 4 : 5), part = rest[0].toLowerCase() + rest.slice(1);
-  if (p.family === void 0 || p.side !== side2) return 0;
-  switch (part) {
-    case "hips":
-      return p.family === "hips" ? 2 : p.family === "torso" && !(g.jp[joint] >= 0 && names[g.jp[joint]].family === "torso") ? 1 : 0;
-    case "spine":
-    case "chest":
-    case "upperChest":
-      return p.family === "torso" ? 2 : 0;
-    case "neck":
-      return p.family === "neck" ? 2 : 0;
-    case "head":
-      return p.family === "head" ? 2 : p.family === "neck" ? 1 : 0;
-    default: {
-      let [family, role] = {
-        upperArm: ["arm", "upper"],
-        lowerArm: ["arm", "lower"],
-        hand: ["arm", "hand"],
-        shoulder: ["arm", "shoulder"],
-        upperLeg: ["leg", "upper"],
-        lowerLeg: ["leg", "lower"],
-        foot: ["leg", "foot"],
-        toes: ["leg", "toe"]
-      }[part];
-      return p.family !== family ? 0 : p.role === role ? 2 : p.role === void 0 ? 1 : 0;
-    }
-  }
-}
-function mapHumanoid(skin) {
-  try {
-    if (skin.joints.length < REQUIRED_HUMANOID_BONES.length) return { error: `a humanoid needs at least ${REQUIRED_HUMANOID_BONES.length} joints, the skin has ${skin.joints.length}` };
-    let g = analyse(skin), names = skin.nodes.map((n) => parseName(n.name)), byName = nameAnchors(g, names), byShape = structure(g, names), attempts = [], legs = byName.legs ?? byShape?.legs, arms = byName.arms ?? byShape?.arms, head = byName.head ?? byShape?.head;
-    legs !== void 0 && arms !== void 0 && head !== void 0 && attempts.push([{ legs, arms, head }, { legs: byName.legs !== void 0, arms: byName.arms !== void 0 }]), byShape !== void 0 && (attempts.length === 0 || attempts[0][0].legs !== byShape.legs || attempts[0][0].arms !== byShape.arms) && attempts.push([byShape, { legs: !1, arms: !1 }]);
-    let failure2 = "no leg pair, arm pair and head found by name or by structure";
-    for (let [anchors, sided] of attempts) {
-      let built = build(g, names, anchors, sided);
-      if (typeof built == "string") {
-        anchors === attempts[0][0] && (failure2 = built);
-        continue;
-      }
-      let bones = {}, evidence = {}, sum = 0;
-      for (let [bone, joint] of Object.entries(built.bones)) {
-        let name = skin.nodes[joint].name;
-        if (skin.nodes.filter((n) => n.name === name).length !== 1) return { error: `the bone name ${JSON.stringify(name)} is not unique` };
-        let match = nameMatch(g, names, bone, joint);
-        bones[bone] = name, evidence[bone] = match > 0 ? "name" : "structure", REQUIRED_HUMANOID_BONES.includes(bone) && (sum += match === 2 ? 1 : match === 1 ? 0.9 : 0.75);
-      }
-      return {
-        bones,
-        evidence,
-        confidence: Math.round(Math.min(1, sum / REQUIRED_HUMANOID_BONES.length * built.factor) * 1e3) / 1e3,
-        unmapped: OPTIONAL_HUMANOID_BONES.filter((b) => bones[b] === void 0),
-        up: built.up,
-        forward: built.forward
-      };
-    }
-    return { error: failure2 };
-  } catch (e) {
-    return { error: `the skin could not be analysed: ${e instanceof Error ? e.message : String(e)}` };
-  }
-}
-
-// src/scene/humanoid-retarget.ts
-var ALL_BONES = [...REQUIRED_HUMANOID_BONES, ...OPTIONAL_HUMANOID_BONES], CHAINS = [
-  ["hips", "spine", "chest", "upperChest", "neck", "head"],
-  ["leftShoulder", "leftUpperArm", "leftLowerArm", "leftHand"],
-  ["rightShoulder", "rightUpperArm", "rightLowerArm", "rightHand"],
-  ["leftUpperLeg", "leftLowerLeg", "leftFoot", "leftToes"],
-  ["rightUpperLeg", "rightLowerLeg", "rightFoot", "rightToes"]
-], CANONICAL = {
-  hips: [0, 1, 0],
-  spine: [0, 1, 0],
-  chest: [0, 1, 0],
-  upperChest: [0, 1, 0],
-  neck: [0, 1, 0],
-  leftShoulder: [1, 0, 0],
-  leftUpperArm: [1, 0, 0],
-  leftLowerArm: [1, 0, 0],
-  rightShoulder: [-1, 0, 0],
-  rightUpperArm: [-1, 0, 0],
-  rightLowerArm: [-1, 0, 0],
-  leftUpperLeg: [0, -1, 0],
-  leftLowerLeg: [0, -1, 0],
-  rightUpperLeg: [0, -1, 0],
-  rightLowerLeg: [0, -1, 0],
-  leftFoot: [0, 0, 1],
-  rightFoot: [0, 0, 1]
-};
-function side(skin, map, what) {
-  let problem = skinProblem(skin, skin.indices.length);
-  if (problem !== void 0) throw new RangeError(`${what}: ${problem}`);
-  if (!uniformScales(skin)) throw new RangeError(`${what}: humanoid retargeting requires uniform bind scales`);
-  let index = /* @__PURE__ */ new Map();
-  skin.nodes.forEach((n, i) => index.set(n.name, i));
-  let up = unit(map.up), forward = unit(map.forward), left = cross2(up, forward);
-  return {
-    skin,
-    rig: analyse(skin),
-    map,
-    basis: qbasis(left, up, forward),
-    left,
-    up,
-    forward,
-    node: (bone) => index.get(map.bones[bone])
-  };
-}
-function mapOf(skin, given, what) {
-  let map = given ?? mapHumanoid(skin);
-  if ("error" in map) throw new RangeError(`Humanoid mapping failed for the ${what}: ${map.error}`);
-  return map;
-}
-function restOrientations(s, shared, correct) {
-  let out = /* @__PURE__ */ new Map(), turn = /* @__PURE__ */ new Map();
-  for (let chain of CHAINS) {
-    let members = chain.filter((b) => shared.includes(b));
-    members.forEach((bone, i) => {
-      let next = members[i + 1], canonical2 = CANONICAL[bone], rotation2 = [0, 0, 0, 1];
-      if (correct && next !== void 0 && canonical2 !== void 0) {
-        let bind = sub(s.rig.P[s.node(next)], s.rig.P[s.node(bone)]);
-        len(bind) > 1e-9 && (rotation2 = qarc(unit(bind), qrot(s.basis, canonical2)));
-      } else correct && i > 0 && (rotation2 = turn.get(members[i - 1]));
-      turn.set(bone, rotation2), out.set(bone, qnorm(qmul2(rotation2, s.rig.Q[s.node(bone)])));
-    });
-  }
-  return out;
-}
-var legLength = (s) => {
-  let sum = 0;
-  for (let prefix of ["left", "right"]) {
-    let [u, l, f] = ["UpperLeg", "LowerLeg", "Foot"].map((p) => s.rig.P[s.node(`${prefix}${p}`)]);
-    sum += len(sub(l, u)) + len(sub(f, l));
-  }
-  return sum / 2;
-}, dotv = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-function retargetHumanoid(source, target, options = {}) {
-  let { translationScale, restCorrection = !0, maxKeyInterval = 1 / 30 } = options;
-  if (translationScale !== void 0 && !(Number.isFinite(translationScale) && translationScale > 0)) throw new RangeError("Retarget translation scale must be positive");
-  if (!(Number.isFinite(maxKeyInterval) && maxKeyInterval > 0)) throw new RangeError("The retarget key interval must be positive");
-  let S = side(source, mapOf(source, options.sourceMap, "source"), "source"), T = side(target, mapOf(target, options.targetMap, "target"), "target"), shared = ALL_BONES.filter((b) => S.map.bones[b] !== void 0 && T.map.bones[b] !== void 0), restS = restOrientations(S, shared, restCorrection), restT = restOrientations(T, shared, restCorrection), B = qmul2(T.basis, qconj2(S.basis)), sourceOf = /* @__PURE__ */ new Map(), targetOf = /* @__PURE__ */ new Map();
-  for (let b of shared)
-    sourceOf.set(S.node(b), b), targetOf.set(T.node(b), b);
-  let ratio = translationScale ?? legLength(T) / legLength(S), hipsS = S.node("hips"), hipsT = T.node("hips"), ground = (x) => ["leftFoot", "rightFoot"].reduce((sum, b) => sum + dotv(x.rig.P[x.node(b)], x.up), 0) / 2, reference = (x, bone) => [dotv(x.rig.P[bone], x.left), dotv(x.rig.P[bone], x.up), dotv(x.rig.P[bone], x.forward)], bindS = reference(S, hipsS), bindT = reference(T, hipsT), groundS = ground(S), groundT = ground(T), pelvis = (x) => dotv(x.rig.P[x.node("hips")], x.up) - (dotv(x.rig.P[x.node("leftUpperLeg")], x.up) + dotv(x.rig.P[x.node("rightUpperLeg")], x.up)) / 2, pelvisS = pelvis(S), pelvisT = pelvis(T), orderS = S.rig.order, orderT = T.rig.order, tNode = (i) => T.skin.nodes[i], hipsParent = tNode(hipsT).parent, hipsParentScale = hipsParent < 0 ? T.rig.origin.scale : T.rig.S[hipsParent], clips = S.skin.clips.map((clip) => {
-    let rotation2 = /* @__PURE__ */ new Map(), translation2 = /* @__PURE__ */ new Map();
-    for (let c of clip.channels) (c.path === "rotation" ? rotation2 : c.path === "translation" ? translation2 : /* @__PURE__ */ new Map()).set(c.node, c);
-    let stamps = /* @__PURE__ */ new Set([0, clip.duration]);
-    for (let c of clip.channels) for (let t of c.times) stamps.add(t);
-    let times = [...stamps].filter((t) => t >= 0 && t <= clip.duration).sort((a, b) => a - b), dense = [];
-    times.forEach((t, i) => {
-      dense.push(t);
-      let gap = times[i + 1] === void 0 ? 0 : times[i + 1] - t, steps = Math.ceil(gap / maxKeyInterval - 1e-9);
-      for (let k = 1; k < steps; k++) dense.push(t + gap * k / steps);
-    }), times = dense;
-    let scratch = new Float64Array(4), sample = (map, node, t, bind) => {
-      let c = map.get(node);
-      return c === void 0 ? bind : (sampleChannelInto(c, t, scratch), scratch);
-    }, rotations = /* @__PURE__ */ new Map(), hips = [];
-    for (let b of shared) rotations.set(T.node(b), []);
-    let animatedHips = [...translation2.keys()].some((n) => {
-      for (let c = hipsS; c >= 0; c = S.skin.nodes[c].parent) if (c === n) return !0;
-      return !1;
-    }), Qs = [], Qt = [], meshInverseT = qconj2(T.rig.meshRot);
-    for (let t of times) {
-      let world = worldSimilarity(S.skin, orderS, (i) => {
-        let n = S.skin.nodes[i], r = sample(rotation2, i, t, n.rotation), q = [r[0], r[1], r[2], r[3]], p = sample(translation2, i, t, n.translation);
-        return { t: [p[0], p[1], p[2]], r: q, s: n.scale[0] };
-      }), inverseMesh = qconj2(world.rot[S.skin.meshNode]);
-      for (let i of orderS) Qs[i] = qnorm(qmul2(inverseMesh, world.rot[i]));
-      for (let i of orderT) {
-        let parent = tNode(i).parent, base = parent < 0 ? meshInverseT : Qt[parent], bone = targetOf.get(i);
-        if (bone === void 0) {
-          Qt[i] = qnorm(qmul2(base, tNode(i).rotation));
-          continue;
-        }
-        let a = S.node(bone), delta = qmul2(Qs[a], qconj2(restS.get(bone)));
-        Qt[i] = qnorm(qmul2(qmul2(qmul2(B, delta), qconj2(B)), restT.get(bone)));
-        let local = qnorm(qmul2(qconj2(base), Qt[i])), list = rotations.get(i), at3 = list.length - 4, flip = at3 >= 0 && list[at3] * local[0] + list[at3 + 1] * local[1] + list[at3 + 2] * local[2] + list[at3 + 3] * local[3] < 0 ? -1 : 1;
-        list.push(local[0] * flip, local[1] * flip, local[2] * flip, local[3] * flip);
-      }
-      if (animatedHips) {
-        let meshPos = world.pos[S.skin.meshNode], p = mul3(qrot(inverseMesh, sub(world.pos[hipsS], meshPos)), 1 / world.scale[S.skin.meshNode]), c = [dotv(p, S.left), dotv(p, S.up), dotv(p, S.forward)], l = bindT[0] + ratio * (c[0] - bindS[0]), u = groundT + pelvisT + ratio * (c[1] - pelvisS - groundS), f = bindT[2] + ratio * (c[2] - bindS[2]), mine = [T.left[0] * l + T.up[0] * u + T.forward[0] * f, T.left[1] * l + T.up[1] * u + T.forward[1] * f, T.left[2] * l + T.up[2] * u + T.forward[2] * f], parentPos = hipsParent < 0 ? T.rig.origin.pos : T.rig.P[hipsParent], parentRot = hipsParent < 0 ? meshInverseT : Qt[hipsParent], local = mul3(qrot(qconj2(parentRot), sub(mine, parentPos)), 1 / hipsParentScale);
-        hips.push(local[0], local[1], local[2]);
-      }
-    }
-    let channels = [...rotations].map(([node, values]) => ({ node, path: "rotation", interpolation: "linear", times, values }));
-    return animatedHips && channels.push({ node: hipsT, path: "translation", interpolation: "linear", times, values: hips }), { name: clip.name, duration: clip.duration, channels };
-  }), result = { ...target, clips }, problem = skinProblem(result, result.indices.length);
-  if (problem !== void 0) throw new RangeError(`Humanoid retargeting produced an invalid skin: ${problem}`);
-  return result;
-}
-var mul3 = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
-
-// src/mesh/skinning.ts
-function deformSkin(skin, palette, positions, normals, outPositions, outNormals, tangents, outTangents) {
-  if (tangents === void 0 != (outTangents === void 0) || tangents !== void 0 && (normals === void 0 || tangents.length !== skin.indices.length * 4 || outTangents.length !== tangents.length)) throw new RangeError("tangent skinning requires normals and matching packed vec4 input/output");
-  for (let v = 0; v < skin.indices.length; v++) {
-    let ids = skin.indices[v], ws = skin.weights[v], a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0, h = 0, i = 0, tx = 0, ty = 0, tz = 0;
-    for (let k = 0; k < 4; k++) {
-      let w = ws[k];
-      if (w === 0) continue;
-      let j = ids[k] * 16;
-      a += palette[j] * w, b += palette[j + 4] * w, c += palette[j + 8] * w, d += palette[j + 1] * w, e += palette[j + 5] * w, f += palette[j + 9] * w, g += palette[j + 2] * w, h += palette[j + 6] * w, i += palette[j + 10] * w, tx += palette[j + 12] * w, ty += palette[j + 13] * w, tz += palette[j + 14] * w;
-    }
-    let at3 = v * 3, x = positions[at3], y = positions[at3 + 1], z = positions[at3 + 2];
-    if (outPositions[at3] = a * x + b * y + c * z + tx, outPositions[at3 + 1] = d * x + e * y + f * z + ty, outPositions[at3 + 2] = g * x + h * y + i * z + tz, normals !== void 0) {
-      let nx = normals[at3], ny = normals[at3 + 1], nz = normals[at3 + 2], det = a * (e * i - f * h) + b * (f * g - d * i) + c * (d * h - e * g), sign2 = det < 0 ? -1 : 1, ox = ((e * i - f * h) * nx + (f * g - d * i) * ny + (d * h - e * g) * nz) * sign2, oy = ((c * h - b * i) * nx + (a * i - c * g) * ny + (b * g - a * h) * nz) * sign2, oz = ((b * f - c * e) * nx + (c * d - a * f) * ny + (a * e - b * d) * nz) * sign2, length2 = Math.hypot(ox, oy, oz);
-      if (length2 < 1e-10 && (ox = nx, oy = ny, oz = nz, length2 = Math.hypot(nx, ny, nz) || 1), outNormals[at3] = ox / length2, outNormals[at3 + 1] = oy / length2, outNormals[at3 + 2] = oz / length2, tangents !== void 0 && outTangents !== void 0) {
-        let t = v * 4, sx = tangents[t], sy = tangents[t + 1], sz = tangents[t + 2], x2 = a * sx + b * sy + c * sz, y2 = d * sx + e * sy + f * sz, z2 = g * sx + h * sy + i * sz, nx2 = outNormals[at3], ny2 = outNormals[at3 + 1], nz2 = outNormals[at3 + 2], projection = x2 * nx2 + y2 * ny2 + z2 * nz2;
-        x2 -= nx2 * projection, y2 -= ny2 * projection, z2 -= nz2 * projection;
-        let magnitude = Math.hypot(x2, y2, z2), valid2 = magnitude > 1e-10 && det !== 0 && tangents[t + 3] !== 0;
-        outTangents[t] = valid2 ? x2 / magnitude : 0, outTangents[t + 1] = valid2 ? y2 / magnitude : 0, outTangents[t + 2] = valid2 ? z2 / magnitude : 0, outTangents[t + 3] = valid2 ? tangents[t + 3] * sign2 : 0;
-      }
-    }
-  }
-}
-
-// src/animation.ts
-var AnimationController = class {
-  apiVersion = 1;
-  player;
-  targets;
-  schedule = new PoseSchedule();
-  disposed = !1;
-  constructor(skin, options = {}) {
-    let problem = skinProblem(skin, skin.indices.length);
-    if (problem !== void 0) throw new RangeError(problem);
-    this.player = new SkeletonPlayer(skin, options.clip), this.setUpdateInterval(options.updateInterval ?? 0), options.updatePolicy !== void 0 && this.setUpdatePolicy(options.updatePolicy), this.targets = Object.entries(options.bones ?? {}).map(([name, bone]) => {
-      let node = skin.nodes.findIndex((n) => n.name === name);
-      if (node < 0) throw new RangeError(`Unknown animation bone: ${name}`);
-      return { node, bone };
-    }), this.apply();
-  }
-  active() {
-    if (this.disposed) throw new Error("Animation controller is disposed");
-  }
-  setUpdateInterval(seconds) {
-    if (this.active(), !Number.isFinite(seconds) || seconds < 0)
-      throw new RangeError(
-        "Animation update interval must be finite and nonnegative"
-      );
-    this.schedule.set([{ distance: 0, interval: seconds }]);
-  }
-  setUpdatePolicy(bands) {
-    this.active(), this.schedule.set(bands);
-  }
-  setLocomotion(options) {
-    this.active(), this.player.locomotion.set(options);
-  }
-  setLocomotionParameter(value) {
-    this.active(), this.player.locomotion.setParameter(value);
-  }
-  /** Configure (or with `undefined` clear) the 2D blend space that drives the base pose. */
-  setBlendSpace(options) {
-    this.active(), this.player.blend.set(options);
-  }
-  setBlendParameter(x, y) {
-    this.active(), this.player.blend.setParameter(x, y);
-  }
-  setLayer(id, layer) {
-    this.active(), this.player.layers.set(id, layer);
-  }
-  /** Fade a layer's weight over `seconds`; false when the layer does not exist. */
-  fadeLayer(id, weight, seconds) {
-    return this.active(), this.player.layers.fade(id, weight, seconds);
-  }
-  setIK(id, constraint) {
-    this.active(), this.player.ik.set(id, constraint);
-  }
-  /** Names the canonical humanoid bones used by limb goals and foot placement (decision 0222). `undefined` removes the map and every limb goal. */
-  setHumanoid(map) {
-    this.active(), this.player.setHumanoid(map);
-  }
-  setLimb(id, goal) {
-    this.active(), this.player.ik.setLimb(id, goal);
-  }
-  setFootPlacement(placement2) {
-    this.active(), this.player.ik.setFootPlacement(placement2);
-  }
-  update(dt, force = !1, distance2 = 0) {
-    if (this.active(), !Number.isFinite(dt) || dt < 0)
-      throw new RangeError("Animation delta must be finite and nonnegative");
-    if (!Number.isFinite(distance2) || distance2 < 0)
-      throw new RangeError("Animation distance must be finite and nonnegative");
-    return this.player.advance(dt, !1), this.schedule.due(dt, distance2, force) ? (this.player.evaluate(), this.apply(), !0) : !1;
-  }
-  apply() {
-    let p = this.player.pose;
-    for (let { node, bone } of this.targets) {
-      let at3 = node * 10;
-      bone.position.set(p[at3], p[at3 + 1], p[at3 + 2]), bone.quaternion.set(p[at3 + 3], p[at3 + 4], p[at3 + 5], p[at3 + 6]), bone.scale.set(p[at3 + 7], p[at3 + 8], p[at3 + 9]);
-    }
-  }
-  dispose() {
-    this.disposed || (this.disposed = !0, this.targets = [], this.player.layers.clear(), this.player.blend.set(void 0), this.player.ik.clear(), this.player.setProceduralOverride(void 0));
-  }
-};
-function createAnimationController(skin, options) {
-  return new AnimationController(skin, options);
-}
-
 // src/host/entity-ids.ts
 var EntityIds = class {
   constructor(getWorld) {
@@ -2819,7 +326,7 @@ var ENVIRONMENT_QUALITY = {
 function quality(value) {
   if (value !== void 0 && !Object.hasOwn(ENVIRONMENT_QUALITY, value)) throw new RangeError("Lighting quality must be low, medium or high");
 }
-function finite2(value, name, minimum = 0) {
+function finite(value, name, minimum = 0) {
   if (value !== void 0 && (!Number.isFinite(Math.fround(value)) || value < minimum)) throw new RangeError(`${name} must fit a finite f32 and be at least ${String(minimum)}`);
 }
 function snapshotRendering(options) {
@@ -2827,12 +334,12 @@ function snapshotRendering(options) {
   let { environment: env, shadows: shadow } = options, environment;
   if (shadow !== void 0) {
     if (quality(shadow.quality), typeof shadow.light != "string" || shadow.light.length === 0) throw new RangeError("A shadow light name is required");
-    for (let name of ["size", "distance", "near", "far"]) finite2(shadow[name], `shadows.${name}`, 1e-6);
-    if (finite2(shadow.bias, "shadows.bias"), finite2(shadow.normalBias, "shadows.normalBias"), (shadow.far ?? 40) <= (shadow.near ?? 0.1)) throw new RangeError("shadows.far must exceed near");
+    for (let name of ["size", "distance", "near", "far"]) finite(shadow[name], `shadows.${name}`, 1e-6);
+    if (finite(shadow.bias, "shadows.bias"), finite(shadow.normalBias, "shadows.normalBias"), (shadow.far ?? 40) <= (shadow.near ?? 0.1)) throw new RangeError("shadows.far must exceed near");
     if (shadow.center !== void 0 && (shadow.center.length !== 3 || shadow.center.some((x) => !Number.isFinite(Math.fround(x))))) throw new RangeError("shadows.center must have three finite f32 coordinates");
   }
   if (env !== void 0) {
-    if (quality(env.quality), finite2(env.intensity, "environment.intensity"), env.rotation !== void 0 && !Number.isFinite(env.rotation)) throw new RangeError("environment.rotation must be finite");
+    if (quality(env.quality), finite(env.intensity, "environment.intensity"), env.rotation !== void 0 && !Number.isFinite(env.rotation)) throw new RangeError("environment.rotation must be finite");
     if (!Number.isInteger(env.width) || !Number.isInteger(env.height) || env.width < 1 || env.height < 1 || env.width > 4096 || env.height > 2048) throw new RangeError("Environment dimensions must be positive integers, at most 4096 x 2048");
     if (!(env.data instanceof Float32Array) || env.data.length !== env.width * env.height * 4) throw new RangeError("Environment data must be width * height * 4 linear RGBA floats");
     let data = env.data.slice();
@@ -3156,6 +663,11 @@ var RUNTIME_DIAGNOSTIC_CATALOGUE = {
   E8103: "non-finite pose produced by the solver",
   E8104: "non-finite value given to a body",
   E8105: "physics adapter cannot move characters",
+  E8110: "humanoid mapping failed for clips_from",
+  E8111: "unknown name in animation command",
+  E8112: "limb command on a rig that is not a humanoid",
+  E8113: "animation command rejected",
+  E8114: "animation module failed to load",
   W8201: "audio value clamped",
   W8202: "sound could not be decoded",
   W8203: "too many HUD items",
@@ -3208,6 +720,7 @@ var MOUNT_KIND_BY_CODE = {
   E7031: "asset-failed",
   E8063: "allocation-failed",
   E8102: "physics-failed",
+  E8114: "animation-failed",
   E8080: "budget-exceeded"
 };
 function mountErrorKindForCode(code) {
@@ -3223,11 +736,11 @@ var MtekMountError = class extends Error {
 };
 
 // src/host/failures.ts
-function abiFailureToDiagnostic(failure2, phase = "runtime:mount") {
-  return makeRuntimeDiagnostic(failure2.code, {
+function abiFailureToDiagnostic(failure3, phase = "runtime:mount") {
+  return makeRuntimeDiagnostic(failure3.code, {
     phase,
-    message: failure2.message,
-    notes: [`field: ${failure2.field}`]
+    message: failure3.message,
+    notes: [`field: ${failure3.field}`]
   });
 }
 function resolveSpan(manifest, spanId) {
@@ -3394,7 +907,7 @@ function checkDeviceCapabilities(required, device) {
 
 // src/abi/generated/validate-manifest.js
 var _mtekDiagnosticString0 = "#/pattern", _mtekDiagnosticString1 = "pattern", _mtekDiagnosticString2 = "#/type", _mtekDiagnosticString3 = "type", _mtekDiagnosticString4 = "must be string", _mtekDiagnosticString5 = "#/items/type", _mtekDiagnosticString6 = "uniqueItems", _mtekDiagnosticString7 = "must be array", _mtekDiagnosticString8 = "#/required", _mtekDiagnosticString9 = "required", _mtekDiagnosticString10 = "#/additionalProperties", _mtekDiagnosticString11 = "additionalProperties", _mtekDiagnosticString12 = "must NOT have additional properties", _mtekDiagnosticString13 = "must be integer", _mtekDiagnosticString14 = "minimum", _mtekDiagnosticString15 = "must be >= 0", _mtekDiagnosticString16 = "must be object", _mtekDiagnosticString17 = "exclusiveMinimum", _mtekDiagnosticString18 = "must be > 0", _mtekDiagnosticString19 = "must be number", _mtekDiagnosticString20 = "must be >= 1", _mtekDiagnosticString21 = "must be boolean", _mtekDiagnosticString22 = "minLength", _mtekDiagnosticString23 = "must NOT have fewer than 1 characters", _mtekDiagnosticString24 = "minItems", _mtekDiagnosticString25 = "must NOT have fewer than 1 items", _mtekDiagnosticString26 = "#/properties/scenes/items/required", _mtekDiagnosticString27 = "enum", _mtekDiagnosticString28 = "must be equal to one of the allowed values", _mtekDiagnosticString29 = "#/properties/kind/const", _mtekDiagnosticString30 = "const", _mtekDiagnosticString31 = "must be equal to constant", _mtekDiagnosticString32 = "maximum", _mtekDiagnosticString33 = "#/discriminator", _mtekDiagnosticString34 = "discriminator", _mtekDiagnosticString35 = 'value of tag "kind" must be in oneOf', _mtekDiagnosticString36 = 'tag "kind" must be string', _mtekDiagnosticString37 = "must be string,null", _mtekDiagnosticString38 = "#/properties/params/type", _mtekDiagnosticString39 = "#/properties/size/const", _mtekDiagnosticString40 = "#/properties/align/const", _mtekDiagnosticString41 = "#/properties/name/enum", _mtekDiagnosticString42 = "maxItems", _mtekDiagnosticString43 = "must NOT have more than 3 items", _mtekDiagnosticString44 = "must NOT have fewer than 3 items", _mtekDiagnosticString45 = "must be <= 256", _mtekDiagnosticString46 = "must NOT have more than 4 items", _mtekDiagnosticString47 = "must be <= 255", _mtekDiagnosticString48 = "#/properties/size/maxItems", _mtekDiagnosticString49 = "#/properties/size/minItems", _mtekDiagnosticString50 = "#/properties/size/items/exclusiveMinimum", _mtekDiagnosticString51 = "#/properties/size/items/type", _mtekDiagnosticString52 = "#/properties/size/type", _mtekDiagnosticString53 = "#/properties/radius/exclusiveMinimum", _mtekDiagnosticString54 = "#/properties/radius/type", _mtekDiagnosticString55 = "must NOT have fewer than 4 items", _mtekDiagnosticString56 = "#/properties/name/type", _mtekDiagnosticString57 = "#/properties/source/required", _mtekDiagnosticString58 = "#/properties/source/type", _mtekDiagnosticString59 = "#/properties/source/minLength", _mtekDiagnosticString60 = "#/properties/class/const", _mtekDiagnosticString61 = "#/properties/sensor/type", _mtekDiagnosticString62 = "#/properties/friction/minimum", _mtekDiagnosticString63 = "#/properties/friction/type", _mtekDiagnosticString64 = "#/properties/restitution/maximum", _mtekDiagnosticString65 = "#/properties/restitution/minimum", _mtekDiagnosticString66 = "#/properties/restitution/type", _mtekDiagnosticString67 = "#/properties/field/type", _mtekDiagnosticString68 = "#/properties/field/enum", _mtekDiagnosticString69 = "must be object,null", _mtekDiagnosticString70 = "#/properties/material/required", _mtekDiagnosticString71 = 'must match "then" schema', _mtekDiagnosticString72 = "#/properties/state/type", _mtekDiagnosticString73 = "#/properties/fields/required";
-var validate_manifest_default = validate52, schema19 = { properties: { manifestSchema: { type: "integer" }, runtimeAbi: { type: "integer" }, languageVersion: { type: "string" }, compilerVersion: { type: "string", minLength: 1 }, buildId: { $ref: "#/$defs/sha256" }, targetProfile: { type: "string", enum: ["webgpu-core-2026"] }, requiredCapabilities: { $ref: "#/$defs/requiredCapabilities" }, subsystems: { type: "object", additionalProperties: !1, required: ["physics"], properties: { physics: { type: "boolean" }, physicsModule: { type: "string", pattern: "^physics/[0-9a-f]{16}\\.js$" } }, if: { properties: { physics: { const: !0 }, physicsModule: {} }, required: ["physics"], additionalProperties: !1 }, then: { properties: { physics: {}, physicsModule: {} }, required: ["physicsModule"], additionalProperties: !1 }, else: { properties: { physics: {}, physicsModule: !1 }, additionalProperties: !1 } }, runtimeConfig: { $ref: "#/$defs/runtimeConfig" }, game: { $ref: "#/$defs/game" }, preview: { type: "object", additionalProperties: !1, required: ["loopBudget"], properties: { loopBudget: { type: "integer", minimum: 1, maximum: 4294967295 } } }, entryScene: { type: "string", minLength: 1 }, sources: { type: "array", items: { $ref: "#/$defs/source" } }, spans: { type: "array", items: { $ref: "#/$defs/span" } }, symbols: { type: "array", items: { $ref: "#/$defs/symbol" } }, layouts: { type: "array", items: { $ref: "#/$defs/layout" } }, shaders: { type: "array", items: { $ref: "#/$defs/shader" } }, materials: { type: "array", items: { $ref: "#/$defs/material" } }, computePrograms: { type: "array", items: { $ref: "#/$defs/computeProgram" } }, meshes: { type: "array", items: { $ref: "#/$defs/mesh" } }, assets: { type: "array", items: { $ref: "#/$defs/asset" } }, prefabs: { type: "array", items: { $ref: "#/$defs/prefab" } }, scene: { $ref: "#/$defs/scene" } } }, func1 = Object.prototype.hasOwnProperty;
+var validate_manifest_default = validate52, schema19 = { properties: { manifestSchema: { type: "integer" }, runtimeAbi: { type: "integer" }, languageVersion: { type: "string" }, compilerVersion: { type: "string", minLength: 1 }, buildId: { $ref: "#/$defs/sha256" }, targetProfile: { type: "string", enum: ["webgpu-core-2026"] }, requiredCapabilities: { $ref: "#/$defs/requiredCapabilities" }, subsystems: { type: "object", additionalProperties: !1, required: ["physics"], properties: { physics: { type: "boolean" }, physicsModule: { type: "string", pattern: "^physics/[0-9a-f]{16}\\.js$" }, animation: { type: "boolean" }, animationModule: { type: "string", pattern: "^animation/[0-9a-f]{16}\\.js$" } }, allOf: [{ if: { properties: { physics: { const: !0 }, physicsModule: {}, animation: {}, animationModule: {} }, required: ["physics"], additionalProperties: !1 }, then: { properties: { physics: {}, physicsModule: {}, animation: {}, animationModule: {} }, required: ["physicsModule"], additionalProperties: !1 }, else: { properties: { physics: {}, physicsModule: !1, animation: {}, animationModule: {} }, additionalProperties: !1 } }, { if: { properties: { physics: {}, physicsModule: {}, animation: { const: !0 }, animationModule: {} }, required: ["animation"], additionalProperties: !1 }, then: { properties: { physics: {}, physicsModule: {}, animation: {}, animationModule: {} }, required: ["animationModule"], additionalProperties: !1 }, else: { properties: { physics: {}, physicsModule: {}, animation: {}, animationModule: !1 }, additionalProperties: !1 } }] }, runtimeConfig: { $ref: "#/$defs/runtimeConfig" }, game: { $ref: "#/$defs/game" }, preview: { type: "object", additionalProperties: !1, required: ["loopBudget"], properties: { loopBudget: { type: "integer", minimum: 1, maximum: 4294967295 } } }, entryScene: { type: "string", minLength: 1 }, sources: { type: "array", items: { $ref: "#/$defs/source" } }, spans: { type: "array", items: { $ref: "#/$defs/span" } }, symbols: { type: "array", items: { $ref: "#/$defs/symbol" } }, layouts: { type: "array", items: { $ref: "#/$defs/layout" } }, shaders: { type: "array", items: { $ref: "#/$defs/shader" } }, materials: { type: "array", items: { $ref: "#/$defs/material" } }, computePrograms: { type: "array", items: { $ref: "#/$defs/computeProgram" } }, meshes: { type: "array", items: { $ref: "#/$defs/mesh" } }, clipSources: { type: "array", items: { $ref: "#/$defs/skin" } }, assets: { type: "array", items: { $ref: "#/$defs/asset" } }, prefabs: { type: "array", items: { $ref: "#/$defs/prefab" } }, scene: { $ref: "#/$defs/scene" } } }, func1 = Object.prototype.hasOwnProperty;
 var pattern3 = new RegExp("^[0-9a-f]{64}$", "u");
 function validate53(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null, errors = 0, evaluated0 = validate53.evaluated;
@@ -3649,7 +1162,7 @@ function validate64(data, { instancePath = "", parentData, parentDataProperty, r
   return validate64.errors = vErrors, errors === 0;
 }
 validate64.evaluated = { dynamicProps: !1, dynamicItems: !1 };
-var pattern8 = new RegExp("^app(\\.[A-Za-z_][A-Za-z0-9_]*)?\\.js$", "u"), pattern9 = new RegExp("^program(\\.[A-Za-z_][A-Za-z0-9_]*)?\\.manifest\\.json$", "u"), pattern10 = new RegExp("^[A-Za-z0-9_.-]{1,64}$", "u");
+var pattern9 = new RegExp("^app(\\.[A-Za-z_][A-Za-z0-9_]*)?\\.js$", "u"), pattern10 = new RegExp("^program(\\.[A-Za-z_][A-Za-z0-9_]*)?\\.manifest\\.json$", "u"), pattern11 = new RegExp("^[A-Za-z0-9_.-]{1,64}$", "u");
 function validate63(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null, errors = 0, evaluated0 = validate63.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
@@ -3693,7 +1206,7 @@ function validate63(data, { instancePath = "", parentData, parentDataProperty, r
             if (data1.name !== void 0 && (validate64(data1.name, { instancePath: instancePath + "/scenes/" + i0 + "/name", parentData: data1, parentDataProperty: "name", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate64.errors : vErrors.concat(validate64.errors), errors = vErrors.length)), data1.module !== void 0) {
               let data3 = data1.module;
               if (typeof data3 == "string") {
-                if (!pattern8.test(data3)) {
+                if (!pattern9.test(data3)) {
                   let err7 = { instancePath: instancePath + "/scenes/" + i0 + "/module", schemaPath: "#/properties/scenes/items/properties/module/pattern", keyword: _mtekDiagnosticString1, params: { pattern: "^app(\\.[A-Za-z_][A-Za-z0-9_]*)?\\.js$" }, message: 'must match pattern "^app(\\.[A-Za-z_][A-Za-z0-9_]*)?\\.js$"' };
                   vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
                 }
@@ -3705,7 +1218,7 @@ function validate63(data, { instancePath = "", parentData, parentDataProperty, r
             if (data1.manifest !== void 0) {
               let data4 = data1.manifest;
               if (typeof data4 == "string") {
-                if (!pattern9.test(data4)) {
+                if (!pattern10.test(data4)) {
                   let err9 = { instancePath: instancePath + "/scenes/" + i0 + "/manifest", schemaPath: "#/properties/scenes/items/properties/manifest/pattern", keyword: _mtekDiagnosticString1, params: { pattern: "^program(\\.[A-Za-z_][A-Za-z0-9_]*)?\\.manifest\\.json$" }, message: 'must match pattern "^program(\\.[A-Za-z_][A-Za-z0-9_]*)?\\.manifest\\.json$"' };
                   vErrors === null ? vErrors = [err9] : vErrors.push(err9), errors++;
                 }
@@ -3727,7 +1240,7 @@ function validate63(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.storage !== void 0) {
       let data5 = data.storage;
       if (typeof data5 == "string") {
-        if (!pattern10.test(data5)) {
+        if (!pattern11.test(data5)) {
           let err13 = { instancePath: instancePath + "/storage", schemaPath: "#/properties/storage/pattern", keyword: _mtekDiagnosticString1, params: { pattern: "^[A-Za-z0-9_.-]{1,64}$" }, message: 'must match pattern "^[A-Za-z0-9_.-]{1,64}$"' };
           vErrors === null ? vErrors = [err13] : vErrors.push(err13), errors++;
         }
@@ -3739,7 +1252,7 @@ function validate63(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.legacyStorage !== void 0) {
       let data6 = data.legacyStorage;
       if (typeof data6 == "string") {
-        if (!pattern10.test(data6)) {
+        if (!pattern11.test(data6)) {
           let err15 = { instancePath: instancePath + "/legacyStorage", schemaPath: "#/properties/legacyStorage/pattern", keyword: _mtekDiagnosticString1, params: { pattern: "^[A-Za-z0-9_.-]{1,64}$" }, message: 'must match pattern "^[A-Za-z0-9_.-]{1,64}$"' };
           vErrors === null ? vErrors = [err15] : vErrors.push(err15), errors++;
         }
@@ -3950,12 +1463,12 @@ function validate78(data, { instancePath = "", parentData, parentDataProperty, r
   return validate78.errors = vErrors, errors === 0;
 }
 validate78.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var pattern12 = new RegExp("^(builtin:[a-z]+|material:.+::.+|compute:.+|fixture:.+)$", "u");
-var pattern13 = new RegExp("^[A-Za-z_][A-Za-z0-9_]*$", "u");
+var pattern13 = new RegExp("^(builtin:[a-z]+|material:.+::.+|compute:.+|fixture:.+)$", "u");
+var pattern14 = new RegExp("^[A-Za-z_][A-Za-z0-9_]*$", "u");
 function validate85(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null, errors = 0, evaluated0 = validate85.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), typeof data == "string") {
-    if (!pattern13.test(data)) {
+    if (!pattern14.test(data)) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString0, keyword: _mtekDiagnosticString1, params: { pattern: "^[A-Za-z_][A-Za-z0-9_]*$" }, message: 'must match pattern "^[A-Za-z_][A-Za-z0-9_]*$"' };
       vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
     }
@@ -4408,7 +1921,7 @@ function validate84(data, { instancePath = "", parentData, parentDataProperty, r
     if (data.id !== void 0) {
       let data0 = data.id;
       if (typeof data0 == "string") {
-        if (!pattern12.test(data0)) {
+        if (!pattern13.test(data0)) {
           let err6 = { instancePath: instancePath + "/id", schemaPath: "#/properties/id/pattern", keyword: _mtekDiagnosticString1, params: { pattern: "^(builtin:[a-z]+|material:.+::.+|compute:.+|fixture:.+)$" }, message: 'must match pattern "^(builtin:[a-z]+|material:.+::.+|compute:.+|fixture:.+)$"' };
           vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
         }
@@ -4425,7 +1938,7 @@ function validate84(data, { instancePath = "", parentData, parentDataProperty, r
   return validate84.errors = vErrors, errors === 0;
 }
 validate84.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var schema43 = { properties: { hash: { $ref: "#/$defs/sha256" }, vertexDeformation: { const: 1 }, lighting: { const: 1 }, url: { type: "string", pattern: "^shaders/[0-9a-f]{16}\\.wgsl$" }, map: { type: "string", pattern: "^shaders/[0-9a-f]{16}\\.mtek-map\\.json$" }, material: { $ref: "#/$defs/symbolId" }, vertexEntry: { $ref: "#/$defs/wgslIdentifier" }, instancedVertexEntry: { $ref: "#/$defs/wgslIdentifier" }, fragmentEntry: { $ref: "#/$defs/wgslIdentifier" }, vertexAttributes: { type: "array", items: { type: "string", enum: ["position", "normal", "uv", "tangent"] }, uniqueItems: !0 }, surfaceInputs: { type: "array", items: { type: "string", enum: ["local_position", "world_position", "world_normal", "uv", "world_tangent"] }, uniqueItems: !0 } } }, pattern14 = new RegExp("^shaders/[0-9a-f]{16}\\.wgsl$", "u"), pattern15 = new RegExp("^shaders/[0-9a-f]{16}\\.mtek-map\\.json$", "u");
+var schema43 = { properties: { hash: { $ref: "#/$defs/sha256" }, vertexDeformation: { const: 1 }, lighting: { const: 1 }, url: { type: "string", pattern: "^shaders/[0-9a-f]{16}\\.wgsl$" }, map: { type: "string", pattern: "^shaders/[0-9a-f]{16}\\.mtek-map\\.json$" }, material: { $ref: "#/$defs/symbolId" }, vertexEntry: { $ref: "#/$defs/wgslIdentifier" }, instancedVertexEntry: { $ref: "#/$defs/wgslIdentifier" }, fragmentEntry: { $ref: "#/$defs/wgslIdentifier" }, vertexAttributes: { type: "array", items: { type: "string", enum: ["position", "normal", "uv", "tangent"] }, uniqueItems: !0 }, surfaceInputs: { type: "array", items: { type: "string", enum: ["local_position", "world_position", "world_normal", "uv", "world_tangent"] }, uniqueItems: !0 } } }, pattern15 = new RegExp("^shaders/[0-9a-f]{16}\\.wgsl$", "u"), pattern16 = new RegExp("^shaders/[0-9a-f]{16}\\.mtek-map\\.json$", "u");
 function validate123(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null, errors = 0, evaluated0 = validate123.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
@@ -4477,7 +1990,7 @@ function validate123(data, { instancePath = "", parentData, parentDataProperty, 
     if (data.url !== void 0) {
       let data3 = data.url;
       if (typeof data3 == "string") {
-        if (!pattern14.test(data3)) {
+        if (!pattern15.test(data3)) {
           let err11 = { instancePath: instancePath + "/url", schemaPath: "#/properties/url/pattern", keyword: _mtekDiagnosticString1, params: { pattern: "^shaders/[0-9a-f]{16}\\.wgsl$" }, message: 'must match pattern "^shaders/[0-9a-f]{16}\\.wgsl$"' };
           vErrors === null ? vErrors = [err11] : vErrors.push(err11), errors++;
         }
@@ -4489,7 +2002,7 @@ function validate123(data, { instancePath = "", parentData, parentDataProperty, 
     if (data.map !== void 0) {
       let data4 = data.map;
       if (typeof data4 == "string") {
-        if (!pattern15.test(data4)) {
+        if (!pattern16.test(data4)) {
           let err13 = { instancePath: instancePath + "/map", schemaPath: "#/properties/map/pattern", keyword: _mtekDiagnosticString1, params: { pattern: "^shaders/[0-9a-f]{16}\\.mtek-map\\.json$" }, message: 'must match pattern "^shaders/[0-9a-f]{16}\\.mtek-map\\.json$"' };
           vErrors === null ? vErrors = [err13] : vErrors.push(err13), errors++;
         }
@@ -5087,7 +2600,7 @@ function validate160(data, { instancePath = "", parentData, parentDataProperty, 
     if (data.hash !== void 0 && (validate53(data.hash, { instancePath: instancePath + "/hash", parentData: data, parentDataProperty: "hash", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate53.errors : vErrors.concat(validate53.errors), errors = vErrors.length)), data.url !== void 0) {
       let data1 = data.url;
       if (typeof data1 == "string") {
-        if (!pattern14.test(data1)) {
+        if (!pattern15.test(data1)) {
           let err4 = { instancePath: instancePath + "/url", schemaPath: "#/properties/url/pattern", keyword: _mtekDiagnosticString1, params: { pattern: "^shaders/[0-9a-f]{16}\\.wgsl$" }, message: 'must match pattern "^shaders/[0-9a-f]{16}\\.wgsl$"' };
           vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
         }
@@ -5099,7 +2612,7 @@ function validate160(data, { instancePath = "", parentData, parentDataProperty, 
     if (data.map !== void 0) {
       let data2 = data.map;
       if (typeof data2 == "string") {
-        if (!pattern15.test(data2)) {
+        if (!pattern16.test(data2)) {
           let err6 = { instancePath: instancePath + "/map", schemaPath: "#/properties/map/pattern", keyword: _mtekDiagnosticString1, params: { pattern: "^shaders/[0-9a-f]{16}\\.mtek-map\\.json$" }, message: 'must match pattern "^shaders/[0-9a-f]{16}\\.mtek-map\\.json$"' };
           vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
         }
@@ -5240,11 +2753,11 @@ function validate142(data, { instancePath = "", parentData, parentDataProperty, 
   return validate142.errors = vErrors, errors === 0;
 }
 validate142.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var pattern18 = new RegExp("^mesh:[0-9]+$", "u");
+var pattern19 = new RegExp("^mesh:[0-9]+$", "u");
 function validate172(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null, errors = 0, evaluated0 = validate172.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), typeof data == "string") {
-    if (!pattern18.test(data)) {
+    if (!pattern19.test(data)) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString0, keyword: _mtekDiagnosticString1, params: { pattern: "^mesh:[0-9]+$" }, message: 'must match pattern "^mesh:[0-9]+$"' };
       vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
     }
@@ -5460,11 +2973,11 @@ function validate176(data, { instancePath = "", parentData, parentDataProperty, 
   return validate176.errors = vErrors, errors === 0;
 }
 validate176.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var pattern19 = new RegExp("^assets/[0-9a-f]{16}\\.[a-z0-9]+$", "u");
+var pattern20 = new RegExp("^assets/[0-9a-f]{16}\\.[a-z0-9]+$", "u");
 function validate180(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null, errors = 0, evaluated0 = validate180.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), typeof data == "string") {
-    if (!pattern19.test(data)) {
+    if (!pattern20.test(data)) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString0, keyword: _mtekDiagnosticString1, params: { pattern: "^assets/[0-9a-f]{16}\\.[a-z0-9]+$" }, message: 'must match pattern "^assets/[0-9a-f]{16}\\.[a-z0-9]+$"' };
       vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
     }
@@ -6087,8 +3600,8 @@ function validate170(data, { instancePath = "", parentData, parentDataProperty, 
 }
 validate170.evaluated = { dynamicProps: !0, dynamicItems: !1 };
 var schema69 = { properties: { indexFormat: { enum: ["uint16", "uint32"] }, attributes: { items: { enum: ["position", "normal", "uv", "tangent"] } } } };
-function validate210(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate210.evaluated;
+function validate211(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate211.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), Array.isArray(data)) {
     if (data.length > 3) {
       let err0 = { instancePath, schemaPath: "#/maxItems", keyword: _mtekDiagnosticString42, params: { limit: 3 }, message: _mtekDiagnosticString43 };
@@ -6110,11 +3623,11 @@ function validate210(data, { instancePath = "", parentData, parentDataProperty, 
     let err3 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
     vErrors === null ? vErrors = [err3] : vErrors.push(err3), errors++;
   }
-  return validate210.errors = vErrors, errors === 0;
+  return validate211.errors = vErrors, errors === 0;
 }
-validate210.evaluated = { items: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate201(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate201.evaluated;
+validate211.evaluated = { items: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate202(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate202.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.source === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "source" }, message: "must have required property 'source'" };
@@ -6282,7 +3795,7 @@ function validate201(data, { instancePath = "", parentData, parentDataProperty, 
             let err29 = { instancePath: instancePath + "/boundingSphere", schemaPath: "#/properties/boundingSphere/additionalProperties", keyword: _mtekDiagnosticString11, params: { additionalProperty: key3 }, message: _mtekDiagnosticString12 };
             vErrors === null ? vErrors = [err29] : vErrors.push(err29), errors++;
           }
-        if (data15.center !== void 0 && (validate210(data15.center, { instancePath: instancePath + "/boundingSphere/center", parentData: data15, parentDataProperty: "center", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate210.errors : vErrors.concat(validate210.errors), errors = vErrors.length)), data15.radius !== void 0) {
+        if (data15.center !== void 0 && (validate211(data15.center, { instancePath: instancePath + "/boundingSphere/center", parentData: data15, parentDataProperty: "center", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate211.errors : vErrors.concat(validate211.errors), errors = vErrors.length)), data15.radius !== void 0) {
           let data17 = data15.radius;
           if (typeof data17 == "number" && isFinite(data17)) {
             if (data17 < 0 || isNaN(data17)) {
@@ -6303,11 +3816,11 @@ function validate201(data, { instancePath = "", parentData, parentDataProperty, 
     let err33 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err33] : vErrors.push(err33), errors++;
   }
-  return validate201.errors = vErrors, errors === 0;
+  return validate202.errors = vErrors, errors === 0;
 }
-validate201.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate213(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate213.evaluated;
+validate202.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate214(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate214.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), Array.isArray(data)) {
     let len0 = data.length;
     for (let i0 = 0; i0 < len0; i0++) {
@@ -6326,11 +3839,11 @@ function validate213(data, { instancePath = "", parentData, parentDataProperty, 
     let err2 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
     vErrors === null ? vErrors = [err2] : vErrors.push(err2), errors++;
   }
-  return validate213.errors = vErrors, errors === 0;
+  return validate214.errors = vErrors, errors === 0;
 }
-validate213.evaluated = { items: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate197(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate197.evaluated;
+validate214.evaluated = { items: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate198(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate198.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.url === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "url" }, message: "must have required property 'url'" };
@@ -6374,23 +3887,23 @@ function validate197(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data4)) {
         let len0 = data4.length;
         for (let i0 = 0; i0 < len0; i0++)
-          validate201(data4[i0], { instancePath: instancePath + "/primitives/" + i0, parentData: data4, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate201.errors : vErrors.concat(validate201.errors), errors = vErrors.length);
+          validate202(data4[i0], { instancePath: instancePath + "/primitives/" + i0, parentData: data4, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate202.errors : vErrors.concat(validate202.errors), errors = vErrors.length);
       } else {
         let err9 = { instancePath: instancePath + "/primitives", schemaPath: "#/properties/primitives/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err9] : vErrors.push(err9), errors++;
       }
     }
-    data.preprocessing !== void 0 && (validate213(data.preprocessing, { instancePath: instancePath + "/preprocessing", parentData: data, parentDataProperty: "preprocessing", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate213.errors : vErrors.concat(validate213.errors), errors = vErrors.length)), data.span !== void 0 && (validate81(data.span, { instancePath: instancePath + "/span", parentData: data, parentDataProperty: "span", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate81.errors : vErrors.concat(validate81.errors), errors = vErrors.length));
+    data.preprocessing !== void 0 && (validate214(data.preprocessing, { instancePath: instancePath + "/preprocessing", parentData: data, parentDataProperty: "preprocessing", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate214.errors : vErrors.concat(validate214.errors), errors = vErrors.length)), data.span !== void 0 && (validate81(data.span, { instancePath: instancePath + "/span", parentData: data, parentDataProperty: "span", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate81.errors : vErrors.concat(validate81.errors), errors = vErrors.length));
   } else {
     let err10 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err10] : vErrors.push(err10), errors++;
   }
-  return validate197.errors = vErrors, errors === 0;
+  return validate198.errors = vErrors, errors === 0;
 }
-validate197.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+validate198.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 var schema72 = { properties: { colorSpace: { enum: ["srgb", "linear"] } } };
-function validate216(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate216.evaluated;
+function validate217(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate217.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.url === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "url" }, message: "must have required property 'url'" };
@@ -6440,7 +3953,7 @@ function validate216(data, { instancePath = "", parentData, parentDataProperty, 
         vErrors === null ? vErrors = [err10] : vErrors.push(err10), errors++;
       }
     }
-    if (data.preprocessing !== void 0 && (validate213(data.preprocessing, { instancePath: instancePath + "/preprocessing", parentData: data, parentDataProperty: "preprocessing", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate213.errors : vErrors.concat(validate213.errors), errors = vErrors.length)), data.span !== void 0 && (validate81(data.span, { instancePath: instancePath + "/span", parentData: data, parentDataProperty: "span", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate81.errors : vErrors.concat(validate81.errors), errors = vErrors.length)), data.source !== void 0) {
+    if (data.preprocessing !== void 0 && (validate214(data.preprocessing, { instancePath: instancePath + "/preprocessing", parentData: data, parentDataProperty: "preprocessing", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate214.errors : vErrors.concat(validate214.errors), errors = vErrors.length)), data.span !== void 0 && (validate81(data.span, { instancePath: instancePath + "/span", parentData: data, parentDataProperty: "span", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate81.errors : vErrors.concat(validate81.errors), errors = vErrors.length)), data.source !== void 0) {
       let data7 = data.source;
       if (typeof data7 == "string") {
         if (data7.length < 1) {
@@ -6456,12 +3969,12 @@ function validate216(data, { instancePath = "", parentData, parentDataProperty, 
     let err13 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err13] : vErrors.push(err13), errors++;
   }
-  return validate216.errors = vErrors, errors === 0;
+  return validate217.errors = vErrors, errors === 0;
 }
-validate216.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+validate217.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 var schema73 = { properties: { format: { enum: ["wav", "ogg", "mp3"] }, mime: { enum: ["audio/wav", "audio/ogg", "audio/mpeg"] } } };
-function validate222(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate222.evaluated;
+function validate223(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate223.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.url === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "url" }, message: "must have required property 'url'" };
@@ -6543,12 +4056,12 @@ function validate222(data, { instancePath = "", parentData, parentDataProperty, 
     let err16 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err16] : vErrors.push(err16), errors++;
   }
-  return validate222.errors = vErrors, errors === 0;
+  return validate223.errors = vErrors, errors === 0;
 }
-validate222.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+validate223.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 var schema74 = { properties: { format: { enum: ["ttf", "otf", "woff", "woff2"] }, mime: { enum: ["font/ttf", "font/otf", "font/woff", "font/woff2"] } } };
-function validate227(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate227.evaluated;
+function validate228(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate228.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.url === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "url" }, message: "must have required property 'url'" };
@@ -6630,23 +4143,23 @@ function validate227(data, { instancePath = "", parentData, parentDataProperty, 
     let err16 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err16] : vErrors.push(err16), errors++;
   }
-  return validate227.errors = vErrors, errors === 0;
+  return validate228.errors = vErrors, errors === 0;
 }
-validate227.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate196(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate196.evaluated;
+validate228.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate197(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate197.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     let tag0 = data.kind;
     if (typeof tag0 == "string")
       if (tag0 === "mesh-data") {
-        validate197(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate197.errors : vErrors.concat(validate197.errors), errors = vErrors.length);
+        validate198(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate198.errors : vErrors.concat(validate198.errors), errors = vErrors.length);
         var props0 = !0;
       } else if (tag0 === "image")
-        validate216(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate216.errors : vErrors.concat(validate216.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate217(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate217.errors : vErrors.concat(validate217.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else if (tag0 === "audio")
-        validate222(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate222.errors : vErrors.concat(validate222.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate223(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate223.errors : vErrors.concat(validate223.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else if (tag0 === "font")
-        validate227(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate227.errors : vErrors.concat(validate227.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate228(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate228.errors : vErrors.concat(validate228.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else {
         let err0 = { instancePath, schemaPath: _mtekDiagnosticString33, keyword: _mtekDiagnosticString34, params: { error: "mapping", tag: "kind", tagValue: tag0 }, message: _mtekDiagnosticString35 };
         vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
@@ -6659,12 +4172,12 @@ function validate196(data, { instancePath = "", parentData, parentDataProperty, 
     let err2 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err2] : vErrors.push(err2), errors++;
   }
-  return validate196.errors = vErrors, evaluated0.props = props0, errors === 0;
+  return validate197.errors = vErrors, evaluated0.props = props0, errors === 0;
 }
-validate196.evaluated = { dynamicProps: !0, dynamicItems: !1 };
-var schema75 = { properties: { symbol: { $ref: "#/$defs/symbolId" }, name: { $ref: "#/$defs/name" }, params: { type: "array", items: { type: "object", additionalProperties: !1, required: ["name", "type"], properties: { name: { $ref: "#/$defs/name" }, type: { $ref: "#/$defs/mtekTypeName" } } } }, mesh: { type: ["string", "null"], pattern: "^mesh:[0-9]+$" }, material: { type: ["object", "null"], additionalProperties: !1, required: ["id", "params", "shareable"], properties: { id: { $ref: "#/$defs/symbolId" }, params: { type: "array", items: { $ref: "#/$defs/instanceParam" } }, shareable: { type: "boolean" } } }, body: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/body" } }, collider: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/collider" } }, state: { type: "array", items: { $ref: "#/$defs/stateEntry" } }, update: { type: "boolean" }, fixedUpdate: { type: "boolean" }, bindings: { type: "array", items: { $ref: "#/$defs/binding" } }, span: { $ref: "#/$defs/spanId" }, tag: { $ref: "#/$defs/tag" }, particles: { $ref: "#/$defs/emitter" }, clip: { $ref: "#/$defs/clip" } } };
-function validate244(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate244.evaluated;
+validate197.evaluated = { dynamicProps: !0, dynamicItems: !1 };
+var schema75 = { properties: { symbol: { $ref: "#/$defs/symbolId" }, name: { $ref: "#/$defs/name" }, params: { type: "array", items: { type: "object", additionalProperties: !1, required: ["name", "type"], properties: { name: { $ref: "#/$defs/name" }, type: { $ref: "#/$defs/mtekTypeName" } } } }, mesh: { type: ["string", "null"], pattern: "^mesh:[0-9]+$" }, material: { type: ["object", "null"], additionalProperties: !1, required: ["id", "params", "shareable"], properties: { id: { $ref: "#/$defs/symbolId" }, params: { type: "array", items: { $ref: "#/$defs/instanceParam" } }, shareable: { type: "boolean" } } }, body: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/body" } }, collider: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/collider" } }, state: { type: "array", items: { $ref: "#/$defs/stateEntry" } }, update: { type: "boolean" }, fixedUpdate: { type: "boolean" }, bindings: { type: "array", items: { $ref: "#/$defs/binding" } }, span: { $ref: "#/$defs/spanId" }, tag: { $ref: "#/$defs/tag" }, particles: { $ref: "#/$defs/emitter" }, clip: { $ref: "#/$defs/clip" }, clipsFrom: { $ref: "#/$defs/index" } } };
+function validate245(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate245.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.name === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "name" }, message: "must have required property 'name'" };
@@ -6687,11 +4200,11 @@ function validate244(data, { instancePath = "", parentData, parentDataProperty, 
     let err4 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
   }
-  return validate244.errors = vErrors, errors === 0;
+  return validate245.errors = vErrors, errors === 0;
 }
-validate244.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate246(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate246.evaluated;
+validate245.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate247(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate247.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.name === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "name" }, message: "must have required property 'name'" };
@@ -6714,11 +4227,11 @@ function validate246(data, { instancePath = "", parentData, parentDataProperty, 
     let err4 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
   }
-  return validate246.errors = vErrors, errors === 0;
+  return validate247.errors = vErrors, errors === 0;
 }
-validate246.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate248(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate248.evaluated;
+validate247.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate249(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate249.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.name === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "name" }, message: "must have required property 'name'" };
@@ -6746,12 +4259,12 @@ function validate248(data, { instancePath = "", parentData, parentDataProperty, 
     let err5 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
   }
-  return validate248.errors = vErrors, errors === 0;
+  return validate249.errors = vErrors, errors === 0;
 }
-validate248.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+validate249.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 var schema82 = { properties: { name: { enum: ["texture.white", "texture.black", "sampler.mag_linear_min_nearest_repeat_level0", "sampler.mag_linear_min_nearest_repeat_mip_nearest", "sampler.mag_linear_min_nearest_repeat_mip_linear", "sampler.mag_linear_min_nearest_clamp_level0", "sampler.mag_linear_min_nearest_clamp_mip_nearest", "sampler.mag_linear_min_nearest_clamp_mip_linear", "sampler.mag_nearest_min_linear_repeat_level0", "sampler.mag_nearest_min_linear_repeat_mip_nearest", "sampler.mag_nearest_min_linear_repeat_mip_linear", "sampler.mag_nearest_min_linear_clamp_level0", "sampler.mag_nearest_min_linear_clamp_mip_nearest", "sampler.mag_nearest_min_linear_clamp_mip_linear", "sampler.linear_repeat", "sampler.linear_clamp", "sampler.nearest_repeat", "sampler.nearest_clamp", "sampler.linear_repeat_level0", "sampler.linear_repeat_mip_nearest", "sampler.linear_clamp_level0", "sampler.linear_clamp_mip_nearest", "sampler.nearest_repeat_level0", "sampler.nearest_repeat_mip_linear", "sampler.nearest_clamp_level0", "sampler.nearest_clamp_mip_linear"] } } };
-function validate254(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate254.evaluated;
+function validate255(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate255.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -6785,11 +4298,11 @@ function validate254(data, { instancePath = "", parentData, parentDataProperty, 
     let err6 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
   }
-  return validate254.errors = vErrors, errors === 0;
+  return validate255.errors = vErrors, errors === 0;
 }
-validate254.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate255(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate255.evaluated;
+validate255.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate256(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate256.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -6813,19 +4326,19 @@ function validate255(data, { instancePath = "", parentData, parentDataProperty, 
     let err4 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
   }
-  return validate255.errors = vErrors, errors === 0;
+  return validate256.errors = vErrors, errors === 0;
 }
-validate255.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate253(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate253.evaluated;
+validate256.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate254(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate254.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     let tag0 = data.kind;
     if (typeof tag0 == "string")
       if (tag0 === "builtin") {
-        validate254(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate254.errors : vErrors.concat(validate254.errors), errors = vErrors.length);
+        validate255(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate255.errors : vErrors.concat(validate255.errors), errors = vErrors.length);
         var props0 = !0;
       } else if (tag0 === "asset")
-        validate255(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate255.errors : vErrors.concat(validate255.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate256(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate256.errors : vErrors.concat(validate256.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else {
         let err0 = { instancePath, schemaPath: _mtekDiagnosticString33, keyword: _mtekDiagnosticString34, params: { error: "mapping", tag: "kind", tagValue: tag0 }, message: _mtekDiagnosticString35 };
         vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
@@ -6838,11 +4351,11 @@ function validate253(data, { instancePath = "", parentData, parentDataProperty, 
     let err2 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err2] : vErrors.push(err2), errors++;
   }
-  return validate253.errors = vErrors, evaluated0.props = props0, errors === 0;
+  return validate254.errors = vErrors, evaluated0.props = props0, errors === 0;
 }
-validate253.evaluated = { dynamicProps: !0, dynamicItems: !1 };
-function validate251(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate251.evaluated;
+validate254.evaluated = { dynamicProps: !0, dynamicItems: !1 };
+function validate252(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate252.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.name === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "name" }, message: "must have required property 'name'" };
@@ -6865,28 +4378,28 @@ function validate251(data, { instancePath = "", parentData, parentDataProperty, 
       let err4 = { instancePath: instancePath + "/class", schemaPath: _mtekDiagnosticString60, keyword: _mtekDiagnosticString30, params: { allowedValue: "resource" }, message: _mtekDiagnosticString31 };
       vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
     }
-    data.value !== void 0 && (validate253(data.value, { instancePath: instancePath + "/value", parentData: data, parentDataProperty: "value", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate253.errors : vErrors.concat(validate253.errors), errors = vErrors.length));
+    data.value !== void 0 && (validate254(data.value, { instancePath: instancePath + "/value", parentData: data, parentDataProperty: "value", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate254.errors : vErrors.concat(validate254.errors), errors = vErrors.length));
   } else {
     let err5 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
   }
-  return validate251.errors = vErrors, errors === 0;
+  return validate252.errors = vErrors, errors === 0;
 }
-validate251.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate243(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate243.evaluated;
+validate252.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate244(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate244.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     let tag0 = data.class;
     if (typeof tag0 == "string")
       if (tag0 === "initial") {
-        validate244(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate244.errors : vErrors.concat(validate244.errors), errors = vErrors.length);
+        validate245(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate245.errors : vErrors.concat(validate245.errors), errors = vErrors.length);
         var props0 = !0;
       } else if (tag0 === "imperative")
-        validate246(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate246.errors : vErrors.concat(validate246.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate247(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate247.errors : vErrors.concat(validate247.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else if (tag0 === "bound")
-        validate248(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate248.errors : vErrors.concat(validate248.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate249(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate249.errors : vErrors.concat(validate249.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else if (tag0 === "resource")
-        validate251(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate251.errors : vErrors.concat(validate251.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate252(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate252.errors : vErrors.concat(validate252.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else {
         let err0 = { instancePath, schemaPath: _mtekDiagnosticString33, keyword: _mtekDiagnosticString34, params: { error: "mapping", tag: "class", tagValue: tag0 }, message: 'value of tag "class" must be in oneOf' };
         vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
@@ -6899,11 +4412,11 @@ function validate243(data, { instancePath = "", parentData, parentDataProperty, 
     let err2 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err2] : vErrors.push(err2), errors++;
   }
-  return validate243.errors = vErrors, evaluated0.props = props0, errors === 0;
+  return validate244.errors = vErrors, evaluated0.props = props0, errors === 0;
 }
-validate243.evaluated = { dynamicProps: !0, dynamicItems: !1 };
-function validate266(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate266.evaluated;
+validate244.evaluated = { dynamicProps: !0, dynamicItems: !1 };
+function validate267(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate267.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -6922,11 +4435,11 @@ function validate266(data, { instancePath = "", parentData, parentDataProperty, 
     let err3 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err3] : vErrors.push(err3), errors++;
   }
-  return validate266.errors = vErrors, errors === 0;
+  return validate267.errors = vErrors, errors === 0;
 }
-validate266.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate267(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate267.evaluated;
+validate267.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate268(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate268.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -6997,11 +4510,11 @@ function validate267(data, { instancePath = "", parentData, parentDataProperty, 
     let err13 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err13] : vErrors.push(err13), errors++;
   }
-  return validate267.errors = vErrors, errors === 0;
+  return validate268.errors = vErrors, errors === 0;
 }
-validate267.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate269(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate269.evaluated;
+validate268.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate270(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate270.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.maxSlope === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "maxSlope" }, message: "must have required property 'maxSlope'" };
@@ -7104,11 +4617,11 @@ function validate269(data, { instancePath = "", parentData, parentDataProperty, 
     let err19 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err19] : vErrors.push(err19), errors++;
   }
-  return validate269.errors = vErrors, errors === 0;
+  return validate270.errors = vErrors, errors === 0;
 }
-validate269.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate268(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate268.evaluated;
+validate270.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate269(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate269.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -7123,26 +4636,26 @@ function validate268(data, { instancePath = "", parentData, parentDataProperty, 
       let err2 = { instancePath: instancePath + "/kind", schemaPath: _mtekDiagnosticString29, keyword: _mtekDiagnosticString30, params: { allowedValue: "kinematic" }, message: _mtekDiagnosticString31 };
       vErrors === null ? vErrors = [err2] : vErrors.push(err2), errors++;
     }
-    data.character !== void 0 && (validate269(data.character, { instancePath: instancePath + "/character", parentData: data, parentDataProperty: "character", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate269.errors : vErrors.concat(validate269.errors), errors = vErrors.length));
+    data.character !== void 0 && (validate270(data.character, { instancePath: instancePath + "/character", parentData: data, parentDataProperty: "character", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate270.errors : vErrors.concat(validate270.errors), errors = vErrors.length));
   } else {
     let err3 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err3] : vErrors.push(err3), errors++;
   }
-  return validate268.errors = vErrors, errors === 0;
+  return validate269.errors = vErrors, errors === 0;
 }
-validate268.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate265(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate265.evaluated;
+validate269.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate266(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate266.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     let tag0 = data.kind;
     if (typeof tag0 == "string")
       if (tag0 === "static") {
-        validate266(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate266.errors : vErrors.concat(validate266.errors), errors = vErrors.length);
+        validate267(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate267.errors : vErrors.concat(validate267.errors), errors = vErrors.length);
         var props0 = !0;
       } else if (tag0 === "dynamic")
-        validate267(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate267.errors : vErrors.concat(validate267.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
-      else if (tag0 === "kinematic")
         validate268(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate268.errors : vErrors.concat(validate268.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+      else if (tag0 === "kinematic")
+        validate269(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate269.errors : vErrors.concat(validate269.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else {
         let err0 = { instancePath, schemaPath: _mtekDiagnosticString33, keyword: _mtekDiagnosticString34, params: { error: "mapping", tag: "kind", tagValue: tag0 }, message: _mtekDiagnosticString35 };
         vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
@@ -7155,11 +4668,11 @@ function validate265(data, { instancePath = "", parentData, parentDataProperty, 
     let err2 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err2] : vErrors.push(err2), errors++;
   }
-  return validate265.errors = vErrors, evaluated0.props = props0, errors === 0;
+  return validate266.errors = vErrors, evaluated0.props = props0, errors === 0;
 }
-validate265.evaluated = { dynamicProps: !0, dynamicItems: !1 };
-function validate276(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate276.evaluated;
+validate266.evaluated = { dynamicProps: !0, dynamicItems: !1 };
+function validate277(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate277.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -7255,11 +4768,11 @@ function validate276(data, { instancePath = "", parentData, parentDataProperty, 
     let err18 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err18] : vErrors.push(err18), errors++;
   }
-  return validate276.errors = vErrors, errors === 0;
+  return validate277.errors = vErrors, errors === 0;
 }
-validate276.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate277(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate277.evaluated;
+validate277.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate278(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate278.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -7338,11 +4851,11 @@ function validate277(data, { instancePath = "", parentData, parentDataProperty, 
     let err15 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err15] : vErrors.push(err15), errors++;
   }
-  return validate277.errors = vErrors, errors === 0;
+  return validate278.errors = vErrors, errors === 0;
 }
-validate277.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate278(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate278.evaluated;
+validate278.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate279(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate279.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -7437,21 +4950,21 @@ function validate278(data, { instancePath = "", parentData, parentDataProperty, 
     let err18 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err18] : vErrors.push(err18), errors++;
   }
-  return validate278.errors = vErrors, errors === 0;
+  return validate279.errors = vErrors, errors === 0;
 }
-validate278.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate275(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate275.evaluated;
+validate279.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate276(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate276.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     let tag0 = data.kind;
     if (typeof tag0 == "string")
       if (tag0 === "box") {
-        validate276(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate276.errors : vErrors.concat(validate276.errors), errors = vErrors.length);
+        validate277(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate277.errors : vErrors.concat(validate277.errors), errors = vErrors.length);
         var props0 = !0;
       } else if (tag0 === "sphere")
-        validate277(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate277.errors : vErrors.concat(validate277.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
-      else if (tag0 === "capsule")
         validate278(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate278.errors : vErrors.concat(validate278.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+      else if (tag0 === "capsule")
+        validate279(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate279.errors : vErrors.concat(validate279.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else {
         let err0 = { instancePath, schemaPath: _mtekDiagnosticString33, keyword: _mtekDiagnosticString34, params: { error: "mapping", tag: "kind", tagValue: tag0 }, message: _mtekDiagnosticString35 };
         vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
@@ -7464,11 +4977,11 @@ function validate275(data, { instancePath = "", parentData, parentDataProperty, 
     let err2 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err2] : vErrors.push(err2), errors++;
   }
-  return validate275.errors = vErrors, evaluated0.props = props0, errors === 0;
+  return validate276.errors = vErrors, evaluated0.props = props0, errors === 0;
 }
-validate275.evaluated = { dynamicProps: !0, dynamicItems: !1 };
-function validate283(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate283.evaluated;
+validate276.evaluated = { dynamicProps: !0, dynamicItems: !1 };
+function validate284(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate284.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.name === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "name" }, message: "must have required property 'name'" };
@@ -7492,12 +5005,12 @@ function validate283(data, { instancePath = "", parentData, parentDataProperty, 
     let err4 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
   }
-  return validate283.errors = vErrors, errors === 0;
+  return validate284.errors = vErrors, errors === 0;
 }
-validate283.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+validate284.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 var schema96 = { properties: { field: { enum: ["position", "rotation", "scale"] } } };
-function validate291(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate291.evaluated;
+function validate292(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate292.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -7535,12 +5048,12 @@ function validate291(data, { instancePath = "", parentData, parentDataProperty, 
     let err7 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
   }
-  return validate291.errors = vErrors, errors === 0;
+  return validate292.errors = vErrors, errors === 0;
 }
-validate291.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+validate292.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 var schema97 = { properties: { field: { enum: ["bounds_center", "bounds_radius"] } } };
-function validate293(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate293.evaluated;
+function validate294(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate294.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -7578,11 +5091,11 @@ function validate293(data, { instancePath = "", parentData, parentDataProperty, 
     let err7 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
   }
-  return validate293.errors = vErrors, errors === 0;
+  return validate294.errors = vErrors, errors === 0;
 }
-validate293.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate295(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate295.evaluated;
+validate294.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate296(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate296.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -7606,11 +5119,11 @@ function validate295(data, { instancePath = "", parentData, parentDataProperty, 
     let err4 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
   }
-  return validate295.errors = vErrors, errors === 0;
+  return validate296.errors = vErrors, errors === 0;
 }
-validate295.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate297(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate297.evaluated;
+validate296.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate298(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate298.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -7638,12 +5151,12 @@ function validate297(data, { instancePath = "", parentData, parentDataProperty, 
     let err5 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
   }
-  return validate297.errors = vErrors, errors === 0;
+  return validate298.errors = vErrors, errors === 0;
 }
-validate297.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+validate298.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 var schema100 = { properties: { field: { enum: ["position", "target", "rotation", "projection.fov_y", "projection.height", "projection.near", "projection.far"] } } };
-function validate300(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate300.evaluated;
+function validate301(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate301.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -7678,12 +5191,12 @@ function validate300(data, { instancePath = "", parentData, parentDataProperty, 
     let err6 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
   }
-  return validate300.errors = vErrors, errors === 0;
+  return validate301.errors = vErrors, errors === 0;
 }
-validate300.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+validate301.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 var schema101 = { properties: { field: { enum: ["color", "intensity"] } } };
-function validate302(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate302.evaluated;
+function validate303(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate303.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -7721,27 +5234,27 @@ function validate302(data, { instancePath = "", parentData, parentDataProperty, 
     let err7 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
   }
-  return validate302.errors = vErrors, errors === 0;
+  return validate303.errors = vErrors, errors === 0;
 }
-validate302.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate290(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate290.evaluated;
+validate303.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate291(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate291.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     let tag0 = data.kind;
     if (typeof tag0 == "string")
       if (tag0 === "transform") {
-        validate291(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate291.errors : vErrors.concat(validate291.errors), errors = vErrors.length);
+        validate292(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate292.errors : vErrors.concat(validate292.errors), errors = vErrors.length);
         var props0 = !0;
       } else if (tag0 === "bounds")
-        validate293(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate293.errors : vErrors.concat(validate293.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate294(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate294.errors : vErrors.concat(validate294.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else if (tag0 === "visible")
-        validate295(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate295.errors : vErrors.concat(validate295.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate296(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate296.errors : vErrors.concat(validate296.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else if (tag0 === "param")
-        validate297(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate297.errors : vErrors.concat(validate297.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate298(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate298.errors : vErrors.concat(validate298.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else if (tag0 === "camera")
-        validate300(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate300.errors : vErrors.concat(validate300.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate301(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate301.errors : vErrors.concat(validate301.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else if (tag0 === "light")
-        validate302(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate302.errors : vErrors.concat(validate302.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate303(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate303.errors : vErrors.concat(validate303.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else {
         let err0 = { instancePath, schemaPath: _mtekDiagnosticString33, keyword: _mtekDiagnosticString34, params: { error: "mapping", tag: "kind", tagValue: tag0 }, message: _mtekDiagnosticString35 };
         vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
@@ -7754,11 +5267,11 @@ function validate290(data, { instancePath = "", parentData, parentDataProperty, 
     let err2 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err2] : vErrors.push(err2), errors++;
   }
-  return validate290.errors = vErrors, evaluated0.props = props0, errors === 0;
+  return validate291.errors = vErrors, evaluated0.props = props0, errors === 0;
 }
-validate290.evaluated = { dynamicProps: !0, dynamicItems: !1 };
-function validate312(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate312.evaluated;
+validate291.evaluated = { dynamicProps: !0, dynamicItems: !1 };
+function validate313(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate313.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -7782,12 +5295,12 @@ function validate312(data, { instancePath = "", parentData, parentDataProperty, 
     let err4 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err4] : vErrors.push(err4), errors++;
   }
-  return validate312.errors = vErrors, errors === 0;
+  return validate313.errors = vErrors, errors === 0;
 }
-validate312.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+validate313.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 var schema104 = { properties: { name: { enum: ["time", "delta", "index"] } } };
-function validate314(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate314.evaluated;
+function validate315(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate315.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -7821,12 +5334,12 @@ function validate314(data, { instancePath = "", parentData, parentDataProperty, 
     let err6 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
   }
-  return validate314.errors = vErrors, errors === 0;
+  return validate315.errors = vErrors, errors === 0;
 }
-validate314.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+validate315.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 var schema105 = { properties: { field: { enum: ["position", "rotation", "scale", "visible", "bounds_center", "bounds_radius"] } } };
-function validate315(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate315.evaluated;
+function validate316(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate316.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -7864,11 +5377,11 @@ function validate315(data, { instancePath = "", parentData, parentDataProperty, 
     let err7 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
   }
-  return validate315.errors = vErrors, errors === 0;
+  return validate316.errors = vErrors, errors === 0;
 }
-validate315.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate317(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate317.evaluated;
+validate316.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate318(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate318.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -7896,11 +5409,11 @@ function validate317(data, { instancePath = "", parentData, parentDataProperty, 
     let err5 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
   }
-  return validate317.errors = vErrors, errors === 0;
+  return validate318.errors = vErrors, errors === 0;
 }
-validate317.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate320(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate320.evaluated;
+validate318.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate321(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate321.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -7928,12 +5441,12 @@ function validate320(data, { instancePath = "", parentData, parentDataProperty, 
     let err5 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
   }
-  return validate320.errors = vErrors, errors === 0;
+  return validate321.errors = vErrors, errors === 0;
 }
-validate320.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+validate321.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 var schema108 = { properties: { field: { enum: ["color", "intensity"] } } };
-function validate323(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate323.evaluated;
+function validate324(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate324.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.kind === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "kind" }, message: "must have required property 'kind'" };
@@ -7971,27 +5484,27 @@ function validate323(data, { instancePath = "", parentData, parentDataProperty, 
     let err7 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
   }
-  return validate323.errors = vErrors, errors === 0;
+  return validate324.errors = vErrors, errors === 0;
 }
-validate323.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate311(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate311.evaluated;
+validate324.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate312(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate312.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     let tag0 = data.kind;
     if (typeof tag0 == "string")
       if (tag0 === "state") {
-        validate312(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate312.errors : vErrors.concat(validate312.errors), errors = vErrors.length);
+        validate313(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate313.errors : vErrors.concat(validate313.errors), errors = vErrors.length);
         var props0 = !0;
       } else if (tag0 === "frame")
-        validate314(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate314.errors : vErrors.concat(validate314.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
-      else if (tag0 === "entityField")
         validate315(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate315.errors : vErrors.concat(validate315.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+      else if (tag0 === "entityField")
+        validate316(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate316.errors : vErrors.concat(validate316.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else if (tag0 === "entityState")
-        validate317(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate317.errors : vErrors.concat(validate317.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate318(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate318.errors : vErrors.concat(validate318.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else if (tag0 === "param")
-        validate320(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate320.errors : vErrors.concat(validate320.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate321(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate321.errors : vErrors.concat(validate321.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else if (tag0 === "light")
-        validate323(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate323.errors : vErrors.concat(validate323.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate324(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate324.errors : vErrors.concat(validate324.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else {
         let err0 = { instancePath, schemaPath: _mtekDiagnosticString33, keyword: _mtekDiagnosticString34, params: { error: "mapping", tag: "kind", tagValue: tag0 }, message: _mtekDiagnosticString35 };
         vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
@@ -8004,11 +5517,11 @@ function validate311(data, { instancePath = "", parentData, parentDataProperty, 
     let err2 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err2] : vErrors.push(err2), errors++;
   }
-  return validate311.errors = vErrors, evaluated0.props = props0, errors === 0;
+  return validate312.errors = vErrors, evaluated0.props = props0, errors === 0;
 }
-validate311.evaluated = { dynamicProps: !0, dynamicItems: !1 };
-function validate288(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate288.evaluated;
+validate312.evaluated = { dynamicProps: !0, dynamicItems: !1 };
+function validate289(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate289.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.id === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "id" }, message: "must have required property 'id'" };
@@ -8035,12 +5548,12 @@ function validate288(data, { instancePath = "", parentData, parentDataProperty, 
         let err5 = { instancePath, schemaPath: _mtekDiagnosticString10, keyword: _mtekDiagnosticString11, params: { additionalProperty: key0 }, message: _mtekDiagnosticString12 };
         vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
       }
-    if (data.id !== void 0 && (validate68(data.id, { instancePath: instancePath + "/id", parentData: data, parentDataProperty: "id", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate68.errors : vErrors.concat(validate68.errors), errors = vErrors.length)), data.target !== void 0 && (validate290(data.target, { instancePath: instancePath + "/target", parentData: data, parentDataProperty: "target", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate290.errors : vErrors.concat(validate290.errors), errors = vErrors.length)), data.deps !== void 0) {
+    if (data.id !== void 0 && (validate68(data.id, { instancePath: instancePath + "/id", parentData: data, parentDataProperty: "id", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate68.errors : vErrors.concat(validate68.errors), errors = vErrors.length)), data.target !== void 0 && (validate291(data.target, { instancePath: instancePath + "/target", parentData: data, parentDataProperty: "target", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate291.errors : vErrors.concat(validate291.errors), errors = vErrors.length)), data.deps !== void 0) {
       let data2 = data.deps;
       if (Array.isArray(data2)) {
         let len0 = data2.length;
         for (let i0 = 0; i0 < len0; i0++)
-          validate311(data2[i0], { instancePath: instancePath + "/deps/" + i0, parentData: data2, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate311.errors : vErrors.concat(validate311.errors), errors = vErrors.length);
+          validate312(data2[i0], { instancePath: instancePath + "/deps/" + i0, parentData: data2, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate312.errors : vErrors.concat(validate312.errors), errors = vErrors.length);
       } else {
         let err6 = { instancePath: instancePath + "/deps", schemaPath: "#/properties/deps/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
@@ -8051,14 +5564,14 @@ function validate288(data, { instancePath = "", parentData, parentDataProperty, 
     let err7 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
   }
-  return validate288.errors = vErrors, errors === 0;
+  return validate289.errors = vErrors, errors === 0;
 }
-validate288.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var pattern21 = new RegExp("^[a-z][a-z0-9_]{0,31}$", "u");
-function validate336(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate336.evaluated;
+validate289.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+var pattern22 = new RegExp("^[a-z][a-z0-9_]{0,31}$", "u");
+function validate337(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate337.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), typeof data == "string") {
-    if (!pattern21.test(data)) {
+    if (!pattern22.test(data)) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString0, keyword: _mtekDiagnosticString1, params: { pattern: "^[a-z][a-z0-9_]{0,31}$" }, message: 'must match pattern "^[a-z][a-z0-9_]{0,31}$"' };
       vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
     }
@@ -8066,11 +5579,11 @@ function validate336(data, { instancePath = "", parentData, parentDataProperty, 
     let err1 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
     vErrors === null ? vErrors = [err1] : vErrors.push(err1), errors++;
   }
-  return validate336.errors = vErrors, errors === 0;
+  return validate337.errors = vErrors, errors === 0;
 }
-validate336.evaluated = { dynamicProps: !1, dynamicItems: !1 };
-function validate338(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate338.evaluated;
+validate337.evaluated = { dynamicProps: !1, dynamicItems: !1 };
+function validate339(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate339.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.rate === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "rate" }, message: "must have required property 'rate'" };
@@ -8156,12 +5669,12 @@ function validate338(data, { instancePath = "", parentData, parentDataProperty, 
     let err15 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err15] : vErrors.push(err15), errors++;
   }
-  return validate338.errors = vErrors, errors === 0;
+  return validate339.errors = vErrors, errors === 0;
 }
-validate338.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+validate339.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 var schema112 = { properties: { path: { enum: ["translation", "rotation", "scale"] }, interpolation: { enum: ["linear", "step"] } } };
-function validate342(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate342.evaluated;
+function validate343(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate343.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.path === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "path" }, message: "must have required property 'path'" };
@@ -8242,11 +5755,11 @@ function validate342(data, { instancePath = "", parentData, parentDataProperty, 
     let err13 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err13] : vErrors.push(err13), errors++;
   }
-  return validate342.errors = vErrors, errors === 0;
+  return validate343.errors = vErrors, errors === 0;
 }
-validate342.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate340(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate340.evaluated;
+validate343.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate341(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate341.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.name === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "name" }, message: "must have required property 'name'" };
@@ -8282,7 +5795,7 @@ function validate340(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data2)) {
         let len0 = data2.length;
         for (let i0 = 0; i0 < len0; i0++)
-          validate342(data2[i0], { instancePath: instancePath + "/channels/" + i0, parentData: data2, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate342.errors : vErrors.concat(validate342.errors), errors = vErrors.length);
+          validate343(data2[i0], { instancePath: instancePath + "/channels/" + i0, parentData: data2, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate343.errors : vErrors.concat(validate343.errors), errors = vErrors.length);
       } else {
         let err6 = { instancePath: instancePath + "/channels", schemaPath: "#/properties/channels/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
@@ -8292,11 +5805,11 @@ function validate340(data, { instancePath = "", parentData, parentDataProperty, 
     let err7 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
   }
-  return validate340.errors = vErrors, errors === 0;
+  return validate341.errors = vErrors, errors === 0;
 }
-validate340.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate237(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate237.evaluated;
+validate341.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate238(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate238.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.symbol === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "symbol" }, message: "must have required property 'symbol'" };
@@ -8388,7 +5901,7 @@ function validate237(data, { instancePath = "", parentData, parentDataProperty, 
         let err18 = { instancePath: instancePath + "/mesh", schemaPath: "#/properties/mesh/type", keyword: _mtekDiagnosticString3, params: { type: schema75.properties.mesh.type }, message: _mtekDiagnosticString37 };
         vErrors === null ? vErrors = [err18] : vErrors.push(err18), errors++;
       }
-      if (typeof data6 == "string" && !pattern18.test(data6)) {
+      if (typeof data6 == "string" && !pattern19.test(data6)) {
         let err19 = { instancePath: instancePath + "/mesh", schemaPath: "#/properties/mesh/pattern", keyword: _mtekDiagnosticString1, params: { pattern: "^mesh:[0-9]+$" }, message: 'must match pattern "^mesh:[0-9]+$"' };
         vErrors === null ? vErrors = [err19] : vErrors.push(err19), errors++;
       }
@@ -8422,7 +5935,7 @@ function validate237(data, { instancePath = "", parentData, parentDataProperty, 
           if (Array.isArray(data9)) {
             let len1 = data9.length;
             for (let i1 = 0; i1 < len1; i1++)
-              validate243(data9[i1], { instancePath: instancePath + "/material/params/" + i1, parentData: data9, parentDataProperty: i1, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate243.errors : vErrors.concat(validate243.errors), errors = vErrors.length);
+              validate244(data9[i1], { instancePath: instancePath + "/material/params/" + i1, parentData: data9, parentDataProperty: i1, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate244.errors : vErrors.concat(validate244.errors), errors = vErrors.length);
           } else {
             let err25 = { instancePath: instancePath + "/material/params", schemaPath: "#/properties/material/properties/params/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
             vErrors === null ? vErrors = [err25] : vErrors.push(err25), errors++;
@@ -8448,7 +5961,7 @@ function validate237(data, { instancePath = "", parentData, parentDataProperty, 
       var _valid0 = _errs25 === errors;
       if (errors = _errs24, vErrors !== null && (_errs24 ? vErrors.length = _errs24 : vErrors = null), _valid0) {
         let _errs27 = errors;
-        validate265(data12, { instancePath: instancePath + "/body", parentData: data, parentDataProperty: "body", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate265.errors : vErrors.concat(validate265.errors), errors = vErrors.length);
+        validate266(data12, { instancePath: instancePath + "/body", parentData: data, parentDataProperty: "body", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate266.errors : vErrors.concat(validate266.errors), errors = vErrors.length);
         var _valid0 = _errs27 === errors;
         valid7 = _valid0;
       }
@@ -8471,7 +5984,7 @@ function validate237(data, { instancePath = "", parentData, parentDataProperty, 
       var _valid1 = _errs31 === errors;
       if (errors = _errs30, vErrors !== null && (_errs30 ? vErrors.length = _errs30 : vErrors = null), _valid1) {
         let _errs33 = errors;
-        validate275(data13, { instancePath: instancePath + "/collider", parentData: data, parentDataProperty: "collider", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate275.errors : vErrors.concat(validate275.errors), errors = vErrors.length);
+        validate276(data13, { instancePath: instancePath + "/collider", parentData: data, parentDataProperty: "collider", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate276.errors : vErrors.concat(validate276.errors), errors = vErrors.length);
         var _valid1 = _errs33 === errors;
         valid8 = _valid1;
       }
@@ -8485,7 +5998,7 @@ function validate237(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data14)) {
         let len2 = data14.length;
         for (let i2 = 0; i2 < len2; i2++)
-          validate283(data14[i2], { instancePath: instancePath + "/state/" + i2, parentData: data14, parentDataProperty: i2, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate283.errors : vErrors.concat(validate283.errors), errors = vErrors.length);
+          validate284(data14[i2], { instancePath: instancePath + "/state/" + i2, parentData: data14, parentDataProperty: i2, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate284.errors : vErrors.concat(validate284.errors), errors = vErrors.length);
       } else {
         let err33 = { instancePath: instancePath + "/state", schemaPath: _mtekDiagnosticString72, keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err33] : vErrors.push(err33), errors++;
@@ -8504,23 +6017,23 @@ function validate237(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data18)) {
         let len3 = data18.length;
         for (let i3 = 0; i3 < len3; i3++)
-          validate288(data18[i3], { instancePath: instancePath + "/bindings/" + i3, parentData: data18, parentDataProperty: i3, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate288.errors : vErrors.concat(validate288.errors), errors = vErrors.length);
+          validate289(data18[i3], { instancePath: instancePath + "/bindings/" + i3, parentData: data18, parentDataProperty: i3, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate289.errors : vErrors.concat(validate289.errors), errors = vErrors.length);
       } else {
         let err36 = { instancePath: instancePath + "/bindings", schemaPath: "#/properties/bindings/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err36] : vErrors.push(err36), errors++;
       }
     }
-    data.span !== void 0 && (validate81(data.span, { instancePath: instancePath + "/span", parentData: data, parentDataProperty: "span", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate81.errors : vErrors.concat(validate81.errors), errors = vErrors.length)), data.tag !== void 0 && (validate336(data.tag, { instancePath: instancePath + "/tag", parentData: data, parentDataProperty: "tag", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate336.errors : vErrors.concat(validate336.errors), errors = vErrors.length)), data.particles !== void 0 && (validate338(data.particles, { instancePath: instancePath + "/particles", parentData: data, parentDataProperty: "particles", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate338.errors : vErrors.concat(validate338.errors), errors = vErrors.length)), data.clip !== void 0 && (validate340(data.clip, { instancePath: instancePath + "/clip", parentData: data, parentDataProperty: "clip", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate340.errors : vErrors.concat(validate340.errors), errors = vErrors.length));
+    data.span !== void 0 && (validate81(data.span, { instancePath: instancePath + "/span", parentData: data, parentDataProperty: "span", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate81.errors : vErrors.concat(validate81.errors), errors = vErrors.length)), data.tag !== void 0 && (validate337(data.tag, { instancePath: instancePath + "/tag", parentData: data, parentDataProperty: "tag", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate337.errors : vErrors.concat(validate337.errors), errors = vErrors.length)), data.particles !== void 0 && (validate339(data.particles, { instancePath: instancePath + "/particles", parentData: data, parentDataProperty: "particles", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate339.errors : vErrors.concat(validate339.errors), errors = vErrors.length)), data.clip !== void 0 && (validate341(data.clip, { instancePath: instancePath + "/clip", parentData: data, parentDataProperty: "clip", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate341.errors : vErrors.concat(validate341.errors), errors = vErrors.length)), data.clipsFrom !== void 0 && (validate68(data.clipsFrom, { instancePath: instancePath + "/clipsFrom", parentData: data, parentDataProperty: "clipsFrom", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate68.errors : vErrors.concat(validate68.errors), errors = vErrors.length));
   } else {
     let err37 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err37] : vErrors.push(err37), errors++;
   }
-  return validate237.errors = vErrors, errors === 0;
+  return validate238.errors = vErrors, errors === 0;
 }
-validate237.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+validate238.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 var schema113 = { properties: { name: { $ref: "#/$defs/name" }, symbol: { $ref: "#/$defs/symbolId" }, fields: { type: "object", additionalProperties: !1, required: ["clearColor", "ambientColor", "ambientIntensity", "gravity"], properties: { clearColor: { $ref: "#/$defs/vec4" }, ambientColor: { $ref: "#/$defs/vec4" }, ambientIntensity: { type: "number", minimum: 0 }, gravity: { $ref: "#/$defs/vec3" } } }, state: { type: "array", items: { $ref: "#/$defs/sceneStateEntry" } }, cameras: { type: "array", items: { $ref: "#/$defs/camera" } }, entities: { type: "array", items: { $ref: "#/$defs/entity" } }, materialInstances: { type: "array", items: { $ref: "#/$defs/materialInstance" } }, bindings: { type: "array", items: { $ref: "#/$defs/binding" } }, hostInputs: { type: "array", items: { $ref: "#/$defs/hostInput" } }, hostOutputs: { type: "array", items: { $ref: "#/$defs/hostOutput" } }, lights: { type: "array", items: { $ref: "#/$defs/light" } } } };
-function validate349(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate349.evaluated;
+function validate351(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate351.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), Array.isArray(data)) {
     if (data.length > 4) {
       let err0 = { instancePath, schemaPath: "#/maxItems", keyword: _mtekDiagnosticString42, params: { limit: 4 }, message: _mtekDiagnosticString46 };
@@ -8542,12 +6055,12 @@ function validate349(data, { instancePath = "", parentData, parentDataProperty, 
     let err3 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
     vErrors === null ? vErrors = [err3] : vErrors.push(err3), errors++;
   }
-  return validate349.errors = vErrors, errors === 0;
+  return validate351.errors = vErrors, errors === 0;
 }
-validate349.evaluated = { items: !0, dynamicProps: !1, dynamicItems: !1 };
+validate351.evaluated = { items: !0, dynamicProps: !1, dynamicItems: !1 };
 var schema115 = { properties: { persist: { enum: ["saved", "setting"] } } };
-function validate353(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate353.evaluated;
+function validate355(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate355.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.name === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "name" }, message: "must have required property 'name'" };
@@ -8604,12 +6117,12 @@ function validate353(data, { instancePath = "", parentData, parentDataProperty, 
     let err10 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err10] : vErrors.push(err10), errors++;
   }
-  return validate353.errors = vErrors, errors === 0;
+  return validate355.errors = vErrors, errors === 0;
 }
-validate353.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+validate355.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 var schema116 = { properties: { projection: { enum: ["perspective", "orthographic"] } } };
-function validate358(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate358.evaluated;
+function validate360(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate360.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.name === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "name" }, message: "must have required property 'name'" };
@@ -8670,12 +6183,12 @@ function validate358(data, { instancePath = "", parentData, parentDataProperty, 
     let err12 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err12] : vErrors.push(err12), errors++;
   }
-  return validate358.errors = vErrors, errors === 0;
+  return validate360.errors = vErrors, errors === 0;
 }
-validate358.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var schema117 = { properties: { index: { $ref: "#/$defs/index" }, name: { $ref: "#/$defs/name" }, symbol: { $ref: "#/$defs/symbolId" }, parent: { type: ["integer", "null"], minimum: 0 }, mesh: { type: ["string", "null"], pattern: "^mesh:[0-9]+$" }, material: { type: ["object", "null"], additionalProperties: !1, required: ["id", "instance"], properties: { id: { $ref: "#/$defs/symbolId" }, instance: { $ref: "#/$defs/index" } } }, light: { type: ["integer", "null"], minimum: 0 }, body: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/body" } }, collider: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/collider" } }, state: { type: "array", items: { $ref: "#/$defs/stateEntry" } }, update: { type: "boolean" }, fixedUpdate: { type: "boolean" }, tag: { $ref: "#/$defs/tag" }, particles: { $ref: "#/$defs/emitter" }, clip: { $ref: "#/$defs/clip" } } };
-function validate362(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate362.evaluated;
+validate360.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+var schema117 = { properties: { index: { $ref: "#/$defs/index" }, name: { $ref: "#/$defs/name" }, symbol: { $ref: "#/$defs/symbolId" }, parent: { type: ["integer", "null"], minimum: 0 }, mesh: { type: ["string", "null"], pattern: "^mesh:[0-9]+$" }, material: { type: ["object", "null"], additionalProperties: !1, required: ["id", "instance"], properties: { id: { $ref: "#/$defs/symbolId" }, instance: { $ref: "#/$defs/index" } } }, light: { type: ["integer", "null"], minimum: 0 }, body: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/body" } }, collider: { type: ["object", "null"], if: { type: "object" }, then: { $ref: "#/$defs/collider" } }, state: { type: "array", items: { $ref: "#/$defs/stateEntry" } }, update: { type: "boolean" }, fixedUpdate: { type: "boolean" }, tag: { $ref: "#/$defs/tag" }, particles: { $ref: "#/$defs/emitter" }, clip: { $ref: "#/$defs/clip" }, clipsFrom: { $ref: "#/$defs/index" } } };
+function validate364(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate364.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.index === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "index" }, message: "must have required property 'index'" };
@@ -8747,7 +6260,7 @@ function validate362(data, { instancePath = "", parentData, parentDataProperty, 
         let err15 = { instancePath: instancePath + "/mesh", schemaPath: "#/properties/mesh/type", keyword: _mtekDiagnosticString3, params: { type: schema117.properties.mesh.type }, message: _mtekDiagnosticString37 };
         vErrors === null ? vErrors = [err15] : vErrors.push(err15), errors++;
       }
-      if (typeof data4 == "string" && !pattern18.test(data4)) {
+      if (typeof data4 == "string" && !pattern19.test(data4)) {
         let err16 = { instancePath: instancePath + "/mesh", schemaPath: "#/properties/mesh/pattern", keyword: _mtekDiagnosticString1, params: { pattern: "^mesh:[0-9]+$" }, message: 'must match pattern "^mesh:[0-9]+$"' };
         vErrors === null ? vErrors = [err16] : vErrors.push(err16), errors++;
       }
@@ -8800,7 +6313,7 @@ function validate362(data, { instancePath = "", parentData, parentDataProperty, 
       var _valid0 = _errs19 === errors;
       if (errors = _errs18, vErrors !== null && (_errs18 ? vErrors.length = _errs18 : vErrors = null), _valid0) {
         let _errs21 = errors;
-        validate265(data9, { instancePath: instancePath + "/body", parentData: data, parentDataProperty: "body", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate265.errors : vErrors.concat(validate265.errors), errors = vErrors.length);
+        validate266(data9, { instancePath: instancePath + "/body", parentData: data, parentDataProperty: "body", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate266.errors : vErrors.concat(validate266.errors), errors = vErrors.length);
         var _valid0 = _errs21 === errors;
         valid2 = _valid0;
       }
@@ -8823,7 +6336,7 @@ function validate362(data, { instancePath = "", parentData, parentDataProperty, 
       var _valid1 = _errs25 === errors;
       if (errors = _errs24, vErrors !== null && (_errs24 ? vErrors.length = _errs24 : vErrors = null), _valid1) {
         let _errs27 = errors;
-        validate275(data10, { instancePath: instancePath + "/collider", parentData: data, parentDataProperty: "collider", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate275.errors : vErrors.concat(validate275.errors), errors = vErrors.length);
+        validate276(data10, { instancePath: instancePath + "/collider", parentData: data, parentDataProperty: "collider", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate276.errors : vErrors.concat(validate276.errors), errors = vErrors.length);
         var _valid1 = _errs27 === errors;
         valid3 = _valid1;
       }
@@ -8837,7 +6350,7 @@ function validate362(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data11)) {
         let len0 = data11.length;
         for (let i0 = 0; i0 < len0; i0++)
-          validate283(data11[i0], { instancePath: instancePath + "/state/" + i0, parentData: data11, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate283.errors : vErrors.concat(validate283.errors), errors = vErrors.length);
+          validate284(data11[i0], { instancePath: instancePath + "/state/" + i0, parentData: data11, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate284.errors : vErrors.concat(validate284.errors), errors = vErrors.length);
       } else {
         let err29 = { instancePath: instancePath + "/state", schemaPath: _mtekDiagnosticString72, keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err29] : vErrors.push(err29), errors++;
@@ -8851,16 +6364,16 @@ function validate362(data, { instancePath = "", parentData, parentDataProperty, 
       let err31 = { instancePath: instancePath + "/fixedUpdate", schemaPath: "#/properties/fixedUpdate/type", keyword: _mtekDiagnosticString3, params: { type: "boolean" }, message: _mtekDiagnosticString21 };
       vErrors === null ? vErrors = [err31] : vErrors.push(err31), errors++;
     }
-    data.tag !== void 0 && (validate336(data.tag, { instancePath: instancePath + "/tag", parentData: data, parentDataProperty: "tag", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate336.errors : vErrors.concat(validate336.errors), errors = vErrors.length)), data.particles !== void 0 && (validate338(data.particles, { instancePath: instancePath + "/particles", parentData: data, parentDataProperty: "particles", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate338.errors : vErrors.concat(validate338.errors), errors = vErrors.length)), data.clip !== void 0 && (validate340(data.clip, { instancePath: instancePath + "/clip", parentData: data, parentDataProperty: "clip", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate340.errors : vErrors.concat(validate340.errors), errors = vErrors.length));
+    data.tag !== void 0 && (validate337(data.tag, { instancePath: instancePath + "/tag", parentData: data, parentDataProperty: "tag", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate337.errors : vErrors.concat(validate337.errors), errors = vErrors.length)), data.particles !== void 0 && (validate339(data.particles, { instancePath: instancePath + "/particles", parentData: data, parentDataProperty: "particles", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate339.errors : vErrors.concat(validate339.errors), errors = vErrors.length)), data.clip !== void 0 && (validate341(data.clip, { instancePath: instancePath + "/clip", parentData: data, parentDataProperty: "clip", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate341.errors : vErrors.concat(validate341.errors), errors = vErrors.length)), data.clipsFrom !== void 0 && (validate68(data.clipsFrom, { instancePath: instancePath + "/clipsFrom", parentData: data, parentDataProperty: "clipsFrom", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate68.errors : vErrors.concat(validate68.errors), errors = vErrors.length));
   } else {
     let err32 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err32] : vErrors.push(err32), errors++;
   }
-  return validate362.errors = vErrors, errors === 0;
+  return validate364.errors = vErrors, errors === 0;
 }
-validate362.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate375(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate375.evaluated;
+validate364.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate378(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate378.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.index === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "index" }, message: "must have required property 'index'" };
@@ -8892,7 +6405,7 @@ function validate375(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data3)) {
         let len0 = data3.length;
         for (let i0 = 0; i0 < len0; i0++)
-          validate243(data3[i0], { instancePath: instancePath + "/params/" + i0, parentData: data3, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate243.errors : vErrors.concat(validate243.errors), errors = vErrors.length);
+          validate244(data3[i0], { instancePath: instancePath + "/params/" + i0, parentData: data3, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate244.errors : vErrors.concat(validate244.errors), errors = vErrors.length);
       } else {
         let err6 = { instancePath: instancePath + "/params", schemaPath: _mtekDiagnosticString38, keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
@@ -8906,12 +6419,12 @@ function validate375(data, { instancePath = "", parentData, parentDataProperty, 
     let err8 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err8] : vErrors.push(err8), errors++;
   }
-  return validate375.errors = vErrors, errors === 0;
+  return validate378.errors = vErrors, errors === 0;
 }
-validate375.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+validate378.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 var schema119 = { properties: { type: { enum: ["f32", "i32", "u32", "bool", "vec2", "vec3", "vec4", "color", "string"] }, codec: { enum: ["f32", "i32", "u32", "bool", "vec2", "vec3", "vec4", "color-hex", "color-hex-opaque", "string"] } } };
-function validate382(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate382.evaluated;
+function validate385(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate385.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.name === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "name" }, message: "must have required property 'name'" };
@@ -8986,12 +6499,12 @@ function validate382(data, { instancePath = "", parentData, parentDataProperty, 
     let err14 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err14] : vErrors.push(err14), errors++;
   }
-  return validate382.errors = vErrors, errors === 0;
+  return validate385.errors = vErrors, errors === 0;
 }
-validate382.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+validate385.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 var schema120 = { properties: { type: { enum: ["f32", "i32", "u32", "bool", "vec2", "vec3", "vec4", "color", "string"] } } };
-function validate386(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate386.evaluated;
+function validate389(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate389.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.name === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "name" }, message: "must have required property 'name'" };
@@ -9051,12 +6564,12 @@ function validate386(data, { instancePath = "", parentData, parentDataProperty, 
     let err11 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err11] : vErrors.push(err11), errors++;
   }
-  return validate386.errors = vErrors, errors === 0;
+  return validate389.errors = vErrors, errors === 0;
 }
-validate386.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+validate389.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
 var schema123 = { properties: { color: { enum: ["initial", "imperative", "bound"] }, intensity: { enum: ["initial", "imperative", "bound"] } } };
-function validate394(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate394.evaluated;
+function validate397(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate397.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.color === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "color" }, message: "must have required property 'color'" };
@@ -9097,11 +6610,11 @@ function validate394(data, { instancePath = "", parentData, parentDataProperty, 
     let err7 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err7] : vErrors.push(err7), errors++;
   }
-  return validate394.errors = vErrors, errors === 0;
+  return validate397.errors = vErrors, errors === 0;
 }
-validate394.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate391(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate391.evaluated;
+validate397.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate394(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate394.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.index === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "index" }, message: "must have required property 'index'" };
@@ -9128,16 +6641,16 @@ function validate391(data, { instancePath = "", parentData, parentDataProperty, 
       let err5 = { instancePath: instancePath + "/kind", schemaPath: _mtekDiagnosticString29, keyword: _mtekDiagnosticString30, params: { allowedValue: "directional" }, message: _mtekDiagnosticString31 };
       vErrors === null ? vErrors = [err5] : vErrors.push(err5), errors++;
     }
-    data.classes !== void 0 && (validate394(data.classes, { instancePath: instancePath + "/classes", parentData: data, parentDataProperty: "classes", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate394.errors : vErrors.concat(validate394.errors), errors = vErrors.length));
+    data.classes !== void 0 && (validate397(data.classes, { instancePath: instancePath + "/classes", parentData: data, parentDataProperty: "classes", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate397.errors : vErrors.concat(validate397.errors), errors = vErrors.length));
   } else {
     let err6 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err6] : vErrors.push(err6), errors++;
   }
-  return validate391.errors = vErrors, errors === 0;
+  return validate394.errors = vErrors, errors === 0;
 }
-validate391.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate396(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate396.evaluated;
+validate394.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate399(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate399.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.index === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "index" }, message: "must have required property 'index'" };
@@ -9180,24 +6693,24 @@ function validate396(data, { instancePath = "", parentData, parentDataProperty, 
         vErrors === null ? vErrors = [err8] : vErrors.push(err8), errors++;
       }
     }
-    data.classes !== void 0 && (validate394(data.classes, { instancePath: instancePath + "/classes", parentData: data, parentDataProperty: "classes", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate394.errors : vErrors.concat(validate394.errors), errors = vErrors.length));
+    data.classes !== void 0 && (validate397(data.classes, { instancePath: instancePath + "/classes", parentData: data, parentDataProperty: "classes", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate397.errors : vErrors.concat(validate397.errors), errors = vErrors.length));
   } else {
     let err9 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err9] : vErrors.push(err9), errors++;
   }
-  return validate396.errors = vErrors, errors === 0;
+  return validate399.errors = vErrors, errors === 0;
 }
-validate396.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-function validate390(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate390.evaluated;
+validate399.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+function validate393(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate393.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     let tag0 = data.kind;
     if (typeof tag0 == "string")
       if (tag0 === "directional") {
-        validate391(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate391.errors : vErrors.concat(validate391.errors), errors = vErrors.length);
+        validate394(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate394.errors : vErrors.concat(validate394.errors), errors = vErrors.length);
         var props0 = !0;
       } else if (tag0 === "point")
-        validate396(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate396.errors : vErrors.concat(validate396.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
+        validate399(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate399.errors : vErrors.concat(validate399.errors), errors = vErrors.length), props0 !== !0 && (props0 = !0);
       else {
         let err0 = { instancePath, schemaPath: _mtekDiagnosticString33, keyword: _mtekDiagnosticString34, params: { error: "mapping", tag: "kind", tagValue: tag0 }, message: _mtekDiagnosticString35 };
         vErrors === null ? vErrors = [err0] : vErrors.push(err0), errors++;
@@ -9210,11 +6723,11 @@ function validate390(data, { instancePath = "", parentData, parentDataProperty, 
     let err2 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err2] : vErrors.push(err2), errors++;
   }
-  return validate390.errors = vErrors, evaluated0.props = props0, errors === 0;
+  return validate393.errors = vErrors, evaluated0.props = props0, errors === 0;
 }
-validate390.evaluated = { dynamicProps: !0, dynamicItems: !1 };
-function validate346(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
-  let vErrors = null, errors = 0, evaluated0 = validate346.evaluated;
+validate393.evaluated = { dynamicProps: !0, dynamicItems: !1 };
+function validate348(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
+  let vErrors = null, errors = 0, evaluated0 = validate348.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
     if (data.name === void 0) {
       let err0 = { instancePath, schemaPath: _mtekDiagnosticString8, keyword: _mtekDiagnosticString9, params: { missingProperty: "name" }, message: "must have required property 'name'" };
@@ -9285,7 +6798,7 @@ function validate346(data, { instancePath = "", parentData, parentDataProperty, 
             let err15 = { instancePath: instancePath + "/fields", schemaPath: "#/properties/fields/additionalProperties", keyword: _mtekDiagnosticString11, params: { additionalProperty: key1 }, message: _mtekDiagnosticString12 };
             vErrors === null ? vErrors = [err15] : vErrors.push(err15), errors++;
           }
-        if (data2.clearColor !== void 0 && (validate349(data2.clearColor, { instancePath: instancePath + "/fields/clearColor", parentData: data2, parentDataProperty: "clearColor", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate349.errors : vErrors.concat(validate349.errors), errors = vErrors.length)), data2.ambientColor !== void 0 && (validate349(data2.ambientColor, { instancePath: instancePath + "/fields/ambientColor", parentData: data2, parentDataProperty: "ambientColor", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate349.errors : vErrors.concat(validate349.errors), errors = vErrors.length)), data2.ambientIntensity !== void 0) {
+        if (data2.clearColor !== void 0 && (validate351(data2.clearColor, { instancePath: instancePath + "/fields/clearColor", parentData: data2, parentDataProperty: "clearColor", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate351.errors : vErrors.concat(validate351.errors), errors = vErrors.length)), data2.ambientColor !== void 0 && (validate351(data2.ambientColor, { instancePath: instancePath + "/fields/ambientColor", parentData: data2, parentDataProperty: "ambientColor", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate351.errors : vErrors.concat(validate351.errors), errors = vErrors.length)), data2.ambientIntensity !== void 0) {
           let data5 = data2.ambientIntensity;
           if (typeof data5 == "number" && isFinite(data5)) {
             if (data5 < 0 || isNaN(data5)) {
@@ -9297,7 +6810,7 @@ function validate346(data, { instancePath = "", parentData, parentDataProperty, 
             vErrors === null ? vErrors = [err17] : vErrors.push(err17), errors++;
           }
         }
-        data2.gravity !== void 0 && (validate210(data2.gravity, { instancePath: instancePath + "/fields/gravity", parentData: data2, parentDataProperty: "gravity", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate210.errors : vErrors.concat(validate210.errors), errors = vErrors.length));
+        data2.gravity !== void 0 && (validate211(data2.gravity, { instancePath: instancePath + "/fields/gravity", parentData: data2, parentDataProperty: "gravity", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate211.errors : vErrors.concat(validate211.errors), errors = vErrors.length));
       } else {
         let err18 = { instancePath: instancePath + "/fields", schemaPath: "#/properties/fields/type", keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
         vErrors === null ? vErrors = [err18] : vErrors.push(err18), errors++;
@@ -9308,7 +6821,7 @@ function validate346(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data7)) {
         let len0 = data7.length;
         for (let i0 = 0; i0 < len0; i0++)
-          validate353(data7[i0], { instancePath: instancePath + "/state/" + i0, parentData: data7, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate353.errors : vErrors.concat(validate353.errors), errors = vErrors.length);
+          validate355(data7[i0], { instancePath: instancePath + "/state/" + i0, parentData: data7, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate355.errors : vErrors.concat(validate355.errors), errors = vErrors.length);
       } else {
         let err19 = { instancePath: instancePath + "/state", schemaPath: _mtekDiagnosticString72, keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err19] : vErrors.push(err19), errors++;
@@ -9319,7 +6832,7 @@ function validate346(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data9)) {
         let len1 = data9.length;
         for (let i1 = 0; i1 < len1; i1++)
-          validate358(data9[i1], { instancePath: instancePath + "/cameras/" + i1, parentData: data9, parentDataProperty: i1, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate358.errors : vErrors.concat(validate358.errors), errors = vErrors.length);
+          validate360(data9[i1], { instancePath: instancePath + "/cameras/" + i1, parentData: data9, parentDataProperty: i1, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate360.errors : vErrors.concat(validate360.errors), errors = vErrors.length);
       } else {
         let err20 = { instancePath: instancePath + "/cameras", schemaPath: "#/properties/cameras/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err20] : vErrors.push(err20), errors++;
@@ -9330,7 +6843,7 @@ function validate346(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data11)) {
         let len2 = data11.length;
         for (let i2 = 0; i2 < len2; i2++)
-          validate362(data11[i2], { instancePath: instancePath + "/entities/" + i2, parentData: data11, parentDataProperty: i2, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate362.errors : vErrors.concat(validate362.errors), errors = vErrors.length);
+          validate364(data11[i2], { instancePath: instancePath + "/entities/" + i2, parentData: data11, parentDataProperty: i2, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate364.errors : vErrors.concat(validate364.errors), errors = vErrors.length);
       } else {
         let err21 = { instancePath: instancePath + "/entities", schemaPath: "#/properties/entities/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err21] : vErrors.push(err21), errors++;
@@ -9341,7 +6854,7 @@ function validate346(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data13)) {
         let len3 = data13.length;
         for (let i3 = 0; i3 < len3; i3++)
-          validate375(data13[i3], { instancePath: instancePath + "/materialInstances/" + i3, parentData: data13, parentDataProperty: i3, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate375.errors : vErrors.concat(validate375.errors), errors = vErrors.length);
+          validate378(data13[i3], { instancePath: instancePath + "/materialInstances/" + i3, parentData: data13, parentDataProperty: i3, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate378.errors : vErrors.concat(validate378.errors), errors = vErrors.length);
       } else {
         let err22 = { instancePath: instancePath + "/materialInstances", schemaPath: "#/properties/materialInstances/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err22] : vErrors.push(err22), errors++;
@@ -9352,7 +6865,7 @@ function validate346(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data15)) {
         let len4 = data15.length;
         for (let i4 = 0; i4 < len4; i4++)
-          validate288(data15[i4], { instancePath: instancePath + "/bindings/" + i4, parentData: data15, parentDataProperty: i4, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate288.errors : vErrors.concat(validate288.errors), errors = vErrors.length);
+          validate289(data15[i4], { instancePath: instancePath + "/bindings/" + i4, parentData: data15, parentDataProperty: i4, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate289.errors : vErrors.concat(validate289.errors), errors = vErrors.length);
       } else {
         let err23 = { instancePath: instancePath + "/bindings", schemaPath: "#/properties/bindings/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err23] : vErrors.push(err23), errors++;
@@ -9363,7 +6876,7 @@ function validate346(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data17)) {
         let len5 = data17.length;
         for (let i5 = 0; i5 < len5; i5++)
-          validate382(data17[i5], { instancePath: instancePath + "/hostInputs/" + i5, parentData: data17, parentDataProperty: i5, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate382.errors : vErrors.concat(validate382.errors), errors = vErrors.length);
+          validate385(data17[i5], { instancePath: instancePath + "/hostInputs/" + i5, parentData: data17, parentDataProperty: i5, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate385.errors : vErrors.concat(validate385.errors), errors = vErrors.length);
       } else {
         let err24 = { instancePath: instancePath + "/hostInputs", schemaPath: "#/properties/hostInputs/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err24] : vErrors.push(err24), errors++;
@@ -9374,7 +6887,7 @@ function validate346(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data19)) {
         let len6 = data19.length;
         for (let i6 = 0; i6 < len6; i6++)
-          validate386(data19[i6], { instancePath: instancePath + "/hostOutputs/" + i6, parentData: data19, parentDataProperty: i6, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate386.errors : vErrors.concat(validate386.errors), errors = vErrors.length);
+          validate389(data19[i6], { instancePath: instancePath + "/hostOutputs/" + i6, parentData: data19, parentDataProperty: i6, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate389.errors : vErrors.concat(validate389.errors), errors = vErrors.length);
       } else {
         let err25 = { instancePath: instancePath + "/hostOutputs", schemaPath: "#/properties/hostOutputs/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err25] : vErrors.push(err25), errors++;
@@ -9385,7 +6898,7 @@ function validate346(data, { instancePath = "", parentData, parentDataProperty, 
       if (Array.isArray(data21)) {
         let len7 = data21.length;
         for (let i7 = 0; i7 < len7; i7++)
-          validate390(data21[i7], { instancePath: instancePath + "/lights/" + i7, parentData: data21, parentDataProperty: i7, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate390.errors : vErrors.concat(validate390.errors), errors = vErrors.length);
+          validate393(data21[i7], { instancePath: instancePath + "/lights/" + i7, parentData: data21, parentDataProperty: i7, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate393.errors : vErrors.concat(validate393.errors), errors = vErrors.length);
       } else {
         let err26 = { instancePath: instancePath + "/lights", schemaPath: "#/properties/lights/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
         vErrors === null ? vErrors = [err26] : vErrors.push(err26), errors++;
@@ -9395,10 +6908,10 @@ function validate346(data, { instancePath = "", parentData, parentDataProperty, 
     let err27 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
     vErrors === null ? vErrors = [err27] : vErrors.push(err27), errors++;
   }
-  return validate346.errors = vErrors, errors === 0;
+  return validate348.errors = vErrors, errors === 0;
 }
-validate346.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
-var pattern7 = new RegExp("^physics/[0-9a-f]{16}\\.js$", "u");
+validate348.evaluated = { props: !0, dynamicProps: !1, dynamicItems: !1 };
+var pattern7 = new RegExp("^physics/[0-9a-f]{16}\\.js$", "u"), pattern8 = new RegExp("^animation/[0-9a-f]{16}\\.js$", "u");
 function validate52(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null, errors = 0, evaluated0 = validate52.evaluated;
   if (evaluated0.dynamicProps && (evaluated0.props = void 0), evaluated0.dynamicItems && (evaluated0.items = void 0), data && typeof data == "object" && !Array.isArray(data)) {
@@ -9525,255 +7038,340 @@ function validate52(data, { instancePath = "", parentData, parentDataProperty, r
       }
     }
     if (data.requiredCapabilities !== void 0 && (validate55(data.requiredCapabilities, { instancePath: instancePath + "/requiredCapabilities", parentData: data, parentDataProperty: "requiredCapabilities", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate55.errors : vErrors.concat(validate55.errors), errors = vErrors.length)), data.subsystems !== void 0) {
-      let data7 = data.subsystems, _errs16 = errors, valid1 = !0, _errs17 = errors;
+      let data7 = data.subsystems, _errs17 = errors, valid2 = !0, _errs18 = errors;
       if (data7 && typeof data7 == "object" && !Array.isArray(data7)) {
         let missing0;
         if (data7.physics === void 0 && (missing0 = "physics")) {
           let err27 = {};
           vErrors === null ? vErrors = [err27] : vErrors.push(err27), errors++;
         } else {
-          let _errs18 = errors;
+          let _errs19 = errors;
           for (let key1 in data7)
-            if (!(key1 === "physics" || key1 === "physicsModule")) {
+            if (!(key1 === "physics" || key1 === "physicsModule" || key1 === "animation" || key1 === "animationModule")) {
               let err28 = {};
               vErrors === null ? vErrors = [err28] : vErrors.push(err28), errors++;
               break;
             }
-          if (_errs18 === errors && data7.physics !== void 0 && data7.physics !== !0) {
+          if (_errs19 === errors && data7.physics !== void 0 && data7.physics !== !0) {
             let err29 = {};
             vErrors === null ? vErrors = [err29] : vErrors.push(err29), errors++;
           }
         }
       }
-      var _valid0 = _errs17 === errors;
-      errors = _errs16, vErrors !== null && (_errs16 ? vErrors.length = _errs16 : vErrors = null);
+      var _valid0 = _errs18 === errors;
+      errors = _errs17, vErrors !== null && (_errs17 ? vErrors.length = _errs17 : vErrors = null);
       let ifClause0;
       if (_valid0) {
-        let _errs20 = errors;
+        let _errs21 = errors;
         if (data7 && typeof data7 == "object" && !Array.isArray(data7)) {
           if (data7.physicsModule === void 0) {
-            let err30 = { instancePath: instancePath + "/subsystems", schemaPath: "#/properties/subsystems/then/required", keyword: _mtekDiagnosticString9, params: { missingProperty: "physicsModule" }, message: "must have required property 'physicsModule'" };
+            let err30 = { instancePath: instancePath + "/subsystems", schemaPath: "#/properties/subsystems/allOf/0/then/required", keyword: _mtekDiagnosticString9, params: { missingProperty: "physicsModule" }, message: "must have required property 'physicsModule'" };
             vErrors === null ? vErrors = [err30] : vErrors.push(err30), errors++;
           }
           for (let key2 in data7)
-            if (!(key2 === "physics" || key2 === "physicsModule")) {
-              let err31 = { instancePath: instancePath + "/subsystems", schemaPath: "#/properties/subsystems/then/additionalProperties", keyword: _mtekDiagnosticString11, params: { additionalProperty: key2 }, message: _mtekDiagnosticString12 };
+            if (!(key2 === "physics" || key2 === "physicsModule" || key2 === "animation" || key2 === "animationModule")) {
+              let err31 = { instancePath: instancePath + "/subsystems", schemaPath: "#/properties/subsystems/allOf/0/then/additionalProperties", keyword: _mtekDiagnosticString11, params: { additionalProperty: key2 }, message: _mtekDiagnosticString12 };
               vErrors === null ? vErrors = [err31] : vErrors.push(err31), errors++;
             }
         }
-        var _valid0 = _errs20 === errors;
-        valid1 = _valid0, ifClause0 = "then";
+        var _valid0 = _errs21 === errors;
+        valid2 = _valid0, ifClause0 = "then";
       } else {
-        let _errs22 = errors;
+        let _errs23 = errors;
         if (data7 && typeof data7 == "object" && !Array.isArray(data7)) {
           for (let key3 in data7)
-            if (!(key3 === "physics" || key3 === "physicsModule")) {
-              let err32 = { instancePath: instancePath + "/subsystems", schemaPath: "#/properties/subsystems/else/additionalProperties", keyword: _mtekDiagnosticString11, params: { additionalProperty: key3 }, message: _mtekDiagnosticString12 };
+            if (!(key3 === "physics" || key3 === "physicsModule" || key3 === "animation" || key3 === "animationModule")) {
+              let err32 = { instancePath: instancePath + "/subsystems", schemaPath: "#/properties/subsystems/allOf/0/else/additionalProperties", keyword: _mtekDiagnosticString11, params: { additionalProperty: key3 }, message: _mtekDiagnosticString12 };
               vErrors === null ? vErrors = [err32] : vErrors.push(err32), errors++;
             }
           if (data7.physicsModule !== void 0) {
-            let err33 = { instancePath: instancePath + "/subsystems/physicsModule", schemaPath: "#/properties/subsystems/else/properties/physicsModule/false schema", keyword: "false schema", params: {}, message: "boolean schema is false" };
+            let err33 = { instancePath: instancePath + "/subsystems/physicsModule", schemaPath: "#/properties/subsystems/allOf/0/else/properties/physicsModule/false schema", keyword: "false schema", params: {}, message: "boolean schema is false" };
             vErrors === null ? vErrors = [err33] : vErrors.push(err33), errors++;
           }
         }
-        var _valid0 = _errs22 === errors;
-        valid1 = _valid0, ifClause0 = "else";
+        var _valid0 = _errs23 === errors;
+        valid2 = _valid0, ifClause0 = "else";
       }
-      if (!valid1) {
-        let err34 = { instancePath: instancePath + "/subsystems", schemaPath: "#/properties/subsystems/if", keyword: "if", params: { failingKeyword: ifClause0 }, message: 'must match "' + ifClause0 + '" schema' };
+      if (!valid2) {
+        let err34 = { instancePath: instancePath + "/subsystems", schemaPath: "#/properties/subsystems/allOf/0/if", keyword: "if", params: { failingKeyword: ifClause0 }, message: 'must match "' + ifClause0 + '" schema' };
         vErrors === null ? vErrors = [err34] : vErrors.push(err34), errors++;
+      }
+      let _errs26 = errors, valid5 = !0, _errs27 = errors;
+      if (data7 && typeof data7 == "object" && !Array.isArray(data7)) {
+        let missing1;
+        if (data7.animation === void 0 && (missing1 = "animation")) {
+          let err35 = {};
+          vErrors === null ? vErrors = [err35] : vErrors.push(err35), errors++;
+        } else {
+          let _errs28 = errors;
+          for (let key4 in data7)
+            if (!(key4 === "physics" || key4 === "physicsModule" || key4 === "animation" || key4 === "animationModule")) {
+              let err36 = {};
+              vErrors === null ? vErrors = [err36] : vErrors.push(err36), errors++;
+              break;
+            }
+          if (_errs28 === errors && data7.animation !== void 0 && data7.animation !== !0) {
+            let err37 = {};
+            vErrors === null ? vErrors = [err37] : vErrors.push(err37), errors++;
+          }
+        }
+      }
+      var _valid1 = _errs27 === errors;
+      errors = _errs26, vErrors !== null && (_errs26 ? vErrors.length = _errs26 : vErrors = null);
+      let ifClause1;
+      if (_valid1) {
+        let _errs30 = errors;
+        if (data7 && typeof data7 == "object" && !Array.isArray(data7)) {
+          if (data7.animationModule === void 0) {
+            let err38 = { instancePath: instancePath + "/subsystems", schemaPath: "#/properties/subsystems/allOf/1/then/required", keyword: _mtekDiagnosticString9, params: { missingProperty: "animationModule" }, message: "must have required property 'animationModule'" };
+            vErrors === null ? vErrors = [err38] : vErrors.push(err38), errors++;
+          }
+          for (let key5 in data7)
+            if (!(key5 === "physics" || key5 === "physicsModule" || key5 === "animation" || key5 === "animationModule")) {
+              let err39 = { instancePath: instancePath + "/subsystems", schemaPath: "#/properties/subsystems/allOf/1/then/additionalProperties", keyword: _mtekDiagnosticString11, params: { additionalProperty: key5 }, message: _mtekDiagnosticString12 };
+              vErrors === null ? vErrors = [err39] : vErrors.push(err39), errors++;
+            }
+        }
+        var _valid1 = _errs30 === errors;
+        valid5 = _valid1, ifClause1 = "then";
+      } else {
+        let _errs32 = errors;
+        if (data7 && typeof data7 == "object" && !Array.isArray(data7)) {
+          for (let key6 in data7)
+            if (!(key6 === "physics" || key6 === "physicsModule" || key6 === "animation" || key6 === "animationModule")) {
+              let err40 = { instancePath: instancePath + "/subsystems", schemaPath: "#/properties/subsystems/allOf/1/else/additionalProperties", keyword: _mtekDiagnosticString11, params: { additionalProperty: key6 }, message: _mtekDiagnosticString12 };
+              vErrors === null ? vErrors = [err40] : vErrors.push(err40), errors++;
+            }
+          if (data7.animationModule !== void 0) {
+            let err41 = { instancePath: instancePath + "/subsystems/animationModule", schemaPath: "#/properties/subsystems/allOf/1/else/properties/animationModule/false schema", keyword: "false schema", params: {}, message: "boolean schema is false" };
+            vErrors === null ? vErrors = [err41] : vErrors.push(err41), errors++;
+          }
+        }
+        var _valid1 = _errs32 === errors;
+        valid5 = _valid1, ifClause1 = "else";
+      }
+      if (!valid5) {
+        let err42 = { instancePath: instancePath + "/subsystems", schemaPath: "#/properties/subsystems/allOf/1/if", keyword: "if", params: { failingKeyword: ifClause1 }, message: 'must match "' + ifClause1 + '" schema' };
+        vErrors === null ? vErrors = [err42] : vErrors.push(err42), errors++;
       }
       if (data7 && typeof data7 == "object" && !Array.isArray(data7)) {
         if (data7.physics === void 0) {
-          let err35 = { instancePath: instancePath + "/subsystems", schemaPath: "#/properties/subsystems/required", keyword: _mtekDiagnosticString9, params: { missingProperty: "physics" }, message: "must have required property 'physics'" };
-          vErrors === null ? vErrors = [err35] : vErrors.push(err35), errors++;
+          let err43 = { instancePath: instancePath + "/subsystems", schemaPath: "#/properties/subsystems/required", keyword: _mtekDiagnosticString9, params: { missingProperty: "physics" }, message: "must have required property 'physics'" };
+          vErrors === null ? vErrors = [err43] : vErrors.push(err43), errors++;
         }
-        for (let key4 in data7)
-          if (!(key4 === "physics" || key4 === "physicsModule")) {
-            let err36 = { instancePath: instancePath + "/subsystems", schemaPath: "#/properties/subsystems/additionalProperties", keyword: _mtekDiagnosticString11, params: { additionalProperty: key4 }, message: _mtekDiagnosticString12 };
-            vErrors === null ? vErrors = [err36] : vErrors.push(err36), errors++;
+        for (let key7 in data7)
+          if (!(key7 === "physics" || key7 === "physicsModule" || key7 === "animation" || key7 === "animationModule")) {
+            let err44 = { instancePath: instancePath + "/subsystems", schemaPath: "#/properties/subsystems/additionalProperties", keyword: _mtekDiagnosticString11, params: { additionalProperty: key7 }, message: _mtekDiagnosticString12 };
+            vErrors === null ? vErrors = [err44] : vErrors.push(err44), errors++;
           }
         if (data7.physics !== void 0 && typeof data7.physics != "boolean") {
-          let err37 = { instancePath: instancePath + "/subsystems/physics", schemaPath: "#/properties/subsystems/properties/physics/type", keyword: _mtekDiagnosticString3, params: { type: "boolean" }, message: _mtekDiagnosticString21 };
-          vErrors === null ? vErrors = [err37] : vErrors.push(err37), errors++;
+          let err45 = { instancePath: instancePath + "/subsystems/physics", schemaPath: "#/properties/subsystems/properties/physics/type", keyword: _mtekDiagnosticString3, params: { type: "boolean" }, message: _mtekDiagnosticString21 };
+          vErrors === null ? vErrors = [err45] : vErrors.push(err45), errors++;
         }
         if (data7.physicsModule !== void 0) {
-          let data11 = data7.physicsModule;
-          if (typeof data11 == "string") {
-            if (!pattern7.test(data11)) {
-              let err38 = { instancePath: instancePath + "/subsystems/physicsModule", schemaPath: "#/properties/subsystems/properties/physicsModule/pattern", keyword: _mtekDiagnosticString1, params: { pattern: "^physics/[0-9a-f]{16}\\.js$" }, message: 'must match pattern "^physics/[0-9a-f]{16}\\.js$"' };
-              vErrors === null ? vErrors = [err38] : vErrors.push(err38), errors++;
+          let data13 = data7.physicsModule;
+          if (typeof data13 == "string") {
+            if (!pattern7.test(data13)) {
+              let err46 = { instancePath: instancePath + "/subsystems/physicsModule", schemaPath: "#/properties/subsystems/properties/physicsModule/pattern", keyword: _mtekDiagnosticString1, params: { pattern: "^physics/[0-9a-f]{16}\\.js$" }, message: 'must match pattern "^physics/[0-9a-f]{16}\\.js$"' };
+              vErrors === null ? vErrors = [err46] : vErrors.push(err46), errors++;
             }
           } else {
-            let err39 = { instancePath: instancePath + "/subsystems/physicsModule", schemaPath: "#/properties/subsystems/properties/physicsModule/type", keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
-            vErrors === null ? vErrors = [err39] : vErrors.push(err39), errors++;
+            let err47 = { instancePath: instancePath + "/subsystems/physicsModule", schemaPath: "#/properties/subsystems/properties/physicsModule/type", keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
+            vErrors === null ? vErrors = [err47] : vErrors.push(err47), errors++;
           }
         }
-      } else {
-        let err40 = { instancePath: instancePath + "/subsystems", schemaPath: "#/properties/subsystems/type", keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
-        vErrors === null ? vErrors = [err40] : vErrors.push(err40), errors++;
-      }
-    }
-    if (data.runtimeConfig !== void 0 && (validate61(data.runtimeConfig, { instancePath: instancePath + "/runtimeConfig", parentData: data, parentDataProperty: "runtimeConfig", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate61.errors : vErrors.concat(validate61.errors), errors = vErrors.length)), data.game !== void 0 && (validate63(data.game, { instancePath: instancePath + "/game", parentData: data, parentDataProperty: "game", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate63.errors : vErrors.concat(validate63.errors), errors = vErrors.length)), data.preview !== void 0) {
-      let data14 = data.preview;
-      if (data14 && typeof data14 == "object" && !Array.isArray(data14)) {
-        if (data14.loopBudget === void 0) {
-          let err41 = { instancePath: instancePath + "/preview", schemaPath: "#/properties/preview/required", keyword: _mtekDiagnosticString9, params: { missingProperty: "loopBudget" }, message: "must have required property 'loopBudget'" };
-          vErrors === null ? vErrors = [err41] : vErrors.push(err41), errors++;
+        if (data7.animation !== void 0 && typeof data7.animation != "boolean") {
+          let err48 = { instancePath: instancePath + "/subsystems/animation", schemaPath: "#/properties/subsystems/properties/animation/type", keyword: _mtekDiagnosticString3, params: { type: "boolean" }, message: _mtekDiagnosticString21 };
+          vErrors === null ? vErrors = [err48] : vErrors.push(err48), errors++;
         }
-        for (let key5 in data14)
-          if (key5 !== "loopBudget") {
-            let err42 = { instancePath: instancePath + "/preview", schemaPath: "#/properties/preview/additionalProperties", keyword: _mtekDiagnosticString11, params: { additionalProperty: key5 }, message: _mtekDiagnosticString12 };
-            vErrors === null ? vErrors = [err42] : vErrors.push(err42), errors++;
-          }
-        if (data14.loopBudget !== void 0) {
-          let data15 = data14.loopBudget;
-          if (!(typeof data15 == "number" && !(data15 % 1) && !isNaN(data15) && isFinite(data15))) {
-            let err43 = { instancePath: instancePath + "/preview/loopBudget", schemaPath: "#/properties/preview/properties/loopBudget/type", keyword: _mtekDiagnosticString3, params: { type: "integer" }, message: _mtekDiagnosticString13 };
-            vErrors === null ? vErrors = [err43] : vErrors.push(err43), errors++;
-          }
-          if (typeof data15 == "number" && isFinite(data15)) {
-            if (data15 > 4294967295 || isNaN(data15)) {
-              let err44 = { instancePath: instancePath + "/preview/loopBudget", schemaPath: "#/properties/preview/properties/loopBudget/maximum", keyword: _mtekDiagnosticString32, params: { comparison: "<=", limit: 4294967295 }, message: "must be <= 4294967295" };
-              vErrors === null ? vErrors = [err44] : vErrors.push(err44), errors++;
+        if (data7.animationModule !== void 0) {
+          let data15 = data7.animationModule;
+          if (typeof data15 == "string") {
+            if (!pattern8.test(data15)) {
+              let err49 = { instancePath: instancePath + "/subsystems/animationModule", schemaPath: "#/properties/subsystems/properties/animationModule/pattern", keyword: _mtekDiagnosticString1, params: { pattern: "^animation/[0-9a-f]{16}\\.js$" }, message: 'must match pattern "^animation/[0-9a-f]{16}\\.js$"' };
+              vErrors === null ? vErrors = [err49] : vErrors.push(err49), errors++;
             }
-            if (data15 < 1 || isNaN(data15)) {
-              let err45 = { instancePath: instancePath + "/preview/loopBudget", schemaPath: "#/properties/preview/properties/loopBudget/minimum", keyword: _mtekDiagnosticString14, params: { comparison: ">=", limit: 1 }, message: _mtekDiagnosticString20 };
-              vErrors === null ? vErrors = [err45] : vErrors.push(err45), errors++;
-            }
+          } else {
+            let err50 = { instancePath: instancePath + "/subsystems/animationModule", schemaPath: "#/properties/subsystems/properties/animationModule/type", keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
+            vErrors === null ? vErrors = [err50] : vErrors.push(err50), errors++;
           }
         }
       } else {
-        let err46 = { instancePath: instancePath + "/preview", schemaPath: "#/properties/preview/type", keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
-        vErrors === null ? vErrors = [err46] : vErrors.push(err46), errors++;
-      }
-    }
-    if (data.entryScene !== void 0) {
-      let data16 = data.entryScene;
-      if (typeof data16 == "string") {
-        if (data16.length < 1) {
-          let err47 = { instancePath: instancePath + "/entryScene", schemaPath: "#/properties/entryScene/minLength", keyword: _mtekDiagnosticString22, params: { limit: 1 }, message: _mtekDiagnosticString23 };
-          vErrors === null ? vErrors = [err47] : vErrors.push(err47), errors++;
-        }
-      } else {
-        let err48 = { instancePath: instancePath + "/entryScene", schemaPath: "#/properties/entryScene/type", keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
-        vErrors === null ? vErrors = [err48] : vErrors.push(err48), errors++;
-      }
-    }
-    if (data.sources !== void 0) {
-      let data17 = data.sources;
-      if (Array.isArray(data17)) {
-        let len0 = data17.length;
-        for (let i0 = 0; i0 < len0; i0++)
-          validate67(data17[i0], { instancePath: instancePath + "/sources/" + i0, parentData: data17, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate67.errors : vErrors.concat(validate67.errors), errors = vErrors.length);
-      } else {
-        let err49 = { instancePath: instancePath + "/sources", schemaPath: "#/properties/sources/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
-        vErrors === null ? vErrors = [err49] : vErrors.push(err49), errors++;
-      }
-    }
-    if (data.spans !== void 0) {
-      let data19 = data.spans;
-      if (Array.isArray(data19)) {
-        let len1 = data19.length;
-        for (let i1 = 0; i1 < len1; i1++)
-          validate73(data19[i1], { instancePath: instancePath + "/spans/" + i1, parentData: data19, parentDataProperty: i1, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate73.errors : vErrors.concat(validate73.errors), errors = vErrors.length);
-      } else {
-        let err50 = { instancePath: instancePath + "/spans", schemaPath: "#/properties/spans/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
-        vErrors === null ? vErrors = [err50] : vErrors.push(err50), errors++;
-      }
-    }
-    if (data.symbols !== void 0) {
-      let data21 = data.symbols;
-      if (Array.isArray(data21)) {
-        let len2 = data21.length;
-        for (let i2 = 0; i2 < len2; i2++)
-          validate78(data21[i2], { instancePath: instancePath + "/symbols/" + i2, parentData: data21, parentDataProperty: i2, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate78.errors : vErrors.concat(validate78.errors), errors = vErrors.length);
-      } else {
-        let err51 = { instancePath: instancePath + "/symbols", schemaPath: "#/properties/symbols/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
+        let err51 = { instancePath: instancePath + "/subsystems", schemaPath: "#/properties/subsystems/type", keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
         vErrors === null ? vErrors = [err51] : vErrors.push(err51), errors++;
       }
     }
-    if (data.layouts !== void 0) {
-      let data23 = data.layouts;
-      if (Array.isArray(data23)) {
-        let len3 = data23.length;
-        for (let i3 = 0; i3 < len3; i3++)
-          validate84(data23[i3], { instancePath: instancePath + "/layouts/" + i3, parentData: data23, parentDataProperty: i3, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate84.errors : vErrors.concat(validate84.errors), errors = vErrors.length);
+    if (data.runtimeConfig !== void 0 && (validate61(data.runtimeConfig, { instancePath: instancePath + "/runtimeConfig", parentData: data, parentDataProperty: "runtimeConfig", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate61.errors : vErrors.concat(validate61.errors), errors = vErrors.length)), data.game !== void 0 && (validate63(data.game, { instancePath: instancePath + "/game", parentData: data, parentDataProperty: "game", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate63.errors : vErrors.concat(validate63.errors), errors = vErrors.length)), data.preview !== void 0) {
+      let data18 = data.preview;
+      if (data18 && typeof data18 == "object" && !Array.isArray(data18)) {
+        if (data18.loopBudget === void 0) {
+          let err52 = { instancePath: instancePath + "/preview", schemaPath: "#/properties/preview/required", keyword: _mtekDiagnosticString9, params: { missingProperty: "loopBudget" }, message: "must have required property 'loopBudget'" };
+          vErrors === null ? vErrors = [err52] : vErrors.push(err52), errors++;
+        }
+        for (let key8 in data18)
+          if (key8 !== "loopBudget") {
+            let err53 = { instancePath: instancePath + "/preview", schemaPath: "#/properties/preview/additionalProperties", keyword: _mtekDiagnosticString11, params: { additionalProperty: key8 }, message: _mtekDiagnosticString12 };
+            vErrors === null ? vErrors = [err53] : vErrors.push(err53), errors++;
+          }
+        if (data18.loopBudget !== void 0) {
+          let data19 = data18.loopBudget;
+          if (!(typeof data19 == "number" && !(data19 % 1) && !isNaN(data19) && isFinite(data19))) {
+            let err54 = { instancePath: instancePath + "/preview/loopBudget", schemaPath: "#/properties/preview/properties/loopBudget/type", keyword: _mtekDiagnosticString3, params: { type: "integer" }, message: _mtekDiagnosticString13 };
+            vErrors === null ? vErrors = [err54] : vErrors.push(err54), errors++;
+          }
+          if (typeof data19 == "number" && isFinite(data19)) {
+            if (data19 > 4294967295 || isNaN(data19)) {
+              let err55 = { instancePath: instancePath + "/preview/loopBudget", schemaPath: "#/properties/preview/properties/loopBudget/maximum", keyword: _mtekDiagnosticString32, params: { comparison: "<=", limit: 4294967295 }, message: "must be <= 4294967295" };
+              vErrors === null ? vErrors = [err55] : vErrors.push(err55), errors++;
+            }
+            if (data19 < 1 || isNaN(data19)) {
+              let err56 = { instancePath: instancePath + "/preview/loopBudget", schemaPath: "#/properties/preview/properties/loopBudget/minimum", keyword: _mtekDiagnosticString14, params: { comparison: ">=", limit: 1 }, message: _mtekDiagnosticString20 };
+              vErrors === null ? vErrors = [err56] : vErrors.push(err56), errors++;
+            }
+          }
+        }
       } else {
-        let err52 = { instancePath: instancePath + "/layouts", schemaPath: "#/properties/layouts/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
-        vErrors === null ? vErrors = [err52] : vErrors.push(err52), errors++;
-      }
-    }
-    if (data.shaders !== void 0) {
-      let data25 = data.shaders;
-      if (Array.isArray(data25)) {
-        let len4 = data25.length;
-        for (let i4 = 0; i4 < len4; i4++)
-          validate123(data25[i4], { instancePath: instancePath + "/shaders/" + i4, parentData: data25, parentDataProperty: i4, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate123.errors : vErrors.concat(validate123.errors), errors = vErrors.length);
-      } else {
-        let err53 = { instancePath: instancePath + "/shaders", schemaPath: "#/properties/shaders/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
-        vErrors === null ? vErrors = [err53] : vErrors.push(err53), errors++;
-      }
-    }
-    if (data.materials !== void 0) {
-      let data27 = data.materials;
-      if (Array.isArray(data27)) {
-        let len5 = data27.length;
-        for (let i5 = 0; i5 < len5; i5++)
-          validate130(data27[i5], { instancePath: instancePath + "/materials/" + i5, parentData: data27, parentDataProperty: i5, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate130.errors : vErrors.concat(validate130.errors), errors = vErrors.length);
-      } else {
-        let err54 = { instancePath: instancePath + "/materials", schemaPath: "#/properties/materials/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
-        vErrors === null ? vErrors = [err54] : vErrors.push(err54), errors++;
-      }
-    }
-    if (data.computePrograms !== void 0) {
-      let data29 = data.computePrograms;
-      if (Array.isArray(data29)) {
-        let len6 = data29.length;
-        for (let i6 = 0; i6 < len6; i6++)
-          validate142(data29[i6], { instancePath: instancePath + "/computePrograms/" + i6, parentData: data29, parentDataProperty: i6, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate142.errors : vErrors.concat(validate142.errors), errors = vErrors.length);
-      } else {
-        let err55 = { instancePath: instancePath + "/computePrograms", schemaPath: "#/properties/computePrograms/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
-        vErrors === null ? vErrors = [err55] : vErrors.push(err55), errors++;
-      }
-    }
-    if (data.meshes !== void 0) {
-      let data31 = data.meshes;
-      if (Array.isArray(data31)) {
-        let len7 = data31.length;
-        for (let i7 = 0; i7 < len7; i7++)
-          validate170(data31[i7], { instancePath: instancePath + "/meshes/" + i7, parentData: data31, parentDataProperty: i7, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate170.errors : vErrors.concat(validate170.errors), errors = vErrors.length);
-      } else {
-        let err56 = { instancePath: instancePath + "/meshes", schemaPath: "#/properties/meshes/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
-        vErrors === null ? vErrors = [err56] : vErrors.push(err56), errors++;
-      }
-    }
-    if (data.assets !== void 0) {
-      let data33 = data.assets;
-      if (Array.isArray(data33)) {
-        let len8 = data33.length;
-        for (let i8 = 0; i8 < len8; i8++)
-          validate196(data33[i8], { instancePath: instancePath + "/assets/" + i8, parentData: data33, parentDataProperty: i8, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate196.errors : vErrors.concat(validate196.errors), errors = vErrors.length);
-      } else {
-        let err57 = { instancePath: instancePath + "/assets", schemaPath: "#/properties/assets/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
+        let err57 = { instancePath: instancePath + "/preview", schemaPath: "#/properties/preview/type", keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
         vErrors === null ? vErrors = [err57] : vErrors.push(err57), errors++;
       }
     }
-    if (data.prefabs !== void 0) {
-      let data35 = data.prefabs;
-      if (Array.isArray(data35)) {
-        let len9 = data35.length;
-        for (let i9 = 0; i9 < len9; i9++)
-          validate237(data35[i9], { instancePath: instancePath + "/prefabs/" + i9, parentData: data35, parentDataProperty: i9, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate237.errors : vErrors.concat(validate237.errors), errors = vErrors.length);
+    if (data.entryScene !== void 0) {
+      let data20 = data.entryScene;
+      if (typeof data20 == "string") {
+        if (data20.length < 1) {
+          let err58 = { instancePath: instancePath + "/entryScene", schemaPath: "#/properties/entryScene/minLength", keyword: _mtekDiagnosticString22, params: { limit: 1 }, message: _mtekDiagnosticString23 };
+          vErrors === null ? vErrors = [err58] : vErrors.push(err58), errors++;
+        }
       } else {
-        let err58 = { instancePath: instancePath + "/prefabs", schemaPath: "#/properties/prefabs/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
-        vErrors === null ? vErrors = [err58] : vErrors.push(err58), errors++;
+        let err59 = { instancePath: instancePath + "/entryScene", schemaPath: "#/properties/entryScene/type", keyword: _mtekDiagnosticString3, params: { type: "string" }, message: _mtekDiagnosticString4 };
+        vErrors === null ? vErrors = [err59] : vErrors.push(err59), errors++;
       }
     }
-    data.scene !== void 0 && (validate346(data.scene, { instancePath: instancePath + "/scene", parentData: data, parentDataProperty: "scene", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate346.errors : vErrors.concat(validate346.errors), errors = vErrors.length));
+    if (data.sources !== void 0) {
+      let data21 = data.sources;
+      if (Array.isArray(data21)) {
+        let len0 = data21.length;
+        for (let i0 = 0; i0 < len0; i0++)
+          validate67(data21[i0], { instancePath: instancePath + "/sources/" + i0, parentData: data21, parentDataProperty: i0, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate67.errors : vErrors.concat(validate67.errors), errors = vErrors.length);
+      } else {
+        let err60 = { instancePath: instancePath + "/sources", schemaPath: "#/properties/sources/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
+        vErrors === null ? vErrors = [err60] : vErrors.push(err60), errors++;
+      }
+    }
+    if (data.spans !== void 0) {
+      let data23 = data.spans;
+      if (Array.isArray(data23)) {
+        let len1 = data23.length;
+        for (let i1 = 0; i1 < len1; i1++)
+          validate73(data23[i1], { instancePath: instancePath + "/spans/" + i1, parentData: data23, parentDataProperty: i1, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate73.errors : vErrors.concat(validate73.errors), errors = vErrors.length);
+      } else {
+        let err61 = { instancePath: instancePath + "/spans", schemaPath: "#/properties/spans/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
+        vErrors === null ? vErrors = [err61] : vErrors.push(err61), errors++;
+      }
+    }
+    if (data.symbols !== void 0) {
+      let data25 = data.symbols;
+      if (Array.isArray(data25)) {
+        let len2 = data25.length;
+        for (let i2 = 0; i2 < len2; i2++)
+          validate78(data25[i2], { instancePath: instancePath + "/symbols/" + i2, parentData: data25, parentDataProperty: i2, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate78.errors : vErrors.concat(validate78.errors), errors = vErrors.length);
+      } else {
+        let err62 = { instancePath: instancePath + "/symbols", schemaPath: "#/properties/symbols/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
+        vErrors === null ? vErrors = [err62] : vErrors.push(err62), errors++;
+      }
+    }
+    if (data.layouts !== void 0) {
+      let data27 = data.layouts;
+      if (Array.isArray(data27)) {
+        let len3 = data27.length;
+        for (let i3 = 0; i3 < len3; i3++)
+          validate84(data27[i3], { instancePath: instancePath + "/layouts/" + i3, parentData: data27, parentDataProperty: i3, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate84.errors : vErrors.concat(validate84.errors), errors = vErrors.length);
+      } else {
+        let err63 = { instancePath: instancePath + "/layouts", schemaPath: "#/properties/layouts/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
+        vErrors === null ? vErrors = [err63] : vErrors.push(err63), errors++;
+      }
+    }
+    if (data.shaders !== void 0) {
+      let data29 = data.shaders;
+      if (Array.isArray(data29)) {
+        let len4 = data29.length;
+        for (let i4 = 0; i4 < len4; i4++)
+          validate123(data29[i4], { instancePath: instancePath + "/shaders/" + i4, parentData: data29, parentDataProperty: i4, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate123.errors : vErrors.concat(validate123.errors), errors = vErrors.length);
+      } else {
+        let err64 = { instancePath: instancePath + "/shaders", schemaPath: "#/properties/shaders/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
+        vErrors === null ? vErrors = [err64] : vErrors.push(err64), errors++;
+      }
+    }
+    if (data.materials !== void 0) {
+      let data31 = data.materials;
+      if (Array.isArray(data31)) {
+        let len5 = data31.length;
+        for (let i5 = 0; i5 < len5; i5++)
+          validate130(data31[i5], { instancePath: instancePath + "/materials/" + i5, parentData: data31, parentDataProperty: i5, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate130.errors : vErrors.concat(validate130.errors), errors = vErrors.length);
+      } else {
+        let err65 = { instancePath: instancePath + "/materials", schemaPath: "#/properties/materials/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
+        vErrors === null ? vErrors = [err65] : vErrors.push(err65), errors++;
+      }
+    }
+    if (data.computePrograms !== void 0) {
+      let data33 = data.computePrograms;
+      if (Array.isArray(data33)) {
+        let len6 = data33.length;
+        for (let i6 = 0; i6 < len6; i6++)
+          validate142(data33[i6], { instancePath: instancePath + "/computePrograms/" + i6, parentData: data33, parentDataProperty: i6, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate142.errors : vErrors.concat(validate142.errors), errors = vErrors.length);
+      } else {
+        let err66 = { instancePath: instancePath + "/computePrograms", schemaPath: "#/properties/computePrograms/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
+        vErrors === null ? vErrors = [err66] : vErrors.push(err66), errors++;
+      }
+    }
+    if (data.meshes !== void 0) {
+      let data35 = data.meshes;
+      if (Array.isArray(data35)) {
+        let len7 = data35.length;
+        for (let i7 = 0; i7 < len7; i7++)
+          validate170(data35[i7], { instancePath: instancePath + "/meshes/" + i7, parentData: data35, parentDataProperty: i7, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate170.errors : vErrors.concat(validate170.errors), errors = vErrors.length);
+      } else {
+        let err67 = { instancePath: instancePath + "/meshes", schemaPath: "#/properties/meshes/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
+        vErrors === null ? vErrors = [err67] : vErrors.push(err67), errors++;
+      }
+    }
+    if (data.clipSources !== void 0) {
+      let data37 = data.clipSources;
+      if (Array.isArray(data37)) {
+        let len8 = data37.length;
+        for (let i8 = 0; i8 < len8; i8++)
+          validate183(data37[i8], { instancePath: instancePath + "/clipSources/" + i8, parentData: data37, parentDataProperty: i8, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate183.errors : vErrors.concat(validate183.errors), errors = vErrors.length);
+      } else {
+        let err68 = { instancePath: instancePath + "/clipSources", schemaPath: "#/properties/clipSources/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
+        vErrors === null ? vErrors = [err68] : vErrors.push(err68), errors++;
+      }
+    }
+    if (data.assets !== void 0) {
+      let data39 = data.assets;
+      if (Array.isArray(data39)) {
+        let len9 = data39.length;
+        for (let i9 = 0; i9 < len9; i9++)
+          validate197(data39[i9], { instancePath: instancePath + "/assets/" + i9, parentData: data39, parentDataProperty: i9, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate197.errors : vErrors.concat(validate197.errors), errors = vErrors.length);
+      } else {
+        let err69 = { instancePath: instancePath + "/assets", schemaPath: "#/properties/assets/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
+        vErrors === null ? vErrors = [err69] : vErrors.push(err69), errors++;
+      }
+    }
+    if (data.prefabs !== void 0) {
+      let data41 = data.prefabs;
+      if (Array.isArray(data41)) {
+        let len10 = data41.length;
+        for (let i10 = 0; i10 < len10; i10++)
+          validate238(data41[i10], { instancePath: instancePath + "/prefabs/" + i10, parentData: data41, parentDataProperty: i10, rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate238.errors : vErrors.concat(validate238.errors), errors = vErrors.length);
+      } else {
+        let err70 = { instancePath: instancePath + "/prefabs", schemaPath: "#/properties/prefabs/type", keyword: _mtekDiagnosticString3, params: { type: "array" }, message: _mtekDiagnosticString7 };
+        vErrors === null ? vErrors = [err70] : vErrors.push(err70), errors++;
+      }
+    }
+    data.scene !== void 0 && (validate348(data.scene, { instancePath: instancePath + "/scene", parentData: data, parentDataProperty: "scene", rootData, dynamicAnchors }) || (vErrors = vErrors === null ? validate348.errors : vErrors.concat(validate348.errors), errors = vErrors.length));
   } else {
-    let err59 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
-    vErrors === null ? vErrors = [err59] : vErrors.push(err59), errors++;
+    let err71 = { instancePath, schemaPath: _mtekDiagnosticString2, keyword: _mtekDiagnosticString3, params: { type: "object" }, message: _mtekDiagnosticString16 };
+    vErrors === null ? vErrors = [err71] : vErrors.push(err71), errors++;
   }
   return validate52.errors = vErrors, errors === 0;
 }
@@ -10765,7 +8363,7 @@ function checkedPositionBounds(bounds) {
 function record(value) {
   return typeof value == "object" && value !== null && !Array.isArray(value) && !ArrayBuffer.isView(value);
 }
-function finite3(value) {
+function finite2(value) {
   if (typeof value != "number" || !Number.isFinite(value) || !Number.isFinite(Math.fround(value))) throw new TypeError("compute parameter requires a finite f32");
   return Math.fround(value);
 }
@@ -10776,21 +8374,21 @@ function normalized(node, type, value) {
         if (typeof value != "boolean") throw new TypeError("compute parameter requires a bool");
         return value;
       }
-      if (node.scalar === "f32") return finite3(value);
+      if (node.scalar === "f32") return finite2(value);
       if (typeof value != "number" || !Number.isInteger(value) || value < (node.scalar === "i32" ? -2147483648 : 0) || value > (node.scalar === "i32" ? 2147483647 : 4294967295)) throw new TypeError(`compute parameter requires ${node.scalar}`);
       return value;
     case "vector": {
       let keys = (type === "color" ? ["r", "g", "b", "a"] : ["x", "y", "z", "w"]).slice(0, node.components);
       if (Array.isArray(value)) {
         if (value.length !== keys.length) throw new TypeError("compute vector parameter has wrong length");
-        return Object.fromEntries(keys.map((key, i) => [key, finite3(value[i])]));
+        return Object.fromEntries(keys.map((key, i) => [key, finite2(value[i])]));
       }
       if (!record(value) || Object.keys(value).length !== keys.length || keys.some((key) => !Object.hasOwn(value, key))) throw new TypeError("compute vector parameter has wrong components");
-      return Object.fromEntries(keys.map((key) => [key, finite3(value[key])]));
+      return Object.fromEntries(keys.map((key) => [key, finite2(value[key])]));
     }
     case "matrix":
       if (!Array.isArray(value) && !(value instanceof Float32Array) || value.length !== 16) throw new TypeError("compute mat4 parameter requires 16 column-major values");
-      return Array.from(value, finite3);
+      return Array.from(value, finite2);
     case "array": {
       if (!Array.isArray(value) || value.length !== node.length) throw new TypeError("compute array parameter has wrong length");
       let split = type.lastIndexOf(","), elementType = type.startsWith("array<") && split >= 0 ? type.slice(6, split).trim() : "";
@@ -11019,8 +8617,8 @@ function isMappedKeyCode(code) {
 
 // src/input/dom.ts
 function pointerPosition(canvas, clientX, clientY) {
-  let rect = canvas.getBoundingClientRect(), width = rect.width > 0 ? rect.width : 1, height = rect.height > 0 ? rect.height : 1, clamp4 = (v) => Math.fround(Math.min(1, Math.max(-1, v)));
-  return { x: clamp4((clientX - rect.left) / width * 2 - 1), y: clamp4(1 - (clientY - rect.top) / height * 2) };
+  let rect = canvas.getBoundingClientRect(), width = rect.width > 0 ? rect.width : 1, height = rect.height > 0 ? rect.height : 1, clamp3 = (v) => Math.fround(Math.min(1, Math.max(-1, v)));
+  return { x: clamp3((clientX - rect.left) / width * 2 - 1), y: clamp3(1 - (clientY - rect.top) / height * 2) };
 }
 function attachInputListeners(input, targets) {
   let { canvas, registry, handledKeys } = targets, style = canvas.style;
@@ -11706,6 +9304,62 @@ var SUPPORTED = {
   }
 };
 
+// src/animation-module/load.ts
+function errorText4(error) {
+  return error instanceof Error ? error.message === "" ? error.name : `${error.name}: ${error.message}` : String(error);
+}
+function failure2(phase, url, why, browserMessage) {
+  return {
+    ok: !1,
+    diagnostics: [
+      makeRuntimeDiagnostic("E8114", {
+        phase,
+        message: `The animation module could not be loaded: ${why}`,
+        notes: [
+          ...url === void 0 ? [] : [`module: ${url}`],
+          ...browserMessage === void 0 ? [] : [`browser message: ${browserMessage}`],
+          "help: the program has a skinned mesh or clips_from, so animation/<hash>.js must be served next to app.js (mtek build writes it)"
+        ]
+      })
+    ]
+  };
+}
+function animationModuleUrl(manifest, baseUrl) {
+  let module = manifest.subsystems.animationModule;
+  return manifest.subsystems.animation === !0 && module !== void 0 ? new URL(module, baseUrl).href : void 0;
+}
+function needsAnimation(structure) {
+  return structure.meshes.some((mesh) => mesh.descriptor.kind === "asset" && mesh.descriptor.skin !== void 0) || structure.entities.some((entity) => entity.clipsFrom !== void 0) || structure.prefabs.some((prefab) => prefab.clipsFrom !== void 0);
+}
+function animationMismatch(manifest, structure, phase) {
+  if (!(manifest.subsystems.animation === !0 || !needsAnimation(structure)))
+    return makeRuntimeDiagnostic("E8114", {
+      phase,
+      message: "The animation module could not be loaded: the program has a skinned mesh or clips_from, but its manifest does not declare the module (subsystems.animation).",
+      notes: ["help: rebuild the program with this version of mtek"]
+    });
+}
+async function loadAnimationBackend(options) {
+  let { phase } = options, url = animationModuleUrl(options.manifest, options.baseUrl);
+  if (url === void 0) return failure2(phase, void 0, "the manifest declares animation but names no module (subsystems.animationModule).");
+  let module;
+  try {
+    module = await options.importModule(url);
+  } catch (error) {
+    return failure2(phase, url, "importing it failed.", errorText4(error));
+  }
+  let load = typeof module == "object" && module !== null ? module.default : void 0;
+  if (typeof load != "function") return failure2(phase, url, "the module has no default export that is a function.");
+  let backend;
+  try {
+    backend = await load();
+  } catch (error) {
+    return failure2(phase, url, "initialising it failed.", errorText4(error));
+  }
+  let candidate = backend;
+  return typeof candidate != "object" || candidate === null || typeof candidate.name != "string" || typeof candidate.createPlayers != "function" || typeof candidate.createCommands != "function" || typeof candidate.retargetHumanoid != "function" ? failure2(phase, url, "the module's default export did not resolve to an animation backend (name, createPlayers, createCommands, retargetHumanoid).") : { ok: !0, backend: candidate, url };
+}
+
 // src/input/input.ts
 function isKnownButton(button) {
   return button === 0 || button === 1 || button === 2;
@@ -11853,11 +9507,325 @@ function copy2(value) {
   return value;
 }
 
+// src/scene/clips.ts
+function sampleChannelInto(channel, time, out) {
+  let comps = channelWidth(channel), times = channel.times, count = times.length, values = channel.values, identity2 = () => {
+    out[0] = 0, out[1] = 0, out[2] = 0, comps === 4 && (out[3] = 1);
+  };
+  if (count === 0) {
+    identity2();
+    return;
+  }
+  let first = times[0] ?? 0;
+  if (time <= first) {
+    for (let i = 0; i < comps; i += 1) out[i] = values[i] ?? 0;
+    comps === 4 && normalizeInto(out);
+    return;
+  }
+  let hi = 1;
+  for (; hi < count && (times[hi] ?? 0) <= time; ) hi += 1;
+  let lo = hi - 1, from = lo * comps;
+  if (channel.interpolation === "step" || hi >= count) {
+    for (let i = 0; i < comps; i += 1) out[i] = values[from + i] ?? 0;
+    comps === 4 && normalizeInto(out);
+    return;
+  }
+  let t0 = times[lo] ?? 0, span = (times[hi] ?? t0) - t0, t = span === 0 ? 0 : (time - t0) / span, to = hi * comps;
+  if (comps === 4) {
+    let dot2 = 0;
+    for (let i = 0; i < 4; i += 1) dot2 += (values[from + i] ?? 0) * (values[to + i] ?? 0);
+    let sign2 = dot2 < 0 ? -1 : 1, angle = Math.acos(Math.min(1, Math.abs(dot2))), sine = Math.sin(angle), aWeight = sine > 1e-6 ? Math.sin((1 - t) * angle) / sine : 1 - t, bWeight = sine > 1e-6 ? Math.sin(t * angle) / sine : t;
+    for (let i = 0; i < 4; i += 1) {
+      let a = values[from + i] ?? 0;
+      out[i] = a * aWeight + sign2 * (values[to + i] ?? 0) * bWeight;
+    }
+    normalizeInto(out);
+    return;
+  }
+  for (let i = 0; i < 3; i += 1) {
+    let a = values[from + i] ?? 0;
+    out[i] = a + ((values[to + i] ?? a) - a) * t;
+  }
+}
+function channelWidth(channel) {
+  return channel.path === "rotation" ? 4 : 3;
+}
+function normalizeInto(value) {
+  let length2 = Math.hypot(value[0] ?? 0, value[1] ?? 0, value[2] ?? 0, value[3] ?? 0);
+  if (!(length2 > 0)) {
+    value[0] = 0, value[1] = 0, value[2] = 0, value[3] = 1;
+    return;
+  }
+  for (let i = 0; i < 4; i += 1) value[i] = (value[i] ?? 0) / length2;
+}
+var ClipPlayers = class {
+  players = [];
+  scratch = new Float64Array(4);
+  add(clip) {
+    this.remove(clip.slot), this.players.push({
+      clip,
+      time: 0,
+      playing: !0,
+      looping: !0,
+      speed: 1,
+      finished: !1,
+      weight: 1,
+      fadeFrom: 1,
+      fadeTo: 1,
+      fadeTime: 0,
+      fadeDuration: 0,
+      previous: 0,
+      travel: 0
+    });
+  }
+  player(slot) {
+    return this.players.find((player) => player.clip.slot === slot);
+  }
+  play(slot, looping, speed) {
+    let p = this.player(slot);
+    return p === void 0 || !Number.isFinite(speed) || speed < 0 ? !1 : (p.time = 0, p.previous = 0, p.travel = 0, p.looping = looping, p.speed = speed, p.finished = !looping && p.clip.duration === 0, p.playing = !p.finished, !0);
+  }
+  pause(slot) {
+    let p = this.player(slot);
+    return p === void 0 ? !1 : (p.playing = !1, !0);
+  }
+  resume(slot) {
+    let p = this.player(slot);
+    return p === void 0 || p.finished ? !1 : (p.playing = !0, !0);
+  }
+  seek(slot, time) {
+    let p = this.player(slot);
+    return p === void 0 || !Number.isFinite(time) ? !1 : (p.time = Math.max(0, Math.min(p.clip.duration, time)), p.previous = p.time, p.travel = 0, p.finished = !p.looping && p.time === p.clip.duration, p.finished && (p.playing = !1), !0);
+  }
+  fade(slot, weight, duration) {
+    let p = this.player(slot);
+    return p === void 0 || !Number.isFinite(weight) || !Number.isFinite(duration) || duration < 0 ? !1 : (p.fadeFrom = p.weight, p.fadeTo = Math.max(0, Math.min(1, weight)), p.fadeDuration = duration, p.fadeTime = 0, duration === 0 && (p.weight = p.fadeTo), !0);
+  }
+  time(slot) {
+    return this.player(slot)?.time ?? 0;
+  }
+  duration(slot) {
+    return this.player(slot)?.clip.duration ?? 0;
+  }
+  weight(slot) {
+    return this.player(slot)?.weight ?? 0;
+  }
+  playing(slot) {
+    return this.player(slot)?.playing ?? !1;
+  }
+  finished(slot) {
+    return this.player(slot)?.finished ?? !1;
+  }
+  /** Number of wraps during the latest advance; seeking and play reset this to zero. */
+  wraps(slot) {
+    let p = this.player(slot);
+    return p === void 0 || p.clip.duration <= 0 ? 0 : Math.max(0, Math.round((p.previous + p.travel - p.time) / p.clip.duration));
+  }
+  /** A marker in (0, duration] crossed during the latest advance, even across wraps/hitches. */
+  crossed(slot, marker) {
+    let p = this.player(slot);
+    if (p === void 0 || !Number.isFinite(marker) || marker <= 0 || marker > p.clip.duration || p.travel <= 0) return !1;
+    let distance2 = marker - p.previous;
+    return distance2 <= 0 && p.looping && (distance2 += p.clip.duration), distance2 > 0 && distance2 <= p.travel;
+  }
+  remove(slot) {
+    let index = this.players.findIndex((player) => player.clip.slot === slot);
+    index >= 0 && this.players.splice(index, 1);
+  }
+  /** Writes every channel at `time` (the player's own time when omitted) without advancing. */
+  pose(apply, time) {
+    for (let player of this.players)
+      for (let channel of player.clip.channels) this.write(apply, player, channel, time ?? player.time);
+  }
+  poseSlot(slot, apply) {
+    let p = this.player(slot);
+    if (p !== void 0) for (let channel of p.clip.channels) this.write(apply, p, channel, p.time);
+  }
+  /** Advances by `dt` seconds, wrapping after the duration, then writes the new pose. */
+  advance(dt, apply) {
+    if (!(!Number.isFinite(dt) || dt < 0))
+      for (let player of this.players) {
+        player.previous = player.time, player.travel = player.playing ? dt * player.speed : 0;
+        let next = player.time + player.travel, { duration } = player.clip;
+        if (!player.looping && next >= duration ? (next = duration, player.travel = duration - player.time, player.finished = !0, player.playing = !1) : duration > 0 && next > duration && (next %= duration), duration === 0 && (next = 0), player.time = next, player.fadeDuration > 0) {
+          player.fadeTime = Math.min(player.fadeDuration, player.fadeTime + dt);
+          let t = player.fadeTime / player.fadeDuration, eased = t * t * (3 - 2 * t);
+          player.weight = player.fadeFrom + (player.fadeTo - player.fadeFrom) * eased;
+        }
+        for (let channel of player.clip.channels) this.write(apply, player, channel, next);
+      }
+  }
+  write(apply, player, channel, time) {
+    sampleChannelInto(channel, time, this.scratch);
+    let weight = player.weight;
+    if (channel.path === "rotation") {
+      let w = this.scratch[3] ?? 1, sign2 = w < 0 ? -1 : 1, angle = Math.acos(Math.min(1, Math.abs(w))), sine = Math.sin(angle), factor = sine > 1e-6 ? Math.sin(weight * angle) / sine : weight;
+      for (let i = 0; i < 3; i += 1) this.scratch[i] = (this.scratch[i] ?? 0) * factor * sign2;
+      this.scratch[3] = Math.cos(weight * angle), normalizeInto(this.scratch);
+    } else {
+      let base = channel.path === "scale" ? 1 : 0;
+      for (let i = 0; i < 3; i += 1) this.scratch[i] = base + ((this.scratch[i] ?? base) - base) * weight;
+    }
+    apply(player.clip.slot, channel, this.scratch);
+  }
+};
+
+// src/scene/animation-players.ts
+var AnimationPlayers = class {
+  nodes = new ClipPlayers();
+  /** The skeletal player of `slot`: none without the animation module. */
+  skin(_slot) {
+  }
+  share(_source, _targets) {
+    throw new RangeError("Animation sharing needs a skinned source");
+  }
+  detach(_slot) {
+    throw new RangeError("Animation detaching needs a skinned entity");
+  }
+  add(clip) {
+    this.nodes.add(clip);
+  }
+  addSkin(_slot, _skin, _clip) {
+    throw new Error("A skinned mesh needs the animation module, which is not loaded");
+  }
+  remove(slot) {
+    this.nodes.remove(slot);
+  }
+  copyPose(_target, _source) {
+    return !1;
+  }
+  transition(_slot, _name, _seconds, _looping, _speed) {
+    return !1;
+  }
+  play(slot, looping, speed) {
+    return this.nodes.play(slot, looping, speed);
+  }
+  pause(slot) {
+    return this.nodes.pause(slot);
+  }
+  resume(slot) {
+    return this.nodes.resume(slot);
+  }
+  seek(slot, time) {
+    return this.nodes.seek(slot, time);
+  }
+  fade(slot, weight, duration) {
+    return this.nodes.fade(slot, weight, duration);
+  }
+  time(slot) {
+    return this.nodes.time(slot);
+  }
+  duration(slot) {
+    return this.nodes.duration(slot);
+  }
+  weight(slot) {
+    return this.nodes.weight(slot);
+  }
+  playing(slot) {
+    return this.nodes.playing(slot);
+  }
+  finished(slot) {
+    return this.nodes.finished(slot);
+  }
+  crossed(slot, marker) {
+    return this.nodes.crossed(slot, marker);
+  }
+  advance(dt, apply, _distance) {
+    this.nodes.advance(dt, apply);
+  }
+  pose(apply, time) {
+    this.nodes.pose(apply, time);
+  }
+  poseSlot(slot, apply) {
+    this.nodes.poseSlot(slot, apply);
+  }
+};
+
+// src/math/mat4.ts
+function at(a, i) {
+  let value = a[i];
+  if (value === void 0) throw new RangeError(`matrix index ${i} out of range`);
+  return value;
+}
+function identity() {
+  let m = new Float32Array(16);
+  return m[0] = 1, m[5] = 1, m[10] = 1, m[15] = 1, m;
+}
+function translation(v) {
+  let m = identity();
+  return m[12] = v.x, m[13] = v.y, m[14] = v.z, m;
+}
+function scaling(v) {
+  let m = new Float32Array(16);
+  return m[0] = v.x, m[5] = v.y, m[10] = v.z, m[15] = 1, m;
+}
+function transpose(m) {
+  let out = new Float32Array(16);
+  for (let row = 0; row < 4; row++)
+    for (let col = 0; col < 4; col++) out[row * 4 + col] = at(m, col * 4 + row);
+  return out;
+}
+function multiply(a, b) {
+  return multiplyInto(new Float32Array(16), a, b);
+}
+function multiplyInto(out, a, b) {
+  for (let col = 0; col < 4; col++)
+    for (let row = 0; row < 4; row++) {
+      let sum = 0;
+      for (let k = 0; k < 4; k++) sum += a[k * 4 + row] * b[col * 4 + k];
+      out[col * 4 + row] = sum;
+    }
+  return out;
+}
+function rotation(q) {
+  return rotationInto(new Float32Array(16), q);
+}
+function rotationInto(m, q) {
+  let { x, y, z, w } = q, xx = x * x, yy = y * y, zz = z * z, xy = x * y, xz = x * z, yz = y * z, wx = w * x, wy = w * y, wz = w * z;
+  return m[0] = 1 - 2 * (yy + zz), m[1] = 2 * (xy + wz), m[2] = 2 * (xz - wy), m[3] = 0, m[4] = 2 * (xy - wz), m[5] = 1 - 2 * (xx + zz), m[6] = 2 * (yz + wx), m[7] = 0, m[8] = 2 * (xz + wy), m[9] = 2 * (yz - wx), m[10] = 1 - 2 * (xx + yy), m[11] = 0, m[12] = 0, m[13] = 0, m[14] = 0, m[15] = 1, m;
+}
+function fromRotationTranslationScaleInto(out, scratch, rotationQuat, translationVec, scale) {
+  let r = rotationInto(scratch, rotationQuat), sx = scale.x, sy = scale.y, sz = scale.z;
+  return out[0] = r[0] * sx, out[1] = r[1] * sx, out[2] = r[2] * sx, out[3] = 0, out[4] = r[4] * sy, out[5] = r[5] * sy, out[6] = r[6] * sy, out[7] = 0, out[8] = r[8] * sz, out[9] = r[9] * sz, out[10] = r[10] * sz, out[11] = 0, out[12] = translationVec.x, out[13] = translationVec.y, out[14] = translationVec.z, out[15] = 1, out;
+}
+function perspective(fovY, aspect, near, far) {
+  let f = 1 / Math.tan(fovY / 2), m = new Float32Array(16);
+  return m[0] = f / aspect, m[5] = f, m[10] = far / (near - far), m[11] = -1, m[14] = near * far / (near - far), m;
+}
+function orthographic(height, aspect, near, far) {
+  let width = height * aspect, m = new Float32Array(16);
+  return m[0] = 2 / width, m[5] = 2 / height, m[10] = 1 / (near - far), m[14] = near / (near - far), m[15] = 1, m;
+}
+function lookAtRotation(position, target) {
+  let fx = target.x - position.x, fy = target.y - position.y, fz = target.z - position.z, fLength = Math.hypot(fx, fy, fz);
+  if (!(fLength > 0) || !Number.isFinite(fLength))
+    throw new RangeError("look-at needs distinct, finite position and target");
+  fx /= fLength, fy /= fLength, fz /= fLength;
+  let upIsMinusZ = Math.abs(fy) > 1 - 1e-6, ux0 = 0, uy0 = upIsMinusZ ? 0 : 1, uz0 = upIsMinusZ ? -1 : 0, rx = fy * uz0 - fz * uy0, ry = fz * ux0 - fx * uz0, rz = fx * uy0 - fy * ux0, rLength = Math.hypot(rx, ry, rz);
+  rx /= rLength, ry /= rLength, rz /= rLength;
+  let ux = ry * fz - rz * fy, uy = rz * fx - rx * fz, uz = rx * fy - ry * fx, m = new Float32Array(16);
+  return m[0] = rx, m[1] = ry, m[2] = rz, m[4] = ux, m[5] = uy, m[6] = uz, m[8] = -fx, m[9] = -fy, m[10] = -fz, m[15] = 1, m;
+}
+function viewFromRotation(position, r) {
+  return multiply(transpose(r), translation({ x: -position.x, y: -position.y, z: -position.z }));
+}
+function viewMatrix(position, orientation) {
+  let r = "target" in orientation ? lookAtRotation(position, orientation.target) : rotation(orientation.rotation);
+  return viewFromRotation(position, r);
+}
+function normalMatrixInto(out, offset, model) {
+  let a = at(model, 0), b = at(model, 4), c = at(model, 8), d = at(model, 1), e = at(model, 5), f = at(model, 9), g = at(model, 2), h = at(model, 6), i = at(model, 10), c00 = e * i - f * h, c01 = f * g - d * i, c02 = d * h - e * g, c10 = c * h - b * i, c11 = a * i - c * g, c12 = b * g - a * h, c20 = b * f - c * e, c21 = c * d - a * f, c22 = a * e - b * d, det = a * c00 + b * c01 + c * c02;
+  if (det === 0 || !Number.isFinite(det))
+    throw new RangeError("normal matrix of a singular transform is undefined");
+  let inv = 1 / det;
+  return out[offset] = c00 * inv, out[offset + 1] = c10 * inv, out[offset + 2] = c20 * inv, out[offset + 3] = 0, out[offset + 4] = c01 * inv, out[offset + 5] = c11 * inv, out[offset + 6] = c21 * inv, out[offset + 7] = 0, out[offset + 8] = c02 * inv, out[offset + 9] = c12 * inv, out[offset + 10] = c22 * inv, out[offset + 11] = 0, out[offset + 12] = 0, out[offset + 13] = 0, out[offset + 14] = 0, out[offset + 15] = 1, out;
+}
+
 // src/math/overlap.ts
-function dot3(a, b) {
+function dot(a, b) {
   return a.x * b.x + a.y * b.y + a.z * b.z;
 }
-function cross3(a, b) {
+function cross(a, b) {
   return { x: a.y * b.z - a.z * b.y, y: a.z * b.x - a.x * b.z, z: a.x * b.y - a.y * b.x };
 }
 function valid(v) {
@@ -11874,9 +9842,9 @@ function axes(q) {
 }
 function overlapBoxes(a, sizeA, rotationA, b, sizeB, rotationB) {
   if (![a, sizeA, b, sizeB].every(valid) || [sizeA, sizeB].some((s) => s.x < 0 || s.y < 0 || s.z < 0)) return !1;
-  let aa = axes(rotationA), bb = axes(rotationB), delta = { x: b.x - a.x, y: b.y - a.y, z: b.z - a.z }, extent = (basis, size, axis) => basis.reduce((sum, v, i) => sum + Math.abs(dot3(v, axis)) * ([size.x, size.y, size.z][i] ?? 0) * 0.5, 0);
-  for (let axis of [...aa, ...bb, ...aa.flatMap((x) => bb.map((y) => cross3(x, y)))])
-    if (!(dot3(axis, axis) < 1e-12) && Math.abs(dot3(delta, axis)) > extent(aa, sizeA, axis) + extent(bb, sizeB, axis))
+  let aa = axes(rotationA), bb = axes(rotationB), delta = { x: b.x - a.x, y: b.y - a.y, z: b.z - a.z }, extent = (basis, size, axis) => basis.reduce((sum, v, i) => sum + Math.abs(dot(v, axis)) * ([size.x, size.y, size.z][i] ?? 0) * 0.5, 0);
+  for (let axis of [...aa, ...bb, ...aa.flatMap((x) => bb.map((y) => cross(x, y)))])
+    if (!(dot(axis, axis) < 1e-12) && Math.abs(dot(delta, axis)) > extent(aa, sizeA, axis) + extent(bb, sizeB, axis))
       return !1;
   return !0;
 }
@@ -11926,7 +9894,7 @@ var SILENT_AUDIO = Object.freeze({
   },
   isMuted: () => !1
 });
-function finite4(value) {
+function finite3(value) {
   return typeof value == "number" && Number.isFinite(value) ? value : void 0;
 }
 var AudioSystem = class {
@@ -12024,7 +9992,7 @@ var AudioSystem = class {
   }
   clamp(spanId, value, fallback, range, what) {
     if (value === void 0) return fallback;
-    let number = finite4(value), [lo, hi] = range;
+    let number = finite3(value), [lo, hi] = range;
     if (number !== void 0 && number >= lo && number <= hi) return number;
     let used = number === void 0 ? fallback : Math.min(hi, Math.max(lo, number));
     return this.options.report(
@@ -12113,17 +10081,17 @@ var AudioSystem = class {
   }
 };
 function relativeToListener(position, pose) {
-  let p = position, px = finite4(p?.x) ?? 0, py = finite4(p?.y) ?? 0, pz = finite4(p?.z) ?? 0;
+  let p = position, px = finite3(p?.x) ?? 0, py = finite3(p?.y) ?? 0, pz = finite3(p?.z) ?? 0;
   if (pose === void 0) return [px, py, pz];
   let d = [px - pose.position.x, py - pose.position.y, pz - pose.position.z], { x, y, z, w } = pose.rotation, right = [1 - 2 * (y * y + z * z), 2 * (x * y + w * z), 2 * (x * z - w * y)], up = [2 * (x * y - w * z), 1 - 2 * (x * x + z * z), 2 * (y * z + w * x)], forward = [-2 * (x * z + w * y), -2 * (y * z - w * x), -(1 - 2 * (x * x + y * y))];
   if (pose.target !== null) {
     let f = normalize([pose.target.x - pose.position.x, pose.target.y - pose.position.y, pose.target.z - pose.position.z]);
-    f !== void 0 && (forward = f, right = normalize(cross4(f, [0, 1, 0])) ?? [1, 0, 0], up = cross4(right, f));
+    f !== void 0 && (forward = f, right = normalize(cross2(f, [0, 1, 0])) ?? [1, 0, 0], up = cross2(right, f));
   }
-  let dot4 = (a, b) => (a[0] ?? 0) * (b[0] ?? 0) + (a[1] ?? 0) * (b[1] ?? 0) + (a[2] ?? 0) * (b[2] ?? 0);
-  return [dot4(d, right), dot4(d, up), -dot4(d, forward)];
+  let dot2 = (a, b) => (a[0] ?? 0) * (b[0] ?? 0) + (a[1] ?? 0) * (b[1] ?? 0) + (a[2] ?? 0) * (b[2] ?? 0);
+  return [dot2(d, right), dot2(d, up), -dot2(d, forward)];
 }
-function cross4(a, b) {
+function cross2(a, b) {
   return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 }
 function normalize(v) {
@@ -12650,25 +10618,25 @@ var TEXT_SIZE_RANGE = [1, 512], RECT_SIZE_RANGE = [0, 8192], MAX_HUD_ITEMS = 512
   },
   button: () => !1
 }), DEFAULT_FAMILY = "system-ui,-apple-system,'Segoe UI',sans-serif", TEXT_STYLE = "position:absolute;white-space:pre;line-height:1.2;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;text-shadow:0 1px 2px rgba(0,0,0,.65);user-select:none;pointer-events:none", RECT_STYLE = "position:absolute;pointer-events:none", BUTTON_STYLE = "position:absolute;white-space:pre;line-height:1.2;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;padding:.3em .9em;border:1px solid rgba(255,255,255,.5);border-radius:.4em;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;user-select:none;pointer-events:auto;transform:translate(-50%,-50%)";
-function finite5(value) {
+function finite4(value) {
   return typeof value == "number" && Number.isFinite(value) ? value : void 0;
 }
-function clamp2(value, lo, hi) {
+function clamp(value, lo, hi) {
   return Math.min(hi, Math.max(lo, value));
 }
 function linearToSrgb(c) {
-  let v = clamp2(c, 0, 1);
+  let v = clamp(c, 0, 1);
   return v <= 31308e-7 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055;
 }
 function cssColor(value) {
   if (typeof value != "object" || value === null) return "rgba(255,255,255,1)";
-  let c = value, channel = (x) => String(Math.round(linearToSrgb(finite5(x) ?? 1) * 255)), alpha = clamp2(finite5(c.a) ?? 1, 0, 1);
+  let c = value, channel = (x) => String(Math.round(linearToSrgb(finite4(x) ?? 1) * 255)), alpha = clamp(finite4(c.a) ?? 1, 0, 1);
   return `rgba(${channel(c.r)},${channel(c.g)},${channel(c.b)},${String(Math.round(alpha * 1e3) / 1e3)})`;
 }
 function point(value) {
   if (typeof value != "object" || value === null) return { x: 0, y: 0 };
   let v = value;
-  return { x: finite5(v.x) ?? 0, y: finite5(v.y) ?? 0 };
+  return { x: finite4(v.x) ?? 0, y: finite4(v.y) ?? 0 };
 }
 function placement(x, y) {
   return {
@@ -12710,9 +10678,9 @@ var HudSystem = class {
       content: typeof content == "string" ? content : "",
       x,
       y,
-      size: clamp2(finite5(size) ?? DEFAULT_SIZE, ...TEXT_SIZE_RANGE),
+      size: clamp(finite4(size) ?? DEFAULT_SIZE, ...TEXT_SIZE_RANGE),
       tint: cssColor(tint),
-      align: clamp2(finite5(align) ?? 0.5, 0, 1)
+      align: clamp(finite4(align) ?? 0.5, 0, 1)
     });
   }
   /** `hud.pixel_font()` (decision 0139). */
@@ -12725,10 +10693,10 @@ var HudSystem = class {
       kind: "rect",
       x,
       y,
-      width: clamp2(extent.x, ...RECT_SIZE_RANGE),
-      height: clamp2(extent.y, ...RECT_SIZE_RANGE),
+      width: clamp(extent.x, ...RECT_SIZE_RANGE),
+      height: clamp(extent.y, ...RECT_SIZE_RANGE),
       tint: cssColor(tint),
-      align: clamp2(finite5(align) ?? 0.5, 0, 1)
+      align: clamp(finite4(align) ?? 0.5, 0, 1)
     });
   }
   button(spanId, label, at3, size) {
@@ -12740,7 +10708,7 @@ var HudSystem = class {
       content,
       x,
       y,
-      size: clamp2(finite5(size) ?? DEFAULT_SIZE, ...TEXT_SIZE_RANGE),
+      size: clamp(finite4(size) ?? DEFAULT_SIZE, ...TEXT_SIZE_RANGE),
       key
     }), this.pendingClicks.delete(key);
   }
@@ -13218,7 +11186,8 @@ var DynamicEntities = class {
       mesh: prefab.resolved.mesh,
       instance,
       ...prefab.resolved.particles === void 0 ? {} : { particles: prefab.resolved.particles },
-      ...prefab.resolved.clip === void 0 ? {} : { clip: prefab.resolved.clip }
+      ...prefab.resolved.clip === void 0 ? {} : { clip: prefab.resolved.clip },
+      ...prefab.resolved.clipsFrom === void 0 ? {} : { clipsFrom: prefab.resolved.clipsFrom }
     }, host = this.options.host, record2 = host.makeRecord(ref, resolved, prefab, params), entity = { record: record2, resolved, ref, prefab, tag: prefab.resolved.tag, order: this.nextOrder++, removing: !1, attachments: /* @__PURE__ */ new Map() };
     return this.bySlot[slot] = entity, host.register(slot, record2, resolved), instance !== null && materials.createInstance(instance), render.addEntity(resolved), prefab.program.init(host.ctx, record2, params), this.bind(entity), instance !== null && instance.shareable && materials.shareInstance(instance.index), this.spawnedTotal += 1, entity;
   }
@@ -13598,6 +11567,22 @@ var CONTEXT_MEMBERS = [
   "animationPlaying",
   "animationFinished",
   "animationCrossed",
+  "animationSetLayer",
+  "animationFadeLayer",
+  "animationRemoveLayer",
+  "animationBlendSample",
+  "animationBlendPlay",
+  "animationBlendParameter",
+  "animationBlendClear",
+  "animationBlendPhase",
+  "animationLimbGoal",
+  "animationClearLimb",
+  "animationFootPlacement",
+  "animationClearFootPlacement",
+  "animationChainGoal",
+  "animationClearChain",
+  "animationRootMotion",
+  "animationTakeRootMotion",
   "gamepadButton",
   "gamepadConnected",
   "print",
@@ -13747,8 +11732,15 @@ var World = class {
   cappedTimerSpans = /* @__PURE__ */ new Set();
   /** Living particles (decision 0155). */
   particles = new ParticleSim();
-  /** Playing glTF clips (decision 0156). */
-  clips = new AnimationPlayers();
+  /** Playing glTF clips (decision 0156); the skeletal ones come from the animation module (decision 0225). */
+  clips;
+  /** The composition commands of `animation.*` (decision 0223); none without the animation module, where every one is dropped. */
+  script;
+  animation;
+  /** `clips_from` retargets by source and target skeleton (decision 0223): the skin to play, or why there is none. */
+  retargets = /* @__PURE__ */ new Map();
+  /** The symbols that already reported `E8110`. */
+  retargetReported = /* @__PURE__ */ new Set();
   /** Per entity slot, the pose its clip last sampled; `undefined` for an entity without a clip. The local transform is the entity's own one times this (decision 0174). */
   clipPoses = [];
   clipBase = new Float32Array(16);
@@ -13760,7 +11752,13 @@ var World = class {
   loopBudgetLimit;
   materialParamTypes;
   constructor(options) {
-    this.manifest = options.manifest, this.structure = options.structure, this.params = options.params, this.report = options.report, this.loopBudgetLimit = options.manifest.preview?.loopBudget;
+    this.manifest = options.manifest, this.structure = options.structure, this.params = options.params, this.report = options.report, this.loopBudgetLimit = options.manifest.preview?.loopBudget, this.animation = options.animation, this.clips = options.animation?.createPlayers() ?? new AnimationPlayers(), this.script = options.animation?.createCommands({
+      player: (slot) => this.clips.skin(slot),
+      world: (slot) => (this.propagate(), this.worlds[slot]),
+      report: (code, slot, spanId, message) => {
+        this.reportScript(code, slot, spanId, message);
+      }
+    });
     let materialParams = new Map(this.structure.materials.map((material) => [material.id, material.params]));
     this.materialParamTypes = materialParams;
     let lightOf = new Map(this.structure.lights.map((light) => [light.entity, light]));
@@ -13948,6 +11946,23 @@ var World = class {
       animationPlaying: (ref) => this.dynamic.alive(ref) ? this.clips.playing(ref.slot) : !1,
       animationFinished: (ref) => this.dynamic.alive(ref) ? this.clips.finished(ref.slot) : !1,
       animationCrossed: (ref, marker) => this.dynamic.alive(ref) ? this.clips.crossed(ref.slot, marker) : !1,
+      // Decision 0223: composition. The last argument of the commands that can report is the span of the call.
+      animationSetLayer: (ref, id, clip, weight, additive, mask2, spanId) => this.dynamic.alive(ref) && this.script?.setLayer(ref.slot, id, clip, weight, additive, mask2, spanId) === !0,
+      animationFadeLayer: (ref, id, weight, seconds, spanId) => this.dynamic.alive(ref) && this.script?.fadeLayer(ref.slot, id, weight, seconds, spanId) === !0,
+      animationRemoveLayer: (ref, id) => this.dynamic.alive(ref) && this.script?.removeLayer(ref.slot, id) === !0,
+      animationBlendSample: (ref, clip, x, y, spanId) => this.dynamic.alive(ref) && this.script?.blendSample(ref.slot, clip, x, y, spanId) === !0,
+      animationBlendPlay: (ref, looping, speed, spanId) => this.dynamic.alive(ref) && this.script?.blendPlay(ref.slot, looping, speed, spanId) === !0,
+      animationBlendParameter: (ref, x, y) => this.dynamic.alive(ref) && this.script?.blendParameter(ref.slot, x, y) === !0,
+      animationBlendClear: (ref) => this.dynamic.alive(ref) && this.script?.blendClear(ref.slot) === !0,
+      animationBlendPhase: (ref) => this.dynamic.alive(ref) ? this.script?.blendPhase(ref.slot) ?? 0 : 0,
+      animationLimbGoal: (ref, limb, goal, weight, spanId) => this.dynamic.alive(ref) && this.script?.limbGoal(ref.slot, limb, goal, weight, spanId) === !0,
+      animationClearLimb: (ref, limb, spanId) => this.dynamic.alive(ref) && this.script?.clearLimb(ref.slot, limb, spanId) === !0,
+      animationFootPlacement: (ref, left, right, leftNormal, rightNormal, weight, spanId) => this.dynamic.alive(ref) && this.script?.footPlacement(ref.slot, left, right, leftNormal, rightNormal, weight, spanId) === !0,
+      animationClearFootPlacement: (ref) => this.dynamic.alive(ref) && this.script?.clearFootPlacement(ref.slot) === !0,
+      animationChainGoal: (ref, id, endJoint, length2, goal, weight, spanId) => this.dynamic.alive(ref) && this.script?.chainGoal(ref.slot, id, endJoint, length2, goal, weight, spanId) === !0,
+      animationClearChain: (ref, id) => this.dynamic.alive(ref) && this.script?.clearChain(ref.slot, id) === !0,
+      animationRootMotion: (ref, joint, spanId) => this.dynamic.alive(ref) && this.script?.rootMotion(ref.slot, joint, spanId) === !0,
+      animationTakeRootMotion: (ref) => this.dynamic.alive(ref) ? this.script?.takeRootMotion(ref.slot) ?? ORIGIN : ORIGIN,
       overlapSpheres,
       overlapBoxes,
       gamepadAxis: (pad, axis) => services.gamepads?.axis(pad, axis) ?? 0,
@@ -14518,6 +12533,51 @@ var World = class {
     let player = this.clips.detach(slot);
     return this.visibility++, player;
   }
+  /**
+   * The skin an entity plays: its own, or with `clips_from` (decision 0223) the clips of the source skeleton retargeted
+   * onto it. A skeleton that does not map, or a retarget that fails, is `E8110` once per declaration; the entity keeps
+   * its own clips.
+   */
+  clipsFromSkin(resolved, own2) {
+    let source = resolved.clipsFrom;
+    if (source === void 0) return own2;
+    let byTarget = this.retargets.get(source);
+    byTarget === void 0 && (byTarget = /* @__PURE__ */ new Map(), this.retargets.set(source, byTarget));
+    let result = byTarget.get(own2);
+    if (result === void 0) {
+      try {
+        if (this.animation === void 0) throw new RangeError("the animation module is not loaded");
+        result = this.animation.retargetHumanoid(source, own2);
+      } catch (error) {
+        if (!(error instanceof RangeError)) throw error;
+        result = error.message;
+      }
+      byTarget.set(own2, result);
+    }
+    if (typeof result != "string") return result;
+    if (!this.retargetReported.has(resolved.symbol)) {
+      this.retargetReported.add(resolved.symbol);
+      let span = spanOfSymbol(this.manifest, resolved.symbol);
+      this.report(
+        makeRuntimeDiagnostic("E8110", {
+          phase: this.phase,
+          message: `The clips_from of '${resolved.name}' could not be retargeted: ${result}. The entity keeps its own clips.`,
+          source: span === void 0 ? null : resolveSpan(this.manifest, span)
+        })
+      );
+    }
+    return own2;
+  }
+  /** A composition command's diagnostic, located at the call of the program. */
+  reportScript(code, slot, spanId, message) {
+    this.report(
+      makeRuntimeDiagnostic(code, {
+        phase: this.phase,
+        message,
+        source: Number.isInteger(spanId) && spanId >= 0 ? resolveSpan(this.manifest, spanId) : this.entitySource(slot)
+      })
+    );
+  }
   trackMotion(slot, resolved, spawned = !1) {
     resolved.particles !== void 0 && this.particles.add({
       slot,
@@ -14532,7 +12592,7 @@ var World = class {
     });
     let descriptor = resolved.mesh?.descriptor;
     if (descriptor?.kind === "asset" && descriptor.skin !== void 0) {
-      this.clips.addSkin(slot, descriptor.skin, resolved.clip?.name);
+      this.clips.addSkin(slot, this.clipsFromSkin(resolved, descriptor.skin), resolved.clip?.name);
       return;
     }
     if (resolved.clip !== void 0 && (this.clipPoses[slot] = { translation: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0, w: 1 }, scale: { x: 1, y: 1, z: 1 } }, this.clips.add({ slot, duration: resolved.clip.duration, channels: resolved.clip.channels }), spawned))
@@ -15207,22 +13267,22 @@ function resourceSignature(instance) {
 }
 var MaterialStore = class {
   /** `images`: the decoded image files that instances' texture params may name (`spec/assets.md` section 5). */
-  constructor(device, registry, plan, structure2, writers, textures, images = /* @__PURE__ */ new Map(), mipmaps) {
+  constructor(device, registry, plan, structure, writers, textures, images = /* @__PURE__ */ new Map(), mipmaps) {
     this.device = device;
     this.registry = registry;
     this.plan = plan;
     this.writers = writers;
     this.mipmaps = mipmaps;
     this.builtins = new BuiltinResources(registry, device.queue, textures), this.assetTextures = new AssetTextures(registry, device.queue, images, mipmaps);
-    for (let prefab of structure2.prefabs ?? [])
+    for (let prefab of structure.prefabs ?? [])
       for (let resource of prefab.material?.resources ?? [])
         "asset" in resource && this.assetTextures.textureView(resource.asset);
     let counts = /* @__PURE__ */ new Map();
-    for (let instance of structure2.instances) {
+    for (let instance of structure.instances) {
       let layout = instance.material.layout;
       layout !== null && counts.set(layout.id, (counts.get(layout.id) ?? 0) + 1);
     }
-    for (let instance of structure2.instances)
+    for (let instance of structure.instances)
       this.add(instance, counts.get(instance.material.layout?.id ?? "") ?? 1);
   }
   device;
@@ -15605,16 +13665,40 @@ var MeshCache = class {
   }
 };
 
+// src/mesh/skinning.ts
+function deformSkin(skin, palette, positions, normals, outPositions, outNormals, tangents, outTangents) {
+  if (tangents === void 0 != (outTangents === void 0) || tangents !== void 0 && (normals === void 0 || tangents.length !== skin.indices.length * 4 || outTangents.length !== tangents.length)) throw new RangeError("tangent skinning requires normals and matching packed vec4 input/output");
+  for (let v = 0; v < skin.indices.length; v++) {
+    let ids = skin.indices[v], ws = skin.weights[v], a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0, h = 0, i = 0, tx = 0, ty = 0, tz = 0;
+    for (let k = 0; k < 4; k++) {
+      let w = ws[k];
+      if (w === 0) continue;
+      let j = ids[k] * 16;
+      a += palette[j] * w, b += palette[j + 4] * w, c += palette[j + 8] * w, d += palette[j + 1] * w, e += palette[j + 5] * w, f += palette[j + 9] * w, g += palette[j + 2] * w, h += palette[j + 6] * w, i += palette[j + 10] * w, tx += palette[j + 12] * w, ty += palette[j + 13] * w, tz += palette[j + 14] * w;
+    }
+    let at3 = v * 3, x = positions[at3], y = positions[at3 + 1], z = positions[at3 + 2];
+    if (outPositions[at3] = a * x + b * y + c * z + tx, outPositions[at3 + 1] = d * x + e * y + f * z + ty, outPositions[at3 + 2] = g * x + h * y + i * z + tz, normals !== void 0) {
+      let nx = normals[at3], ny = normals[at3 + 1], nz = normals[at3 + 2], det = a * (e * i - f * h) + b * (f * g - d * i) + c * (d * h - e * g), sign2 = det < 0 ? -1 : 1, ox = ((e * i - f * h) * nx + (f * g - d * i) * ny + (d * h - e * g) * nz) * sign2, oy = ((c * h - b * i) * nx + (a * i - c * g) * ny + (b * g - a * h) * nz) * sign2, oz = ((b * f - c * e) * nx + (c * d - a * f) * ny + (a * e - b * d) * nz) * sign2, length2 = Math.hypot(ox, oy, oz);
+      if (length2 < 1e-10 && (ox = nx, oy = ny, oz = nz, length2 = Math.hypot(nx, ny, nz) || 1), outNormals[at3] = ox / length2, outNormals[at3 + 1] = oy / length2, outNormals[at3 + 2] = oz / length2, tangents !== void 0 && outTangents !== void 0) {
+        let t = v * 4, sx = tangents[t], sy = tangents[t + 1], sz = tangents[t + 2], x2 = a * sx + b * sy + c * sz, y2 = d * sx + e * sy + f * sz, z2 = g * sx + h * sy + i * sz, nx2 = outNormals[at3], ny2 = outNormals[at3 + 1], nz2 = outNormals[at3 + 2], projection = x2 * nx2 + y2 * ny2 + z2 * nz2;
+        x2 -= nx2 * projection, y2 -= ny2 * projection, z2 -= nz2 * projection;
+        let magnitude = Math.hypot(x2, y2, z2), valid2 = magnitude > 1e-10 && det !== 0 && tangents[t + 3] !== 0;
+        outTangents[t] = valid2 ? x2 / magnitude : 0, outTangents[t + 1] = valid2 ? y2 / magnitude : 0, outTangents[t + 2] = valid2 ? z2 / magnitude : 0, outTangents[t + 3] = valid2 ? tangents[t + 3] * sign2 : 0;
+      }
+    }
+  }
+}
+
 // src/mesh/skin-bounds.ts
 function skinWorldScale(matrix) {
   let maximum = 0;
   for (let row = 0; row < 3; row++) {
     let sum = 0;
     for (let col = 0; col < 3; col++) {
-      let dot4 = 0;
+      let dot2 = 0;
       for (let k = 0; k < 3; k++)
-        dot4 += matrix[row * 4 + k] * matrix[col * 4 + k];
-      sum += Math.abs(dot4);
+        dot2 += matrix[row * 4 + k] * matrix[col * 4 + k];
+      sum += Math.abs(dot2);
     }
     maximum = Math.max(maximum, sum);
   }
@@ -16047,9 +14131,9 @@ function putBatch(out, index, start, count, firstInstance) {
   let existing = out[index];
   existing === void 0 ? out.push({ start, count, firstInstance }) : (existing.start = start, existing.count = count, existing.firstInstance = firstInstance);
 }
-function instancingCandidates(structure2, blockOf, pipelineKeyOf) {
+function instancingCandidates(structure, blockOf, pipelineKeyOf) {
   let groups = /* @__PURE__ */ new Map();
-  for (let entity of structure2.entities) {
+  for (let entity of structure.entities) {
     if (entity.mesh === null || entity.instance === null) continue;
     let { material } = entity.instance;
     if (material.shader.instancedVertexEntry === void 0) continue;
@@ -16059,12 +14143,12 @@ function instancingCandidates(structure2, blockOf, pipelineKeyOf) {
   let materials = /* @__PURE__ */ new Set(), capacity = 0;
   for (let group of groups.values())
     group.count < 2 || (materials.add(group.material), capacity += group.count);
-  for (let entity of structure2.entities) {
+  for (let entity of structure.entities) {
     if (entity.particles === void 0 || entity.mesh === null || entity.instance === null) continue;
     let { material } = entity.instance;
     material.shader.instancedVertexEntry !== void 0 && materials.add(material.id);
   }
-  for (let prefab of structure2.prefabs) {
+  for (let prefab of structure.prefabs) {
     let material = prefab.material?.material;
     prefab.mesh === null || material === void 0 || material.shader.instancedVertexEntry === void 0 || materials.add(material.id);
   }
@@ -16525,7 +14609,7 @@ function pipelineDescriptor(plan, request) {
     depthStencil: { format: DEPTH_FORMAT, depthCompare: DEPTH_COMPARE, depthWriteEnabled: request.blended !== !0 }
   };
 }
-function errorText4(error) {
+function errorText5(error) {
   return error instanceof Error ? error.message === "" ? error.name : error.message : String(error);
 }
 var PipelineCache = class {
@@ -16565,7 +14649,7 @@ var PipelineCache = class {
     this.device.pushErrorScope("validation");
     let creation = this.registry.createRenderPipelineAsync(descriptor).then(
       (pipeline) => ({ pipeline, error: void 0 }),
-      (error) => ({ pipeline: void 0, error: errorText4(error) })
+      (error) => ({ pipeline: void 0, error: errorText5(error) })
     ), scope = this.device.popErrorScope().then(
       (error) => error === null ? void 0 : error.message,
       // popErrorScope rejects when the device is lost; the loss is reported through device.lost.
@@ -16811,31 +14895,31 @@ var Renderer = class {
   failedMaterials = /* @__PURE__ */ new Set();
   constructor(options) {
     this.options = options;
-    let { device, registry, structure: structure2, writers, manifest } = options;
+    let { device, registry, structure, writers, manifest } = options;
     if (options.blendedSeed !== void 0) for (let [id, made] of options.blendedSeed) this.blended.set(id, made);
-    for (let material of structure2.materials) this.materialsById.set(material.id, material);
-    let frameWriters = writers.get(structure2.frameLayout.id), objectWriters = writers.get(structure2.objectLayout.id);
+    for (let material of structure.materials) this.materialsById.set(material.id, material);
+    let frameWriters = writers.get(structure.frameLayout.id), objectWriters = writers.get(structure.objectLayout.id);
     if (frameWriters === void 0 || objectWriters === void 0) throw new Error("internal error: no writers for the built-in blocks");
-    this.writeViewProj = fieldWriter(frameWriters, "view_proj", structure2.frameLayout.id), this.writeCameraPosition = fieldWriter(frameWriters, "camera_position", structure2.frameLayout.id), this.writeLightCount = fieldWriter(frameWriters, "light_count", structure2.frameLayout.id), this.writeAmbient = fieldWriter(frameWriters, "ambient", structure2.frameLayout.id), this.writeExposure = fieldWriter(frameWriters, "exposure", structure2.frameLayout.id), this.writeLights = fieldWriter(frameWriters, "lights", structure2.frameLayout.id), this.packedLights = emptyPackedLights(structure2.lightCapacity), this.lightSource = {
+    this.writeViewProj = fieldWriter(frameWriters, "view_proj", structure.frameLayout.id), this.writeCameraPosition = fieldWriter(frameWriters, "camera_position", structure.frameLayout.id), this.writeLightCount = fieldWriter(frameWriters, "light_count", structure.frameLayout.id), this.writeAmbient = fieldWriter(frameWriters, "ambient", structure.frameLayout.id), this.writeExposure = fieldWriter(frameWriters, "exposure", structure.frameLayout.id), this.writeLights = fieldWriter(frameWriters, "lights", structure.frameLayout.id), this.packedLights = emptyPackedLights(structure.lightCapacity), this.lightSource = {
       light: (entity) => {
         let light = options.world.entities[entity]?.light;
         if (light == null) throw new Error(`internal error: entity ${String(entity)} has no light record`);
         return light;
       },
       worldMatrix: (entity) => options.world.worldMatrix(entity)
-    }, this.writeModel = fieldWriter(objectWriters, "model", structure2.objectLayout.id), this.writeNormalMatrix = fieldWriter(objectWriters, "normal_matrix", structure2.objectLayout.id);
+    }, this.writeModel = fieldWriter(objectWriters, "model", structure.objectLayout.id), this.writeNormalMatrix = fieldWriter(objectWriters, "normal_matrix", structure.objectLayout.id);
     let { ambientColor, ambientIntensity } = manifest.scene.fields;
-    this.ambient = Object.freeze({ x: ambientColor[0] * ambientIntensity, y: ambientColor[1] * ambientIntensity, z: ambientColor[2] * ambientIntensity }), this.frameArena = new UniformArena(device, registry, structure2.frameLayout, { initialCapacity: 1 }), this.frameSlot = this.frameArena.allocate();
-    let drawable = structure2.entities.filter((entity) => entity.mesh !== null);
-    this.objectArena = new UniformArena(device, registry, structure2.objectLayout, { dynamicOffset: !0, initialCapacity: Math.max(1, drawable.length) });
+    this.ambient = Object.freeze({ x: ambientColor[0] * ambientIntensity, y: ambientColor[1] * ambientIntensity, z: ambientColor[2] * ambientIntensity }), this.frameArena = new UniformArena(device, registry, structure.frameLayout, { initialCapacity: 1 }), this.frameSlot = this.frameArena.allocate();
+    let drawable = structure.entities.filter((entity) => entity.mesh !== null);
+    this.objectArena = new UniformArena(device, registry, structure.objectLayout, { dynamicOffset: !0, initialCapacity: Math.max(1, drawable.length) });
     for (let entity of drawable) {
       this.objectSlots[entity.index] = this.objectArena.allocate();
       let centre = entity.mesh === null ? void 0 : options.meshes.get(entity.mesh.id).boundingCenter;
       centre !== void 0 && (centre[0] !== 0 || centre[1] !== 0 || centre[2] !== 0) && (this.localCentres[entity.index] = centre);
     }
-    this.sphereCentres = new Float64Array(structure2.entities.length * 3), this.sphereScales = new Float64Array(structure2.entities.length), this.entityMatrices = new Float32Array(structure2.entities.length * INSTANCE_FLOATS), this.entityWords = new Uint32Array(this.entityMatrices.buffer), this.objectStale = new Uint8Array(structure2.entities.length).fill(1), this.recordOf = new Int32Array(structure2.entities.length).fill(-1);
+    this.sphereCentres = new Float64Array(structure.entities.length * 3), this.sphereScales = new Float64Array(structure.entities.length), this.entityMatrices = new Float32Array(structure.entities.length * INSTANCE_FLOATS), this.entityWords = new Uint32Array(this.entityMatrices.buffer), this.objectStale = new Uint8Array(structure.entities.length).fill(1), this.recordOf = new Int32Array(structure.entities.length).fill(-1);
     let candidates = options.instancing === !1 ? void 0 : instancingCandidates(
-      structure2,
+      structure,
       (instance) => options.materials.blockOf(instance),
       (material) => options.pipelines.get(material.id)?.key ?? ""
     ), capacity = candidates?.capacity ?? 0;
@@ -16938,11 +15022,11 @@ var Renderer = class {
         if (record2 === void 0 || !this.options.meshes.positionsAvailable(draw.entity)) return [];
         let computed = draw.gpuMesh.computedPositions === !0, authored = record2.bounds_radius > 0 && !computed, source = authored ? "authored" : computed ? "compute" : draw.vertexDeformation === 1 ? "unbounded" : skin === void 0 ? "mesh" : "animated", unavailable = source === "unbounded" || !authored && skin !== void 0 && !this.options.meshes.skinBoundsCurrent(draw.entity, skin), sphere = { x: 0, y: 0, z: 0, radius: 0 }, model = world.worldMatrix(draw.entity), center = authored ? [record2.bounds_center.x, record2.bounds_center.y, record2.bounds_center.z] : draw.gpuMesh.boundingCenter;
         worldBoundingSphere(model, authored ? record2.bounds_radius : draw.gpuMesh.boundingRadius, sphere, center), (authored || computed || skin !== void 0) && (sphere.radius = (authored ? record2.bounds_radius : draw.gpuMesh.boundingRadius) * skinWorldScale(model));
-        let finite6 = !unavailable && [sphere.x, sphere.y, sphere.z, sphere.radius].every(Number.isFinite);
+        let finite5 = !unavailable && [sphere.x, sphere.y, sphere.z, sphere.radius].every(Number.isFinite);
         return [{ slot: draw.entity, value: {
           source,
-          sphere: finite6 ? { center: { x: sphere.x, y: sphere.y, z: sphere.z }, radius: sphere.radius } : null,
-          culled: this.cullingEnabled && finite6 && !sphereIntersectsFrustum(planes, sphere.x, sphere.y, sphere.z, sphere.radius)
+          sphere: finite5 ? { center: { x: sphere.x, y: sphere.y, z: sphere.z }, radius: sphere.radius } : null,
+          culled: this.cullingEnabled && finite5 && !sphereIntersectsFrustum(planes, sphere.x, sphere.y, sphere.z, sphere.radius)
         } }];
       })
     };
@@ -16974,7 +15058,7 @@ var Renderer = class {
   }
   /** The current draw list (rebuilt when visibility or the set of failed materials changed). */
   drawList() {
-    let { world, structure: structure2, pipelines, meshes, materials } = this.options;
+    let { world, structure, pipelines, meshes, materials } = this.options;
     if (meshes.refreshPositions(), this.drawsPositionVersion !== meshes.positionVersion && (this.positionBoundsDirty = !0, this.cullDirty = !0), this.drawsVersion === world.visibilityVersion && this.drawsBlockVersion === materials.blockVersion && this.drawsPopulation === world.dynamic.version && this.drawsPositionVersion === meshes.positionVersion && this.drawsBlendedVersion === this.blendedVersion)
       return this.draws;
     let items = [], list = (entity, visible, order) => {
@@ -17001,8 +15085,8 @@ var Renderer = class {
         ...blended === void 0 ? {} : { translucent: !0 }
       });
     };
-    for (let entity of structure2.entities) list(entity, world.entities[entity.index]?.visible, entity.index);
-    for (let spawned of world.dynamic.live) list(spawned.resolved, spawned.record.visible, structure2.entities.length + spawned.order);
+    for (let entity of structure.entities) list(entity, world.entities[entity.index]?.visible, entity.index);
+    for (let spawned of world.dynamic.live) list(spawned.resolved, spawned.record.visible, structure.entities.length + spawned.order);
     return this.draws = items.sort(compareDraws), this.drawsVersion = world.visibilityVersion, this.drawsPositionVersion = meshes.positionVersion, this.drawsBlockVersion = materials.blockVersion, this.drawsPopulation = world.dynamic.version, this.drawsBlendedVersion = this.blendedVersion, this.draws;
   }
   /** Renders one frame (phase 7). Returns false when the target has no pixels (nothing is drawn or uploaded). */
@@ -17590,20 +15674,21 @@ function missingModule(material, phase) {
   };
 }
 async function startScene(options) {
-  let { manifest, structure: structure2, program, device, registry, surface, modules, report, services } = options, lightingProblem = sceneLightingProblem(manifest, options.rendering);
+  let { manifest, structure, program, device, registry, surface, modules, report, services } = options, lightingProblem = sceneLightingProblem(manifest, options.rendering);
   if (lightingProblem !== void 0) return { ok: !1, diagnostics: [makeRuntimeDiagnostic("E8051", { phase: "runtime:mount", message: lightingProblem })] };
   let additive = new Set(options.rendering?.additiveMaterials ?? []), blendMode = (material) => additive.has(material.id) ? "additive" : "alpha";
   options.assertActive?.();
-  let generation = registry.generation, plan = options.bindingPlan ?? new BindingPlan(registry, structure2.frameLayout, structure2.objectLayout), mipmaps = device.createCommandEncoder !== void 0 && device.createComputePipeline !== void 0 && [...options.assets?.images.values() ?? []].some((image) => image.width > 1 || image.height > 1) ? new MipmapGenerator({ queue: device.queue, createCommandEncoder: device.createCommandEncoder.bind(device) }, registry) : void 0, materials = new MaterialStore(device, registry, plan, structure2, program.writers, options.textures, options.assets?.images, mipmaps), meshes, renderer, lighting, committed = !1;
+  let generation = registry.generation, plan = options.bindingPlan ?? new BindingPlan(registry, structure.frameLayout, structure.objectLayout), mipmaps = device.createCommandEncoder !== void 0 && device.createComputePipeline !== void 0 && [...options.assets?.images.values() ?? []].some((image) => image.width > 1 || image.height > 1) ? new MipmapGenerator({ queue: device.queue, createCommandEncoder: device.createCommandEncoder.bind(device) }, registry) : void 0, materials = new MaterialStore(device, registry, plan, structure, program.writers, options.textures, options.assets?.images, mipmaps), meshes, renderer, lighting, committed = !1;
   try {
     let { recover } = options, world, bindings;
     if (recover === void 0) {
       let fresh = new World({
         manifest,
-        structure: structure2,
+        structure,
         params: materials,
         report,
-        prefabs: buildPrefabRuntimes(structure2.prefabs, program.prefabs),
+        prefabs: buildPrefabRuntimes(structure.prefabs, program.prefabs),
+        ...options.animation === void 0 ? {} : { animation: options.animation },
         ...services === void 0 ? {} : { services }
       }), freshBindings = new Bindings(manifest, program.scene.bindings, fresh);
       options.onWorld?.(fresh), fresh.initialise(program.scene.init, () => {
@@ -17611,11 +15696,11 @@ async function startScene(options) {
       }), world = fresh, bindings = freshBindings;
     } else
       ({ world, bindings } = recover), world.rebindParams(materials);
-    if (options.assertActive?.(), materials.shareIdentical(), meshes = new MeshStore(registry, device.queue, void 0, device.limits.maxBufferSize, structure2.meshes.some((m) => m.descriptor.kind === "asset" && m.descriptor.skin !== void 0) ? device : void 0, structure2.materials.some((m) => m.shader.vertexAttributes.includes("tangent"))), meshes.upload(structure2.meshes, options.assets?.files), structure2.materials.some((material) => material.shader.lighting === 1)) {
+    if (options.assertActive?.(), materials.shareIdentical(), meshes = new MeshStore(registry, device.queue, void 0, device.limits.maxBufferSize, structure.meshes.some((m) => m.descriptor.kind === "asset" && m.descriptor.skin !== void 0) ? device : void 0, structure.materials.some((m) => m.shader.vertexAttributes.includes("tangent"))), meshes.upload(structure.meshes, options.assets?.files), structure.materials.some((material) => material.shader.lighting === 1)) {
       device.pushErrorScope("validation");
       let validation;
       try {
-        lighting = new SceneLighting(device, registry, plan, manifest, options.rendering, { structure: structure2, modules });
+        lighting = new SceneLighting(device, registry, plan, manifest, options.rendering, { structure, modules });
       } finally {
         validation = await device.popErrorScope();
       }
@@ -17624,18 +15709,18 @@ async function startScene(options) {
     }
     let pipelines = options.pipelineCache ?? new PipelineCache(device, registry, plan, manifest), phase = recover === void 0 ? void 0 : "runtime:device", instanced = new Set(
       options.instancing === !1 ? [] : instancingCandidates(
-        structure2,
+        structure,
         (instance) => materials.blockOf(instance),
         (material) => materialPipelineKey(material, surface.colorFormat)
       ).materials
     ), emitterMaterials = /* @__PURE__ */ new Map();
-    for (let entity of structure2.entities)
+    for (let entity of structure.entities)
       entity.particles !== void 0 && entity.instance !== null && emitterMaterials.set(entity.instance.material.id, entity.instance.material);
-    for (let prefab of structure2.prefabs)
+    for (let prefab of structure.prefabs)
       prefab.particles !== void 0 && prefab.material !== null && emitterMaterials.set(prefab.material.material.id, prefab.material.material);
     for (let [id, material] of emitterMaterials) material.shader.instancedVertexEntry !== void 0 && instanced.add(id);
     let results = await Promise.all(
-      structure2.materials.map(async (material) => {
+      structure.materials.map(async (material) => {
         let module = modules.get(material.shader.hash);
         if (module === void 0) {
           if (recover !== void 0) return missingModule(material, phase);
@@ -17654,7 +15739,7 @@ async function startScene(options) {
     options.assertActive?.();
     let failed = [], byMaterial = /* @__PURE__ */ new Map();
     if (results.forEach((result, index) => {
-      let material = structure2.materials[index];
+      let material = structure.materials[index];
       material !== void 0 && (result.ok ? byMaterial.set(material.id, {
         key: result.key,
         pipeline: result.pipeline,
@@ -17665,12 +15750,12 @@ async function startScene(options) {
     let blendedSeed = /* @__PURE__ */ new Map(), wanted = /* @__PURE__ */ new Map(), want = (material, instancedVariant) => {
       !canBlend(material) && !additive.has(material.id) || modules.get(material.shader.hash) === void 0 || !byMaterial.has(material.id) || instancedVariant && material.shader.instancedVertexEntry === void 0 || wanted.set(blendedKey(material.id, instancedVariant), { material, instanced: instancedVariant });
     };
-    for (let entity of structure2.entities) {
+    for (let entity of structure.entities) {
       if (entity.mesh === null || entity.instance === null) continue;
       let { material } = entity.instance;
       !alwaysBlends(material) && !materials.isTranslucent(entity.instance.index) && !additive.has(material.id) || (want(material, !1), entity.particles !== void 0 && want(material, !0));
     }
-    for (let prefab of structure2.prefabs) {
+    for (let prefab of structure.prefabs) {
       let material = prefab.material?.material;
       prefab.mesh === null || material === void 0 || !alwaysBlends(material) && !additive.has(material.id) || (want(material, !1), prefab.particles !== void 0 && want(material, !0));
     }
@@ -17686,7 +15771,7 @@ async function startScene(options) {
       registry,
       surface,
       manifest,
-      structure: structure2,
+      structure,
       world,
       writers: program.writers,
       plan,
@@ -18126,6 +16211,44 @@ function checkProgram(program, manifest) {
   return diagnostics.length > 0 || scene === void 0 ? { ok: !1, diagnostics } : { ok: !0, program: { scene, prefabs, writers } };
 }
 
+// src/scene/skin-problem.ts
+function skinProblem(skin, vertices) {
+  let n = skin.nodes.length;
+  if (n > 256 || skin.joints.length > 128) return "skin exceeds the 256-node or 128-joint profile";
+  let index = (i, max2) => Number.isInteger(i) && i >= 0 && i < max2, finite5 = (values, length2) => values.length === length2 && values.every(Number.isFinite);
+  if (!index(skin.meshNode, n) || skin.joints.length === 0 || skin.joints.some((j) => !index(j, n)) || skin.inverseBind.length !== skin.joints.length || skin.inverseBind.some((m) => !finite5(m, 16))) return "skin node or inverse-bind count is invalid";
+  if (skin.indices.length !== vertices || skin.weights.length !== vertices) return "skin influences do not match the vertex count";
+  for (let i = 0; i < n; i++) {
+    let node = skin.nodes[i];
+    if (node.parent !== -1 && !index(node.parent, n) || !finite5(node.translation, 3) || !finite5(node.rotation, 4) || !finite5(node.scale, 3) || node.scale.some((v) => v <= 0) || Math.hypot(...node.rotation) < 1e-8) return "invalid skeletal bind transform";
+    let parent = i;
+    for (let depth = 0; parent >= 0; depth++) {
+      if (!index(parent, n)) return "invalid skeletal bind transform";
+      if (depth >= n) return "cyclic skeletal hierarchy";
+      parent = skin.nodes[parent].parent;
+    }
+  }
+  for (let i = 0; i < vertices; i++) {
+    let weights = skin.weights[i];
+    if (skin.indices[i].length !== 4 || skin.indices[i].some((j) => !index(j, skin.joints.length)) || !finite5(weights, 4) || weights.some((w) => w < 0) || Math.abs(weights.reduce((a, b) => a + b, 0) - 1) > 1e-3) return "invalid vertex joint indices or weights";
+  }
+  let names = /* @__PURE__ */ new Set();
+  for (let clip of skin.clips) {
+    if (names.has(clip.name)) return "duplicate skeletal clip name";
+    if (!Number.isFinite(clip.duration) || clip.duration < 0) return "invalid skeletal clip duration";
+    names.add(clip.name);
+    let channels = /* @__PURE__ */ new Set();
+    for (let c of clip.channels) {
+      let key = String(c.node) + c.path;
+      if (!index(c.node, n) || channels.has(key) || c.times.length === 0 || c.values.length !== c.times.length * (c.path === "rotation" ? 4 : 3) || c.values.some((v) => !Number.isFinite(v)) || c.times.some((t, i) => !Number.isFinite(t) || t < 0 || t > clip.duration || i > 0 && t <= c.times[i - 1]) || c.path === "scale" && c.values.some((v) => v <= 0)) return "invalid skeletal clip channel";
+      if (c.path === "rotation") {
+        for (let k = 0; k < c.values.length; k += 4) if (Math.hypot(...c.values.slice(k, k + 4)) < 1e-8) return "invalid skeletal rotation";
+      }
+      channels.add(key);
+    }
+  }
+}
+
 // src/scene/structure.ts
 var FRAME_LAYOUT_ID = "builtin:frame", OBJECT_LAYOUT_ID = "builtin:object", FRAME_MEMBERS = ["view_proj", "camera_position", "light_count", "ambient", "lights"], OBJECT_MEMBERS = ["model", "normal_matrix"], VERTEX_ATTRIBUTE_ORDER = ["position", "normal", "uv", "tangent"];
 function broken(field, message) {
@@ -18262,7 +16385,16 @@ function resolveStructure(manifest) {
     }
     meshes.push({ id: mesh.id, descriptor: mesh });
   });
-  let meshById = new Map(meshes.map((mesh) => [mesh.id, mesh])), instances = [];
+  let meshById = new Map(meshes.map((mesh) => [mesh.id, mesh])), clipSources = [];
+  (manifest.clipSources ?? []).forEach((skin, index) => {
+    let problem = skinProblem(skin, skin.indices.length);
+    problem !== void 0 ? diagnostics.push(broken(`clipSources[${String(index)}]`, problem)) : clipSources[index] = skin;
+  });
+  let clipSource = (field, owner, index) => {
+    if (index === void 0) return null;
+    let source = clipSources[index];
+    return source === void 0 && (manifest.clipSources ?? [])[index] === void 0 && diagnostics.push(broken(`${field}.clipsFrom`, `${owner} takes clips from clipSources[${String(index)}], which the manifest lacks.`)), source;
+  }, instances = [];
   scene.materialInstances.forEach((instance, index) => {
     let field = `scene.materialInstances[${String(index)}]`;
     if (instance.index !== index) {
@@ -18331,7 +16463,8 @@ function resolveStructure(manifest) {
         return;
       }
     }
-    entities.push({
+    let clipsFrom = clipSource(field, `entity '${entity.name}'`, entity.clipsFrom);
+    clipsFrom !== void 0 && entities.push({
       index,
       name: entity.name,
       symbol: entity.symbol,
@@ -18339,7 +16472,8 @@ function resolveStructure(manifest) {
       mesh,
       instance,
       ...entity.particles === void 0 ? {} : { particles: entity.particles },
-      ...entity.clip === void 0 ? {} : { clip: entity.clip }
+      ...entity.clip === void 0 ? {} : { clip: entity.clip },
+      ...clipsFrom === null ? {} : { clipsFrom }
     });
   });
   let lightsNode = frameLayout?.root.members.find((member) => member.name === "lights")?.node, lightCapacity = lightsNode?.kind === "array" ? lightsNode.length : 0;
@@ -18418,7 +16552,8 @@ function resolveStructure(manifest) {
     }
     for (let param of prefab.material?.params ?? [])
       param.class === "bound" && prefab.bindings[param.binding] === void 0 && diagnostics.push(broken(`${field}.material.params`, `the param '${param.name}' of prefab '${prefab.name}' names the missing binding ${String(param.binding)}.`));
-    prefabs.push({
+    let clipsFrom = clipSource(field, `prefab '${prefab.name}'`, prefab.clipsFrom);
+    clipsFrom !== void 0 && prefabs.push({
       symbol: prefab.symbol,
       name: prefab.name,
       index,
@@ -18434,7 +16569,8 @@ function resolveStructure(manifest) {
       span: prefab.span,
       ...prefab.tag === void 0 ? {} : { tag: prefab.tag },
       ...prefab.particles === void 0 ? {} : { particles: prefab.particles },
-      ...prefab.clip === void 0 ? {} : { clip: prefab.clip }
+      ...prefab.clip === void 0 ? {} : { clip: prefab.clip },
+      ...clipsFrom === null ? {} : { clipsFrom }
     });
   }), diagnostics.length > 0 || frameLayout === void 0 || objectLayout === void 0 || camera === void 0 ? { ok: !1, diagnostics } : {
     ok: !0,
@@ -18618,7 +16754,7 @@ var GameSaves = class {
       try {
         this.legacyNamespace === void 0 ? this.storage.removeItem(saveKey(this.namespace)) : this.storage.setItem(saveKey(this.namespace), JSON.stringify({ format: 1, values: {} }));
       } catch (error) {
-        this.report({ code: "W5403", message: `Clearing the saved data failed: ${errorText5(error)}.` });
+        this.report({ code: "W5403", message: `Clearing the saved data failed: ${errorText6(error)}.` });
       }
   }
   remember(entries, state) {
@@ -18645,7 +16781,7 @@ var GameSaves = class {
         typeof item == "object" && item !== null && typeof item.type == "string" && "value" in item && (out[name] = item);
       return out;
     } catch (error) {
-      return this.warnOnce("document", `The saved data under '${saveKey(this.namespace)}' cannot be read (${errorText5(error)}); it is ignored until the next save.`), {};
+      return this.warnOnce("document", `The saved data under '${saveKey(this.namespace)}' cannot be read (${errorText6(error)}); it is ignored until the next save.`), {};
     }
   }
   write(entries, state) {
@@ -18656,14 +16792,14 @@ var GameSaves = class {
     try {
       this.storage.setItem(saveKey(this.namespace), JSON.stringify({ format: 1, values }));
     } catch (error) {
-      this.report({ code: "W5403", message: `Saving failed: ${errorText5(error)}.` });
+      this.report({ code: "W5403", message: `Saving failed: ${errorText6(error)}.` });
     }
   }
   warnOnce(key, message, code = "W5402") {
     this.warned.has(key) || (this.warned.add(key), this.report({ code, message }));
   }
 };
-function errorText5(error) {
+function errorText6(error) {
   return error instanceof Error ? error.message : String(error);
 }
 
@@ -19227,11 +17363,11 @@ function carryValue(value) {
 }
 var RecoveryAbandoned = class extends Error {
 };
-function errorText6(error) {
+function errorText7(error) {
   return error instanceof Error ? error.message === "" ? error.name : error.message : String(error);
 }
 function attemptFailureText(error) {
-  return error instanceof MtekMountError ? error.diagnostics.map((diagnostic2) => [diagnostic2.message, ...diagnostic2.notes].join(" ")).join(" ") : errorText6(error);
+  return error instanceof MtekMountError ? error.diagnostics.map((diagnostic2) => [diagnostic2.message, ...diagnostic2.notes].join(" ")).join(" ") : errorText7(error);
 }
 var MountedApp = class {
   constructor(deps) {
@@ -19256,7 +17392,7 @@ var MountedApp = class {
         this.fail(
           makeRuntimeDiagnostic("E8050", {
             phase: "runtime:render",
-            message: `The frame loop stopped because a frame threw: ${errorText6(error)}`
+            message: `The frame loop stopped because a frame threw: ${errorText7(error)}`
           })
         );
       }
@@ -19301,7 +17437,7 @@ var MountedApp = class {
       },
       (id, error) => {
         let current = this.deps.manifest, compute = current.computePrograms?.find((compute2) => compute2.definition.id === id);
-        this.report(makeRuntimeDiagnostic("E8050", { phase: "runtime:update", message: `Compute '${id}' failed: ${errorText6(error)}`, ...compute === void 0 ? {} : { source: resolveSpan(current, compute.span) } }));
+        this.report(makeRuntimeDiagnostic("E8050", { phase: "runtime:update", message: `Compute '${id}' failed: ${errorText7(error)}`, ...compute === void 0 ? {} : { source: resolveSpan(current, compute.span) } }));
       },
       () => this.deps.scene
     );
@@ -19336,7 +17472,7 @@ var MountedApp = class {
     this.extensions = new ExtensionHost({ apiVersion: 1, ...access, service: (name) => services[name], get physics() {
       return physics();
     } }, (id, error) => {
-      this.report(makeRuntimeDiagnostic("E8050", { phase: "runtime:update", message: `Extension '${id}' failed and was disabled: ${errorText6(error)}` }));
+      this.report(makeRuntimeDiagnostic("E8050", { phase: "runtime:update", message: `Extension '${id}' failed and was disabled: ${errorText7(error)}` }));
     }), this.extensions.install(extensions);
   }
   debug;
@@ -19460,7 +17596,7 @@ var MountedApp = class {
     this.sceneRequest = request;
     let seed = Math.floor(this.liveServices.random() * 4294967296) >>> 0;
     this.changeScene(request, spanId, seed).catch((error) => {
-      this.sceneChangeFailed(request, spanId, [], errorText6(error));
+      this.sceneChangeFailed(request, spanId, [], errorText7(error));
     });
   }
   async changeScene(request, spanId, seed) {
@@ -19478,7 +17614,7 @@ var MountedApp = class {
           await this.deps.environment.importModule(sceneModuleUrl(this.deps.program.baseUrl, entry.module, current.buildId))
         );
       } catch (error) {
-        this.sceneChangeFailed(request, spanId, [], `its module ${entry.module} could not be loaded (${errorText6(error)})`);
+        this.sceneChangeFailed(request, spanId, [], `its module ${entry.module} could not be loaded (${errorText7(error)})`);
         return;
       }
     }
@@ -19569,7 +17705,7 @@ var MountedApp = class {
       } catch (error) {
         let diagnostic2 = makeRuntimeDiagnostic("E8006", {
           phase: "runtime:reload",
-          message: `The candidate manifest could not be loaded from ${candidate.manifestUrl.href}: ${errorText6(error)}`,
+          message: `The candidate manifest could not be loaded from ${candidate.manifestUrl.href}: ${errorText7(error)}`,
           notes: ["field: manifestUrl"]
         });
         return report(diagnostic2), { ok: !1, diagnostics: [diagnostic2] };
@@ -19581,7 +17717,7 @@ var MountedApp = class {
       } catch (error) {
         let diagnostic2 = makeRuntimeDiagnostic("E8006", {
           phase: "runtime:reload",
-          message: `The candidate manifest is not valid JSON: ${errorText6(error)}`,
+          message: `The candidate manifest is not valid JSON: ${errorText7(error)}`,
           notes: ["field: manifest"]
         });
         return report(diagnostic2), { ok: !1, diagnostics: [diagnostic2] };
@@ -19589,10 +17725,10 @@ var MountedApp = class {
       let checkedManifest = checkManifest(json);
       if (!checkedManifest.ok) {
         let diagnostics = checkedManifest.failures.map(
-          (failure2) => makeRuntimeDiagnostic(failure2.code, {
+          (failure3) => makeRuntimeDiagnostic(failure3.code, {
             phase: "runtime:reload",
-            message: failure2.message,
-            notes: [`field: ${failure2.field}`]
+            message: failure3.message,
+            notes: [`field: ${failure3.field}`]
           })
         );
         for (let diagnostic2 of diagnostics) report(diagnostic2);
@@ -19606,10 +17742,10 @@ var MountedApp = class {
           return assertActive(), await this.prepareProgram(programOfModule(module), { kind: "reload", followScene: !1 }, report);
         }
       }
-      let structure2 = resolveStructure(manifest);
-      if (!structure2.ok) {
-        for (let diagnostic2 of structure2.diagnostics) report(diagnostic2);
-        return { ok: !1, diagnostics: structure2.diagnostics };
+      let structure = resolveStructure(manifest);
+      if (!structure.ok) {
+        for (let diagnostic2 of structure.diagnostics) report(diagnostic2);
+        return { ok: !1, diagnostics: structure.diagnostics };
       }
       let checked = checkProgram(candidate, manifest);
       if (!checked.ok) {
@@ -19667,7 +17803,7 @@ var MountedApp = class {
         return { ok: !1, diagnostics: loaded.diagnostics };
       }
       services.audio?.adopt?.(manifest, (url) => loaded.assets.has(url) ? loaded.assets.bytes(url) : void 0);
-      let started, physicsModule = this.deps.physicsModule;
+      let started, physicsModule = this.deps.physicsModule, animationModule = this.deps.animationModule;
       try {
         if (assertActive(), !manifest.subsystems.physics)
           physicsModule = void 0;
@@ -19685,11 +17821,34 @@ var MountedApp = class {
           }
           physicsModule = { url: loadedPhysics.url, backend: loadedPhysics.backend };
         }
+        assertActive();
+        let unannounced = animationMismatch(manifest, structure.structure, "runtime:reload");
+        if (unannounced !== void 0) {
+          for (let module of shaders.created) registry.release(module);
+          return report(unannounced), { ok: !1, diagnostics: [unannounced] };
+        }
+        if (manifest.subsystems.animation !== !0)
+          animationModule = void 0;
+        else if (animationModule === void 0 || animationModule.url !== animationModuleUrl(manifest, candidate.baseUrl)) {
+          let loadedAnimation = await loadAnimationBackend({
+            manifest,
+            baseUrl: candidate.baseUrl,
+            importModule: (url) => environment.importModule(url),
+            phase: "runtime:reload"
+          });
+          if (!loadedAnimation.ok) {
+            for (let module of shaders.created) registry.release(module);
+            for (let diagnostic2 of loadedAnimation.diagnostics) report(diagnostic2);
+            return { ok: !1, diagnostics: loadedAnimation.diagnostics };
+          }
+          animationModule = { url: loadedAnimation.url, backend: loadedAnimation.backend };
+        }
         assertActive(), started = await startScene({
           ...this.deps.rendering === void 0 ? {} : { rendering: this.deps.rendering },
           assertActive,
           manifest,
-          structure: structure2.structure,
+          ...animationModule === void 0 ? {} : { animation: animationModule.backend },
+          structure: structure.structure,
           program: checked.program,
           device,
           registry,
@@ -19730,6 +17889,7 @@ var MountedApp = class {
         sceneFunctions: checked.program.scene,
         restart: mode.kind === "reload" ? restart : void 0,
         physicsModule,
+        animationModule,
         ...mode.kind === "fresh" && preparation !== void 0 ? { fresh: { carry: mode.carry, preparation } } : {}
       }, preparedScene = void 0, { ok: !0 };
     } catch (error) {
@@ -19743,7 +17903,7 @@ var MountedApp = class {
       }
       let diagnostic2 = makeRuntimeDiagnostic("E8050", {
         phase: "runtime:reload",
-        message: mode.kind === "reload" ? `replaceProgram failed: ${errorText6(error)}` : `Preparing the scene failed: ${errorText6(error)}`
+        message: mode.kind === "reload" ? `replaceProgram failed: ${errorText7(error)}` : `Preparing the scene failed: ${errorText7(error)}`
       });
       return report(diagnostic2), { ok: !1, diagnostics: [diagnostic2] };
     }
@@ -19949,8 +18109,8 @@ var MountedApp = class {
     }), { device } = acquired, committed = !1;
     try {
       this.ensureRecovering(), registry.recycle(device), surface.recover(device), await surface.preparePostProcessing();
-      let manifest = this.deps.manifest, structure2 = resolveStructure(manifest);
-      if (!structure2.ok) throw new Error(structure2.diagnostics.map((diagnostic2) => diagnostic2.message).join(" "));
+      let manifest = this.deps.manifest, structure = resolveStructure(manifest);
+      if (!structure.ok) throw new Error(structure.diagnostics.map((diagnostic2) => diagnostic2.message).join(" "));
       let checked = checkProgram(this.deps.program, manifest);
       if (!checked.ok) throw new Error(checked.diagnostics.map((diagnostic2) => diagnostic2.message).join(" "));
       let shaders = await loadStartupShaders({
@@ -19977,7 +18137,7 @@ var MountedApp = class {
         let { world, bindings } = this.deps.scene, started = await startScene({
           ...this.deps.rendering === void 0 ? {} : { rendering: this.deps.rendering },
           manifest,
-          structure: structure2.structure,
+          structure: structure.structure,
           program: checked.program,
           device,
           registry,
@@ -20040,7 +18200,7 @@ var MountedApp = class {
         this.state !== "failed" && this.fail(
           makeRuntimeDiagnostic("E8050", {
             phase: "runtime:render",
-            message: `Resizing the canvas failed: ${errorText6(error)}`
+            message: `Resizing the canvas failed: ${errorText7(error)}`
           })
         );
       }
@@ -20113,7 +18273,7 @@ var MountedApp = class {
         pending.scene.materials.dispose(), pending.computes?.dispose(), pending.scene.meshes.dispose(), pending.scene.renderer.dispose();
         let cause = makeRuntimeDiagnostic("E8102", {
           phase: "runtime:reload",
-          message: `The candidate was discarded: creating its physics world failed (${errorText6(error)}).`,
+          message: `The candidate was discarded: creating its physics world failed (${errorText7(error)}).`,
           notes: [`module: ${pending.physicsModule.url}`]
         }), request = this.sceneRequest;
         pending.fresh !== void 0 && request !== void 0 ? this.sceneChangeFailed(request, -1, [cause], "creating its physics world failed") : (this.sceneRequest = void 0, this.report(cause));
@@ -20136,7 +18296,7 @@ var MountedApp = class {
       let diagnostic2 = restartDiagnostic(pending.manifest, pending.restart);
       this.deps.sink.report(diagnostic2), this.deps.overlay?.add(diagnostic2);
     }
-    this.deps.test?.disableCulling === !0 && pending.scene.renderer.setFrustumCulling(!1), physics?.createNamedBodies(), this.deps.physics?.dispose(), this.deps.physics = physics, this.deps.physicsModule = pending.physicsModule, this.deps.scene = pending.scene, pending.computes === void 0 ? this.computes.sceneChanged(pending.manifest) : (this.computes.dispose(), this.computes = pending.computes), this.deps.manifest = pending.manifest, this.deps.program = pending.program, this.deps.modules = pending.modules, this.deps.assets = pending.assets, this.deps.sceneFunctions = pending.sceneFunctions, this.behaviors = new Behaviors(pending.sceneFunctions, pending.scene.world), this.handlerKeys = this.behaviors.handledKeys(), this.hostInputs = new HostInputs(pending.manifest), this.hostOutputs.replace(pending.manifest), previous.materials.dispose(), previous.renderer.dispose(), previous.meshes.dispose();
+    this.deps.test?.disableCulling === !0 && pending.scene.renderer.setFrustumCulling(!1), physics?.createNamedBodies(), this.deps.physics?.dispose(), this.deps.physics = physics, this.deps.physicsModule = pending.physicsModule, this.deps.animationModule = pending.animationModule, this.deps.scene = pending.scene, pending.computes === void 0 ? this.computes.sceneChanged(pending.manifest) : (this.computes.dispose(), this.computes = pending.computes), this.deps.manifest = pending.manifest, this.deps.program = pending.program, this.deps.modules = pending.modules, this.deps.assets = pending.assets, this.deps.sceneFunctions = pending.sceneFunctions, this.behaviors = new Behaviors(pending.sceneFunctions, pending.scene.world), this.handlerKeys = this.behaviors.handledKeys(), this.hostInputs = new HostInputs(pending.manifest), this.hostOutputs.replace(pending.manifest), previous.materials.dispose(), previous.renderer.dispose(), previous.meshes.dispose();
   }
   createDebug(manual) {
     return {
@@ -20485,7 +18645,7 @@ var FailureOverlay = class _FailureOverlay {
 };
 
 // src/host/mount.ts
-function errorText7(error) {
+function errorText8(error) {
   return error instanceof Error ? error.message === "" ? error.name : error.message : String(error);
 }
 function mountDiagnostic(code, message, notes = []) {
@@ -20560,17 +18720,17 @@ async function loadManifest(environment, url) {
     text = await response.text();
   } catch (error) {
     throw error instanceof MtekMountError ? error : mountError([
-      mountDiagnostic("E8006", `The manifest could not be loaded from ${url.href}: ${errorText7(error)}`, ["field: manifestUrl"])
+      mountDiagnostic("E8006", `The manifest could not be loaded from ${url.href}: ${errorText8(error)}`, ["field: manifestUrl"])
     ]);
   }
   let json;
   try {
     json = JSON.parse(text);
   } catch (error) {
-    throw mountError([mountDiagnostic("E8006", `The manifest is not valid JSON: ${errorText7(error)}`, ["field: manifest"])]);
+    throw mountError([mountDiagnostic("E8006", `The manifest is not valid JSON: ${errorText8(error)}`, ["field: manifest"])]);
   }
   let result = checkManifest(json);
-  if (!result.ok) throw mountError(result.failures.map((failure2) => abiFailureToDiagnostic(failure2)));
+  if (!result.ok) throw mountError(result.failures.map((failure3) => abiFailureToDiagnostic(failure3)));
   return result.manifest;
 }
 function deviceCapabilities(acquired, gpu) {
@@ -20613,11 +18773,13 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
         ]);
       environment = restrictToBase(environment, program.baseUrl);
     }
-    let structure2 = resolveStructure(manifest);
-    if (!structure2.ok) throw mountError(structure2.diagnostics);
+    let structure = resolveStructure(manifest);
+    if (!structure.ok) throw mountError(structure.diagnostics);
     let checked = checkProgram(program, manifest);
     if (!checked.ok) throw mountError(checked.diagnostics);
-    let physicsLoad = manifest.subsystems.physics ? loadPhysicsBackend({ manifest, baseUrl: program.baseUrl, importModule: (url) => environment.importModule(url), phase: "runtime:mount" }) : void 0, required = manifest.requiredCapabilities;
+    let physicsLoad = manifest.subsystems.physics ? loadPhysicsBackend({ manifest, baseUrl: program.baseUrl, importModule: (url) => environment.importModule(url), phase: "runtime:mount" }) : void 0, unannounced = animationMismatch(manifest, structure.structure, "runtime:mount");
+    if (unannounced !== void 0) throw mountError([unannounced]);
+    let animationLoad = manifest.subsystems.animation === !0 ? loadAnimationBackend({ manifest, baseUrl: program.baseUrl, importModule: (url) => environment.importModule(url), phase: "runtime:mount" }) : void 0, required = manifest.requiredCapabilities;
     acquired = await acquireDevice({
       requiredFeatures: [...required.features],
       requiredLimits: { ...required.limits },
@@ -20635,7 +18797,7 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
     let { device } = acquired, gpu = environment.gpu;
     if (gpu === null) throw new Error("internal error: a device was acquired without WebGPU");
     let unmet = checkDeviceCapabilities(required, deviceCapabilities(acquired, gpu));
-    if (unmet.length > 0) throw mountError(unmet.map((failure2) => abiFailureToDiagnostic(failure2)));
+    if (unmet.length > 0) throw mountError(unmet.map((failure3) => abiFailureToDiagnostic(failure3)));
     registry = new ResourceRegistry(device, {
       phase: "runtime:mount",
       onAllocationFailure: (diagnostic2) => {
@@ -20673,7 +18835,7 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
     try {
       surface.configure();
     } catch (error) {
-      throw mountError([mountDiagnostic("E8002", "Configuring the canvas for WebGPU failed.", [`browser message: ${errorText7(error)}`])]);
+      throw mountError([mountDiagnostic("E8002", "Configuring the canvas for WebGPU failed.", [`browser message: ${errorText8(error)}`])]);
     }
     try {
       surface.allocate();
@@ -20681,7 +18843,7 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
       throw allocationFailures.length === 0 ? error : mountError(allocationFailures);
     }
     await surface.preparePostProcessing();
-    let fetchShaderFile = rememberingFetch(environment), [shaders, loadedAssets, loadedPhysics] = await Promise.all([
+    let fetchShaderFile = rememberingFetch(environment), [shaders, loadedAssets, loadedPhysics, loadedAnimation] = await Promise.all([
       loadStartupShaders({
         manifest,
         baseUrl: program.baseUrl,
@@ -20696,10 +18858,16 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
         maxTextureDimension2D: device.limits.maxTextureDimension2D,
         ...options.test?.onAssetState === void 0 ? {} : { onState: options.test.onAssetState }
       }),
-      physicsLoad ?? Promise.resolve(void 0)
+      physicsLoad ?? Promise.resolve(void 0),
+      animationLoad ?? Promise.resolve(void 0)
     ]);
     images = loadedAssets.images;
-    let startupFailures = [...shaders.diagnostics, ...loadedAssets.diagnostics, ...loadedPhysics?.ok === !1 ? loadedPhysics.diagnostics : []];
+    let startupFailures = [
+      ...shaders.diagnostics,
+      ...loadedAssets.diagnostics,
+      ...loadedPhysics?.ok === !1 ? loadedPhysics.diagnostics : [],
+      ...loadedAnimation?.ok === !1 ? loadedAnimation.diagnostics : []
+    ];
     if (startupFailures.length > 0) throw mountError(startupFailures);
     let assets = loadedAssets.assets, seed = options.seed === void 0 ? (Math.floor(environment.now() * 1e3) ^ Date.now()) >>> 0 : Math.trunc(options.seed) >>> 0, generator = new Xoshiro128(seed), input = new InputState(), gamepads = new GamepadInput(() => environment.getGamepads?.() ?? []), game = new GameLink(), pageStorage = options.storage === void 0 && options.test === void 0 ? defaultSaveStorage() : null, saveStorage = options.storage ?? pageStorage ?? new MemorySaveStorage(), saveStorageUnavailable = options.storage === void 0 && options.test === void 0 && pageStorage === null, listening = {}, manifestNow = () => app?.currentManifest() ?? manifest, unlockInstalled = !1, installUnlock = () => {
       if (unlockInstalled || audio === void 0 || registry === void 0) return;
@@ -20765,7 +18933,8 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
       started = await startScene({
         ...options.rendering === void 0 ? {} : { rendering: options.rendering },
         manifest,
-        structure: structure2.structure,
+        ...loadedAnimation?.ok === !0 ? { animation: loadedAnimation.backend } : {},
+        structure: structure.structure,
         program: checked.program,
         device,
         registry,
@@ -20801,7 +18970,7 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
         throw mountError([
           makeRuntimeDiagnostic("E8102", {
             phase: "runtime:mount",
-            message: `The physics module could not be loaded: creating the physics world and its bodies failed (${errorText7(error)}).`,
+            message: `The physics module could not be loaded: creating the physics world and its bodies failed (${errorText8(error)}).`,
             notes: [`module: ${loadedPhysics.url}`]
           })
         ]);
@@ -20849,6 +19018,7 @@ async function mountMtekWith(environment, canvas, program, options = {}) {
       scene: started.scene,
       physics,
       physicsModule: loadedPhysics?.ok === !0 ? { url: loadedPhysics.url, backend: loadedPhysics.backend } : void 0,
+      animationModule: loadedAnimation?.ok === !0 ? { url: loadedAnimation.url, backend: loadedAnimation.backend } : void 0,
       modules: new Map(shaders.modules),
       program
     }), app.installExtensions(options.extensions ?? [], options.hostServices);
@@ -20903,7 +19073,7 @@ function min(a, b) {
 function max(a, b) {
   return b > a || a !== a ? b : a;
 }
-function clamp3(x, lo, hi) {
+function clamp2(x, lo, hi) {
   return min(max(x, lo), hi);
 }
 function saturate(x) {
@@ -20916,7 +19086,7 @@ function step(edge, x) {
   return x >= edge ? 1 : 0;
 }
 function smoothstep(e0, e1, x) {
-  let t = clamp3(fr2(fr2(x - e0) / fr2(e1 - e0)), 0, 1);
+  let t = clamp2(fr2(fr2(x - e0) / fr2(e1 - e0)), 0, 1);
   return fr2(fr2(t * t) * fr2(3 - fr2(2 * t)));
 }
 function sqrt(x) {
@@ -21182,7 +19352,7 @@ var v3divs = zip3s(fdiv), v3neg = map3(fneg), v4add = zip4(fadd), v4sub = zip4(f
 function v4smul(scale, v) {
   return v4scale(v, scale);
 }
-var v4divs = zip4s(fdiv), v4neg = map4(fneg), v2abs = map2(abs), v3abs = map3(abs), v4abs = map4(abs), v2min = zip2(min), v3min = zip3(min), v4min = zip4(min), v2max = zip2(max), v3max = zip3(max), v4max = zip4(max), v2clamp = tri2(clamp3), v3clamp = tri3(clamp3), v4clamp = tri4(clamp3), v2saturate = map2(saturate), v3saturate = map3(saturate), v4saturate = map4(saturate), v2mix = tri2(mix), v3mix = tri3(mix), v4mix = tri4(mix), v2mixs = tri2s(mix), v3mixs = tri3s(mix), v4mixs = tri4s(mix), v2step = zip2(step), v3step = zip3(step), v4step = zip4(step), v2smoothstep = tri2(smoothstep), v3smoothstep = tri3(smoothstep), v4smoothstep = tri4(smoothstep), v2sqrt = map2(sqrt), v3sqrt = map3(sqrt), v4sqrt = map4(sqrt), v2inverseSqrt = map2(inverseSqrt), v3inverseSqrt = map3(inverseSqrt), v4inverseSqrt = map4(inverseSqrt), v2pow = zip2(pow), v3pow = zip3(pow), v4pow = zip4(pow), v2exp = map2(exp), v3exp = map3(exp), v4exp = map4(exp), v2exp2 = map2(exp2), v3exp2 = map3(exp2), v4exp2 = map4(exp2), v2log = map2(log), v3log = map3(log), v4log = map4(log), v2log2 = map2(log2), v3log2 = map3(log2), v4log2 = map4(log2), v2sin = map2(sin), v3sin = map3(sin), v4sin = map4(sin), v2cos = map2(cos), v3cos = map3(cos), v4cos = map4(cos), v2tan = map2(tan), v3tan = map3(tan), v4tan = map4(tan), v2asin = map2(asin), v3asin = map3(asin), v4asin = map4(asin), v2acos = map2(acos), v3acos = map3(acos), v4acos = map4(acos), v2atan = map2(atan), v3atan = map3(atan), v4atan = map4(atan), v2atan2 = zip2(atan2), v3atan2 = zip3(atan2), v4atan2 = zip4(atan2), v2floor = map2(floor), v3floor = map3(floor), v4floor = map4(floor), v2ceil = map2(ceil), v3ceil = map3(ceil), v4ceil = map4(ceil), v2trunc = map2(trunc), v3trunc = map3(trunc), v4trunc = map4(trunc), v2fract = map2(fract), v3fract = map3(fract), v4fract = map4(fract), v2sign = map2(sign), v3sign = map3(sign), v4sign = map4(sign), v2round = map2(round), v3round = map3(round), v4round = map4(round), v2radians = map2(radians), v3radians = map3(radians), v4radians = map4(radians), v2degrees = map2(degrees), v3degrees = map3(degrees), v4degrees = map4(degrees);
+var v4divs = zip4s(fdiv), v4neg = map4(fneg), v2abs = map2(abs), v3abs = map3(abs), v4abs = map4(abs), v2min = zip2(min), v3min = zip3(min), v4min = zip4(min), v2max = zip2(max), v3max = zip3(max), v4max = zip4(max), v2clamp = tri2(clamp2), v3clamp = tri3(clamp2), v4clamp = tri4(clamp2), v2saturate = map2(saturate), v3saturate = map3(saturate), v4saturate = map4(saturate), v2mix = tri2(mix), v3mix = tri3(mix), v4mix = tri4(mix), v2mixs = tri2s(mix), v3mixs = tri3s(mix), v4mixs = tri4s(mix), v2step = zip2(step), v3step = zip3(step), v4step = zip4(step), v2smoothstep = tri2(smoothstep), v3smoothstep = tri3(smoothstep), v4smoothstep = tri4(smoothstep), v2sqrt = map2(sqrt), v3sqrt = map3(sqrt), v4sqrt = map4(sqrt), v2inverseSqrt = map2(inverseSqrt), v3inverseSqrt = map3(inverseSqrt), v4inverseSqrt = map4(inverseSqrt), v2pow = zip2(pow), v3pow = zip3(pow), v4pow = zip4(pow), v2exp = map2(exp), v3exp = map3(exp), v4exp = map4(exp), v2exp2 = map2(exp2), v3exp2 = map3(exp2), v4exp2 = map4(exp2), v2log = map2(log), v3log = map3(log), v4log = map4(log), v2log2 = map2(log2), v3log2 = map3(log2), v4log2 = map4(log2), v2sin = map2(sin), v3sin = map3(sin), v4sin = map4(sin), v2cos = map2(cos), v3cos = map3(cos), v4cos = map4(cos), v2tan = map2(tan), v3tan = map3(tan), v4tan = map4(tan), v2asin = map2(asin), v3asin = map3(asin), v4asin = map4(asin), v2acos = map2(acos), v3acos = map3(acos), v4acos = map4(acos), v2atan = map2(atan), v3atan = map3(atan), v4atan = map4(atan), v2atan2 = zip2(atan2), v3atan2 = zip3(atan2), v4atan2 = zip4(atan2), v2floor = map2(floor), v3floor = map3(floor), v4floor = map4(floor), v2ceil = map2(ceil), v3ceil = map3(ceil), v4ceil = map4(ceil), v2trunc = map2(trunc), v3trunc = map3(trunc), v4trunc = map4(trunc), v2fract = map2(fract), v3fract = map3(fract), v4fract = map4(fract), v2sign = map2(sign), v3sign = map3(sign), v4sign = map4(sign), v2round = map2(round), v3round = map3(round), v4round = map4(round), v2radians = map2(radians), v3radians = map3(radians), v4radians = map4(radians), v2degrees = map2(degrees), v3degrees = map3(degrees), v4degrees = map4(degrees);
 function v2dot(a, b) {
   return fr3(fr3(a.x * b.x) + fr3(a.y * b.y));
 }
@@ -21218,16 +19388,16 @@ function v3cross(a, b) {
   };
 }
 function v2normalize(v) {
-  let len2 = v2length(v);
-  return len2 === 0 ? { x: 0, y: 0 } : { x: fr3(v.x / len2), y: fr3(v.y / len2) };
+  let len = v2length(v);
+  return len === 0 ? { x: 0, y: 0 } : { x: fr3(v.x / len), y: fr3(v.y / len) };
 }
 function v3normalize(v) {
-  let len2 = v3length(v);
-  return len2 === 0 ? { x: 0, y: 0, z: 0 } : { x: fr3(v.x / len2), y: fr3(v.y / len2), z: fr3(v.z / len2) };
+  let len = v3length(v);
+  return len === 0 ? { x: 0, y: 0, z: 0 } : { x: fr3(v.x / len), y: fr3(v.y / len), z: fr3(v.z / len) };
 }
 function v4normalize(v) {
-  let len2 = v4length(v);
-  return len2 === 0 ? { x: 0, y: 0, z: 0, w: 0 } : { x: fr3(v.x / len2), y: fr3(v.y / len2), z: fr3(v.z / len2), w: fr3(v.w / len2) };
+  let len = v4length(v);
+  return len === 0 ? { x: 0, y: 0, z: 0, w: 0 } : { x: fr3(v.x / len), y: fr3(v.y / len), z: fr3(v.z / len), w: fr3(v.w / len) };
 }
 function v2reflect(i, n) {
   let t = fr3(2 * v2dot(n, i));
@@ -21255,7 +19425,7 @@ function quat2(x, y, z, w) {
 function qidentity() {
   return { x: 0, y: 0, z: 0, w: 1 };
 }
-function qmul3(a, b) {
+function qmul(a, b) {
   let { x: ax, y: ay, z: az, w: aw } = a, { x: bx, y: by, z: bz, w: bw } = b;
   return {
     x: fr4(fr4(fr4(fr4(aw * bx) + fr4(ax * bw)) + fr4(ay * bz)) - fr4(az * by)),
@@ -21264,7 +19434,7 @@ function qmul3(a, b) {
     w: fr4(fr4(fr4(fr4(aw * bw) - fr4(ax * bx)) - fr4(ay * by)) - fr4(az * bz))
   };
 }
-function qrotate2(q, v) {
+function qrotate(q, v) {
   let { x: qx, y: qy, z: qz, w } = q, tx = fr4(2 * fr4(fr4(qy * v.z) - fr4(qz * v.y))), ty = fr4(2 * fr4(fr4(qz * v.x) - fr4(qx * v.z))), tz = fr4(2 * fr4(fr4(qx * v.y) - fr4(qy * v.x))), cx = fr4(fr4(qy * tz) - fr4(qz * ty)), cy = fr4(fr4(qz * tx) - fr4(qx * tz)), cz = fr4(fr4(qx * ty) - fr4(qy * tx));
   return {
     x: fr4(fr4(v.x + fr4(w * tx)) + cx),
@@ -21279,12 +19449,12 @@ function qaxisAngle(axis, angle) {
   ay > largest && (largest = ay);
   let az = Math.abs(axis.z);
   if (az > largest && (largest = az), largest === 0) return qidentity();
-  let sx = fr4(axis.x / largest), sy = fr4(axis.y / largest), sz = fr4(axis.z / largest), len2 = fr4(Math.sqrt(fr4(fr4(fr4(sx * sx) + fr4(sy * sy)) + fr4(sz * sz)))), nx = fr4(sx / len2), ny = fr4(sy / len2), nz = fr4(sz / len2), half = fr4(angle * 0.5), sinHalf = fr4(Math.sin(half)), cosHalf = fr4(Math.cos(half));
+  let sx = fr4(axis.x / largest), sy = fr4(axis.y / largest), sz = fr4(axis.z / largest), len = fr4(Math.sqrt(fr4(fr4(fr4(sx * sx) + fr4(sy * sy)) + fr4(sz * sz)))), nx = fr4(sx / len), ny = fr4(sy / len), nz = fr4(sz / len), half = fr4(angle * 0.5), sinHalf = fr4(Math.sin(half)), cosHalf = fr4(Math.cos(half));
   return { x: fr4(nx * sinHalf), y: fr4(ny * sinHalf), z: fr4(nz * sinHalf), w: cosHalf };
 }
 var AXIS_X = { x: 1, y: 0, z: 0 }, AXIS_Y = { x: 0, y: 1, z: 0 }, AXIS_Z = { x: 0, y: 0, z: 1 };
 function qeuler(x, y, z) {
-  return qmul3(qmul3(qaxisAngle(AXIS_Y, y), qaxisAngle(AXIS_X, x)), qaxisAngle(AXIS_Z, z));
+  return qmul(qmul(qaxisAngle(AXIS_Y, y), qaxisAngle(AXIS_X, x)), qaxisAngle(AXIS_Z, z));
 }
 
 // src/math/color.ts
@@ -21455,10 +19625,9 @@ function fmt(value, type, precision) {
   }
 }
 
-// src/index.ts
+// src/core.ts
 var RUNTIME_ABI = 1, RUNTIME_VERSION = "0.1.0-dev";
 export {
-  AnimationController,
   AssetPool,
   EXTENSION_API_VERSION,
   I32_MAX,
@@ -21486,17 +19655,15 @@ export {
   checkCompatibility,
   checkDeviceCapabilities,
   checkManifest,
-  clamp3 as clamp,
+  clamp2 as clamp,
   clampIndex,
   clinear,
   color,
   copy2 as copy,
   cos,
-  createAnimationController,
   crgb,
   csrgb,
   decodeRadiance,
-  deformSkin,
   degrees,
   distance,
   easeInCubic,
@@ -21549,7 +19716,6 @@ export {
   m4translation,
   m4transpose,
   makeRuntimeDiagnostic,
-  mapHumanoid,
   max,
   min,
   mix,
@@ -21559,13 +19725,11 @@ export {
   qaxisAngle,
   qeuler,
   qidentity,
-  qmul3 as qmul,
-  qrotate2 as qrotate,
+  qmul,
+  qrotate,
   quat2 as quat,
   radians,
   refEq,
-  retargetHumanoid,
-  retargetSkin,
   round,
   roundUp,
   saturate,
@@ -21739,4 +19903,4 @@ export {
   validateManifest,
   whileLimit
 };
-//# sourceMappingURL=runtime.js.map
+//# sourceMappingURL=core.js.map
