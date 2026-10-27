@@ -1,0 +1,311 @@
+// Composable animation (decision 0224). Everything is Mtek source: the host only mounts the program.
+//
+//   W / Shift+W     walk / run forward          Q / E   strafe left / right      A / D   turn
+//   F               hold to wave (upper-body layer, faded in and out)
+//   G               hold to reach for the orb with the left hand
+//   T               tail follows a target on / off        P   foot placement on / off
+//   1 .. 4          stations: start, the curb, the foot of the stairs, the plateau
+//
+// A 2D blend space (idle, walk, run, strafe left and right) is driven by the keys through a parameter that
+// follows them, the clips' root travel moves the capsule through `move_character`, foot placement keeps the
+// feet on the steps, the curb and the ramp, the left hand reaches a world-space target, the tail is a chain
+// goal, and the Guest plays the Hero's clips on a skeleton with other names, proportions and rest pose.
+
+const HERO = asset.glb("../models/Hero.glb");
+
+const GUEST = asset.glb("../models/Guest.glb");
+
+const GRAVITY: f32 = 9.81;
+
+const TURN_RATE: f32 = 2.0;
+
+// Seconds the blend parameter and the reach need to follow the keys.
+const FOLLOW: f32 = 0.12;
+
+// The capsule's centre is this high above the soles of the figure; the foot joint is SOLE above the sole.
+const FIGURE_BASE: f32 = 0.91;
+
+const SOLE: f32 = 0.08;
+
+// The left arm is 0.57 m long; the hand is asked for no more than this.
+const ARM_REACH: f32 = 0.5;
+
+const WAVE_FADE: f32 = 0.4;
+
+// The ground along z: a curb 0.2 m high for x >= 0 (z 0 to 2), two risers of 0.15 m (z = 3.5 and 4.5) onto a
+// plateau, and a ramp down to the floor (z 7.5 to 9). The colliders below have the same shapes; the edges of
+// the risers and of the curb are smoothed over a few centimetres, as a foot rolls over an edge.
+fn ground(x: f32, z: f32) -> f32 {
+    let strip = 1.0 - smoothstep(2.8, 3.2, abs(x));
+    let stairs = 0.15 * smoothstep(3.35, 3.65, z) + 0.15 * smoothstep(4.35, 4.65, z);
+    let ramp = 0.3 * clamp((z - 7.5) / 1.5, 0.0, 1.0);
+    let curb = 0.2 * smoothstep(-0.05, 0.05, x) * smoothstep(-0.1, 0.1, z) * (1.0 - smoothstep(1.9, 2.1, z));
+    return strip * (stairs - ramp + curb);
+}
+
+fn ground_normal(x: f32, z: f32) -> vec3 {
+    let e = 0.05;
+    return normalize(vec3(ground(x - e, z) - ground(x + e, z), 2.0 * e, ground(x, z - e) - ground(x, z + e)));
+}
+
+scene Stage {
+    clear_color: #1b2230;
+    ambient_color: #ffffff;
+    ambient_intensity: 0.25;
+
+    state ready: bool = false;
+    state heading: f32 = 0.0;
+    state blend_x: f32 = 0.0;
+    state blend_y: f32 = 0.0;
+    state reach: f32 = 0.0;
+    state tail_on: bool = true;
+    state feet_on: bool = true;
+
+    camera Main {
+        position: vec3(0.0, 2.0, -7.0);
+        target: vec3(0.0, 0.8, -3.0);
+        projection: Perspective { fov_y: 0.8; near: 0.1; far: 120.0 };
+        exposure: -0.2630344;
+    }
+
+    entity Sun {
+        rotation: quat.euler(-0.9, 0.4, 0.0);
+        light: DirectionalLight { color: #fff4e0; intensity: 3.0 };
+    }
+
+    // ---- the ground: the floor, the curb, the stairs with the plateau, and the ramp ----
+
+    entity Floor {
+        position: vec3(0.0, -0.1, 4.0);
+        mesh: Box { size: vec3(40.0, 0.2, 50.0) };
+        material: Pbr { base_color: #3a4150; roughness: 0.9 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(40.0, 0.2, 50.0); friction: 0.8 };
+    }
+    entity Curb {
+        position: vec3(1.5, 0.1, 1.0);
+        mesh: Box { size: vec3(3.0, 0.2, 2.0) };
+        material: Pbr { base_color: #c9694b; roughness: 0.8 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(3.0, 0.2, 2.0); friction: 0.8 };
+    }
+    entity Riser {
+        position: vec3(0.0, 0.075, 4.0);
+        mesh: Box { size: vec3(6.0, 0.15, 1.0) };
+        material: Pbr { base_color: #c9a66b; roughness: 0.8 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(6.0, 0.15, 1.0); friction: 0.8 };
+    }
+    entity Plateau {
+        position: vec3(0.0, 0.15, 6.0);
+        mesh: Box { size: vec3(6.0, 0.3, 3.0) };
+        material: Pbr { base_color: #6fae77; roughness: 0.8 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(6.0, 0.3, 3.0); friction: 0.8 };
+    }
+    entity Ramp {
+        position: vec3(0.0, 0.15 - 0.25 * cos(0.1974), 8.25 - 0.25 * sin(0.1974));
+        rotation: quat.axis_angle(vec3(1.0, 0.0, 0.0), 0.1974);
+        mesh: Box { size: vec3(6.0, 0.5, 1.5297) };
+        material: Pbr { base_color: #4e8a57; roughness: 0.8 };
+        body: Static {};
+        collider: BoxCollider { size: vec3(6.0, 0.5, 1.5297); friction: 0.8 };
+    }
+
+    // ---- the target of the left hand ----
+
+    entity Orb {
+        position: vec3(0.36, 1.25, -2.7);
+        mesh: Sphere { radius: 0.05 };
+        material: Unlit { color: #ffd040 };
+    }
+
+    // ---- the Guest: another rig (other names, proportions and rest pose) playing the Hero's clips ----
+
+    entity Guest {
+        position: vec3(2.6, 0.0, 1.5);
+        rotation: quat.axis_angle(vec3(0.0, 1.0, 0.0), -1.2);
+        mesh: GUEST.mesh("Body");
+        clips_from: HERO;
+        clip: "Dance";
+        material: Pbr { base_color: #4f86d9; roughness: 0.55 };
+    }
+
+    // ---- the Hero: a capsule moved by the clips' root travel, and its figure ----
+
+    entity Hero {
+        position: vec3(0.0, FIGURE_BASE, -3.0);
+        body: Kinematic { max_slope: 0.7853982; step_height: 0.3 };
+        collider: CapsuleCollider { radius: 0.3; height: 1.8; friction: 0.0 };
+        state vy: f32 = 0.0;
+        state travel: vec3 = vec3(0.0, 0.0, 0.0);
+
+        entity Model {
+            position: vec3(0.0, -FIGURE_BASE, 0.0);
+            mesh: HERO.mesh("Body");
+            clip: "Idle";
+            material: Pbr { base_color: #e8863a; roughness: 0.55 };
+        }
+
+        fixed_update(dt: f32) {
+            if self.body.grounded {
+                if self.vy < 0.0 {
+                    self.vy = 0.0;
+                }
+            } else {
+                self.vy -= GRAVITY * dt;
+            }
+            let step = self.travel + vec3(0.0, self.vy * dt, 0.0);
+            self.travel = vec3(0.0, 0.0, 0.0);
+            self.body.move_character(step, quat.axis_angle(vec3(0.0, 1.0, 0.0), heading));
+        }
+    }
+
+    // The same figure, never shown and never touched by layers or goals: its pose is the animation without any of
+    // them, from which the program reads where the feet would be on flat ground.
+    entity Ghost {
+        visible: false;
+        mesh: HERO.mesh("Body");
+        clip: "Idle";
+    }
+
+    update(dt: f32) {
+        if !ready {
+            animation.set_layer(Model, "wave", "Wave", 0.0, false, "Spine1");
+            animation.blend_sample(Model, "Idle", 0.0, 0.0);
+            animation.blend_sample(Model, "Walk", 0.0, 1.0);
+            animation.blend_sample(Model, "Run", 0.0, 2.0);
+            animation.blend_sample(Model, "StrafeLeft", -1.0, 0.0);
+            animation.blend_sample(Model, "StrafeRight", 1.0, 0.0);
+            animation.blend_play(Model, true, 1.0);
+            animation.blend_sample(Ghost, "Idle", 0.0, 0.0);
+            animation.blend_sample(Ghost, "Walk", 0.0, 1.0);
+            animation.blend_sample(Ghost, "Run", 0.0, 2.0);
+            animation.blend_sample(Ghost, "StrafeLeft", -1.0, 0.0);
+            animation.blend_sample(Ghost, "StrafeRight", 1.0, 0.0);
+            animation.blend_play(Ghost, true, 1.0);
+            animation.root_motion(Model, "Root");
+            animation.root_motion(Ghost, "Root");
+            ready = true;
+        }
+
+        // The keys set where the blend space is wanted; the parameter follows (exactly, whatever the frame time).
+        var want_x = 0.0;
+        var want_y = 0.0;
+        var turn = 0.0;
+        if is_key_down(Key.W) {
+            want_y = 1.0;
+            if is_key_down(Key.ShiftLeft) {
+                want_y = 2.0;
+            }
+        }
+        if is_key_down(Key.Q) {
+            want_x -= 1.0;
+        }
+        if is_key_down(Key.E) {
+            want_x += 1.0;
+        }
+        if is_key_down(Key.A) {
+            turn += 1.0;
+        }
+        if is_key_down(Key.D) {
+            turn -= 1.0;
+        }
+        let follow = 1.0 - exp(-dt / FOLLOW);
+        blend_x += (want_x - blend_x) * follow;
+        blend_y += (want_y - blend_y) * follow;
+        animation.blend_parameter(Model, blend_x, blend_y);
+        animation.blend_parameter(Ghost, blend_x, blend_y);
+
+        // Root motion: the clips' travel, turned into the world by the figure, is what the capsule moves by.
+        Hero.travel += animation.take_root_motion(Model);
+        animation.take_root_motion(Ghost);
+        heading += turn * TURN_RATE * dt;
+        let facing = quat.axis_angle(vec3(0.0, 1.0, 0.0), heading);
+        Main.position = Hero.position + facing * vec3(0.0, 1.6, -4.0);
+        Main.target = Hero.position + vec3(0.0, 0.3, 0.0);
+
+        // The soles of the figure and its turn, as the physics last reported them.
+        let rot = Hero.rotation;
+        let origin = Hero.position - rot * vec3(0.0, FIGURE_BASE, 0.0);
+
+        // Foot placement: where the animated feet would be, put on the ground under them (a foot keeps the height
+        // the animation lifts it to, above whatever the ground is there).
+        if feet_on {
+            let lf = animation.joint_position(Ghost, "LeftFoot");
+            let rf = animation.joint_position(Ghost, "RightFoot");
+            let lw = origin + rot * lf;
+            let rw = origin + rot * rf;
+            animation.foot_placement(
+                Model,
+                vec3(lw.x, ground(lw.x, lw.z) + max(lf.y - SOLE, 0.0), lw.z),
+                vec3(rw.x, ground(rw.x, rw.z) + max(rf.y - SOLE, 0.0), rw.z),
+                ground_normal(lw.x, lw.z),
+                ground_normal(rw.x, rw.z),
+                1.0,
+            );
+        } else {
+            animation.clear_foot_placement(Model);
+        }
+
+        // A hand reaching a world-space target: the goal is the orb, held to the arm's reach.
+        var want_reach = 0.0;
+        if is_key_down(Key.G) {
+            want_reach = 1.0;
+        }
+        reach += (want_reach - reach) * follow;
+        if reach > 0.001 {
+            let shoulder = origin + rot * animation.joint_position(Model, "LeftArm");
+            let to_orb = Orb.position - shoulder;
+            let goal = shoulder + to_orb * min(1.0, ARM_REACH / max(length(to_orb), 0.001));
+            animation.limb_goal(Model, "left_arm", goal, reach);
+        } else {
+            animation.clear_limb(Model, "left_arm");
+        }
+
+        // A chain goal: the tip of the tail follows a point that swings behind the figure.
+        if tail_on {
+            let tip = origin + rot * vec3(0.3 * sin(frame.time * 2.5), 0.75, -0.5);
+            animation.chain_goal(Model, "tail", "Tail4", 4, tip, 1.0);
+        } else {
+            animation.clear_chain(Model, "tail");
+        }
+    }
+
+    ui(dt: f32) {
+        hud.text("W walk, Shift+W run, Q/E strafe, A/D turn, F wave, G reach, T tail, P feet, 1-4 stations", vec2(-0.95, 0.9), 16.0, #ffffff, 0.0, hud.pixel_font());
+    }
+
+    on key_down(Key.F) {
+        animation.fade_layer(Model, "wave", 1.0, WAVE_FADE);
+    }
+    on key_up(Key.F) {
+        animation.fade_layer(Model, "wave", 0.0, WAVE_FADE);
+    }
+    on key_down(Key.T) {
+        tail_on = !tail_on;
+    }
+    on key_down(Key.P) {
+        feet_on = !feet_on;
+    }
+    on key_down(Key.Digit1) {
+        Hero.vy = 0.0;
+        heading = 0.0;
+        Hero.body.teleport(vec3(0.0, FIGURE_BASE, -3.0), quat.identity(), false);
+    }
+    on key_down(Key.Digit2) {
+        Hero.vy = 0.0;
+        heading = 0.0;
+        Hero.body.teleport(vec3(0.03, 0.2 + FIGURE_BASE, 1.0), quat.identity(), false);
+    }
+    on key_down(Key.Digit3) {
+        Hero.vy = 0.0;
+        heading = 0.0;
+        Hero.body.teleport(vec3(0.0, FIGURE_BASE, 3.0), quat.identity(), false);
+    }
+    on key_down(Key.Digit4) {
+        Hero.vy = 0.0;
+        heading = 0.0;
+        Hero.body.teleport(vec3(0.0, 0.3 + FIGURE_BASE, 6.0), quat.identity(), false);
+    }
+}

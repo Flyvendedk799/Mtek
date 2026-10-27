@@ -18,6 +18,7 @@ import { deflateSync } from "node:zlib";
 import { mkdirSync, readFileSync, writeFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { GUEST, HERO } from "./animation-demo-assets.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -1842,6 +1843,8 @@ function chairModel(variant = null) {
 }
 
 put("../../examples/material-configurator/models/chair.glb", chairModel());
+put("../../examples/animation-composition/models/Hero.glb", HERO.glb);
+put("../../examples/animation-composition/models/Guest.glb", GUEST.glb);
 put("../browser/fixtures/m4-variants/chair_normal_texture.glb", chairModel("normal_texture"));
 put("../browser/fixtures/m4-variants/chair_required_extension.glb", chairModel("required_extension"));
 
