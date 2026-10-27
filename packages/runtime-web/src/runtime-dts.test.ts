@@ -56,10 +56,16 @@ describe("runtime.d.ts with tsc --strict", () => {
       import type * as D from "./runtime.js";
       import type * as S from "./host/inspection.js";
       import type * as A from "./scene/animation-inspection.js";
+      import type * as P from "./host/physics-api.js";
       type Mutual<X,Y>=[X] extends [Y]?([Y] extends [X]?true:false):false;
       export const scene:Mutual<D.SceneInspection,S.SceneInspection>=true;
       export const animation:Mutual<D.AnimationInspection,A.AnimationInspection>=true;
       export const body:Mutual<D.ScenePhysicsBody,S.ScenePhysicsBody>=true;
+      export const physics:Mutual<D.MtekPhysics,P.MtekPhysics>=true;
+      export const shape:Mutual<D.MtekQueryShape,P.MtekQueryShape>=true;
+      export const options:Mutual<D.MtekQueryOptions,P.MtekQueryOptions>=true;
+      export const rayHit:Mutual<D.MtekRayHit,P.MtekRayHit>=true;
+      export const contact:Mutual<D.MtekContact,P.MtekContact>=true;
     `,{types:["@webgpu/types"],skipLibCheck:true})).toEqual([]);
   });
   it("accepts the host usage of spec/runtime-abi.md section 6", () => {
@@ -91,6 +97,9 @@ describe("runtime.d.ts with tsc --strict", () => {
           app.resume();
           const state: "running" | "paused" | "recovering" | "failed" | "disposed" = app.state;
           const debug: MtekDebug | undefined = app.debug;
+          const hit = app.physics?.castRay({ x: 0, y: 5, z: 0 }, { x: 0, y: -1, z: 0 }, 10, { includeSensors: true });
+          const entityId: string | undefined = hit?.entityId;
+          app.physics?.setCollisionGroups(entityId ?? "", 1, 0xffff);
           debug?.step(3, 1 / 60);
           const pixels = await debug?.readPixels();
           console.log(pixels?.format, pixels?.data.length, debug?.counters()["liveBuffers"], debug?.scene().entities[0]?.name, state);
