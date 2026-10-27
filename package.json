@@ -41,6 +41,8 @@
     "test:browser:hardware": "npm run build && npm run test:hardware -w @mtek/browser-tests --",
     "test": "npm run check && cargo test --workspace --locked && npm run test:unit && npm run check:coverage && npm run check:release && npm run check:baseline && npm run test:browser",
     "check:baseline": "node scripts/gen-m7-baseline.mjs --check",
+    "ccd:check": "node packages/physics-rapier/scripts/measure-ccd-lanes.ts --check",
+    "ccd:write": "node packages/physics-rapier/scripts/measure-ccd-lanes.ts --write",
     "check:budgets": "node scripts/game-budgets.mjs size",
     "audit:assets": "npm run audit -w @mtek/asset-audit --"
   },

@@ -13,7 +13,8 @@
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["src", "vitest.config.ts", "../runtime-web/src/physics/types.ts"]
+  "include": ["src", "vitest.config.ts", "scripts/measure-ccd-lanes.ts", "../runtime-web/src/physics/types.ts"]
 }
