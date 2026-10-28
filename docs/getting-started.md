@@ -184,7 +184,9 @@ shaders/<hash>.wgsl
 `index.html` is a page with a canvas, `app.js` is your program as a JavaScript module,
 `runtime.<hash>.js` is the runtime that drives the GPU, `shaders/` holds the WGSL generated for the
 material, and `program.manifest.json` tells the runtime what the program needs. `<hash>` stands for
-16 hex digits derived from the file's content.
+16 hex digits derived from the file's content. A program with physics bodies also gets `physics/<hash>.js`,
+and one with a skinned character `animation/<hash>.js`: the runtime loads them only when the program needs
+them, so serve all of `dist/`.
 
 `dist/` is plain static files, but there is no `mtek serve` command, and a browser will not load
 the page's module scripts from a `file:` address. To look at a release build, serve `dist/` with

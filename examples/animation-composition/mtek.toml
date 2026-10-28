@@ -1,0 +1,9 @@
+[project]
+name = "animation-composition"
+language = "0.1"
+entry = "src/main.mtek"
+scene = "Stage"
+
+[build]
+target = "web"
+title = "Animation Composition"

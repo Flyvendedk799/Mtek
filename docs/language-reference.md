@@ -359,13 +359,13 @@ Generated from [spec/stdlib-schema.json](../spec/stdlib-schema.json) (registry v
 | Type | Kind | GPU | Fields | Methods | Description |
 |---|---|---|---|---|---|
 | `ComputeInput` | record | yes | index: u32; global_x: u32; global_y: u32; global_z: u32; local_x: u32; local_y: u32; local_z: u32; group_x: u32; group_y: u32; group_z: u32; group_count_x: u32; group_count_y: u32; group_count_z: u32; local_index: u32 |  | Compute invocation IDs. |
-| `PointerEvent` | record | no | position: vec2; button: i32 |  | A pointer event: `position` in canvas coordinates (x right, y up, -1..1) and the `button` (0 primary, 1 middle, 2 secondary). |
+| `PointerEvent` | record | no | position: vec2; button: i32 |  | `position` in canvas coordinates (x right, y up, -1..1); `button` 0 primary, 1 middle, 2 secondary. |
 | `SurfaceInput` | record | yes | local_position: vec3; world_position: vec3; world_normal: vec3; uv: vec2; world_tangent: vec4 |  | Interpolated fragment inputs. |
 | `VertexInput` | record | yes | position: vec3; normal: vec3; uv: vec2; tangent: vec4 |  | Skinned local vertex inputs. |
 | `array` | array | yes |  |  | The generic `array<T, N>`: a fixed-length array of `N` (1 to 65536) elements of type `T`. |
 | `bool` | scalar | yes |  |  | Truth value. |
 | `color` | color | yes |  |  | Linear RGBA, straight alpha; not a `vec4`. A literal `#rrggbb` is sRGB, converted; `color.linear(rgb, a)` takes linear components, `color.srgb(rgb, a)` sRGB ones. Fields `.r .g .b .a`, `.rgb`; no arithmetic. |
-| `entity_ref` | handle | no |  |  | A generation-checked reference to an entity. Compare it, test `alive`, `destroy` it, command its body, and read `position`, `rotation`, `scale` and `visible`. |
+| `entity_ref` | handle | no |  |  | A generation-checked entity reference. Compare it, test `alive`, `destroy` it, command its body, read `position`, `rotation`, `scale`, `visible`. |
 | `f32` | scalar | yes |  |  | IEEE-754 binary32 floating-point number. |
 | `font` | handle | no |  |  | A font for `hud.text`: `asset.font(..)` or the built-in `hud.pixel_font()`; CPU only (decision 0139). |
 | `glb_asset` | handle | no |  | material, material_base_color, material_metallic, material_roughness, material_texture, mesh, node_position, node_rotation, node_scale, primitive | The compile-time handle of `asset.glb(..)`; may be stored only in a `const` and used through its accessors. |
@@ -375,7 +375,7 @@ Generated from [spec/stdlib-schema.json](../spec/stdlib-schema.json) (registry v
 | `mesh` | handle | no |  |  | An immutable mesh: a primitive descriptor or an asset mesh. |
 | `quat` | rotation | yes |  |  | Unit quaternion `(x, y, z, w)`; distinct from `vec4`. |
 | `sampler` | handle | no |  |  | A sampler preset. Usable only as a material parameter. |
-| `sound` | handle | no |  |  | A sound file declared with `asset.sound(..)`; CPU only. Played with `play`, `play_at` and `play_music` (decision 0130). |
+| `sound` | handle | no |  |  | A sound declared with `asset.sound(..)`; CPU only. Played by `play`, `play_at`, `play_music` (decision 0130). |
 | `string` | text | no |  |  | Immutable text. CPU only. |
 | `texture` | handle | no |  |  | An immutable texture. Usable only as a material parameter. |
 | `u32` | scalar | yes |  |  | 32-bit unsigned integer. |
@@ -393,15 +393,15 @@ Descriptor literals (`Name { field: value; }`) construct these. The *Update* col
 
 ##### `Box`
 
-An axis-aligned box centred on the origin.
+Axis-aligned box centred on the origin.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
-| `size` | `vec3` | `vec3(1.0, 1.0, 1.0)` | no | construction only | every component > 0 | Full extents along X, Y and Z. |
+| `size` | `vec3` | `vec3(1.0, 1.0, 1.0)` | no | construction only | every component > 0 | Full extents. |
 
 ##### `Plane`
 
-A single-sided horizontal plane at y = 0 facing +Y.
+Single-sided plane at y = 0 facing +Y.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
@@ -425,10 +425,10 @@ A box collision shape.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
-| `friction` | `f32` | `0.5` | no | construction only | ≥ 0, finite | Coulomb friction coefficient. |
+| `friction` | `f32` | `0.5` | no | construction only | ≥ 0, finite | Friction coefficient. |
 | `restitution` | `f32` | `0.0` | no | construction only | 0…1 | Bounciness, 0 to 1. |
-| `sensor` | `bool` | `false` | no | construction only |  | A sensor reports collisions but pushes nothing. |
-| `size` | `vec3` | none | yes | construction only | every component > 0, finite | Full extents along X, Y and Z. |
+| `sensor` | `bool` | `false` | no | construction only |  | Reports collisions, pushes nothing. |
+| `size` | `vec3` | none | yes | construction only | every component > 0, finite | Full extents. |
 
 ##### `CapsuleCollider`
 
@@ -436,11 +436,11 @@ A capsule shape: a cylinder along local Y capped by hemispheres.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
-| `friction` | `f32` | `0.5` | no | construction only | ≥ 0, finite | Coulomb friction coefficient. |
+| `friction` | `f32` | `0.5` | no | construction only | ≥ 0, finite | Friction coefficient. |
 | `height` | `f32` | none | yes | construction only | > 0, finite | Full height including both caps; > 2 * `radius`. |
 | `radius` | `f32` | none | yes | construction only | > 0, finite | Radius in metres. |
 | `restitution` | `f32` | `0.0` | no | construction only | 0…1 | Bounciness, 0 to 1. |
-| `sensor` | `bool` | `false` | no | construction only |  | A sensor reports collisions but pushes nothing. |
+| `sensor` | `bool` | `false` | no | construction only |  | Reports collisions, pushes nothing. |
 
 ##### `SphereCollider`
 
@@ -448,10 +448,10 @@ A sphere collision shape.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
-| `friction` | `f32` | `0.5` | no | construction only | ≥ 0, finite | Coulomb friction coefficient. |
+| `friction` | `f32` | `0.5` | no | construction only | ≥ 0, finite | Friction coefficient. |
 | `radius` | `f32` | none | yes | construction only | > 0, finite | Radius in metres. |
 | `restitution` | `f32` | `0.0` | no | construction only | 0…1 | Bounciness, 0 to 1. |
-| `sensor` | `bool` | `false` | no | construction only |  | A sensor reports collisions but pushes nothing. |
+| `sensor` | `bool` | `false` | no | construction only |  | Reports collisions, pushes nothing. |
 
 #### Schemas of the category `object`
 
@@ -461,9 +461,9 @@ The fields of a `camera`. Looks along local -Z, or at `target` when declared.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
-| `active` | `bool` | none | no | construction only |  | Marks the active camera; optional with one camera, exactly one `active: true` with several. |
-| `exposure` | `f32` | `-1.9145305` | no | construction only |  | EV100; lit materials scale by 1 / (1.2 * 2^exposure). Default -log2(1.2 * pi): white under 1 lux shows white; a sunny day (about 100 000 lux) is about 15. |
-| `position` | `vec3` | `vec3(0.0, 0.0, 5.0)` | no | writable, bindable |  | Camera position in world space, in metres. |
+| `active` | `bool` | none | no | construction only |  | Marks the active camera: optional with one, exactly one `active: true` with several. |
+| `exposure` | `f32` | `-1.9145305` | no | construction only |  | EV100; lit materials scale by 1 / (1.2 * 2^exposure). By default white under 1 lux shows white. |
+| `position` | `vec3` | `vec3(0.0, 0.0, 5.0)` | no | writable, bindable |  | World position in metres. |
 | `projection` | `projection` | `Perspective {}` | no | construction only |  | `Perspective {..}` or `Orthographic {..}`; the kind is construction-only, its fields writable and bindable. |
 | `rotation` | `quat` | `quat.identity()` | no | writable, bindable |  | Orientation when no `target` is declared. |
 | `target` | `vec3` | none | no | writable, bindable |  | Optional point to look at (up is +Y); excludes `rotation`. |
@@ -474,19 +474,20 @@ Entity/prefab: a named transform with optional components.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
-| `body` | `body` | none | no | construction only |  | A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; requires `collider`. |
+| `body` | `body` | none | no | construction only |  | A physics body (`Static`, `Dynamic`, `Kinematic`). Root entities only; needs `collider`. |
 | `bounds_center` | `vec3` | `vec3(0.0, 0.0, 0.0)` | no | writable, bindable | finite | Final deformed local sphere center; used when bounds_radius > 0. |
 | `bounds_radius` | `f32` | `0.0` | no | writable, bindable | ≥ 0, finite | Enclose every final local vertex/pose; 0 uses mesh/skin bounds, or unbounded authored vertices. |
 | `clip` | `string` | none | no | construction only |  | A glTF animation name that moves this entity; the mesh must come from that file. |
+| `clips_from` | `glb_asset` | none | no | construction only |  | GLB whose humanoid clips play on this skeletal mesh; `clip` names its clips. |
 | `collider` | `collider` | none | no | construction only |  | A collision shape (`BoxCollider`, `SphereCollider`, `CapsuleCollider`). Requires `body`. |
-| `light` | `light` | none | no | construction only |  | A light (`DirectionalLight`, `PointLight`); its fields are writable and bindable. Named entities only. |
-| `material` | `material` | `Unlit {}` | no | writable |  | Material instance; a value-only one can be replaced by the same material type; params are writable and bindable. Requires `mesh`. |
-| `mesh` | `mesh` | none | no | construction only |  | The mesh drawn: a descriptor (`Box`, `Sphere`, `Plane`) or an asset mesh. |
-| `particles` | `emitter` | none | no | construction only |  | A particle emitter: up to 64 camera-facing billboards of this entity's mesh in its material's colour; counted even without a mesh. |
+| `light` | `light` | none | no | construction only |  | A light (`DirectionalLight`, `PointLight`); fields writable and bindable. Named entities only. |
+| `material` | `material` | `Unlit {}` | no | writable |  | Material instance; a value-only one can be replaced by the same type; params are writable and bindable. Needs `mesh`. |
+| `mesh` | `mesh` | none | no | construction only |  | The mesh: `Box`, `Sphere`, `Plane` or an asset mesh. |
+| `particles` | `emitter` | none | no | construction only |  | Particle emitter: up to 64 camera-facing billboards of the entity's mesh in its material's colour |
 | `position` | `vec3` | `vec3(0.0, 0.0, 0.0)` | no | writable, bindable |  | Position local to the parent, in metres. |
 | `rotation` | `quat` | `quat.identity()` | no | writable, bindable |  | Rotation local to the parent. |
 | `scale` | `vec3` | `vec3(1.0, 1.0, 1.0)` | no | writable, bindable | every component > 0, finite | Parent-local scale; construction-only on bodies, `vec3(1.0)` on dynamic and kinematic ones. |
-| `tag` | `string` | none | no | construction only |  | A group name (`"rock"`: lowercase letters, digits, `_`) for `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag` and `destroy_tagged`. |
+| `tag` | `string` | none | no | construction only |  | Group name (lowercase letters, digits, `_`) for `count_tagged`, `first_tagged`, `nearest_tagged`, `tagged`, `has_tag`, `destroy_tagged`. |
 | `visible` | `bool` | `true` | no | writable, bindable |  | Hide the mesh; behavior keeps running. |
 
 ##### `Scene`
@@ -495,29 +496,29 @@ The fields of a scene: all construction-only constant expressions.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
-| `ambient_color` | `color` | `#ffffff` | no | construction only |  | Colour of the ambient light; only RGB is used. |
-| `ambient_intensity` | `f32` | `0.0` | no | construction only | ≥ 0 | Ambient light scale for lit materials; 0 is off. Multiplied by the camera's exposure scale (about 3.14 by default), so 0.3 is near full brightness on white. Unlit ignores it. |
-| `clear_color` | `color` | `#000000` | no | construction only |  | Colour the canvas is cleared to; only RGB is used. |
+| `ambient_color` | `color` | `#ffffff` | no | construction only |  | Ambient light colour; only RGB is used. |
+| `ambient_intensity` | `f32` | `0.0` | no | construction only | ≥ 0 | Ambient light scale for lit materials; 0 is off. Times the exposure scale (about 3.14): 0.3 is near full brightness on white. Unlit ignores it. |
+| `clear_color` | `color` | `#000000` | no | construction only |  | Canvas clear colour; only RGB is used. |
 | `gravity` | `vec3` | `vec3(0.0, -9.81, 0.0)` | no | construction only | finite | Gravitational acceleration in m/s^2; used only with physics bodies. |
 
 #### Schemas of the category `light`
 
 ##### `DirectionalLight`
 
-A light infinitely far away. Travels along the entity's world -Z axis; rotate the entity to aim it.
+Infinitely distant light travelling along the entity's world -Z; rotate the entity to aim it.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
-| `color` | `color` | `#ffffff` | no | writable, bindable |  | Light colour (linear RGB; alpha is ignored). |
+| `color` | `color` | `#ffffff` | no | writable, bindable |  | Linear RGB colour; alpha is ignored. |
 | `intensity` | `f32` | `1.0` | no | writable, bindable |  | Illuminance in lux. |
 
 ##### `PointLight`
 
-A light radiating from the entity's world position.
+Light radiating from the entity's position.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
-| `color` | `color` | `#ffffff` | no | writable, bindable |  | Light colour (linear RGB; alpha is ignored). |
+| `color` | `color` | `#ffffff` | no | writable, bindable |  | Linear RGB colour; alpha is ignored. |
 | `intensity` | `f32` | `1.0` | no | writable, bindable |  | Luminous intensity in candela. |
 | `range` | `f32` | `0.0` | no | construction only | ≥ 0 | Distance at which the light fades to nothing; 0 means unlimited. |
 
@@ -525,18 +526,18 @@ A light radiating from the entity's world position.
 
 ##### `Dynamic`
 
-A solver-controlled body; forces, impulses and teleports are explicit commands.
+A solver-controlled body; forces, impulses and teleports are commands.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
-| `angular_damping` | `f32` | `0.05` | no | construction only | ≥ 0, finite | Rate at which angular velocity decays. |
-| `continuous` | `bool` | `false` | no | construction only |  | Continuous collision detection for this body. |
-| `linear_damping` | `f32` | `0.0` | no | construction only | ≥ 0, finite | Rate at which linear velocity decays. |
+| `angular_damping` | `f32` | `0.05` | no | construction only | ≥ 0, finite | Angular velocity decay rate. |
+| `continuous` | `bool` | `false` | no | construction only |  | Continuous collision detection. |
+| `linear_damping` | `f32` | `0.0` | no | construction only | ≥ 0, finite | Linear velocity decay rate. |
 | `mass` | `f32` | `1.0` | no | construction only | > 0, finite | Mass in kilograms. |
 
 ##### `Kinematic`
 
-Program-moved body: `set_kinematic_target`, or `move_character` with collisions. Fields tune `move_character`.
+Program-moved body: `set_kinematic_target`, or `move_character` with collisions. Fields tune it.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
@@ -549,7 +550,7 @@ Program-moved body: `set_kinematic_target`, or `move_character` with collisions.
 
 ##### `Static`
 
-An immovable body; its pose is fixed at creation from the entity transform.
+An immovable body; its pose is fixed at creation.
 
 No fields.
 
@@ -557,15 +558,15 @@ No fields.
 
 ##### `Emitter`
 
-A bounded particle emitter: at most 64 particles, `rate` per second, in a hemisphere around the entity's up axis.
+Bounded particle emitter: at most 64 particles, `rate` per second, in a hemisphere around the entity's up axis.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
-| `gravity` | `f32` | `0.0` | no | construction only | finite | Downward acceleration in metres per second squared. |
-| `lifetime` | `f32` | `1.0` | no | construction only | > 0, finite | How long each particle lives, in seconds. |
-| `rate` | `f32` | `0.0` | no | construction only | ≥ 0 | Particles spawned per second. A fraction carries to the next frame. |
+| `gravity` | `f32` | `0.0` | no | construction only | finite | Downward acceleration in m/s^2. |
+| `lifetime` | `f32` | `1.0` | no | construction only | > 0, finite | Particle lifetime in seconds. |
+| `rate` | `f32` | `0.0` | no | construction only | ≥ 0 | Particles per second; a fraction carries to the next frame. |
 | `size` | `f32` | `0.05` | no | construction only | > 0, finite | Billboard size in metres. |
-| `speed` | `f32` | `1.0` | no | construction only | ≥ 0 | Initial speed in metres per second. |
+| `speed` | `f32` | `1.0` | no | construction only | ≥ 0 | Initial speed in m/s. |
 
 #### Schemas of the category `projection`
 
@@ -575,9 +576,9 @@ An orthographic projection (right-handed, clip depth 0 to 1).
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
-| `far` | `f32` | `1000.0` | no | writable, bindable | > near | Distance to the far plane. |
-| `height` | `f32` | `10.0` | no | writable, bindable | > 0 | Height of the view volume in world units; width follows the aspect ratio. |
-| `near` | `f32` | `0.1` | no | writable, bindable | > 0 | Distance to the near plane. |
+| `far` | `f32` | `1000.0` | no | writable, bindable | > near | Far plane. |
+| `height` | `f32` | `10.0` | no | writable, bindable | > 0 | View volume height in world units; width follows the aspect ratio. |
+| `near` | `f32` | `0.1` | no | writable, bindable | > 0 | Near plane. |
 
 ##### `Perspective`
 
@@ -585,34 +586,34 @@ A perspective projection (right-handed, clip depth 0 to 1).
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
-| `far` | `f32` | `1000.0` | no | writable, bindable | > near | Distance to the far plane. |
+| `far` | `f32` | `1000.0` | no | writable, bindable | > near | Far plane. |
 | `fov_y` | `f32` | `0.9` | no | writable, bindable | (0, π) | Full vertical field of view in radians. |
-| `near` | `f32` | `0.1` | no | writable, bindable | > 0 | Distance to the near plane. |
+| `near` | `f32` | `0.1` | no | writable, bindable | > 0 | Near plane. |
 
 #### Schemas of the category `material`
 
 ##### `Pbr`
 
-Metallic-roughness PBR with optional scene shadows and environment lighting.
+Metallic-roughness PBR; optional scene shadows and environment lighting.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
-| `base_color` | `color` | `#ffffff` | no | writable, bindable |  | Linear base colour multiplied with the base colour texture. |
-| `base_color_sampler` | `sampler` | `sampler.linear_repeat()` | no | construction only |  | Sampler for the base colour texture. |
-| `base_color_texture` | `texture` | `texture.white()` | no | construction only |  | Base colour texture. |
+| `base_color` | `color` | `#ffffff` | no | writable, bindable |  | Linear base colour, multiplied with the texture. |
+| `base_color_sampler` | `sampler` | `sampler.linear_repeat()` | no | construction only |  | Sampler. |
+| `base_color_texture` | `texture` | `texture.white()` | no | construction only |  | Texture. |
 | `emissive` | `color` | `#000000` | no | writable, bindable |  | Linear emission before exposure. |
-| `emissive_sampler` | `sampler` | `sampler.linear_repeat()` | no | construction only |  | Sampler of the emissive map. |
+| `emissive_sampler` | `sampler` | `sampler.linear_repeat()` | no | construction only |  | Sampler. |
 | `emissive_texture` | `texture` | `texture.white()` | no | construction only |  | sRGB emissive colour, multiplied by emissive. |
-| `metallic` | `f32` | `0.0` | no | writable, bindable |  | Metalness; clamped to 0..1 by the lighting model. |
-| `metallic_roughness_sampler` | `sampler` | `sampler.linear_repeat()` | no | construction only |  | Sampler of the metallic_roughness map. |
+| `metallic` | `f32` | `0.0` | no | writable, bindable |  | Metalness, clamped to 0..1. |
+| `metallic_roughness_sampler` | `sampler` | `sampler.linear_repeat()` | no | construction only |  | Sampler. |
 | `metallic_roughness_texture` | `texture` | `texture.white()` | no | construction only |  | Linear green roughness and blue metallic factors. |
-| `normal_sampler` | `sampler` | `sampler.linear_repeat()` | no | construction only |  | Sampler of the normal map. |
+| `normal_sampler` | `sampler` | `sampler.linear_repeat()` | no | construction only |  | Sampler. |
 | `normal_scale` | `f32` | `0.0` | no | writable, bindable |  | Normal XY scale; zero suits the white fallback. GLB map default: one. |
 | `normal_texture` | `texture` | `texture.white()` | no | construction only |  | Linear tangent-space normal map; enable with normal_scale. |
-| `occlusion_sampler` | `sampler` | `sampler.linear_repeat()` | no | construction only |  | Sampler of the occlusion map. |
-| `occlusion_strength` | `f32` | `1.0` | no | writable, bindable |  | Indirect-light occlusion strength, clamped to 0..1. |
+| `occlusion_sampler` | `sampler` | `sampler.linear_repeat()` | no | construction only |  | Sampler. |
+| `occlusion_strength` | `f32` | `1.0` | no | writable, bindable |  | Occlusion strength, clamped to 0..1. |
 | `occlusion_texture` | `texture` | `texture.white()` | no | construction only |  | Linear red indirect-light occlusion. |
-| `roughness` | `f32` | `0.5` | no | writable, bindable |  | Perceptual roughness; clamped to 0.045..1 by the lighting model. |
+| `roughness` | `f32` | `0.5` | no | writable, bindable |  | Perceptual roughness, clamped to 0.045..1. |
 
 ##### `Sprite`
 
@@ -620,11 +621,11 @@ One frame of a sprite sheet, tinted; always translucent.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
-| `cell` | `f32` | `0.0` | no | writable, bindable |  | Cell (animation frame) shown, from 0, row by row; floored and wrapped, so `bind(t * fps)` animates. |
-| `columns` | `f32` | `1.0` | no | writable, bindable | 1…64 | Cells per row of the sheet. |
-| `rows` | `f32` | `1.0` | no | writable, bindable | 1…64 | Rows of cells in the sheet. |
+| `cell` | `f32` | `0.0` | no | writable, bindable |  | Cell shown, from 0, row by row; floored and wrapped, so `bind(t * fps)` animates. |
+| `columns` | `f32` | `1.0` | no | writable, bindable | 1…64 | Cells per row. |
+| `rows` | `f32` | `1.0` | no | writable, bindable | 1…64 | Rows of cells. |
 | `sheet` | `texture` | `texture.white()` | no | construction only |  | The sprite sheet: `columns` x `rows` equal cells. |
-| `sheet_sampler` | `sampler` | `sampler.nearest_clamp()` | no | construction only |  | Sampler of the sheet (default nearest, clamped). |
+| `sheet_sampler` | `sampler` | `sampler.nearest_clamp()` | no | construction only |  | Sampler. |
 | `tint` | `color` | `#ffffff` | no | writable, bindable |  | Multiplies the texel, alpha included. |
 
 ##### `Unlit`
@@ -633,7 +634,7 @@ Flat colour, no lighting.
 
 | Field | Type | Default | Required | Update | Range | Description |
 |---|---|---|---|---|---|---|
-| `color` | `color` | `#ffffff` | no | writable, bindable |  | The colour written to the canvas. |
+| `color` | `color` | `#ffffff` | no | writable, bindable |  | Colour. |
 
 ### Scene objects
 
@@ -645,20 +646,20 @@ Flat colour, no lighting.
 
 | Event | Form | Argument | Allowed in | Needs a collider | Description |
 |---|---|---|---|---|---|
-| `collision_enter` | parameter | `entity_ref` | entity, prefab | yes | Its collider started touching another; the parameter is that entity. |
-| `collision_exit` | parameter | `entity_ref` | entity, prefab | yes | Its collider stopped touching another; the parameter is that entity. |
-| `key_down` | filter | `Key` | scene, entity, prefab | no | Delivered when the filtered key transitions to pressed. Auto-repeat is ignored. |
+| `collision_enter` | parameter | `entity_ref` | entity, prefab | yes | Its collider began touching the parameter entity. |
+| `collision_exit` | parameter | `entity_ref` | entity, prefab | yes | Its collider stopped touching the parameter entity. |
+| `key_down` | filter | `Key` | scene, entity, prefab | no | Delivered when the filtered key is pressed; auto-repeat is ignored. |
 | `key_up` | filter | `Key` | scene, entity, prefab | no | Delivered when the filtered key is released. |
-| `message` | parameter | `string` | entity, prefab | no | A queued string sent to this entity; delivered before its next unpaused update. |
-| `pointer_down` | parameter | `PointerEvent` | scene, entity, prefab | no | A pointer button was pressed on the canvas. |
-| `pointer_move` | parameter | `PointerEvent` | scene, entity, prefab | no | The pointer moved; at most once per frame with the latest position. |
+| `message` | parameter | `string` | entity, prefab | no | A string sent to this entity; delivered before its next unpaused update. |
+| `pointer_down` | parameter | `PointerEvent` | scene, entity, prefab | no | A pointer button was pressed. |
+| `pointer_move` | parameter | `PointerEvent` | scene, entity, prefab | no | The pointer moved; at most once per frame, latest position. |
 | `pointer_up` | parameter | `PointerEvent` | scene, entity, prefab | no | A pointer button was released. |
 
 ### Enums
 
 #### `Key`
 
-A physical key, layout-independent. Written `Key.<Member>` with exactly the members listed (`Key.Space`, `Key.ArrowUp`, `Key.A`, `Key.Digit1`); there is no `Key.Up`, `Key.KeyA` or `Key.Shift`.
+A physical key: `Key.<Member>` with exactly the members listed (e.g. `Key.ArrowUp`, `Key.Digit1`); there is no `Key.Up`, `Key.KeyA` or `Key.Shift`.
 
 | Member | DOM `KeyboardEvent.code` |
 |---|---|
@@ -722,33 +723,50 @@ Controls an entity's imported node clip (decision 0190).
 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
-| `animation.copy_pose` | function | `(target: entity_ref, source: entity_ref) -> bool` | cpu | no | Copies and holds the displayed pose of a compatible skeleton; a later transition blends from it. |
-| `animation.crossed` | function | `(target: entity_ref, marker: f32) -> bool` | cpu | no | Whether a marker in (0, duration] was crossed in the latest update, including loop wraps. Not consumed by reading. |
-| `animation.duration` | function | `(target: entity_ref) -> f32` | cpu | no | Clip duration in seconds; zero for an unavailable clip. |
-| `animation.fade` | function | `(target: entity_ref, weight: f32, duration: f32) -> bool` | cpu | no | Blends clip weight toward a 0..1 target over seconds; zero applies at once. |
+| `animation.animated_joint_position` | function | `(target: entity_ref, name: string) -> vec3` | cpu | no | Joint position before goals. |
+| `animation.blend_clear` | function | `(target: entity_ref) -> bool` | cpu | no | Drops the blend space and pending samples. False if none. |
+| `animation.blend_parameter` | function | `(target: entity_ref, x: f32, y: f32) -> bool` | cpu | no | Moves the blend point; the phase stays. |
+| `animation.blend_phase` | function | `(target: entity_ref) -> f32` | cpu | no | Blend cycle position 0..1; zero if unavailable. |
+| `animation.blend_play` | function | `(target: entity_ref, looping: bool, speed: f32) -> bool` | cpu | no | Plays the pending blend space; false if invalid. |
+| `animation.blend_sample` | function | `(target: entity_ref, clip: string, x: f32, y: f32) -> bool` | cpu | no | Adds `clip` at (x, y) to the pending blend space. |
+| `animation.chain_goal` | function | `(target: entity_ref, id: string, end_joint: string, length: i32, goal: vec3, weight: f32) -> bool` | cpu | no | Bends the `length` joints ending at `end_joint` to a world `goal` (CCD). |
+| `animation.clear_chain` | function | `(target: entity_ref, id: string) -> bool` | cpu | no | Removes chain goal `id`. False if none. |
+| `animation.clear_foot_placement` | function | `(target: entity_ref) -> bool` | cpu | no | Releases foot placement. False if none. |
+| `animation.clear_limb` | function | `(target: entity_ref, id: string) -> bool` | cpu | no | Removes the goal of limb `id`. False if none. |
+| `animation.copy_pose` | function | `(target: entity_ref, source: entity_ref) -> bool` | cpu | no | Holds a compatible skeleton's pose; a later transition blends from it. |
+| `animation.crossed` | function | `(target: entity_ref, marker: f32) -> bool` | cpu | no | Whether `marker` in (0, duration] was crossed in the last update (wraps count). |
+| `animation.duration` | function | `(target: entity_ref) -> f32` | cpu | no | Clip duration in seconds; zero if unavailable. |
+| `animation.fade` | function | `(target: entity_ref, weight: f32, duration: f32) -> bool` | cpu | no | Fades clip weight to 0..1 over `duration`; zero is immediate. |
+| `animation.fade_layer` | function | `(target: entity_ref, id: string, weight: f32, seconds: f32) -> bool` | cpu | no | Fades layer `id` to `weight` over `seconds`; false if none. |
 | `animation.finished` | function | `(target: entity_ref) -> bool` | cpu | no | Whether a one-shot clip reached its end. |
-| `animation.joint_position` | function | `(target: entity_ref, name: string) -> vec3` | cpu | no | Joint position in the skeletal mesh local space; zero if missing. |
-| `animation.joint_rotation` | function | `(target: entity_ref, name: string) -> quat` | cpu | no | Joint rotation in skeletal mesh local space; identity if missing. |
-| `animation.pause` | function | `(target: entity_ref) -> bool` | cpu | no | Freezes clip time; fades continue during scene updates. |
-| `animation.play` | function | `(target: entity_ref, looping: bool, speed: f32) -> bool` | cpu | no | Restarts the clip. Speed must be finite and nonnegative. Returns false for an unavailable clip. |
-| `animation.playing` | function | `(target: entity_ref) -> bool` | cpu | no | Whether clip time is advancing; false for an unavailable clip. |
-| `animation.resume` | function | `(target: entity_ref) -> bool` | cpu | no | Continues a paused clip; returns false for a finished clip. |
-| `animation.seek` | function | `(target: entity_ref, time: f32) -> bool` | cpu | no | Clamps time to the clip duration and applies the pose at once, crossing no markers and not resuming. |
-| `animation.time` | function | `(target: entity_ref) -> f32` | cpu | no | Current clip time in seconds; zero for an unavailable clip. |
-| `animation.transition` | function | `(target: entity_ref, name: string, seconds: f32, looping: bool, speed: f32) -> bool` | cpu | no | Selects a skeletal clip, crossfading from the current pose; the current name does not restart (use play). |
-| `animation.weight` | function | `(target: entity_ref) -> f32` | cpu | no | Current clip weight; zero for an unavailable clip. |
+| `animation.foot_placement` | function | `(target: entity_ref, left: vec3, right: vec3, left_normal: vec3, right_normal: vec3, left_weight: f32, right_weight: f32) -> bool` | cpu | no | Plants feet on world ground points, lowering the hips; humanoids only. |
+| `animation.joint_position` | function | `(target: entity_ref, name: string) -> vec3` | cpu | no | Joint position in mesh-local space; zero if missing. |
+| `animation.joint_rotation` | function | `(target: entity_ref, name: string) -> quat` | cpu | no | Joint rotation in mesh-local space; identity if missing. |
+| `animation.limb_goal` | function | `(target: entity_ref, limb: string, goal: vec3, weight: f32) -> bool` | cpu | no | Reaches `limb` (`left_leg`, `right_leg`, `left_arm`, `right_arm`) to a world `goal`; humanoids only. |
+| `animation.pause` | function | `(target: entity_ref) -> bool` | cpu | no | Freezes clip time (fades continue). False if none. |
+| `animation.play` | function | `(target: entity_ref, looping: bool, speed: f32) -> bool` | cpu | no | Restarts the clip (speed >= 0); false if unavailable. |
+| `animation.playing` | function | `(target: entity_ref) -> bool` | cpu | no | Whether clip time is advancing; false if unavailable. |
+| `animation.remove_layer` | function | `(target: entity_ref, id: string) -> bool` | cpu | no | Removes layer `id`. False if none. |
+| `animation.resume` | function | `(target: entity_ref) -> bool` | cpu | no | Continues a paused clip. False if none. |
+| `animation.root_motion` | function | `(target: entity_ref, joint: string) -> bool` | cpu | no | `joint`'s translation drives the entity, not the mesh ("" = off); see `take_root_motion`. |
+| `animation.seek` | function | `(target: entity_ref, time: f32) -> bool` | cpu | no | Jumps to `time` (clamped) at once; crosses no markers, does not resume. |
+| `animation.set_layer` | function | `(target: entity_ref, id: string, clip: string, weight: f32, additive: bool, mask: string) -> bool` | cpu | no | Layer `id` plays `clip` over the base at `weight`; `mask` roots the moved subtree ("" = all); the same clip keeps its phase. |
+| `animation.take_root_motion` | function | `(target: entity_ref) -> vec3` | cpu | no | World root displacement since the last call; feed it to `move_character`. |
+| `animation.time` | function | `(target: entity_ref) -> f32` | cpu | no | Current clip time in seconds; zero if unavailable. |
+| `animation.transition` | function | `(target: entity_ref, name: string, seconds: f32, looping: bool, speed: f32) -> bool` | cpu | no | Crossfades to a skeletal clip; the same clip is not restarted. |
+| `animation.weight` | function | `(target: entity_ref) -> f32` | cpu | no | Current clip weight; zero if unavailable. |
 
 #### `asset`
 
-Compile-time asset declarations. The argument must be a string literal naming a file inside the project.
+Compile-time asset declarations. The argument is a string literal naming a project file.
 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
-| `asset.font` | function | `(path: string) -> font` | cpu | yes | A font file (`.ttf`, `.otf`, `.woff` or `.woff2`) for `hud.text`. |
-| `asset.glb` | function | `(path: string) -> glb_asset` | cpu | yes | A static GLB model; only in a `const`, used through its accessors. |
+| `asset.font` | function | `(path: string) -> font` | cpu | yes | Font file (`.ttf`, `.otf`, `.woff`, `.woff2`) for `hud.text`. |
+| `asset.glb` | function | `(path: string) -> glb_asset` | cpu | yes | Static GLB model; only in a `const`, used through its accessors. |
 | `asset.linear_texture` | function | `(path: string) -> texture` | cpu | yes | A linear data texture (masks, normal data). |
-| `asset.sound` | function | `(path: string) -> sound` | cpu | yes | A sound file (`.wav`, `.ogg` or `.mp3`) for `play`, `play_at` and `play_music`. |
-| `asset.texture` | function | `(path: string) -> texture` | cpu | yes | An sRGB colour texture. |
+| `asset.sound` | function | `(path: string) -> sound` | cpu | yes | Sound file (`.wav`, `.ogg`, `.mp3`) for `play`, `play_at`, `play_music`. |
+| `asset.texture` | function | `(path: string) -> texture` | cpu | yes | sRGB colour texture. |
 
 #### `color`
 
@@ -756,12 +774,12 @@ Colour constructors.
 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
-| `color.linear` | function | `(rgb: vec3, a: f32) -> color` | both | yes | A colour from linear-light components. |
-| `color.srgb` | function | `(rgb: vec3, a: f32) -> color` | both | yes | A colour from sRGB-encoded components, converted to linear light. |
+| `color.linear` | function | `(rgb: vec3, a: f32) -> color` | both | yes | Colour from linear components. |
+| `color.srgb` | function | `(rgb: vec3, a: f32) -> color` | both | yes | Colour from sRGB components, converted to linear. |
 
 #### `easing`
 
-Easing curves for tweens: `mix(a, b, easing.out_cubic(t))` moves from `a` to `b` as `t` goes from 0 to 1.
+Easing curves for tweens: `mix(a, b, easing.out_cubic(t))` moves `a` to `b` as `t` goes 0 to 1.
 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
@@ -778,13 +796,13 @@ Easing curves for tweens: `mix(a, b, easing.out_cubic(t))` moves from `a` to `b`
 
 #### `frame`
 
-Per-frame CPU/`bind` values; route to GPU stages through material params. `update(dt)` gets the variable frame delta; `fixed_update(dt)` runs zero or more times per frame with a constant step (default 1/60 s).
+Per-frame CPU/`bind` values; route to GPU stages through material params. `update(dt)` gets the variable delta; `fixed_update(dt)` runs zero or more times per frame at a constant step (default 1/60 s).
 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
-| `frame.delta` | value | `f32` | cpu | no | The clamped frame delta passed to `update`. |
-| `frame.index` | value | `u32` | cpu | no | Rendered frame counter since mount, wrapping. |
-| `frame.time` | value | `f32` | cpu | no | Active application time in seconds since mount, excluding paused time. |
+| `frame.delta` | value | `f32` | cpu | no | The clamped delta passed to `update`. |
+| `frame.index` | value | `u32` | cpu | no | Frame counter since mount, wrapping. |
+| `frame.time` | value | `f32` | cpu | no | Seconds since mount, excluding paused time. |
 
 #### `gamepad`
 
@@ -802,10 +820,10 @@ The heads-up display: text, rectangles and buttons drawn over the canvas. Immedi
 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
-| `hud.button` | function | `(label: string, at: vec2) -> bool`<br>`(label: string, at: vec2, size: f32) -> bool` | cpu | no | Draws a button centred at `at` (canvas NDC) labelled `label` (`size` CSS pixels, default 24.0). Returns true in the frame after a click, once per click; buttons are told apart by label and order. |
-| `hud.pixel_font` | function | `() -> font` | cpu | no | The built-in 5x7 pixel bitmap font of printable ASCII; other characters show as a box. |
-| `hud.rect` | function | `(at: vec2, size: vec2, tint: color) -> ()`<br>`(at: vec2, size: vec2, tint: color, align: f32) -> ()` | cpu | no | Draws a filled rectangle of `size` CSS pixels at `at` (canvas NDC), aligned like `hud.text` (default centred). |
-| `hud.text` | function | `(content: string, at: vec2) -> ()`<br>`(content: string, at: vec2, size: f32) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color, align: f32) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color, align: f32, font: font) -> ()` | cpu | no | Draws a line of text at `at` (canvas NDC, y up): `size` CSS pixels (default 24.0), `tint` (default white), `align` 0.0 left edge, 0.5 centre (default), 1.0 right edge, `font` an `asset.font(..)` or `hud.pixel_font()` (default: page sans-serif). Centred vertically on `at`. |
+| `hud.button` | function | `(label: string, at: vec2) -> bool`<br>`(label: string, at: vec2, size: f32) -> bool` | cpu | no | Draws a button at `at` (canvas NDC) labelled `label` (`size` CSS px, 24.0). True once per click, next frame; buttons are told apart by label and order. |
+| `hud.pixel_font` | function | `() -> font` | cpu | no | Built-in 5x7 bitmap font of printable ASCII; others show as a box. |
+| `hud.rect` | function | `(at: vec2, size: vec2, tint: color) -> ()`<br>`(at: vec2, size: vec2, tint: color, align: f32) -> ()` | cpu | no | Draws a filled rectangle of `size` CSS px at `at` (canvas NDC), aligned like `hud.text`. |
+| `hud.text` | function | `(content: string, at: vec2) -> ()`<br>`(content: string, at: vec2, size: f32) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color, align: f32) -> ()`<br>`(content: string, at: vec2, size: f32, tint: color, align: f32, font: font) -> ()` | cpu | no | Draws text at `at` (canvas NDC, y up), `size` CSS px (24.0), `tint` (white), `align` 0 left, 0.5 centre (default), 1 right, `font` (page sans-serif). Centred vertically. |
 
 #### `lighting`
 
@@ -814,7 +832,7 @@ Lighting functions for material fragment stages.
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
 | `lighting.pbr` | function | `(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32) -> color` | gpu | no | PBR with scene lights, optional shadows and environment lighting. |
-| `lighting.pbr_mapped` | function | `(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32, normal_texel: vec3, normal_scale: f32, occlusion: f32, emissive: vec3) -> color` | gpu | no | Derivative normal, indirect occlusion, exposed emission; fragment initial straight-line code only. |
+| `lighting.pbr_mapped` | function | `(surface: SurfaceInput, base_color: color, metallic: f32, roughness: f32, normal_texel: vec3, normal_scale: f32, occlusion: f32, emissive: vec3) -> color` | gpu | no | Derivative normal, occlusion and emission; fragment initial straight-line code only. |
 
 #### `mat4`
 
@@ -834,8 +852,8 @@ Quaternion constructors.
 
 | Member | Kind | Signatures | Domain | Constant | Description |
 |---|---|---|---|---|---|
-| `quat.axis_angle` | function | `(axis: vec3, angle: f32) -> quat` | both | yes | Rotation by `angle` radians about `axis` (normalised; a zero axis gives the identity on the CPU). |
-| `quat.euler` | function | `(x: f32, y: f32, z: f32) -> quat` | both | yes | Rotation about Z, then X, then Y, all about fixed world axes: `axis_angle(+Y, y) * axis_angle(+X, x) * axis_angle(+Z, z)`. |
+| `quat.axis_angle` | function | `(axis: vec3, angle: f32) -> quat` | both | yes | Rotation of `angle` radians about `axis` (normalised; zero axis: identity on the CPU). |
+| `quat.euler` | function | `(x: f32, y: f32, z: f32) -> quat` | both | yes | Z, then X, then Y rotation about fixed world axes: `axis_angle(+Y, y) * axis_angle(+X, x) * axis_angle(+Z, z)`. |
 | `quat.identity` | function | `() -> quat` | both | yes | The rotation that does nothing. |
 
 #### `sampler`
@@ -874,36 +892,36 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 |---|---|---|---|---|---|
 | `abs` | `(x: T) -> T`<br>`(x: I) -> I` | both | yes | no | Absolute value, component-wise. |
 | `acos` | `(x: T) -> T` | both | yes | no | Arc cosine, in radians. |
-| `alive` | `(target: entity_ref) -> bool` | cpu | no | no | Whether the entity reference points at a live entity. |
+| `alive` | `(target: entity_ref) -> bool` | cpu | no | no | Whether the reference points at a live entity. |
 | `asin` | `(x: T) -> T` | both | yes | no | Arc sine, in radians. |
 | `atan` | `(x: T) -> T` | both | yes | no | Arc tangent, in radians. |
 | `atan2` | `(y: T, x: T) -> T` | both | yes | no | Angle of the point `(x, y)` in radians; note the argument order `atan2(y, x)`. |
 | `ceil` | `(x: T) -> T` | both | yes | no | Smallest integer value not below `x`. |
 | `chance` | `(p: f32) -> bool` | cpu | no | no | True with probability `p`. |
-| `choose` | `(items: array<T, N>) -> T` | cpu | no | no | One element of an array, chosen uniformly. |
+| `choose` | `(items: array<T, N>) -> T` | cpu | no | no | A uniformly chosen element. |
 | `clamp` | `(x: T, lo: T, hi: T) -> T`<br>`(x: I, lo: I, hi: I) -> I` | both | yes | no | Limits `x` to the range `lo..hi`. |
 | `clear_saved` | `() -> ()` | cpu | no | yes | Deletes everything stored. |
 | `cos` | `(x: T) -> T` | both | yes | no | Cosine of an angle in radians. |
-| `count_tagged` | `(tag: string) -> i32` | cpu | no | no | The number of live entities with the tag. |
+| `count_tagged` | `(tag: string) -> i32` | cpu | no | no | Number of live entities with the tag. |
 | `cross` | `(a: vec3, b: vec3) -> vec3` | both | yes | no | Cross product of two 3D vectors. |
 | `degrees` | `(x: T) -> T` | both | yes | no | Radians to degrees. |
 | `destroy` | `(target: entity_ref) -> ()` | cpu | no | yes | Queues removal of a spawned entity; it counts as dead at once. |
-| `destroy_tagged` | `(tag: string) -> ()` | cpu | no | yes | Queues removal of every live spawned entity with the tag (not a tag of a named entity). |
+| `destroy_tagged` | `(tag: string) -> ()` | cpu | no | yes | Queues removal of every live spawned entity with the tag (not named entities). |
 | `distance` | `(a: T, b: T) -> f32` | both | yes | no | Distance between two points. |
 | `dot` | `(a: V, b: V) -> f32` | both | yes | no | Dot product of two vectors. |
 | `exp` | `(x: T) -> T` | both | yes | no | e raised to `x`. |
 | `exp2` | `(x: T) -> T` | both | yes | no | 2 raised to `x`. |
-| `first_tagged` | `(tag: string) -> entity_ref` | cpu | no | no | The first live entity with the tag in instance order; a dead reference if there is none. |
+| `first_tagged` | `(tag: string) -> entity_ref` | cpu | no | no | The first live entity with the tag in instance order; a dead reference if none. |
 | `floor` | `(x: T) -> T` | both | yes | no | Largest integer value not above `x`. |
 | `fract` | `(x: T) -> T` | both | yes | no | Fractional part of `x`. |
 | `go_to` | `(scene: scene name) -> ()` | cpu | no | yes | Switches scene, keeping shared state. |
 | `has_tag` | `(target: entity_ref, tag: string) -> bool` | cpu | no | no | Whether the entity is live and has the tag. |
 | `inverse_sqrt` | `(x: T) -> T` | both | yes | no | Reciprocal of the square root. |
-| `is_key_down` | `(key: Key) -> bool` | cpu | no | no | Whether the key was down at the end of input handling this frame. |
+| `is_key_down` | `(key: Key) -> bool` | cpu | no | no | Whether the key is down. Sampled after this frame's input handling. |
 | `is_muted` | `() -> bool` | cpu | no | no | Whether audio is muted with `set_muted`. |
-| `is_pointer_down` | `(button: i32) -> bool` | cpu | no | no | Whether pointer button `button` was down at the end of input handling. |
-| `key_pressed` | `(key: Key) -> bool` | cpu | no | no | Whether the key went down during input handling of the current frame. |
-| `key_released` | `(key: Key) -> bool` | cpu | no | no | Whether the key went up during input handling of the current frame. |
+| `is_pointer_down` | `(button: i32) -> bool` | cpu | no | no | Whether pointer button `button` is down after input handling. |
+| `key_pressed` | `(key: Key) -> bool` | cpu | no | no | Whether the key went down. Sampled after this frame's input handling. |
+| `key_released` | `(key: Key) -> bool` | cpu | no | no | Whether the key went up. Sampled after this frame's input handling. |
 | `length` | `(x: T) -> f32` | both | yes | no | Length of a vector, or the absolute value of a scalar. |
 | `load` | `() -> bool` | cpu | no | yes | Reads saved values back; false if none. |
 | `log` | `(x: T) -> T` | both | yes | no | Natural logarithm. |
@@ -911,21 +929,21 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `max` | `(a: T, b: T) -> T`<br>`(a: I, b: I) -> I` | both | yes | no | Larger of two values, component-wise. |
 | `min` | `(a: T, b: T) -> T`<br>`(a: I, b: I) -> I` | both | yes | no | Smaller of two values, component-wise. |
 | `mix` | `(a: T, b: T, t: f32) -> T`<br>`(a: T, b: T, t: T) -> T` | both | yes | no | Linear interpolation `a * (1 - t) + b * t`, with a scalar or a component-wise `t`. |
-| `nearest_tagged` | `(tag: string, point: vec3) -> entity_ref` | cpu | no | no | The live entity with the tag whose world position is nearest `point`; a dead reference if there is none. |
+| `nearest_tagged` | `(tag: string, point: vec3) -> entity_ref` | cpu | no | no | The live entity with the tag nearest `point` (world position); a dead reference if none. |
 | `normalize` | `(v: V) -> V` | both | yes | no | The vector scaled to length 1. |
-| `overlap_boxes` | `(a: vec3, size_a: vec3, rotation_a: quat, b: vec3, size_b: vec3, rotation_b: quat) -> bool` | cpu | no | no | Oriented box intersection from world centres, full sizes and rotations. No physics needed. |
-| `overlap_spheres` | `(a: vec3, radius_a: f32, b: vec3, radius_b: f32) -> bool` | cpu | no | no | World-space sphere intersection, including touching. No physics required. |
-| `particle_count` | `() -> i32` | cpu | no | no | How many particles are alive. |
+| `overlap_boxes` | `(a: vec3, size_a: vec3, rotation_a: quat, b: vec3, size_b: vec3, rotation_b: quat) -> bool` | cpu | no | no | Oriented box intersection from world centres, full sizes and rotations. |
+| `overlap_spheres` | `(a: vec3, radius_a: f32, b: vec3, radius_b: f32) -> bool` | cpu | no | no | World-space sphere intersection, touching included. No physics needed. |
+| `particle_count` | `() -> i32` | cpu | no | no | Live particle count. |
 | `pause` | `() -> ()` | cpu | no | yes | Stops update, physics and timers; input goes on. |
 | `paused` | `() -> bool` | cpu | no | no | Whether paused. |
-| `play` | `(sound: sound) -> ()`<br>`(sound: sound, volume: f32) -> ()`<br>`(sound: sound, volume: f32, pitch: f32) -> ()` | cpu | no | yes | Plays a sound once with `volume` (default 1.0, range 0..4) and `pitch` (rate, default 1.0, range 0.0625..16). |
-| `play_at` | `(sound: sound, position: vec3) -> ()`<br>`(sound: sound, position: vec3, volume: f32) -> ()` | cpu | no | yes | Plays a sound once at a world position: quieter with distance from the active camera, and panned. |
+| `play` | `(sound: sound) -> ()`<br>`(sound: sound, volume: f32) -> ()`<br>`(sound: sound, volume: f32, pitch: f32) -> ()` | cpu | no | yes | Plays a sound once at `volume` (default 1, 0..4) and `pitch` (rate, default 1, 0.0625..16). |
+| `play_at` | `(sound: sound, position: vec3) -> ()`<br>`(sound: sound, position: vec3, volume: f32) -> ()` | cpu | no | yes | Plays a sound once at a world position, attenuated by distance from the camera and panned. |
 | `play_music` | `(sound: sound) -> ()`<br>`(sound: sound, volume: f32) -> ()` | cpu | no | yes | Starts a sound as looping music, replacing the current music. |
-| `pointer_position` | `() -> vec2` | cpu | no | no | The pointer position at the end of input handling, in canvas NDC. |
+| `pointer_position` | `() -> vec2` | cpu | no | no | The pointer position after input handling, in canvas NDC. |
 | `pow` | `(base: T, exponent: T) -> T` | both | yes | no | `base` raised to `exponent`, component-wise. |
-| `print` | `(message: string) -> ()` | cpu | no | no | Writes a message to the development console. |
+| `print` | `(message: string) -> ()` | cpu | no | no | Writes to the development console. |
 | `radians` | `(x: T) -> T` | both | yes | no | Degrees to radians. |
-| `random` | `() -> f32` | cpu | no | no | A pseudo-random number in `[0, 1)`. |
+| `random` | `() -> f32` | cpu | no | no | Pseudo-random in `[0, 1)`. |
 | `random_int` | `(lo: i32, hi: i32) -> i32` | cpu | no | no | A random i32 in `[lo, hi)`; `lo` if `hi <= lo`. |
 | `random_range` | `(lo: f32, hi: f32) -> f32` | cpu | no | no | A random f32 in `[lo, hi)`. |
 | `reflect` | `(i: V, n: V) -> V` | both | yes | no | Reflects incident vector `i` about the surface normal `n`. |
@@ -939,13 +957,13 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 | `screen_to_world` | `(point: vec2, z: f32) -> vec3` | cpu | no | no | Canvas NDC to the world Z plane `z`; parallel rays return NaN x/y. |
 | `send` | `(target: entity_ref, message: string) -> ()` | cpu | no | yes | Queues a string for a live entity's `on message(value: string)` handler. |
 | `set_camera` | `(camera: camera name) -> ()` | cpu | no | yes | Switches the active camera. |
-| `set_muted` | `(muted: bool) -> ()` | cpu | no | yes | Mutes or unmutes all audio; the volume is kept. |
-| `set_volume` | `(volume: f32) -> ()` | cpu | no | yes | Sets the global volume of every sound and the music (default 1.0, range 0..4). |
-| `shuffle` | `(items: array<T, N>) -> array<T, N>` | cpu | no | no | A new array with the same elements in a random order. |
+| `set_muted` | `(muted: bool) -> ()` | cpu | no | yes | Mutes or unmutes all audio, keeping the volume. |
+| `set_volume` | `(volume: f32) -> ()` | cpu | no | yes | Global volume of all sound and music (default 1.0, range 0..4). |
+| `shuffle` | `(items: array<T, N>) -> array<T, N>` | cpu | no | no | A new array in random order. |
 | `sign` | `(x: T) -> T` | both | yes | no | -1, 0 or 1 according to the sign of `x`. |
 | `sin` | `(x: T) -> T` | both | yes | no | Sine of an angle in radians. |
 | `smoothstep` | `(edge0: T, edge1: T, x: T) -> T` | both | yes | no | Smooth Hermite interpolation between `edge0` and `edge1`. |
-| `spawn` | `(prefab: prefab descriptor) -> entity_ref` | cpu | no | yes | Queues a prefab instance as a root entity; the reference is valid at once and `alive` turns true after the next flush. |
+| `spawn` | `(prefab: prefab descriptor) -> entity_ref` | cpu | no | yes | Queues a prefab instance as a root entity; valid now, `alive` after the next flush. |
 | `sqrt` | `(x: T) -> T` | both | yes | no | Square root. |
 | `step` | `(edge: T, x: T) -> T` | both | yes | no | 0 where `x < edge`, otherwise 1, component-wise. WGSL argument order: `step(edge, x)`. |
 | `stop_music` | `() -> ()` | cpu | no | yes | Stops the music started with `play_music`; does nothing when none plays. |
@@ -968,12 +986,12 @@ Domain `both` runs on the CPU and the GPU, `cpu` only on the CPU, `gpu` only in 
 
 | Property | Type | Applies to | Description |
 |---|---|---|---|
-| `angular_velocity` | `vec3` | Dynamic, Kinematic | Angular velocity as of the last completed tick. Read-only. |
+| `angular_velocity` | `vec3` | Dynamic, Kinematic | Angular velocity as of the last tick. Read-only. |
 | `ground_normal` | `vec3` | Kinematic | Ground normal of the last `move_character`; zero in the air. Read-only. |
 | `grounded` | `bool` | Kinematic | Ground found by the last completed `move_character`. Read-only. |
-| `linear_velocity` | `vec3` | Dynamic, Kinematic | Linear velocity as of the last completed tick. Read-only. |
+| `linear_velocity` | `vec3` | Dynamic, Kinematic | Linear velocity as of the last tick. Read-only. |
 
-## Part C. Features of this build (267)
+## Part C. Features of this build (284)
 
 The list below is `supported.features` of `mtek context`, printed by the compiler this document was generated with. It is derived by the compiler from its construct table and from the registry, never typed in. A feature is supported when a test that would fail without it passes in a recorded environment (`spec/testing.md`); `docs/coverage-matrix.md` shows which program or fixture exercises each one.
 
@@ -997,9 +1015,9 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 `event:collision_enter` `event:collision_exit` `event:key_down` `event:key_up` `event:message` `event:pointer_down` `event:pointer_move` `event:pointer_up`
 
-### Functions (145)
+### Functions (162)
 
-`function:abs` `function:acos` `function:alive` `function:animation.copy_pose` `function:animation.crossed` `function:animation.duration` `function:animation.fade` `function:animation.finished` `function:animation.joint_position` `function:animation.joint_rotation` `function:animation.pause` `function:animation.play` `function:animation.playing` `function:animation.resume` `function:animation.seek` `function:animation.time` `function:animation.transition` `function:animation.weight` `function:asin` `function:asset.font` `function:asset.glb` `function:asset.linear_texture` `function:asset.sound` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:chance` `function:choose` `function:clamp` `function:clear_saved` `function:color.linear` `function:color.srgb` `function:cos` `function:count_tagged` `function:cross` `function:degrees` `function:destroy` `function:destroy_tagged` `function:distance` `function:dot` `function:easing.in_cubic` `function:easing.in_out_cubic` `function:easing.in_out_quad` `function:easing.in_out_sine` `function:easing.in_quad` `function:easing.out_back` `function:easing.out_bounce` `function:easing.out_cubic` `function:easing.out_elastic` `function:easing.out_quad` `function:exp` `function:exp2` `function:first_tagged` `function:floor` `function:fract` `function:gamepad.axis` `function:gamepad.button` `function:gamepad.connected` `function:go_to` `function:has_tag` `function:hud.button` `function:hud.pixel_font` `function:hud.rect` `function:hud.text` `function:inverse_sqrt` `function:is_key_down` `function:is_muted` `function:is_pointer_down` `function:key_pressed` `function:key_released` `function:length` `function:lighting.pbr` `function:lighting.pbr_mapped` `function:load` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:nearest_tagged` `function:normalize` `function:overlap_boxes` `function:overlap_spheres` `function:particle_count` `function:pause` `function:paused` `function:play` `function:play_at` `function:play_music` `function:pointer_position` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:random_int` `function:random_range` `function:reflect` `function:reset` `function:resume` `function:round` `function:sample` `function:sample_mip` `function:sampler.linear_clamp` `function:sampler.linear_clamp_level0` `function:sampler.linear_clamp_mip_nearest` `function:sampler.linear_repeat` `function:sampler.linear_repeat_level0` `function:sampler.linear_repeat_mip_nearest` `function:sampler.nearest_clamp` `function:sampler.nearest_clamp_level0` `function:sampler.nearest_clamp_mip_linear` `function:sampler.nearest_repeat` `function:sampler.nearest_repeat_level0` `function:sampler.nearest_repeat_mip_linear` `function:saturate` `function:save` `function:screen_to_world` `function:send` `function:set_camera` `function:set_muted` `function:set_volume` `function:shuffle` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:stop_music` `function:tagged` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc` `function:world_to_screen`
+`function:abs` `function:acos` `function:alive` `function:animation.animated_joint_position` `function:animation.blend_clear` `function:animation.blend_parameter` `function:animation.blend_phase` `function:animation.blend_play` `function:animation.blend_sample` `function:animation.chain_goal` `function:animation.clear_chain` `function:animation.clear_foot_placement` `function:animation.clear_limb` `function:animation.copy_pose` `function:animation.crossed` `function:animation.duration` `function:animation.fade` `function:animation.fade_layer` `function:animation.finished` `function:animation.foot_placement` `function:animation.joint_position` `function:animation.joint_rotation` `function:animation.limb_goal` `function:animation.pause` `function:animation.play` `function:animation.playing` `function:animation.remove_layer` `function:animation.resume` `function:animation.root_motion` `function:animation.seek` `function:animation.set_layer` `function:animation.take_root_motion` `function:animation.time` `function:animation.transition` `function:animation.weight` `function:asin` `function:asset.font` `function:asset.glb` `function:asset.linear_texture` `function:asset.sound` `function:asset.texture` `function:atan` `function:atan2` `function:ceil` `function:chance` `function:choose` `function:clamp` `function:clear_saved` `function:color.linear` `function:color.srgb` `function:cos` `function:count_tagged` `function:cross` `function:degrees` `function:destroy` `function:destroy_tagged` `function:distance` `function:dot` `function:easing.in_cubic` `function:easing.in_out_cubic` `function:easing.in_out_quad` `function:easing.in_out_sine` `function:easing.in_quad` `function:easing.out_back` `function:easing.out_bounce` `function:easing.out_cubic` `function:easing.out_elastic` `function:easing.out_quad` `function:exp` `function:exp2` `function:first_tagged` `function:floor` `function:fract` `function:gamepad.axis` `function:gamepad.button` `function:gamepad.connected` `function:go_to` `function:has_tag` `function:hud.button` `function:hud.pixel_font` `function:hud.rect` `function:hud.text` `function:inverse_sqrt` `function:is_key_down` `function:is_muted` `function:is_pointer_down` `function:key_pressed` `function:key_released` `function:length` `function:lighting.pbr` `function:lighting.pbr_mapped` `function:load` `function:log` `function:log2` `function:mat4.columns` `function:mat4.identity` `function:mat4.rotation` `function:mat4.scale` `function:mat4.translation` `function:max` `function:min` `function:mix` `function:nearest_tagged` `function:normalize` `function:overlap_boxes` `function:overlap_spheres` `function:particle_count` `function:pause` `function:paused` `function:play` `function:play_at` `function:play_music` `function:pointer_position` `function:pow` `function:print` `function:quat.axis_angle` `function:quat.euler` `function:quat.identity` `function:radians` `function:random` `function:random_int` `function:random_range` `function:reflect` `function:reset` `function:resume` `function:round` `function:sample` `function:sample_mip` `function:sampler.linear_clamp` `function:sampler.linear_clamp_level0` `function:sampler.linear_clamp_mip_nearest` `function:sampler.linear_repeat` `function:sampler.linear_repeat_level0` `function:sampler.linear_repeat_mip_nearest` `function:sampler.nearest_clamp` `function:sampler.nearest_clamp_level0` `function:sampler.nearest_clamp_mip_linear` `function:sampler.nearest_repeat` `function:sampler.nearest_repeat_level0` `function:sampler.nearest_repeat_mip_linear` `function:saturate` `function:save` `function:screen_to_world` `function:send` `function:set_camera` `function:set_muted` `function:set_volume` `function:shuffle` `function:sign` `function:sin` `function:smoothstep` `function:spawn` `function:sqrt` `function:step` `function:stop_music` `function:tagged` `function:tan` `function:texture.black` `function:texture.white` `function:transpose` `function:trunc` `function:world_to_screen`
 
 ### Type methods (10)
 
@@ -1027,7 +1045,7 @@ The list below is `supported.features` of `mtek context`, printed by the compile
 
 What the build does **not** support is on [limitations.md](limitations.md); `supported.notSupported` of `mtek context` has the same list.
 
-## Part D. Diagnostics (254 codes)
+## Part D. Diagnostics (260 codes)
 
 Every diagnostic has a stable code: `E` for an error, `W` for a warning, then four digits; the first digit is the area. The full catalogue, the JSON form (`mtek check --format json`), the human rendering and the suggested edits are in [spec/diagnostics.md](../spec/diagnostics.md).
 
@@ -1040,8 +1058,8 @@ Every diagnostic has a stable code: `E` for an error, `W` for a warning, then fo
 | `4xxx` | functions, effects, execution domains, material stages | 20 |
 | `5xxx` | scenes, entities, schemas, ownership, bindings, physics rules | 66 |
 | `6xxx` | GPU layout, target profile, generated-shader validation | 4 |
-| `7xxx` | assets | 37 |
-| `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 36 |
+| `7xxx` | assets | 38 |
+| `8xxx` | runtime (mount, device, host inputs, lifecycle, budgets) | 41 |
 | `9xxx` | project, configuration, tooling, internal | 13 |
 
 Within each range the `x9xx` codes mean "specified as not supported in v0.1"; all of them are listed, with their reasons, on [limitations.md](limitations.md).

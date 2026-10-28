@@ -272,7 +272,7 @@ fn builtins(registry: &Registry) -> (Vec<String>, Vec<String>) {
                 NamespaceMember::Function(def) => {
                     // A family (`easing.in_quad|out_quad|..`) shares its signature and the end of
                     // its documentation: one line, with what the documentations have in common.
-                    if let Some((names, doc)) = family_doc(&implemented, def) {
+                    if let Some((names, doc)) = family_doc(functions(&implemented), def) {
                         done.extend(names.iter().copied());
                         let name = format!("{}.{}", namespace.name, names.join("|"));
                         lines.push(function_line(&name, def, &doc));
@@ -298,6 +298,13 @@ fn builtins(registry: &Registry) -> (Vec<String>, Vec<String>) {
     let mut done: Vec<&'static str> = Vec::new();
     for def in &documented {
         if done.contains(&def.name) {
+            continue;
+        }
+        // The global functions of one signature that end their documentation alike (`is_key_down`,
+        // `key_pressed`, `key_released`; decision 0223) are one line, like a family of a namespace.
+        if let Some((names, doc)) = family_doc(documented.iter().copied(), def) {
+            done.extend(names.iter().copied());
+            lines.push(function_line(&names.join("|"), def, &doc));
             continue;
         }
         let presets: Vec<&'static str> = if def.signatures.iter().all(|sig| sig.params.is_empty()) {
@@ -352,22 +359,16 @@ fn grouped_lines(defs: &[&IntrinsicDef]) -> Vec<String> {
 /// restrictions of `def` whose documentation ends in the same sentence: the names and that
 /// sentence. What differs in front of it (`Easing t²;`, `Easing bounces at 1 …;`) is told by the
 /// names.
-fn family_doc(
-    members: &[&NamespaceMember],
+fn family_doc<'a>(
+    members: impl Iterator<Item = &'a IntrinsicDef>,
     def: &IntrinsicDef,
 ) -> Option<(Vec<&'static str>, String)> {
     let family: Vec<&IntrinsicDef> = members
-        .iter()
-        .filter_map(|member| match member {
-            NamespaceMember::Function(other)
-                if other.signatures == def.signatures
-                    && other.domain == def.domain
-                    && other.handlers_only == def.handlers_only
-                    && other.const_eligible == def.const_eligible =>
-            {
-                Some(other)
-            }
-            _ => None,
+        .filter(|other| {
+            other.signatures == def.signatures
+                && other.domain == def.domain
+                && other.handlers_only == def.handlers_only
+                && other.const_eligible == def.const_eligible
         })
         .collect();
     if family.len() < 3 {
@@ -385,6 +386,16 @@ fn family_doc(
         family.iter().map(|other| other.name).collect(),
         common.to_owned(),
     ))
+}
+
+/// The functions among the members of a namespace.
+fn functions<'a>(
+    members: &'a [&'a NamespaceMember],
+) -> impl Iterator<Item = &'a IntrinsicDef> + 'a {
+    members.iter().filter_map(|member| match member {
+        NamespaceMember::Function(def) => Some(def),
+        NamespaceMember::Value(_) => None,
+    })
 }
 
 /// The names of the functions among `members` that have the signatures and domain of `def`.

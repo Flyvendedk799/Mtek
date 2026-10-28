@@ -41,29 +41,26 @@ pub(super) fn events() -> Vec<EventDef> {
             hosts: WITH_COLLIDER,
             requires_collider: false,
             since: Milestone::M1,
-            doc: "A queued string sent to this entity; delivered before its next unpaused update.",
+            doc: "A string sent to this entity; delivered before its next unpaused update.",
         },
         key(
             "key_down",
-            "Delivered when the filtered key transitions to pressed. Auto-repeat is ignored.",
+            "Delivered when the filtered key is pressed; auto-repeat is ignored.",
         ),
         key("key_up", "Delivered when the filtered key is released."),
-        pointer(
-            "pointer_down",
-            "A pointer button was pressed on the canvas.",
-        ),
+        pointer("pointer_down", "A pointer button was pressed."),
         pointer("pointer_up", "A pointer button was released."),
         pointer(
             "pointer_move",
-            "The pointer moved; at most once per frame with the latest position.",
+            "The pointer moved; at most once per frame, latest position.",
         ),
         collision(
             "collision_enter",
-            "Its collider started touching another; the parameter is that entity.",
+            "Its collider began touching the parameter entity.",
         ),
         collision(
             "collision_exit",
-            "Its collider stopped touching another; the parameter is that entity.",
+            "Its collider stopped touching the parameter entity.",
         ),
     ]
 }
@@ -137,6 +134,6 @@ pub(super) fn enums() -> Vec<EnumDef> {
             })
             .collect(),
         since: Milestone::M1,
-        doc: "A physical key, layout-independent. Written `Key.<Member>` with exactly the members listed (`Key.Space`, `Key.ArrowUp`, `Key.A`, `Key.Digit1`); there is no `Key.Up`, `Key.KeyA` or `Key.Shift`.",
+        doc: "A physical key: `Key.<Member>` with exactly the members listed (e.g. `Key.ArrowUp`, `Key.Digit1`); there is no `Key.Up`, `Key.KeyA` or `Key.Shift`.",
     }]
 }

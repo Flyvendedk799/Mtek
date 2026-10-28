@@ -52,7 +52,7 @@ scene Demo {
     const output = resolve(project, mode);
     execFileSync("cargo", ["run", "--quiet", "--locked", "-p", "mtek-cli", "--", "build", "--mode", mode, "--out", output, project], { cwd: root, stdio: "pipe" });
     cpSync(resolve(project, "src"), resolve(output, "src"), { recursive: true });
-    const runtimeName = mode === "dev" || mode === "test" ? "runtime.dev.js.map" : "runtime.js.map";
+    const runtimeName = mode === "dev" || mode === "test" ? "core.dev.js.map" : "core.js.map";
     cpSync(resolve(root, "packages/runtime-web/dist", runtimeName), resolve(output, runtimeName));
     const program = await import(/* @vite-ignore */ pathToFileURL(resolve(output, "app.js")).href) as Program;
     programs.set(mode, program);

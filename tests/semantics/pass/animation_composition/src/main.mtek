@@ -1,0 +1,39 @@
+// Animation composition in a program (decision 0223): masked layers and fades, a 2D blend space,
+// limb, foot and chain goals in world space, and root motion fed to a character mover.
+scene Demo {
+    state phase: f32 = 0.0;
+    state applied: bool = false;
+    state travel: vec3 = vec3(0.0, 0.0, 0.0);
+    camera Main {}
+    entity Rig {}
+    entity Hero {
+        body: Kinematic {};
+        collider: CapsuleCollider { radius: 0.3; height: 1.8; };
+    }
+    on key_down(Key.Space) {
+        animation.set_layer(Rig, "wave", "Wave", 1.0, false, "Spine");
+        animation.set_layer(Rig, "breath", "Breathe", 0.4, true, "");
+        animation.fade_layer(Rig, "wave", 0.0, 0.3);
+        animation.remove_layer(Rig, "breath");
+        animation.blend_sample(Rig, "Idle", 0.0, 0.0);
+        animation.blend_sample(Rig, "Walk", 1.0, 0.0);
+        animation.blend_sample(Rig, "Strafe", 0.0, 1.0);
+        animation.blend_play(Rig, true, 1.0);
+        animation.blend_parameter(Rig, 0.5, 0.25);
+        animation.blend_clear(Rig);
+        animation.limb_goal(Rig, "left_leg", vec3(0.0, 0.1, 0.5), 1.0);
+        animation.clear_limb(Rig, "left_leg");
+        animation.foot_placement(Rig, vec3(0.1, 0.0, 0.0), vec3(-0.1, 0.2, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 1.0, 0.0), 1.0, 0.0);
+        animation.clear_foot_placement(Rig);
+        travel = animation.animated_joint_position(Rig, "Hips");
+        animation.chain_goal(Rig, "reach", "Hand", 3, vec3(1.0, 1.0, 0.0), 0.8);
+        animation.clear_chain(Rig, "reach");
+        animation.root_motion(Rig, "Hips");
+    }
+    update(dt: f32) {
+        phase = animation.blend_phase(Rig);
+        applied = animation.fade_layer(Rig, "wave", 1.0, dt);
+        travel = animation.take_root_motion(Rig);
+        Hero.body.move_character(animation.take_root_motion(Hero), Hero.rotation);
+    }
+}

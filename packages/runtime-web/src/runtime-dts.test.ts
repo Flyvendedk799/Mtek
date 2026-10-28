@@ -107,7 +107,7 @@ describe("runtime.d.ts with tsc --strict", () => {
         } catch (error) {
           if (error instanceof MtekMountError) {
             const kind: "webgpu-unavailable" | "adapter-unavailable" | "device-failed" | "incompatible-program"
-              | "manifest-invalid" | "shader-failed" | "asset-failed" | "allocation-failed" | "physics-failed" | "budget-exceeded" = error.kind;
+              | "manifest-invalid" | "shader-failed" | "asset-failed" | "allocation-failed" | "physics-failed" | "animation-failed" | "budget-exceeded" = error.kind;
             console.log(kind, error.diagnostics[0]?.code);
           }
         }
@@ -372,13 +372,39 @@ describe("runtime.d.ts agrees with the implementation", () => {
       controller.setLocomotion({samples:[{clip:"walk",threshold:1},{clip:"run",threshold:4}],parameter:2});
       controller.setLocomotionParameter(3);controller.update(0.016,false,25);
       controller.player.locomotion.pause();controller.player.locomotion.resume();
+      controller.setBlendSpace({samples:[{clip:"walk",x:0,y:0},{clip:"run",x:1,y:0},{clip:"turn",x:0,y:1}],parameter:{x:0.5,y:0.5},looping:false});
+      controller.setBlendParameter(1,0);controller.player.blend.setParameter(0.2);controller.player.blend.seek(0.5);
+      export const blendFade:boolean=controller.fadeLayer("action",0,0.3)&&controller.player.layers.fade("action",1,0.1);
+      export const blendWeights:D.AnimationInspection["blend"]=controller.player.inspect?.().blend??null;
       controller.setIK("foot",{chain:["hip","knee","foot"],target:[0,0,0],rotation:[0,0,0,1],limits:{knee:{axis:[1,0,0],min:0,max:2}}});
       export const retargeted:D.MtekSkin=A.retargetSkin(skin,skin,{}, {rotationSpace:"world",nodeTranslationScales:{hips:1.2}});
       type Mutual<X,Y>=[X] extends [Y]?([Y] extends [X]?true:false):false;
       export const optionsMatch:Mutual<D.LocomotionOptions,A.LocomotionOptions>=true;
+      export const blendOptionsMatch:Mutual<D.BlendOptions,A.BlendOptions>=true;
       export const limitsMatch:Mutual<D.IKConstraint,A.IKConstraint>=true;
+      declare const humanoidGiven:D.HumanoidMap;
+      controller.setHumanoid(humanoidGiven);controller.player.setHumanoid(humanoidGiven);
+      controller.setLimb("leg",{limb:"leftLeg",target:[0,0.4,0.1],pole:[0,0,1],rotation:[0,0,0,1],rotationWeight:0.5,softness:0.1,flexion:{min:0,max:2},weight:1});
+      controller.player.ik.setLimb("arm",{limb:"rightArm",target:[0,1,0]});
+      controller.setFootPlacement({left:{height:0},right:{point:[0,0,0],normal:[0,1,0],weight:0.5},smoothing:0.1,soleOffset:0.05,groundLevel:0,maxDrop:0.3,softness:0.05});
+      controller.player.ik.setFootPlacement(undefined);controller.setHumanoid(undefined);
+      export const limbs:readonly D.LimbInspection[]|undefined=controller.player.inspect?.().limbs;
+      export const placement:D.FootPlacementInspection|null|undefined=controller.player.inspect?.().footPlacement;
+      export const limbGoalMatch:Mutual<D.LimbGoal,A.LimbGoal>=true;
+      export const footPlacementMatch:Mutual<D.FootPlacement,A.FootPlacement>=true;
+      export const footGroundMatch:Mutual<D.FootGround,A.FootGround>=true;
+      export const limbInspectionMatch:Mutual<D.LimbInspection,A.LimbInspection>=true;
+      export const placementInspectionMatch:Mutual<D.FootPlacementInspection,A.FootPlacementInspection>=true;
+      export const boneMatch:Mutual<D.HumanoidBone,A.HumanoidBone>=true;
       export const retargetMatch:Mutual<D.RetargetOptions,A.RetargetOptions>=true;
       export const delta=controller.player.consumeRootMotion();
+      export const humanoid:D.HumanoidMap|{readonly error:string}=A.mapHumanoid(skin);
+      export const humanoidRetargeted:D.MtekSkin=A.retargetHumanoid(skin,skin,{translationScale:2,restCorrection:false,maxKeyInterval:0.05});
+      export const humanoidMatch:Mutual<D.HumanoidMap,A.HumanoidMap>=true;
+      export const humanoidBoneMatch:Mutual<D.HumanoidBone,A.HumanoidBone>=true;
+      export const humanoidOptionsMatch:Mutual<D.HumanoidRetargetOptions,A.HumanoidRetargetOptions>=true;
+      export const humanoidMapFunction:Mutual<typeof D.mapHumanoid,typeof A.mapHumanoid>=true;
+      export const humanoidRetargetFunction:Mutual<typeof D.retargetHumanoid,typeof A.retargetHumanoid>=true;
     `,{types:["@webgpu/types"],skipLibCheck:true});
     expect(problems).toEqual([]);
   });

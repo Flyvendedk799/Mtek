@@ -29,9 +29,9 @@ The descriptors:
 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
-| `angular_damping` | `f32` | `0.05` | fixed at construction | ≥ 0, finite | Rate at which angular velocity decays. |
-| `continuous` | `bool` | `false` | fixed at construction |  | Continuous collision detection for this body. |
-| `linear_damping` | `f32` | `0.0` | fixed at construction | ≥ 0, finite | Rate at which linear velocity decays. |
+| `angular_damping` | `f32` | `0.05` | fixed at construction | ≥ 0, finite | Angular velocity decay rate. |
+| `continuous` | `bool` | `false` | fixed at construction |  | Continuous collision detection. |
+| `linear_damping` | `f32` | `0.0` | fixed at construction | ≥ 0, finite | Linear velocity decay rate. |
 | `mass` | `f32` | `1.0` | fixed at construction | > 0, finite | Mass in kilograms. |
 
 **`Kinematic`**
@@ -49,29 +49,29 @@ The descriptors:
 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
-| `friction` | `f32` | `0.5` | fixed at construction | ≥ 0, finite | Coulomb friction coefficient. |
+| `friction` | `f32` | `0.5` | fixed at construction | ≥ 0, finite | Friction coefficient. |
 | `restitution` | `f32` | `0.0` | fixed at construction | 0…1 | Bounciness, 0 to 1. |
-| `sensor` | `bool` | `false` | fixed at construction |  | A sensor reports collisions but pushes nothing. |
-| `size` | `vec3` | required | fixed at construction | every component > 0, finite | Full extents along X, Y and Z. |
+| `sensor` | `bool` | `false` | fixed at construction |  | Reports collisions, pushes nothing. |
+| `size` | `vec3` | required | fixed at construction | every component > 0, finite | Full extents. |
 
 **`SphereCollider`**
 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
-| `friction` | `f32` | `0.5` | fixed at construction | ≥ 0, finite | Coulomb friction coefficient. |
+| `friction` | `f32` | `0.5` | fixed at construction | ≥ 0, finite | Friction coefficient. |
 | `radius` | `f32` | required | fixed at construction | > 0, finite | Radius in metres. |
 | `restitution` | `f32` | `0.0` | fixed at construction | 0…1 | Bounciness, 0 to 1. |
-| `sensor` | `bool` | `false` | fixed at construction |  | A sensor reports collisions but pushes nothing. |
+| `sensor` | `bool` | `false` | fixed at construction |  | Reports collisions, pushes nothing. |
 
 **`CapsuleCollider`**
 
 | Field | Type | Default | After construction | Range | Meaning |
 |---|---|---|---|---|---|
-| `friction` | `f32` | `0.5` | fixed at construction | ≥ 0, finite | Coulomb friction coefficient. |
+| `friction` | `f32` | `0.5` | fixed at construction | ≥ 0, finite | Friction coefficient. |
 | `height` | `f32` | required | fixed at construction | > 0, finite | Full height including both caps; > 2 * `radius`. |
 | `radius` | `f32` | required | fixed at construction | > 0, finite | Radius in metres. |
 | `restitution` | `f32` | `0.0` | fixed at construction | 0…1 | Bounciness, 0 to 1. |
-| `sensor` | `bool` | `false` | fixed at construction |  | A sensor reports collisions but pushes nothing. |
+| `sensor` | `bool` | `false` | fixed at construction |  | Reports collisions, pushes nothing. |
 
 The commands and properties:
 
@@ -83,10 +83,10 @@ The commands and properties:
 | `body.set_kinematic_target(position: vec3, rotation: quat)` | Kinematic | The pose reached at the end of the next tick; the solver derives the velocity. |
 | `body.set_linear_velocity(v: vec3)` | Dynamic | Sets the linear velocity at the start of the next tick. |
 | `body.teleport(position: vec3, rotation: quat, keep_velocity: bool)` | Dynamic, Kinematic | Sets the pose before the next tick; velocities are zeroed unless `keep_velocity` is true. |
-| `body.angular_velocity: vec3` | Dynamic, Kinematic | Angular velocity as of the last completed tick. Read-only. |
+| `body.angular_velocity: vec3` | Dynamic, Kinematic | Angular velocity as of the last tick. Read-only. |
 | `body.ground_normal: vec3` | Kinematic | Ground normal of the last `move_character`; zero in the air. Read-only. |
 | `body.grounded: bool` | Kinematic | Ground found by the last completed `move_character`. Read-only. |
-| `body.linear_velocity: vec3` | Dynamic, Kinematic | Linear velocity as of the last completed tick. Read-only. |
+| `body.linear_velocity: vec3` | Dynamic, Kinematic | Linear velocity as of the last tick. Read-only. |
 
 ## Why
 

@@ -53,7 +53,39 @@ root motion are approximated over the update interval.
 `retargetSkin(source, destination, mapping, translationScale)` transfers clips onto
 the destination's rest proportions. Every animated source node must be mapped,
 along with its parent chain. Names and destinations must be unique. Use rigs with
-compatible bone axes/rest semantics; arbitrary-rig humanoid inference is not provided.
+compatible bone axes/rest semantics.
+
+For bipeds with different names, proportions or rest poses (T-pose and A-pose),
+`mapHumanoid(skin)` finds the canonical humanoid bones from names and, failing that,
+from the skeleton's shape (it returns `{ error }` for non-humanoids such as the Fox), and
+`retargetHumanoid(source, target)` plays the source clips on the target through both maps,
+with rest-pose correction and the hips translation scaled by the leg-length ratio. Extra
+and unmapped bones keep their bind pose. See
+[decision 0221](../spec/decisions/0221-humanoid-mapping-and-retargeting.md) and
+[`spec/animation.md`](../spec/animation.md) for the rules and measured accuracy.
+
+A `.mtek` program reaches the same machinery without host code (decision 0223): the
+`animation.*` calls `set_layer`, `fade_layer`, `blend_sample`/`blend_play`/`blend_parameter`,
+`limb_goal`, `foot_placement` (a contact weight for each foot), `chain_goal`, `root_motion` and `take_root_motion` take world-space
+goals and return the root displacement in world space for `body.move_character`, and the entity
+field `clips_from: asset.glb("..")` plays another humanoid's clips through `retargetHumanoid` when
+the scene mounts. A name the entity lacks is `E8111`, a rig that is not a humanoid `E8110` or `E8112`,
+a refused argument `E8113`; each is reported once per entity and the call returns `false`. The
+mounted runtime keeps this state with the entity's `SkeletonPlayer`, so `player.layers`,
+`player.ik` and `player.blend` show and can change what a program set, and a hot reload starts it again
+(`spec/animation.md` section 4). `animation.animated_joint_position` (`player.animatedJointPosition`) reads a joint in the pose before the
+limb, foot and chain goals, so a program can place a foot from where the animation puts it (decision 0224).
+
+**Where the code is loaded from (decision 0225).** The animation code is not in the runtime that
+`mtek build` writes as `runtime.<hash>.js`. A program with a skinned mesh or `clips_from` gets it as a
+second file, `animation/<hash>.js`, named in the manifest (`subsystems.animationModule`), and the
+runtime imports it while the game starts; a program without skins never requests it and its runtime is
+about 75 KB smaller. A host that serves a game, and any preview or itch.io upload, must serve the whole
+`dist/` folder, including `animation/` (and `physics/` for programs with bodies). A file that is
+missing or broken fails the mount with `animation-failed` (`E8114`). The functions above
+(`createAnimationController`, `retargetSkin`, `mapHumanoid`, `retargetHumanoid`, `deformSkin`) are
+exported by the npm entry `@mtek/runtime-web`, which host code bundles with what it imports; the
+built game's `runtime.<hash>.js` does not export them.
 
 For CPU inspection call `deformSkin(skin, player.palette, positions, normals,
 outPositions, outNormals)` with reusable output arrays. Normal output uses the

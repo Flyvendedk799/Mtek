@@ -1,0 +1,26 @@
+const RIG = asset.glb("../models/model.glb");
+const DANCER = asset.glb("../models/dancer.glb");
+
+prefab Marcher {
+    param origin: vec3 = vec3(0.0, 0.0, 0.0);
+    position: origin;
+    mesh: RIG.mesh("Tri");
+    clips_from: DANCER;
+    clip: "March";
+}
+
+scene Demo {
+    camera Main {}
+    entity Actor {
+        mesh: RIG.mesh("Tri");
+        clips_from: DANCER;
+        clip: "March";
+    }
+    entity Plain {
+        mesh: RIG.mesh("Tri");
+        clips_from: DANCER;
+    }
+    on key_down(Key.Space) {
+        spawn(Marcher { origin: vec3(2.0, 0.0, 0.0); });
+    }
+}

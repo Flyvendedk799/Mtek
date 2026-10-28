@@ -15,7 +15,7 @@ export interface RuntimeFacts {
   manifestSchema: number;
   runtimeAbi: number;
   languageVersion: string;
-  /** `RUNTIME_ABI` exported by the package entry (`src/index.ts`), read as text. */
+  /** `RUNTIME_ABI` exported by the core entry (`src/core.ts`, re-exported by the package entry `src/index.ts`), read as text. */
   indexRuntimeAbi: number | null;
   /** `readonly abi: N` of `src/runtime.d.ts`, the declarations a program is typed against. */
   declaredAbi: string | undefined;
@@ -77,7 +77,7 @@ export async function readRuntimeFacts(root: string, codecIds: readonly string[]
   );
   const keys = await load<{ MAPPED_KEY_CODES: readonly string[] }>("input/keys.ts");
   const codecs = await load<{ decodeHostInput: Decode }>("host/codecs.ts");
-  const indexText = readText(root, "packages/runtime-web/src/index.ts");
+  const indexText = readText(root, "packages/runtime-web/src/core.ts");
   const abi = /export const RUNTIME_ABI = (\d+);/.exec(indexText)?.[1];
   const dynamic = readText(root, "packages/runtime-web/src/scene/dynamic.ts");
   return {

@@ -7,7 +7,7 @@ type Mutable<T> = {-readonly [K in keyof T]: T[K]};
 const snapshot = (scene: SceneInspection, animation: AnimationInspection | null = null): InspectorSpatialSnapshot => ({status:"ready",selectedId:"actor",scene,animation,error:null});
 const scene = (): Mutable<SceneInspection> => ({frame:1,renderable:true,viewport:{width:200,height:100},viewProjection:identity,
   entities:[{id:"actor",parentId:null,worldMatrix:identity}],bodies:[]});
-const animation = (): Mutable<AnimationInspection> => ({mode:"clip",clip:"Idle",transition:{elapsed:0,duration:0,progress:1,outgoingClip:null,fromSnapshot:false},rootMotionNode:null,proceduralOverride:false,layers:[],ik:[],locomotion:null,
+const animation = (): Mutable<AnimationInspection> => ({mode:"clip",clip:"Idle",transition:{elapsed:0,duration:0,progress:1,outgoingClip:null,fromSnapshot:false},rootMotionNode:null,proceduralOverride:false,layers:[],ik:[],blend:null,locomotion:null,
   nodes:[{index:0,name:"Same name",parent:-1,joint:true,position:{x:0,y:0,z:.5}},{index:1,name:"Same name",parent:0,joint:true,position:{x:.2,y:0,z:.5}}]});
 
 describe("world-space diagnostic overlays", () => {
@@ -47,6 +47,16 @@ describe("world-space diagnostic overlays", () => {
     const points = geometry.lines.flatMap(line => [line.start,line.end]);
     expect(Math.max(...points.map(p => p.y))).toBeCloseTo(.3); expect(Math.min(...points.map(p => p.y))).toBeCloseTo(-.3);
     expect(Math.max(...points.map(p => p.x))).toBeCloseTo(.1);
+  });
+  it("draws anatomical limb goals like IK goals, with their bones and the miss to the end joint", () => {
+    const s = scene(), a = animation();
+    a.nodes = [...a.nodes, {index:2,name:"Hand",parent:1,joint:true,position:{x:.4,y:0,z:.5}}];
+    a.limbs = [{id:"reach",limb:"leftArm",nodes:[0,1,2],target:{x:.5,y:.1,z:.5},weight:1,rotationWeight:1,softness:.05,flexionRange:{min:0,max:2.5},flexion:.3,residual:0}];
+    const lines = buildInspectorOverlay(snapshot(s,a),{bounds:false,skeleton:false,colliders:false,contacts:false}).lines;
+    expect(lines.every(line => line.kind === "ik")).toBe(true);
+    expect(lines.filter(line => line.dashed)).toHaveLength(1); // the miss
+    expect(lines.length).toBeGreaterThanOrEqual(2 + 1 + 2); // two bones, the dashed miss and the target cross
+    expect(buildInspectorOverlay(snapshot(s,a),{bounds:false,skeleton:false,ik:false,colliders:false,contacts:false}).lines).toHaveLength(0);
   });
   it("combines supplied world bounds, IK targets and contacts, with a strict output limit", () => {
     const s = scene(), a = animation();

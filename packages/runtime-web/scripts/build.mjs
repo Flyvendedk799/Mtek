@@ -1,7 +1,10 @@
-// Bundles the runtime (ESM, ES2022; scripts/flavours.mjs): the minified dist/runtime.min.js for game packages
-// (decision 0136) and, unminified with source maps,
-// dist/runtime.js (release: no development code) and dist/runtime.dev.js (dev: overlay, GPU timing), and
-// prints the maintained host declarations without comments for compiled app packages (decision 0206).
+// Bundles the runtime (ESM, ES2022; scripts/flavours.mjs):
+//   - the core runtime that `mtek build` embeds, without skeletal animation: dist/core.js (release), dist/core.dev.js
+//     (overlay, GPU timing) and the minified dist/core.min.js for game packages (decisions 0055, 0136, 0225);
+//   - the animation module, dist/animation.js and dist/animation.min.js, written by `mtek build` as animation/<h16>.js
+//     for programs with skinned meshes (decision 0225);
+//   - the npm entry dist/runtime.js: the core plus the host animation API, for host code that bundles what it imports;
+// and prints the maintained host declarations without comments for compiled app packages (decision 0206).
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { build } from "esbuild";
 import { compactDeclarations } from "./declarations.mjs";

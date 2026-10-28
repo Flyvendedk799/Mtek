@@ -54,7 +54,7 @@ pub(super) const CAMERA_FIELDS: [&str; 6] = [
     "exposure",
 ];
 /// The entity fields lowered into [`Entity`].
-pub(super) const ENTITY_FIELDS: [&str; 14] = [
+pub(super) const ENTITY_FIELDS: [&str; 15] = [
     "position",
     "rotation",
     "scale",
@@ -69,6 +69,7 @@ pub(super) const ENTITY_FIELDS: [&str; 14] = [
     "tag",
     "particles",
     "clip",
+    "clips_from",
 ];
 /// The scene-object kinds lowered (into [`Camera`]).
 pub(super) const OBJECT_KINDS: [&str; 1] = ["camera"];
@@ -843,6 +844,13 @@ impl Lowering<'_> {
             },
             None => None,
         };
+        let clips_from = match fields.iter().find(|f| f.name == "clips_from") {
+            Some(field) => match parts(&what, field, checked.span)?.0 {
+                crate::types::ConstValue::GlbAsset(file) => Some(file.clone()),
+                _ => return Err(format!("the clips_from of {what} is not a glb asset")),
+            },
+            None => None,
+        };
         out.push(Entity {
             index,
             name: checked.name.clone(),
@@ -864,6 +872,7 @@ impl Lowering<'_> {
             tag,
             particles,
             clip,
+            clips_from,
         });
         for child in &checked.children {
             self.entity(child, &symbol, Some(index), out)?;

@@ -74,6 +74,8 @@ fn compile_time(
 fn animation_namespace() -> NamespaceDef {
     let target = p("target", exact(TypeRef::EntityRef));
     let boolean = exact(TypeRef::Bool);
+    let string = exact(TypeRef::String);
+    let vec3 = exact(TypeRef::Vec3);
     let member = |name, doc, params: Vec<_>, ret, mutation| {
         let f = function(
             name,
@@ -92,28 +94,35 @@ fn animation_namespace() -> NamespaceDef {
         vec![
             member(
                 "copy_pose",
-                "Copies and holds the displayed pose of a compatible skeleton; a later transition blends from it.",
+                "Holds a compatible skeleton's pose; a later transition blends from it.",
                 vec![target, p("source", exact(TypeRef::EntityRef))],
                 boolean,
                 true,
             ),
             member(
                 "joint_position",
-                "Joint position in the skeletal mesh local space; zero if missing.",
+                "Joint position in mesh-local space; zero if missing.",
+                vec![target, p("name", exact(TypeRef::String))],
+                exact(TypeRef::Vec3),
+                false,
+            ),
+            member(
+                "animated_joint_position",
+                "Joint position before goals.",
                 vec![target, p("name", exact(TypeRef::String))],
                 exact(TypeRef::Vec3),
                 false,
             ),
             member(
                 "joint_rotation",
-                "Joint rotation in skeletal mesh local space; identity if missing.",
+                "Joint rotation in mesh-local space; identity if missing.",
                 vec![target, p("name", exact(TypeRef::String))],
                 exact(TypeRef::Quat),
                 false,
             ),
             member(
                 "transition",
-                "Selects a skeletal clip, crossfading from the current pose; the current name does not restart (use play).",
+                "Crossfades to a skeletal clip; the same clip is not restarted.",
                 vec![
                     target,
                     p("name", exact(TypeRef::String)),
@@ -126,63 +135,63 @@ fn animation_namespace() -> NamespaceDef {
             ),
             member(
                 "play",
-                "Restarts the clip. Speed must be finite and nonnegative. Returns false for an unavailable clip.",
+                "Restarts the clip (speed >= 0); false if unavailable.",
                 vec![target, p("looping", boolean), p("speed", F32)],
                 boolean,
                 true,
             ),
             member(
                 "pause",
-                "Freezes clip time; fades continue during scene updates.",
+                "Freezes clip time (fades continue). False if none.",
                 vec![target],
                 boolean,
                 true,
             ),
             member(
                 "resume",
-                "Continues a paused clip; returns false for a finished clip.",
+                "Continues a paused clip. False if none.",
                 vec![target],
                 boolean,
                 true,
             ),
             member(
                 "seek",
-                "Clamps time to the clip duration and applies the pose at once, crossing no markers and not resuming.",
+                "Jumps to `time` (clamped) at once; crosses no markers, does not resume.",
                 vec![target, p("time", F32)],
                 boolean,
                 true,
             ),
             member(
                 "fade",
-                "Blends clip weight toward a 0..1 target over seconds; zero applies at once.",
+                "Fades clip weight to 0..1 over `duration`; zero is immediate.",
                 vec![target, p("weight", F32), p("duration", F32)],
                 boolean,
                 true,
             ),
             member(
                 "time",
-                "Current clip time in seconds; zero for an unavailable clip.",
+                "Current clip time in seconds; zero if unavailable.",
                 vec![target],
                 F32,
                 false,
             ),
             member(
                 "duration",
-                "Clip duration in seconds; zero for an unavailable clip.",
+                "Clip duration in seconds; zero if unavailable.",
                 vec![target],
                 F32,
                 false,
             ),
             member(
                 "weight",
-                "Current clip weight; zero for an unavailable clip.",
+                "Current clip weight; zero if unavailable.",
                 vec![target],
                 F32,
                 false,
             ),
             member(
                 "playing",
-                "Whether clip time is advancing; false for an unavailable clip.",
+                "Whether clip time is advancing; false if unavailable.",
                 vec![target],
                 boolean,
                 false,
@@ -196,10 +205,144 @@ fn animation_namespace() -> NamespaceDef {
             ),
             member(
                 "crossed",
-                "Whether a marker in (0, duration] was crossed in the latest update, including loop wraps. Not consumed by reading.",
+                "Whether `marker` in (0, duration] was crossed in the last update (wraps count).",
                 vec![target, p("marker", F32)],
                 boolean,
                 false,
+            ),
+            member(
+                "set_layer",
+                "Layer `id` plays `clip` over the base at `weight`; `mask` roots the moved subtree (\"\" = all); the same clip keeps its phase.",
+                vec![
+                    target,
+                    p("id", string),
+                    p("clip", string),
+                    p("weight", F32),
+                    p("additive", boolean),
+                    p("mask", string),
+                ],
+                boolean,
+                true,
+            ),
+            member(
+                "fade_layer",
+                "Fades layer `id` to `weight` over `seconds`; false if none.",
+                vec![target, p("id", string), p("weight", F32), p("seconds", F32)],
+                boolean,
+                true,
+            ),
+            member(
+                "remove_layer",
+                "Removes layer `id`. False if none.",
+                vec![target, p("id", string)],
+                boolean,
+                true,
+            ),
+            member(
+                "blend_sample",
+                "Adds `clip` at (x, y) to the pending blend space.",
+                vec![target, p("clip", string), p("x", F32), p("y", F32)],
+                boolean,
+                true,
+            ),
+            member(
+                "blend_play",
+                "Plays the pending blend space; false if invalid.",
+                vec![target, p("looping", boolean), p("speed", F32)],
+                boolean,
+                true,
+            ),
+            member(
+                "blend_parameter",
+                "Moves the blend point; the phase stays.",
+                vec![target, p("x", F32), p("y", F32)],
+                boolean,
+                true,
+            ),
+            member(
+                "blend_clear",
+                "Drops the blend space and pending samples. False if none.",
+                vec![target],
+                boolean,
+                true,
+            ),
+            member(
+                "blend_phase",
+                "Blend cycle position 0..1; zero if unavailable.",
+                vec![target],
+                F32,
+                false,
+            ),
+            member(
+                "limb_goal",
+                "Reaches `limb` (`left_leg`, `right_leg`, `left_arm`, `right_arm`) to a world `goal`; humanoids only.",
+                vec![target, p("limb", string), p("goal", vec3), p("weight", F32)],
+                boolean,
+                true,
+            ),
+            member(
+                "clear_limb",
+                "Removes the goal of limb `id`. False if none.",
+                vec![target, p("id", string)],
+                boolean,
+                true,
+            ),
+            member(
+                "foot_placement",
+                "Plants feet on world ground points, lowering the hips; humanoids only.",
+                vec![
+                    target,
+                    p("left", vec3),
+                    p("right", vec3),
+                    p("left_normal", vec3),
+                    p("right_normal", vec3),
+                    p("left_weight", F32),
+                    p("right_weight", F32),
+                ],
+                boolean,
+                true,
+            ),
+            member(
+                "clear_foot_placement",
+                "Releases foot placement. False if none.",
+                vec![target],
+                boolean,
+                true,
+            ),
+            member(
+                "chain_goal",
+                "Bends the `length` joints ending at `end_joint` to a world `goal` (CCD).",
+                vec![
+                    target,
+                    p("id", string),
+                    p("end_joint", string),
+                    p("length", exact(TypeRef::I32)),
+                    p("goal", vec3),
+                    p("weight", F32),
+                ],
+                boolean,
+                true,
+            ),
+            member(
+                "clear_chain",
+                "Removes chain goal `id`. False if none.",
+                vec![target, p("id", string)],
+                boolean,
+                true,
+            ),
+            member(
+                "root_motion",
+                "`joint`'s translation drives the entity, not the mesh (\"\" = off); see `take_root_motion`.",
+                vec![target, p("joint", string)],
+                boolean,
+                true,
+            ),
+            member(
+                "take_root_motion",
+                "World root displacement since the last call; feed it to `move_character`.",
+                vec![target],
+                exact(TypeRef::Vec3),
+                true,
             ),
         ],
     )
@@ -227,7 +370,7 @@ fn hud_namespace() -> NamespaceDef {
         vec![
             member(
                 "text",
-                "Draws a line of text at `at` (canvas NDC, y up): `size` CSS pixels (default 24.0), `tint` (default white), `align` 0.0 left edge, 0.5 centre (default), 1.0 right edge, `font` an `asset.font(..)` or `hud.pixel_font()` (default: page sans-serif). Centred vertically on `at`.",
+                "Draws text at `at` (canvas NDC, y up), `size` CSS px (24.0), `tint` (white), `align` 0 left, 0.5 centre (default), 1 right, `font` (page sans-serif). Centred vertically.",
                 vec![
                     sig(&[p("content", string), p("at", vec2)], unit),
                     sig(&[p("content", string), p("at", vec2), p("size", F32)], unit),
@@ -266,13 +409,13 @@ fn hud_namespace() -> NamespaceDef {
             ),
             member(
                 "pixel_font",
-                "The built-in 5x7 pixel bitmap font of printable ASCII; other characters show as a box.",
+                "Built-in 5x7 bitmap font of printable ASCII; others show as a box.",
                 vec![sig(&[], font)],
                 "Returns the built-in font; draws nothing.",
             ),
             member(
                 "rect",
-                "Draws a filled rectangle of `size` CSS pixels at `at` (canvas NDC), aligned like `hud.text` (default centred).",
+                "Draws a filled rectangle of `size` CSS px at `at` (canvas NDC), aligned like `hud.text`.",
                 vec![
                     sig(&[p("at", vec2), p("size", vec2), p("tint", tint)], unit),
                     sig(
@@ -289,7 +432,7 @@ fn hud_namespace() -> NamespaceDef {
             ),
             member(
                 "button",
-                "Draws a button centred at `at` (canvas NDC) labelled `label` (`size` CSS pixels, default 24.0). Returns true in the frame after a click, once per click; buttons are told apart by label and order.",
+                "Draws a button at `at` (canvas NDC) labelled `label` (`size` CSS px, 24.0). True once per click, next frame; buttons are told apart by label and order.",
                 vec![
                     sig(&[p("label", string), p("at", vec2)], boolean),
                     sig(
@@ -322,7 +465,7 @@ fn ease_namespace() -> NamespaceDef {
     namespace(
         "easing",
         Milestone::M1,
-        "Easing curves for tweens: `mix(a, b, easing.out_cubic(t))` moves from `a` to `b` as `t` goes from 0 to 1.",
+        "Easing curves for tweens: `mix(a, b, easing.out_cubic(t))` moves `a` to `b` as `t` goes 0 to 1.",
         vec![
             member(
                 "in_quad",
@@ -400,14 +543,14 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                 pure(
                     "axis_angle",
                     Milestone::M1,
-                    "Rotation by `angle` radians about `axis` (normalised; a zero axis gives the identity on the CPU).",
+                    "Rotation of `angle` radians about `axis` (normalised; zero axis: identity on the CPU).",
                     &[p("axis", vec3), p("angle", F32)],
                     TypeRef::Quat,
                 ),
                 pure(
                     "euler",
                     Milestone::M1,
-                    "Rotation about Z, then X, then Y, all about fixed world axes: `axis_angle(+Y, y) * axis_angle(+X, x) * axis_angle(+Z, z)`.",
+                    "Z, then X, then Y rotation about fixed world axes: `axis_angle(+Y, y) * axis_angle(+X, x) * axis_angle(+Z, z)`.",
                     &[p("x", F32), p("y", F32), p("z", F32)],
                     TypeRef::Quat,
                 ),
@@ -464,7 +607,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                 pure(
                     "linear",
                     Milestone::M1,
-                    "A colour from linear-light components.",
+                    "Colour from linear components.",
                     &[p("rgb", vec3), p("a", F32)],
                     TypeRef::Color,
                 ),
@@ -475,7 +618,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                         Domain::Both,
                         true,
                         Milestone::M1,
-                        "A colour from sRGB-encoded components, converted to linear light.",
+                        "Colour from sRGB components, converted to linear.",
                         vec![sig(&[p("rgb", vec3), p("a", F32)], exact(TypeRef::Color))],
                     )
                     .cpu_semantics(
@@ -532,22 +675,22 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
         namespace(
             "frame",
             Milestone::M1,
-            "Per-frame CPU/`bind` values; route to GPU stages through material params. `update(dt)` gets the variable frame delta; `fixed_update(dt)` runs zero or more times per frame with a constant step (default 1/60 s).",
+            "Per-frame CPU/`bind` values; route to GPU stages through material params. `update(dt)` gets the variable delta; `fixed_update(dt)` runs zero or more times per frame at a constant step (default 1/60 s).",
             vec![
                 value(
                     "time",
                     TypeRef::F32,
-                    "Active application time in seconds since mount, excluding paused time.",
+                    "Seconds since mount, excluding paused time.",
                 ),
                 value(
                     "delta",
                     TypeRef::F32,
-                    "The clamped frame delta passed to `update`.",
+                    "The clamped delta passed to `update`.",
                 ),
                 value(
                     "index",
                     TypeRef::U32,
-                    "Rendered frame counter since mount, wrapping.",
+                    "Frame counter since mount, wrapping.",
                 ),
             ],
         ),
@@ -556,19 +699,19 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
             // Implemented by task M4-05 ahead of the M4 gate, like textures and samplers
             // (decisions 0054 and 0058): `CURRENT_MILESTONE` does not move.
             Milestone::M1,
-            "Compile-time asset declarations. The argument must be a string literal naming a file inside the project.",
+            "Compile-time asset declarations. The argument is a string literal naming a project file.",
             vec![
                 NamespaceMember::Function(compile_time(
                     "glb",
                     Milestone::M1,
-                    "A static GLB model; only in a `const`, used through its accessors.",
+                    "Static GLB model; only in a `const`, used through its accessors.",
                     &[p("path", string)],
                     TypeRef::GlbAsset,
                 )),
                 NamespaceMember::Function(compile_time(
                     "texture",
                     Milestone::M1,
-                    "An sRGB colour texture.",
+                    "sRGB colour texture.",
                     &[p("path", string)],
                     TypeRef::Texture,
                 )),
@@ -583,7 +726,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                 NamespaceMember::Function(compile_time(
                     "sound",
                     Milestone::M1,
-                    "A sound file (`.wav`, `.ogg` or `.mp3`) for `play`, `play_at` and `play_music`.",
+                    "Sound file (`.wav`, `.ogg`, `.mp3`) for `play`, `play_at`, `play_music`.",
                     &[p("path", string)],
                     TypeRef::Sound,
                 )),
@@ -591,7 +734,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                 NamespaceMember::Function(compile_time(
                     "font",
                     Milestone::M1,
-                    "A font file (`.ttf`, `.otf`, `.woff` or `.woff2`) for `hud.text`.",
+                    "Font file (`.ttf`, `.otf`, `.woff`, `.woff2`) for `hud.text`.",
                     &[p("path", string)],
                     TypeRef::Font,
                 )),
@@ -635,7 +778,7 @@ pub(super) fn namespaces() -> Vec<NamespaceDef> {
                 )],
             )), NamespaceMember::Function(function(
                 "pbr_mapped", Domain::Gpu, false, Milestone::M1,
-                "Derivative normal, indirect occlusion, exposed emission; fragment initial straight-line code only.",
+                "Derivative normal, occlusion and emission; fragment initial straight-line code only.",
                 vec![sig(&[
                     p("surface", exact(TypeRef::Record("SurfaceInput"))),
                     p("base_color", exact(TypeRef::Color)),
@@ -835,7 +978,7 @@ pub(super) fn types() -> Vec<TypeDef> {
         handle(
             "entity_ref",
             Milestone::M1,
-            "A generation-checked reference to an entity. Compare it, test `alive`, `destroy` it, command its body, and read `position`, `rotation`, `scale` and `visible`.",
+            "A generation-checked entity reference. Compare it, test `alive`, `destroy` it, command its body, read `position`, `rotation`, `scale`, `visible`.",
         ),
         handle(
             "font",
@@ -845,7 +988,7 @@ pub(super) fn types() -> Vec<TypeDef> {
         handle(
             "sound",
             Milestone::M1,
-            "A sound file declared with `asset.sound(..)`; CPU only. Played with `play`, `play_at` and `play_music` (decision 0130).",
+            "A sound declared with `asset.sound(..)`; CPU only. Played by `play`, `play_at`, `play_music` (decision 0130).",
         ),
         TypeDef {
             methods: glb_methods(),
@@ -961,7 +1104,7 @@ pub(super) fn types() -> Vec<TypeDef> {
                 TypeKind::Record,
                 Milestone::M1,
                 false,
-                "A pointer event: `position` in canvas coordinates (x right, y up, -1..1) and the `button` (0 primary, 1 middle, 2 secondary).",
+                "`position` in canvas coordinates (x right, y up, -1..1); `button` 0 primary, 1 middle, 2 secondary.",
             )
         },
     ]

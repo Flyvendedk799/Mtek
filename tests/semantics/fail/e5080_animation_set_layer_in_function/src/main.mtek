@@ -1,0 +1,9 @@
+// A layer changes the animation, so it is set only in lifecycle functions and handlers, not in a function.
+fn wave(target: entity_ref) {
+    animation.set_layer(target, "wave", "Wave", 1.0, false, "");
+}
+
+scene Demo {
+    camera Main {}
+    entity Rig {}
+}

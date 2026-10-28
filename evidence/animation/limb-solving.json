@@ -1,0 +1,2350 @@
+{
+  "format": "mtek-limb-solving/1",
+  "decision": "0222",
+  "softness": 0.05,
+  "bounds": {
+    "reachRelativeError": 0.00001,
+    "directionError": 0.00001,
+    "maxReachFraction": 1.000001,
+    "rangeViolations": 0,
+    "reverseBends": 0,
+    "kneeBackViolations": 0,
+    "nonFinite": 0,
+    "maxStepRatio": 12,
+    "dropError": 0.00001,
+    "footError": 0.00001,
+    "normalError": 0.00001,
+    "identityDifference": 1e-9,
+    "smoothingDeviation": 1e-9
+  },
+  "rigs": [
+    {
+      "id": "upright",
+      "description": "straight identity-frame bind, y up, unit scale"
+    },
+    {
+      "id": "bent-bind",
+      "description": "knees 14/20 deg and elbows 18 deg bent in bind, A pose, bone-aligned frames"
+    },
+    {
+      "id": "z-up-scaled",
+      "description": "Z-up mesh node, rig yawed 0.7 rad and scaled 2.5, unequal left/right bone lengths, bone-aligned frames"
+    },
+    {
+      "id": "short-shin",
+      "description": "non-uniform bone lengths (long thigh, short shin, short upper arm, long forearm), A pose, bone-aligned frames"
+    },
+    {
+      "id": "stance-upright",
+      "description": "knees bent 34 deg, identity frames"
+    },
+    {
+      "id": "stance-framed",
+      "description": "knees bent 34/38 deg, bone-aligned frames, Z-up mesh, yawed and scaled by 2.5"
+    }
+  ],
+  "reach": [
+    {
+      "rig": "upright",
+      "limb": "leftLeg",
+      "targets": 2000,
+      "maxRelativeError": 0.000001
+    },
+    {
+      "rig": "upright",
+      "limb": "rightLeg",
+      "targets": 2000,
+      "maxRelativeError": 0.000001
+    },
+    {
+      "rig": "upright",
+      "limb": "leftArm",
+      "targets": 2000,
+      "maxRelativeError": 0.000001
+    },
+    {
+      "rig": "upright",
+      "limb": "rightArm",
+      "targets": 2000,
+      "maxRelativeError": 0.000001
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "leftLeg",
+      "targets": 2000,
+      "maxRelativeError": 0.000001
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "rightLeg",
+      "targets": 2000,
+      "maxRelativeError": 0.000001
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "leftArm",
+      "targets": 2000,
+      "maxRelativeError": 0.000001
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "rightArm",
+      "targets": 2000,
+      "maxRelativeError": 0.000001
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "leftLeg",
+      "targets": 2000,
+      "maxRelativeError": 0.000001
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "rightLeg",
+      "targets": 2000,
+      "maxRelativeError": 0.000001
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "leftArm",
+      "targets": 2000,
+      "maxRelativeError": 0.000001
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "rightArm",
+      "targets": 2000,
+      "maxRelativeError": 0.000001
+    },
+    {
+      "rig": "short-shin",
+      "limb": "leftLeg",
+      "targets": 2000,
+      "maxRelativeError": 0.000001
+    },
+    {
+      "rig": "short-shin",
+      "limb": "rightLeg",
+      "targets": 2000,
+      "maxRelativeError": 0.000001
+    },
+    {
+      "rig": "short-shin",
+      "limb": "leftArm",
+      "targets": 2000,
+      "maxRelativeError": 0.000001
+    },
+    {
+      "rig": "short-shin",
+      "limb": "rightArm",
+      "targets": 2000,
+      "maxRelativeError": 0.000001
+    }
+  ],
+  "beyond": [
+    {
+      "rig": "upright",
+      "limb": "leftLeg",
+      "samples": 4860,
+      "maxReachFraction": 1,
+      "monotoneViolations": 0,
+      "maxDirectionError": 0.000001,
+      "profile": [
+        {
+          "target": 0.95,
+          "end": 0.95
+        },
+        {
+          "target": 1,
+          "end": 0.9864
+        },
+        {
+          "target": 1.1,
+          "end": 0.9991
+        },
+        {
+          "target": 2,
+          "end": 1
+        }
+      ]
+    },
+    {
+      "rig": "upright",
+      "limb": "rightLeg",
+      "samples": 4860,
+      "maxReachFraction": 1,
+      "monotoneViolations": 0,
+      "maxDirectionError": 0.000001,
+      "profile": [
+        {
+          "target": 0.95,
+          "end": 0.95
+        },
+        {
+          "target": 1,
+          "end": 0.9864
+        },
+        {
+          "target": 1.1,
+          "end": 0.9991
+        },
+        {
+          "target": 2,
+          "end": 1
+        }
+      ]
+    },
+    {
+      "rig": "upright",
+      "limb": "leftArm",
+      "samples": 4860,
+      "maxReachFraction": 1,
+      "monotoneViolations": 0,
+      "maxDirectionError": 0.000001,
+      "profile": [
+        {
+          "target": 0.95,
+          "end": 0.95
+        },
+        {
+          "target": 1,
+          "end": 0.9872
+        },
+        {
+          "target": 1.1,
+          "end": 0.9993
+        },
+        {
+          "target": 2,
+          "end": 1
+        }
+      ]
+    },
+    {
+      "rig": "upright",
+      "limb": "rightArm",
+      "samples": 4860,
+      "maxReachFraction": 1,
+      "monotoneViolations": 0,
+      "maxDirectionError": 0.000001,
+      "profile": [
+        {
+          "target": 0.95,
+          "end": 0.95
+        },
+        {
+          "target": 1,
+          "end": 0.9872
+        },
+        {
+          "target": 1.1,
+          "end": 0.9993
+        },
+        {
+          "target": 2,
+          "end": 1
+        }
+      ]
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "leftLeg",
+      "samples": 4860,
+      "maxReachFraction": 1,
+      "monotoneViolations": 0,
+      "maxDirectionError": 0.000001,
+      "profile": [
+        {
+          "target": 0.95,
+          "end": 0.95
+        },
+        {
+          "target": 1,
+          "end": 0.9864
+        },
+        {
+          "target": 1.1,
+          "end": 0.9991
+        },
+        {
+          "target": 2,
+          "end": 1
+        }
+      ]
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "rightLeg",
+      "samples": 4860,
+      "maxReachFraction": 1,
+      "monotoneViolations": 0,
+      "maxDirectionError": 0.000001,
+      "profile": [
+        {
+          "target": 0.95,
+          "end": 0.95
+        },
+        {
+          "target": 1,
+          "end": 0.9864
+        },
+        {
+          "target": 1.1,
+          "end": 0.9991
+        },
+        {
+          "target": 2,
+          "end": 1
+        }
+      ]
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "leftArm",
+      "samples": 4860,
+      "maxReachFraction": 1,
+      "monotoneViolations": 0,
+      "maxDirectionError": 0.000001,
+      "profile": [
+        {
+          "target": 0.95,
+          "end": 0.95
+        },
+        {
+          "target": 1,
+          "end": 0.9872
+        },
+        {
+          "target": 1.1,
+          "end": 0.9993
+        },
+        {
+          "target": 2,
+          "end": 1
+        }
+      ]
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "rightArm",
+      "samples": 4860,
+      "maxReachFraction": 1,
+      "monotoneViolations": 0,
+      "maxDirectionError": 0.000001,
+      "profile": [
+        {
+          "target": 0.95,
+          "end": 0.95
+        },
+        {
+          "target": 1,
+          "end": 0.9872
+        },
+        {
+          "target": 1.1,
+          "end": 0.9993
+        },
+        {
+          "target": 2,
+          "end": 1
+        }
+      ]
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "leftLeg",
+      "samples": 4860,
+      "maxReachFraction": 1,
+      "monotoneViolations": 0,
+      "maxDirectionError": 0.000001,
+      "profile": [
+        {
+          "target": 0.95,
+          "end": 0.95
+        },
+        {
+          "target": 1,
+          "end": 0.9865
+        },
+        {
+          "target": 1.1,
+          "end": 0.9991
+        },
+        {
+          "target": 2,
+          "end": 1
+        }
+      ]
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "rightLeg",
+      "samples": 4860,
+      "maxReachFraction": 1,
+      "monotoneViolations": 0,
+      "maxDirectionError": 0.000001,
+      "profile": [
+        {
+          "target": 0.95,
+          "end": 0.95
+        },
+        {
+          "target": 1,
+          "end": 0.9865
+        },
+        {
+          "target": 1.1,
+          "end": 0.9991
+        },
+        {
+          "target": 2,
+          "end": 1
+        }
+      ]
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "leftArm",
+      "samples": 4860,
+      "maxReachFraction": 1,
+      "monotoneViolations": 0,
+      "maxDirectionError": 0.000001,
+      "profile": [
+        {
+          "target": 0.95,
+          "end": 0.95
+        },
+        {
+          "target": 1,
+          "end": 0.9873
+        },
+        {
+          "target": 1.1,
+          "end": 0.9993
+        },
+        {
+          "target": 2,
+          "end": 1
+        }
+      ]
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "rightArm",
+      "samples": 4860,
+      "maxReachFraction": 1,
+      "monotoneViolations": 0,
+      "maxDirectionError": 0.000001,
+      "profile": [
+        {
+          "target": 0.95,
+          "end": 0.95
+        },
+        {
+          "target": 1,
+          "end": 0.9872
+        },
+        {
+          "target": 1.1,
+          "end": 0.9993
+        },
+        {
+          "target": 2,
+          "end": 1
+        }
+      ]
+    },
+    {
+      "rig": "short-shin",
+      "limb": "leftLeg",
+      "samples": 4860,
+      "maxReachFraction": 1,
+      "monotoneViolations": 0,
+      "maxDirectionError": 0.000001,
+      "profile": [
+        {
+          "target": 0.95,
+          "end": 0.95
+        },
+        {
+          "target": 1,
+          "end": 0.9891
+        },
+        {
+          "target": 1.1,
+          "end": 0.9996
+        },
+        {
+          "target": 2,
+          "end": 1
+        }
+      ]
+    },
+    {
+      "rig": "short-shin",
+      "limb": "rightLeg",
+      "samples": 4860,
+      "maxReachFraction": 1,
+      "monotoneViolations": 0,
+      "maxDirectionError": 0.000001,
+      "profile": [
+        {
+          "target": 0.95,
+          "end": 0.95
+        },
+        {
+          "target": 1,
+          "end": 0.9891
+        },
+        {
+          "target": 1.1,
+          "end": 0.9996
+        },
+        {
+          "target": 2,
+          "end": 1
+        }
+      ]
+    },
+    {
+      "rig": "short-shin",
+      "limb": "leftArm",
+      "samples": 4860,
+      "maxReachFraction": 1,
+      "monotoneViolations": 0,
+      "maxDirectionError": 0.000001,
+      "profile": [
+        {
+          "target": 0.95,
+          "end": 0.95
+        },
+        {
+          "target": 1,
+          "end": 0.9889
+        },
+        {
+          "target": 1.1,
+          "end": 0.9996
+        },
+        {
+          "target": 2,
+          "end": 1
+        }
+      ]
+    },
+    {
+      "rig": "short-shin",
+      "limb": "rightArm",
+      "samples": 4860,
+      "maxReachFraction": 1,
+      "monotoneViolations": 0,
+      "maxDirectionError": 0.000001,
+      "profile": [
+        {
+          "target": 0.95,
+          "end": 0.95
+        },
+        {
+          "target": 1,
+          "end": 0.9889
+        },
+        {
+          "target": 1.1,
+          "end": 0.9996
+        },
+        {
+          "target": 2,
+          "end": 1
+        }
+      ]
+    }
+  ],
+  "range": [
+    {
+      "rig": "upright",
+      "limb": "leftLeg",
+      "targets": 9600,
+      "rangeViolations": 0,
+      "reverseBends": 0,
+      "kneeBackViolations": 0,
+      "minFlexionDegrees": 0.642,
+      "maxFlexionDegrees": 150,
+      "nonFinite": 0
+    },
+    {
+      "rig": "upright",
+      "limb": "rightLeg",
+      "targets": 9600,
+      "rangeViolations": 0,
+      "reverseBends": 0,
+      "kneeBackViolations": 0,
+      "minFlexionDegrees": 0.642,
+      "maxFlexionDegrees": 150,
+      "nonFinite": 0
+    },
+    {
+      "rig": "upright",
+      "limb": "leftArm",
+      "targets": 9600,
+      "rangeViolations": 0,
+      "reverseBends": 0,
+      "kneeBackViolations": 0,
+      "minFlexionDegrees": 0.503,
+      "maxFlexionDegrees": 145,
+      "nonFinite": 0
+    },
+    {
+      "rig": "upright",
+      "limb": "rightArm",
+      "targets": 9600,
+      "rangeViolations": 0,
+      "reverseBends": 0,
+      "kneeBackViolations": 0,
+      "minFlexionDegrees": 0.503,
+      "maxFlexionDegrees": 145,
+      "nonFinite": 0
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "leftLeg",
+      "targets": 9600,
+      "rangeViolations": 0,
+      "reverseBends": 0,
+      "kneeBackViolations": 0,
+      "minFlexionDegrees": 0.642,
+      "maxFlexionDegrees": 150,
+      "nonFinite": 0
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "rightLeg",
+      "targets": 9600,
+      "rangeViolations": 0,
+      "reverseBends": 0,
+      "kneeBackViolations": 0,
+      "minFlexionDegrees": 0.642,
+      "maxFlexionDegrees": 150,
+      "nonFinite": 0
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "leftArm",
+      "targets": 9600,
+      "rangeViolations": 0,
+      "reverseBends": 0,
+      "kneeBackViolations": 0,
+      "minFlexionDegrees": 0.503,
+      "maxFlexionDegrees": 145,
+      "nonFinite": 0
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "rightArm",
+      "targets": 9600,
+      "rangeViolations": 0,
+      "reverseBends": 0,
+      "kneeBackViolations": 0,
+      "minFlexionDegrees": 0.503,
+      "maxFlexionDegrees": 145,
+      "nonFinite": 0
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "leftLeg",
+      "targets": 9600,
+      "rangeViolations": 0,
+      "reverseBends": 0,
+      "kneeBackViolations": 0,
+      "minFlexionDegrees": 0.626,
+      "maxFlexionDegrees": 150,
+      "nonFinite": 0
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "rightLeg",
+      "targets": 9600,
+      "rangeViolations": 0,
+      "reverseBends": 0,
+      "kneeBackViolations": 0,
+      "minFlexionDegrees": 0.621,
+      "maxFlexionDegrees": 150,
+      "nonFinite": 0
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "leftArm",
+      "targets": 9600,
+      "rangeViolations": 0,
+      "reverseBends": 0,
+      "kneeBackViolations": 0,
+      "minFlexionDegrees": 0.497,
+      "maxFlexionDegrees": 145,
+      "nonFinite": 0
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "rightArm",
+      "targets": 9600,
+      "rangeViolations": 0,
+      "reverseBends": 0,
+      "kneeBackViolations": 0,
+      "minFlexionDegrees": 0.504,
+      "maxFlexionDegrees": 145,
+      "nonFinite": 0
+    },
+    {
+      "rig": "short-shin",
+      "limb": "leftLeg",
+      "targets": 9600,
+      "rangeViolations": 0,
+      "reverseBends": 0,
+      "kneeBackViolations": 0,
+      "minFlexionDegrees": 0.264,
+      "maxFlexionDegrees": 150,
+      "nonFinite": 0
+    },
+    {
+      "rig": "short-shin",
+      "limb": "rightLeg",
+      "targets": 9600,
+      "rangeViolations": 0,
+      "reverseBends": 0,
+      "kneeBackViolations": 0,
+      "minFlexionDegrees": 0.264,
+      "maxFlexionDegrees": 150,
+      "nonFinite": 0
+    },
+    {
+      "rig": "short-shin",
+      "limb": "leftArm",
+      "targets": 9600,
+      "rangeViolations": 0,
+      "reverseBends": 0,
+      "kneeBackViolations": 0,
+      "minFlexionDegrees": 0.287,
+      "maxFlexionDegrees": 145,
+      "nonFinite": 0
+    },
+    {
+      "rig": "short-shin",
+      "limb": "rightArm",
+      "targets": 9600,
+      "rangeViolations": 0,
+      "reverseBends": 0,
+      "kneeBackViolations": 0,
+      "minFlexionDegrees": 0.287,
+      "maxFlexionDegrees": 145,
+      "nonFinite": 0
+    }
+  ],
+  "continuity": [
+    {
+      "rig": "upright",
+      "limb": "leftLeg",
+      "softness": 0.05,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 7.38,
+          "maxFlexionRatio": 7.38
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 7.42,
+          "maxFlexionRatio": 7.42
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.23,
+          "maxFlexionRatio": 0.000105
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000118
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000836
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000799
+        }
+      ]
+    },
+    {
+      "rig": "upright",
+      "limb": "leftLeg",
+      "softness": 0,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 89.5,
+          "maxFlexionRatio": 89.5
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 94.3,
+          "maxFlexionRatio": 94.3
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.23,
+          "maxFlexionRatio": 0.000105
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000118
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000836
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000799
+        }
+      ]
+    },
+    {
+      "rig": "upright",
+      "limb": "rightLeg",
+      "softness": 0.05,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 7.38,
+          "maxFlexionRatio": 7.38
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 7.42,
+          "maxFlexionRatio": 7.42
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.23,
+          "maxFlexionRatio": 0.000105
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000118
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000836
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000742
+        }
+      ]
+    },
+    {
+      "rig": "upright",
+      "limb": "rightLeg",
+      "softness": 0,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 89.5,
+          "maxFlexionRatio": 89.5
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 94.3,
+          "maxFlexionRatio": 94.3
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.23,
+          "maxFlexionRatio": 0.000105
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000118
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000836
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000742
+        }
+      ]
+    },
+    {
+      "rig": "upright",
+      "limb": "leftArm",
+      "softness": 0.05,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 7.63,
+          "maxFlexionRatio": 7.63
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 7.66,
+          "maxFlexionRatio": 7.66
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.54,
+          "maxFlexionRatio": 0.000141
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000558
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000747
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 2.91,
+          "maxFlexionRatio": 0.000191
+        },
+        {
+          "path": "great circle over the head (0 to 175 deg)",
+          "steps": 875,
+          "maxStepRatio": 3.24,
+          "maxFlexionRatio": 0.000191
+        }
+      ]
+    },
+    {
+      "rig": "upright",
+      "limb": "leftArm",
+      "softness": 0,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 89.6,
+          "maxFlexionRatio": 89.6
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 94.4,
+          "maxFlexionRatio": 94.4
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.54,
+          "maxFlexionRatio": 0.000141
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000558
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000747
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 2.91,
+          "maxFlexionRatio": 0.000191
+        },
+        {
+          "path": "great circle over the head (0 to 175 deg)",
+          "steps": 875,
+          "maxStepRatio": 3.24,
+          "maxFlexionRatio": 0.000191
+        }
+      ]
+    },
+    {
+      "rig": "upright",
+      "limb": "rightArm",
+      "softness": 0.05,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 7.63,
+          "maxFlexionRatio": 7.63
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 7.66,
+          "maxFlexionRatio": 7.66
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.54,
+          "maxFlexionRatio": 0.000141
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000558
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000747
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 2.91,
+          "maxFlexionRatio": 0.000191
+        },
+        {
+          "path": "great circle over the head (0 to 175 deg)",
+          "steps": 875,
+          "maxStepRatio": 3.24,
+          "maxFlexionRatio": 0.000191
+        }
+      ]
+    },
+    {
+      "rig": "upright",
+      "limb": "rightArm",
+      "softness": 0,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 89.6,
+          "maxFlexionRatio": 89.6
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 94.4,
+          "maxFlexionRatio": 94.4
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.54,
+          "maxFlexionRatio": 0.000141
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000558
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000747
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 2.91,
+          "maxFlexionRatio": 0.000191
+        },
+        {
+          "path": "great circle over the head (0 to 175 deg)",
+          "steps": 875,
+          "maxStepRatio": 3.24,
+          "maxFlexionRatio": 0.000191
+        }
+      ]
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "leftLeg",
+      "softness": 0.05,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 7.38,
+          "maxFlexionRatio": 7.38
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 7.42,
+          "maxFlexionRatio": 7.42
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.23,
+          "maxFlexionRatio": 0.0000992
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000147
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000912
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000937
+        }
+      ]
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "leftLeg",
+      "softness": 0,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 89.5,
+          "maxFlexionRatio": 89.5
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 94.3,
+          "maxFlexionRatio": 94.3
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.23,
+          "maxFlexionRatio": 0.0000992
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000147
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000912
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000937
+        }
+      ]
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "rightLeg",
+      "softness": 0.05,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 7.38,
+          "maxFlexionRatio": 7.38
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 7.42,
+          "maxFlexionRatio": 7.42
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.23,
+          "maxFlexionRatio": 0.000105
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000115
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000116
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.26,
+          "maxFlexionRatio": 0.000089
+        }
+      ]
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "rightLeg",
+      "softness": 0,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 89.5,
+          "maxFlexionRatio": 89.5
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 94.3,
+          "maxFlexionRatio": 94.3
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.23,
+          "maxFlexionRatio": 0.000105
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000115
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000116
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.26,
+          "maxFlexionRatio": 0.000089
+        }
+      ]
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "leftArm",
+      "softness": 0.05,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 7.63,
+          "maxFlexionRatio": 7.63
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 7.66,
+          "maxFlexionRatio": 7.66
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.7,
+          "maxFlexionRatio": 0.000199
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 5.35,
+          "maxFlexionRatio": 0.000164
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.47,
+          "maxFlexionRatio": 0.0000988
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.85,
+          "maxFlexionRatio": 0.000158
+        },
+        {
+          "path": "great circle over the head (0 to 175 deg)",
+          "steps": 875,
+          "maxStepRatio": 2.16,
+          "maxFlexionRatio": 0.000162
+        }
+      ]
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "leftArm",
+      "softness": 0,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 89.6,
+          "maxFlexionRatio": 89.6
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 94.4,
+          "maxFlexionRatio": 94.4
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.7,
+          "maxFlexionRatio": 0.000199
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 5.35,
+          "maxFlexionRatio": 0.000164
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.47,
+          "maxFlexionRatio": 0.0000988
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.85,
+          "maxFlexionRatio": 0.000158
+        },
+        {
+          "path": "great circle over the head (0 to 175 deg)",
+          "steps": 875,
+          "maxStepRatio": 2.16,
+          "maxFlexionRatio": 0.000162
+        }
+      ]
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "rightArm",
+      "softness": 0.05,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 7.63,
+          "maxFlexionRatio": 7.63
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 7.66,
+          "maxFlexionRatio": 7.66
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.7,
+          "maxFlexionRatio": 0.00019
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 5.35,
+          "maxFlexionRatio": 0.000156
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.47,
+          "maxFlexionRatio": 0.000113
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 3.24,
+          "maxFlexionRatio": 0.000168
+        },
+        {
+          "path": "great circle over the head (0 to 175 deg)",
+          "steps": 875,
+          "maxStepRatio": 2.16,
+          "maxFlexionRatio": 0.000154
+        }
+      ]
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "rightArm",
+      "softness": 0,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 89.6,
+          "maxFlexionRatio": 89.6
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 94.4,
+          "maxFlexionRatio": 94.4
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.7,
+          "maxFlexionRatio": 0.00019
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 5.35,
+          "maxFlexionRatio": 0.000156
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.47,
+          "maxFlexionRatio": 0.000113
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 3.24,
+          "maxFlexionRatio": 0.000168
+        },
+        {
+          "path": "great circle over the head (0 to 175 deg)",
+          "steps": 875,
+          "maxStepRatio": 2.16,
+          "maxFlexionRatio": 0.000154
+        }
+      ]
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "leftLeg",
+      "softness": 0.05,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 7.44,
+          "maxFlexionRatio": 7.44
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 7.45,
+          "maxFlexionRatio": 7.45
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.23,
+          "maxFlexionRatio": 0.000149
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000193
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000162
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000107
+        }
+      ]
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "leftLeg",
+      "softness": 0,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 89.6,
+          "maxFlexionRatio": 89.6
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 94.5,
+          "maxFlexionRatio": 94.5
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.23,
+          "maxFlexionRatio": 0.000149
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000193
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000162
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000107
+        }
+      ]
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "rightLeg",
+      "softness": 0.05,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 7.45,
+          "maxFlexionRatio": 7.45
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 7.47,
+          "maxFlexionRatio": 7.47
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.23,
+          "maxFlexionRatio": 0.000166
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000243
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000142
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000118
+        }
+      ]
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "rightLeg",
+      "softness": 0,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 89.7,
+          "maxFlexionRatio": 89.7
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 94.5,
+          "maxFlexionRatio": 94.5
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.23,
+          "maxFlexionRatio": 0.000166
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000243
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000142
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000118
+        }
+      ]
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "leftArm",
+      "softness": 0.05,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 7.65,
+          "maxFlexionRatio": 7.65
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 7.67,
+          "maxFlexionRatio": 7.67
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.54,
+          "maxFlexionRatio": 0.000276
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000988
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0001
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 2.91,
+          "maxFlexionRatio": 0.00039
+        },
+        {
+          "path": "great circle over the head (0 to 175 deg)",
+          "steps": 875,
+          "maxStepRatio": 3.24,
+          "maxFlexionRatio": 0.00039
+        }
+      ]
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "leftArm",
+      "softness": 0,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 89.6,
+          "maxFlexionRatio": 89.6
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 94.5,
+          "maxFlexionRatio": 94.5
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.54,
+          "maxFlexionRatio": 0.000276
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0000988
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0001
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 2.91,
+          "maxFlexionRatio": 0.00039
+        },
+        {
+          "path": "great circle over the head (0 to 175 deg)",
+          "steps": 875,
+          "maxStepRatio": 3.24,
+          "maxFlexionRatio": 0.00039
+        }
+      ]
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "rightArm",
+      "softness": 0.05,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 7.63,
+          "maxFlexionRatio": 7.63
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 7.65,
+          "maxFlexionRatio": 7.65
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.54,
+          "maxFlexionRatio": 0.000221
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.00011
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0001
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 2.91,
+          "maxFlexionRatio": 0.000287
+        },
+        {
+          "path": "great circle over the head (0 to 175 deg)",
+          "steps": 875,
+          "maxStepRatio": 3.24,
+          "maxFlexionRatio": 0.000397
+        }
+      ]
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "rightArm",
+      "softness": 0,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 89.6,
+          "maxFlexionRatio": 89.6
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 94.4,
+          "maxFlexionRatio": 94.4
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.54,
+          "maxFlexionRatio": 0.000221
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.00011
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.0001
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 2.91,
+          "maxFlexionRatio": 0.000287
+        },
+        {
+          "path": "great circle over the head (0 to 175 deg)",
+          "steps": 875,
+          "maxStepRatio": 3.24,
+          "maxFlexionRatio": 0.000397
+        }
+      ]
+    },
+    {
+      "rig": "short-shin",
+      "limb": "leftLeg",
+      "softness": 0.05,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 8.74,
+          "maxFlexionRatio": 8.74
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 8.77,
+          "maxFlexionRatio": 8.77
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.23,
+          "maxFlexionRatio": 0.000119
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000159
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000119
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000124
+        }
+      ]
+    },
+    {
+      "rig": "short-shin",
+      "limb": "leftLeg",
+      "softness": 0,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 94.6,
+          "maxFlexionRatio": 94.6
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 99.7,
+          "maxFlexionRatio": 99.7
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.23,
+          "maxFlexionRatio": 0.000119
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000159
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000119
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000124
+        }
+      ]
+    },
+    {
+      "rig": "short-shin",
+      "limb": "rightLeg",
+      "softness": 0.05,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 8.74,
+          "maxFlexionRatio": 8.74
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 8.77,
+          "maxFlexionRatio": 8.77
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.23,
+          "maxFlexionRatio": 0.000123
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000178
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000119
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000112
+        }
+      ]
+    },
+    {
+      "rig": "short-shin",
+      "limb": "rightLeg",
+      "softness": 0,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 94.6,
+          "maxFlexionRatio": 94.6
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 99.7,
+          "maxFlexionRatio": 99.7
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.23,
+          "maxFlexionRatio": 0.000123
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000178
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000119
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.25,
+          "maxFlexionRatio": 0.000112
+        }
+      ]
+    },
+    {
+      "rig": "short-shin",
+      "limb": "leftArm",
+      "softness": 0.05,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 8.47,
+          "maxFlexionRatio": 8.47
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 8.5,
+          "maxFlexionRatio": 8.5
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.7,
+          "maxFlexionRatio": 0.000258
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 5.35,
+          "maxFlexionRatio": 0.000178
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.47,
+          "maxFlexionRatio": 0.00012
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.85,
+          "maxFlexionRatio": 0.000182
+        },
+        {
+          "path": "great circle over the head (0 to 175 deg)",
+          "steps": 875,
+          "maxStepRatio": 2.16,
+          "maxFlexionRatio": 0.000182
+        }
+      ]
+    },
+    {
+      "rig": "short-shin",
+      "limb": "leftArm",
+      "softness": 0,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 92.8,
+          "maxFlexionRatio": 92.8
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 97.8,
+          "maxFlexionRatio": 97.8
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.7,
+          "maxFlexionRatio": 0.000258
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 5.35,
+          "maxFlexionRatio": 0.000178
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.47,
+          "maxFlexionRatio": 0.00012
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.85,
+          "maxFlexionRatio": 0.000182
+        },
+        {
+          "path": "great circle over the head (0 to 175 deg)",
+          "steps": 875,
+          "maxStepRatio": 2.16,
+          "maxFlexionRatio": 0.000182
+        }
+      ]
+    },
+    {
+      "rig": "short-shin",
+      "limb": "rightArm",
+      "softness": 0.05,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 8.47,
+          "maxFlexionRatio": 8.47
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 8.5,
+          "maxFlexionRatio": 8.5
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.7,
+          "maxFlexionRatio": 0.000283
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 5.35,
+          "maxFlexionRatio": 0.000185
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.47,
+          "maxFlexionRatio": 0.000133
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 3.27,
+          "maxFlexionRatio": 0.00016
+        },
+        {
+          "path": "great circle over the head (0 to 175 deg)",
+          "steps": 875,
+          "maxStepRatio": 2.16,
+          "maxFlexionRatio": 0.000187
+        }
+      ]
+    },
+    {
+      "rig": "short-shin",
+      "limb": "rightArm",
+      "softness": 0,
+      "paths": [
+        {
+          "path": "radial in/out through full extension",
+          "steps": 1050,
+          "maxStepRatio": 92.8,
+          "maxFlexionRatio": 92.8
+        },
+        {
+          "path": "radial near full extension (0.93R to 1.05R)",
+          "steps": 400,
+          "maxStepRatio": 97.8,
+          "maxFlexionRatio": 97.8
+        },
+        {
+          "path": "circle around the limb axis (35 deg)",
+          "steps": 1800,
+          "maxStepRatio": 1.7,
+          "maxFlexionRatio": 0.000283
+        },
+        {
+          "path": "great circle through the bend side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 5.35,
+          "maxFlexionRatio": 0.000185
+        },
+        {
+          "path": "great circle through the opposite side (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 1.47,
+          "maxFlexionRatio": 0.000133
+        },
+        {
+          "path": "great circle across the bend plane (0 to 160 deg)",
+          "steps": 800,
+          "maxStepRatio": 3.27,
+          "maxFlexionRatio": 0.00016
+        },
+        {
+          "path": "great circle over the head (0 to 175 deg)",
+          "steps": 875,
+          "maxStepRatio": 2.16,
+          "maxFlexionRatio": 0.000187
+        }
+      ]
+    }
+  ],
+  "degenerate": [
+    {
+      "rig": "upright",
+      "limb": "leftLeg",
+      "cases": 44,
+      "nonFinite": 0
+    },
+    {
+      "rig": "upright",
+      "limb": "rightLeg",
+      "cases": 44,
+      "nonFinite": 0
+    },
+    {
+      "rig": "upright",
+      "limb": "leftArm",
+      "cases": 44,
+      "nonFinite": 0
+    },
+    {
+      "rig": "upright",
+      "limb": "rightArm",
+      "cases": 44,
+      "nonFinite": 0
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "leftLeg",
+      "cases": 44,
+      "nonFinite": 0
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "rightLeg",
+      "cases": 44,
+      "nonFinite": 0
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "leftArm",
+      "cases": 44,
+      "nonFinite": 0
+    },
+    {
+      "rig": "bent-bind",
+      "limb": "rightArm",
+      "cases": 44,
+      "nonFinite": 0
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "leftLeg",
+      "cases": 44,
+      "nonFinite": 0
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "rightLeg",
+      "cases": 44,
+      "nonFinite": 0
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "leftArm",
+      "cases": 44,
+      "nonFinite": 0
+    },
+    {
+      "rig": "z-up-scaled",
+      "limb": "rightArm",
+      "cases": 44,
+      "nonFinite": 0
+    },
+    {
+      "rig": "short-shin",
+      "limb": "leftLeg",
+      "cases": 44,
+      "nonFinite": 0
+    },
+    {
+      "rig": "short-shin",
+      "limb": "rightLeg",
+      "cases": 44,
+      "nonFinite": 0
+    },
+    {
+      "rig": "short-shin",
+      "limb": "leftArm",
+      "cases": 44,
+      "nonFinite": 0
+    },
+    {
+      "rig": "short-shin",
+      "limb": "rightArm",
+      "cases": 44,
+      "nonFinite": 0
+    }
+  ],
+  "placement": [
+    {
+      "rig": "stance-upright",
+      "cases": 43,
+      "maxDropError": 1e-7,
+      "maxFootError": 1e-7,
+      "raised": 0,
+      "maxNormalErrorRad": 1e-7,
+      "maxDrop": 0.294
+    },
+    {
+      "rig": "stance-framed",
+      "cases": 43,
+      "maxDropError": 0.000001,
+      "maxFootError": 0.000001,
+      "raised": 0,
+      "maxNormalErrorRad": 0.000001,
+      "maxDrop": 0.294
+    }
+  ],
+  "identity": [
+    {
+      "rig": "stance-upright",
+      "maxPoseDifference": 1e-15,
+      "drop": 0
+    },
+    {
+      "rig": "stance-framed",
+      "maxPoseDifference": 1e-15,
+      "drop": 0
+    }
+  ],
+  "smoothing": {
+    "rig": "stance-upright",
+    "frames": 90,
+    "maxDeviation": 1e-16,
+    "monotone": true
+  }
+}

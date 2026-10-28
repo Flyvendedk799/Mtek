@@ -99,6 +99,10 @@ pub struct Manifest {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub compute_programs: Vec<ComputeProgram>,
     pub meshes: Vec<Mesh>,
+    /// The skeletons whose clips entities play through `clips_from` (decision 0223): nodes, joints,
+    /// inverse binds and clips, without vertex influences. Absent when no entity uses `clips_from`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub clip_sources: Vec<crate::assets::skin::Skin>,
     pub assets: Vec<Asset>,
     /// The prefabs the program spawns (decision 0064); absent when it spawns none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -181,6 +185,19 @@ pub struct Subsystems {
         skip_serializing_if = "Option::is_none"
     )]
     pub physics_module: Option<String>,
+    /// True when the program needs the animation module: a skinned mesh or `clips_from`
+    /// (decision 0225). Omitted when false, so a manifest without skeletal animation is the
+    /// same text as before the module existed.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub animation: bool,
+    /// The content-addressed animation module (`animation/<h16>.js`), present exactly when
+    /// `animation` is true: the runtime cannot derive the hashed name.
+    #[serde(
+        rename = "animationModule",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub animation_module: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -691,6 +708,10 @@ pub struct Entity {
     /// A glTF clip that moves this entity (decision 0156); absent when it plays none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub clip: Option<Clip>,
+    /// Index into `clipSources` (decision 0223): the skeleton whose clips this entity plays,
+    /// retargeted onto its own skeletal mesh at mount; absent when it plays its own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clips_from: Option<u32>,
 }
 
 /// A particle emitter (decision 0155). The runtime keeps at most 64 particles.
@@ -759,6 +780,9 @@ pub struct Prefab {
     /// The clip every instance plays (decision 0156); absent when the prefab plays none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub clip: Option<Clip>,
+    /// Index into `clipSources` (decision 0223); absent when the prefab plays its own clips.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clips_from: Option<u32>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

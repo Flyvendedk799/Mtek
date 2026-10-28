@@ -17,6 +17,8 @@ import { attachInputListeners } from "../input/dom.js";
 import { loadPhysicsBackend, physicsModuleUrl } from "../physics/load.js";
 import { PhysicsSystem, type CollisionEventName } from "../physics/system.js";
 import type { PhysicsBackend } from "../physics/types.js";
+import type { AnimationBackend } from "../animation-module/backend.js";
+import { animationMismatch, animationModuleUrl, loadAnimationBackend } from "../animation-module/load.js";
 import { InputState } from "../input/input.js";
 import { isMappedKeyCode } from "../input/keys.js";
 import { copy } from "../math/copy.js";
@@ -161,6 +163,8 @@ export interface AppDependencies {
   physics: PhysicsSystem | undefined;
   /** The loaded physics module, kept so a reload that still has bodies does not import it again. */
   physicsModule: { readonly url: string; readonly backend: PhysicsBackend } | undefined;
+  /** The loaded animation module (decision 0225), kept so a reload that still needs it does not import it again. */
+  animationModule: { readonly url: string; readonly backend: AnimationBackend } | undefined;
   /** Shader modules by hash; reused across reloads when the WGSL is unchanged. */
   modules: Map<string, GPUShaderModule>;
   /** The mounted program module; updated on a successful hot-reload swap. */
@@ -258,6 +262,8 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         readonly restart: StructuralChange | undefined;
         /** The physics module the candidate needs (loaded by `replaceProgram`), if it has bodies. */
         readonly physicsModule: { readonly url: string; readonly backend: PhysicsBackend } | undefined;
+        /** The animation module the candidate needs (loaded by `replaceProgram`), if it has skeletal animation. */
+        readonly animationModule: { readonly url: string; readonly backend: AnimationBackend } | undefined;
         /** A scene of `go_to`/`reset`: no migration; `carry` copies the shared state (decision 0141). */
         readonly fresh?: { readonly carry: boolean; readonly preparation: Preparation };
       }
@@ -721,6 +727,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
       // otherwise it is imported now, so a candidate whose physics cannot load is discarded like any other.
       let started: Awaited<ReturnType<typeof startScene>>;
       let physicsModule = this.deps.physicsModule;
+      let animationModule = this.deps.animationModule;
       try {
         assertActive();
         if (!manifest.subsystems.physics) {
@@ -741,10 +748,36 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         }
         assertActive();
 
+        // The same for the animation module (decision 0225): reused when it is the same file, imported now otherwise.
+        const unannounced = animationMismatch(manifest, structure.structure, "runtime:reload");
+        if (unannounced !== undefined) {
+          for (const module of shaders.created) registry.release(module);
+          report(unannounced);
+          return { ok: false, diagnostics: [unannounced] };
+        }
+        if (manifest.subsystems.animation !== true) {
+          animationModule = undefined;
+        } else if (animationModule === undefined || animationModule.url !== animationModuleUrl(manifest, candidate.baseUrl)) {
+          const loadedAnimation = await loadAnimationBackend({
+            manifest,
+            baseUrl: candidate.baseUrl,
+            importModule: (url) => environment.importModule(url),
+            phase: "runtime:reload",
+          });
+          if (!loadedAnimation.ok) {
+            for (const module of shaders.created) registry.release(module);
+            for (const diagnostic of loadedAnimation.diagnostics) report(diagnostic);
+            return { ok: false, diagnostics: loadedAnimation.diagnostics };
+          }
+          animationModule = { url: loadedAnimation.url, backend: loadedAnimation.backend };
+        }
+        assertActive();
+
         started = await startScene({
           ...(this.deps.rendering===undefined?{}:{rendering:this.deps.rendering}),
           assertActive,
           manifest,
+          ...(animationModule === undefined ? {} : { animation: animationModule.backend }),
           structure: structure.structure,
           program: checked.program,
           device,
@@ -801,6 +834,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
         sceneFunctions: checked.program.scene,
         restart: mode.kind === "reload" ? restart : undefined,
         physicsModule,
+        animationModule,
         ...(mode.kind === "fresh" && preparation !== undefined ? { fresh: { carry: mode.carry, preparation } } : {}),
       };
       preparedScene = undefined;
@@ -1454,6 +1488,7 @@ export class MountedApp<I = Record<string, unknown>, O = Record<string, unknown>
     this.deps.physics?.dispose();
     this.deps.physics = physics;
     this.deps.physicsModule = pending.physicsModule;
+    this.deps.animationModule = pending.animationModule;
     this.deps.scene = pending.scene;
     if (pending.computes === undefined) this.computes.sceneChanged(pending.manifest);
     else { this.computes.dispose(); this.computes = pending.computes; }

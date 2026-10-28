@@ -1,54 +1,14 @@
 import type { MtekSkin } from "../abi/manifest-types.js";
 import { identity, multiplyInto, fromRotationTranslationScaleInto, normalMatrixInto } from "../math/mat4.js";
-import { ClipPlayers, sampleChannelInto, type PlayableChannel, type PlayableClip } from "./clips.js";
+import { ClipPlayers, sampleChannelInto } from "./clips.js";
+import { AnimationPlayers, type Apply } from "./animation-players.js";
 import { PoseLayers } from "./pose-layers.js";
 import { PoseIK } from "./ik.js";
+import { BlendSpace } from "./blend-space.js";
 import { LocomotionBlend } from "./locomotion.js";
 import { PoseSchedule, type AnimationUpdateBand } from "./pose-schedule.js";
 import type { AnimationInspection } from "./animation-inspection.js";
-
-/** Shared file data, independently evaluated by every entity instance. */
-export function skinProblem(skin: MtekSkin, vertices: number): string | undefined {
-  const n = skin.nodes.length;
-  if(n>256||skin.joints.length>128)return "skin exceeds the 256-node or 128-joint profile";
-  const index=(i: number,max: number): boolean => Number.isInteger(i)&&i>=0&&i<max;
-  const finite=(values: readonly number[],length: number): boolean => values.length===length&&values.every(Number.isFinite);
-  if (!index(skin.meshNode,n) || skin.joints.length===0 || skin.joints.some(j => !index(j,n)) || skin.inverseBind.length !== skin.joints.length
-    || skin.inverseBind.some(m=>!finite(m,16))) return "skin node or inverse-bind count is invalid";
-  if (skin.indices.length !== vertices || skin.weights.length !== vertices) return "skin influences do not match the vertex count";
-  for (let i = 0; i < n; i++) {
-    const node = skin.nodes[i]!;
-    if ((node.parent!==-1&&!index(node.parent,n)) || !finite(node.translation,3) || !finite(node.rotation,4) || !finite(node.scale,3) || node.scale.some(v => v <= 0) || Math.hypot(...node.rotation) < 1e-8) return "invalid skeletal bind transform";
-    let parent = i;
-    for (let depth = 0; parent >= 0; depth++) {
-      if(!index(parent,n))return "invalid skeletal bind transform";
-      if (depth >= n) return "cyclic skeletal hierarchy";
-      parent = skin.nodes[parent]!.parent;
-    }
-  }
-  for (let i = 0; i < vertices; i++) {
-    const weights = skin.weights[i]!;
-    if (skin.indices[i]!.length!==4 || skin.indices[i]!.some(j => !index(j,skin.joints.length)) || !finite(weights,4) || weights.some(w => w < 0) || Math.abs(weights.reduce((a,b) => a+b,0)-1) > 0.001) return "invalid vertex joint indices or weights";
-  }
-  const names = new Set<string>();
-  for (const clip of skin.clips) {
-    if (names.has(clip.name)) return "duplicate skeletal clip name";
-    if(!Number.isFinite(clip.duration)||clip.duration<0) return "invalid skeletal clip duration";
-    names.add(clip.name);
-    const channels = new Set<string>();
-    for (const c of clip.channels) {
-      const key = String(c.node) + c.path;
-      if (!index(c.node,n) || channels.has(key) || c.times.length===0 || c.values.length !== c.times.length * (c.path === "rotation" ? 4 : 3) || c.values.some(v=>!Number.isFinite(v))
-        || c.times.some((t,i) => !Number.isFinite(t) || t < 0 || t > clip.duration || (i > 0 && t <= c.times[i-1]!))
-        || (c.path === "scale" && c.values.some(v => v <= 0))) return "invalid skeletal clip channel";
-      if (c.path === "rotation") {
-        for (let k=0;k<c.values.length;k+=4) if (Math.hypot(...c.values.slice(k,k+4)) < 1e-8) return "invalid skeletal rotation";
-      }
-      channels.add(key);
-    }
-  }
-  return undefined;
-}
+import type { HumanoidMap } from "./humanoid-types.js";
 
 function slerp(out: Float64Array, at: number, a: Float64Array, b: Float64Array, t: number): void {
   let dot = 0;
@@ -63,6 +23,9 @@ function slerp(out: Float64Array, at: number, a: Float64Array, b: Float64Array, 
 export class SkeletonPlayer {
   readonly layers: PoseLayers;
   readonly ik: PoseIK;
+  /** The phase-synchronized 1D/2D blend that replaces the base clip while active (decision 0220). */
+  readonly blend: BlendSpace;
+  /** The 1D view of `blend`: thresholds are x with y = 0 (decision 0196). */
   readonly locomotion: LocomotionBlend;
   private readonly schedule = new PoseSchedule();
   private evaluatedLocomotion = -1;
@@ -80,10 +43,24 @@ export class SkeletonPlayer {
   consumeRootMotion(): {x: number;y: number;z: number} {
     const result={x:this.rootDelta[0]!,y:this.rootDelta[1]!,z:this.rootDelta[2]!};this.rootDelta.fill(0);return result;
   }
+  /**
+   * Like `consumeRootMotion`, but the displacement is turned from the root node's parent space into the skeletal mesh
+   * local space of `jointPosition` (the linear part of the parent's displayed transform relative to the mesh node), so
+   * it can be carried to the world by the entity's transform alone (decision 0223).
+   */
+  consumeRootMotionLocal(): {x: number;y: number;z: number} {
+    const delta=this.consumeRootMotion();
+    if(this.rootNode<0) return delta;
+    const parent=this.skin.nodes[this.rootNode]!.parent,m=this.product;
+    if(parent<0) m.set(this.inverseMesh); else multiplyInto(m,this.inverseMesh,this.globals[parent]!);
+    return {x:m[0]!*delta.x+m[4]!*delta.y+m[8]!*delta.z,y:m[1]!*delta.x+m[5]!*delta.y+m[9]!*delta.z,z:m[2]!*delta.x+m[6]!*delta.y+m[10]!*delta.z};
+  }
   /** Final local-pose adjustment, after layers and before world matrices/sockets. */
   private override: ((pose: Float64Array) => void) | undefined;
   private evaluatedLayers = -1;
   private evaluatedIK = -1;
+  /** Supplies the canonical humanoid bones that limb goals and foot placement use (decision 0222); undefined removes them. */
+  setHumanoid(map: HumanoidMap | undefined): void { this.ik.setHumanoid(map); }
   setProceduralOverride(override: ((pose: Float64Array) => void) | undefined): void {
     this.override = override; this.evaluatedTime = NaN;
   }
@@ -93,6 +70,12 @@ export class SkeletonPlayer {
   readonly palette: Float32Array;
   readonly pose: Float64Array;
   private readonly bind: Float64Array;
+  /** The pose before the limb, foot and chain goals, and what `animatedJointPosition` derives from it (decision 0224). */
+  private readonly animated: Float64Array;
+  private readonly animatedGlobals: Float32Array[];
+  private readonly animatedLocal = identity();
+  private readonly animatedInverse = identity();
+  private animatedStale = true;
   /** Incoming sample during evaluation; unlayered displayed pose between evaluations. */
   private readonly sample: Float64Array;
   private readonly from: Float64Array;
@@ -116,15 +99,42 @@ export class SkeletonPlayer {
   /** Copies current evaluated diagnostics. Never advances clocks, consumes root motion or evaluates a pose. */
   inspect(): AnimationInspection {
     const progress = this.blendDuration === 0 ? 1 : Math.min(1, this.blendTime / this.blendDuration);
-    return { mode: this.held ? "held" : this.locomotion.active ? "locomotion" : this.name === "" ? "bind" : "clip", clip: this.name || null,
+    return { mode: this.held ? "held" : this.blend.active ? "locomotion" : this.name === "" ? "bind" : "clip", clip: this.name || null,
       transition: { elapsed: this.blendTime, duration: this.blendDuration, progress, outgoingClip: this.outgoing?.name ?? null, fromSnapshot: progress < 1 && this.outgoing === undefined },
       rootMotionNode: this.rootNode < 0 ? null : this.rootNode, proceduralOverride: this.override !== undefined,
       nodes: this.skin.nodes.map((node, index) => {
         multiplyInto(this.product, this.inverseMesh, this.globals[index]!);
         return { index, name: node.name, parent: node.parent, joint: this.skin.joints.includes(index),
           position: { x: Math.fround(this.product[12]!), y: Math.fround(this.product[13]!), z: Math.fround(this.product[14]!) } };
-      }), layers: this.layers.inspect(), ik: this.ik.inspect(), locomotion: this.locomotion.inspect(),
+      }), layers: this.layers.inspect(), ik: this.ik.inspect(), ...this.ik.limbs.inspect(), blend: this.blend.inspect(), locomotion: this.locomotion.inspect(),
     };
+  }
+  /**
+   * Like `jointPosition`, for the pose the animation gives before the limb, foot and chain goals (decision 0224): the base clip or
+   * blend, layers, the procedural override and root ownership. With no goal set it equals `jointPosition`; with goals it is the pose
+   * the program would see without them, so a program can place a foot from where the animation puts it. Computed on demand from a copy
+   * of the pose taken at each evaluation; it never evaluates.
+   */
+  animatedJointPosition(name: string): { x: number; y: number; z: number } {
+    const i=this.skin.nodes.findIndex(n=>n.name===name);
+    if(i<0) return {x:0,y:0,z:0};
+    if(this.animatedStale) this.forwardAnimated();
+    multiplyInto(this.product,this.animatedInverse,this.animatedGlobals[i]!);
+    return {x:Math.fround(this.product[12]!),y:Math.fround(this.product[13]!),z:Math.fround(this.product[14]!)};
+  }
+  private forwardAnimated(): void {
+    const p=this.animated,local=this.animatedLocal,g=this.animatedGlobals;
+    for(const i of this.order) {
+      const a=i*10;
+      fromRotationTranslationScaleInto(local,this.scratch,{x:p[a+3]!,y:p[a+4]!,z:p[a+5]!,w:p[a+6]!},{x:p[a]!,y:p[a+1]!,z:p[a+2]!},{x:p[a+7]!,y:p[a+8]!,z:p[a+9]!});
+      const parent=this.skin.nodes[i]!.parent;
+      if(parent<0) g[i]!.set(local); else multiplyInto(g[i]!,g[parent]!,local);
+    }
+    const mesh=g[this.skin.meshNode]!,inverse=this.animatedInverse;
+    normalMatrixInto(this.scratch,0,mesh);
+    for(let r=0;r<3;r++) for(let c=0;c<3;c++) inverse[c*4+r]=this.scratch[r*4+c]!;
+    for(let r=0;r<3;r++) inverse[12+r]=-(inverse[r]!*mesh[12]!+inverse[4+r]!*mesh[13]!+inverse[8+r]!*mesh[14]!);
+    this.animatedStale=false;
   }
   jointPosition(name: string): { x: number; y: number; z: number } {
     const i=this.skin.nodes.findIndex(n=>n.name===name);
@@ -153,7 +163,8 @@ export class SkeletonPlayer {
   constructor(readonly skin: MtekSkin, initial?: string) {
     this.layers = new PoseLayers(skin);
     this.ik = new PoseIK(skin);
-    this.locomotion = new LocomotionBlend(skin);
+    this.blend = new BlendSpace(skin);
+    this.locomotion = new LocomotionBlend(this.blend);
     this.bind = new Float64Array(skin.nodes.length*10);
     skin.nodes.forEach((node,i) => {
       this.bind.set(node.translation,i*10);
@@ -161,7 +172,8 @@ export class SkeletonPlayer {
       this.bind.set(q.map(v=>v/norm),i*10+3);
       this.bind.set(node.scale,i*10+7);
     });
-    this.pose = this.bind.slice(); this.sample = this.bind.slice(); this.from = this.bind.slice();
+    this.pose = this.bind.slice(); this.sample = this.bind.slice(); this.from = this.bind.slice(); this.animated = this.bind.slice();
+    this.animatedGlobals = skin.nodes.map(()=>identity());
     this.locals = skin.nodes.map(()=>identity()); this.globals = skin.nodes.map(()=>identity());
     this.inverseBind = skin.inverseBind.map(m=>new Float32Array(m));
     this.palette = new Float32Array(skin.joints.length*16);
@@ -175,7 +187,7 @@ export class SkeletonPlayer {
   transition(name: string, seconds: number, looping: boolean, speed: number): boolean {
     const clip = this.skin.clips.find(c=>c.name===name);
     if (clip === undefined || !Number.isFinite(seconds) || seconds<0 || !Number.isFinite(speed) || speed<0) return false;
-    if (this.locomotion.active) { this.locomotion.set(undefined); this.name = ""; }
+    if (this.blend.active) { this.blend.set(undefined); this.name = ""; }
     if (name === this.name) return true; // declarative state selection doesn't restart every update
     this.outgoing = this.name !== "" && !this.held && this.blendTime >= this.blendDuration
       ? { name: this.name, clock: this.clock } : undefined;
@@ -199,7 +211,7 @@ export class SkeletonPlayer {
           || n.translation.some((v,k)=>v!==other.translation[k])
           || n.rotation.some((v,k)=>v!==other.rotation[k]) || n.scale.some((v,k)=>v!==other.scale[k]);
       })) return false;
-    this.locomotion.set(undefined);
+    this.blend.set(undefined);
     this.from.set(source.pose); this.pose.set(source.pose);
     this.held=true; this.name=""; this.outgoing=undefined;
     this.blendDuration=0; this.blendTime=0; this.evaluatedTime=NaN;
@@ -216,8 +228,8 @@ export class SkeletonPlayer {
     }
   }
   play(looping: boolean, speed: number): boolean {
-    if (this.locomotion.active) {
-      const ok = this.locomotion.play(looping,speed); if (ok) this.evaluate(); return ok;
+    if (this.blend.active) {
+      const ok = this.blend.play(looping,speed); if (ok) this.evaluate(); return ok;
     }
     const ok = this.clock.play(0,looping,speed);
     if (ok) { this.from.set(this.sample); this.blendTime=0; this.evaluate(); }
@@ -229,10 +241,11 @@ export class SkeletonPlayer {
     this.clock.advance(dt,()=>undefined);
     this.outgoing?.clock.advance(dt,()=>undefined);
     this.layers.advance(dt);
-    this.locomotion.advance(dt);
+    this.ik.advance(dt);
+    this.blend.advance(dt);
     this.blendTime=Math.min(this.blendDuration,this.blendTime+dt);
-    if(this.rootNode>=0 && this.locomotion.active) {
-      this.rootSample.fill(0); this.locomotion.rootDelta(this.rootNode,this.rootSample);
+    if(this.rootNode>=0 && this.blend.active) {
+      this.rootSample.fill(0); this.blend.rootDelta(this.rootNode,this.rootSample);
       for (let c=0;c<3;c++) this.rootDelta[c]=this.rootDelta[c]!+this.rootSample[c]!*this.clock.weight(0);
     }
     else if(this.rootNode>=0) {
@@ -269,11 +282,11 @@ export class SkeletonPlayer {
   }
   evaluate(): void {
     const time = this.clock.time(0), weight = this.clock.weight(0);
-    if (this.override === undefined && time === this.evaluatedTime && this.blendTime === this.evaluatedBlend && weight === this.evaluatedWeight && this.evaluatedLayers === this.layers.revision && this.evaluatedIK === this.ik.revision && this.evaluatedLocomotion === this.locomotion.revision) return;
+    if (this.override === undefined && time === this.evaluatedTime && this.blendTime === this.evaluatedBlend && weight === this.evaluatedWeight && this.evaluatedLayers === this.layers.revision && this.evaluatedIK === this.ik.revision && !this.ik.animating && this.evaluatedLocomotion === this.blend.revision) return;
     this.evaluatedTime = time; this.evaluatedBlend = this.blendTime; this.evaluatedWeight = weight;
     this.evaluatedLayers = this.layers.revision;
     this.evaluatedIK = this.ik.revision;
-    this.evaluatedLocomotion = this.locomotion.revision;
+    this.evaluatedLocomotion = this.blend.revision;
     if (this.held) this.sample.set(this.from);
     else this.samplePose(this.name,time,this.sample);
     if (this.outgoing !== undefined) {
@@ -294,8 +307,8 @@ export class SkeletonPlayer {
       for(const c of [0,1,2,7,8,9]) this.pose[at+c]=this.bind[at+c]!+(this.pose[at+c]!-this.bind[at+c]!)*weight;
       slerp(this.pose,at+3,this.bind,this.pose,weight);
     }
-    if (this.locomotion.active) {
-      this.locomotion.apply(this.pose,this.bind);
+    if (this.blend.active) {
+      this.blend.apply(this.pose,this.bind);
       for(let at=0;at<this.pose.length;at+=10) {
         for(const c of [0,1,2,7,8,9]) this.pose[at+c]=this.bind[at+c]!+(this.pose[at+c]!-this.bind[at+c]!)*weight;
         slerp(this.pose,at+3,this.bind,this.pose,weight);
@@ -315,6 +328,7 @@ export class SkeletonPlayer {
       if(length<1e-8) throw new RangeError("Procedural pose contains a zero quaternion");
       for(let c=0;c<4;c++) this.pose[at+c]=this.pose[at+c]!/length;
     }
+    this.animated.set(this.pose); this.animatedStale=true;
     this.ik.apply(this.pose);
     for(const i of this.order) {
       const a=i*10,p=this.pose;
@@ -340,15 +354,16 @@ export class SkeletonPlayer {
   }
 }
 
-type Apply = (slot: number, channel: PlayableChannel, value: ArrayLike<number>) => void;
-/** The same Mtek control API for rigid-node and skeletal animation. */
-export class AnimationPlayers {
-  private readonly nodes = new ClipPlayers();
+/**
+ * The same Mtek control API for rigid-node and skeletal animation: the players of a world whose animation module is
+ * loaded (decision 0225). Rigid clips are the base class's; an entity with a rig answers for itself.
+ */
+export class SkeletalPlayers extends AnimationPlayers {
   private readonly rigs = new Map<number,SkeletonPlayer>();
   private readonly groups = new Map<SkeletonPlayer,number>();
-  skin(slot: number): SkeletonPlayer | undefined { return this.rigs.get(slot); }
+  override skin(slot: number): SkeletonPlayer | undefined { return this.rigs.get(slot); }
   /** Explicit pose cohorts: all members intentionally share clocks, layers, IK and a palette. */
-  share(source: number, targets: readonly number[]): boolean {
+  override share(source: number, targets: readonly number[]): boolean {
     const player = this.rigs.get(source);
     if (player === undefined) throw new RangeError("Animation sharing needs a skinned source");
     for (const target of targets) {
@@ -360,25 +375,24 @@ export class AnimationPlayers {
     for (const target of targets) if (this.rigs.get(target) !== player) { this.rigs.set(target,player); changed = true; }
     return changed;
   }
-  detach(slot: number): SkeletonPlayer {
+  override detach(slot: number): SkeletonPlayer {
     const source = this.rigs.get(slot);
     if (source === undefined) throw new RangeError("Animation detaching needs a skinned entity");
     const player = new SkeletonPlayer(source.skin);
     player.copyPose(source); this.rigs.set(slot,player); return player;
   }
-  add(clip: PlayableClip): void { this.nodes.add(clip); }
-  addSkin(slot: number, skin: MtekSkin, clip?: string): void { this.rigs.set(slot,new SkeletonPlayer(skin,clip)); }
-  remove(slot: number): void { this.nodes.remove(slot); this.rigs.delete(slot); }
-  copyPose(target: number,source: number): boolean {
+  override addSkin(slot: number, skin: MtekSkin, clip?: string): void { this.rigs.set(slot,new SkeletonPlayer(skin,clip)); }
+  override remove(slot: number): void { super.remove(slot); this.rigs.delete(slot); }
+  override copyPose(target: number,source: number): boolean {
     const a=this.rigs.get(target),b=this.rigs.get(source);
     return a!==undefined && b!==undefined && a.copyPose(b);
   }
-  transition(slot: number,name: string,seconds: number,looping: boolean,speed: number): boolean { return this.rigs.get(slot)?.transition(name,seconds,looping,speed) ?? false; }
-  play(slot: number,looping: boolean,speed: number): boolean { const r=this.rigs.get(slot); return r===undefined?this.nodes.play(slot,looping,speed):r.play(looping,speed); }
+  override transition(slot: number,name: string,seconds: number,looping: boolean,speed: number): boolean { return this.rigs.get(slot)?.transition(name,seconds,looping,speed) ?? false; }
+  override play(slot: number,looping: boolean,speed: number): boolean { const r=this.rigs.get(slot); return r===undefined?super.play(slot,looping,speed):r.play(looping,speed); }
   private clock(slot: number): [ClipPlayers,number] { const r=this.rigs.get(slot); return r===undefined?[this.nodes,slot]:[r.clock,0]; }
-  pause(slot: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.pause(); const [c,s]=this.clock(slot); return c.pause(s); }
-  resume(slot: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.resume(); const [c,s]=this.clock(slot); return c.resume(s); }
-  seek(slot: number,time: number): boolean {
+  override pause(slot: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.pause(); const [c,s]=this.clock(slot); return c.pause(s); }
+  override resume(slot: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.resume(); const [c,s]=this.clock(slot); return c.resume(s); }
+  override seek(slot: number,time: number): boolean {
     const blend=this.rigs.get(slot)?.locomotion;
     if(blend?.active===true) {
       if(!Number.isFinite(time)||time<0||time>blend.duration)return false;
@@ -386,20 +400,20 @@ export class AnimationPlayers {
     }
     const [c,s]=this.clock(slot); return c.seek(s,time);
   }
-  fade(slot: number,weight: number,duration: number): boolean { const [c,s]=this.clock(slot); return c.fade(s,weight,duration); }
-  time(slot: number): number { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.phase*blend.duration; const [c,s]=this.clock(slot); return c.time(s); }
-  duration(slot: number): number { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.duration; const [c,s]=this.clock(slot); return c.duration(s); }
-  weight(slot: number): number { const [c,s]=this.clock(slot); return c.weight(s); }
-  playing(slot: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.playing; const [c,s]=this.clock(slot); return c.playing(s); }
-  finished(slot: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.finished; const [c,s]=this.clock(slot); return c.finished(s); }
-  crossed(slot: number,marker: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.crossedPhase(marker/blend.duration); const [c,s]=this.clock(slot); return c.crossed(s,marker); }
-  advance(dt: number,apply: Apply,distance?: (slot: number)=>number): void {
-    this.nodes.advance(dt,apply);
+  override fade(slot: number,weight: number,duration: number): boolean { const [c,s]=this.clock(slot); return c.fade(s,weight,duration); }
+  override time(slot: number): number { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.phase*blend.duration; const [c,s]=this.clock(slot); return c.time(s); }
+  override duration(slot: number): number { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.duration; const [c,s]=this.clock(slot); return c.duration(s); }
+  override weight(slot: number): number { const [c,s]=this.clock(slot); return c.weight(s); }
+  override playing(slot: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.playing; const [c,s]=this.clock(slot); return c.playing(s); }
+  override finished(slot: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.finished; const [c,s]=this.clock(slot); return c.finished(s); }
+  override crossed(slot: number,marker: number): boolean { const blend=this.rigs.get(slot)?.locomotion; if(blend?.active===true)return blend.crossedPhase(marker/blend.duration); const [c,s]=this.clock(slot); return c.crossed(s,marker); }
+  override advance(dt: number,apply: Apply,distance?: (slot: number)=>number): void {
+    super.advance(dt,apply);
     this.groups.clear();
     for (const [slot,player] of this.rigs) this.groups.set(player,Math.min(this.groups.get(player)??Infinity,distance?.(slot)??0));
     for (const [player,nearest] of this.groups) player.advance(dt,true,nearest);
     this.groups.clear();
   }
-  pose(apply: Apply,time?: number): void { this.nodes.pose(apply,time); for(const r of this.rigs.values()) r.evaluate(); }
-  poseSlot(slot: number,apply: Apply): void { this.nodes.poseSlot(slot,apply); this.rigs.get(slot)?.evaluate(); }
+  override pose(apply: Apply,time?: number): void { super.pose(apply,time); for(const r of this.rigs.values()) r.evaluate(); }
+  override poseSlot(slot: number,apply: Apply): void { super.poseSlot(slot,apply); this.rigs.get(slot)?.evaluate(); }
 }

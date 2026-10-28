@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MTEK-E5016",
+    "file": "src/main.mtek",
+    "startByte": 379,
+    "endByte": 392,
+    "message": "The clip 'Nope' of 'Actor' is not a clip of its clips_from file 'models/dancer.glb'.",
+    "notes": [
+      "help: the clips of 'models/dancer.glb' are 'March'"
+    ]
+  }
+]

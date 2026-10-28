@@ -71,14 +71,14 @@ pub(super) fn body_properties() -> Vec<BodyPropertyDef> {
             ty: TypeRef::Vec3,
             applies_to: MOVING,
             since: Milestone::M1,
-            doc: "Linear velocity as of the last completed tick. Read-only.",
+            doc: "Linear velocity as of the last tick. Read-only.",
         },
         BodyPropertyDef {
             name: "angular_velocity",
             ty: TypeRef::Vec3,
             applies_to: MOVING,
             since: Milestone::M1,
-            doc: "Angular velocity as of the last completed tick. Read-only.",
+            doc: "Angular velocity as of the last tick. Read-only.",
         },
         BodyPropertyDef {
             name: "grounded",

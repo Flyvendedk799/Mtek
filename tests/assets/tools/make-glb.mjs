@@ -18,6 +18,7 @@ import { deflateSync } from "node:zlib";
 import { mkdirSync, readFileSync, writeFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { GUEST, HERO } from "./animation-demo-assets.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -1249,6 +1250,45 @@ fail("e7019_skin", (() => {
   return m.glb();
 })());
 
+// `clips_from` (decision 0223): an entity with a skeletal mesh plays the clips of another file's skeleton. Whether the
+// two skeletons are humanoid is a run-time question, so a one-joint skin is enough here.
+const CLIPS_FROM_MAIN = `const RIG = asset.glb("../models/model.glb");
+const DANCER = asset.glb("../models/dancer.glb");
+
+prefab Marcher {
+    param origin: vec3 = vec3(0.0, 0.0, 0.0);
+    position: origin;
+    mesh: RIG.mesh("Caster");
+    clips_from: DANCER;
+    clip: "March";
+}
+
+scene Demo {
+    camera Main {}
+    entity Actor {
+        mesh: RIG.mesh("Caster");
+        clips_from: DANCER;
+        clip: "March";
+    }
+    entity Plain {
+        mesh: RIG.mesh("Caster");
+        clips_from: DANCER;
+    }
+    on key_down(Key.Space) {
+        spawn(Marcher { origin: vec3(2.0, 0.0, 0.0); });
+    }
+}
+`;
+const dancer = { "models/dancer.glb": shadowSkinModel(false, "March") };
+project("pass/clips_from", shadowSkinModel(), { main: CLIPS_FROM_MAIN, extra: dancer });
+fail("e7028_source_without_skin", shadowSkinModel(), { main: CLIPS_FROM_MAIN, extra: { "models/dancer.glb": tri().glb() } });
+fail("e7028_mesh_not_skeletal", tri().glb(), {
+  main: CLIPS_FROM_MAIN.replaceAll('RIG.mesh("Caster")', 'RIG.mesh("Tri")'), extra: dancer,
+});
+fail("e5016_clips_from_unknown_clip", shadowSkinModel(), {
+  main: CLIPS_FROM_MAIN.replace('clips_from: DANCER;\n        clip: "March";', 'clips_from: DANCER;\n        clip: "Nope";'), extra: dancer,
+});
+
 // ----- declarations ----------------------------------------------------------
 
 const declaring = (extra) => `${extra}
@@ -1440,7 +1480,7 @@ textureProject("e7002_texture_file_too_large", bigPng(2000, 2000), `${TOML}\n[as
 const BROWSER_FIXTURES = "../browser/fixtures/m4";
 
 // A one-joint animated quad: an off-camera skin must still deform for the shadow pass.
-function shadowSkinModel(withTangents = false) {
+function shadowSkinModel(withTangents = false, clipName = "Slide") {
   const m = new Model();
   const attributes = {
     POSITION: m.positions([-0.5, 0, -0.5, -0.5, 0, 0.5, 0.5, 0, 0.5, 0.5, 0, -0.5]),
@@ -1454,7 +1494,7 @@ function shadowSkinModel(withTangents = false) {
   m.node({ name: "Mesh", mesh: 0, skin: 0 }); m.node({ name: "Joint" });
   m.json.skins = [{ joints: [1], skeleton: 1 }];
   const time = m.accessor(f32(0, 1), { componentType: FLOAT, type: "SCALAR", count: 2, min: [0], max: [1] });
-  m.json.animations = [{ name: "Slide", samplers: [{ input: time, output: m.vec3s([0, 0, 0, 1.4, 0, 0]), interpolation: "LINEAR" }],
+  m.json.animations = [{ name: clipName, samplers: [{ input: time, output: m.vec3s([0, 0, 0, 1.4, 0, 0]), interpolation: "LINEAR" }],
     channels: [{ sampler: 0, target: { node: 1, path: "translation" } }] }];
   return m.glb();
 }
@@ -1803,6 +1843,8 @@ function chairModel(variant = null) {
 }
 
 put("../../examples/material-configurator/models/chair.glb", chairModel());
+put("../../examples/animation-composition/models/Hero.glb", HERO.glb);
+put("../../examples/animation-composition/models/Guest.glb", GUEST.glb);
 put("../browser/fixtures/m4-variants/chair_normal_texture.glb", chairModel("normal_texture"));
 put("../browser/fixtures/m4-variants/chair_required_extension.glb", chairModel("required_extension"));
 

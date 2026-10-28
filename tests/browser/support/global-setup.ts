@@ -9,7 +9,8 @@
 // variants (`examples/material-configurator` into `.out/m4-configurator/`, support/m4-configurator.ts), the M5-01 prefab
 // fixture (`fixtures/m5/*` into `.out/m5/`, support/m5-fixtures.ts), the physics playground example
 // (`examples/physics-playground` into `.out/m5-playground/`, support/m5-playground.ts), the character movement example
-// (`examples/character-movement` into `.out/movement-example/`, support/movement-example.ts, decision 0218), the M7-01 modular scene example
+// (`examples/character-movement` into `.out/movement-example/`, support/movement-example.ts, decision 0218), the composable-animation example
+// (`examples/animation-composition` into `.out/animation-example/`, support/animation-example.ts, decision 0224), the M7-01 modular scene example
 // (`examples/modular-scene` into `.out/m7-modular-scene/`, support/m7-modular-scene.ts), the M6-10 untrusted-preview
 // fixtures (`fixtures/preview/*` and the physics fixture, built with `--mode preview` into `.out/preview/`,
 // support/preview-fixtures.ts), the M6 fixtures (`fixtures/m6/*` into `.out/m6/`, support/m6-fixtures.ts),
@@ -31,6 +32,7 @@ import { buildM4Fixtures } from "./m4-fixtures.ts";
 import { buildM5Fixtures } from "./m5-fixtures.ts";
 import { buildM6Fixtures } from "./m6-fixtures.ts";
 import { buildPlayground } from "./m5-playground.ts";
+import { buildAnimationExample } from "./animation-example.ts";
 import { buildMovementExample } from "./movement-example.ts";
 import { buildModularScene } from "./m7-modular-scene.ts";
 import { buildPreviewFixtures } from "./preview-fixtures.ts";
@@ -132,6 +134,8 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   buildPlayground(cli);
   // Decision 0218: the character movement example, in `.out/movement-example/`.
   buildMovementExample(cli);
+  // Decision 0224: the composable-animation example, in `.out/animation-example/`.
+  buildAnimationExample(cli);
   // M7-01: the modular scene example (five modules), in `.out/m7-modular-scene/`.
   buildModularScene(cli);
   // M6-10: untrusted previews (loop budget, policy page, external bootstrap), in `.out/preview/`.

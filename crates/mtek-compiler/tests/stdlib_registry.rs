@@ -116,6 +116,7 @@ fn schema_rows() -> Vec<Row> {
         ("Entity", "tag", "string", None, "C", None),
         ("Entity", "particles", "emitter", None, "C", None),
         ("Entity", "clip", "string", None, "C", None),
+        ("Entity", "clips_from", "glb_asset", None, "C", None),
         // 3.3 Camera (spec/scenes.md section 3)
         (
             "Camera",
@@ -934,7 +935,7 @@ fn every_namespace_member_of_section_2_is_present() {
             count("easing"),
             count("animation")
         ],
-        [3, 5, 2, 2, 12, 3, 5, 2, 4, 10, 15]
+        [3, 5, 2, 2, 12, 3, 5, 2, 4, 10, 32]
     );
 }
 

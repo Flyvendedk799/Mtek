@@ -1,0 +1,24 @@
+[
+  {
+    "code": "MTEK-E3002",
+    "file": "src/main.mtek",
+    "startByte": 183,
+    "endByte": 235,
+    "message": "`animation.set_layer` takes 6 arguments (target: entity_ref, id: string, clip: string, weight: f32, additive: bool, mask: string), but 5 were given.",
+    "notes": [
+      "signature: animation.set_layer(target: entity_ref, id: string, clip: string, weight: f32, additive: bool, mask: string) -> bool",
+      "help: add the missing argument `mask: string`"
+    ]
+  },
+  {
+    "code": "MTEK-E3002",
+    "file": "src/main.mtek",
+    "startByte": 245,
+    "endByte": 306,
+    "message": "`animation.set_layer` takes 6 arguments (target: entity_ref, id: string, clip: string, weight: f32, additive: bool, mask: string), but 7 were given.",
+    "notes": [
+      "signature: animation.set_layer(target: entity_ref, id: string, clip: string, weight: f32, additive: bool, mask: string) -> bool",
+      "help: remove the last argument; the parameters are `target: entity_ref, id: string, clip: string, weight: f32, additive: bool, mask: string`"
+    ]
+  }
+]

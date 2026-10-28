@@ -16,16 +16,18 @@
 // except tests; it uses only Node built-ins and `git ls-files`.
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const prebuilt = join(root, "crates/mtek-cli/prebuilt");
 const FILES = [
-  { name: "runtime.js", from: "packages/runtime-web/dist" },
-  { name: "runtime.dev.js", from: "packages/runtime-web/dist" },
-  { name: "runtime.min.js", from: "packages/runtime-web/dist" },
+  { name: "core.js", from: "packages/runtime-web/dist" },
+  { name: "core.dev.js", from: "packages/runtime-web/dist" },
+  { name: "core.min.js", from: "packages/runtime-web/dist" },
+  { name: "animation.js", from: "packages/runtime-web/dist" },
+  { name: "animation.min.js", from: "packages/runtime-web/dist" },
   { name: "runtime.d.ts", from: "packages/runtime-web/dist" },
   { name: "physics.js", from: "packages/physics-rapier/dist" },
 ];
@@ -68,6 +70,10 @@ const provenancePath = join(prebuilt, "PROVENANCE.json");
 
 if (args.has("--write")) {
   mkdirSync(prebuilt, { recursive: true });
+  // A file of an earlier layout (decision 0225 renamed runtime*.js to core*.js) is not carried along.
+  for (const stale of readdirSync(prebuilt)) {
+    if (stale !== "PROVENANCE.json" && !FILES.some(({ name }) => name === stale)) rmSync(join(prebuilt, stale));
+  }
   const files = {};
   for (const { name, from } of FILES) {
     const source = join(root, from, name);

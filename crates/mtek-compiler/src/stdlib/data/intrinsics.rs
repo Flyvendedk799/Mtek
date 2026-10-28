@@ -51,12 +51,12 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
         ),
         function(
             "overlap_spheres", Domain::Cpu, false, Milestone::M1,
-            "World-space sphere intersection, including touching. No physics required.",
+            "World-space sphere intersection, touching included. No physics needed.",
             vec![sig(&[p("a", vec3), p("radius_a", F32), p("b", vec3), p("radius_b", F32)], exact(TypeRef::Bool))],
         ),
         function(
             "overlap_boxes", Domain::Cpu, false, Milestone::M1,
-            "Oriented box intersection from world centres, full sizes and rotations. No physics needed.",
+            "Oriented box intersection from world centres, full sizes and rotations.",
             vec![sig(&[p("a", vec3), p("size_a", vec3), p("rotation_a", exact(TypeRef::Quat)), p("b", vec3), p("size_b", vec3), p("rotation_b", exact(TypeRef::Quat))], exact(TypeRef::Bool))],
         ),
         function(
@@ -216,7 +216,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "A pseudo-random number in `[0, 1)`.",
+            "Pseudo-random in `[0, 1)`.",
             vec![sig(&[], F32)],
         )
         .cpu_semantics("Seeded PRNG (xoshiro128**, seed from the mount options); deterministic under a fixed seed."),
@@ -254,7 +254,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "One element of an array, chosen uniformly.",
+            "A uniformly chosen element.",
             vec![sig(&[p("items", ARRAY_TN)], ELEMENT_T)],
         )
         .cpu_semantics("One draw of `random()`: index `floor(random() * N)`. `N` is at least 1."),
@@ -263,7 +263,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "A new array with the same elements in a random order.",
+            "A new array in random order.",
             vec![sig(&[p("items", ARRAY_TN)], ARRAY_TN)],
         )
         .cpu_semantics("Fisher-Yates: `N - 1` draws of `random()` (`N` below 2 draws none). Does not modify `items`."),
@@ -272,7 +272,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "Writes a message to the development console.",
+            "Writes to the development console.",
             vec![sig(&[p("message", exact(TypeRef::String))], exact(TypeRef::Unit))],
         )
         .cpu_semantics("No-op in release builds."),
@@ -281,7 +281,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "Whether the key was down at the end of input handling this frame.",
+            "Whether the key is down. Sampled after this frame's input handling.",
             vec![sig(&[p("key", exact(TypeRef::Enum("Key")))], exact(TypeRef::Bool))],
         ),
         // Input polling (decision 0153).
@@ -290,7 +290,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "Whether the key went down during input handling of the current frame.",
+            "Whether the key went down. Sampled after this frame's input handling.",
             vec![sig(&[p("key", exact(TypeRef::Enum("Key")))], exact(TypeRef::Bool))],
         ),
         function(
@@ -298,7 +298,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "Whether the key went up during input handling of the current frame.",
+            "Whether the key went up. Sampled after this frame's input handling.",
             vec![sig(&[p("key", exact(TypeRef::Enum("Key")))], exact(TypeRef::Bool))],
         ),
         function(
@@ -306,7 +306,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "The pointer position at the end of input handling, in canvas NDC.",
+            "The pointer position after input handling, in canvas NDC.",
             vec![sig(&[], exact(TypeRef::Vec2))],
         )
         .cpu_semantics("`x` right, `y` up, both in `[-1, 1]`. `(0, 0)` until the pointer moves or a button changes."),
@@ -315,7 +315,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "Whether pointer button `button` was down at the end of input handling.",
+            "Whether pointer button `button` is down after input handling.",
             vec![sig(&[p("button", exact(TypeRef::I32))], exact(TypeRef::Bool))],
         )
         .cpu_semantics("0 primary, 1 middle, 2 secondary. Any other button is false."),
@@ -324,7 +324,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "Queues a prefab instance as a root entity; the reference is valid at once and `alive` turns true after the next flush.",
+            "Queues a prefab instance as a root entity; valid now, `alive` after the next flush.",
             vec![sig(
                 &[p("prefab", exact(TypeRef::PrefabDescriptor))],
                 exact(TypeRef::EntityRef),
@@ -346,7 +346,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "Plays a sound once with `volume` (default 1.0, range 0..4) and `pitch` (rate, default 1.0, range 0.0625..16).",
+            "Plays a sound once at `volume` (default 1, 0..4) and `pitch` (rate, default 1, 0.0625..16).",
             vec![
                 sig(&[p("sound", sound)], unit),
                 sig(&[p("sound", sound), p("volume", F32)], unit),
@@ -360,7 +360,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "Plays a sound once at a world position: quieter with distance from the active camera, and panned.",
+            "Plays a sound once at a world position, attenuated by distance from the camera and panned.",
             vec![
                 sig(&[p("sound", sound), p("position", vec3)], unit),
                 sig(&[p("sound", sound), p("position", vec3), p("volume", F32)], unit),
@@ -394,7 +394,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "Sets the global volume of every sound and the music (default 1.0, range 0..4).",
+            "Global volume of all sound and music (default 1.0, range 0..4).",
             vec![sig(&[p("volume", F32)], unit)],
         )
         .handlers_only(),
@@ -403,7 +403,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "Mutes or unmutes all audio; the volume is kept.",
+            "Mutes or unmutes all audio, keeping the volume.",
             vec![sig(&[p("muted", exact(TypeRef::Bool))], unit)],
         )
         .handlers_only(),
@@ -476,7 +476,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "How many particles are alive.",
+            "Live particle count.",
             vec![sig(&[], exact(TypeRef::I32))],
         ),
         function(
@@ -511,7 +511,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "Whether the entity reference points at a live entity.",
+            "Whether the reference points at a live entity.",
             vec![sig(&[p("target", exact(TypeRef::EntityRef))], exact(TypeRef::Bool))],
         ),
         // Tag queries (decision 0150): the tag is a string literal that some entity or prefab of
@@ -521,7 +521,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "The number of live entities with the tag.",
+            "Number of live entities with the tag.",
             vec![sig(&[p("tag", exact(TypeRef::String))], exact(TypeRef::I32))],
         ),
         function(
@@ -529,7 +529,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "The first live entity with the tag in instance order; a dead reference if there is none.",
+            "The first live entity with the tag in instance order; a dead reference if none.",
             vec![sig(&[p("tag", exact(TypeRef::String))], exact(TypeRef::EntityRef))],
         ),
         function(
@@ -537,7 +537,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "The live entity with the tag whose world position is nearest `point`; a dead reference if there is none.",
+            "The live entity with the tag nearest `point` (world position); a dead reference if none.",
             vec![sig(
                 &[p("tag", exact(TypeRef::String)), p("point", exact(TypeRef::Vec3))],
                 exact(TypeRef::EntityRef),
@@ -569,7 +569,7 @@ pub(super) fn intrinsics() -> Vec<IntrinsicDef> {
             Domain::Cpu,
             false,
             Milestone::M1,
-            "Queues removal of every live spawned entity with the tag (not a tag of a named entity).",
+            "Queues removal of every live spawned entity with the tag (not named entities).",
             vec![sig(&[p("tag", exact(TypeRef::String))], exact(TypeRef::Unit))],
         )
         .handlers_only(),

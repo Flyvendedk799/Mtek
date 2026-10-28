@@ -204,6 +204,7 @@ fn schema_fields(schema: &Validator, instance: &Value) -> Vec<String> {
 /// by design (module documentation of `package::manifest`); the compiler validates every
 /// manifest it builds against the schema instead.
 const REJECTED_BY_THE_MODEL: &[&str] = &[
+    "invalid/animation-not-boolean.json",
     "invalid/asset-image-without-color-space.json",
     "invalid/asset-unknown-kind.json",
     "invalid/binding-missing-order.json",

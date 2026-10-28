@@ -1,0 +1,6 @@
+// take_root_motion consumes the accumulated displacement, so it is not an initialiser.
+scene Demo {
+    camera Main {}
+    entity Rig {}
+    state step: vec3 = animation.take_root_motion(Rig);
+}

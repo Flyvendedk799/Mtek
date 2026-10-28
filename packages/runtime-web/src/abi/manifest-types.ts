@@ -431,6 +431,8 @@ export interface MtekEntity {
   readonly particles?: MtekParticles;
   /** A glTF clip that moves this entity (decision 0156); absent when it plays none. */
   readonly clip?: MtekClip;
+  /** Index into `clipSources` (decision 0223): the skeleton whose clips this entity plays, retargeted at mount. */
+  readonly clipsFrom?: number;
 }
 
 export interface MtekParticles {
@@ -531,6 +533,8 @@ export interface MtekPrefab {
   readonly particles?: MtekParticles;
   /** The clip every instance plays (decision 0156). */
   readonly clip?: MtekClip;
+  /** Index into `clipSources` (decision 0223). */
+  readonly clipsFrom?: number;
 }
 
 export type MtekBindingTarget =
@@ -651,8 +655,16 @@ export interface MtekManifest {
   /**
    * `physicsModule` is `physics/<h16>.js`, relative to the program, and present exactly when `physics` is true
    * (decision 0066): the file name is the hash of the bundle, which the runtime cannot derive.
+   * `animation` and `animationModule` are the same for skeletal animation (decision 0225): `animationModule` is
+   * `animation/<h16>.js` and present exactly when `animation` is true, which a program with a skinned mesh or
+   * `clips_from` has; both are absent from the manifests of programs without skeletal animation.
    */
-  readonly subsystems: { readonly physics: boolean; readonly physicsModule?: string };
+  readonly subsystems: {
+    readonly physics: boolean;
+    readonly physicsModule?: string;
+    readonly animation?: boolean;
+    readonly animationModule?: string;
+  };
   readonly runtimeConfig: MtekRuntimeConfig;
   /** Game-level data: the scenes `go_to` can load (decision 0141); absent for a single-scene program. */
   readonly game?: MtekGame;
@@ -670,6 +682,8 @@ export interface MtekManifest {
   readonly materials: readonly MtekMaterial[];
   readonly computePrograms?: readonly MtekComputeProgram[];
   readonly meshes: readonly MtekMesh[];
+  /** The skeletons `clips_from` entities take clips from (decision 0223): a skin with empty vertex influences. Absent when none does. */
+  readonly clipSources?: readonly MtekSkin[];
   readonly assets: readonly MtekAsset[];
   /** The prefabs the program spawns, by symbol; absent when it spawns none (decision 0064). */
   readonly prefabs?: readonly MtekPrefab[];
