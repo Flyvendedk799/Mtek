@@ -4,8 +4,24 @@ Date: 2026-10-27. This records an implementation increment against the supplied
 ten-item platform request. **The entire request is not complete.** Existing frozen
 AI benchmark evidence was not modified or used as source examples.
 
-**Areas complete: 1 of 10** (area 6, movement and spatial queries). The other nine remain
-partial; see the table under "Request acceptance status".
+**Areas complete: 2 of 10** (area 6, movement and spatial queries; area 2, composable and
+adaptable animation). The other eight remain partial; see the table under "Request acceptance status".
+
+The [composable-animation completion](../../spec/decisions/0219-complete-composable-animation.md)
+(decisions 0219–0225) closes area 2 against an acceptance contract written before the
+work, and brings back the three items earlier labelled extensions. Mtek programs compose
+animation without host code (masked layers with fades, 1D/2D blend spaces, limb, foot and
+chain goals, root motion, animated-pose reads, `clips_from` another humanoid). 2D blend
+spaces use a Delaunay/barycentric layout with synchronized cycles; automatic humanoid
+mapping covers Mixamo, Unreal, Unity/VRM, Rigify, CesiumMan and plain names with a
+structural fallback and rejects the Fox; humanoid retargeting corrects T/A rest poses and
+scales hips by leg length; analytic two-bone limbs keep anatomical ranges (0 reverse bends
+in about 154,000 targets) and place feet with the minimum hips drop. Measurements are
+generated into [`spec/animation.md`](../../spec/animation.md) and asserted. Skeletal code
+now loads lazily as `animation/<h16>.js` (decision 0225): games without skins ship a
+669 KB core (689 KB before the area) and every package budget holds unchanged.
+[`examples/animation-composition`](../../examples/animation-composition/README.md) passes
+68 browser checks on Radeon and SwiftShader against CPU references.
 
 The [movement completion](../../spec/decisions/0214-complete-character-movement.md)
 (decisions 0214–0218) closes area 6 against an acceptance contract written before the
@@ -209,7 +225,7 @@ animation/rendering/inspection browser checks and eleven package budgets pass.
 | Area | Status | Remaining work before the requested acceptance criteria are met |
 |---|---|---|
 | 1. Scalable skeletal animation | Implemented + measured on one desktop | GPU skinning, animated culling, shared-pose cohorts and distance policies are implemented. The requested 1/10/50 independent-character comparison at two mesh complexities now has complete p95 CPU/GPU/upload/memory and correctness evidence. Mtek retains higher GPU time/buffer use in these unlit workloads and whole-frame CPU changes are mixed; a measured optimization reduces GPU time/buffers with mixed whole-frame CPU results; further CPU investigation and wider hardware evidence remain. |
-| 2. Composable/adaptable animation | Requested compatible-rig workflow demonstrated on desktop | The production composition workshop combines locomotion/actions, unequal foot heights, two-hand props, generated different proportions, procedural adaptation and root ownership. Interruptions, phase markers, four frame-rate patterns, independent render references, device recovery and resource release pass. The mapping and foot/prop adaptation are explicit and scene-specific; general 2D blend spaces, anatomical solving and automatic humanoid mapping are extensions beyond this delivered compatible-rig workflow. |
+| 2. Composable/adaptable animation | **Done** (decisions 0219–0225, local desktop gate) | Every acceptance item of [0219](../../spec/decisions/0219-complete-composable-animation.md) holds and is tested, including the items earlier deferred as extensions: 2D blend spaces, automatic humanoid mapping (name conventions plus structural fallback, non-humanoids rejected) and anatomical limb solving with foot placement. Programs use 17 new `animation.*` calls (layers, blend spaces, limb/foot/chain goals, root motion, animated-pose reads) and `clips_from` without host code; per-foot contact weights and animated-pose reads let feet plant while walking. Published exclusions (not hidden): structure-only mapping of Rigify twist chains without `DEF-` names, left/right ambiguity for toeless straight-kneed rigs facing away (4 of 162), foot slide from mismatched pelvis or thigh:shin ratios before foot placement, middle-joint-only anatomical ranges (no hip/shoulder limits), uniform scale only, and no ray casts in the language (programs supply ground points). Wider physical devices belong to area 7. |
 | 3. Core rendering/materials | Partial | Core glTF texture channels, mip-aware sampling, directional shadows and HDR environment lighting are implemented and tested. Authored position/normal/UV results, typed payloads, finite bounds and combined animation compositions have CPU/GPU references; mixed min/mag samplers are preserved. Bounded source compute passes numerical, geometry, shadow and lifecycle acceptance. PBR colour opacity is corrected, and five procedural material/lighting categories pass at two qualities on both desktop backends. Authored tangent import/shading is implemented and the unchanged product passes the complete hardware matrix. The native-reference software normal-map control remains failed; qualified matched costs and wider physical devices remain. HDR display/effects and cascaded/point shadows are further extensions. |
 | 4. Incremental adoption | API/package proof and rendered check delivered | Animation/content APIs and the Three.js integration exist. The optional inspector is separately packaged, installed and strictly type-checked without source aliases, with mounted lifecycle/version tests and a documented compatibility policy. Its opt-in lighting-studio rendering check passes edit/undo/redo/reset/removal on Radeon and SwiftShader. Packages remain private development snapshots; stable release/external adoption evidence remains. |
 | 5. Asset/content pipeline | Partial | A pinned 16-input compatibility corpus and serial audit tool now separate declaration import from named mesh/material/clip use; the original 26 checks matched expected outcomes. A subsequent [30-check run](shader-authoring/characters-2026-10-26/asset-audit/report.md) now accepts original CesiumMan mesh/material/clip use and mixed min/mag filters, retaining the original provenance. The current tangent/product increment expands the pinned audit to 21 inputs and 38 matched import/use outcomes. Morphs, cubic-spline playback, compression, compiler-integrated async scene streaming, LOD, unloading/plateau evidence and a broader production corpus remain. The independent pool does not change the strict GLB profile. |

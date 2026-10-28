@@ -1,6 +1,6 @@
 # 0219 — Complete composable and adaptable animation
 
-Status: accepted contract. Date: 2026-10-27. Extends 0190, 0191, 0192, 0196 and 0209.
+Status: accepted contract; **met** on 2026-10-28 by 0220–0225 (scorecard area 2 done). Date: 2026-10-27. Extends 0190, 0191, 0192, 0196 and 0209.
 Defines what "done" means for platform scorecard area 2 (composable and
 adaptable animation) and splits the work into 0220 (blend spaces and layer
 fades), 0221 (automatic humanoid mapping and retargeting), 0222 (anatomical
