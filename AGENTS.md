@@ -9,3 +9,8 @@ on benchmark evidence. Preserve its contents and do not use it as a coding refer
 
 Use `examples/`, `crates/mtek-compiler/src/context/examples/` and passing fixtures
 under `tests/` for current language examples.
+
+# Continuing work
+
+To resume the platform roadmap, read [`CONTINUE.md`](CONTINUE.md) first: current status,
+the method that finishes an area, the local gate and known traps.
